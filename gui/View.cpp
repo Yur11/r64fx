@@ -20,19 +20,20 @@ namespace r64fx{
     
 View::View(Scene* scene) : _scene(scene)
 {
-    _panel.setBackgroundColor(0.5, 0.5, 0.5, 1.0);
+//     _panel.setBackgroundColor(0.5, 0.5, 0.5, 1.0);
 }
     
     
 void View::resize(int left, int top, int right, int bottom) 
 {
+    cout << "View::resize " << right << ", " << top << "\n";
     _rect.left = left;
     _rect.top = top;
     _rect.right = right; 
     _rect.bottom = bottom; 
     
-    _panel.setPosition(_rect.left, _rect.top);
-    _panel.setWidth(_rect.width());
+//     _panel.setPosition(_rect.left, _rect.top);
+//     _panel.setWidth(_rect.width());
 }
     
     
@@ -42,22 +43,12 @@ void View::render()
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
     
-    _scene->render();
-    _panel.render();
-}
-
-
-void View::Panel::render()
-{
-    glColor(backgroundColor());
-    glBegin(GL_POLYGON);
-        glVertex2f(0.0, 0.0);
-        glVertex2f(width(), 0.0);
-        glVertex2f(width(), height());
-        glVertex2f(0.0, height());
-    glEnd();
+    glScissor(x(), y(), width(), height());
     
-    render_children();
+    glPushMatrix();
+    glTranslatef(x(), y(), 0.0);
+    _scene->render();
+    glPopMatrix();
 }
 
 
@@ -80,7 +71,7 @@ void View::mousePressEvent(MouseEvent* event)
 void View::mouseReleaseEvent(MouseEvent* event)
 {
 #ifdef DEBUG
-    MAKE_SURE_WE_HAVE_A_SCENE;
+    MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
     transform_mouse_event(event);
     _scene->mouseReleaseEvent(event);
@@ -132,19 +123,10 @@ HorizontalSplitView* View::splitHorizontally(float ratio)
 
 
 void SplitView::render()
-{     
+{    
     glEnable(GL_SCISSOR_TEST);
-    glScissor(viewA()->x(), viewA()->y(), viewA()->width(), viewA()->height());
-    glPushMatrix();
-    glTranslatef(viewA()->x(), viewA()->y(), 0.0);
     viewA()->render();
-    glPopMatrix();
-    
-    glScissor(viewB()->x(), viewB()->y(), viewB()->width(), viewB()->height());
-    glPushMatrix();
-    glTranslatef(viewB()->x(), viewB()->y(), 0.0);
     viewB()->render();
-    glPopMatrix();
     glDisable(GL_SCISSOR_TEST);
     
     render_separator();

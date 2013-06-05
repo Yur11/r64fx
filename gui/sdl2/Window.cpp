@@ -250,17 +250,20 @@ void Window::processEvents()
                         int w = event.window.data1;
                         int h = event.window.data2;
                         
+                        cout << "resized: " << w << ", " << h << "\n";
+                        
+                        cout << "glViewport(0, 0, " << w << "," << h << ")\n";
                         glViewport(0, 0, w, h);
                         glMatrixMode(GL_PROJECTION);
                         glLoadIdentity();
                         
-                        /* (0, 0) is in the top left corner. */
+                        /* (0, 0) is in the bottom left corner. */
                         glOrtho(0, w, 0, h, -1, 1);
                         
                         glMatrixMode(GL_MODELVIEW);
                         glLoadIdentity();
                         
-                        last_focused_window->view()->resize(0, event.window.data2, event.window.data1, 0);
+                        last_focused_window->view()->resize(0, h, w, 0);
                     }
                 }
                 break;

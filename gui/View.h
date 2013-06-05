@@ -87,15 +87,6 @@ public:
     
 /** @brief A view that can render a scene with a given projection. */
 class View : public SplittableView{
-public:
-    class Panel 
-    : public HorizontalContainer
-    , public BackgroundColorMixin
-    {
-    public:
-        virtual void render();
-    }
-    _panel;
     
 private:
     friend class Window;
@@ -107,10 +98,6 @@ private:
     
 public:
     View(Scene* scene = nullptr);
-    
-    
-    
-    inline Panel* panel() { return &_panel; }; 
     
     virtual void resize(int left, int top, int right, int bottom);
     

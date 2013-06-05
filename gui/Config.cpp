@@ -1,3 +1,5 @@
+//Broken!
+
 #include "Config.h"
 #include <string>
 #include <map>
@@ -151,7 +153,11 @@ bool Config::init()
         }
         else if(errno == ENFILE)
         {
-            cerr << "r64fx: System can't open more file!\n";
+            cerr << "r64fx: System can't open more files!\n";
+        }
+        else
+        {
+            cerr << "r64fx: Unknown error when opening config directory!\n";
         }
         return false;
     }
@@ -159,16 +165,24 @@ bool Config::init()
     string gui_config_file = config_dir + "r64fx.conf";
     
     FILE* file = fopen(gui_config_file.c_str(), "r");
-    if(!file && errno == EEXIST)
+    if(!file)
     {
-        file = fopen(gui_config_file.c_str(), "rw");
-        if(!file)
+        if(errno == EEXIST)
         {
-            cerr << "r64fx: Failed to access gui.conf file!\n";
+            file = fopen(gui_config_file.c_str(), "rw");
+            if(!file)
+            {
+                cerr << "r64fx: Failed to create r64fx.conf file!\n";
+                return false;
+            }
+            
+            create_default_config(file);
+        }
+        else
+        {
+            cerr << "r64fx: Failed to access r64fx.conf file!\n";
             return false;
         }
-        
-        create_default_config(file);
     }
     
     string text;
