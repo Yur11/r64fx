@@ -25,7 +25,7 @@ add_library(r64fx_gui
     Font.cpp
     menus.cpp
     Message.cpp
-)
+) 
 # add_executable(r64fx_gui_example example.cpp)
 
 target_link_libraries(r64fx_gui SDL2 GL GLU ftgl png Utf8String)

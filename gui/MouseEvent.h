@@ -2,6 +2,7 @@
 #define R64FX_GUI_MOUSE_EVENT_H
 
 #include "Mouse.h"
+#include "Event.h"
 
 namespace r64fx{
 
@@ -16,7 +17,7 @@ class Widget;
     Mouse events are usually created by the window and delivered down through the views, the scene
     and the widget tree.
  */
-class MouseEvent{
+class MouseEvent : public Event{
     Point<float> _position;
     
     /** Orignal event position. */
@@ -33,12 +34,6 @@ public:
     MouseEvent(float x = 0.0, float y = 0.0, unsigned int buttons = Mouse::Button::None)
     : MouseEvent(Point<float>(x, y), buttons)
     {}
-    
-    /** We can do feedback via mouse event objecs. */
-    WindowBase* window = nullptr;
-    SplittableView* view = nullptr;
-    Scene* scene = nullptr;
-    Widget* widget = nullptr;
     
     inline Point<float> position() const { return _position; }
     

@@ -6,12 +6,12 @@
 using namespace std;
 
 namespace r64fx{
-    
-        
+            
 WindowBase::WindowBase()
 {
    
 }
+
 
 void WindowBase::debug_init(ContextMenu* menu)
 {
@@ -82,14 +82,14 @@ void WindowBase::closeAllOverlayMenus()
 void WindowBase::initMousePressEvent(int x, int y, unsigned int buttons)
 {
     MouseEvent event(x, y, buttons);
-    event.window = this;
+    event.setOriginWindow(this);
     
     if(!_overlay_menus.empty())
     {
         Widget* menu = overlay_menu_at(x, y);
         if(menu)
         {
-            /* Event goes to the menu. */
+            /* Deliver event to the menu. */
             event -= menu->position();
             menu->mousePressEvent(&event);
             return;
@@ -101,11 +101,11 @@ void WindowBase::initMousePressEvent(int x, int y, unsigned int buttons)
         }
     }
 
-    /* Temporary. Menus shall be requested by objects int the scene. */
-    if(buttons & Mouse::Button::Right)
-    {
-        showOverlayMenu(x, y, menu);
-    }
+    /* Temporary. Menus shall be requested by objects in the scene. */
+//     if(buttons & Mouse::Button::Right)
+//     {
+//         showOverlayMenu(x, y, menu);
+//     }
     
     view()->mousePressEvent(&event);
 }
@@ -114,7 +114,7 @@ void WindowBase::initMousePressEvent(int x, int y, unsigned int buttons)
 void WindowBase::initMouseReleaseEvent(int x, int y, unsigned int buttons)
 {
     MouseEvent event(x, y, buttons);
-    event.window = this;
+    event.setOriginWindow(this);
     
     if(!_overlay_menus.empty())
     {
@@ -137,7 +137,7 @@ void WindowBase::initMouseReleaseEvent(int x, int y, unsigned int buttons)
 void WindowBase::initMouseMoveEvent(int x, int y, unsigned int buttons)
 {
     MouseEvent event(x, y, buttons);
-    event.window = this;
+    event.setOriginWindow(this);
     
     if(!_overlay_menus.empty())
     {
@@ -160,18 +160,21 @@ void WindowBase::initMouseMoveEvent(int x, int y, unsigned int buttons)
 void WindowBase::initMouseWheelEvent(int dx, int dy, unsigned int buttons)
 {
     MouseEvent event;
+    event.setOriginWindow(this);
 }
 
     
 void WindowBase::initKeyPressEvent(unsigned int scancode, unsigned int buttons)
 {
     KeyEvent event(scancode, buttons);
+    event.setOriginWindow(this);
 }
 
     
 void WindowBase::initKeyReleaseEvent(unsigned int scancode, unsigned int buttons)
 {
     KeyEvent event(scancode, buttons);
+    event.setOriginWindow(this);
 }
 
 

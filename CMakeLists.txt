@@ -5,7 +5,7 @@ project(r64fx)
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -g")
 
 add_definitions(
-    -DDEBUG 
+    -DDEBUG
 )
 
 add_subdirectory(base)

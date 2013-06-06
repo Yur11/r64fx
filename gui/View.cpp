@@ -18,6 +18,7 @@ using namespace std;
 namespace r64fx{
     
     
+/* ==== View ================================================================================ */
 View::View(Scene* scene) : _scene(scene)
 {
 //     _panel.setBackgroundColor(0.5, 0.5, 0.5, 1.0);
@@ -103,7 +104,8 @@ VerticalSplitView* View::splitVertically(float ratio)
     
     return vsv;
 }
-    
+
+
 HorizontalSplitView* View::splitHorizontally(float ratio)
 {
     auto a = new View;
@@ -121,7 +123,16 @@ HorizontalSplitView* View::splitHorizontally(float ratio)
 }
 
 
+ContextMenu* View::fetchContextMenu()
+{
+    cerr << "ContextMenu* Widget::fetchContextMenu() [Not implemented!]";
+    abort();
+    return nullptr;
+}
 
+
+
+/* ==== SplitView ======================================================================= */
 void SplitView::render()
 {    
     glEnable(GL_SCISSOR_TEST);
@@ -134,7 +145,7 @@ void SplitView::render()
     
 void SplitView::mousePressEvent(MouseEvent* event)
 {   
-    event->view = this;
+//     event->view = this;
     
     auto ra = viewA()->rect().to<float>();
     auto rb = viewB()->rect().to<float>();
@@ -153,7 +164,7 @@ void SplitView::mousePressEvent(MouseEvent* event)
 
 void SplitView::mouseReleaseEvent(MouseEvent* event)
 {
-    event->view = this;
+//     event->view = this;
     
     auto ra = viewA()->rect().to<float>();
     auto rb = viewB()->rect().to<float>();
@@ -173,7 +184,7 @@ void SplitView::mouseReleaseEvent(MouseEvent* event)
 
 void SplitView::mouseMoveEvent(MouseEvent* event)
 {
-    event->view = this;
+//     event->view = this;
     
     auto ra = viewA()->rect().to<float>();
     auto rb = viewB()->rect().to<float>();
@@ -216,6 +227,14 @@ void VerticalSplitView::render_separator()
 }
 
 
+ContextMenu* VerticalSplitView::fetchContextMenu()
+{
+    cerr << "ContextMenu* Widget::fetchContextMenu() [Not implemented!]";
+    abort();
+    return nullptr;
+}
+
+
 void HorizontalSplitView::resize(int left, int top, int right, int bottom)
 {
     _rect.left = left;
@@ -239,5 +258,14 @@ void HorizontalSplitView::render_separator()
         glVertex2f(width() * splitRatio(), _rect.bottom);
     glEnd();
 }
+
+
+ContextMenu* HorizontalSplitView::fetchContextMenu()
+{
+    cerr << "ContextMenu* Widget::fetchContextMenu() [Not implemented!]";
+    abort();
+    return nullptr;
+}
+
 
 }//namespace r64fx

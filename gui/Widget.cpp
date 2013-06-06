@@ -92,7 +92,7 @@ void Widget::update()
 
 void Widget::mousePressEvent(MouseEvent* event)
 {
-    event->widget = this;
+//     event->widget = this;
     
     auto child = childAt(event->position()); 
     if(child)
@@ -105,7 +105,7 @@ void Widget::mousePressEvent(MouseEvent* event)
     
 void Widget::mouseReleaseEvent(MouseEvent* event)
 {
-    event->widget = this;
+//     event->widget = this;
     
     auto child = childAt(event->position()); 
     if(child)
@@ -118,7 +118,7 @@ void Widget::mouseReleaseEvent(MouseEvent* event)
     
 void Widget::mouseMoveEvent(MouseEvent* event)
 {
-    event->widget = this;
+//     event->widget = this;
     
     auto child = childAt(event->position()); 
     if(child)

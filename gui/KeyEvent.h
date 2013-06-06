@@ -1,9 +1,11 @@
 #ifndef R64FX_GUI_KEY_EVENT_H
 #define R64FX_GUI_KEY_EVENT_H
 
+#include "Event.h"
+
 namespace r64fx{
     
-class KeyEvent{
+class KeyEvent : public Event{
     unsigned int _key;
     unsigned int _buttons;
 

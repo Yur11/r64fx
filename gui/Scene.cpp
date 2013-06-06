@@ -30,7 +30,7 @@ void Scene::render()
 
 void Scene::mousePressEvent(MouseEvent* event)
 {
-    event->scene = this;
+    event->setScene(this);
     
     Widget* w = widgetAt(event->x(), event->y());
     if(w)
@@ -43,7 +43,7 @@ void Scene::mousePressEvent(MouseEvent* event)
     
 void Scene::mouseReleaseEvent(MouseEvent* event)
 {
-    event->scene = this;
+    event->setScene(this);
     
     Widget* w = widgetAt(event->x(), event->y());
     if(w)
@@ -56,7 +56,7 @@ void Scene::mouseReleaseEvent(MouseEvent* event)
     
 void Scene::mouseMoveEvent(MouseEvent* event)
 {
-    event->scene = this;
+    event->setScene(this);
     
     Widget* w = widgetAt(event->x(), event->y());
     if(w)
