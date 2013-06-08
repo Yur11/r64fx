@@ -11,7 +11,9 @@ MenuItem::MenuItem(Icon* icon, TextLine* caption, TextLine* shortcut, Widget* pa
     appendWidget(icon);    
     appendWidget(caption);
     appendWidget(shortcut);
-    
+ 
+    caption->update();
+    shortcut->update();
     update();
 }
 
