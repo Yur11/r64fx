@@ -131,13 +131,23 @@ void Window::processEvents()
             /* Keyboard */
             case SDL_KEYDOWN:
             {
-                if(focused_window) focused_window->initKeyPressEvent(event.key.keysym.scancode, pressed_mouse_buttons);
+                if(focused_window) 
+                    focused_window->initKeyPressEvent(
+                        event.key.keysym.scancode, 
+                        pressed_mouse_buttons, 
+                        event.key.keysym.mod
+                    );
                 break;
             }
             
             case SDL_KEYUP:
             {
-                if(focused_window) focused_window->initKeyReleaseEvent(event.key.keysym.scancode, pressed_mouse_buttons);
+                if(focused_window) 
+                    focused_window->initKeyReleaseEvent(
+                        event.key.keysym.scancode, 
+                        pressed_mouse_buttons, 
+                        event.key.keysym.mod
+                    );
                 break;
             }
             

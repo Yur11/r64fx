@@ -4,6 +4,7 @@
 #include "Window.h"
 #include "Icon.h"
 #include "Dummy.h"
+#include "Keyboard.h"
 
 using namespace std;
 
@@ -40,6 +41,9 @@ int main()
     
     /* Initialize default font. */
     Font::init();
+    
+    /*  */
+    Keyboard::init();
     
     /* These should be loaded from a file. */
     Scene scene;

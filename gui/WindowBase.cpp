@@ -152,16 +152,16 @@ void WindowBase::initMouseWheelEvent(int dx, int dy, unsigned int buttons)
 }
 
     
-void WindowBase::initKeyPressEvent(unsigned int scancode, unsigned int buttons)
+void WindowBase::initKeyPressEvent(unsigned int scancode, unsigned int buttons, unsigned int modifiers)
 {
-    KeyEvent event(scancode, buttons);
+    KeyEvent event(scancode, buttons, modifiers);
     event.setOriginWindow(this);
 }
 
     
-void WindowBase::initKeyReleaseEvent(unsigned int scancode, unsigned int buttons)
+void WindowBase::initKeyReleaseEvent(unsigned int scancode, unsigned int buttons,  unsigned int modifiers)
 {
-    KeyEvent event(scancode, buttons);
+    KeyEvent event(scancode, buttons, modifiers);
     event.setOriginWindow(this);
 }
 

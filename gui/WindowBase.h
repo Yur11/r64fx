@@ -50,9 +50,9 @@ protected:
     
     void initMouseWheelEvent(int dx, int dy, unsigned int buttons);
     
-    void initKeyPressEvent(unsigned int scancode, unsigned int buttons);
+    void initKeyPressEvent(unsigned int scancode, unsigned int buttons, unsigned int modifiers);
     
-    void initKeyReleaseEvent(unsigned int scancode, unsigned int buttons);
+    void initKeyReleaseEvent(unsigned int scancode, unsigned int buttons,  unsigned int modifiers);
     
     void initTextInputEvent(Utf8String text);
 };    

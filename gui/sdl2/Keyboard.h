@@ -1,3 +1,8 @@
+#ifndef R64FX_GUI_SDL2_KEYBOARD_H
+#define R64FX_GUI_SDL2_KEYBOARD_H
+
+namespace r64fx{
+
 struct Keyboard{
     struct Key{
         static const unsigned int Backspace = SDL_SCANCODE_BACKSPACE;
@@ -77,8 +82,8 @@ struct Keyboard{
         static const unsigned int Insert = SDL_SCANCODE_INSERT;
         static const unsigned int Home = SDL_SCANCODE_HOME;
         static const unsigned int End = SDL_SCANCODE_END;
-        static const unsigned int Pageup = SDL_SCANCODE_PAGEUP;
-        static const unsigned int Pagedown = SDL_SCANCODE_PAGEDOWN;
+        static const unsigned int PageUp = SDL_SCANCODE_PAGEUP;
+        static const unsigned int PageDown = SDL_SCANCODE_PAGEDOWN;
         static const unsigned int F1 = SDL_SCANCODE_F1;
         static const unsigned int F2 = SDL_SCANCODE_F2;
         static const unsigned int F3 = SDL_SCANCODE_F3;
@@ -94,9 +99,9 @@ struct Keyboard{
         static const unsigned int F13 = SDL_SCANCODE_F13;
         static const unsigned int F14 = SDL_SCANCODE_F14;
         static const unsigned int F15 = SDL_SCANCODE_F15;
-        static const unsigned int Numlock = SDL_SCANCODE_NUMLOCKCLEAR;
-        static const unsigned int Capslock = SDL_SCANCODE_CAPSLOCK;
-        static const unsigned int Scrollock = SDL_SCANCODE_SCROLLLOCK;
+        static const unsigned int NumLock = SDL_SCANCODE_NUMLOCKCLEAR;
+        static const unsigned int CapsLock = SDL_SCANCODE_CAPSLOCK;
+        static const unsigned int ScrollLock = SDL_SCANCODE_SCROLLLOCK;
         static const unsigned int Rshift = SDL_SCANCODE_RSHIFT;
         static const unsigned int Lshift = SDL_SCANCODE_LSHIFT;
         static const unsigned int RightCtrl = SDL_SCANCODE_RCTRL;
@@ -111,15 +116,38 @@ struct Keyboard{
         static const unsigned int Sysreq = SDL_SCANCODE_SYSREQ;
         static const unsigned int Menu = SDL_SCANCODE_MENU;
         static const unsigned int Power = SDL_SCANCODE_POWER;
+        
+        const char* str(unsigned int);
     };
-
-    static void beginTextInput()
+    
+    struct Modifier{
+        static const unsigned int None = KMOD_NONE;
+        static const unsigned int LeftShift  = KMOD_LSHIFT;
+        static const unsigned int RightShift = KMOD_RSHIFT;
+        static const unsigned int LeftCtrl = KMOD_LCTRL;
+        static const unsigned int RightCtrl = KMOD_RCTRL;
+        static const unsigned int LeftAlt = KMOD_LALT;
+        static const unsigned int RightAlt = KMOD_RALT;
+        static const unsigned int LeftGui = KMOD_LGUI;
+        static const unsigned int RightGui = KMOD_RGUI;
+        static const unsigned int Numlock = KMOD_NUM;
+        
+        const char* str(unsigned int);
+    };
+    
+    static void init();
+    
+    inline static void beginTextInput()
     {
         SDL_StartTextInput();
     }
     
-    static void endTextInput()
+    inline static void endTextInput()
     {
         SDL_StopTextInput();
     }
 };
+
+}//namespace r64fx
+
+#endif//R64FX_GUI_SDL2_KEYBOARD_H
