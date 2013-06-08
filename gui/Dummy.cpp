@@ -1,12 +1,17 @@
 #include "Dummy.h"
 #include "MouseEvent.h"
 #include "KeyEvent.h"
+#include "Menu.h"
+#include "WindowBase.h"
 #include <iostream>
 
 
 using namespace std;
 
 namespace r64fx{
+
+
+Menu* _debug_menu = nullptr;
     
 void Dummy::render()
 {    
@@ -25,8 +30,15 @@ void Dummy::render()
 
 void Dummy::mousePressEvent(MouseEvent* event)
 {
-    auto p = toSceneCoords(event->position());
-    cout << "dummy: " << event->x() << ", " << event->y() << " [" << p.x << ", " << p.y << "]\n";
+    if(event->buttons() & Mouse::Button::Right)
+    {
+        event->originWindow()->showOverlayMenu(event->original_x(), event->original_y(), _debug_menu);
+    }
+    else
+    {
+        auto p = toSceneCoords(event->position());
+        cout << "dummy: " << event->x() << ", " << event->y() << " [" << p.x << ", " << p.y << "]\n";
+    }
 }
 
 
@@ -39,6 +51,21 @@ void Dummy::mouseMoveEvent(MouseEvent* event)
 void Dummy::keyPressEvent(KeyEvent* event)
 {
 //     cout << "key: " << (int)event->ch() << "\n";
+}
+
+
+void Dummy::initDebugMenu()
+{
+    if(_debug_menu) return;
+    
+    _debug_menu = new Menu;
+    _debug_menu->appendWidget(new MenuItem(new Icon(Texture::defaultTexture()), new TextLine("bla bla bla"), new TextLine("Ctrl + bla")));
+    _debug_menu->appendWidget(new MenuItem(new Icon(Texture::defaultTexture()), new TextLine("bla bla bla"), new TextLine("Ctrl + bla")));
+    _debug_menu->appendWidget(new MenuItem(new Icon(Texture::defaultTexture()), new TextLine("bla bla bla"), new TextLine("Ctrl + bla")));
+    _debug_menu->appendWidget(new MenuItem(new Icon(Texture::defaultTexture()), new TextLine("bla bla bla"), new TextLine("Ctrl + bla")));
+    _debug_menu->appendWidget(new MenuItem(new Icon(Texture::defaultTexture()), new TextLine("bla bla bla"), new TextLine("Ctrl + bla")));
+    _debug_menu->setSpacing(10);
+    _debug_menu->update();
 }
     
 }//namespace r64fx

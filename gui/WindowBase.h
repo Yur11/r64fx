@@ -2,6 +2,7 @@
 #define R64FX_GUI_WINDOW_BASE_H
 
 #include "View.h"
+#include "Menu.h"
 #include "MouseEvent.h"
 
 namespace r64fx{
@@ -10,28 +11,17 @@ namespace r64fx{
 class WindowBase{
     SplittableView* _view = nullptr;
     
-    /** Menus that show up on top of all the other widgets. Kinda all of them do.
-        Ordered in the opening order. 
-        This way we can add/remove menus to/from the back of the vector.
-        Also this allows us to calculate proper positions for nested menus, starting from the first one,
-        by simply iterating over the list.
-     */
     std::vector<Widget*> _overlay_menus;
     
     Widget* overlay_menu_at(int x, int y);
     
-    /* Remove me */
-    ContextMenu* menu;
-    
     MouseEvent _last_mouse_event;
     
 protected:
-    void render_overlays();
+    void render_overlay_menus();
     
 public:
     WindowBase();
-    
-    void debug_init(ContextMenu* menu);
     
     inline void setView(SplittableView* view) { _view = view; }
     inline SplittableView* view() const { return _view; }
@@ -42,9 +32,9 @@ public:
     
     inline int height() { return size().h; }
     
-    void showOverlayMenu(int x, int y, VerticalMenu* menu);
+    void showOverlayMenu(int x, int y, Menu* menu);
     
-    void closeOverlayMenu(VerticalMenu* menu);
+    void closeOverlayMenu(Menu* menu);
     
     void closeAllOverlayMenus();
     

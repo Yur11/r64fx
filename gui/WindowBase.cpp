@@ -13,13 +13,7 @@ WindowBase::WindowBase()
 }
 
 
-void WindowBase::debug_init(ContextMenu* menu)
-{
-    this->menu = menu;
-}
-
-
-void WindowBase::render_overlays()
+void WindowBase::render_overlay_menus()
 {
     glDisable(GL_SCISSOR_TEST);
     glEnable(GL_BLEND);
@@ -50,7 +44,7 @@ Widget* WindowBase::overlay_menu_at(int x, int y)
 }
 
 
-void WindowBase::showOverlayMenu(int x, int y, VerticalMenu* menu)
+void WindowBase::showOverlayMenu(int x, int y, Menu* menu)
 {
     if(y > height() / 2)
     {
@@ -67,7 +61,7 @@ void WindowBase::showOverlayMenu(int x, int y, VerticalMenu* menu)
 }
 
     
-void WindowBase::closeOverlayMenu(VerticalMenu* menu)
+void WindowBase::closeOverlayMenu(Menu* menu)
 {
     
 }
@@ -75,7 +69,7 @@ void WindowBase::closeOverlayMenu(VerticalMenu* menu)
 
 void WindowBase::closeAllOverlayMenus()
 {
-    _overlay_menus.clear();
+    
 }
 
 
@@ -100,12 +94,6 @@ void WindowBase::initMousePressEvent(int x, int y, unsigned int buttons)
             closeAllOverlayMenus();
         }
     }
-
-    /* Temporary. Menus shall be requested by objects in the scene. */
-//     if(buttons & Mouse::Button::Right)
-//     {
-//         showOverlayMenu(x, y, menu);
-//     }
     
     view()->mousePressEvent(&event);
 }

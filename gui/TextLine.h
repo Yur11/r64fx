@@ -27,10 +27,11 @@ public:
         Centered
     };
     
-    TextLine(Font* font, Widget* parent = nullptr) 
+    TextLine(Utf8String text = "", Font* font = Font::defaultFont(), Widget* parent = nullptr) 
     : Widget(parent)
     , _font(font)
     , text_color(0.0, 0.0, 0.0)
+    , text(text)
     {}
     
     inline Font* font() const { return _font; }

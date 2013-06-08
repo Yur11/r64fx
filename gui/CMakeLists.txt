@@ -1,12 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(r64fx_gui)
 
-include_directories(/usr/include/freetype2)
-
-add_definitions(
-    -DUSE_SDL2
-)
-
 add_library(r64fx_gui
     SHARED
     WindowBase.cpp
@@ -22,8 +16,8 @@ add_library(r64fx_gui
     Texture.cpp
     Config.cpp
     MenuItem.cpp
+    Menu.cpp
     Font.cpp
-    menus.cpp
     Message.cpp
 ) 
 # add_executable(r64fx_gui_example example.cpp)
@@ -50,7 +44,6 @@ install(
     Config.h
     MenuItem.h
     Font.h
-    menus.h
     Message.h
     
     DESTINATION

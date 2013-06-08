@@ -1,10 +1,12 @@
 #include "TextLine.h"
+#include <iostream>
 
+using namespace std;
 
 namespace r64fx{
 
 void TextLine::render()
-{        
+{      
     glPushMatrix();
         glTranslated(paddingLeft(), paddingBottom() + _font->descender(), 0.0);
         glColor(this->textColor());

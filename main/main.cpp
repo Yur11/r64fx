@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include "Config.h"
 #include "Window.h"
+#include "Icon.h"
 #include "Dummy.h"
 
 using namespace std;
@@ -24,9 +25,21 @@ int main()
         return 2;
     }
     
-    /* Main window opened by default. */
-    Window window(800, 600, "My window");
+    /*
+     * Main window opened by default. 
+     * This creates OpenGL context.
+     * 
+     * A lot of things in the gui can be done only after this step.
+     * This is true for everything that has to do with rendering or texture loading.
+     */
+    Window window(800, 600, "r64fx");
     window.makeCurrent();
+    
+    /* Initialize default texture. */
+    Texture::init();
+    
+    /* Initialize default font. */
+    Font::init();
     
     /* These should be loaded from a file. */
     Scene scene;
@@ -40,6 +53,8 @@ int main()
     Dummy dummy2(100, 100);
     Dummy dummy3(200, 100);
     
+    Dummy::initDebugMenu();
+    
     HorizontalContainer c;
     c.appendWidget(&dummy1);
     c.appendWidget(&dummy2);
@@ -51,6 +66,10 @@ int main()
     
     scene.appendWidget(&c);
     
+    Dummy dummy4(100, 100);
+    dummy4.setPosition(100, 100);
+    
+    scene.appendWidget(&dummy4);
     
     /* Main event loop. */
     for(;;)
@@ -66,7 +85,9 @@ int main()
     }
     
     /* Clean things up before exiting. */
-    Window::cleanup(); 
+    Texture::cleanup();
+    Font::cleanup();
+    Window::cleanup();
     
     return 0;
 }

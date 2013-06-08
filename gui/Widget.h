@@ -32,9 +32,7 @@ class Widget{
         However the root widget should have this pointer set to a valid address.
         This way we can "climb" up the widget tree to the root
         and obtain the scene pointer from there, without having to update this value for every child widget.
-        
-        
-     */
+    */
     Scene* _scene = nullptr;
     
     Window* _window;

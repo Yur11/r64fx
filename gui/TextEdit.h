@@ -103,8 +103,8 @@ class TextEdit : public TextLine{
     } text_selection;
     
 public:    
-    TextEdit(Font* font, Widget* parent = nullptr) 
-    : TextLine(font, parent)
+    TextEdit(Utf8String inital_text = "", Font* font = Font::defaultFont(), Widget* parent = nullptr) 
+    : TextLine(inital_text, font, parent)
     , background_color(1.0, 1.0, 1.0)
     {
     }

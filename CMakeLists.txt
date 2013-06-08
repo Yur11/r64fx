@@ -4,8 +4,11 @@ project(r64fx)
 
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -g")
 
+include_directories(/usr/include/freetype2)
+
 add_definitions(
     -DDEBUG
+    -DUSE_SDL2
 )
 
 add_subdirectory(base)

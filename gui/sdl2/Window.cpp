@@ -68,7 +68,7 @@ void Window::render()
 
     view()->render();
     
-    render_overlays();
+    render_overlay_menus();
 }
 
 
@@ -250,9 +250,6 @@ void Window::processEvents()
                         int w = event.window.data1;
                         int h = event.window.data2;
                         
-                        cout << "resized: " << w << ", " << h << "\n";
-                        
-                        cout << "glViewport(0, 0, " << w << "," << h << ")\n";
                         glViewport(0, 0, w, h);
                         glMatrixMode(GL_PROJECTION);
                         glLoadIdentity();

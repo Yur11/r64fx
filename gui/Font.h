@@ -28,6 +28,12 @@ public:
     inline float descender() { return _ftfont.Descender(); }
     
     inline FTTextureFont &ftfont() { return _ftfont; }
+    
+    static void init();
+    
+    static Font* defaultFont();
+    
+    static void cleanup();
 };
     
 }//namespace r64fx

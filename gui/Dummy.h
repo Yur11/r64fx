@@ -5,6 +5,8 @@
 
 namespace r64fx{
     
+class Menu;
+    
 /** @brief Just a dummy widget that draws a rectangle. */
 class Dummy : public Widget{
     Point<float> _last_mouse_move;
@@ -19,6 +21,8 @@ public:
     virtual void mouseMoveEvent(MouseEvent* event);
     
     virtual void keyPressEvent(KeyEvent* event);
+    
+    static void initDebugMenu();
 };
     
 }//namespace r64fx

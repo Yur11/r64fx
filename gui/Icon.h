@@ -10,7 +10,14 @@ class Icon : public Widget{
     Texture* _texture = nullptr;
     
 public:
-    Icon(Texture* texture,  Widget* parent = nullptr) : Widget(parent),  _texture(texture) {}
+    Icon(Texture* texture,  Widget* parent = nullptr) 
+        : Widget(parent),  _texture(texture) {}
+    
+    Icon(std::string path, Widget* parent = nullptr) 
+        : Widget(parent),  _texture(new Texture(path)) {}
+        
+    Icon(int width, int height, int channel_count, int mode, unsigned char* bytes, Widget* parent = nullptr)
+        : Widget(parent), _texture(new Texture(width, height, channel_count, mode, bytes)) {}
     
     virtual void render();
     

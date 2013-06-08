@@ -97,8 +97,8 @@ void Widget::mousePressEvent(MouseEvent* event)
     auto child = childAt(event->position()); 
     if(child)
     {
-        MouseEvent me(event->position() - child->position(), event->buttons());
-        child->mousePressEvent(&me);
+        *event -= child->position();
+        child->mousePressEvent(event);
     }
 }
 
@@ -110,8 +110,8 @@ void Widget::mouseReleaseEvent(MouseEvent* event)
     auto child = childAt(event->position()); 
     if(child)
     {
-        MouseEvent me(event->position() - child->position(), event->buttons());
-        child->mouseReleaseEvent(&me);
+        *event -= child->position();
+        child->mouseReleaseEvent(event);
     }
 }
     
@@ -123,8 +123,8 @@ void Widget::mouseMoveEvent(MouseEvent* event)
     auto child = childAt(event->position()); 
     if(child)
     {
-        MouseEvent me(event->position() - child->position(), event->buttons());
-        child->mouseMoveEvent(&me);
+        *event -= child->position();
+        child->mouseMoveEvent(event);
     }
 }
 

@@ -2,7 +2,6 @@
 #define R64FX_GUI_VIEW_H
 
 #include "Scene.h"
-#include "menus.h"
 
 namespace r64fx{
     
@@ -35,8 +34,6 @@ public:
     virtual void mouseReleaseEvent(MouseEvent* event) = 0;
     
     virtual void mouseMoveEvent(MouseEvent* event) = 0;
-    
-    virtual ContextMenu* fetchContextMenu() = 0;
 };
 
 
@@ -75,8 +72,6 @@ protected:
     
 public:
     virtual void resize(int left, int top, int right, int bottom);
-    
-    virtual ContextMenu* fetchContextMenu();
 };
 
 
@@ -86,8 +81,6 @@ protected:
     
 public:
     virtual void resize(int left, int top, int right, int bottom);
-    
-    virtual ContextMenu* fetchContextMenu();
 };
 
     
@@ -136,8 +129,6 @@ public:
     VerticalSplitView* splitVertically(float ratio);
     
     HorizontalSplitView* splitHorizontally(float ratio);
-    
-    virtual ContextMenu* fetchContextMenu();
 };
     
 }//namespace r64fx

@@ -21,20 +21,15 @@ namespace r64fx{
 /* ==== View ================================================================================ */
 View::View(Scene* scene) : _scene(scene)
 {
-//     _panel.setBackgroundColor(0.5, 0.5, 0.5, 1.0);
 }
     
     
 void View::resize(int left, int top, int right, int bottom) 
 {
-    cout << "View::resize " << right << ", " << top << "\n";
     _rect.left = left;
     _rect.top = top;
     _rect.right = right; 
     _rect.bottom = bottom; 
-    
-//     _panel.setPosition(_rect.left, _rect.top);
-//     _panel.setWidth(_rect.width());
 }
     
     
@@ -121,15 +116,6 @@ HorizontalSplitView* View::splitHorizontally(float ratio)
     
     return hsv;
 }
-
-
-ContextMenu* View::fetchContextMenu()
-{
-    cerr << "ContextMenu* Widget::fetchContextMenu() [Not implemented!]";
-    abort();
-    return nullptr;
-}
-
 
 
 /* ==== SplitView ======================================================================= */
@@ -227,14 +213,6 @@ void VerticalSplitView::render_separator()
 }
 
 
-ContextMenu* VerticalSplitView::fetchContextMenu()
-{
-    cerr << "ContextMenu* Widget::fetchContextMenu() [Not implemented!]";
-    abort();
-    return nullptr;
-}
-
-
 void HorizontalSplitView::resize(int left, int top, int right, int bottom)
 {
     _rect.left = left;
@@ -257,14 +235,6 @@ void HorizontalSplitView::render_separator()
         glVertex2f(width() * splitRatio(), _rect.top);
         glVertex2f(width() * splitRatio(), _rect.bottom);
     glEnd();
-}
-
-
-ContextMenu* HorizontalSplitView::fetchContextMenu()
-{
-    cerr << "ContextMenu* Widget::fetchContextMenu() [Not implemented!]";
-    abort();
-    return nullptr;
 }
 
 
