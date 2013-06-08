@@ -11,8 +11,16 @@ class Texture{
     int _width = 0;
     int _height = 0;
     
+    void load_to_vram(int width, int height, int channel_count, int mode, unsigned char* bytes);
+    
 public:
     Texture(std::string path);
+    
+    Texture(int width, int height, int channel_count, int mode, unsigned char* bytes)
+    {
+        load_to_vram(width, height, channel_count, mode, bytes);
+    }
+    
    ~Texture();
     
     inline int width() const { return _width; }
@@ -23,6 +31,12 @@ public:
     inline void bind(int mode = GL_TEXTURE_2D) { glBindTexture(mode, _texture); }
     
     inline bool isValid() const { return _width && _height; }
+    
+    static void init();
+    
+    static Texture* defaultTexture();
+    
+    static void cleanup();
 };
     
 }//namespace r64fx

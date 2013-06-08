@@ -1,4 +1,7 @@
-#include "Icon.h" 
+#include "Icon.h"
+#include <iostream>
+
+using namespace std;
 
 namespace r64fx{
     
@@ -31,5 +34,6 @@ void Icon::resizeToFitTexture()
 {
     resize(_texture->width(), _texture->height());
 }
+
     
 }//namespace r64fx

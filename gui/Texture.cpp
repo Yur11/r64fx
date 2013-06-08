@@ -2,12 +2,14 @@
 #include <png.h>
 #include <GL/glu.h>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
 namespace r64fx{
     
-
+    
+vector<Texture*> all_texture_instances;
     
 Texture::Texture(std::string path)
 {
@@ -88,6 +90,17 @@ Texture::Texture(std::string path)
     png_read_image(png_ptr, row_pointers);
     fclose(file);
     
+    load_to_vram(_width, _height, channel_count, mode, data);
+    
+    delete[] row_pointers;
+    delete[] data;
+    
+    all_texture_instances.push_back(this);
+}
+
+
+void Texture::load_to_vram(int width, int height, int channel_count, int mode, unsigned char* bytes)
+{
     glGenTextures(1, &_texture);
     glBindTexture(GL_TEXTURE_2D, _texture);
     glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -98,16 +111,96 @@ Texture::Texture(std::string path)
 //     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
     
     
-    gluBuild2DMipmaps(GL_TEXTURE_2D, channel_count, _width, _height, mode, GL_UNSIGNED_BYTE, data);
-    
-    delete[] row_pointers;
-    delete[] data;
+    gluBuild2DMipmaps(GL_TEXTURE_2D, channel_count, width, height, mode, GL_UNSIGNED_BYTE, bytes);
 }
 
 
 Texture::~Texture()
 {
     glDeleteTextures(1, &_texture);
+    
+    for(int i=all_texture_instances.size() - 1; i>=0; i--)
+    {
+        if(all_texture_instances[i] == this)
+        {
+            all_texture_instances.erase(all_texture_instances.begin() + i);
+        }
+    }
+}
+
+
+
+Texture* default_texture = nullptr;
+
+
+void Texture::init()
+{
+    /** Create default texture. */
+    const int width = 32;
+    const int height = 32;
+    const int mode = GL_RGBA;
+    unsigned char bytes[width * height * 4];
+    
+    for(int y=0; y<height; y++)
+    {
+        for(int x=0; x<width; x++)
+        {
+            unsigned color;
+            if(y < height / 2)
+            {
+                if(x < width / 2)
+                {
+                    color = 0;
+                }
+                else
+                {
+                    color = 255;
+                }
+            }
+            else
+            {
+                if(x < width / 2)
+                {
+                    color = 255;
+                }
+                else
+                {
+                    color = 0;
+                }
+            }
+            
+            for(int ch=0; ch<3; ch++)
+            {
+                bytes[width * y * 4 + x * 4 + ch] = color;
+            }
+            
+            bytes[width * y * 4 + x * 4 + 3] = 255;
+        }
+    }
+    
+    default_texture = new Texture(width, height, 4, mode, bytes);
+}
+
+
+Texture* Texture::defaultTexture()
+{
+    return default_texture;
+}
+
+
+void Texture::cleanup()
+{
+    /* If all works well the all_texture_instances vector 
+     * should be cleared by the code in the destructor.
+     * 
+     * I know this is quite hackish.
+     * 
+     * This allows to delete texture instaces individually as well as all at once.
+     */
+    while(!all_texture_instances.empty())
+    {
+        delete all_texture_instances.back();
+    }
 }
     
 }//namespace r64fx
