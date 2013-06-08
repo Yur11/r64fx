@@ -29,13 +29,13 @@ class Event{
     
 public:
     
-    inline WindowBase* originWindow() const { return origin_window; }
+    inline WindowBase* originWindow() const { return this->origin_window; }
 
     inline Scene* scene() const { return _scene; }
     
     
 private:
-    inline void setOriginWindow(WindowBase* window) { origin_window = window; }
+    inline void setOriginWindow(WindowBase* window) { this->origin_window = window; }
 
     inline void setScene(Scene* scene) { _scene = scene; }
     

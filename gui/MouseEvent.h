@@ -49,15 +49,10 @@ public:
     
     inline unsigned int buttons() const { return _buttons; }
     
-    inline MouseEvent operator+(Point<float> other) { return MouseEvent(x() + other.x, y() + other.y, buttons()); }
-    inline MouseEvent operator-(Point<float> other) { return MouseEvent(x() - other.x, y() - other.y, buttons()); }
-    inline MouseEvent operator*(Point<float> other) { return MouseEvent(x() * other.x, y() * other.y, buttons()); }
-    inline MouseEvent operator*(float coeff) { return MouseEvent(x() * coeff, y() * coeff, buttons()); }
-    
-    inline void operator+=(Point<float> other) { *this = *this + other; }
-    inline void operator-=(Point<float> other) { *this = *this - other; }
-    inline void operator*=(Point<float> other) { *this = *this * other; }
-    inline void operator*=(float coeff) { *this = *this * coeff; }
+    inline void operator+=(Point<float> other) { this->_position += other; }
+    inline void operator-=(Point<float> other) { this->_position -= other; }
+    inline void operator*=(Point<float> other) { this->_position *= other; }
+    inline void operator*=(float coeff) { this->_position *= coeff; }
 };
 
 }//namespace r64fx
