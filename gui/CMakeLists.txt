@@ -20,6 +20,7 @@ add_library(r64fx_gui
     Font.cpp
     Message.cpp
     Keyboard.cpp
+    KeyboardShortcut.cpp
 ) 
 # add_executable(r64fx_gui_example example.cpp)
 

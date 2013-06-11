@@ -4,6 +4,7 @@
 #include "containers.h"
 #include "TextLine.h"
 #include "Icon.h"
+#include "KeyboardShortcut.h"
 
 namespace r64fx{
     

@@ -130,7 +130,6 @@ const unsigned int Keyboard::Modifier::RightGui;
 const unsigned int Keyboard::Modifier::Numlock;
 
 map<unsigned int, const char*> key2str;
-map<unsigned int, const char*> mod2str;
 
 void Keyboard::init()
 {
@@ -245,17 +244,6 @@ void Keyboard::init()
     key2str[Keyboard::Key::Sysreq] = "Sysreq";
     key2str[Keyboard::Key::Menu] = "Menu";
     key2str[Keyboard::Key::Power] = "Power";
-    
-    mod2str[Keyboard::Modifier::None] = "None";
-    mod2str[Keyboard::Modifier::LeftShift]  = "Shift";
-    mod2str[Keyboard::Modifier::RightShift] = "Shift";
-    mod2str[Keyboard::Modifier::LeftCtrl] = "Ctrl";
-    mod2str[Keyboard::Modifier::RightCtrl] = "Ctrl";
-    mod2str[Keyboard::Modifier::LeftAlt] = "Alt";
-    mod2str[Keyboard::Modifier::RightAlt] = "Alt";
-    mod2str[Keyboard::Modifier::LeftGui] = "Gui";
-    mod2str[Keyboard::Modifier::RightGui] = "Gui";
-    mod2str[Keyboard::Modifier::Numlock] = "NumLock";
 }
 
 
@@ -266,12 +254,5 @@ const char* Keyboard::Key::str(unsigned int key)
     return it->second;
 }
 
-
-const char* Keyboard::Modifier::str(unsigned int mod)
-{
-    auto it = mod2str.find(mod);
-    if(it == mod2str.end()) return nullptr;
-    return it->second;
-}
 
 }//namespace r64fx

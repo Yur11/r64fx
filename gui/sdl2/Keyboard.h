@@ -117,7 +117,7 @@ struct Keyboard{
         static const unsigned int Menu = SDL_SCANCODE_MENU;
         static const unsigned int Power = SDL_SCANCODE_POWER;
         
-        const char* str(unsigned int);
+        static const char* str(unsigned int);
     };
     
     struct Modifier{
@@ -131,8 +131,6 @@ struct Keyboard{
         static const unsigned int LeftGui = KMOD_LGUI;
         static const unsigned int RightGui = KMOD_RGUI;
         static const unsigned int Numlock = KMOD_NUM;
-        
-        const char* str(unsigned int);
     };
     
     static void init();
