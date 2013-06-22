@@ -1,5 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
-project(r64fx_gui)
+#r64fx gui
 
 add_library(r64fx_gui
     SHARED
@@ -22,32 +21,5 @@ add_library(r64fx_gui
     Keyboard.cpp
     KeyboardShortcut.cpp
 ) 
-# add_executable(r64fx_gui_example example.cpp)
+target_link_libraries(r64fx_gui r64fx_serialize r64fx_utf8string SDL2 GL GLU ftgl png)
 
-target_link_libraries(r64fx_gui SDL2 GL GLU ftgl png Utf8String)
-
-# target_link_libraries(r64fx_gui_example r64fx_gui)
-
-# install(TARGETS r64fx_gui DESTINATION lib)
-# install(TARGETS r64fx_gui_example DESTINATION bin)
-# install(
-#     FILES 
-#     WindowBase.h
-#     Window.h 
-#     View.h 
-#     Scene.h
-#     Widget.h 
-#     containers.h 
-#     Dummy.h
-#     TextLine.h
-#     TextEdit.h
-#     Icon.h
-#     TextEdit.h
-#     Config.h
-#     MenuItem.h
-#     Font.h
-#     Message.h
-#     
-#     DESTINATION
-#     include/r64fx/gui
-# )
