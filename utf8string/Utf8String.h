@@ -3,6 +3,8 @@
 
 #include <string>
 
+namespace r64fx{
+
 /** @brief Utf-8 wrapper for std::string. */
 class Utf8String{
 public:
@@ -50,5 +52,6 @@ public:
     void erase(int position, int n);
 };
 
+}//namespace r64fx
 
 #endif//UTF_8_STRING_H

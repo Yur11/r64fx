@@ -5,6 +5,7 @@
 
 using namespace std;
 
+namespace r64fx{
 
 template<typename T> string str(T x)
 {
@@ -549,3 +550,5 @@ JsonString JsonWriter::writeJson(JsonVariant variant, JsonString indent_item)
     writer.write(variant);
     return writer.text;
 }
+
+}//namespace r64fx

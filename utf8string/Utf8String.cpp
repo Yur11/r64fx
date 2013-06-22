@@ -1,5 +1,7 @@
 #include "Utf8String.h"
 
+namespace r64fx{
+
 std::string Utf8String::operator[](unsigned int index)
 {
     int byte = bytes_up_to(index);
@@ -97,3 +99,5 @@ void Utf8String::erase(int position, int n)
     int end_byte = bytes_from_to(begin_byte, n);
     stdstr.erase(begin_byte, end_byte - begin_byte);
 }
+
+}//namespace r64fx

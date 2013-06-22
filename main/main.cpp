@@ -54,10 +54,10 @@ int main()
         View view(&scene);
         window.setView(&view);
             
-        TextLine line("Hello, world! йцукенгшщзхъфывапролджэячсмитьбю");
+        TextLine line("йцукенгшщзхъфывапролджэячсмитьбю");
         scene.appendWidget(&line);
         line.setPosition(100, 100);
-        line.font()->setFaceSize(72);
+        line.font()->setFaceSize(40);
         line.update();
         
 //         Dummy dummy(200, 200);

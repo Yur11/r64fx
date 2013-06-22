@@ -1,10 +1,11 @@
-#ifndef R64FX__JSON_H
-#define R64FX__JSON_H
+#ifndef R64FX_JSON_H
+#define R64FX_JSON_H
 
 #include <string>
 #include <vector>
 #include <map>
 
+namespace r64fx{
 
 typedef std::string JsonString;
 class JsonObject;
@@ -334,4 +335,6 @@ public:
     static JsonString writeJson(JsonVariant variant, JsonString indent_item = "    ");
 };
 
-#endif//R64FX__JSON_H
+}//namespace r64fx
+
+#endif//R64FX_JSON_H
