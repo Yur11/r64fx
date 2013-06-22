@@ -4,11 +4,15 @@ using namespace std;
 
 namespace r64fx{
     
-/* Directories where r64fx will look for the data. */
+/** Directories where r64fx will look for the data. 
+ *  Enteries must end with a slash.
+ */
 vector<string> ____data_paths = {
     "./",
+    "./data/",
     "~/.r64fx/",
     "/usr/share/r64fx/",
+    "",
 };
 
 

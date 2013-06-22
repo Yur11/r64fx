@@ -7,7 +7,6 @@ include_directories(${CMAKE_SOURCE_DIR}/gui)
 
 add_executable(r64fx
     main.cpp
-    data_paths.cpp
 )
 
 link_directories(${CMAKE_BINARY_DIR}/base)
@@ -18,5 +17,3 @@ target_link_libraries(r64fx
     r64fx_gui
     SDL2
 )
-
-install(TARGETS r64fx DESTINATION bin)

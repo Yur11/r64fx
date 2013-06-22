@@ -32,7 +32,8 @@ public:
     , _font(font)
     , text_color(0.0, 0.0, 0.0)
     , text(text)
-    {}
+    {
+    }
     
     inline Font* font() const { return _font; }
     

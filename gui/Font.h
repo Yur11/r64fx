@@ -11,7 +11,13 @@ class Font{
     FTGLTextureFont _ftfont;
     
 public:
-    Font(const char* path) : _ftfont(path) {}
+    Font(std::string path) : _ftfont(path.c_str()) {}
+    
+    Font(const Font &other) : _ftfont(other._ftfont) {};
+    
+    Font(FTGLTextureFont ftfont) : _ftfont(ftfont) {}
+    
+    inline bool isOk() { return !_ftfont.Error(); }
     
     inline void render(const char* text) { _ftfont.Render(text); }
     
@@ -32,8 +38,19 @@ public:
     static void init();
     
     static Font* defaultFont();
+
+    static Font* find(std::string name);
     
     static void cleanup();
+    
+    class Error{
+        std::string _message;
+        
+    public:
+        Error(std::string message) : _message(message) {}
+        
+        inline std::string message() const { return _message; }
+    };
 };
     
 }//namespace r64fx

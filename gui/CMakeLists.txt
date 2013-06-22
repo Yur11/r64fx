@@ -21,5 +21,14 @@ add_library(r64fx_gui
     Keyboard.cpp
     KeyboardShortcut.cpp
 ) 
-target_link_libraries(r64fx_gui r64fx_serialize r64fx_utf8string SDL2 GL GLU ftgl png)
+target_link_libraries(r64fx_gui 
+    r64fx_serialize 
+    r64fx_utf8string 
+    r64fx_paths 
+    SDL2 
+    GL 
+    GLU 
+    ftgl 
+    png
+)
 

@@ -36,57 +36,52 @@ int main()
     Window window(800, 600, "r64fx");
     window.makeCurrent();
     
-    /* Initialize default texture. */
-    Texture::init();
-    
-    /* Initialize default font. */
-    Font::init();
-    
-    /*  */
-    Keyboard::init();
-    
-    /* These should be loaded from a file. */
-    Scene scene;
-    
-    /* Setup root view of the main window. */
-    View view(&scene);
-    window.setView(&view);
-        
-    /* Remove this.*/
-    Dummy dummy1(100, 100);
-    Dummy dummy2(100, 100);
-    Dummy dummy3(200, 100);
-    
-    Dummy::initDebugMenu();
-    
-    HorizontalContainer c;
-    c.appendWidget(&dummy1);
-    c.appendWidget(&dummy2);
-    c.appendWidget(&dummy3);
-    c.setPadding(10);
-    c.setSpacing(5);
-    c.setPosition(650, 150);
-    c.update();
-    
-    scene.appendWidget(&c);
-    
-    Dummy dummy4(100, 100);
-    dummy4.setPosition(100, 100);
-    
-    scene.appendWidget(&dummy4);
-    
-    /* Main event loop. */
-    for(;;)
+    try
     {
-        Window::processEvents();
+        /* Initialize default texture. */
+        Texture::init();
         
-        //Process other stuff here.
+        /* Initialize default font. */
+        Font::init();
         
-        window.render();
-        window.swapBuffers();
-        if(Window::shouldQuit()) break;
-        usleep(3000);
+        /*  */
+        Keyboard::init();
+        
+        /* These should be loaded from a file. */
+        Scene scene;
+        
+        /* Setup root view of the main window. */
+        View view(&scene);
+        window.setView(&view);
+            
+        TextLine line("Hello, world! йцукенгшщзхъфывапролджэячсмитьбю");
+        scene.appendWidget(&line);
+        line.setPosition(100, 100);
+        line.font()->setFaceSize(72);
+        line.update();
+        
+//         Dummy dummy(200, 200);
+//         scene.appendWidget(&dummy);
+//         dummy.setPosition(300, 50);
+//                 
+        /* Main event loop. */
+        for(;;)
+        {
+            Window::processEvents();
+            
+            //Process other stuff here.
+            
+            window.render();
+            window.swapBuffers();
+            if(Window::shouldQuit()) break;
+            usleep(3000);
+        }
     }
+    catch(Font::Error font_error)
+    {
+        cerr << "Font::Error " << font_error.message() << "\n";
+    }
+    
     
     /* Clean things up before exiting. */
     Texture::cleanup();

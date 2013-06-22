@@ -11,7 +11,7 @@ void TextLine::render()
         glTranslated(paddingLeft(), paddingBottom() + _font->descender(), 0.0);
         glColor(this->textColor());
         _font->render(text.stdstr.c_str());
-    glPopMatrix();
+    glPopMatrix();    
 }
 
 
