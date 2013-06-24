@@ -14,28 +14,21 @@ include_directories(
     /usr/include/freetype2 
     ${CMAKE_SOURCE_DIR}/utf8string
     ${CMAKE_SOURCE_DIR}/json
-    ${CMAKE_SOURCE_DIR}/serialize
     ${CMAKE_SOURCE_DIR}/base
     ${CMAKE_SOURCE_DIR}/gui
-    ${CMAKE_SOURCE_DIR}/paths
-    
 )
 
 link_directories(
     ${CMAKE_BINARY_DIR}/utf8string
     ${CMAKE_BINARY_DIR}/json
-    ${CMAKE_BINARY_DIR}/serialize
     ${CMAKE_BINARY_DIR}/base
     ${CMAKE_BINARY_DIR}/gui
-    ${CMAKE_BINARY_DIR}/paths
 )
 
 add_subdirectory(utf8string)
 add_subdirectory(json)
-add_subdirectory(serialize)
 add_subdirectory(base)
 add_subdirectory(gui)
-add_subdirectory(paths)
 add_subdirectory(main)
 
 

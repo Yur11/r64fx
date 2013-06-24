@@ -35,13 +35,12 @@ public:
     
     inline FTTextureFont &ftfont() { return _ftfont; }
     
-    static void init();
-    
-    static Font* defaultFont();
 
-    static Font* find(std::string name);
-    
-    static void cleanup();
+    /* Remove this! */
+    static void initDefaultFont(Font* font);
+
+    /* Remove this! */
+    static Font* defaultFont();
     
     class Error{
         std::string _message;

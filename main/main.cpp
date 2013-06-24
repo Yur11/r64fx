@@ -5,13 +5,16 @@
 #include "Icon.h"
 #include "Dummy.h"
 #include "Keyboard.h"
+#include <Json.h>
 
 using namespace std;
 
 
 namespace r64fx{
-    
-    
+
+#include "data_paths.cpp"
+#include "serialize.cpp"
+
     
 }//namespace r64fx
 
@@ -28,64 +31,67 @@ int main()
     
     /*
      * Main window opened by default. 
-     * This creates OpenGL context.
+     * This creates an OpenGL context.
      * 
      * A lot of things in the gui can be done only after this step.
      * This is true for everything that has to do with rendering or texture loading.
      */
     Window window(800, 600, "r64fx");
     window.makeCurrent();
-    
-    try
+
+    /*  */
+    Keyboard::init();
+
+    /* Initializ default texture. */
+    Texture::init();
+
+    /* Find an initialize the default font. */
+    string default_font_path = find_path("fonts/Xolonium-Regular.otf");
+    if(default_font_path.empty())
     {
-        /* Initialize default texture. */
-        Texture::init();
-        
-        /* Initialize default font. */
-        Font::init();
-        
-        /*  */
-        Keyboard::init();
-        
-        /* These should be loaded from a file. */
-        Scene scene;
-        
-        /* Setup root view of the main window. */
-        View view(&scene);
-        window.setView(&view);
-            
-        TextLine line("йцукенгшщзхъфывапролджэячсмитьбю");
-        scene.appendWidget(&line);
-        line.setPosition(100, 100);
-        line.font()->setFaceSize(40);
-        line.update();
-        
-//         Dummy dummy(200, 200);
-//         scene.appendWidget(&dummy);
-//         dummy.setPosition(300, 50);
-//                 
-        /* Main event loop. */
-        for(;;)
-        {
-            Window::processEvents();
-            
-            //Process other stuff here.
-            
-            window.render();
-            window.swapBuffers();
-            if(Window::shouldQuit()) break;
-            usleep(3000);
-        }
+        cerr << "Failed to find default font file!\n";
+        abort();
     }
-    catch(Font::Error font_error)
+
+    Font font(default_font_path);
+    if(font.isOk())
     {
-        cerr << "Font::Error " << font_error.message() << "\n";
+        Font::initDefaultFont(&font);
+    }
+    else
+    {
+        cerr << "Problem creating default font!\n";
+        abort();
+    }
+
+
+    /* These should be loaded from a file. */
+    Scene scene;
+
+    /* Setup root view of the main window. */
+    View view(&scene);
+    window.setView(&view);
+
+    Dummy dummy(150, 150);
+    scene.appendWidget(&dummy);
+    dummy.setPosition(100, 100);
+
+    /* Main event loop. */
+    for(;;)
+    {
+        Window::processEvents();
+
+        //Process other stuff here.
+
+        window.render();
+        window.swapBuffers();
+        if(Window::shouldQuit()) break;
+        usleep(3000);
     }
     
-    
-    /* Clean things up before exiting. */
+
+    /* Cleanup things up before exiting. */
     Texture::cleanup();
-    Font::cleanup();
     Window::cleanup();
     
     return 0;
