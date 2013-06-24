@@ -14,7 +14,7 @@ namespace r64fx{
 
 #include "data_paths.cpp"
 #include "serialize.cpp"
-
+#include "xolonium_regular_font.cpp"
     
 }//namespace r64fx
 
@@ -42,18 +42,12 @@ int main()
     /*  */
     Keyboard::init();
 
-    /* Initializ default texture. */
+    /* Initialize default texture. */
     Texture::init();
 
-    /* Find an initialize the default font. */
-    string default_font_path = find_path("fonts/Xolonium-Regular.otf");
-    if(default_font_path.empty())
-    {
-        cerr << "Failed to find default font file!\n";
-        abort();
-    }
 
-    Font font(default_font_path);
+    /* Initialize default font. */
+    Font font(xolonium_regular_font, xolonium_regular_font_size);
     if(font.isOk())
     {
         Font::initDefaultFont(&font);
@@ -75,6 +69,12 @@ int main()
     Dummy dummy(150, 150);
     scene.appendWidget(&dummy);
     dummy.setPosition(100, 100);
+
+    TextLine line("Session Edit View Help");
+    scene.appendWidget(&line);
+    line.font()->setFaceSize(20);
+    line.update();
+    line.setPosition(100, 400);
 
     /* Main event loop. */
     for(;;)

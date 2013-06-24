@@ -15,6 +15,8 @@ public:
     
     Font(const Font &other) : _ftfont(other._ftfont) {};
     
+    Font(const unsigned char* bytes, unsigned int nbytes) : _ftfont(FTGLTextureFont(bytes, nbytes)) {}
+
     Font(FTGLTextureFont ftfont) : _ftfont(ftfont) {}
     
     inline bool isOk() { return !_ftfont.Error(); }
