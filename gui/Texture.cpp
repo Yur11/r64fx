@@ -131,6 +131,7 @@ Texture::~Texture()
 
 
 Texture* default_texture = nullptr;
+Texture* transparent_16x16 = nullptr;
 
 
 void Texture::init()
@@ -179,12 +180,35 @@ void Texture::init()
     }
     
     default_texture = new Texture(width, height, 4, mode, bytes);
+
+
+    /* Create transparent 16x16 texture. */
+    for(int y=0; y<16; y++)
+    {
+        for(int x=0; x<16; x++)
+        {
+            for(int ch=0; ch<3; ch++)
+            {
+                bytes[16 * y * 4 + x * 4 + ch] = 0;
+            }
+
+            bytes[16 * y * 4 + x * 4 + 3] = 0;
+        }
+    }
+
+    transparent_16x16 = new Texture(16, 16, 4, GL_RGBA, bytes);
 }
 
 
 Texture* Texture::defaultTexture()
 {
     return default_texture;
+}
+
+
+Texture* Texture::transparent16x16()
+{
+    return transparent_16x16;
 }
 
 

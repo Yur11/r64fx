@@ -2,6 +2,7 @@
 #define R64FX_GUI_MENU_H
 
 #include "MenuItem.h"
+#include "containers.h"
 
 namespace r64fx{
     

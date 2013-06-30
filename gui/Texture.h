@@ -35,6 +35,8 @@ public:
     static void init();
     
     static Texture* defaultTexture();
+
+    static Texture* transparent16x16();
     
     static void cleanup();
 };

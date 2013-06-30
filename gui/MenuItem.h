@@ -1,26 +1,19 @@
 #ifndef R64FX_GUI_MENU_ITEM_H
 #define R64FX_GUI_MENU_ITEM_H
 
-#include "containers.h"
-#include "TextLine.h"
-#include "Icon.h"
-#include "KeyboardShortcut.h"
+#include "Widget.h"
+#include "Action.h"
 
 namespace r64fx{
     
-/** @brief A widget to be clicked on. Can be a menu item or something. */
-class MenuItem : public HorizontalContainer{
-    
-public:
-    MenuItem(Icon* icon = nullptr, TextLine* _caption = nullptr, TextLine* _shortcut = nullptr, Widget* parent = nullptr);
+/** @brief A widget to be put inside a menu. */
+class MenuItem : public Widget{
+    Action* _action;
 
-    Message on_click;
+public:
+    MenuItem(Action* action, Widget* parent = nullptr);
     
-    inline Icon* icon() const { return (Icon*) child(0); }
-    
-    inline TextLine* caption() const { return (TextLine*) child(1); }
-    
-    inline TextLine* shortcut() const { return (TextLine*) child(2); }
+    virtual Action* action() const { return _action; }
     
     virtual void mousePressEvent(MouseEvent* event);
     

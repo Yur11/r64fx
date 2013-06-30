@@ -35,5 +35,11 @@ void Icon::resizeToFitTexture()
     resize(_texture->width(), _texture->height());
 }
 
+
+Icon* Icon::newDefaultIcon()
+{
+    return new Icon(Texture::transparent16x16());
+}
+
     
 }//namespace r64fx

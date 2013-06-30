@@ -22,6 +22,8 @@ public:
     virtual void render();
     
     void resizeToFitTexture();
+
+    static Icon* newDefaultIcon();
 };
     
 }//namespace r64fx

@@ -59,12 +59,6 @@ void Dummy::initDebugMenu()
     if(_debug_menu) return;
     
     _debug_menu = new Menu;
-    _debug_menu->appendWidget(new MenuItem(new Icon(Texture::defaultTexture()), new TextLine("bla bla bla"), new TextLine("Ctrl + bla")));
-    _debug_menu->appendWidget(new MenuItem(new Icon(Texture::defaultTexture()), new TextLine("bla bla bla"), new TextLine("Ctrl + bla")));
-    _debug_menu->appendWidget(new MenuItem(new Icon(Texture::defaultTexture()), new TextLine("bla bla bla"), new TextLine("Ctrl + bla")));
-    _debug_menu->appendWidget(new MenuItem(new Icon(Texture::defaultTexture()), new TextLine("bla bla bla"), new TextLine("Ctrl + bla")));
-    _debug_menu->appendWidget(new MenuItem(new Icon(Texture::defaultTexture()), new TextLine("bla bla bla"), new TextLine("Ctrl + bla")));
-    _debug_menu->setSpacing(10);
     _debug_menu->update();
 }
     

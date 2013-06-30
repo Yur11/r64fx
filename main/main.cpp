@@ -4,7 +4,9 @@
 #include "Window.h"
 #include "Icon.h"
 #include "Dummy.h"
+#include "TextEdit.h"
 #include "Keyboard.h"
+#include "Font.h"
 #include <Json.h>
 
 using namespace std;
@@ -72,7 +74,7 @@ int main()
 
     TextLine line("Session Edit View Help");
     scene.appendWidget(&line);
-    line.font()->setFaceSize(20);
+    line.font()->setFaceSize(16);
     line.update();
     line.setPosition(100, 400);
 
