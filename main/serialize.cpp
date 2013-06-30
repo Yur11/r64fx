@@ -1,4 +1,5 @@
 /* Serialization/Deserialization routines for r64fx classes. */
+namespace r64fx{
 
 /** @brief Error thrown by serialization/deserialization routines.*/
 class SerializationError{
@@ -87,3 +88,5 @@ void deserialize_widget(JsonValue value, Widget* &widget)
         Json::readObject((*obj)["size"])
     ));
 }
+
+}//namespace r64fx

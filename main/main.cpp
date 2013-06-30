@@ -1,5 +1,7 @@
 #include <iostream>
+#include <map>
 #include <unistd.h>
+
 #include "Config.h"
 #include "Window.h"
 #include "Icon.h"
@@ -7,17 +9,17 @@
 #include "TextEdit.h"
 #include "Keyboard.h"
 #include "Font.h"
-#include <Json.h>
+#include "Json.h"
 
 using namespace std;
 
+#include "data_paths.cpp"
+#include "filesystem.cpp"
+#include "translator.cpp"
+#include "serialize.cpp"
 
 namespace r64fx{
-
-#include "data_paths.cpp"
-#include "serialize.cpp"
 #include "xolonium_regular_font.cpp"
-    
 }//namespace r64fx
 
 
@@ -47,7 +49,6 @@ int main()
     /* Initialize default texture. */
     Texture::init();
 
-
     /* Initialize default font. */
     Font font(xolonium_regular_font, xolonium_regular_font_size);
     if(font.isOk())
@@ -60,6 +61,7 @@ int main()
         abort();
     }
 
+    tr.loadLanguage("ru");
 
     /* These should be loaded from a file. */
     Scene scene;
@@ -72,7 +74,7 @@ int main()
     scene.appendWidget(&dummy);
     dummy.setPosition(100, 100);
 
-    TextLine line("Session Edit View Help");
+    TextLine line(tr("Session") + " " + tr("Edit") + " " + tr("View") + " " + tr("Graph") + " " + tr("Undo") + " " + tr("Redo"));
     scene.appendWidget(&line);
     line.font()->setFaceSize(16);
     line.update();

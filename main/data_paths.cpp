@@ -1,3 +1,5 @@
+namespace r64fx{
+
 /** Directories where r64fx will look for the data. 
  *  Enteries must end with a slash!
  */
@@ -29,3 +31,5 @@ string find_path(string item)
 
     return "";
 }
+
+}//namespace r64fx
