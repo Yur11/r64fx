@@ -5,13 +5,22 @@ using namespace std;
 using namespace r64fx;
 
 
-long int num1 = 20;
-long int num2 = 40;
+float v1[4] = { 1.0, 2.0, 3.0, 4.0 };
+float v2[4] = { 0.1, 0.1, 0.1, 0.1 };
 
+ostream &operator<<(ostream &ost, float vec[4])
+{
+    ost << vec[0] << ", " << vec[1] << ", " << vec[2] << ", " << vec[3];
+    return ost;
+}
 
 int main()
 {
     Assembler a;
+    a.movups(xmm4, &v1);
+    a.addps(xmm4, &v2);
+    a.movups(&v2, xmm4);
+
     a.mov(rax, 111);
     a.ret();
 
@@ -19,11 +28,7 @@ int main()
     Fun fun = (Fun) a.getFun();
 
     cout << "-----\n";
-    cout << "num1: " << num1 << "\n";
-    cout << "num2: " << num2 << "\n";
     cout << "fun: [" << fun() << "]\n";
-    cout << "num1: " << num1 << "\n";
-    cout << "num2: " << num2 << "\n";
     cout << "-----\n";
 
     return 0;

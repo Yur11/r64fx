@@ -1053,6 +1053,14 @@ public:
     void sub(GPR64 dst, GPR64 src);
     void sub(GPR64 reg, unsigned int imm);
 
+    /* SSE */
+    void addps(Xmm dst, Xmm src);
+    void addps(Xmm reg, Mem128 mem);
+
+
+    void movups(Xmm dst, Xmm src);
+    void movups(Xmm reg, Mem128 mem);
+    void movups(Mem128, Xmm reg);
 
 };//Assembler
 

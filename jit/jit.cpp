@@ -2,6 +2,8 @@
 
 namespace r64fx{
 
+inline unsigned char Disp8(unsigned char disp) { return disp; }
+
 void Assembler::add(GPR32 reg, Mem32 mem)
 {
     if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
@@ -24,7 +26,10 @@ void Assembler::add(GPR32 dst, GPR32 src)
 {
     if(src.prefix_bit() || dst.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
     bytes << 0x03;
-    bytes << ModRM(b11, dst.code(), src.code());
+    if(src.code() & b101)
+        bytes << ModRM(b10, dst.code(), src.code()) << Disp8(0);
+    else
+        bytes << ModRM(b11, dst.code(), src.code());
 }
 
 
@@ -205,6 +210,49 @@ void Assembler::sub(GPR64 reg, unsigned int imm)
     bytes << 0x81;
     bytes << ModRM(b11, 0x5, reg.code());
     bytes << Imm32(imm);
+}
+
+
+void Assembler::addps(Xmm dst, Xmm src)
+{
+    if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x0F << 0x58;
+    bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::addps(Xmm reg, Mem128 mem)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0x58;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::movups(Xmm dst, Xmm src)
+{
+    if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x0F << 0x10;
+    bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::movups(Xmm reg, Mem128 mem)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0x10;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::movups(Mem128 mem, Xmm reg)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0x11;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
 }
 
 }//namespace r64fx
