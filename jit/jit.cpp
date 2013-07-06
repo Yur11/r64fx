@@ -1,4 +1,5 @@
 #include "jit.h"
+#include <iostream>
 
 namespace r64fx{
 
@@ -26,10 +27,7 @@ void Assembler::add(GPR32 dst, GPR32 src)
 {
     if(src.prefix_bit() || dst.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
     bytes << 0x03;
-    if(src.code() & b101)
-        bytes << ModRM(b10, dst.code(), src.code()) << Disp8(0);
-    else
-        bytes << ModRM(b11, dst.code(), src.code());
+    bytes << ModRM(b11, dst.code(), src.code());
 }
 
 
@@ -132,7 +130,10 @@ void Assembler::mov(GPR64 dst, GPR64 src)
 {
     bytes << Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
     bytes << 0x8B;
-    bytes << ModRM(b11, dst.code(), src.code());
+    if(src.code() == b0101 || src.code() == b1101)
+        bytes << ModRM(b10, dst.code(), src.code()) << Disp8(0);
+    else
+        bytes << ModRM(b11, dst.code(), src.code());
 }
 
 
@@ -140,6 +141,36 @@ void Assembler::mov(GPR64 reg, unsigned long long imm)
 {
     bytes << Rex(1, 0, 0, reg.prefix_bit());
     bytes << (0xB8 + (reg.code() & b0111)) << Imm64(imm);
+}
+
+
+void Assembler::push(GPR64 reg)
+{
+    bytes << Rex(1, 0, 0, reg.prefix_bit());
+    bytes << (0x50 + (reg.code() & b0111));
+}
+
+
+void Assembler::push(unsigned int imm)
+{
+    bytes << Rex(1, 0, 0, 0);
+    if(imm < 256)
+    {
+        bytes << 0x6A;
+        bytes << Imm8(imm);
+    }
+    else
+    {
+        bytes << 0x68;
+        bytes << Imm32(imm);
+    }
+}
+
+
+void Assembler::pop(GPR64 reg)
+{
+    bytes << Rex(1, 0, 0, reg.prefix_bit());
+    bytes << (0x58 + (reg.code() & b0111));
 }
 
 

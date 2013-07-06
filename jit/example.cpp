@@ -17,11 +17,9 @@ ostream &operator<<(ostream &ost, float vec[4])
 int main()
 {
     Assembler a;
-    a.movups(xmm4, &v1);
-    a.addps(xmm4, &v2);
-    a.movups(&v2, xmm4);
-
-    a.mov(rax, 111);
+    a.push(1000);
+    a.mov(rax, 4);
+    a.pop(rax);
     a.ret();
 
     typedef long int (*Fun)();

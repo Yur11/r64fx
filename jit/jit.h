@@ -1043,6 +1043,12 @@ public:
     void mov(GPR64 reg, unsigned long long imm);
 
 
+    void push(GPR64 reg);
+    void push(unsigned int imm);
+
+    void pop(GPR64 reg);
+
+
     void sub(GPR32 reg, Mem32 mem);
     void sub(Mem32 mem, GPR32 reg);
     void sub(GPR32 dst, GPR32 src);
