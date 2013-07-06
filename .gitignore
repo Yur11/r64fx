@@ -3,3 +3,4 @@ core
 .kateproject.d
 script
 tools/build_resource
+example
