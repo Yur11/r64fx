@@ -6,24 +6,23 @@
 
 namespace r64fx{
     
-class Icon : public Widget{
-    Texture* _texture = nullptr;
-    
-public:
-    Icon(Texture* texture,  Widget* parent = nullptr) 
-        : Widget(parent),  _texture(texture) {}
-    
-    Icon(std::string path, Widget* parent = nullptr) 
-        : Widget(parent),  _texture(new Texture(path)) {}
-        
-    Icon(int width, int height, int channel_count, int mode, unsigned char* bytes, Widget* parent = nullptr)
-        : Widget(parent), _texture(new Texture(width, height, channel_count, mode, bytes)) {}
-    
-    virtual void render();
-    
-    void resizeToFitTexture();
+class Icon{
+    Texture* _texture;
 
-    static Icon* newDefaultIcon();
+public:
+    Size<float> size;
+
+    Icon(Size<float> size = {32, 32}, Texture* texture = nullptr)
+    : _texture(texture)
+    {}
+
+    inline bool isOk() const { return _texture != nullptr; }
+
+    void render();
+
+    static Icon find(std::string name);
+
+    static Icon defaultIcon();
 };
     
 }//namespace r64fx

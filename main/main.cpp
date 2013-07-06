@@ -61,7 +61,7 @@ int main()
         abort();
     }
 
-    tr.loadLanguage("ru");
+    tr.loadLanguage("en");
 
     /* These should be loaded from a file. */
     Scene scene;

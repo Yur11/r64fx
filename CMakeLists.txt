@@ -14,6 +14,7 @@ include_directories(
     /usr/include/freetype2 
     ${CMAKE_SOURCE_DIR}/utf8string
     ${CMAKE_SOURCE_DIR}/json
+    ${CMAKE_SOURCE_DIR}/jit
     ${CMAKE_SOURCE_DIR}/base
     ${CMAKE_SOURCE_DIR}/gui
 )
