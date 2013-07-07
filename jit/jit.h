@@ -518,24 +518,13 @@ const unsigned int b11111110 = 254;
 const unsigned int b11111111 = 255;
 
 
-/* Generator errors. */
-class Error{
-    const char* _message;
-    
-public:
-    Error(const char* message) : _message(message) {}
-    
-    inline const char* message() const { return _message; }
-};
-
-
 /* Immediate operands. */
 class Imm8{
     friend class CodeBuffer;
     unsigned char byte;
     
 public:
-    Imm8(unsigned char byte)
+    explicit Imm8(unsigned char byte)
     {
         this->byte = byte;
     }
@@ -549,7 +538,7 @@ class Imm16{
     }bytes;
     
 public:
-    Imm16(unsigned short word)
+    explicit Imm16(unsigned short word)
     {
         bytes.word = word;
     }
@@ -564,7 +553,7 @@ class Imm32{
     }bytes;
     
 public:
-    Imm32(unsigned int dword)
+    explicit Imm32(unsigned int dword)
     {
         bytes.dword = dword;
     }
@@ -579,14 +568,18 @@ class Imm64{
     }bytes;
     
 public:
-    Imm64(unsigned long long qword)
+    explicit Imm64(unsigned long long qword)
     {
         bytes.qword = qword;
+    }
+
+    explicit Imm64(void* ptr)
+    {
+        bytes.qword = (long int) ptr;
     }
 }; 
 
 
-/* Classes that represent register of the x86_64 cpu. */
 class Register{
     const unsigned char _bits;
 
@@ -602,11 +595,10 @@ public:
 };
 
 
-/* General purpose registers */
 class GPR64 : public Register{
     
 public:
-    GPR64(const unsigned char bits) : Register(bits) {}
+    explicit GPR64(const unsigned char bits) : Register(bits) {}
 };
 
 const GPR64
@@ -632,7 +624,7 @@ const GPR64
 class GPR32 : public Register{
     
 public:
-    GPR32(const unsigned char bits) : Register(bits) {}
+    explicit GPR32(const unsigned char bits) : Register(bits) {}
 };
 
 const GPR32
@@ -658,7 +650,7 @@ const GPR32
 class GPR16 : public Register{
     
 public:
-    GPR16(const unsigned char bits) : Register(bits) {}
+    explicit GPR16(const unsigned char bits) : Register(bits) {}
 };
 
 const GPR16
@@ -676,7 +668,7 @@ const GPR16
 class GPR8 : public Register{
 
 public:
-    GPR8(const unsigned char bits) : Register(bits) {}
+    explicit GPR8(const unsigned char bits) : Register(bits) {}
 };
 
 const GPR8
@@ -691,11 +683,10 @@ const GPR8
 ;
 
 
-/* SSE registers */
 class Xmm : public Register{
 
 public:
-    Xmm(const unsigned char bits) : Register(bits) {}
+    explicit Xmm(const unsigned char bits) : Register(bits) {}
 };
 
 const Xmm
@@ -718,11 +709,10 @@ const Xmm
 ;
 
 
-/* AVX registers */
 class Ymm : public Register{
 
 public:
-    Ymm(const unsigned char bits) : Register(bits) {}
+    explicit Ymm(const unsigned char bits) : Register(bits) {}
 };
 
 const Ymm
@@ -747,7 +737,7 @@ const Ymm
 struct Mem8{
     long int addr;
     
-    Mem8(void* addr)
+    explicit Mem8(void* addr)
     {
         this->addr = (long int) addr;
     }
@@ -756,7 +746,7 @@ struct Mem8{
 struct Mem16{
     long int addr;
     
-    Mem16(void* addr)
+    explicit Mem16(void* addr)
     {
         this->addr = (long int) addr;
     }
@@ -765,7 +755,7 @@ struct Mem16{
 struct Mem32{
     long int addr;
     
-    Mem32(void* addr)
+    explicit Mem32(void* addr)
     {
         this->addr = (long int) addr;
     }
@@ -774,7 +764,7 @@ struct Mem32{
 struct Mem64{
     long int addr;
     
-    Mem64(void* addr)
+    explicit Mem64(void* addr)
     {
         this->addr = (long int) addr;
     }
@@ -783,7 +773,7 @@ struct Mem64{
 struct Mem128{
     long int addr;
     
-    Mem128(void* addr)
+    explicit Mem128(void* addr)
     {
         this->addr = (long int) addr;
     }
@@ -792,61 +782,24 @@ struct Mem128{
 struct Mem256{
     long int addr;
     
-    Mem256(void* addr)
+    explicit Mem256(void* addr)
     {
         this->addr = (long int) addr;
     }
 };
 
 
+struct Base{
+    GPR64 reg;
 
-/* Values used with cmpps */
-const unsigned char EQ    = b000;
-const unsigned char LT    = b001;
-const unsigned char LE    = b010;
-const unsigned char UNORD = b001;
-const unsigned char NEQ   = b100;
-const unsigned char NLT   = b101;
-const unsigned char NLE   = b110;
-const unsigned char ORD   = b111;
-
-
-struct Vex2{
-    unsigned char bytes[2];
-
-    Vex2(bool R, unsigned char ww, bool L, unsigned char pp)
-    {
-        bytes[0] = 0xC5;
-        bytes[1] = ((!R)<<7) | ((~ww)<<3) | (L<<2) | pp;
-    }
-};
-
-struct Vex3{
-    unsigned char bytes[3];
-
-    Vex3(bool R, bool X, bool B, unsigned char map_select, bool W, unsigned char ww, bool L, unsigned char pp)
-    {
-        bytes[0] = 0xC4;
-        bytes[1] = ((!R)<<7) | ((!X)<<6) | ((!B)<<5) | map_select;
-        bytes[2] = ((!W)<<7) | ((~ww)<<3) | (L<<2) | pp;
-    }
+    explicit Base(GPR64 reg) : reg(reg) {}
 };
 
 
-struct Rip{
-    int displacement;
-
-    /** Calculates RIP dislacement.*/
-    Rip(long int addr, unsigned char* next_ip)
-    {
-        long int _addr = (long int) addr;
-        long int _next_ip = (long int) next_ip;
-
-        long int _displacement = _addr - _next_ip;
-
-        displacement = (int) _displacement;
-    }
-};
+const unsigned char Scale1 = b00;
+const unsigned char Scale2 = b01;
+const unsigned char Scale4 = b10;
+const unsigned char Scale8 = b11;
 
 
 class CodeBuffer{
@@ -855,10 +808,7 @@ class CodeBuffer{
     int _npages;
     
 public:
-    CodeBuffer(int npages) : _npages(npages)
-    {
-        begin = end = (unsigned char*) memalign(getpagesize(), npages * getpagesize());
-    }
+    CodeBuffer(int npages = 1);
     
     ~CodeBuffer()
     {
@@ -883,77 +833,20 @@ public:
     
     inline int npages() const { return _npages; }
     
-    inline void allowExecution()
-    {
-        mprotect(begin, getpagesize() * npages(), PROT_EXEC);
-    }
+    void allowExecution();
     
-    inline CodeBuffer &operator<<(unsigned char byte)
-    {
-        *end = byte;
-        end += 1;
-        return *this;
-    }
-    
+    CodeBuffer &operator<<(unsigned char byte);
+
     inline CodeBuffer &operator<<(Imm8 imm)
     {
         return operator<<(imm.byte);
     }
+
+    CodeBuffer &operator<<(Imm16 imm);
     
-    inline CodeBuffer &operator<<(Imm16 imm)
-    {
-        for(int i=0; i<2; i++)
-        {
-            *end = imm.bytes.byte[i];
-            end += 1;
-        }
-        return *this;
-    }
+    CodeBuffer &operator<<(Imm32 imm);
     
-    inline CodeBuffer &operator<<(Imm32 imm)
-    {
-        for(int i=0; i<4; i++)
-        {
-            *end = imm.bytes.byte[i];
-            end += 1;
-        }
-        return *this;
-    }
-    
-    inline CodeBuffer &operator<<(Imm64 imm)
-    {
-        for(int i=0; i<8; i++)
-        {
-            *end = imm.bytes.byte[i];
-            end += 1;
-        }
-        return *this;
-    }
-    
-    inline CodeBuffer &operator<<(Rip rip)
-    {
-        return operator<<(Imm32(rip.displacement));
-    }
-    
-    inline CodeBuffer &operator<<(Vex2 vex)
-    {
-        for(int i=0; i<2; i++)
-        {
-            *end = vex.bytes[i];
-            end += 1;
-        }
-        return *this;
-    }
-    
-    inline CodeBuffer &operator<<(Vex3 vex)
-    {
-        for(int i=0; i<3; i++)
-        {
-            *end = vex.bytes[i];
-            end += 1;
-        }
-        return *this;
-    }
+    CodeBuffer &operator<<(Imm64 imm);
 };
 
 
@@ -961,24 +854,6 @@ public:
 class Assembler{
     CodeBuffer bytes;
     bool must_free;
-
-    inline unsigned char ModRM(unsigned char mod, unsigned char reg, unsigned char rm)
-    {
-        reg &= b0111;
-        rm  &= b0111;
-        return (mod << 6) | (reg << 3) | rm;
-    }
-
-    inline unsigned char Rex(unsigned char bits)
-    {
-        return (b0100 << 4) | bits;
-    }
-
-    inline unsigned char Rex(bool W, bool R, bool X, bool B)
-    {
-        unsigned char bits = (W << 3) | (R << 2) | (X << 1) | B;
-        return Rex(bits);
-    }
 
 public:
     Assembler(int npages = 1) : bytes(npages), must_free(true)
@@ -1031,6 +906,8 @@ public:
     void add(GPR64 dst, GPR64 src);
     void add(GPR64 reg, unsigned int imm);
 
+    void add(GPR64 reg, Base base);
+    void add(Base base, GPR64 reg);
 
     void mov(GPR32 reg, Mem32 mem);
     void mov(Mem32 mem, GPR32 reg);
@@ -1038,9 +915,14 @@ public:
     void mov(GPR32 reg, unsigned int imm);
 
     void mov(GPR64 reg, Mem64 mem);
-    void mov(Mem64 mem, GPR64 reg);
+        void mov(Mem64 mem, GPR64 reg);
     void mov(GPR64 dst, GPR64 src);
-    void mov(GPR64 reg, unsigned long long imm);
+    void mov(GPR64 reg, Imm32 imm);
+    void mov(GPR64 reg, Imm64 imm);
+    inline void mov(GPR64 reg, unsigned int imm)      { mov(reg, Imm32(imm)); }
+
+    void mov(GPR64 reg, Base base);
+    void mov(Base base, GPR64 reg);
 
 
     void push(GPR64 reg);
@@ -1058,6 +940,9 @@ public:
     void sub(Mem64 mem, GPR64 reg);
     void sub(GPR64 dst, GPR64 src);
     void sub(GPR64 reg, unsigned int imm);
+
+    void sub(GPR64 reg, Base base);
+    void sub(Base base, GPR64 reg);
 
     /* SSE */
     void addps(Xmm dst, Xmm src);
