@@ -914,6 +914,20 @@ public:
     void mov(GPR32 dst, GPR32 src);
     void mov(GPR32 reg, unsigned int imm);
 
+    void sub(GPR32 reg, Mem32 mem);
+    void sub(Mem32 mem, GPR32 reg);
+    void sub(GPR32 dst, GPR32 src);
+    void sub(GPR32 reg, unsigned int imm);
+
+    void sub(GPR64 reg, Mem64 mem);
+    void sub(Mem64 mem, GPR64 reg);
+    void sub(GPR64 dst, GPR64 src);
+    void sub(GPR64 reg, unsigned int imm);
+
+    void sub(GPR64 reg, Base base);
+    void sub(Base base, GPR64 reg);
+
+
     void mov(GPR64 reg, Mem64 mem);
         void mov(Mem64 mem, GPR64 reg);
     void mov(GPR64 dst, GPR64 src);
@@ -930,24 +944,10 @@ public:
 
     void pop(GPR64 reg);
 
-
-    void sub(GPR32 reg, Mem32 mem);
-    void sub(Mem32 mem, GPR32 reg);
-    void sub(GPR32 dst, GPR32 src);
-    void sub(GPR32 reg, unsigned int imm);
-
-    void sub(GPR64 reg, Mem64 mem);
-    void sub(Mem64 mem, GPR64 reg);
-    void sub(GPR64 dst, GPR64 src);
-    void sub(GPR64 reg, unsigned int imm);
-
-    void sub(GPR64 reg, Base base);
-    void sub(Base base, GPR64 reg);
-
     /* SSE */
     void addps(Xmm dst, Xmm src);
     void addps(Xmm reg, Mem128 mem);
-
+    void addps(Xmm reg, Base base);
 
     void movups(Xmm dst, Xmm src);
     void movups(Xmm reg, Mem128 mem);

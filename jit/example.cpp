@@ -30,21 +30,22 @@ int main()
     Assembler a;
     a.push(rbp);
 
-    a.mov(rax, 4);
-    a.mov(rsi, Imm64(&iv3));
-    a.add(rax, Base(rsi));
-    a.add(Base(rsi), rax);
+    a.movups(xmm0, Mem128(&v1));
+    a.mov(rbp, Imm64(&v2));
+    a.addps(xmm0, Base(rbp));
 
     a.pop(rbp);
     a.ret();
 
-    typedef long int (*Fun)();
+    typedef float (*Fun)();
     Fun fun = (Fun) a.getFun();
 
     cout << "-----\n";
-    cout << iv3 << "\n";
+    cout << "v1:  " << v1 << "\n";
+    cout << "v2:  " << v2 << "\n";
     cout << "fun: [" << fun() << "]\n";
-    cout << iv3 << "\n";
+    cout << "v1:  " << v1 << "\n";
+    cout << "v2:  " << v2 << "\n";
     cout << "-----\n";
 
     return 0;

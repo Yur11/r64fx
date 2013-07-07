@@ -153,7 +153,8 @@ CodeBuffer &operator<<(CodeBuffer &buff, Vex3 vex)
 }
 
 
-void encode_modrm_and_sib_base(CodeBuffer &bytes, GPR64 &reg, Base &base)
+template<typename RegT>
+void encode_modrm_and_sib_base(CodeBuffer &bytes, RegT &reg, Base &base)
 {
     if((base.reg.code() & b0111) == b101)
     {
@@ -251,6 +252,92 @@ void Assembler::add(Base base, GPR64 reg)
 {
     bytes << Rex(1, reg.prefix_bit(), 0, base.reg.prefix_bit());
     bytes << 0x01;
+    encode_modrm_and_sib_base(bytes, reg, base);
+}
+
+
+void Assembler::sub(GPR32 reg, Mem32 mem)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
+    bytes << 0x2B;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::sub(Mem32 mem, GPR32 reg)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
+    bytes << 0x29;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::sub(GPR32 dst, GPR32 src)
+{
+    if(src.prefix_bit() || dst.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x2B;
+    bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::sub(GPR32 reg, unsigned int imm)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, 0, 0, 1);
+    bytes << 0x81;
+    bytes << ModRM(b11, 0x5, reg.code());
+    bytes << Imm32(imm);
+}
+
+
+void Assembler::sub(GPR64 reg, Mem64 mem)
+{
+    bytes << Rex(1, reg.prefix_bit(), 0, 0);
+    bytes << 0x2B;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::sub(Mem64 mem, GPR64 reg)
+{
+    bytes << Rex(1, reg.prefix_bit(), 0, 0);
+    bytes << 0x29;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::sub(GPR64 dst, GPR64 src)
+{
+    bytes << Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x2B;
+    bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::sub(GPR64 reg, unsigned int imm)
+{
+    bytes << Rex(1, 0, 0, reg.prefix_bit());
+    bytes << 0x81;
+    bytes << ModRM(b11, 0x5, reg.code());
+    bytes << Imm32(imm);
+}
+
+
+void Assembler::sub(GPR64 reg, Base base)
+{
+    bytes << Rex(1, reg.prefix_bit(), 0, 0);
+    bytes << 0x2B;
+    encode_modrm_and_sib_base(bytes, reg, base);
+}
+
+
+void Assembler::sub(Base base, GPR64 reg)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
+    bytes << 0x29;
     encode_modrm_and_sib_base(bytes, reg, base);
 }
 
@@ -376,91 +463,6 @@ void Assembler::pop(GPR64 reg)
 }
 
 
-void Assembler::sub(GPR32 reg, Mem32 mem)
-{
-    if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
-    bytes << 0x2B;
-    bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
-}
-
-
-void Assembler::sub(Mem32 mem, GPR32 reg)
-{
-    if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
-    bytes << 0x29;
-    bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
-}
-
-
-void Assembler::sub(GPR32 dst, GPR32 src)
-{
-    if(src.prefix_bit() || dst.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
-    bytes << 0x2B;
-    bytes << ModRM(b11, dst.code(), src.code());
-}
-
-
-void Assembler::sub(GPR32 reg, unsigned int imm)
-{
-    if(reg.prefix_bit()) bytes << Rex(0, 0, 0, 1);
-    bytes << 0x81;
-    bytes << ModRM(b11, 0x5, reg.code());
-    bytes << Imm32(imm);
-}
-
-
-void Assembler::sub(GPR64 reg, Mem64 mem)
-{
-    bytes << Rex(1, reg.prefix_bit(), 0, 0);
-    bytes << 0x2B;
-    bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
-}
-
-
-void Assembler::sub(Mem64 mem, GPR64 reg)
-{
-    bytes << Rex(1, reg.prefix_bit(), 0, 0);
-    bytes << 0x29;
-    bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
-}
-
-
-void Assembler::sub(GPR64 dst, GPR64 src)
-{
-    bytes << Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
-    bytes << 0x2B;
-    bytes << ModRM(b11, dst.code(), src.code());
-}
-
-
-void Assembler::sub(GPR64 reg, unsigned int imm)
-{
-    bytes << Rex(1, 0, 0, reg.prefix_bit());
-    bytes << 0x81;
-    bytes << ModRM(b11, 0x5, reg.code());
-    bytes << Imm32(imm);
-}
-
-
-void Assembler::sub(GPR64 reg, Base base)
-{
-    bytes << Rex(1, reg.prefix_bit(), 0, 0);
-    bytes << 0x2B;
-    encode_modrm_and_sib_base(bytes, reg, base);
-}
-
-void Assembler::sub(Base base, GPR64 reg)
-{
-    if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
-    bytes << 0x29;
-    encode_modrm_and_sib_base(bytes, reg, base);
-}
-
-
 void Assembler::addps(Xmm dst, Xmm src)
 {
     if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
@@ -475,6 +477,14 @@ void Assembler::addps(Xmm reg, Mem128 mem)
     bytes << 0x0F << 0x58;
     bytes << ModRM(b00, reg.code(), b101);
     bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::addps(Xmm reg, Base base)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.code());
+    bytes << 0x0F << 0x58;
+    encode_modrm_and_sib_base(bytes, reg, base);
 }
 
 
