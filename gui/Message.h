@@ -10,7 +10,7 @@ struct Message{
     /** @brief Message callback. */
     Callback callback;
     
-    /** @brief Exrtra data passed with the message. */
+    /** @brief Extra data passed with the message. */
     void* data;
     
     Message(Callback callback, void* data = nullptr)

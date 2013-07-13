@@ -796,6 +796,13 @@ struct Base{
 };
 
 
+struct Disp8{
+    unsigned char byte;
+
+    explicit Disp8(unsigned char byte) : byte(byte) {}
+};
+
+
 const unsigned char Scale1 = b00;
 const unsigned char Scale2 = b01;
 const unsigned char Scale4 = b10;
@@ -947,7 +954,7 @@ public:
     /* SSE */
     void addps(Xmm dst, Xmm src);
     void addps(Xmm reg, Mem128 mem);
-    void addps(Xmm reg, Base base);
+    void addps(Xmm reg, Base base, Disp8 disp = Disp8(0));
 
     void movups(Xmm dst, Xmm src);
     void movups(Xmm reg, Mem128 mem);

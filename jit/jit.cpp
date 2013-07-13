@@ -153,14 +153,19 @@ CodeBuffer &operator<<(CodeBuffer &buff, Vex3 vex)
 }
 
 
-template<typename RegT>
-void encode_modrm_and_sib_base(CodeBuffer &bytes, RegT &reg, Base &base)
+void encode_modrm_sib_base_and_disp8(CodeBuffer &bytes, Register &reg, Base &base, Disp8 disp)
+{
+    bytes << ModRM(b01, reg.code(), b100);
+    bytes << SIB(b00, b100, base.reg.code());
+    bytes << Imm8(disp.byte);
+}
+
+
+void encode_modrm_and_sib_base(CodeBuffer &bytes, Register &reg, Base &base)
 {
     if((base.reg.code() & b0111) == b101)
     {
-        bytes << ModRM(b01, reg.code(), b100);
-        bytes << SIB(b00, b100, base.reg.code());
-        bytes << Imm8(0);
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, Disp8(0));
     }
     else
     {
@@ -480,11 +485,14 @@ void Assembler::addps(Xmm reg, Mem128 mem)
 }
 
 
-void Assembler::addps(Xmm reg, Base base)
+void Assembler::addps(Xmm reg, Base base, Disp8 disp)
 {
-    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.code());
+    if(reg.prefix_bit() || base.reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
     bytes << 0x0F << 0x58;
-    encode_modrm_and_sib_base(bytes, reg, base);
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
 }
 
 
