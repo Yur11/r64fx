@@ -568,12 +568,20 @@ public:
     {
         bytes.qword = qword;
     }
-
-    explicit Imm64(void* ptr)
-    {
-        bytes.qword = (long int) ptr;
-    }
 }; 
+
+
+class ImmPtr{
+    Imm64 imm;
+
+public:
+    explicit ImmPtr(void* ptr)
+    :imm((long int)ptr)
+    {
+    }
+
+    inline operator Imm64() const { return imm; }
+};
 
 
 class Register{
@@ -971,6 +979,8 @@ public:
     void jmp(Mem8 mem);
     void jnz(Mem8 mem);
     void jz(Mem8 mem);
+    void je(Mem8 mem);
+    void jl(Mem8 mem);
 
 
     /* SSE */

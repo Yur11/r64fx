@@ -476,6 +476,19 @@ void Assembler::jz(Mem8 mem)
 }
 
 
+void Assembler::je(Mem8 mem)
+{
+    jz(mem);
+}
+
+
+void Assembler::jl(Mem8 mem)
+{
+    bytes << 0x0F << 0x8C;
+    bytes << Rip32(mem.addr, ip() + 4);
+}
+
+
 #define ENCODE_SSE_PS_INSTRUCTION(name, second_opcode)\
 void Assembler::name(Xmm dst, Xmm src)\
 {\

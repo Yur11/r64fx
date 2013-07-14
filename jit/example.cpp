@@ -5,14 +5,6 @@ using namespace std;
 using namespace r64fx;
 
 
-float v1[8] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 };
-float v2[4] = { 1.0, 1.1, 1.2, 2.0 };
-
-long int iv3[4] = { 11, 22, 33, 44 };
-
-long int i1 = 123;
-long int i2 = 456;
-
 ostream &operator<<(ostream &ost, float vec[4])
 {
     ost << vec[0] << ", " << vec[1] << ", " << vec[2] << ", " << vec[3];
@@ -29,27 +21,32 @@ ostream &operator<<(ostream &ost, long int vec[4])
 
 int main()
 {
+    long int* buff = new long int[32];
+
     Assembler a;
     a.mov(rax, 0);
-    a.mov(r9,  10);
+    a.mov(rbx, ImmPtr(buff));
     auto loop = Mem8(a.ip());
         a.add(rax, 1);
-        a.sub(r9, 2);
-        a.jz(Mem8(a.ip() + 12)); //Jump into one of the nops below =)
-        a.jmp(loop);
-    a.nop(10);
+        a.mov(Base(rbx), rax);
+        a.add(rbx, sizeof(long int));
+        a.cmp(rax, Imm32(32));
+        a.jl(loop);
     a.ret();
 
     typedef long int (*Fun)();
     Fun fun = (Fun) a.getFun();
 
     cout << "-----\n";
-    cout << "v1:  " << v1 << "\n";
-    cout << "v2:  " << v2 << "\n";
     cout << "fun: [" << fun() << "]\n";
-    cout << "v1:  " << v1 << "\n";
-    cout << "v2:  " << v2 << "\n";
     cout << "-----\n";
+
+    for(int i=0; i<32; i++)
+    {
+        cout << buff[i] << "\n";
+    }
+
+    delete[] buff;
 
     return 0;
 }
