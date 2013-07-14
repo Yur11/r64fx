@@ -1,10 +1,6 @@
 #ifndef X86_64_JIT_ASSEMBLER_H
 #define X86_64_JIT_ASSEMBLER_H
 
-#include <unistd.h>
-#include <malloc.h>
-#include <sys/mman.h>
-
 namespace r64fx{
 
 /* Usefull binary constants. */
@@ -840,13 +836,9 @@ public:
     
     ~CodeBuffer()
     {
-
     }
     
-    void cleanup()
-    {
-        free(begin);
-    }
+    void cleanup();
     
     /** @brief Pointer to the beginning of the buffer. */
     inline unsigned char* codeBegin() const { return begin; }
@@ -926,12 +918,10 @@ public:
     void add(GPR32 reg, Mem32 mem);
     void add(Mem32 mem, GPR32 reg);
     void add(GPR32 dst, GPR32 src);
-    void add(GPR32 reg, unsigned int imm);
 
     void add(GPR64 reg, Mem64 mem);
     void add(Mem64 mem, GPR64 reg);
     void add(GPR64 dst, GPR64 src);
-    void add(GPR64 reg, unsigned int imm);
 
     void add(GPR64 reg, Base base);
     void add(Base base, GPR64 reg);
@@ -939,17 +929,16 @@ public:
     void mov(GPR32 reg, Mem32 mem);
     void mov(Mem32 mem, GPR32 reg);
     void mov(GPR32 dst, GPR32 src);
-    void mov(GPR32 reg, unsigned int imm);
 
     void sub(GPR32 reg, Mem32 mem);
     void sub(Mem32 mem, GPR32 reg);
     void sub(GPR32 dst, GPR32 src);
-    void sub(GPR32 reg, unsigned int imm);
 
     void sub(GPR64 reg, Mem64 mem);
     void sub(Mem64 mem, GPR64 reg);
     void sub(GPR64 dst, GPR64 src);
-    void sub(GPR64 reg, unsigned int imm);
+
+    void sub(GPR64 reg, Imm32 imm);
 
     void sub(GPR64 reg, Base base);
     void sub(Base base, GPR64 reg);
@@ -960,16 +949,20 @@ public:
     void mov(GPR64 dst, GPR64 src);
     void mov(GPR64 reg, Imm32 imm);
     void mov(GPR64 reg, Imm64 imm);
-    inline void mov(GPR64 reg, unsigned int imm)      { mov(reg, Imm32(imm)); }
 
     void mov(GPR64 reg, Base base);
     void mov(Base base, GPR64 reg);
 
 
     void push(GPR64 reg);
-    void push(unsigned int imm);
 
     void pop(GPR64 reg);
+
+
+    void cmp(GPR64 reg, Imm32 imm);
+
+    void jnz(Mem8 mem);
+
 
     /* SSE */
     void addps(Xmm dst, Xmm src);

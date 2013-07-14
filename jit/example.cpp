@@ -6,7 +6,7 @@ using namespace r64fx;
 
 
 float v1[8] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 };
-float v2[4] = { 0.1, 0.1, 0.1, 0.1 };
+float v2[4] = { 1.0, 1.1, 1.2, 2.0 };
 
 long int iv3[4] = { 11, 22, 33, 44 };
 
@@ -31,20 +31,21 @@ int main()
 {
     Assembler a;
 
-    a.mov(rax, Imm64(&v1));
-    a.mov(rbx, Imm64(&v2));
+    a.movaps(xmm0, Mem128(&v1));
+    a.movaps(xmm1, Mem128(&v2));
 
-    a.movaps(xmm0, Base(rax));
-    a.movaps(xmm1, Base(rbx));
+    a.mov(rax, Imm64(10));
+    auto _loop = a.ip();
+        a.addps(xmm0, xmm1);
+        a.sub(rax, Imm32(1));
+        a.jnz(Mem8(_loop));
 
-    a.addps(xmm0, xmm1);
-
-    a.movaps(Base(rax), xmm0);
-    a.movaps(Base(rbx), xmm1);
+    a.movaps(Mem128(&v1), xmm0);
+    a.movaps(Mem128(&v2), xmm1);
 
     a.ret();
 
-    typedef float (*Fun)();
+    typedef long int (*Fun)();
     Fun fun = (Fun) a.getFun();
 
     cout << "-----\n";

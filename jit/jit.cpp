@@ -1,4 +1,7 @@
 #include "jit.h"
+#include <unistd.h>
+#include <malloc.h>
+#include <sys/mman.h>
 #include <iostream>
 
 
@@ -10,6 +13,12 @@ namespace r64fx{
 CodeBuffer::CodeBuffer(int npages) : _npages(npages)
 {
     begin = end = (unsigned char*) memalign(getpagesize(), npages * getpagesize());
+}
+
+
+void CodeBuffer::cleanup()
+{
+    free(begin);
 }
 
 
@@ -201,15 +210,6 @@ void Assembler::add(GPR32 dst, GPR32 src)
 }
 
 
-void Assembler::add(GPR32 reg, unsigned int imm)
-{
-    if(reg.prefix_bit()) bytes << Rex(0, 0, 0, 1);
-    bytes << 0x81;
-    bytes << ModRM(b11, 0x0, reg.code());
-    bytes << Imm32(imm);
-}
-
-
 void Assembler::add(GPR64 reg, Mem64 mem)
 {
     bytes << Rex(1, reg.prefix_bit(), 0, 0);
@@ -233,15 +233,6 @@ void Assembler::add(GPR64 dst, GPR64 src)
     bytes << Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
     bytes << 0x03;
     bytes << ModRM(b11, dst.code(), src.code());
-}
-
-
-void Assembler::add(GPR64 reg, unsigned int imm)
-{
-    bytes << Rex(0, 0, 0, reg.prefix_bit());
-    bytes << 0x81;
-    bytes << ModRM(b11, 0x0, reg.code());
-    bytes << Imm32(imm);
 }
 
 
@@ -287,15 +278,6 @@ void Assembler::sub(GPR32 dst, GPR32 src)
 }
 
 
-void Assembler::sub(GPR32 reg, unsigned int imm)
-{
-    if(reg.prefix_bit()) bytes << Rex(0, 0, 0, 1);
-    bytes << 0x81;
-    bytes << ModRM(b11, 0x5, reg.code());
-    bytes << Imm32(imm);
-}
-
-
 void Assembler::sub(GPR64 reg, Mem64 mem)
 {
     bytes << Rex(1, reg.prefix_bit(), 0, 0);
@@ -322,12 +304,11 @@ void Assembler::sub(GPR64 dst, GPR64 src)
 }
 
 
-void Assembler::sub(GPR64 reg, unsigned int imm)
+void Assembler::sub(GPR64 reg, Imm32 imm)
 {
-    bytes << Rex(1, 0, 0, reg.prefix_bit());
-    bytes << 0x81;
-    bytes << ModRM(b11, 0x5, reg.code());
-    bytes << Imm32(imm);
+    bytes << Rex(1, reg.prefix_bit(), 0, 0);
+    bytes << 0x2D;
+    bytes << imm;
 }
 
 
@@ -370,13 +351,6 @@ void Assembler::mov(GPR32 dst, GPR32 src)
     if(src.prefix_bit() || dst.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
     bytes << 0x8B;
     bytes << ModRM(b11, dst.code(), src.code());
-}
-
-
-void Assembler::mov(GPR32 reg, unsigned int imm)
-{
-    if(reg.prefix_bit()) bytes << Rex(0, 0, 0, 1);
-    bytes << (0xB8 + (reg.code() & b0111)) << imm;
 }
 
 
@@ -445,26 +419,29 @@ void Assembler::push(GPR64 reg)
 }
 
 
-void Assembler::push(unsigned int imm)
-{
-    bytes << Rex(1, 0, 0, 0);
-    if(imm < 256)
-    {
-        bytes << 0x6A;
-        bytes << Imm8(imm);
-    }
-    else
-    {
-        bytes << 0x68;
-        bytes << Imm32(imm);
-    }
-}
-
-
 void Assembler::pop(GPR64 reg)
 {
     bytes << Rex(1, 0, 0, reg.prefix_bit());
     bytes << (0x58 + (reg.code() & b0111));
+}
+
+
+void Assembler::cmp(GPR64 reg, Imm32 imm)
+{
+    bytes << Rex(1, reg.prefix_bit(), 0, 0);
+    bytes << 0x81;
+    bytes << ModRM(b11, 7, reg.code());
+    bytes << imm;
+}
+
+
+void Assembler::jnz(Mem8 mem)
+{
+    auto next_addr = ((long int) ip()) + 6;
+    auto target_addr = (long int) mem.addr;
+    auto offset = target_addr - next_addr;
+    bytes << 0x0F << 0x85;
+    bytes << Imm32(offset);
 }
 
 
