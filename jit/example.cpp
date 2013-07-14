@@ -30,19 +30,14 @@ ostream &operator<<(ostream &ost, long int vec[4])
 int main()
 {
     Assembler a;
-
-    a.movaps(xmm0, Mem128(&v1));
-    a.movaps(xmm1, Mem128(&v2));
-
-    a.mov(rax, Imm64(10));
-    auto _loop = a.ip();
-        a.addps(xmm0, xmm1);
-        a.sub(rax, Imm32(1));
-        a.jnz(Mem8(_loop));
-
-    a.movaps(Mem128(&v1), xmm0);
-    a.movaps(Mem128(&v2), xmm1);
-
+    a.mov(rax, 0);
+    a.mov(r9,  10);
+    auto loop = Mem8(a.ip());
+        a.add(rax, 1);
+        a.sub(r9, 2);
+        a.jz(Mem8(a.ip() + 12)); //Jump into one of the nops below =)
+        a.jmp(loop);
+    a.nop(10);
     a.ret();
 
     typedef long int (*Fun)();

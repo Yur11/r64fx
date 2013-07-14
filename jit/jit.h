@@ -926,6 +926,10 @@ public:
     void add(GPR64 reg, Base base);
     void add(Base base, GPR64 reg);
 
+    void add(GPR64 reg, Imm32 imm);
+    inline
+    void add(GPR64 reg, unsigned int imm) { add(reg, Imm32(imm)); }
+
     void mov(GPR32 reg, Mem32 mem);
     void mov(Mem32 mem, GPR32 reg);
     void mov(GPR32 dst, GPR32 src);
@@ -939,6 +943,8 @@ public:
     void sub(GPR64 dst, GPR64 src);
 
     void sub(GPR64 reg, Imm32 imm);
+    inline
+    void sub(GPR64 reg, unsigned int imm) { sub(reg, Imm32(imm)); }
 
     void sub(GPR64 reg, Base base);
     void sub(Base base, GPR64 reg);
@@ -949,6 +955,7 @@ public:
     void mov(GPR64 dst, GPR64 src);
     void mov(GPR64 reg, Imm32 imm);
     void mov(GPR64 reg, Imm64 imm);
+    void mov(GPR64 reg, unsigned long int imm);
 
     void mov(GPR64 reg, Base base);
     void mov(Base base, GPR64 reg);
@@ -961,7 +968,9 @@ public:
 
     void cmp(GPR64 reg, Imm32 imm);
 
+    void jmp(Mem8 mem);
     void jnz(Mem8 mem);
+    void jz(Mem8 mem);
 
 
     /* SSE */

@@ -3,6 +3,7 @@
 #include <malloc.h>
 #include <sys/mman.h>
 #include <iostream>
+#include <limits>
 
 
 using namespace std;
@@ -121,10 +122,10 @@ struct Vex3{
 };
 
 
-struct Rip{
+struct Rip32{
     int displacement;
 
-    Rip(long int addr, unsigned char* next_ip)
+    Rip32(long int addr, unsigned char* next_ip)
     {
         long int _addr = (long int) addr;
         long int _next_ip = (long int) next_ip;
@@ -136,7 +137,7 @@ struct Rip{
 };
 
 
-CodeBuffer &operator<<(CodeBuffer &buff, Rip rip)
+CodeBuffer &operator<<(CodeBuffer &buff, Rip32 rip)
 {
     return buff << Imm32(rip.displacement);
 }
@@ -189,7 +190,7 @@ void Assembler::add(GPR32 reg, Mem32 mem)
     if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
     bytes << 0x03;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -198,7 +199,7 @@ void Assembler::add(Mem32 mem, GPR32 reg)
     if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
     bytes << 0x01;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -215,7 +216,7 @@ void Assembler::add(GPR64 reg, Mem64 mem)
     bytes << Rex(1, reg.prefix_bit(), 0, 0);
     bytes << 0x03;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -224,7 +225,7 @@ void Assembler::add(Mem64 mem, GPR64 reg)
     bytes << Rex(1, reg.prefix_bit(), 0, 0);
     bytes << 0x01;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -252,12 +253,30 @@ void Assembler::add(Base base, GPR64 reg)
 }
 
 
+void Assembler::add(GPR64 reg, Imm32 imm)
+{
+    bytes << Rex(1, 0, 0, reg.prefix_bit());
+    bytes << 0x81;
+    bytes << ModRM(b11, 0, reg.code());
+    bytes << imm;
+}
+
+
+void Assembler::mov(GPR64 reg, unsigned long int imm)
+{
+    if(imm < numeric_limits<unsigned long int>::max())
+        mov(reg, Imm32(imm));
+    else
+        mov(reg, Imm64(imm));
+}
+
+
 void Assembler::sub(GPR32 reg, Mem32 mem)
 {
     if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
     bytes << 0x2B;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -266,7 +285,7 @@ void Assembler::sub(Mem32 mem, GPR32 reg)
     if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
     bytes << 0x29;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -283,7 +302,7 @@ void Assembler::sub(GPR64 reg, Mem64 mem)
     bytes << Rex(1, reg.prefix_bit(), 0, 0);
     bytes << 0x2B;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -292,7 +311,7 @@ void Assembler::sub(Mem64 mem, GPR64 reg)
     bytes << Rex(1, reg.prefix_bit(), 0, 0);
     bytes << 0x29;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -306,8 +325,9 @@ void Assembler::sub(GPR64 dst, GPR64 src)
 
 void Assembler::sub(GPR64 reg, Imm32 imm)
 {
-    bytes << Rex(1, reg.prefix_bit(), 0, 0);
-    bytes << 0x2D;
+    bytes << Rex(1, 0, 0, reg.prefix_bit());
+    bytes << 0x81;
+    bytes << ModRM(b11, 5, reg.code());
     bytes << imm;
 }
 
@@ -333,7 +353,7 @@ void Assembler::mov(GPR32 reg, Mem32 mem)
     if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
     bytes << 0x8B;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -342,7 +362,7 @@ void Assembler::mov(Mem32 mem, GPR32 reg)
     if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
     bytes << 0x89;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -359,7 +379,7 @@ void Assembler::mov(GPR64 reg, Mem64 mem)
     bytes << Rex(1, reg.prefix_bit(), 0, 0);
     bytes << 0x8B;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -368,7 +388,7 @@ void Assembler::mov(Mem64 mem, GPR64 reg)
     bytes << Rex(1, reg.prefix_bit(), 0, 0);
     bytes << 0x89;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -435,13 +455,24 @@ void Assembler::cmp(GPR64 reg, Imm32 imm)
 }
 
 
+void Assembler::jmp(Mem8 mem)
+{
+    bytes << 0xE9;
+    bytes << Rip32(mem.addr, ip() + 4);
+}
+
+
 void Assembler::jnz(Mem8 mem)
 {
-    auto next_addr = ((long int) ip()) + 6;
-    auto target_addr = (long int) mem.addr;
-    auto offset = target_addr - next_addr;
     bytes << 0x0F << 0x85;
-    bytes << Imm32(offset);
+    bytes << Rip32(mem.addr, ip() + 4);
+}
+
+
+void Assembler::jz(Mem8 mem)
+{
+    bytes << 0x0F << 0x84;
+    bytes << Rip32(mem.addr, ip() + 4);
 }
 
 
@@ -459,7 +490,7 @@ void Assembler::name(Xmm reg, Mem128 mem)\
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);\
     bytes << 0x0F << second_opcode;\
     bytes << ModRM(b00, reg.code(), b101);\
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);\
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);\
 }\
 \
 \
@@ -490,7 +521,7 @@ void Assembler::name(Xmm reg, Mem32 mem)\
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);\
     bytes << 0x0F << third_opcode;\
     bytes << ModRM(b00, reg.code(), b101);\
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);\
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);\
 }\
 \
 \
@@ -541,7 +572,7 @@ void Assembler::cmpps(CmpCode kind, Xmm reg, Mem128 mem)
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
     bytes << 0x0F << 0xC2;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
     bytes << kind.code();
 }
 
@@ -574,7 +605,7 @@ void Assembler::cmpss(CmpCode kind, Xmm reg, Mem128 mem)
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
     bytes << 0x0F << 0xC2;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
     bytes << kind.code();
 }
 
@@ -605,7 +636,7 @@ void Assembler::movups(Xmm reg, Mem128 mem)
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
     bytes << 0x0F << 0x10;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -625,7 +656,7 @@ void Assembler::movups(Mem128 mem, Xmm reg)
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
     bytes << 0x0F << 0x11;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -653,7 +684,7 @@ void Assembler::movaps(Xmm reg, Mem128 mem)
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
     bytes << 0x0F << 0x28;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
@@ -673,7 +704,7 @@ void Assembler::movaps(Mem128 mem, Xmm reg)
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
     bytes << 0x0F << 0x29;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
 }
 
 
