@@ -468,32 +468,86 @@ void Assembler::pop(GPR64 reg)
 }
 
 
-void Assembler::addps(Xmm dst, Xmm src)
-{
-    if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
-    bytes << 0x0F << 0x58;
-    bytes << ModRM(b11, dst.code(), src.code());
-}
+#define ENCODE_SSE_PS_INSTRUCTION(name, second_opcode)\
+void Assembler::name(Xmm dst, Xmm src)\
+{\
+    if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());\
+    bytes << 0x0F << second_opcode;\
+    bytes << ModRM(b11, dst.code(), src.code());\
+}\
+\
+\
+void Assembler::name(Xmm reg, Mem128 mem)\
+{\
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);\
+    bytes << 0x0F << second_opcode;\
+    bytes << ModRM(b00, reg.code(), b101);\
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);\
+}\
+\
+\
+void Assembler::name(Xmm reg, Base base, Disp8 disp)\
+{\
+    if(reg.prefix_bit() || base.reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());\
+    bytes << 0x0F << second_opcode;\
+    if(disp.byte == 0)\
+        encode_modrm_and_sib_base(bytes, reg, base);\
+    else\
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);\
+}\
 
 
-void Assembler::addps(Xmm reg, Mem128 mem)
-{
-    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
-    bytes << 0x0F << 0x58;
-    bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
-}
+#define ENCODE_SSE_SS_INSTRUCTION(name, third_opcode)\
+void Assembler::name(Xmm dst, Xmm src)\
+{\
+    bytes << 0xF3;\
+    if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());\
+    bytes << 0x0F << third_opcode;\
+    bytes << ModRM(b11, dst.code(), src.code());\
+}\
+\
+\
+void Assembler::name(Xmm reg, Mem32 mem)\
+{\
+    bytes << 0xF3;\
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);\
+    bytes << 0x0F << third_opcode;\
+    bytes << ModRM(b00, reg.code(), b101);\
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);\
+}\
+\
+\
+void Assembler::name(Xmm reg, Base base, Disp8 disp)\
+{\
+    bytes << 0xF3;\
+    if(reg.prefix_bit() || base.reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());\
+    bytes << 0x0F << third_opcode;\
+    if(disp.byte == 0)\
+        encode_modrm_and_sib_base(bytes, reg, base);\
+    else\
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);\
+}\
 
 
-void Assembler::addps(Xmm reg, Base base, Disp8 disp)
-{
-    if(reg.prefix_bit() || base.reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
-    bytes << 0x0F << 0x58;
-    if(disp.byte == 0)
-        encode_modrm_and_sib_base(bytes, reg, base);
-    else
-        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
-}
+#define ENCODE_SSE_INSTRUCTION(name, opcode)\
+    ENCODE_SSE_PS_INSTRUCTION(name##ps, opcode)\
+    ENCODE_SSE_SS_INSTRUCTION(name##ss, opcode)
+
+
+/* *ss instructions broken! Rex bit seems to be leaking!*/
+ENCODE_SSE_INSTRUCTION(add,   0x58)
+ENCODE_SSE_INSTRUCTION(sub,   0x5C)
+ENCODE_SSE_INSTRUCTION(mul,   0x59)
+ENCODE_SSE_INSTRUCTION(div,   0x5E)
+ENCODE_SSE_INSTRUCTION(rcp,   0x53)
+ENCODE_SSE_INSTRUCTION(sqrt,  0x51)
+ENCODE_SSE_INSTRUCTION(rsqrt, 0x52)
+ENCODE_SSE_INSTRUCTION(max,   0x5F)
+ENCODE_SSE_INSTRUCTION(min,   0x5D)
+ENCODE_SSE_PS_INSTRUCTION(andps,   0x54)
+ENCODE_SSE_PS_INSTRUCTION(andnps,  0x55)
+ENCODE_SSE_PS_INSTRUCTION(orps,    0x56)
+ENCODE_SSE_PS_INSTRUCTION(xorps,   0x57)
 
 
 void Assembler::movups(Xmm dst, Xmm src)

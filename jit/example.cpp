@@ -31,16 +31,16 @@ int main()
 {
     Assembler a;
 
-    a.movups(xmm15, Mem128(&v1));
-    a.movups(xmm1, Mem128(&v2));
+    a.movups(xmm10, Mem128(&v1));
+    a.movups(xmm2, Mem128(&v2));
     a.mov(rbx, Imm64(&v1));
-    a.addps(xmm15, Base(rbx), Disp8(16));
-    a.movups(Mem128(&v1), xmm15);
-    a.movups(Mem128(&v2), xmm1);
+    a.addss(xmm10, xmm2);
+    a.movups(Mem128(&v1), xmm10);
+    a.movups(Mem128(&v2), xmm2);
 
     a.ret();
 
-    typedef long int(*Fun)();
+    typedef float (*Fun)();
     Fun fun = (Fun) a.getFun();
 
     cout << "-----\n";

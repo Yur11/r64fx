@@ -936,7 +936,7 @@ public:
 
 
     void mov(GPR64 reg, Mem64 mem);
-        void mov(Mem64 mem, GPR64 reg);
+    void mov(Mem64 mem, GPR64 reg);
     void mov(GPR64 dst, GPR64 src);
     void mov(GPR64 reg, Imm32 imm);
     void mov(GPR64 reg, Imm64 imm);
@@ -955,6 +955,90 @@ public:
     void addps(Xmm dst, Xmm src);
     void addps(Xmm reg, Mem128 mem);
     void addps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void addss(Xmm dst, Xmm src);
+    void addss(Xmm reg, Mem32 mem);
+    void addss(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void subps(Xmm dst, Xmm src);
+    void subps(Xmm reg, Mem128 mem);
+    void subps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void subss(Xmm dst, Xmm src);
+    void subss(Xmm reg, Mem32 mem);
+    void subss(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void mulps(Xmm dst, Xmm src);
+    void mulps(Xmm reg, Mem128 mem);
+    void mulps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void mulss(Xmm dst, Xmm src);
+    void mulss(Xmm reg, Mem32 mem);
+    void mulss(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void divps(Xmm dst, Xmm src);
+    void divps(Xmm reg, Mem128 mem);
+    void divps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void divss(Xmm dst, Xmm src);
+    void divss(Xmm reg, Mem32 mem);
+    void divss(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void rcpps(Xmm dst, Xmm src);
+    void rcpps(Xmm reg, Mem128 mem);
+    void rcpps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void rcpss(Xmm dst, Xmm src);
+    void rcpss(Xmm reg, Mem32 mem);
+    void rcpss(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void sqrtps(Xmm dst, Xmm src);
+    void sqrtps(Xmm reg, Mem128 mem);
+    void sqrtps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void sqrtss(Xmm dst, Xmm src);
+    void sqrtss(Xmm reg, Mem32 mem);
+    void sqrtss(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void rsqrtps(Xmm dst, Xmm src);
+    void rsqrtps(Xmm reg, Mem128 mem);
+    void rsqrtps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void rsqrtss(Xmm dst, Xmm src);
+    void rsqrtss(Xmm reg, Mem32 mem);
+    void rsqrtss(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void maxps(Xmm dst, Xmm src);
+    void maxps(Xmm reg, Mem128 mem);
+    void maxps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void maxss(Xmm dst, Xmm src);
+    void maxss(Xmm reg, Mem32 mem);
+    void maxss(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void minps(Xmm dst, Xmm src);
+    void minps(Xmm reg, Mem128 mem);
+    void minps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void minss(Xmm dst, Xmm src);
+    void minss(Xmm reg, Mem32 mem);
+    void minss(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void andps(Xmm dst, Xmm src);
+    void andps(Xmm reg, Mem128 mem);
+    void andps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void andnps(Xmm dst, Xmm src);
+    void andnps(Xmm reg, Mem128 mem);
+    void andnps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void orps(Xmm dst, Xmm src);
+    void orps(Xmm reg, Mem128 mem);
+    void orps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void xorps(Xmm dst, Xmm src);
+    void xorps(Xmm reg, Mem128 mem);
+    void xorps(Xmm reg, Base base, Disp8 disp = Disp8(0));
 
     void movups(Xmm dst, Xmm src);
     void movups(Xmm reg, Mem128 mem);
