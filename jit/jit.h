@@ -809,6 +809,27 @@ const unsigned char Scale4 = b10;
 const unsigned char Scale8 = b11;
 
 
+class CmpCode{
+    unsigned int _code;
+
+public:
+    CmpCode(unsigned int code) : _code(code) {}
+
+    inline unsigned int code() const { return _code; }
+};
+
+const CmpCode
+    EQ(0),
+    LT(1),
+    LE(2),
+    UNORD(3),
+    NEQ(4),
+    NLT(5),
+    NLE(6),
+    ORD(7)
+;
+
+
 class CodeBuffer{
     unsigned char* begin;
     unsigned char* end;
@@ -855,7 +876,6 @@ public:
     
     CodeBuffer &operator<<(Imm64 imm);
 };
-
 
 
 class Assembler{
@@ -1040,9 +1060,27 @@ public:
     void xorps(Xmm reg, Mem128 mem);
     void xorps(Xmm reg, Base base, Disp8 disp = Disp8(0));
 
+    void cmpps(CmpCode kind, Xmm dst, Xmm src);
+    void cmpps(CmpCode kind, Xmm reg, Mem128 mem);
+    void cmpps(CmpCode kind, Xmm reg, Base base, Disp8 disp = Disp8(0));
+
+    void cmpss(CmpCode kind, Xmm dst, Xmm src);
+    void cmpss(CmpCode kind, Xmm reg, Mem128 mem);
+    void cmpss(CmpCode kind, Xmm reg, Base base, Disp8 disp = Disp8(0));
+
     void movups(Xmm dst, Xmm src);
     void movups(Xmm reg, Mem128 mem);
+    void movups(Xmm reg, Base base, Disp8 disp = Disp8(0));
     void movups(Mem128, Xmm reg);
+    void movups(Base base, Disp8 disp, Xmm reg);
+    inline void movups(Base base, Xmm reg) { movups(base, Disp8(0), reg); }
+
+    void movaps(Xmm dst, Xmm src);
+    void movaps(Xmm reg, Mem128 mem);
+    void movaps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+    void movaps(Mem128, Xmm reg);
+    void movaps(Base base, Disp8 disp, Xmm reg);
+    inline void movaps(Base base, Xmm reg) { movaps(base, Disp8(0), reg); }
 
 };//Assembler
 

@@ -550,6 +550,71 @@ ENCODE_SSE_PS_INSTRUCTION(orps,    0x56)
 ENCODE_SSE_PS_INSTRUCTION(xorps,   0x57)
 
 
+void Assembler::cmpps(CmpCode kind, Xmm dst, Xmm src)
+{
+    if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x0F << 0xC2;
+    bytes << ModRM(b11, dst.code(), src.code());
+    bytes << kind.code();
+}
+
+
+void Assembler::cmpps(CmpCode kind, Xmm reg, Mem128 mem)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0xC2;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << kind.code();
+}
+
+
+void Assembler::cmpps(CmpCode kind, Xmm reg, Base base, Disp8 disp)
+{
+    if(reg.prefix_bit() || base.reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0xC2;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+    bytes << kind.code();
+}
+
+
+void Assembler::cmpss(CmpCode kind, Xmm dst, Xmm src)
+{
+    bytes << 0xF3;
+    if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x0F << 0xC2;
+    bytes << ModRM(b11, dst.code(), src.code());
+    bytes << kind.code();
+}
+
+
+void Assembler::cmpss(CmpCode kind, Xmm reg, Mem128 mem)
+{
+    bytes << 0xF3;
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0xC2;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+    bytes << kind.code();
+}
+
+
+void Assembler::cmpss(CmpCode kind, Xmm reg, Base base, Disp8 disp)
+{
+    bytes << 0xF3;
+    if(reg.prefix_bit() || base.reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0xC2;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+    bytes << kind.code();
+}
+
+
 void Assembler::movups(Xmm dst, Xmm src)
 {
     if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
@@ -567,6 +632,17 @@ void Assembler::movups(Xmm reg, Mem128 mem)
 }
 
 
+void Assembler::movups(Xmm reg, Base base, Disp8 disp)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0x10;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+}
+
+
 void Assembler::movups(Mem128 mem, Xmm reg)
 {
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
@@ -576,15 +652,63 @@ void Assembler::movups(Mem128 mem, Xmm reg)
 }
 
 
-/* Values used with cmpps */
-const unsigned char EQ    = b000;
-const unsigned char LT    = b001;
-const unsigned char LE    = b010;
-const unsigned char UNORD = b001;
-const unsigned char NEQ   = b100;
-const unsigned char NLT   = b101;
-const unsigned char NLE   = b110;
-const unsigned char ORD   = b111;
+void Assembler::movups(Base base, Disp8 disp, Xmm reg)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0x11;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+}
+
+
+void Assembler::movaps(Xmm dst, Xmm src)
+{
+    if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x0F << 0x28;
+    bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::movaps(Xmm reg, Mem128 mem)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0x28;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::movaps(Xmm reg, Base base, Disp8 disp)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0x28;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+}
+
+
+void Assembler::movaps(Mem128 mem, Xmm reg)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0x29;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::movaps(Base base, Disp8 disp, Xmm reg)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0x29;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+}
 
 }//namespace r64fx
 

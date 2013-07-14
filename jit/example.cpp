@@ -31,12 +31,16 @@ int main()
 {
     Assembler a;
 
-    a.movups(xmm10, Mem128(&v1));
-    a.movups(xmm2, Mem128(&v2));
-    a.mov(rbx, Imm64(&v1));
-    a.addss(xmm10, xmm2);
-    a.movups(Mem128(&v1), xmm10);
-    a.movups(Mem128(&v2), xmm2);
+    a.mov(rax, Imm64(&v1));
+    a.mov(rbx, Imm64(&v2));
+
+    a.movaps(xmm0, Base(rax));
+    a.movaps(xmm1, Base(rbx));
+
+    a.addps(xmm0, xmm1);
+
+    a.movaps(Base(rax), xmm0);
+    a.movaps(Base(rbx), xmm1);
 
     a.ret();
 
