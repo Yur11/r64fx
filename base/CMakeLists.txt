@@ -5,8 +5,15 @@ add_library(r64fx_base
     SHARED
     AudioEngine.cpp
     JackAudioEngine.cpp
+    AudioData.cpp
     dsp.cpp
 )
 
-target_link_libraries(r64fx_base jack)
+target_link_libraries(r64fx_base jack sndfile samplerate)
+
+add_executable(r64fx_example example.cpp)
+
+target_link_libraries(r64fx_example r64fx_base)
+
+
 

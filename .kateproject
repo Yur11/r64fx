@@ -1,4 +1,4 @@
 {
   "name": "r64fx",
-  "files": [ { "git": 1 } ]
+  "files": [ { "git": 1 }, { "directory": "kate", "filters": ["*.cpp", "*.h", "*.ui", "CMakeLists.txt", "Find*.cmake"], "recursive": 1 } ]
 }

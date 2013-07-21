@@ -923,6 +923,8 @@ public:
         bytes << 0xC3;
     }
 
+    inline void rdtsc() { bytes << 0x0F << 0x31; }
+
     void add(GPR32 reg, Mem32 mem);
     void add(Mem32 mem, GPR32 reg);
     void add(GPR32 dst, GPR32 src);
@@ -956,7 +958,6 @@ public:
 
     void sub(GPR64 reg, Base base);
     void sub(Base base, GPR64 reg);
-
 
     void mov(GPR64 reg, Mem64 mem);
     void mov(Mem64 mem, GPR64 reg);

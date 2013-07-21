@@ -4,6 +4,11 @@
 #include <vector>
 #include <cstring>
 
+#ifdef DEBUG
+#include <string>
+#include <assert.h>
+#endif//DEBUG
+
 using namespace std;
 
 namespace r64fx{
@@ -14,12 +19,20 @@ int on_buffer_size_change(jack_nframes_t new_size, void *arg);
 void on_shutdown(void* arg);
 void on_error(const char* str);
     
+#ifdef DEBUG
+int on_debug_audio_player_io(jack_nframes_t nframes, void* arg);
+#endif//DEBUG
 
 struct JackAudioEnginePrivate{
     JackAudioEngine* public_inteface;
     jack_client_t* client;
     vector<jack_port_t*> input_ports;
     vector<jack_port_t*> output_ports;
+
+#ifdef DEBUG
+    vector<AudioData> debug_player_data_channels;
+    vector<int> debug_player_indices;
+#endif//DEBUG
     
     inline bool init(JackAudioEngine* engine, const char* client_name)
     {
@@ -34,7 +47,7 @@ struct JackAudioEnginePrivate{
             return false;
         }
         
-        jack_set_process_callback(client, &on_audio_io, this);
+        jack_set_process_callback(client, on_audio_io, this);
         jack_set_sample_rate_callback(client, on_sample_rate_change, this);
         jack_on_shutdown(client, on_shutdown, this);
         
@@ -96,7 +109,7 @@ struct JackAudioEnginePrivate{
     {
         public_inteface->setBufferSize(new_size);
     }
-    
+
     inline void activate()
     {
         jack_activate(client);
@@ -111,6 +124,42 @@ struct JackAudioEnginePrivate{
     {
         jack_client_close(client);
     }
+
+#ifdef DEBUG
+    inline void run_debug_audio_player(vector<AudioData> data_channels)
+    {
+        assert(data_channels.size() > 0);
+        int channel_size = data_channels[0].size();
+        for(int i=1; i<(int)data_channels.size(); i++)
+        {
+            assert((int)data_channels[i].size() == channel_size);
+        }
+
+        for(int i=0; i<(int)data_channels.size(); i++)
+        {
+            string name = "out";
+            name.push_back(i + 48);
+            create_new_output_port(name.c_str());
+            debug_player_indices.push_back(0);
+        }
+
+        debug_player_data_channels = data_channels;
+
+        jack_set_process_callback(client, on_debug_audio_player_io, this);
+    }
+
+    inline void do_debug_audio_player_io(unsigned int sample_count)
+    {
+        for(int i=0; i<(int)output_ports.size(); i++)
+        {
+           float* port = (float*) jack_port_get_buffer(output_ports[i], sample_count);
+           memcpy(port, debug_player_data_channels[i].data() + debug_player_indices[i], sizeof(float) * sample_count);
+           if(debug_player_indices[i] + sample_count < debug_player_data_channels[i].size())
+               debug_player_indices[i] += sample_count;
+        }
+    }
+
+#endif//DEBUG
 };
     
     
@@ -120,6 +169,16 @@ int on_audio_io(jack_nframes_t nframes, void* arg)
     p->do_audio_io(nframes);
     return 0;
 }
+
+
+#ifdef DEBUG
+int on_debug_audio_player_io(jack_nframes_t nframes, void* arg)
+{
+    auto p = (JackAudioEnginePrivate*) arg;
+    p->do_debug_audio_player_io(nframes);
+    return 0;
+}
+#endif//DEBUG
 
 
 int on_sample_rate_change(jack_nframes_t new_rate, void* arg)
@@ -187,6 +246,13 @@ void JackAudioEngine::deactivate()
 {
     p->deactivate();
 }
+
+#ifdef DEBUG
+void JackAudioEngine::runDebugAudioPlayer(vector<AudioData> data_channels)
+{
+    p->run_debug_audio_player(data_channels);
+}
+#endif//DEBUG
 
     
 }//namespace r64fx

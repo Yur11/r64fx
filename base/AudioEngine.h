@@ -1,6 +1,8 @@
 #ifndef R64FX_AUDIO_ENGINE_H
 #define R64FX_AUDIO_ENGINE_H
 
+#include <vector>
+
 
 namespace r64fx{
    
@@ -12,7 +14,8 @@ struct AudioEnginePrivate;
     Make a subclass for each specific audio backend: Jack, PortAudio etc...
  */
 class AudioEngine{
-    AudioEnginePrivate* p;
+    std::vector<float*> input_buffers;
+    std::vector<float*> output_buffers;
     
 protected:
     int sample_rate;

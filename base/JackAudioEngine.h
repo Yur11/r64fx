@@ -2,6 +2,8 @@
 #define R64FX_JACK_AUDIO_ENGINE_H
 
 #include "AudioEngine.h"
+#include <jack/jack.h>
+#include "AudioData.h"
 
 namespace r64fx{
 
@@ -26,6 +28,10 @@ public:
     virtual void activate();
     
     virtual void deactivate();
+
+#ifdef DEBUG
+    void runDebugAudioPlayer(std::vector<AudioData> data_channels);
+#endif//DEBUG
 };
     
 }//namespace r64fx
