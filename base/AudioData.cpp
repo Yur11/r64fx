@@ -140,4 +140,52 @@ _cleanup:
     return channels;
 }
 
+
+void AudioData::saveFile(const char* file_path, std::vector<AudioData> channels, int samplerate)
+{
+    /* See libsndfile http://www.mega-nerd.com/libsndfile/ */
+    SF_INFO file_info;
+    file_info.frames = channels[0].size();
+    file_info.samplerate = samplerate;
+    file_info.channels = channels.size();
+    file_info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
+    SNDFILE* sndfile = sf_open(file_path, SFM_WRITE, &file_info);
+    if(!sndfile)
+    {
+        cerr << "Failed to open file for writing!\n";
+        cerr << sf_strerror(sndfile) << "\n";
+        return;
+    }
+
+    int nframes = channels[0].size();
+    int buffer_size = nframes * file_info.channels;
+    float* buffer = new float[buffer_size];
+    int written_frames = 0;
+    int frames_to_write = channels[0].size();
+    cout << frames_to_write << " frames\n";
+    while(written_frames < frames_to_write)
+    {
+        cout << ".\n";
+        for(int i=0; i<nframes; i++)
+        {
+            for(int ch=0; ch<file_info.channels; ch++)
+            {
+                buffer[i * file_info.channels + ch] = channels[ch][i];
+            }
+        }
+
+        if(sf_writef_float(sndfile, buffer, nframes) < nframes)
+        {
+            cerr << "Failed to write " << nframes << " frames!\n";
+            cerr << sf_strerror(sndfile) << "\n";
+        }
+
+        written_frames += nframes;
+    }
+
+    delete[] buffer;
+
+    sf_close(sndfile);
+}
+
 }//namespace r64fx

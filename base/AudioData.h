@@ -21,6 +21,8 @@ public:
         void* feedback_data = nullptr
     );
 
+    static void saveFile(const char* path, std::vector<AudioData> channels, int samplerate);
+
     inline float &operator[](unsigned long int index) { return _data[index]; }
 
     inline float* data() const { return _data; }
