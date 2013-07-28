@@ -2,8 +2,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(r64fx)
 
-set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -O2")
-
 
 add_definitions(
     -DDEBUG
@@ -17,6 +15,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/jit
     ${CMAKE_SOURCE_DIR}/base
     ${CMAKE_SOURCE_DIR}/gui
+    ${EXTRA_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -24,7 +23,10 @@ link_directories(
     ${CMAKE_BINARY_DIR}/json
     ${CMAKE_BINARY_DIR}/base
     ${CMAKE_BINARY_DIR}/gui
+    ${EXTRA_LIB_DIRS}
 )
+
+set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -g -O0")
 
 add_subdirectory(utf8string)
 add_subdirectory(json)
