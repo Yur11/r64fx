@@ -15,7 +15,6 @@ add_library(r64fx_gui
     Texture.cpp
     Config.cpp
     Action.cpp
-    MenuItem.cpp
     Menu.cpp
     Font.cpp
     Message.cpp
