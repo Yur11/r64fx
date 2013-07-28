@@ -2,37 +2,37 @@
 #define R64FX_GUI_ACTION_H
 
 #include "Message.h"
-#include "Texture.h"
-#include <string>
+#include "Icon.h"
+#include "Utf8String.h"
 
 namespace r64fx{
 
 /** @brief An action that can be taken by the user. */
 class Action{
-    Texture* _icon_texture;
-    std::string _name;
+    Icon _icon;
+    Utf8String _name;
     Message _message;
 
 public:
-    Action(Texture* icon_texture, std::string name, Message message = Message())
-    : _icon_texture(icon_texture)
+    Action(Icon icon, Utf8String name, Message message = Message())
+    : _icon(icon)
     , _name(name)
     , _message(message)
     {}
 
-    Action(std::string name, Message message = Message())
-    : _icon_texture(Texture::transparent16x16())
+    Action(Utf8String name, Message message = Message())
+    : _icon(Icon::defaultIcon())
     , _name(name)
     , _message(message)
     {}
 
-    inline void setIconTexture(Texture* texture) { _icon_texture = texture; }
+    inline void setIcon(Icon icon) { _icon = icon; }
     
-    inline Texture* iconTexture() const { return _icon_texture; }
+    inline Icon icon() const { return _icon; }
 
-    inline void setName(std::string name) { _name = name; }
+    inline void setName(Utf8String name) { _name = name; }
 
-    inline std::string name() const { return _name; }
+    inline Utf8String name() const { return _name; }
 
     inline void setMessage(Message message) { _message = message; }
 
