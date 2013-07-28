@@ -70,6 +70,7 @@ int main()
     View view(&scene);
     window.setView(&view);
 
+    Dummy::initDebugMenu();
     Dummy dummy(150, 150);
     scene.appendWidget(&dummy);
     dummy.setPosition(100, 100);
