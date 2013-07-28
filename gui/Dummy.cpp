@@ -59,6 +59,14 @@ void Dummy::initDebugMenu()
     if(_debug_menu) return;
     
     _debug_menu = new Menu;
+    _debug_menu->appendAction(new Action("Hello"));
+    _debug_menu->appendAction(new Action("Doctor"));
+    _debug_menu->appendAction(new Action("Name"));
+    _debug_menu->appendAction(new Action("Continue"));
+    _debug_menu->appendAction(new Action("Yesterday"));
+    _debug_menu->appendAction(new Action("Tommorow"));
+    _debug_menu->setPadding(5);
+    _debug_menu->setSpacing(10);
     _debug_menu->update();
 }
     

@@ -2,12 +2,18 @@
 #define R64FX_GUI_MENU_H
 
 #include "containers.h"
+#include "Action.h"
+
 
 namespace r64fx{
     
 class Menu : public VerticalContainer{
 public:
     Menu(Widget* parent = nullptr);
+    
+    void appendAction(Action* act);
+    
+    virtual void render();
 };
     
 }//namespace r64fx

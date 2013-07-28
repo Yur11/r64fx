@@ -57,7 +57,7 @@ Icon Icon::find(std::string name)
 
 Icon Icon::defaultIcon()
 {
-    return Icon(Size<float>(32, 32), nullptr);
+    return Icon(Size<float>(18, 18), nullptr);
 }
 
     
