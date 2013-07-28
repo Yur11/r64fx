@@ -86,7 +86,10 @@ void Widget::render()
 
 void Widget::update()
 {
-    
+    for(auto ch : _children)
+    {
+        ch->update();
+    }
 }
 
 

@@ -7,6 +7,8 @@ namespace r64fx{
     
 void HorizontalContainer::update()
 {
+    Widget::update();
+    
     float chx = paddingLeft();
     float chy = paddingTop();
     float new_width = 0.0;
@@ -29,6 +31,8 @@ void HorizontalContainer::update()
 
 void VerticalContainer::update()
 {
+    Widget::update();
+    
     float chx = paddingLeft();
     float chy = paddingTop();
     float new_width = 0.0;
