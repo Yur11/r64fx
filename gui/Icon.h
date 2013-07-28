@@ -12,8 +12,9 @@ class Icon{
 public:
     Size<float> size;
 
-    Icon(Size<float> size = {32, 32}, Texture* texture = nullptr)
+    Icon(Size<float> size = Size<float>(32, 32), Texture* texture = nullptr)
     : _texture(texture)
+    , size(size)
     {}
 
     inline bool isOk() const { return _texture != nullptr; }
