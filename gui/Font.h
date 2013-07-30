@@ -44,14 +44,17 @@ public:
     /* Remove this! */
     static Font* defaultFont();
     
-    class Error{
-        std::string _message;
-        
-    public:
-        Error(std::string message) : _message(message) {}
-        
-        inline std::string message() const { return _message; }
-    };
+    /** @brief Load a font from file and add it to the font library with a given font name.
+     
+        @return Returns nullptr if the font has failed to load.
+     */
+    static Font* loadFont(std::string fontname, std::string path);
+    
+    /** @brief Find a font in the font library by the name. 
+     
+        @return Function returns nullptr on failure.
+     */
+    static Font* find(std::string fontname);
 };
     
 }//namespace r64fx
