@@ -63,13 +63,16 @@ void WindowBase::showOverlayMenu(int x, int y, Menu* menu)
     
 void WindowBase::closeOverlayMenu(Menu* menu)
 {
-    
+    while(_overlay_menus.back() != menu)
+    {
+        _overlay_menus.pop_back();
+    }
 }
 
 
 void WindowBase::closeAllOverlayMenus()
 {
-    
+    _overlay_menus.clear();
 }
 
 

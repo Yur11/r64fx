@@ -90,8 +90,9 @@ int main()
 
         window.render();
         window.swapBuffers();
+        glFinish();
         if(Window::shouldQuit()) break;
-        usleep(3000);
+        usleep(300);
     }
     
 
