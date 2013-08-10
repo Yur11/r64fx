@@ -756,5 +756,36 @@ void Assembler::shufps(Xmm reg, Mem128 mem, unsigned char imm)
     bytes << imm;
 }
 
+
+void Assembler::pshufd(Xmm dst, Xmm src, unsigned char imm)
+{
+    if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x66 << 0x0F << 0x70;
+    bytes << ModRM(b11, dst.code(), src.code());
+    bytes << imm;
+}
+
+
+void Assembler::pshufd(Xmm reg, Mem128 mem, unsigned char imm)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x66 << 0x0F << 0x70;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 5);
+    bytes << imm;
+}
+
+
+void Assembler::pshufd(Xmm reg, Base base, Disp8 disp, unsigned char imm)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x66 << 0x0F << 0x70;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+    bytes << imm;
+}
+
 }//namespace r64fx
 

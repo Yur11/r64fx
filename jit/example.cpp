@@ -23,7 +23,7 @@ using namespace r64fx;
 // float buffer[nsamples * 4];
 
 
-float vec1[4] = { 1.0, 2.0, 3.0, 4.0 };
+float vec1[8] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 };
 
 
 int main()
@@ -81,8 +81,9 @@ int main()
 //     
 //     a.ret();
     
-//     a.movaps(xmm0, Mem128(vec1));
-    a.shufps(xmm0, Mem128(vec1), shuf(2, 1, 0, 3));
+//     a.movaps(xmm1, Mem128(vec1));
+    a.mov(rdx, Imm64(vec1));
+    a.pshufd(xmm0, Base(rdx), Disp8(16), shuf(3, 1, 1, 2));
     a.movaps(Mem128(vec1), xmm0);
     a.ret();
     

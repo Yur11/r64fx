@@ -559,12 +559,14 @@ public:
 class Imm64{
     friend class CodeBuffer;
     union{
-        unsigned long long qword;
+        unsigned long qword;
         unsigned char byte[8];
     }bytes;
     
 public:
-    explicit Imm64(unsigned long long qword)
+    explicit Imm64(void* ptr) : Imm64((unsigned long)ptr) {}
+    
+    explicit Imm64(unsigned long qword)
     {
         bytes.qword = qword;
     }
@@ -835,7 +837,7 @@ const CmpCode
 ;
 
 
-/** @brief Pack four 0..3 values into a sigle byte. To be used with shufps. 
+/** @brief Pack four 0..3 values into a sigle byte. To be used with shuffle instructions. 
  
     Each parameter defines the source scalar from which to read the data into the current position.
     For example 
@@ -1113,7 +1115,13 @@ public:
     void shufps(Xmm reg, Mem128 mem, unsigned char imm);
     /* ??? */
     
-    
+    void pshufd(Xmm dst, Xmm src, unsigned char imm);
+    void pshufd(Xmm reg, Mem128 mem, unsigned char imm);
+    void pshufd(Xmm reg, Base base, Disp8 disp, unsigned char imm);
+    inline void pshufd(Xmm reg, Base base, unsigned imm)
+    {
+        pshufd(reg, base, Disp8(0), imm);
+    }
 
 };//Assembler
 
