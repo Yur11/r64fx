@@ -40,6 +40,20 @@ Window::Window(int width, int height, const char* title)
     all_windows.push_back(this);
     
     trackMouse(true);
+    
+    
+    /* Hack. Send these events to the window for it to resize properly. */
+    SDL_Event event;
+    event.type = SDL_WINDOWEVENT;
+    
+    event.window.event = SDL_WINDOWEVENT_FOCUS_GAINED;
+    event.window.windowID = SDL_GetWindowID(_window);
+    SDL_PushEvent(&event);
+    
+    event.window.event = SDL_WINDOWEVENT_RESIZED;
+    event.window.data1 = width;
+    event.window.data2 = height;
+    SDL_PushEvent(&event);
 }
 
 

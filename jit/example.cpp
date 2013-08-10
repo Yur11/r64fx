@@ -83,7 +83,7 @@ int main()
     
 //     a.movaps(xmm1, Mem128(vec1));
     a.mov(rdx, Imm64(vec1));
-    a.pshufd(xmm0, Base(rdx), Disp8(16), shuf(3, 1, 1, 2));
+    a.pshufd(xmm0, Base(rdx), Disp8(16), shuf(3, 2, 1, 0));
     a.movaps(Mem128(vec1), xmm0);
     a.ret();
     
