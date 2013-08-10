@@ -822,6 +822,7 @@ public:
     inline unsigned int code() const { return _code; }
 };
 
+/** @brief Codes used with cmpps. */
 const CmpCode
     EQ(0),
     LT(1),
@@ -832,6 +833,18 @@ const CmpCode
     NLE(6),
     ORD(7)
 ;
+
+
+/** @brief Pack four 0..3 values into a sigle byte. To be used with shufps. 
+ 
+    Each parameter defines the source scalar from which to read the data into the current position.
+    For example 
+       Setting s3 to 0, means moving the first scalar form the source vector into the last scalar of the destination vector.
+       - shuf(0, 1, 2, 3) - no shuffle.
+       - shuf(3, 2, 1, 0) - reverse order.
+       - etc...
+ */
+unsigned char shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3);
 
 
 class CodeBuffer{
@@ -1094,6 +1107,13 @@ public:
     void movaps(Mem128, Xmm reg);
     void movaps(Base base, Disp8 disp, Xmm reg);
     inline void movaps(Base base, Xmm reg) { movaps(base, Disp8(0), reg); }
+    
+    /* ??? */
+    void shufps(Xmm dst, Xmm src, unsigned char imm);
+    void shufps(Xmm reg, Mem128 mem, unsigned char imm);
+    /* ??? */
+    
+    
 
 };//Assembler
 

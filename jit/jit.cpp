@@ -185,6 +185,12 @@ void encode_modrm_and_sib_base(CodeBuffer &bytes, Register &reg, Base &base)
 }
 
 
+unsigned char shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3)
+{
+    return (s3 << 6) + (s2 << 4) + (s1 << 2) + s0;
+}
+
+
 void Assembler::add(GPR32 reg, Mem32 mem)
 {
     if(reg.prefix_bit()) bytes << Rex(0, 1, 0, 0);
@@ -729,6 +735,25 @@ void Assembler::movaps(Base base, Disp8 disp, Xmm reg)
         encode_modrm_and_sib_base(bytes, reg, base);
     else
         encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+}
+
+
+void Assembler::shufps(Xmm dst, Xmm src, unsigned char imm)
+{
+    if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x0F << 0xC6;
+    bytes << ModRM(b11, dst.code(), src.code());
+    bytes << imm;
+}
+
+
+void Assembler::shufps(Xmm reg, Mem128 mem, unsigned char imm)
+{
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0xC6;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 5);
+    bytes << imm;
 }
 
 }//namespace r64fx

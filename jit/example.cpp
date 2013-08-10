@@ -5,22 +5,26 @@ using namespace std;
 using namespace r64fx;
 
 
-union CpuCycleCount{
-    unsigned int parts[2];
-    unsigned long value;
-} begin_count, end_count;
+// union CpuCycleCount{
+//     unsigned int parts[2];
+//     unsigned long value;
+// } begin_count, end_count;
 
-int num1 = 123;
-int num2 = 456;
+// int num1 = 123;
+// int num2 = 456;
+// 
+// float freq[4] = {110.0, 220.0, 440.0, 880.0};
+// float osc[4] = {0.0, 0.0, 0.0, 0.0};
+// const float samplerate_rcp = 1.0 / 48000.0;
+// float samplerate_rcp_buff[4] = {samplerate_rcp, samplerate_rcp, samplerate_rcp, samplerate_rcp};
+// float one[4] = {1.0, 1.0, 1.0, 1.0};
+// float two[4] = {2.0, 2.0, 2.0, 2.0};
+// const int nsamples = 1024;
+// float buffer[nsamples * 4];
 
-float freq[4] = {110.0, 220.0, 440.0, 880.0};
-float osc[4] = {0.0, 0.0, 0.0, 0.0};
-const float samplerate_rcp = 1.0 / 48000.0;
-float samplerate_rcp_buff[4] = {samplerate_rcp, samplerate_rcp, samplerate_rcp, samplerate_rcp};
-float one[4] = {1.0, 1.0, 1.0, 1.0};
-float two[4] = {2.0, 2.0, 2.0, 2.0};
-const int nsamples = 1024;
-float buffer[nsamples * 4];
+
+float vec1[4] = { 1.0, 2.0, 3.0, 4.0 };
+
 
 int main()
 {
@@ -77,13 +81,19 @@ int main()
 //     
 //     a.ret();
     
-    
+//     a.movaps(xmm0, Mem128(vec1));
+    a.shufps(xmm0, Mem128(vec1), shuf(2, 1, 0, 3));
+    a.movaps(Mem128(vec1), xmm0);
     a.ret();
     
     typedef long int (*Fun)();
     Fun fun = (Fun) a.getFun();
 
+    cout << vec1[0] << ", " << vec1[1] << ", " << vec1[2] << ", " << vec1[3] << "\n";
     fun();
+    cout << vec1[0] << ", " << vec1[1] << ", " << vec1[2] << ", " << vec1[3] << "\n";
+    
+    
     
 //     for(int i=0; i<nsamples; i++)
 //     {
