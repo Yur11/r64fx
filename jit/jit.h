@@ -1,6 +1,10 @@
 #ifndef X86_64_JIT_ASSEMBLER_H
 #define X86_64_JIT_ASSEMBLER_H
 
+#ifdef DEBUG
+#include <assert.h>
+#endif//DEBUG
+
 namespace r64fx{
 
 /* Usefull binary constants. */
@@ -754,6 +758,9 @@ struct Mem16{
     
     explicit Mem16(void* addr)
     {
+#ifdef DEBUG
+        assert(addr % 2 == 0);
+#endif//DEBUG
         this->addr = (long int) addr;
     }
 };
@@ -763,6 +770,9 @@ struct Mem32{
     
     explicit Mem32(void* addr)
     {
+#ifdef DEBUG
+        assert(addr % 4 == 0);
+#endif//DEBUG
         this->addr = (long int) addr;
     }
 };
@@ -772,6 +782,9 @@ struct Mem64{
     
     explicit Mem64(void* addr)
     {
+#ifdef DEBUG
+        assert(addr % 8 == 0);
+#endif//DEBUG
         this->addr = (long int) addr;
     }
 };
@@ -781,6 +794,9 @@ struct Mem128{
     
     explicit Mem128(void* addr)
     {
+#ifdef DEBUG
+        assert(addr % 16 == 0);
+#endif//DEBUG
         this->addr = (long int) addr;
     }
 };
@@ -790,6 +806,9 @@ struct Mem256{
     
     explicit Mem256(void* addr)
     {
+#ifdef DEBUG
+        assert(addr % 32 == 0);
+#endif//DEBUG
         this->addr = (long int) addr;
     }
 };
@@ -939,6 +958,8 @@ public:
     }
 
     inline void rdtsc() { bytes << 0x0F << 0x31; }
+    
+    inline void rdpmc() { bytes << 0x0F << 0x33; }
 
     void add(GPR32 reg, Mem32 mem);
     void add(Mem32 mem, GPR32 reg);
@@ -1095,6 +1116,8 @@ public:
     void cmpss(CmpCode kind, Xmm dst, Xmm src);
     void cmpss(CmpCode kind, Xmm reg, Mem128 mem);
     void cmpss(CmpCode kind, Xmm reg, Base base, Disp8 disp = Disp8(0));
+    
+    inline void cmpltps(Xmm dst, Xmm src) { cmpps(LT, dst, src); }
 
     void movups(Xmm dst, Xmm src);
     void movups(Xmm reg, Mem128 mem);
