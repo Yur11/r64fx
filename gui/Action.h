@@ -28,6 +28,8 @@ public:
 
     inline void setIcon(Icon icon) { _icon = icon; }
     
+    inline void setIconSize(Size<float> size) { _icon.size = size; }
+    
     inline Icon icon() const { return _icon; }
 
     inline void setName(Utf8String name) { _name = name; }

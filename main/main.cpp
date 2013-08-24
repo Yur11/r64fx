@@ -67,6 +67,7 @@ struct Program{
 
         /* Initialize default font. */
         Font font(xolonium_regular_font, xolonium_regular_font_size);
+        font.setFaceSize(16);
         if(font.isOk())
         {
             Font::initDefaultFont(&font);
@@ -93,7 +94,7 @@ struct Program{
 
         TextLine line(tr("Session") + " " + tr("Edit") + " " + tr("View") + " " + tr("Graph") + " " + tr("Undo") + " " + tr("Redo"));
         scene.appendWidget(&line);
-        line.font()->setFaceSize(16);
+//         line.font()->setFaceSize(16);
         line.update();
         line.setPosition(100, 400);
 

@@ -1,6 +1,10 @@
 #include "Menu.h"
 #include "Font.h"
 
+#include <iostream>
+
+using namespace std;
+
 
 namespace r64fx{
     
@@ -25,15 +29,17 @@ struct ActionWidget : Widget{
         action->icon().render();
         glPushMatrix();
             glColor3f(0.9, 0.9, 0.9);
-            glTranslatef(action->icon().size.w, 0.0, 0.0);
+            glTranslatef(action->icon().size.w + 5, 2.0, 0.0);
             Font::defaultFont()->render(action->name().stdstr);
         glPopMatrix();
     }
     
     virtual void update()
     {
-        setWidth(100);
-        setHeight(max(action->icon().size.h, Font::defaultFont()->ascender() + Font::defaultFont()->descender()));
+        float new_height = (Font::defaultFont()->ascender() + Font::defaultFont()->descender());
+        setWidth(Font::defaultFont()->estimatedTextWidth(action->name().stdstr) + new_height + 10);
+        setHeight(new_height);
+        action->setIconSize({16, 16});
     }
 };
     

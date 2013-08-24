@@ -34,7 +34,7 @@ void VerticalContainer::update()
     Widget::update();
     
     float chx = paddingLeft();
-    float chy = paddingTop();
+    float chy = paddingBottom();
     float new_width = 0.0;
     float new_height = 0.0;
     for(auto it=_children.rbegin(); it != _children.rend(); it++)

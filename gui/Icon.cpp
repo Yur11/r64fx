@@ -17,7 +17,7 @@ void Icon::render()
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         _texture.bind();//texture
-        glColor3f(1.0, 1.0, 1.0);
+//         glColor3f(1.0, 1.0, 1.0);
         glBegin(GL_POLYGON);
             glTexCoord2f(0.0, 1.0);
             glVertex2f(0.0, 0.0);

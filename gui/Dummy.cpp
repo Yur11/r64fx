@@ -19,21 +19,6 @@ void Dummy::render()
     
     render_bounding_rect();
     
-    glDisable(GL_BLEND);
-    glEnable(GL_TEXTURE_2D);
-    Texture::defaultTexture().bind();
-    glBegin(GL_POLYGON);
-        glTexCoord2f(0.0, 0.0);
-        glVertex2f(0.0, 0.0);
-        glTexCoord2f(0.0, 1.0);
-        glVertex2f(0.0, height());
-        glTexCoord2f(1.0, 1.0);
-        glVertex2f(width(), height());
-        glTexCoord2f(1.0, 0.0);
-        glVertex2f(width(), 0.0);
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
-    
     glPointSize(5.0);
     glColor3f(0.0, 0.0, 1.0);
     glBegin(GL_POINTS);
@@ -81,6 +66,7 @@ void Dummy::initDebugMenu()
     _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Yesterday"));
     _debug_menu->appendAction(new Action("Tommorow"));
     _debug_menu->setPadding(5);
+    _debug_menu->setPaddingTop(10);
     _debug_menu->setSpacing(10);
     _debug_menu->update();
 }
