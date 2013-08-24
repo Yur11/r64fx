@@ -4,3 +4,4 @@ core
 script
 tools/build_resource
 example
+.directory
