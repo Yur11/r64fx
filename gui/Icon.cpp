@@ -1,21 +1,23 @@
 #include "Icon.h"
 #include <map>
 
+#include <iostream>
+
 using namespace std;
 
 namespace r64fx{
 
 map<string, Icon> all_icons;
-    
+
 void Icon::render()
 {
-    if(_texture)
+    if(_texture.isGood())
     {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        _texture->bind();//texture
-        glColor3f(0.0, 0.0, 0.0);
+        _texture.bind();//texture
+        glColor3f(1.0, 1.0, 1.0);
         glBegin(GL_POLYGON);
             glTexCoord2f(0.0, 1.0);
             glVertex2f(0.0, 0.0);
@@ -45,19 +47,31 @@ void Icon::render()
 }
 
 
-Icon Icon::find(std::string name)
+Icon Icon::find(std::string name, Size<float> size)
 {
     auto it = all_icons.find(name);
     if(it == all_icons.end())
-        return defaultIcon();
+    {
+        Texture texture("icons/" + name + ".png");
+        if(texture.isGood())
+        {
+            Icon icon(size, texture);
+            all_icons[name] = icon;
+            return icon;
+        }
+        else
+        {
+            return defaultIcon();
+        }
+    }
     else
         return it->second;
 }
 
 
-Icon Icon::defaultIcon()
+Icon Icon::defaultIcon(Size<float> size)
 {
-    return Icon(Size<float>(18, 18), nullptr);
+    return Icon(size, Texture::badTexture());
 }
 
     

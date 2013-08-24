@@ -7,23 +7,36 @@
 using namespace std;
 
 namespace r64fx{
+   
     
+vector<Texture> all_textures;
+std::vector<std::string>* texture_data_paths;
     
-vector<Texture*> all_texture_instances;
-    
-Texture::Texture(std::string path)
+Texture::Texture(std::string name)
 {
-    FILE* file = fopen(path.c_str(), "rb");
+    FILE* file = fopen(name.c_str(), "rb");//Try absolute path first.
+    if(!file && texture_data_paths)
+    {
+        /* Check all known data directories. */
+        for(auto it=texture_data_paths->begin(); it!=texture_data_paths->end(); it++)
+        {
+            auto &path = *it;
+            file = fopen((path + name).c_str(), "rb");
+            if(file)
+                break;
+        }
+    }
+    
     if(!file)
     {
-        cerr << "Texture: Failed to read file '" << path << "' !\n";
+        cerr << "Texture: Failed to find and read texture file '" << name << "' !\n";
         return;
     }
     
     char header[8];
     if(fread(header, 1, 8, file) < 8)
     {
-        cerr << "Texture: Failed to read file header for '" << path << "' !\n";
+        cerr << "Texture: Failed to read file header for '" << name << "' !\n";
         fclose(file);
         return;
     }
@@ -95,15 +108,17 @@ Texture::Texture(std::string path)
     delete[] row_pointers;
     delete[] data;
     
-    all_texture_instances.push_back(this);
+    all_textures.push_back(*this);
 }
 
 
 void Texture::load_to_vram(int width, int height, int channel_count, int mode, unsigned char* bytes)
 {
+    glEnable(GL_TEXTURE_2D);
+    
     glGenTextures(1, &_texture);
     glBindTexture(GL_TEXTURE_2D, _texture);
-    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
@@ -112,30 +127,26 @@ void Texture::load_to_vram(int width, int height, int channel_count, int mode, u
     
     
     gluBuild2DMipmaps(GL_TEXTURE_2D, channel_count, width, height, mode, GL_UNSIGNED_BYTE, bytes);
+//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
+    
+    glDisable(GL_TEXTURE_2D);
 }
 
 
 Texture::~Texture()
 {
-    glDeleteTextures(1, &_texture);
-    
-    for(int i=all_texture_instances.size() - 1; i>=0; i--)
-    {
-        if(all_texture_instances[i] == this)
-        {
-            all_texture_instances.erase(all_texture_instances.begin() + i);
-        }
-    }
 }
 
 
 
-Texture* default_texture = nullptr;
-Texture* transparent_16x16 = nullptr;
+Texture default_texture;
+Texture transparent_16x16;
 
 
-void Texture::init()
+void Texture::init(std::vector<std::string>* data_paths)
 {
+    texture_data_paths = data_paths;
+    
     /** Create default texture. */
     const int width = 32;
     const int height = 32;
@@ -179,7 +190,7 @@ void Texture::init()
         }
     }
     
-    default_texture = new Texture(width, height, 4, mode, bytes);
+    default_texture = Texture(width, height, 4, mode, bytes);
 
 
     /* Create transparent 16x16 texture. */
@@ -196,17 +207,23 @@ void Texture::init()
         }
     }
 
-    transparent_16x16 = new Texture(16, 16, 4, GL_RGBA, bytes);
+    transparent_16x16 = Texture(16, 16, 4, GL_RGBA, bytes);
 }
 
 
-Texture* Texture::defaultTexture()
+Texture Texture::defaultTexture()
 {
     return default_texture;
 }
 
 
-Texture* Texture::transparent16x16()
+Texture Texture::badTexture()
+{
+    return Texture();
+}
+
+
+Texture Texture::transparent16x16()
 {
     return transparent_16x16;
 }
@@ -214,17 +231,7 @@ Texture* Texture::transparent16x16()
 
 void Texture::cleanup()
 {
-    /* If all works well the all_texture_instances vector 
-     * should be cleared by the code in the destructor.
-     * 
-     * I know this is quite hackish.
-     * 
-     * This allows to delete texture instaces individually as well as all at once.
-     */
-    while(!all_texture_instances.empty())
-    {
-        delete all_texture_instances.back();
-    }
+    all_textures.clear();
 }
     
 }//namespace r64fx

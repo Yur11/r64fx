@@ -3,6 +3,7 @@
 
 #include <GL/gl.h>
 #include <string>
+#include <vector>
 
 namespace r64fx{
     
@@ -14,7 +15,9 @@ class Texture{
     void load_to_vram(int width, int height, int channel_count, int mode, unsigned char* bytes);
     
 public:
-    Texture(std::string path);
+    Texture() {}
+    
+    Texture(std::string name);
     
     Texture(int width, int height, int channel_count, int mode, unsigned char* bytes)
     {
@@ -23,20 +26,29 @@ public:
     
    ~Texture();
     
+    inline bool operator==(const Texture &other)
+    {
+        return _texture == other._texture;
+    }
+   
     inline int width() const { return _width; }
     inline int height() const { return _width; }
     
-    GLuint texture() const { return _texture; }
+    GLuint id() const { return _texture; }
     
     inline void bind(int mode = GL_TEXTURE_2D) { glBindTexture(mode, _texture); }
     
-    inline bool isValid() const { return _width && _height; }
+    inline bool isGood() const { return _width && _height; }
     
-    static void init();
+    inline void free() { glDeleteTextures(1, &_texture); _width = _height = 0; }
     
-    static Texture* defaultTexture();
+    static void init(std::vector<std::string>* data_paths);
+    
+    static Texture defaultTexture();
+    
+    static Texture badTexture();
 
-    static Texture* transparent16x16();
+    static Texture transparent16x16();
     
     static void cleanup();
 };

@@ -7,23 +7,28 @@
 namespace r64fx{
     
 class Icon{
-    Texture* _texture;
-
+    Texture _texture;
+    
 public:
     Size<float> size;
-
-    Icon(Size<float> size = Size<float>(32, 32), Texture* texture = nullptr)
+    
+    Icon(Size<float> size = Size<float>(32, 32), Texture texture = Texture::badTexture())
     : _texture(texture)
     , size(size)
     {}
 
-    inline bool isOk() const { return _texture != nullptr; }
-
     void render();
 
-    static Icon find(std::string name);
+    static Icon find(std::string name, Size<float> size = Size<float>(32, 32));
+    
+    inline static Icon find(std::string name, float width, float height)
+    {
+        return Icon::find(name, Size<float>(width, height));
+    }
 
-    static Icon defaultIcon();
+    static Icon defaultIcon(Size<float> size = Size<float>(18, 18));
+    
+    static Icon loadFrom(std::vector<std::string>* data_paths);
 };
     
 }//namespace r64fx

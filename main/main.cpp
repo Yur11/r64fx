@@ -1,6 +1,8 @@
 #include <iostream>
 #include <map>
 #include <unistd.h>
+#include <cstring>
+#include <jack/jack.h>
 
 #include "Config.h"
 #include "Window.h"
@@ -23,82 +25,141 @@ namespace r64fx{
 }//namespace r64fx
 
 
+struct Program{
+    jack_client_t* jack_client;
+    jack_status_t jack_status;
+    bool jack_thread_should_be_running;
+    
+    
+    int main_thread()
+    {
+        using namespace r64fx;
+        
+//         jack_client = jack_client_open("r64fx", JackNullOption, &jack_status);
+//         if(!jack_client)
+//         {
+//             cerr << "Failed to create jack client!\n";
+//             return 1;
+//         }
+//         
+        
+        if(!Window::init())
+        {
+            cerr << "Failed to init GUI!\n";
+            return 2;
+        }
+        
+        /*
+        * Main window opened by default. 
+        * This creates an OpenGL context.
+        * 
+        * A lot of things in the gui can be done only after this step.
+        * This is true for everything that has to do with rendering or texture loading.
+        */
+        Window window(800, 600, "r64fx");
+        window.makeCurrent();
+
+        /*  */
+        Keyboard::init();
+
+        /* Initialize default texture. */
+        Texture::init(&data_paths);
+
+        /* Initialize default font. */
+        Font font(xolonium_regular_font, xolonium_regular_font_size);
+        if(font.isOk())
+        {
+            Font::initDefaultFont(&font);
+        }
+        else
+        {
+            cerr << "Problem creating default font!\n";
+            abort();
+        }
+
+        tr.loadLanguage("en");
+
+        /* These should be loaded from a file. */
+        Scene scene;
+
+        /* Setup root view of the main window. */
+        View view(&scene);
+        window.setView(&view);
+
+        Dummy::initDebugMenu();
+        Dummy dummy(150, 150);
+        scene.appendWidget(&dummy);
+        dummy.setPosition(100, 100);
+
+        TextLine line(tr("Session") + " " + tr("Edit") + " " + tr("View") + " " + tr("Graph") + " " + tr("Undo") + " " + tr("Redo"));
+        scene.appendWidget(&line);
+        line.font()->setFaceSize(16);
+        line.update();
+        line.setPosition(100, 400);
+
+//         start_jack_thread();
+        
+        /* Main event loop. */
+        for(;;)
+        {
+            Window::processEvents();
+
+            //Process other stuff here.
+
+            window.render();
+            window.swapBuffers();
+            glFinish();
+            if(Window::shouldQuit()) break;
+            usleep(300);
+        }
+        
+//         stop_jack_thread();
+
+        /* Cleanup things up before exiting. */
+        Texture::cleanup();
+        Window::cleanup();
+        
+        return 0;
+    }
+
+
+    void jack_thread()
+    {
+        static int i = 0;
+        while(jack_thread_should_be_running)
+        {
+            cout << i++ << "\n";
+            auto nframes = jack_cycle_wait(jack_client);
+            //Do IO.
+            jack_cycle_signal(jack_client, 0);
+            //Do processing.
+        }
+    }
+    
+
+    void start_jack_thread()
+    {
+        jack_thread_should_be_running = true;
+        jack_set_process_thread(jack_client, [](void* data)->void*{
+            auto program = (Program*) data;
+            program->jack_thread();
+            return nullptr;
+        }, this);
+        
+        jack_activate(jack_client);
+    }
+
+
+    void stop_jack_thread()
+    {
+        jack_deactivate(jack_client);
+        jack_thread_should_be_running = false;
+    }
+    
+} program;
+
+
 int main()
 {
-    using namespace r64fx;
-    
-    if(!Window::init())
-    {
-        cerr << "Failed to init GUI!\n";
-        return 2;
-    }
-    
-    /*
-     * Main window opened by default. 
-     * This creates an OpenGL context.
-     * 
-     * A lot of things in the gui can be done only after this step.
-     * This is true for everything that has to do with rendering or texture loading.
-     */
-    Window window(800, 600, "r64fx");
-    window.makeCurrent();
-
-    /*  */
-    Keyboard::init();
-
-    /* Initialize default texture. */
-    Texture::init();
-
-    /* Initialize default font. */
-    Font font(xolonium_regular_font, xolonium_regular_font_size);
-    if(font.isOk())
-    {
-        Font::initDefaultFont(&font);
-    }
-    else
-    {
-        cerr << "Problem creating default font!\n";
-        abort();
-    }
-
-    tr.loadLanguage("en");
-
-    /* These should be loaded from a file. */
-    Scene scene;
-
-    /* Setup root view of the main window. */
-    View view(&scene);
-    window.setView(&view);
-
-    Dummy::initDebugMenu();
-    Dummy dummy(150, 150);
-    scene.appendWidget(&dummy);
-    dummy.setPosition(100, 100);
-
-    TextLine line(tr("Session") + " " + tr("Edit") + " " + tr("View") + " " + tr("Graph") + " " + tr("Undo") + " " + tr("Redo"));
-    scene.appendWidget(&line);
-    line.font()->setFaceSize(16);
-    line.update();
-    line.setPosition(100, 400);
-
-    /* Main event loop. */
-    for(;;)
-    {
-        Window::processEvents();
-
-        //Process other stuff here.
-
-        window.render();
-        window.swapBuffers();
-        glFinish();
-        if(Window::shouldQuit()) break;
-        usleep(300);
-    }
-    
-
-    /* Cleanup things up before exiting. */
-    Texture::cleanup();
-    Window::cleanup();
-    
-    return 0;
+    return program.main_thread();
 }
