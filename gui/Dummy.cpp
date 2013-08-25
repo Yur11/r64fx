@@ -11,6 +11,15 @@ using namespace std;
 namespace r64fx{
 
 
+void* on_menu_click(void* source, void* data)
+{
+    auto act = (Action*) source;
+    cout << act->name().stdstr << "\n";
+    
+    return nullptr;
+}
+    
+
 Menu* _debug_menu = nullptr;
     
 void Dummy::render()
@@ -59,12 +68,12 @@ void Dummy::initDebugMenu()
     if(_debug_menu) return;
     
     _debug_menu = new Menu;
-    _debug_menu->appendAction(new Action(Icon::find("D1", 18, 18), "Hello"));
-    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Doctor"));
-    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Name"));
-    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Continue"));
-    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Yesterday"));
-    _debug_menu->appendAction(new Action("Tommorow"));
+    _debug_menu->appendAction(new Action(Icon::find("D1", 18, 18), "Hello",     Message(on_menu_click)));
+    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Doctor",    Message(on_menu_click)));
+    _debug_menu->appendAction(new Action(/*Icon::find("D1", 32, 32),*/ "Name",      Message(on_menu_click)));
+    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Continue",  Message(on_menu_click)));
+    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Yesterday", Message(on_menu_click)));
+    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Tommorow",  Message(on_menu_click)));
     _debug_menu->setPadding(5);
     _debug_menu->setPaddingTop(10);
     _debug_menu->setSpacing(10);

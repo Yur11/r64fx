@@ -36,13 +36,13 @@ void Icon::render()
     }
     else
     {
-        glColor3f(1.0, 0.0, 0.0);
-        glBegin(GL_LINE_LOOP);
-            glVertex2f(0.0, 0.0);
-            glVertex2f(size.w, 0.0);
-            glVertex2f(size.w, size.h);
-            glVertex2f(0.0, size.h);
-        glEnd();
+//         glColor3f(1.0, 0.0, 0.0);
+//         glBegin(GL_LINE_LOOP);
+//             glVertex2f(0.0, 0.0);
+//             glVertex2f(size.w, 0.0);
+//             glVertex2f(size.w, size.h);
+//             glVertex2f(0.0, size.h);
+//         glEnd();
     }
 }
 

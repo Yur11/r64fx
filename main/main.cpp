@@ -21,7 +21,7 @@ using namespace std;
 #include "serialize.cpp"
 
 namespace r64fx{
-#include "xolonium_regular_font.cpp"
+#include "jura_book_font.cpp"
 }//namespace r64fx
 
 
@@ -62,11 +62,11 @@ struct Program{
         /*  */
         Keyboard::init();
 
-        /* Initialize default texture. */
+        /* Initialize default texture and data paths for texture file lookup. */
         Texture::init(&data_paths);
 
         /* Initialize default font. */
-        Font font(xolonium_regular_font, xolonium_regular_font_size);
+        Font font(jura_book_font, jura_book_font_size);
         font.setFaceSize(16);
         if(font.isOk())
         {

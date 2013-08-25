@@ -3,17 +3,27 @@
 
 #include "containers.h"
 #include "Action.h"
+#include "Font.h"
 
 
 namespace r64fx{
     
 class Menu : public VerticalContainer{
+    Font* _font;
+    Widget* highlighted_widget = nullptr;
+    
 public:
-    Menu(Widget* parent = nullptr);
+    Menu(Font* font = Font::defaultFont(), Widget* parent = nullptr);
     
     void appendAction(Action* act);
     
     virtual void render();
+    
+    virtual void mousePressEvent(MouseEvent* event);
+
+    virtual void mouseReleaseEvent(MouseEvent* event);
+    
+    virtual void mouseMoveEvent(MouseEvent* event);
 };
     
 }//namespace r64fx

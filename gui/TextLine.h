@@ -53,7 +53,11 @@ public:
     virtual void render();
     
     /** @brief Update widget to fit the text. */
-    void update();    
+    void update();
+    
+    static void setDefaultFont(Font* font);
+    
+    static Font* defaultFont();
 };
     
 }//namespace r64fx

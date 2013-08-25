@@ -25,6 +25,5 @@ void TextLine::update()
     
     Widget::resize(width, height);
 }
-
     
 }//namespace r64fx

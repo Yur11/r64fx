@@ -37,11 +37,8 @@ public:
     
     inline FTTextureFont &ftfont() { return _ftfont; }
     
-
-    /* Remove this! */
     static void initDefaultFont(Font* font);
 
-    /* Remove this! */
     static Font* defaultFont();
     
     /** @brief Load a font from file and add it to the font library with a given font name.
