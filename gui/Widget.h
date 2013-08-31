@@ -2,12 +2,13 @@
 #define R64FX_GUI_WIDGET_H
 
 #include <vector>
-#include <Utf8String.h>
+#include "Utf8String.h"
 #include <GL/glu.h>
 #include "geometry.h"
 #include "events.h"
 #include "Color.h"
 #include "Message.h"
+#include "gc.h"
 
 
 namespace r64fx{
@@ -20,7 +21,7 @@ class Window;
 /* Used with widgets that display text. */
 
 /** @brief Base class for user interface widgets. */
-class Widget{
+class Widget : public Disposable{
     friend class Scene;
     Point<float> _position;
     Size<float> _size;

@@ -11,6 +11,7 @@
 #include "TextEdit.h"
 #include "Keyboard.h"
 #include "Font.h"
+#include "gc.h"
 #include "Json.h"
 
 using namespace std;
@@ -102,6 +103,7 @@ struct Program{
 //         start_jack_thread();
         
         /* Main event loop. */
+        int gc_counter = 256;
         for(;;)
         {
             Window::processEvents();
@@ -111,6 +113,15 @@ struct Program{
             window.render();
             window.swapBuffers();
             glFinish();
+            if(!gc_counter)
+            {
+                gc_counter = 256;
+                gc::deleteGarbage();
+            }
+            else
+            {
+                gc_counter--;
+            }
             if(Window::shouldQuit()) break;
             usleep(300);
         }

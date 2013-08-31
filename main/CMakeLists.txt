@@ -13,6 +13,7 @@ link_directories(${CMAKE_BINARY_DIR}/base)
 link_directories(${CMAKE_BINARY_DIR}/gui)
 
 target_link_libraries(r64fx
+    r64fx_gc
     r64fx_base
     r64fx_gui
     r64fx_json

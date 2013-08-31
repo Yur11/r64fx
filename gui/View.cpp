@@ -153,9 +153,8 @@ View::View(Scene* scene) : _scene(scene)
                     
                     parent_window->updateGeometry();
                     
-                    /* Is it ok to delete these here? */
-                    delete view;
-                    delete parent_view;
+                    view->deleteLater();
+                    parent_view->deleteLater();
                 }
                 
                 return nullptr;

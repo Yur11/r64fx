@@ -12,6 +12,7 @@ include_directories(
     /usr/include/freetype2 
     ${CMAKE_SOURCE_DIR}/utf8string
     ${CMAKE_SOURCE_DIR}/json
+    ${CMAKE_SOURCE_DIR}/gc
     ${CMAKE_SOURCE_DIR}/jit
     ${CMAKE_SOURCE_DIR}/base
     ${CMAKE_SOURCE_DIR}/gui
@@ -21,6 +22,7 @@ include_directories(
 link_directories(
     ${CMAKE_BINARY_DIR}/utf8string
     ${CMAKE_BINARY_DIR}/json
+    ${CMAKE_SOURCE_DIR}/gc
     ${CMAKE_BINARY_DIR}/base
     ${CMAKE_BINARY_DIR}/gui
     ${EXTRA_LIB_DIRS}
@@ -30,6 +32,7 @@ set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -g -O0")
 
 add_subdirectory(utf8string)
 add_subdirectory(json)
+add_subdirectory(gc)
 add_subdirectory(base)
 add_subdirectory(gui)
 add_subdirectory(main)

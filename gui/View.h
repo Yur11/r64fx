@@ -4,6 +4,7 @@
 #include "Scene.h"
 #include "Menu.h"
 
+
 namespace r64fx{
     
 class WindowBase;
@@ -14,7 +15,7 @@ class SplitView;
     We can either have a normal view that displays a scene, 
     or a splitted view, that hosts two other views. (Think Blender UI)
  */
-class SplittableView{
+class SplittableView : public Disposable{
     friend class SplitView;
     
 protected:
