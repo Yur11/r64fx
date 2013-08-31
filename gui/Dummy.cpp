@@ -48,6 +48,8 @@ void Dummy::mousePressEvent(MouseEvent* event)
         auto p = toSceneCoords(event->position());
         cout << "dummy: " << event->x() << ", " << event->y() << " [" << p.x << ", " << p.y << "]\n";
     }
+    
+    event->has_been_handled = true;
 }
 
 
@@ -75,8 +77,6 @@ void Dummy::initDebugMenu()
     _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Yesterday", Message(on_menu_click)));
     _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Tommorow",  Message(on_menu_click)));
     _debug_menu->setPadding(5);
-    _debug_menu->setPaddingTop(10);
-    _debug_menu->setSpacing(10);
     _debug_menu->update();
 }
     

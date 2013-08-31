@@ -28,6 +28,7 @@ class Event{
     Scene* _scene = nullptr;
     
 public:
+    bool has_been_handled = false;
     
     inline WindowBase* originWindow() const { return this->origin_window; }
 

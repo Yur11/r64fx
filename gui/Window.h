@@ -33,6 +33,8 @@ public:
     
     virtual Size<int> size();
     
+    virtual void updateGeometry();
+    
     static bool init();
     
     static void cleanup();

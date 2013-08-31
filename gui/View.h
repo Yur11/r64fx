@@ -2,8 +2,12 @@
 #define R64FX_GUI_VIEW_H
 
 #include "Scene.h"
+#include "Menu.h"
 
 namespace r64fx{
+    
+class WindowBase;
+class SplitView;
     
 /** @brief Base class for views. 
  
@@ -11,10 +15,16 @@ namespace r64fx{
     or a splitted view, that hosts two other views. (Think Blender UI)
  */
 class SplittableView{
+    friend class SplitView;
+    
 protected:
     Rect<int> _rect;
     
-public:    
+public: 
+    virtual ~SplittableView(){}
+    
+    void findParentViewOrWindow(SplitView* &view, WindowBase* &window);
+    
     inline Rect<int> rect() const { return _rect; }
     
     inline int x() const { return _rect.x(); }
@@ -34,12 +44,14 @@ public:
     virtual void mouseReleaseEvent(MouseEvent* event) = 0;
     
     virtual void mouseMoveEvent(MouseEvent* event) = 0;
+
+    SplittableView* findParentForView(SplittableView* view);
 };
 
 
 /** @brief View that can be splitted into two parts. */
 class SplitView : public SplittableView{
-    float _split_ratio;
+    float _split_ratio = 0.5;
     SplittableView* _a;
     SplittableView* _b;
 
@@ -47,11 +59,16 @@ protected:
     virtual void render_separator() = 0;
     
 public:
+    virtual ~SplitView() {}
+    
     inline void setSplitRatio(float ratio) { _split_ratio = ratio; }
     inline float splitRatio() const { return _split_ratio; }
     
-    inline void setViewA(SplittableView* a) { _a = a;}
-    inline void setViewB(SplittableView* b) { _b = b;}
+    inline void setViewA(SplittableView* a) { _a = a; }
+    inline void setViewB(SplittableView* b) { _b = b; }
+    
+    /** @brief Replace one of the sub-views. */
+    void replaceSubView(SplittableView* old_view, SplittableView* new_view);
     
     inline SplittableView* viewA() const { return _a; }
     inline SplittableView* viewB() const { return _b; }
@@ -71,6 +88,8 @@ protected:
     virtual void render_separator();
     
 public:
+    virtual ~VerticalSplitView() {}
+    
     virtual void resize(int left, int top, int right, int bottom);
 };
 
@@ -80,6 +99,8 @@ protected:
     virtual void render_separator();
     
 public:
+    virtual ~HorizontalSplitView() {}
+    
     virtual void resize(int left, int top, int right, int bottom);
 };
 
@@ -91,14 +112,27 @@ private:
     friend class Window;
     Scene* _scene = nullptr;
     float _scale_factor = 1.0;
-    Point<float> _offset;
+    Point<float> _offset = {0.0, 0.0};
+    
+    Action* split_view_vert_act;
+    Action* split_view_hor_act;
+    Action* close_view_act;
+    Menu* _context_menu;
     
     void transform_mouse_event(MouseEvent* event);
+    
+    View(const View&){}
     
 public:
     View(Scene* scene = nullptr);
     
+    virtual ~View();
+    
     virtual void resize(int left, int top, int right, int bottom);
+    
+    inline void setScene(Scene* scene) { _scene = scene; }
+    
+    inline Scene* scene() const { return _scene; }
     
     inline void setOffset(Point<float> offset) { _offset = offset; }
     

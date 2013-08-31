@@ -7,9 +7,24 @@ using namespace std;
 
 namespace r64fx{
             
+vector<WindowBase*> _all_window_base_instances;
+    
 WindowBase::WindowBase()
 {
-   
+    _all_window_base_instances.push_back(this);
+}
+
+
+WindowBase::~WindowBase()
+{
+    for(int i=0; i<(int)_all_window_base_instances.size(); i++)
+    {
+        if(_all_window_base_instances[i] == this)
+        {
+            _all_window_base_instances.erase(_all_window_base_instances.begin() + i);
+            break;
+        }
+    }
 }
 
 
@@ -73,6 +88,12 @@ void WindowBase::closeOverlayMenu(Menu* menu)
 void WindowBase::closeAllOverlayMenus()
 {
     _overlay_menus.clear();
+}
+
+
+std::vector<WindowBase*> WindowBase::allInstances()
+{
+    return _all_window_base_instances;
 }
 
 

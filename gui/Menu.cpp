@@ -1,5 +1,6 @@
 #include "Menu.h"
 #include "MouseEvent.h"
+#include "WindowBase.h"
 
 #include <iostream>
 
@@ -16,7 +17,7 @@ template<typename T> T max(T a, T b)
 }
  
 
-struct ActionWidget : Widget{
+struct ActionWidget : public Widget, public Padding{
     Action* action;
     Font* font;
     bool is_highlighted = false;
@@ -26,6 +27,8 @@ struct ActionWidget : Widget{
     , action(act)
     , font(font)
     {
+        setPaddingTop(5.0);
+        setPaddingBottom(5.0);
     }
     
     virtual void render()
@@ -33,9 +36,9 @@ struct ActionWidget : Widget{
         action->icon().render();
         glPushMatrix();
             if(is_highlighted)
-                glColor3f(0.9, 0.7, 0.7);
-            else
                 glColor3f(0.7, 0.9, 0.9);
+            else
+                glColor3f(0.9, 0.7, 0.7);
             glTranslatef(action->icon().size.w + 5, 2.0, 0.0);
             font->render(action->name().stdstr);
         glPopMatrix();
@@ -44,8 +47,8 @@ struct ActionWidget : Widget{
     virtual void update()
     {
         float new_height = (font->ascender() + font->descender());
-        setWidth(font->estimatedTextWidth(action->name().stdstr) + new_height + 10);
-        setHeight(new_height);
+        setWidth(paddingLeft() + font->estimatedTextWidth(action->name().stdstr) + new_height + 10 + paddingRight());
+        setHeight(paddingTop() + new_height + paddingBottom());
         action->setIconSize(Size<float>(new_height * 1.5, new_height * 1.5));
     }
 };
@@ -93,6 +96,7 @@ void Menu::mouseReleaseEvent(MouseEvent* event)
         if(widget)
         {
             widget->to<ActionWidget*>()->action->trigger();
+            event->originWindow()->closeAllOverlayMenus();
         }
     }
 }

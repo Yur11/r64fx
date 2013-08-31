@@ -83,10 +83,11 @@ struct Program{
         /* These should be loaded from a file. */
         Scene scene;
 
-        /* Setup root view of the main window. */
+        /* Setup root view of the main window. */        
         View view(&scene);
         window.setView(&view);
 
+        
         Dummy::initDebugMenu();
         Dummy dummy(150, 150);
         scene.appendWidget(&dummy);

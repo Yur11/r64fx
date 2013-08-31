@@ -23,10 +23,14 @@ protected:
 public:
     WindowBase();
     
+    virtual ~WindowBase();
+    
     inline void setView(SplittableView* view) { _view = view; }
     inline SplittableView* view() const { return _view; }
     
     virtual Size<int> size() = 0;
+    
+    virtual void updateGeometry() = 0;
     
     inline int width() { return size().w; }
     
@@ -37,6 +41,8 @@ public:
     void closeOverlayMenu(Menu* menu);
     
     void closeAllOverlayMenus();
+
+    static std::vector<WindowBase*> allInstances();
     
 protected:
     /** @brief Create and deliver a new mouse press event, taking into acount possible overlays. */
