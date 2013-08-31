@@ -305,6 +305,14 @@ void SplitView::render()
     viewA()->render();
     viewB()->render();
     
+    if(separatorIsHovered())
+        if(separatorIsGrabbed())
+            glColor3f(0.3, 0.6, 0.3);
+        else
+            glColor3f(0.3, 0.3, 0.3);
+    else
+        glColor3f(0.0, 0.0, 0.0);
+    
     render_separator();
 }
     
@@ -312,18 +320,30 @@ void SplitView::mousePressEvent(MouseEvent* event)
 {   
     auto ra = viewA()->rect().to<float>();
     
-    if(ra.overlaps(event->position()))
+    if(separatorIsHovered())
     {
-        viewA()->mousePressEvent(event);
+        _separator_is_grabbed = true;
     }
     else
     {
-        viewB()->mousePressEvent(event);
+        if(ra.overlaps(event->position()))
+        {
+            viewA()->mousePressEvent(event);
+        }
+        else
+        {
+            viewB()->mousePressEvent(event);
+        }
     }
 }
 
 void SplitView::mouseReleaseEvent(MouseEvent* event)
 {   
+    if(separatorIsGrabbed())
+    {
+        _separator_is_grabbed = false;
+    }
+    
     auto ra = viewA()->rect().to<float>();
     
     if(ra.overlaps(event->position()))
@@ -339,15 +359,37 @@ void SplitView::mouseReleaseEvent(MouseEvent* event)
 
 void SplitView::mouseMoveEvent(MouseEvent* event)
 {
-    auto ra = viewA()->rect().to<float>();
-    
-    if(ra.overlaps(event->position()))
+    if(separatorIsGrabbed())
     {
-        viewA()->mouseMoveEvent(event);
+        moveSeparator(event->position());
+        
+        /* Kluge: We only need to update  geometry of the parent parent view,
+         * but since we don't have the handle here, lets just do it on all the windows.
+         * Shouldn't be much of an overhead.
+         */
+        for(auto w : WindowBase::allInstances())
+        {
+            w->updateGeometry();
+        }
+    }
+    else if(separatorRect().overlaps(event->position()))
+    {
+        _separator_is_hovered = true;
     }
     else
     {
-        viewB()->mouseMoveEvent(event);
+        _separator_is_hovered = false;
+
+        auto ra = viewA()->rect().to<float>();
+        
+        if(ra.overlaps(event->position()))
+        {
+            viewA()->mouseMoveEvent(event);
+        }
+        else
+        {
+            viewB()->mouseMoveEvent(event);
+        }
     }
 }
 
@@ -368,11 +410,23 @@ void VerticalSplitView::resize(int left, int top, int right, int bottom)
 
 void VerticalSplitView::render_separator()
 {
-    glColor3f(0.0, 0.0, 0.0);
     glBegin(GL_LINES);
         glVertex2f(_rect.left, _rect.bottom + height() * splitRatio());
         glVertex2f(_rect.right, _rect.bottom + height() * splitRatio());
     glEnd();
+}
+
+
+Rect<float> VerticalSplitView::separatorRect()
+{
+    float y = _rect.bottom + height() * splitRatio();
+    return Rect<float>(_rect.left, y+2, _rect.right, y-2);
+}
+
+
+void VerticalSplitView::moveSeparator(Point<float> p)
+{
+    setSplitRatio( p.y / _rect.height() );
 }
 
 
@@ -385,18 +439,30 @@ void HorizontalSplitView::resize(int left, int top, int right, int bottom)
 
     int split_width = (width() * splitRatio());
     
-    viewA()->resize(left, top, right - split_width, bottom);
-    viewB()->resize(left + (width() - split_width), top, right, bottom);
+    viewA()->resize(left, top, left + split_width, bottom);
+    viewB()->resize(left + split_width, top, right, bottom);
 }
     
     
 void HorizontalSplitView::render_separator()
 {
-    glColor3f(0.0, 0.0, 0.0);
     glBegin(GL_LINES);
         glVertex2f(_rect.left + width() * splitRatio(), _rect.top);
         glVertex2f(_rect.left + width() * splitRatio(), _rect.bottom);
     glEnd();
+}
+
+
+Rect<float> HorizontalSplitView::separatorRect()
+{
+    float x = _rect.left + width() * splitRatio();
+    return Rect<float>(x-2, _rect.top, x+2, _rect.bottom);
+}
+
+
+void HorizontalSplitView::moveSeparator(Point<float> p)
+{
+    setSplitRatio( p.x / _rect.width() );
 }
 
 

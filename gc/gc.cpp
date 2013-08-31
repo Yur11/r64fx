@@ -1,5 +1,6 @@
 #include "gc.h"
 #include <vector>
+#include <iostream>
 
 using namespace std;
 

@@ -15,7 +15,7 @@ namespace r64fx{
  */
 class Disposable{
 public:
-    ~Disposable() {}
+    virtual ~Disposable() {}
     
     /** @brief Tell the garbage collector that this instance is no longer needed and should be destroyed. */
     virtual void deleteLater();

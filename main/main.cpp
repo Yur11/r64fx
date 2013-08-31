@@ -85,8 +85,8 @@ struct Program{
         Scene scene;
 
         /* Setup root view of the main window. */        
-        View view(&scene);
-        window.setView(&view);
+        View* view = new View(&scene);
+        window.setView(view);
 
         
         Dummy::initDebugMenu();

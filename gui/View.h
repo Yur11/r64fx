@@ -53,14 +53,23 @@ public:
 /** @brief View that can be splitted into two parts. */
 class SplitView : public SplittableView{
     float _split_ratio = 0.5;
-    SplittableView* _a;
-    SplittableView* _b;
+    bool _separator_is_hovered = false;
+    bool _separator_is_grabbed = false;
+    SplittableView* _a = nullptr;
+    SplittableView* _b = nullptr;
 
 protected:
     virtual void render_separator() = 0;
     
+    virtual Rect<float> separatorRect() = 0;
+    
+    virtual void moveSeparator(Point<float> p) = 0;
+    
 public:
     virtual ~SplitView() {}
+    
+    inline bool separatorIsHovered() const { return _separator_is_hovered; }
+    inline bool separatorIsGrabbed() const { return _separator_is_grabbed; }
     
     inline void setSplitRatio(float ratio) { _split_ratio = ratio; }
     inline float splitRatio() const { return _split_ratio; }
@@ -88,6 +97,10 @@ class VerticalSplitView : public SplitView{
 protected:
     virtual void render_separator();
     
+    virtual Rect<float> separatorRect();
+    
+    virtual void moveSeparator(Point<float> p);
+    
 public:
     virtual ~VerticalSplitView() {}
     
@@ -98,6 +111,10 @@ public:
 class HorizontalSplitView : public SplitView{
 protected:
     virtual void render_separator();
+    
+    virtual Rect<float> separatorRect();
+    
+    virtual void moveSeparator(Point<float> p);
     
 public:
     virtual ~HorizontalSplitView() {}
