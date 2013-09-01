@@ -13,6 +13,7 @@
 #include "Font.h"
 #include "gc.h"
 #include "Json.h"
+#include "MachineScene.h"
 
 using namespace std;
 
@@ -81,25 +82,19 @@ struct Program{
 
         tr.loadLanguage("en");
 
-        /* These should be loaded from a file. */
-        Scene scene;
+        MachineWidget* mw = new MachineWidget;
+        
+        MachineScene machine_scene;
+        machine_scene.appendWidget(mw);
+        
+        mw->setPosition(100, 200);
+        mw->update();
 
         /* Setup root view of the main window. */        
-        View* view = new View(&scene);
+        View* view = new View(&machine_scene);
         window.setView(view);
 
         
-        Dummy::initDebugMenu();
-        Dummy dummy(150, 150);
-        scene.appendWidget(&dummy);
-        dummy.setPosition(100, 100);
-
-        TextLine line(tr("Session") + " " + tr("Edit") + " " + tr("View") + " " + tr("Graph") + " " + tr("Undo") + " " + tr("Redo"));
-        scene.appendWidget(&line);
-//         line.font()->setFaceSize(16);
-        line.update();
-        line.setPosition(100, 400);
-
 //         start_jack_thread();
         
         /* Main event loop. */

@@ -1,6 +1,7 @@
 #include "Scene.h"
 #include "Widget.h"
 #include "MouseEvent.h"
+#include "KeyEvent.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -63,6 +64,32 @@ void Scene::mouseMoveEvent(MouseEvent* event)
     {
         *event -= w->position();
         w->mouseMoveEvent(event);
+    }
+}
+
+
+void Scene::keyPressEvent(KeyEvent* event)
+{
+    event->mouse_event->setScene(this);
+    
+    Widget* w = widgetAt(event->mouse_event->x(), event->mouse_event->y());
+    if(w)
+    {
+        *(event->mouse_event) -= w->position();
+        w->keyPressEvent(event);
+    }
+}
+    
+    
+void Scene::keyReleaseEvent(KeyEvent* event)
+{
+    event->mouse_event->setScene(this);
+    
+    Widget* w = widgetAt(event->mouse_event->x(), event->mouse_event->y());
+    if(w)
+    {
+        *(event->mouse_event) -= w->position();
+        w->keyReleaseEvent(event);
     }
 }
 

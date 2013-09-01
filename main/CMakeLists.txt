@@ -7,6 +7,8 @@ include_directories(${CMAKE_SOURCE_DIR}/gui)
 
 add_executable(r64fx
     main.cpp
+    MachineScene.cpp
+    MachineWidget.cpp
 )
 
 link_directories(${CMAKE_BINARY_DIR}/base)

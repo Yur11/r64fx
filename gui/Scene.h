@@ -10,21 +10,27 @@ class Scene{
     std::vector<Widget*> _widgets;
             
 public:
-    inline void appendWidget(Widget* widget) { _widgets.push_back(widget); }
+    inline void appendWidget(Widget* widget) { _widgets.push_back(widget); widget->_scene = this; }
     
-    inline void insertWidget(Widget* widget, int index) { _widgets.insert(_widgets.begin() + index, widget); }
+    inline void insertWidget(Widget* widget, int index) { _widgets.insert(_widgets.begin() + index, widget); widget->_scene = this; }
     
-    inline void removeWidget(int index) { _widgets.erase(_widgets.begin() + index); }
+    inline void removeWidget(int index) { auto it = _widgets.begin() + index; (*it)->_scene = nullptr; _widgets.erase(it); }
   
     void render();
     
-    void mousePressEvent(MouseEvent*);
+    virtual void mousePressEvent(MouseEvent*);
     
-    void mouseReleaseEvent(MouseEvent*);
+    virtual void mouseReleaseEvent(MouseEvent*);
     
-    void mouseMoveEvent(MouseEvent*);
+    virtual void mouseMoveEvent(MouseEvent*);
     
-    Widget* widgetAt(float x, float y);  
+    virtual void keyPressEvent(KeyEvent*);
+    
+    virtual void keyReleaseEvent(KeyEvent*);
+    
+    Widget* widgetAt(float x, float y);
+    
+    template<typename T> T to() const { return (T)this; }
 };
 
 }//namespace r64fx

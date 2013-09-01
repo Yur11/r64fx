@@ -18,7 +18,6 @@ class KeyEvent;
 class Scene;
 class Window;
 
-/* Used with widgets that display text. */
 
 /** @brief Base class for user interface widgets. */
 class Widget : public Disposable{

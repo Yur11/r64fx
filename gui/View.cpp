@@ -251,6 +251,27 @@ void View::mouseMoveEvent(MouseEvent* event)
 }
 
 
+
+void View::keyPressEvent(KeyEvent* event)
+{
+#ifdef DEBUG
+    MAKE_SURE_WE_HAVE_A_SCENE
+#endif//DEBUG
+    transform_mouse_event(event->mouse_event);
+    _scene->keyPressEvent(event);
+}
+    
+    
+void View::keyReleaseEvent(KeyEvent* event)
+{
+#ifdef DEBUG
+    MAKE_SURE_WE_HAVE_A_SCENE
+#endif//DEBUG
+    transform_mouse_event(event->mouse_event);
+    _scene->keyReleaseEvent(event);
+}
+
+
 VerticalSplitView* View::splitVertically(float ratio)
 {
     auto a = this;
@@ -390,6 +411,36 @@ void SplitView::mouseMoveEvent(MouseEvent* event)
         {
             viewB()->mouseMoveEvent(event);
         }
+    }
+}
+
+
+void SplitView::keyPressEvent(KeyEvent* event)
+{
+    auto ra = viewA()->rect().to<float>();
+        
+    if(ra.overlaps(event->mouse_event->position()))
+    {
+        viewA()->keyPressEvent(event);
+    }
+    else
+    {
+        viewB()->keyPressEvent(event);
+    }
+}
+
+    
+void SplitView::keyReleaseEvent(KeyEvent* event)
+{
+    auto ra = viewA()->rect().to<float>();
+        
+    if(ra.overlaps(event->mouse_event->position()))
+    {
+        viewA()->keyReleaseEvent(event);
+    }
+    else
+    {
+        viewB()->keyReleaseEvent(event);
     }
 }
 

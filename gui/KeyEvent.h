@@ -5,16 +5,22 @@
 
 namespace r64fx{
     
+class MouseEvent;
+    
 class KeyEvent : public Event{
     unsigned int _key;
     unsigned int _buttons;
     unsigned int _modifiers;
 
 public:
-    KeyEvent(unsigned int key, unsigned int buttons, unsigned int modifiers) 
+    MouseEvent* mouse_event;
+    
+    KeyEvent(unsigned int key, unsigned int buttons, unsigned int modifiers, MouseEvent* mouse_event) 
     : _key(key)
     , _buttons(buttons)
-    , _modifiers(modifiers) {}
+    , _modifiers(modifiers)
+    , mouse_event(mouse_event) 
+    {}
     
     inline unsigned int key() const { return _key; }
     inline unsigned int buttons() const { return _buttons; }

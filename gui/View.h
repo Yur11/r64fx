@@ -45,6 +45,10 @@ public:
     virtual void mouseReleaseEvent(MouseEvent* event) = 0;
     
     virtual void mouseMoveEvent(MouseEvent* event) = 0;
+    
+    virtual void keyPressEvent(KeyEvent* event) = 0;
+    
+    virtual void keyReleaseEvent(KeyEvent* event) = 0;
 
     SplittableView* findParentForView(SplittableView* view);
 };
@@ -90,6 +94,10 @@ public:
     virtual void mouseReleaseEvent(MouseEvent* event);
     
     virtual void mouseMoveEvent(MouseEvent* event);
+    
+    virtual void keyPressEvent(KeyEvent* event);
+    
+    virtual void keyReleaseEvent(KeyEvent* event);
 };
 
 
@@ -177,6 +185,10 @@ public:
     virtual void mouseReleaseEvent(MouseEvent* event);
     
     virtual void mouseMoveEvent(MouseEvent* event);
+    
+    virtual void keyPressEvent(KeyEvent* event);
+    
+    virtual void keyReleaseEvent(KeyEvent* event);
     
     VerticalSplitView* splitVertically(float ratio);
     

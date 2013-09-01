@@ -28,6 +28,7 @@ void Widget::setParent(Widget* new_parent)
             if(*it == this)
             {
                 _parent->_children.erase(it);
+                break;
             }
         }
     }
