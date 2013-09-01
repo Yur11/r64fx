@@ -8,6 +8,7 @@ namespace r64fx{
 
 class WindowBase;
 class SplittableView;
+class View;
 class Scene;
 class Widget;
 
@@ -25,6 +26,8 @@ class MouseEvent : public Event{
     unsigned int _buttons;
    
 public:
+    View* view = nullptr;
+    
     MouseEvent(Point<float> position, unsigned int buttons = Mouse::Button::None)
     : _position(position)
     , _original_position(position)

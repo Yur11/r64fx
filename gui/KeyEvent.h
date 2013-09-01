@@ -13,6 +13,11 @@ class KeyEvent : public Event{
     unsigned int _modifiers;
 
 public:
+    /** @brief Previous mouse event. 
+     
+        This is needed primarily to make the current mouse position available to key event handlers.
+        The WindowBase is responsible for setting this pointer.
+     */
     MouseEvent* mouse_event;
     
     KeyEvent(unsigned int key, unsigned int buttons, unsigned int modifiers, MouseEvent* mouse_event) 

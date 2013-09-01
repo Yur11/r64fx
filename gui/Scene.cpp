@@ -107,5 +107,14 @@ Widget* Scene::widgetAt(float x, float y)
     
     return nullptr;
 }
+
+
+void Scene::updateWidgets()
+{
+    for(auto w : _widgets)
+    {
+        w->update();
+    }
+}
     
 }//namespace r64fx

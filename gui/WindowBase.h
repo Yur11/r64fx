@@ -15,6 +15,7 @@ class WindowBase{
     
     Widget* overlay_menu_at(int x, int y);
     
+    /** @brief Copy of the last mouse event before any coordinate transformation took place. */
     MouseEvent _last_mouse_event;
     
 protected:

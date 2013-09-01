@@ -100,6 +100,7 @@ std::vector<WindowBase*> WindowBase::allInstances()
 void WindowBase::initMousePressEvent(int x, int y, unsigned int buttons)
 {
     MouseEvent event(x, y, buttons);
+    _last_mouse_event = event;
     event.setOriginWindow(this);
     
     if(!_overlay_menus.empty())
@@ -126,6 +127,7 @@ void WindowBase::initMousePressEvent(int x, int y, unsigned int buttons)
 void WindowBase::initMouseReleaseEvent(int x, int y, unsigned int buttons)
 {
     MouseEvent event(x, y, buttons);
+    _last_mouse_event = event;
     event.setOriginWindow(this);
     
     if(!_overlay_menus.empty())
@@ -149,6 +151,7 @@ void WindowBase::initMouseReleaseEvent(int x, int y, unsigned int buttons)
 void WindowBase::initMouseMoveEvent(int x, int y, unsigned int buttons)
 {
     MouseEvent event(x, y, buttons);
+    _last_mouse_event = event;
     event.setOriginWindow(this);
     
     if(!_overlay_menus.empty())
@@ -180,6 +183,15 @@ void WindowBase::initKeyPressEvent(unsigned int scancode, unsigned int buttons, 
 {
     KeyEvent event(scancode, buttons, modifiers, &_last_mouse_event);
     event.setOriginWindow(this);
+    
+    if(Widget::keyboardInputGrabber())
+    {
+        Widget::keyboardInputGrabber()->keyPressEvent(&event);
+    }
+    else
+    {
+        view()->keyPressEvent(&event);
+    }
 }
 
     
@@ -187,6 +199,15 @@ void WindowBase::initKeyReleaseEvent(unsigned int scancode, unsigned int buttons
 {
     KeyEvent event(scancode, buttons, modifiers, &_last_mouse_event);
     event.setOriginWindow(this);
+    
+    if(Widget::keyboardInputGrabber())
+    {
+        Widget::keyboardInputGrabber()->keyReleaseEvent(&event);
+    }
+    else
+    {
+        view()->keyReleaseEvent(&event);
+    }
 }
 
 

@@ -13,7 +13,7 @@
 #include "Font.h"
 #include "gc.h"
 #include "Json.h"
-#include "MachineScene.h"
+#include "Machine.h"
 
 using namespace std;
 
@@ -82,16 +82,17 @@ struct Program{
 
         tr.loadLanguage("en");
 
-        MachineWidget* mw = new MachineWidget;
+        FrontMachineScene fms;
+        BackMachineScene bms;
         
-        MachineScene machine_scene;
-        machine_scene.appendWidget(mw);
+        /* Allow to flip between front and back machine_scenes in a view. */
+        fms.counterpart_scene = &bms;
+        bms.counterpart_scene = &fms;
         
-        mw->setPosition(100, 200);
-        mw->update();
+        Machine* m = new Machine(&fms, &bms);
 
         /* Setup root view of the main window. */        
-        View* view = new View(&machine_scene);
+        View* view = new View(&fms);
         window.setView(view);
 
         

@@ -156,7 +156,7 @@ public:
     
     virtual void resize(int left, int top, int right, int bottom);
     
-    inline void setScene(Scene* scene) { _scene = scene; }
+    void setScene(Scene* scene);
     
     inline Scene* scene() const { return _scene; }
     

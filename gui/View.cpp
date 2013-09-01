@@ -75,8 +75,10 @@ void SplittableView::findParentViewOrWindow(SplitView* &view, WindowBase* &windo
 
     
 /* ==== View ================================================================================ */
-View::View(Scene* scene) : _scene(scene)
+View::View(Scene* scene)
 {
+    setScene(scene);
+    
     split_view_vert_act = new Action(
         Icon::find("split_vertically", 24, 24),
         "Split Vertically",  
@@ -179,6 +181,16 @@ View::~View()
     delete split_view_hor_act;
     delete close_view_act;
 }
+
+
+void View::setScene(Scene* scene)
+{
+    _scene = scene;
+    if(!_scene) return;
+    _scene->replace_me_callback = [](View* view, Scene* old_scene, Scene* new_scene){
+        view->setScene(new_scene);
+    };
+}
     
     
 void View::resize(int left, int top, int right, int bottom) 
@@ -221,6 +233,7 @@ void View::mousePressEvent(MouseEvent* event)
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
     transform_mouse_event(event);
+    event->view = this;
     _scene->mousePressEvent(event);
     
     if(!event->has_been_handled && event->buttons() & Mouse::Button::Right)
@@ -237,6 +250,7 @@ void View::mouseReleaseEvent(MouseEvent* event)
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
     transform_mouse_event(event);
+    event->view = this;
     _scene->mouseReleaseEvent(event);
 }
     
@@ -247,6 +261,7 @@ void View::mouseMoveEvent(MouseEvent* event)
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
     transform_mouse_event(event);
+    event->view = this;
     _scene->mouseMoveEvent(event);
 }
 
@@ -258,6 +273,7 @@ void View::keyPressEvent(KeyEvent* event)
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
     transform_mouse_event(event->mouse_event);
+    event->mouse_event->view = this;
     _scene->keyPressEvent(event);
 }
     
@@ -268,6 +284,7 @@ void View::keyReleaseEvent(KeyEvent* event)
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
     transform_mouse_event(event->mouse_event);
+    event->mouse_event->view = this;
     _scene->keyReleaseEvent(event);
 }
 
