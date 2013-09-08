@@ -1,5 +1,4 @@
 #include "WindowBase.h"
-#include "MouseEvent.h"
 #include "KeyEvent.h"
 #include <iostream>
 
@@ -100,7 +99,6 @@ std::vector<WindowBase*> WindowBase::allInstances()
 void WindowBase::initMousePressEvent(int x, int y, unsigned int buttons, unsigned int keyboard_modifiers)
 {
     MouseEvent event(x, y, buttons, keyboard_modifiers);
-    _last_mouse_event = event;
     event.setOriginWindow(this);
     
     if(!_overlay_menus.empty())
@@ -127,7 +125,6 @@ void WindowBase::initMousePressEvent(int x, int y, unsigned int buttons, unsigne
 void WindowBase::initMouseReleaseEvent(int x, int y, unsigned int buttons, unsigned int keyboard_modifiers)
 {
     MouseEvent event(x, y, buttons, keyboard_modifiers);
-    _last_mouse_event = event;
     event.setOriginWindow(this);
     
     if(!_overlay_menus.empty())
@@ -151,7 +148,6 @@ void WindowBase::initMouseReleaseEvent(int x, int y, unsigned int buttons, unsig
 void WindowBase::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int keyboard_modifiers)
 {
     MouseEvent event(x, y, buttons, keyboard_modifiers);
-    _last_mouse_event = event;
     event.setOriginWindow(this);
     
     if(!_overlay_menus.empty())
@@ -165,25 +161,32 @@ void WindowBase::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned
             return;
         }
     }
-    else
-    {
-        view()->mouseMoveEvent(&event);
-    }
+    
+    view()->mouseMoveEvent(&event);
 }
 
 
-void WindowBase::initMouseWheelEvent(int dx, int dy, unsigned int buttons, unsigned int keyboard_modifiers)
+void WindowBase::initMouseWheelEvent(int x, int y, int dx, int dy, unsigned int buttons, unsigned int keyboard_modifiers)
 {
-    MouseEvent event = _last_mouse_event;
+    MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setButtons(event.buttons() | (dy > 0 ? Mouse::Button::WheelUp : Mouse::Button::WheelDown));
-    event.setKeyboardModifiers(keyboard_modifiers);
+    
+    if(!_overlay_menus.empty())
+    {
+        Widget* menu = overlay_menu_at(x, y);
+        if(menu)
+        {
+            return;
+        }
+    }
+    
     view()->mouseWheelEvent(&event);
 }
 
     
-void WindowBase::initKeyPressEvent(unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers)
+void WindowBase::initKeyPressEvent(int x, int y, unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers)
 {
-    KeyEvent event(scancode, buttons, keyboard_modifiers, &_last_mouse_event);
+    KeyEvent event(x, y, buttons, scancode, keyboard_modifiers);
     event.setOriginWindow(this);
     
     if(Widget::keyboardInputGrabber())
@@ -197,9 +200,9 @@ void WindowBase::initKeyPressEvent(unsigned int scancode, unsigned int buttons, 
 }
 
     
-void WindowBase::initKeyReleaseEvent(unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers)
+void WindowBase::initKeyReleaseEvent(int x, int y, unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers)
 {
-    KeyEvent event(scancode, buttons, keyboard_modifiers, &_last_mouse_event);
+    KeyEvent event(x, y, buttons, scancode, keyboard_modifiers);
     event.setOriginWindow(this);
     
     if(Widget::keyboardInputGrabber())

@@ -9,25 +9,18 @@ class MouseEvent;
     
 class KeyEvent : public Event{
     unsigned int _key;
-    unsigned int _buttons;
 
 public:
-    /** @brief Previous mouse event. 
-     
-        This is needed primarily to make the current mouse position available to key event handlers.
-        The WindowBase is responsible for setting this pointer.
-     */
-    MouseEvent* mouse_event;
-    
-    KeyEvent(unsigned int key, unsigned int buttons, unsigned int keyboard_modifiers, MouseEvent* mouse_event) 
-    : Event(keyboard_modifiers)
+    KeyEvent(Point<float> position, unsigned int buttons, unsigned int key, unsigned int keyboard_modifiers) 
+    : Event(position, buttons, keyboard_modifiers)
     , _key(key)
-    , _buttons(buttons)
-    , mouse_event(mouse_event)
+    {}
+    
+    KeyEvent(float x, float y, unsigned int buttons, unsigned int key, unsigned int keyboard_modifiers)
+    : KeyEvent(Point<float>(x, y), buttons, key, keyboard_modifiers)
     {}
     
     inline unsigned int key() const { return _key; }
-    inline unsigned int buttons() const { return _buttons; }
 };
     
 }//namespace r64fx

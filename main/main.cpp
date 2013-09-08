@@ -82,6 +82,8 @@ struct Program{
 
         tr.loadLanguage("en");
 
+        Dummy::initDebugMenu();
+        
         FrontMachineScene fms;
         BackMachineScene bms;
         

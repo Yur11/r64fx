@@ -152,8 +152,14 @@ void Window::processEvents()
             /* Keyboard */
             case SDL_KEYDOWN:
             {
+                int x = 0; 
+                int y = 0;
+                
+                SDL_GetMouseState(&x, &y);
+                
                 if(focused_window) 
                     focused_window->initKeyPressEvent(
+                        x, last_focused_window->height() - y,
                         event.key.keysym.scancode, 
                         pressed_mouse_buttons, 
                         event.key.keysym.mod
@@ -163,8 +169,14 @@ void Window::processEvents()
             
             case SDL_KEYUP:
             {
+                int x = 0; 
+                int y = 0;
+                
+                SDL_GetMouseState(&x, &y);
+                
                 if(focused_window) 
                     focused_window->initKeyReleaseEvent(
+                        x, last_focused_window->height() - y,
                         event.key.keysym.scancode, 
                         pressed_mouse_buttons, 
                         event.key.keysym.mod
@@ -236,7 +248,12 @@ void Window::processEvents()
             {
                 if(last_focused_window)
                 {
-                    last_focused_window->initMouseWheelEvent(event.wheel.x, event.wheel.y, pressed_mouse_buttons, SDL_GetModState());
+                    int x = 0; 
+                    int y = 0;
+                
+                    SDL_GetMouseState(&x, &y);
+                    
+                    last_focused_window->initMouseWheelEvent(x, last_focused_window->height() - y, event.wheel.x, event.wheel.y, pressed_mouse_buttons, SDL_GetModState());
                 }
                 break;
             }

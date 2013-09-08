@@ -59,12 +59,12 @@ void Scene::mouseMoveEvent(MouseEvent* event)
 {
     event->setScene(this);
     
-//     Widget* w = widgetAt(event->x(), event->y());
-//     if(w)
-//     {
-//         *event -= w->position();
-//         w->mouseMoveEvent(event);
-//     }
+    Widget* w = widgetAt(event->x(), event->y());
+    if(w)
+    {
+        *event -= w->position();
+        w->mouseMoveEvent(event);
+    }
 }
 
 
@@ -76,12 +76,12 @@ void Scene::mouseWheelEvent(MouseEvent* event)
 
 void Scene::keyPressEvent(KeyEvent* event)
 {
-    event->mouse_event->setScene(this);
+    event->setScene(this);
     
-    Widget* w = widgetAt(event->mouse_event->x(), event->mouse_event->y());
+    Widget* w = widgetAt(event->x(), event->y());
     if(w)
     {
-        *(event->mouse_event) -= w->position();
+        *(event) -= w->position();
         w->keyPressEvent(event);
     }
 }
@@ -89,12 +89,12 @@ void Scene::keyPressEvent(KeyEvent* event)
     
 void Scene::keyReleaseEvent(KeyEvent* event)
 {
-    event->mouse_event->setScene(this);
+    event->setScene(this);
     
-    Widget* w = widgetAt(event->mouse_event->x(), event->mouse_event->y());
+    Widget* w = widgetAt(event->x(), event->y());
     if(w)
     {
-        *(event->mouse_event) -= w->position();
+        *(event) -= w->position();
         w->keyReleaseEvent(event);
     }
 }

@@ -19,9 +19,9 @@ void MachineScene::keyPressEvent(KeyEvent* event)
     {
 #ifdef DEBUG
         cout << "tab: " << this << "\n";
-        assert(event->mouse_event->view != nullptr);
+        assert(event->view() != nullptr);
 #endif//DEBUG
-        replace_me_callback(event->mouse_event->view, this, counterpart_scene);
+        replace_me_callback(event->view(), this, counterpart_scene);
     }
     else
     {

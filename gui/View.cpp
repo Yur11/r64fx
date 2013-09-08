@@ -221,10 +221,11 @@ void View::render()
 }
 
 
-void View::transform_mouse_event(MouseEvent* event)
+void View::transform_event(Event* event)
 {
     *event -= rect().to<float>().position();
-    *event *= Point<float>(_scale_factor, _scale_factor) - _offset;
+    *event -= _offset;
+    *event *= Point<float>(1.0 / _scale_factor, 1.0 / _scale_factor);
 }
 
 
@@ -233,8 +234,8 @@ void View::mousePressEvent(MouseEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_mouse_event(event);
-    event->view = this;
+    transform_event(event);
+    event->_view = this;
     _scene->mousePressEvent(event);
     
     if(!event->has_been_handled && event->buttons() & Mouse::Button::Right)
@@ -250,8 +251,8 @@ void View::mouseReleaseEvent(MouseEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_mouse_event(event);
-    event->view = this;
+    transform_event(event);
+    event->_view = this;
     _scene->mouseReleaseEvent(event);
 }
     
@@ -261,8 +262,8 @@ void View::mouseMoveEvent(MouseEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_mouse_event(event);
-    event->view = this;
+    transform_event(event);
+    event->_view = this;
     _scene->mouseMoveEvent(event);
 }
 
@@ -272,7 +273,8 @@ void View::mouseWheelEvent(MouseEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    event->view = this;
+    transform_event(event);
+    event->_view = this;
     _scene->mouseWheelEvent(event);
     
     if(!event->has_been_handled)
@@ -280,7 +282,7 @@ void View::mouseWheelEvent(MouseEvent* event)
         if(event->buttons() & Mouse::Button::WheelUp)
         {
             if(event->keyboardModifiers() & Keyboard::Modifier::Ctrl)
-                setScaleFactor(scaleFactor() * 1.1);
+                zoomInOnce(event->originalPosition());
             else if(event->keyboardModifiers() & Keyboard::Modifier::Shift)
                 translate(10.0, 0.0);
             else
@@ -289,14 +291,13 @@ void View::mouseWheelEvent(MouseEvent* event)
         else if(event->buttons() & Mouse::Button::WheelDown)
         {
             if(event->keyboardModifiers() & Keyboard::Modifier::Ctrl)
-                setScaleFactor(scaleFactor() * 0.9);
+                zoomOutOnce(event->position());
             else if(event->keyboardModifiers() & Keyboard::Modifier::Shift)
                 translate(-10.0, 0.0);
             else
                 translate(0.0, 10.0);
         }
         
-        cout << offset().x << ", " << offset().y << "\n";
         event->has_been_handled = true;
     }
 }
@@ -307,8 +308,8 @@ void View::keyPressEvent(KeyEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_mouse_event(event->mouse_event);
-    event->mouse_event->view = this;
+    transform_event(event);
+    event->_view = this;
     _scene->keyPressEvent(event);
 }
     
@@ -318,8 +319,8 @@ void View::keyReleaseEvent(KeyEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_mouse_event(event->mouse_event);
-    event->mouse_event->view = this;
+    transform_event(event);
+    event->_view = this;
     _scene->keyReleaseEvent(event);
 }
 
@@ -361,6 +362,12 @@ HorizontalSplitView* View::splitHorizontally(float ratio)
     return hsv;
 }
 
+
+void View::zoomOnce(float scale_coeff, Point<float> mouse_postition)
+{
+    setScaleFactor(scaleFactor() * scale_coeff);
+}
+    
 
 /* ==== SplitView ======================================================================= */
 void SplitView::replaceSubView(SplittableView* old_view, SplittableView* new_view)
@@ -486,7 +493,7 @@ void SplitView::keyPressEvent(KeyEvent* event)
 {
     auto ra = viewA()->rect().to<float>();
         
-    if(ra.overlaps(event->mouse_event->position()))
+    if(ra.overlaps(event->position()))
     {
         viewA()->keyPressEvent(event);
     }
@@ -501,7 +508,7 @@ void SplitView::keyReleaseEvent(KeyEvent* event)
 {
     auto ra = viewA()->rect().to<float>();
         
-    if(ra.overlaps(event->mouse_event->position()))
+    if(ra.overlaps(event->position()))
     {
         viewA()->keyReleaseEvent(event);
     }

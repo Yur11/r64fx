@@ -3,7 +3,7 @@
 
 #include "View.h"
 #include "Menu.h"
-#include "MouseEvent.h"
+#include "Event.h"
 
 namespace r64fx{
     
@@ -14,9 +14,6 @@ class WindowBase{
     std::vector<Widget*> _overlay_menus;
     
     Widget* overlay_menu_at(int x, int y);
-    
-    /** @brief Copy of the last mouse move, press or release event before any coordinate transformation took place. */
-    MouseEvent _last_mouse_event;
     
 protected:
     void render_overlay_menus();
@@ -55,11 +52,11 @@ protected:
     /** @brief Create and deliver a new mouse move event, taking into acount possible overlays. */
     void initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int keyboard_modifiers);
     
-    void initMouseWheelEvent(int dx, int dy, unsigned int buttons, unsigned int keyboard_modifiers);
+    void initMouseWheelEvent(int x, int y, int dx, int dy, unsigned int buttons, unsigned int keyboard_modifiers);
     
-    void initKeyPressEvent(unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers);
+    void initKeyPressEvent(int x, int y, unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers);
     
-    void initKeyReleaseEvent(unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers);
+    void initKeyReleaseEvent(int x, int y, unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers);
     
     void initTextInputEvent(Utf8String text);
 };    

@@ -3,6 +3,7 @@
 
 #include "Scene.h"
 #include "Menu.h"
+#include "MouseEvent.h"
 
 
 namespace r64fx{
@@ -72,7 +73,7 @@ private:
     Action* close_view_act;
     Menu* _context_menu;
     
-    void transform_mouse_event(MouseEvent* event);
+    void transform_event(Event* event);
     
     View(const View&){}
     
@@ -122,6 +123,13 @@ public:
     VerticalSplitView* splitVertically(float ratio);
     
     HorizontalSplitView* splitHorizontally(float ratio);
+    
+    
+    void zoomOnce(float scale_coeff, Point<float> mouse_postition = {0.0, 0.0});
+    
+    inline void zoomInOnce(Point<float> mouse_postition = {0.0, 0.0}) { zoomOnce(1.1, mouse_postition); }
+    
+    inline  void zoomOutOnce(Point<float> mouse_postition = {0.0, 0.0}) { zoomOnce(0.9, mouse_postition); }
 };
 
 

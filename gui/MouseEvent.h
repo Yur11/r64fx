@@ -19,44 +19,15 @@ class Widget;
     and the widget tree.
  */
 class MouseEvent : public Event{
-    Point<float> _position;
-    
-    /** Orignal event position. */
-    Point<float> _original_position;
-    unsigned int _buttons;
    
 public:
-    View* view = nullptr;
-    
     MouseEvent(Point<float> position, unsigned int buttons = Mouse::Button::None, unsigned int keyboard_modifiers = Keyboard::Modifier::None)
-    : Event(keyboard_modifiers)
-    , _position(position)
-    , _original_position(position)
-    , _buttons(buttons)
+    : Event(position, buttons, keyboard_modifiers)
     {}
     
     MouseEvent(float x = 0.0, float y = 0.0, unsigned int buttons = Mouse::Button::None, unsigned int keyboard_modifiers = Keyboard::Modifier::None)
     : MouseEvent(Point<float>(x, y), buttons, keyboard_modifiers)
     {}
-    
-    inline Point<float> position() const { return _position; }
-    
-    inline float x() const { return _position.x; }
-    inline float y() const { return _position.y; }
-    
-    inline Point<float> originalPosition() const { return _original_position; }
-    
-    inline float original_x() const { return _original_position.x; }
-    inline float original_y() const { return _original_position.y; }
-    
-    inline void setButtons(unsigned int buttons) { _buttons = buttons; }
-    
-    inline unsigned int buttons() const { return _buttons; }
-    
-    inline void operator+=(Point<float> other) { this->_position += other; }
-    inline void operator-=(Point<float> other) { this->_position -= other; }
-    inline void operator*=(Point<float> other) { this->_position *= other; }
-    inline void operator*=(float coeff) { this->_position *= coeff; }
 };
 
 }//namespace r64fx
