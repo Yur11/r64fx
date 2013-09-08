@@ -9,6 +9,8 @@ namespace r64fx{
     
 class WindowBase;
 class SplitView;
+class VerticalSplitView;
+class HorizontalSplitView;
     
 /** @brief Base class for views. 
  
@@ -46,88 +48,13 @@ public:
     
     virtual void mouseMoveEvent(MouseEvent* event) = 0;
     
+    virtual void mouseWheelEvent(MouseEvent* event) = 0;
+    
     virtual void keyPressEvent(KeyEvent* event) = 0;
     
     virtual void keyReleaseEvent(KeyEvent* event) = 0;
 
     SplittableView* findParentForView(SplittableView* view);
-};
-
-
-/** @brief View that can be splitted into two parts. */
-class SplitView : public SplittableView{
-    float _split_ratio = 0.5;
-    bool _separator_is_hovered = false;
-    bool _separator_is_grabbed = false;
-    SplittableView* _a = nullptr;
-    SplittableView* _b = nullptr;
-
-protected:
-    virtual void render_separator() = 0;
-    
-    virtual Rect<float> separatorRect() = 0;
-    
-    virtual void moveSeparator(Point<float> p) = 0;
-    
-public:
-    virtual ~SplitView() {}
-    
-    inline bool separatorIsHovered() const { return _separator_is_hovered; }
-    inline bool separatorIsGrabbed() const { return _separator_is_grabbed; }
-    
-    inline void setSplitRatio(float ratio) { _split_ratio = ratio; }
-    inline float splitRatio() const { return _split_ratio; }
-    
-    inline void setViewA(SplittableView* a) { _a = a; }
-    inline void setViewB(SplittableView* b) { _b = b; }
-    
-    /** @brief Replace one of the sub-views. */
-    void replaceSubView(SplittableView* old_view, SplittableView* new_view);
-    
-    inline SplittableView* viewA() const { return _a; }
-    inline SplittableView* viewB() const { return _b; }
-    
-    virtual void render();
-    
-    virtual void mousePressEvent(MouseEvent* event);
-    
-    virtual void mouseReleaseEvent(MouseEvent* event);
-    
-    virtual void mouseMoveEvent(MouseEvent* event);
-    
-    virtual void keyPressEvent(KeyEvent* event);
-    
-    virtual void keyReleaseEvent(KeyEvent* event);
-};
-
-
-class VerticalSplitView : public SplitView{
-protected:
-    virtual void render_separator();
-    
-    virtual Rect<float> separatorRect();
-    
-    virtual void moveSeparator(Point<float> p);
-    
-public:
-    virtual ~VerticalSplitView() {}
-    
-    virtual void resize(int left, int top, int right, int bottom);
-};
-
-
-class HorizontalSplitView : public SplitView{
-protected:
-    virtual void render_separator();
-    
-    virtual Rect<float> separatorRect();
-    
-    virtual void moveSeparator(Point<float> p);
-    
-public:
-    virtual ~HorizontalSplitView() {}
-    
-    virtual void resize(int left, int top, int right, int bottom);
 };
 
     
@@ -186,6 +113,8 @@ public:
     
     virtual void mouseMoveEvent(MouseEvent* event);
     
+    virtual void mouseWheelEvent(MouseEvent* event);
+    
     virtual void keyPressEvent(KeyEvent* event);
     
     virtual void keyReleaseEvent(KeyEvent* event);
@@ -193,6 +122,86 @@ public:
     VerticalSplitView* splitVertically(float ratio);
     
     HorizontalSplitView* splitHorizontally(float ratio);
+};
+
+
+
+/** @brief View that can be splitted into two parts. */
+class SplitView : public SplittableView{
+    float _split_ratio = 0.5;
+    bool _separator_is_hovered = false;
+    bool _separator_is_grabbed = false;
+    SplittableView* _a = nullptr;
+    SplittableView* _b = nullptr;
+
+protected:
+    virtual void render_separator() = 0;
+    
+    virtual Rect<float> separatorRect() = 0;
+    
+    virtual void moveSeparator(Point<float> p) = 0;
+    
+public:
+    virtual ~SplitView() {}
+    
+    inline bool separatorIsHovered() const { return _separator_is_hovered; }
+    inline bool separatorIsGrabbed() const { return _separator_is_grabbed; }
+    
+    inline void setSplitRatio(float ratio) { _split_ratio = ratio; }
+    inline float splitRatio() const { return _split_ratio; }
+    
+    inline void setViewA(SplittableView* a) { _a = a; }
+    inline void setViewB(SplittableView* b) { _b = b; }
+    
+    /** @brief Replace one of the sub-views. */
+    void replaceSubView(SplittableView* old_view, SplittableView* new_view);
+    
+    inline SplittableView* viewA() const { return _a; }
+    inline SplittableView* viewB() const { return _b; }
+    
+    virtual void render();
+    
+    virtual void mousePressEvent(MouseEvent* event);
+    
+    virtual void mouseReleaseEvent(MouseEvent* event);
+    
+    virtual void mouseMoveEvent(MouseEvent* event);
+    
+    virtual void mouseWheelEvent(MouseEvent* event);
+    
+    virtual void keyPressEvent(KeyEvent* event);
+    
+    virtual void keyReleaseEvent(KeyEvent* event);
+};
+
+
+class VerticalSplitView : public SplitView{
+protected:
+    virtual void render_separator();
+    
+    virtual Rect<float> separatorRect();
+    
+    virtual void moveSeparator(Point<float> p);
+    
+public:
+    virtual ~VerticalSplitView() {}
+    
+    virtual void resize(int left, int top, int right, int bottom);
+};
+
+
+class HorizontalSplitView : public SplitView{
+protected:
+    virtual void render_separator();
+    
+    virtual Rect<float> separatorRect();
+    
+    virtual void moveSeparator(Point<float> p);
+    
+public:
+    virtual ~HorizontalSplitView() {}
+    
+    virtual void resize(int left, int top, int right, int bottom);
 };
     
 }//namespace r64fx

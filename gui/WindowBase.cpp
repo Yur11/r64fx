@@ -174,8 +174,9 @@ void WindowBase::initMouseMoveEvent(int x, int y, unsigned int buttons)
 
 void WindowBase::initMouseWheelEvent(int dx, int dy, unsigned int buttons)
 {
-    MouseEvent event;
-    event.setOriginWindow(this);
+    MouseEvent event = _last_mouse_event;
+    event.setButtons(event.buttons() | (dy > 0 ? Mouse::Button::WheelUp : Mouse::Button::WheelDown));
+    view()->mouseWheelEvent(&event);
 }
 
     

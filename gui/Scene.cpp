@@ -59,12 +59,18 @@ void Scene::mouseMoveEvent(MouseEvent* event)
 {
     event->setScene(this);
     
-    Widget* w = widgetAt(event->x(), event->y());
-    if(w)
-    {
-        *event -= w->position();
-        w->mouseMoveEvent(event);
-    }
+//     Widget* w = widgetAt(event->x(), event->y());
+//     if(w)
+//     {
+//         *event -= w->position();
+//         w->mouseMoveEvent(event);
+//     }
+}
+
+
+void Scene::mouseWheelEvent(MouseEvent* event)
+{
+    event->setScene(this);
 }
 
 

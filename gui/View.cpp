@@ -213,6 +213,7 @@ void View::render()
     glEnable(GL_SCISSOR_TEST);
     glPushMatrix();
     glTranslatef(x(), y(), 0.0);
+    glScalef(scaleFactor(), scaleFactor(), 1.0);
     _scene->render();
     glPopMatrix();
     glDisable(GL_SCISSOR_TEST);
@@ -265,6 +266,27 @@ void View::mouseMoveEvent(MouseEvent* event)
     _scene->mouseMoveEvent(event);
 }
 
+
+void View::mouseWheelEvent(MouseEvent* event)
+{
+#ifdef DEBUG
+    MAKE_SURE_WE_HAVE_A_SCENE
+#endif//DEBUG
+    event->view = this;
+    _scene->mouseWheelEvent(event);
+    
+    if(!event->has_been_handled)
+    {
+        if(event->buttons() & Mouse::Button::WheelUp)
+        {
+            setScaleFactor(scaleFactor() * 1.1);
+        }
+        else if(event->buttons() & Mouse::Button::WheelDown)
+        {
+            setScaleFactor(scaleFactor() * 0.9);
+        }
+    }
+}
 
 
 void View::keyPressEvent(KeyEvent* event)
@@ -428,6 +450,21 @@ void SplitView::mouseMoveEvent(MouseEvent* event)
         {
             viewB()->mouseMoveEvent(event);
         }
+    }
+}
+
+
+void SplitView::mouseWheelEvent(MouseEvent* event)
+{
+    auto ra = viewA()->rect().to<float>();
+    
+    if(ra.overlaps(event->position()))
+    {
+        viewA()->mouseWheelEvent(event);
+    }
+    else
+    {
+        viewB()->mouseWheelEvent(event);
     }
 }
 

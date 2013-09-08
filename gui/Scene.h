@@ -13,6 +13,8 @@ class Scene{
     std::vector<Widget*> _widgets;
             
 public:
+    bool is_scalable = true;
+    
     /** @brief A request callback to replace this scene with another in the host View. */
     void (*replace_me_callback)(View* view, Scene* old_scene, Scene* new_scene);
     
@@ -29,6 +31,8 @@ public:
     virtual void mouseReleaseEvent(MouseEvent*);
     
     virtual void mouseMoveEvent(MouseEvent*);
+    
+    virtual void mouseWheelEvent(MouseEvent*);
     
     virtual void keyPressEvent(KeyEvent*);
     

@@ -9,6 +9,8 @@ struct Mouse{
         static const unsigned int Left   = 1;
         static const unsigned int Middle = 1<<1;
         static const unsigned int Right  = 1<<2;
+        static const unsigned int WheelUp = 1<<3;
+        static const unsigned int WheelDown = 1<<4;
     };
 };
     
