@@ -197,7 +197,7 @@ void Window::processEvents()
             {
                 if(last_focused_window)
                 {
-                    last_focused_window->initMouseMoveEvent(event.motion.x, last_focused_window->height() - event.motion.y, pressed_mouse_buttons);
+                    last_focused_window->initMouseMoveEvent(event.motion.x, last_focused_window->height() - event.motion.y, pressed_mouse_buttons, SDL_GetModState());
                 }
                 break;
             }
@@ -212,7 +212,7 @@ void Window::processEvents()
                         pressed_mouse_buttons |= Mouse::Button::Middle;
                     else if(event.button.button == SDL_BUTTON_RIGHT)
                         pressed_mouse_buttons |= Mouse::Button::Right;
-                    last_focused_window->initMousePressEvent(event.button.x, last_focused_window->height() - event.button.y, pressed_mouse_buttons);
+                    last_focused_window->initMousePressEvent(event.button.x, last_focused_window->height() - event.button.y, pressed_mouse_buttons, SDL_GetModState());
                 }
                 break;
             }
@@ -227,7 +227,7 @@ void Window::processEvents()
                         pressed_mouse_buttons &= ~Mouse::Button::Middle;
                     else if(event.button.button == SDL_BUTTON_RIGHT)
                         pressed_mouse_buttons &= ~Mouse::Button::Right;
-                    last_focused_window->initMouseReleaseEvent(event.button.x, last_focused_window->height() - event.button.y, pressed_mouse_buttons);
+                    last_focused_window->initMouseReleaseEvent(event.button.x, last_focused_window->height() - event.button.y, pressed_mouse_buttons, SDL_GetModState());
                 }
                 break;
             }
@@ -236,7 +236,7 @@ void Window::processEvents()
             {
                 if(last_focused_window)
                 {
-                    last_focused_window->initMouseWheelEvent(event.wheel.x, event.wheel.y, pressed_mouse_buttons);
+                    last_focused_window->initMouseWheelEvent(event.wheel.x, event.wheel.y, pressed_mouse_buttons, SDL_GetModState());
                 }
                 break;
             }

@@ -28,14 +28,15 @@ class MouseEvent : public Event{
 public:
     View* view = nullptr;
     
-    MouseEvent(Point<float> position, unsigned int buttons = Mouse::Button::None)
-    : _position(position)
+    MouseEvent(Point<float> position, unsigned int buttons = Mouse::Button::None, unsigned int keyboard_modifiers = Keyboard::Modifier::None)
+    : Event(keyboard_modifiers)
+    , _position(position)
     , _original_position(position)
     , _buttons(buttons)
     {}
     
-    MouseEvent(float x = 0.0, float y = 0.0, unsigned int buttons = Mouse::Button::None)
-    : MouseEvent(Point<float>(x, y), buttons)
+    MouseEvent(float x = 0.0, float y = 0.0, unsigned int buttons = Mouse::Button::None, unsigned int keyboard_modifiers = Keyboard::Modifier::None)
+    : MouseEvent(Point<float>(x, y), buttons, keyboard_modifiers)
     {}
     
     inline Point<float> position() const { return _position; }

@@ -212,7 +212,7 @@ void View::render()
     
     glEnable(GL_SCISSOR_TEST);
     glPushMatrix();
-    glTranslatef(x(), y(), 0.0);
+    glTranslatef(x() + offset().x, y() + offset().y, 0.0);
     glScalef(scaleFactor(), scaleFactor(), 1.0);
     _scene->render();
     glPopMatrix();
@@ -279,12 +279,25 @@ void View::mouseWheelEvent(MouseEvent* event)
     {
         if(event->buttons() & Mouse::Button::WheelUp)
         {
-            setScaleFactor(scaleFactor() * 1.1);
+            if(event->keyboardModifiers() & Keyboard::Modifier::Ctrl)
+                setScaleFactor(scaleFactor() * 1.1);
+            else if(event->keyboardModifiers() & Keyboard::Modifier::Shift)
+                translate(10.0, 0.0);
+            else
+                translate(0.0, -10.0);
         }
         else if(event->buttons() & Mouse::Button::WheelDown)
         {
-            setScaleFactor(scaleFactor() * 0.9);
+            if(event->keyboardModifiers() & Keyboard::Modifier::Ctrl)
+                setScaleFactor(scaleFactor() * 0.9);
+            else if(event->keyboardModifiers() & Keyboard::Modifier::Shift)
+                translate(-10.0, 0.0);
+            else
+                translate(0.0, 10.0);
         }
+        
+        cout << offset().x << ", " << offset().y << "\n";
+        event->has_been_handled = true;
     }
 }
 

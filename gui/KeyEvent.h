@@ -10,7 +10,6 @@ class MouseEvent;
 class KeyEvent : public Event{
     unsigned int _key;
     unsigned int _buttons;
-    unsigned int _modifiers;
 
 public:
     /** @brief Previous mouse event. 
@@ -20,16 +19,15 @@ public:
      */
     MouseEvent* mouse_event;
     
-    KeyEvent(unsigned int key, unsigned int buttons, unsigned int modifiers, MouseEvent* mouse_event) 
-    : _key(key)
+    KeyEvent(unsigned int key, unsigned int buttons, unsigned int keyboard_modifiers, MouseEvent* mouse_event) 
+    : Event(keyboard_modifiers)
+    , _key(key)
     , _buttons(buttons)
-    , _modifiers(modifiers)
-    , mouse_event(mouse_event) 
+    , mouse_event(mouse_event)
     {}
     
     inline unsigned int key() const { return _key; }
     inline unsigned int buttons() const { return _buttons; }
-    inline unsigned int modifiers() const { return _modifiers; }
 };
     
 }//namespace r64fx

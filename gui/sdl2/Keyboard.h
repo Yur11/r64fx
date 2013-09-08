@@ -124,12 +124,16 @@ struct Keyboard{
         static const unsigned int None = KMOD_NONE;
         static const unsigned int LeftShift  = KMOD_LSHIFT;
         static const unsigned int RightShift = KMOD_RSHIFT;
+        static const unsigned int Shift = KMOD_SHIFT;
         static const unsigned int LeftCtrl = KMOD_LCTRL;
         static const unsigned int RightCtrl = KMOD_RCTRL;
+        static const unsigned int Ctrl = KMOD_CTRL;
         static const unsigned int LeftAlt = KMOD_LALT;
         static const unsigned int RightAlt = KMOD_RALT;
+        static const unsigned int Alt = KMOD_ALT;
         static const unsigned int LeftGui = KMOD_LGUI;
         static const unsigned int RightGui = KMOD_RGUI;
+        static const unsigned int Gui = KMOD_GUI;
         static const unsigned int Numlock = KMOD_NUM;
     };
     

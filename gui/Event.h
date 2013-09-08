@@ -1,6 +1,8 @@
 #ifndef R64FX_GUI_EVENT_H
 #define R64FX_GUI_EVENT_H
 
+#include "Keyboard.h"
+
 namespace r64fx{
 
 class WindowBase;
@@ -27,13 +29,20 @@ class Event{
     WindowBase* origin_window = nullptr;
     Scene* _scene = nullptr;
     
+    unsigned int _keyboard_modifiers = Keyboard::Modifier::None;
+    
 public:
     bool has_been_handled = false;
+    
+    Event(unsigned int keyboard_modifiers = Keyboard::Modifier::None) : _keyboard_modifiers(keyboard_modifiers) {}
     
     inline WindowBase* originWindow() const { return this->origin_window; }
 
     inline Scene* scene() const { return _scene; }
     
+    inline int keyboardModifiers() { return _keyboard_modifiers; }
+    
+    inline void setKeyboardModifiers(unsigned int keyboard_modifiers) { _keyboard_modifiers = keyboard_modifiers; }
     
 private:
     inline void setOriginWindow(WindowBase* window) { this->origin_window = window; }

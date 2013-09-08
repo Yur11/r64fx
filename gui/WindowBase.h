@@ -47,19 +47,19 @@ public:
     
 protected:
     /** @brief Create and deliver a new mouse press event, taking into acount possible overlays. */
-    void initMousePressEvent(int x, int y, unsigned int buttons);
+    void initMousePressEvent(int x, int y, unsigned int buttons, unsigned int keyboard_modifiers);
     
     /** @brief Create and deliver a new mouse release event, taking into acount possible overlays. */
-    void initMouseReleaseEvent(int x, int y, unsigned int buttons);
+    void initMouseReleaseEvent(int x, int y, unsigned int buttons, unsigned int keyboard_modifiers);
     
     /** @brief Create and deliver a new mouse move event, taking into acount possible overlays. */
-    void initMouseMoveEvent(int x, int y, unsigned int buttons);
+    void initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int keyboard_modifiers);
     
-    void initMouseWheelEvent(int dx, int dy, unsigned int buttons);
+    void initMouseWheelEvent(int dx, int dy, unsigned int buttons, unsigned int keyboard_modifiers);
     
-    void initKeyPressEvent(unsigned int scancode, unsigned int buttons, unsigned int modifiers);
+    void initKeyPressEvent(unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers);
     
-    void initKeyReleaseEvent(unsigned int scancode, unsigned int buttons,  unsigned int modifiers);
+    void initKeyReleaseEvent(unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers);
     
     void initTextInputEvent(Utf8String text);
 };    
