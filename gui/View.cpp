@@ -198,7 +198,8 @@ void View::resize(int left, int top, int right, int bottom)
     _rect.left = left;
     _rect.top = top;
     _rect.right = right; 
-    _rect.bottom = bottom; 
+    _rect.bottom = bottom;
+    _scale_center = Point<float>(left + width()*0.5, bottom + height()*0.5);
 }
     
     
@@ -212,8 +213,12 @@ void View::render()
     
     glEnable(GL_SCISSOR_TEST);
     glPushMatrix();
-    glTranslatef(x() + offset().x, y() + offset().y, 0.0);
+    glTranslatef(x(), y(), 0.0);
+
     glScalef(scaleFactor(), scaleFactor(), 1.0);
+    
+    glTranslatef(_offset.x, _offset.y, 0.0);
+    
     _scene->render();
     glPopMatrix();
     glDisable(GL_SCISSOR_TEST);
@@ -223,9 +228,9 @@ void View::render()
 
 void View::transform_event(Event* event)
 {
-    *event -= rect().to<float>().position();
-    *event -= _offset;
-    *event *= Point<float>(1.0 / _scale_factor, 1.0 / _scale_factor);
+    *event -= Point<float>(x(), y());
+    *event -= _offset * scaleFactor();
+    *event *= (1.0/scaleFactor());
 }
 
 
@@ -282,7 +287,7 @@ void View::mouseWheelEvent(MouseEvent* event)
         if(event->buttons() & Mouse::Button::WheelUp)
         {
             if(event->keyboardModifiers() & Keyboard::Modifier::Ctrl)
-                zoomInOnce(event->originalPosition());
+                zoomInOnce(event->originalPosition() - Point<float>(x(), y()));
             else if(event->keyboardModifiers() & Keyboard::Modifier::Shift)
                 translate(10.0, 0.0);
             else
@@ -291,7 +296,7 @@ void View::mouseWheelEvent(MouseEvent* event)
         else if(event->buttons() & Mouse::Button::WheelDown)
         {
             if(event->keyboardModifiers() & Keyboard::Modifier::Ctrl)
-                zoomOutOnce(event->position());
+                zoomOutOnce(event->originalPosition() - Point<float>(x(), y()));
             else if(event->keyboardModifiers() & Keyboard::Modifier::Shift)
                 translate(-10.0, 0.0);
             else
@@ -363,9 +368,21 @@ HorizontalSplitView* View::splitHorizontally(float ratio)
 }
 
 
-void View::zoomOnce(float scale_coeff, Point<float> mouse_postition)
-{
+void View::zoomOnce(float scale_coeff, Point<float> mouse_position)
+{    
+    Point<float> before_scaling = mouse_position;
+    before_scaling -= _offset * scaleFactor();
+    before_scaling *= (1.0/scaleFactor());
+    
     setScaleFactor(scaleFactor() * scale_coeff);
+    
+    Point<float> after_scaling = mouse_position;
+    after_scaling -= _offset * scaleFactor();
+    after_scaling *= (1.0/scaleFactor());
+    
+    Point<float> diff = after_scaling - before_scaling;
+    cout << "diff: " << diff.x << ", " << diff.y << "\n";
+    translate(diff);
 }
     
 

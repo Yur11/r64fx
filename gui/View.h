@@ -66,6 +66,7 @@ private:
     friend class Window;
     Scene* _scene = nullptr;
     float _scale_factor = 1.0;
+    Point<float> _scale_center = {0.0, 0.0};
     Point<float> _offset = {0.0, 0.0};
     
     Action* split_view_vert_act;
@@ -124,12 +125,11 @@ public:
     
     HorizontalSplitView* splitHorizontally(float ratio);
     
+    void zoomOnce(float scale_coeff, Point<float> mouse_position = {0.0, 0.0});
     
-    void zoomOnce(float scale_coeff, Point<float> mouse_postition = {0.0, 0.0});
+    inline void zoomInOnce(Point<float> mouse_position = {0.0, 0.0}) { zoomOnce(1.1, mouse_position); }
     
-    inline void zoomInOnce(Point<float> mouse_postition = {0.0, 0.0}) { zoomOnce(1.1, mouse_postition); }
-    
-    inline  void zoomOutOnce(Point<float> mouse_postition = {0.0, 0.0}) { zoomOnce(0.9, mouse_postition); }
+    inline  void zoomOutOnce(Point<float> mouse_position = {0.0, 0.0}) { zoomOnce(1.0 / 1.1, mouse_position); }
 };
 
 

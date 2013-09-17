@@ -12,6 +12,11 @@ template<typename T> struct Point{
     , y(y)
     {}
     
+    inline Point<T> operator-()
+    {
+        return Point<T>(-x, -y);
+    }
+    
     inline Point<T> operator+(Point<T> other)
     {
         return Point<T>(x + other.x, y + other.y);
