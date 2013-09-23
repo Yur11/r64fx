@@ -24,7 +24,7 @@ public:
     
     inline void removeWidget(int index) { auto it = _widgets.begin() + index; (*it)->_scene = nullptr; _widgets.erase(it); }
   
-    void render();
+    virtual void render();
     
     virtual void mousePressEvent(MouseEvent*);
     

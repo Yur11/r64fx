@@ -1,6 +1,6 @@
 #include "machine_widgets.h"
 #include "machine_scenes.h"
-
+#include "MouseEvent.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -12,47 +12,10 @@ using namespace std;
 
 namespace r64fx{
 
-class BackWidget : public Widget{
-    Texture _surface_tex;
-    
-public:
-    BackWidget(Widget* parent = nullptr) : Widget(parent)
-    {
-        _surface_tex = Texture::defaultTexture();
-    }
-    
-    virtual ~BackWidget() {}
-    
-    virtual void render()
-    {
-        glEnable(GL_TEXTURE_2D);
-        _surface_tex.bind();
-        glBegin(GL_POLYGON);
-            glTexCoord2f(0.0, 0.0);
-            glVertex2f(0.0, 0.0);
-            
-            glTexCoord2f(0.0, height() / _surface_tex.height());
-            glVertex2f(0.0, height());
-            
-            glTexCoord2f(width() / _surface_tex.width(), height() / _surface_tex.height());
-            glVertex2f(width(), height());
-            
-            glTexCoord2f(width() / _surface_tex.width(), 0.0);
-            glVertex2f(width(), 0.0);
-        glEnd();
-        glDisable(GL_TEXTURE_2D);
-    }
-};
-    
     
 MachineWidget::MachineWidget(Widget* parent) : Widget(parent)
 {
-    resize(19, 1.75);
-    _surface_tex = Texture("textures/grainy_grey.png");
-    if(!_surface_tex.isGood())
-    {
-        _surface_tex = Texture::defaultTexture();
-    }
+    resize(19 * 100, 1.75 * 100);
 }
 
 
@@ -61,24 +24,58 @@ MachineWidget::~MachineWidget()
 }
 
 
+void MachineWidget::safelySetSurfaceTexture(Texture texture)
+{
+    surface_texture = texture;
+    if(!surface_texture.isGood())
+        surface_texture = Texture::defaultTexture();
+}
+
+
 void MachineWidget::render()
 {
     glEnable(GL_TEXTURE_2D);
-    _surface_tex.bind();
+    surface_texture.bind();
     glBegin(GL_POLYGON);
         glTexCoord2f(0.0, 0.0);
         glVertex2f(0.0, 0.0);
         
-        glTexCoord2f(0.0, height() / _surface_tex.height());
+        glTexCoord2f(0.0, height() / surface_texture.height());
         glVertex2f(0.0, height());
         
-        glTexCoord2f(width() / _surface_tex.width(), height() / _surface_tex.height());
+        glTexCoord2f(width() / surface_texture.width(), height() / surface_texture.height());
         glVertex2f(width(), height());
         
-        glTexCoord2f(width() / _surface_tex.width(), 0.0);
+        glTexCoord2f(width() / surface_texture.width(), 0.0);
         glVertex2f(width(), 0.0);
     glEnd();
     glDisable(GL_TEXTURE_2D);
+}
+
+
+void MachineWidget::mousePressEvent(MouseEvent* event)
+{
+    Widget::mousePressEvent(event);
+    if(!event->has_been_handled)
+        about_to_be_dragged = true;
+}
+
+    
+void MachineWidget::mouseReleaseEvent(MouseEvent* event)
+{
+    about_to_be_dragged = false;
+}
+    
+    
+void MachineWidget::mouseMoveEvent(MouseEvent* event)
+{
+    Widget::mouseMoveEvent(event);
+    if(!event->has_been_handled && about_to_be_dragged)
+    {
+        about_to_be_dragged = false;
+        drag_start_mouse_position = event->position();
+        dragged.send(this);
+    }
 }
 
 }//namespace r64fx 

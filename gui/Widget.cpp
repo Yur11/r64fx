@@ -262,18 +262,6 @@ Widget* Widget::keyboardInputGrabber()
 }
 
 
-void Widget::grabMouseInput()
-{
-    setKeyboardGrabber(this);
-}
-
-
-void Widget::grabKeyboardInput()
-{
-    setKeyboardGrabber(this);
-}
-
-
 bool Widget::isMouseGrabber()
 {
     return mouse_grabber == this;

@@ -8,13 +8,26 @@ namespace r64fx{
     
 
 class MachineScene : public Scene{
+    MachineWidget* dragged_widget = nullptr;
+    Point<float> mouse_position = {0.0, 0.0};
+    
+    /** @brief Can we drop the dragged widget at the current mouse position. */
+    bool canDropWidget();
     
 public:
     MachineScene* counterpart_scene = nullptr;
     
+    virtual void render();
+
+    virtual void mouseReleaseEvent(MouseEvent*);
+    
+    virtual void mouseMoveEvent(MouseEvent*);
+    
     virtual void keyPressEvent(KeyEvent*);
     
     virtual void keyReleaseEvent(KeyEvent*);
+    
+    void startDrag(MachineWidget* own_dragged_widget, MachineWidget* counterpart_scene_widget);
 };
     
     

@@ -13,7 +13,7 @@ vector<Texture> all_textures;
 std::vector<std::string>* texture_data_paths;
     
 Texture::Texture(std::string name)
-{
+{    
     FILE* file = fopen(name.c_str(), "rb");//Try absolute path first.
     if(!file && texture_data_paths)
     {

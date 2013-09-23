@@ -223,10 +223,14 @@ public:
     static Widget* keyboardInputGrabber();
     
     /** @brief Make this widget a mouse grabber. */
-    void grabMouseInput();
+    inline void grabMouseInput() { setMouseGrabber(this); }
+    
+    inline void ungrabMouseInput() { setMouseGrabber(nullptr); }
     
     /** @brief Make this widget a keyboard grabber. */
-    void grabKeyboardInput();
+    inline void grabKeyboardInput() { setKeyboardGrabber(this); }
+    
+    inline void ungrabKeyboardInput() { setKeyboardGrabber(nullptr); }
     
     bool isMouseGrabber();
     

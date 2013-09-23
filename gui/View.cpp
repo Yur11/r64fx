@@ -381,7 +381,6 @@ void View::zoomOnce(float scale_coeff, Point<float> mouse_position)
     after_scaling *= (1.0/scaleFactor());
     
     Point<float> diff = after_scaling - before_scaling;
-    cout << "diff: " << diff.x << ", " << diff.y << "\n";
     translate(diff);
 }
     
