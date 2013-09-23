@@ -91,7 +91,12 @@ struct Program{
         fms.counterpart_scene = &bms;
         bms.counterpart_scene = &fms;
         
-        Machine* m = new Machine(&fms, &bms);
+        Machine* m1 = new Machine(&fms, &bms);
+        m1->setPosition(100, 100);
+        Machine* m2 = new Machine(&fms, &bms);
+        m2->setPosition(100, 300);
+        Machine* m3 = new Machine(&fms, &bms);
+        m3->setPosition(100, 500);
 
         /* Setup root view of the main window. */        
         View* view = new View(&fms);

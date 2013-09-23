@@ -2,6 +2,7 @@
 #include "Keyboard.h"
 #include "MouseEvent.h"
 #include "KeyEvent.h"
+#include <algorithm>
 
 #ifdef DEBUG
 #include <iostream>
@@ -12,46 +13,76 @@ using namespace std;
 
 namespace r64fx{
     
+    
 void MachineScene::render()
 {
     Scene::render();
-    if(dragged_widget)
+    if(!selected_widgets.empty())
     {
-        glColor3f(1.0, 0.0, 0.0);
-        glBegin(GL_LINE_LOOP);
-            glVertex2f(
-                mouse_position.x - dragged_widget->drag_start_mouse_position.x,
-                mouse_position.y - dragged_widget->drag_start_mouse_position.y
-            );
+        if(drag_in_progress)
+        {
+            if(can_drop)
+                glColor3f(0.0, 1.0, 0.0);
+            else
+                glColor3f(1.0, 0.0, 0.0);
+        }
+        else
+        {
+            glColor3f(0.0, 0.0, 1.0);
+        }
+        
+        for(auto w : selected_widgets)
+        {
+            auto position = w->position() + drag_position - drag_start_position;
+            auto size = w->size();
             
-            glVertex2f(
-                mouse_position.x - dragged_widget->drag_start_mouse_position.x + dragged_widget->width(),
-                mouse_position.y - dragged_widget->drag_start_mouse_position.y
-            );
-            
-            glVertex2f(
-                mouse_position.x - dragged_widget->drag_start_mouse_position.x + dragged_widget->width(),
-                mouse_position.y - dragged_widget->drag_start_mouse_position.y + dragged_widget->height()
-            );
-            
-            glVertex2f(
-                mouse_position.x - dragged_widget->drag_start_mouse_position.x,
-                mouse_position.y - dragged_widget->drag_start_mouse_position.y + dragged_widget->height()
-            );
-        glEnd();
+            glBegin(GL_LINE_LOOP);
+                glVertex2f(position.x, position.y);
+                glVertex2f(position.x + size.w, position.y);
+                glVertex2f(position.x + size.w, position.y + size.h);
+                glVertex2f(position.x, position.y + size.h);
+            glEnd();
+        }
+    }
+}
+
+
+void MachineScene::mousePressEvent(MouseEvent* event)
+{
+    Scene::mousePressEvent(event);
+    if(!event->has_been_handled)
+    {
+        deselectAllWidgets();
+        counterpart_scene->deselectAllWidgets();
     }
 }
 
 
 void MachineScene::mouseReleaseEvent(MouseEvent* event)
 {
-    if(dragged_widget)
+    if(drag_in_progress)
     {
-        dragged_widget->setPosition(event->position() - dragged_widget->drag_start_mouse_position);
-        counterpart_scene->dragged_widget->setPosition(event->position() - dragged_widget->drag_start_mouse_position);
+        if(can_drop)
+        {
+            for(auto w : selected_widgets)
+            {
+                w->setPosition(w->position() + drag_position - drag_start_position);
+            }
+            
+            for(auto w : counterpart_scene->selected_widgets)
+            {
+                w->setPosition(w->position() + drag_position - drag_start_position);
+            }
+        }
         
-        dragged_widget = nullptr;
-        counterpart_scene->dragged_widget = nullptr;
+        drag_position = {0.0, 0.0};
+        drag_start_position = {0.0, 0.0};
+        counterpart_scene->drag_position = {0.0, 0.0};
+        counterpart_scene->drag_start_position = {0.0, 0.0};
+        drag_in_progress = false;
+        counterpart_scene->drag_in_progress = false;
+        can_drop = false;
+        counterpart_scene->can_drop = false;
     }
     else
     {
@@ -62,13 +93,32 @@ void MachineScene::mouseReleaseEvent(MouseEvent* event)
     
 void MachineScene::mouseMoveEvent(MouseEvent* event)
 {
-    mouse_position = event->position();
-    counterpart_scene->mouse_position = event->position();
+    mouse_position = counterpart_scene->mouse_position = event->position();
     
-    if(dragged_widget)
+    if(drag_in_progress)
     {
         cout << "drag: " << event->position().x << ", " << event->position().y << "\n";
         /* Check if widget can be dropped here. */
+        
+        can_drop = true;
+        for(auto w : Scene::widgets())
+        {
+            for(auto sw : selected_widgets)
+            {       
+                if(w == sw)
+                    break;
+                
+                if((sw->rect() + drag_position - drag_start_position).overlaps(w->rect()))
+                {
+                    can_drop = false;
+                    goto _proceed;
+                }
+            }
+        }
+    _proceed:
+        
+        drag_position = counterpart_scene->drag_position = event->position();
+        counterpart_scene->can_drop = can_drop;
     }
     else
     {
@@ -79,6 +129,10 @@ void MachineScene::mouseMoveEvent(MouseEvent* event)
     
 void MachineScene::keyPressEvent(KeyEvent* event)
 {
+    Scene::keyPressEvent(event);
+    if(event->has_been_handled)
+        return;
+    
     if(event->key() == Keyboard::Key::Tab)
     {
 #ifdef DEBUG
@@ -86,10 +140,6 @@ void MachineScene::keyPressEvent(KeyEvent* event)
         assert(event->view() != nullptr);
 #endif//DEBUG
         replace_me_callback(event->view(), this, counterpart_scene);
-    }
-    else
-    {
-        Scene::keyPressEvent(event);
     }
 }
 
@@ -100,11 +150,27 @@ void MachineScene::keyReleaseEvent(KeyEvent* event)
 }
 
 
-void MachineScene::startDrag(MachineWidget* own_dragged_widget, MachineWidget* counterpart_scene_widget)
+void MachineScene::selectWidget(MachineWidget* widget)
 {
-    dragged_widget = own_dragged_widget;
-    counterpart_scene->dragged_widget = counterpart_scene_widget;
-    counterpart_scene->dragged_widget->drag_start_mouse_position = own_dragged_widget->drag_start_mouse_position;
+    if(!(Keyboard::modifiers() & Keyboard::Modifier::Ctrl))
+        deselectAllWidgets();
+    
+    if(find(selected_widgets.begin(), selected_widgets.end(), widget) == selected_widgets.end())
+        selected_widgets.push_back(widget);
+}
+    
+
+void MachineScene::deselectAllWidgets()
+{
+    selected_widgets.clear();
+}
+
+
+void MachineScene::startDrag()
+{
+    drag_start_position = counterpart_scene->drag_start_position = mouse_position;
+    drag_in_progress = true;
+    counterpart_scene->drag_in_progress = true;
 }
 
     

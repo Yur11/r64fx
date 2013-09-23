@@ -110,7 +110,19 @@ template<typename T> struct Rect{
         return overlaps(Point<float>(x, y));
     }
     
+    bool overlaps(Rect<float> other)
+    {
+        auto leftmost = (left < other.left ? left : other.left);
+        auto rightmost = (right > other.right ? right : other.right);
+        auto topmost = (top > other.top ? top : other.top);
+        auto bottommost = (bottom < other.bottom ? bottom : other.bottom);
+        return width() + other.width() >= rightmost - leftmost && height() + other.height() >= topmost - bottommost;
+    }
+    
     template<typename OtherT> Rect<OtherT> to() { return Rect<OtherT>(left, top, right, bottom); }
+    
+    inline Rect<T> operator+(Point<T> point) { return Rect<T>(position() + point, size()); }
+    inline Rect<T> operator-(Point<T> point) { return Rect<T>(position() - point, size()); }
 };
     
 

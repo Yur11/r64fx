@@ -139,6 +139,8 @@ struct Keyboard{
     
     static void init();
     
+    inline static unsigned int modifiers() { return SDL_GetModState(); }
+    
     inline static void beginTextInput()
     {
         SDL_StartTextInput();

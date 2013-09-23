@@ -15,20 +15,31 @@ Machine::Machine(/*Graph* graph, */FrontMachineScene* fms, BackMachineScene* bms
     _front->safelySetSurfaceTexture(Texture("textures/grainy_greenish.png"));
     _back->safelySetSurfaceTexture(Texture("textures/grainy_dark.png"));
     
-    _front->dragged= Message([](void*, void* data)->void*{
+    _front->clicked = Message([](void* source, void* data)->void*{
         auto machine = (Machine*) data;
-        machine->_fms->startDrag(machine->_front, machine->_back);
+        machine->frontScene()->selectWidget(machine->front());
+        machine->backScene()->selectWidget(machine->back());
+        return nullptr;
+    }, this);
+    
+    _back->clicked = Message([](void* source, void* data)->void*{
+        auto machine = (Machine*) data;
+        machine->frontScene()->selectWidget(machine->front());
+        machine->backScene()->selectWidget(machine->back());
+        return nullptr;
+    }, this);
+    
+    _front->dragged = Message([](void*, void* data)->void*{
+        auto machine = (Machine*) data;
+        machine->frontScene()->startDrag();
         return nullptr;
     }, this);
     
     _back->dragged = Message([](void*, void* data)->void*{
         auto machine = (Machine*) data;
-        machine->_bms->startDrag(machine->_back, machine->_front);
+        machine->frontScene()->startDrag();
         return nullptr;
     }, this);
-    
-    _front->setPosition(100.0, 200.0);
-    _back->setPosition(100.0, 200.0);
     
     _fms->appendWidget(_front);
     _bms->appendWidget(_back);
@@ -39,6 +50,13 @@ Machine::~Machine()
 {
     delete _front;
     delete _back;
+}
+
+
+void Machine::setPosition(Point<float> p)
+{
+    _front->setPosition(p);
+    _back->setPosition(p);
 }
     
 }//namespace r64fx

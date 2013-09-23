@@ -24,6 +24,8 @@ public:
     
     inline void removeWidget(int index) { auto it = _widgets.begin() + index; (*it)->_scene = nullptr; _widgets.erase(it); }
   
+    inline const std::vector<Widget*> &widgets() { return _widgets; }
+  
     virtual void render();
     
     virtual void mousePressEvent(MouseEvent*);

@@ -56,14 +56,19 @@ void MachineWidget::render()
 void MachineWidget::mousePressEvent(MouseEvent* event)
 {
     Widget::mousePressEvent(event);
-    if(!event->has_been_handled)
+    if(!event->has_been_handled && event->buttons() & Mouse::Button::Left)
+    {
         about_to_be_dragged = true;
+        clicked.send(this);
+        event->has_been_handled = true;
+    }
 }
 
     
 void MachineWidget::mouseReleaseEvent(MouseEvent* event)
 {
     about_to_be_dragged = false;
+    event->has_been_handled = true;
 }
     
     
@@ -75,6 +80,7 @@ void MachineWidget::mouseMoveEvent(MouseEvent* event)
         about_to_be_dragged = false;
         drag_start_mouse_position = event->position();
         dragged.send(this);
+        event->has_been_handled = true;
     }
 }
 

@@ -26,6 +26,8 @@ public:
     
     virtual void render();
 
+    Message clicked;
+    
     Message dragged;
     
     /** @brief Mouse position where the drag has started, in the coordinate system of this widget. */
