@@ -12,6 +12,14 @@ struct Mouse{
         static const unsigned int WheelUp = 1<<3;
         static const unsigned int WheelDown = 1<<4;
     };
+    
+#ifdef USE_SDL2
+    inline static unsigned int buttons()
+    {
+        int x, y;
+        return SDL_GetMouseState(&x, &y);
+    }
+#endif//USE_SDL2
 };
     
 }//namespace r64fx

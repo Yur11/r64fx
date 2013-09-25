@@ -17,8 +17,9 @@ class MachineScene : public Scene{
     Point<float> drag_start_position = {0.0, 0.0};
     bool drag_in_progress = false;
     /** Rubberband selection rect. */
-    Rect<float> rubberband = {0.0, 0.0, 0.0, 0.0};
-
+    Rubberband rubberband;
+    bool rubberband_in_progress = false;
+    
     bool can_drop = false;
     
 public:
@@ -41,6 +42,10 @@ public:
     void deselectAllWidgets();
     
     void startDrag();
+    
+    void processDrag();
+    
+    void endDrag();
 };
     
     

@@ -32,11 +32,13 @@ Machine::Machine(/*Graph* graph, */FrontMachineScene* fms, BackMachineScene* bms
     _front->dragged = Message([](void*, void* data)->void*{
         auto machine = (Machine*) data;
         machine->frontScene()->startDrag();
+        machine->backScene()->startDrag();
         return nullptr;
     }, this);
     
     _back->dragged = Message([](void*, void* data)->void*{
         auto machine = (Machine*) data;
+        machine->frontScene()->startDrag();
         machine->frontScene()->startDrag();
         return nullptr;
     }, this);

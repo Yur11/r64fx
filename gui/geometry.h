@@ -155,6 +155,30 @@ enum class Orientation{
     Horizontal
 };
 
+
+struct Rubberband{
+    Point<float> p1 = {0.0, 0.0};
+    Point<float> p2 = {0.0, 0.0};
+    
+    inline void start(Point<float> p) { p1 = p2 = p; }
+    inline void move(Point<float> p) { p2 = p; }
+    
+    inline Rect<float> rect() 
+    { 
+        return Rect<float>(
+            p1.x < p2.x ? p1.x : p2.x,
+            p1.y > p2.y ? p1.y : p2.y,
+            p1.x > p2.x ? p1.x : p2.x,
+            p1.y < p2.y ? p1.y : p2.y
+        );
+    }
+    
+    inline bool isVisible()
+    {
+        return p1.x - p2.x != 0 && p1.y - p2.y != 0;
+    }
+};
+
 }//namespace r64fx
 
 #endif//R64FX_GUI_GEOMETRY_H
