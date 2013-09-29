@@ -82,6 +82,7 @@ void Knob::render()
         glVertex2f(cos(0.0) * radius * 0.618, sin(0.0) * radius);
     glEnd();
     
+    glScalef(1.0, -1.0, 1.0);//Kluge.
     glBegin(GL_TRIANGLE_STRIP);
         glColor3f(0.5, 0.0, 0.0);
         glVertex2f(-radius * 0.1, radius * 0.3);

@@ -13,8 +13,8 @@ class Knob : public Widget, public Padding{
 public:
     Knob(Widget* parent = nullptr);
     
-    float min_angle = 0;
-    float max_angle = 360;
+    float min_angle = 45;
+    float max_angle = 315;
     
     float min_value = 0.0;
     float max_value = 1.0;
@@ -28,7 +28,7 @@ public:
     
     int npoints = 12;
     
-    float radius = 25.0;
+    float radius = 75.0;
     
     virtual void render();
     
