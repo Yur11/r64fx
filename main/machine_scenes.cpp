@@ -71,6 +71,7 @@ void MachineScene::render()
 
 void MachineScene::mousePressEvent(MouseEvent* event)
 {
+    mouse_position = counterpart_scene->mouse_position = event->position();
     Scene::mousePressEvent(event);
     if(!event->has_been_handled)
     {
@@ -84,6 +85,7 @@ void MachineScene::mousePressEvent(MouseEvent* event)
 
 void MachineScene::mouseReleaseEvent(MouseEvent* event)
 {
+    mouse_position = counterpart_scene->mouse_position = event->position();
     if(drag_in_progress)
     {
         endDrag();
@@ -154,7 +156,7 @@ void MachineScene::deselectAllWidgets()
 
 void MachineScene::startDrag()
 {
-    drag_start_position = mouse_position;
+    drag_start_position = drag_position = mouse_position;
     drag_in_progress = true;
 }
 
