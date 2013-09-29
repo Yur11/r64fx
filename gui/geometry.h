@@ -179,6 +179,8 @@ struct Rubberband{
     }
 };
 
+
+
 }//namespace r64fx
 
 #endif//R64FX_GUI_GEOMETRY_H

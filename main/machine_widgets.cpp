@@ -7,6 +7,7 @@
 #include <assert.h>
 #endif//DEBUG
 
+
 using namespace std;
 
 
@@ -50,6 +51,8 @@ void MachineWidget::render()
         glVertex2f(width(), 0.0);
     glEnd();
     glDisable(GL_TEXTURE_2D);
+    
+    Widget::render();
 }
 
 

@@ -118,7 +118,11 @@ void WindowBase::initMousePressEvent(int x, int y, unsigned int buttons, unsigne
         }
     }
     
-    view()->mousePressEvent(&event);
+    
+    if(Widget::mouseInputGrabber())
+        Widget::mouseInputGrabber()->mousePressEvent(&event);
+    else
+        view()->mousePressEvent(&event);
 }
 
     
@@ -140,7 +144,10 @@ void WindowBase::initMouseReleaseEvent(int x, int y, unsigned int buttons, unsig
     }
     else
     {
-        view()->mouseReleaseEvent(&event);
+        if(Widget::mouseInputGrabber())
+            Widget::mouseInputGrabber()->mouseReleaseEvent(&event);
+        else
+            view()->mouseReleaseEvent(&event);
     }
 }
 
@@ -162,7 +169,10 @@ void WindowBase::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned
         }
     }
     
-    view()->mouseMoveEvent(&event);
+    if(Widget::mouseInputGrabber())
+        Widget::mouseInputGrabber()->mouseMoveEvent(&event);
+    else
+        view()->mouseMoveEvent(&event);
 }
 
 

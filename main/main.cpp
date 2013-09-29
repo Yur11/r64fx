@@ -15,6 +15,8 @@
 #include "Json.h"
 #include "Machine.h"
 
+#include "Knob.h"
+
 using namespace std;
 
 #include "data_paths.cpp"
@@ -91,13 +93,18 @@ struct Program{
         fms.counterpart_scene = &bms;
         bms.counterpart_scene = &fms;
         
-        Machine* m1 = new Machine(&fms, &bms);
-        m1->setPosition(100, 100);
-        Machine* m2 = new Machine(&fms, &bms);
-        m2->setPosition(100, 300);
-        Machine* m3 = new Machine(&fms, &bms);
-        m3->setPosition(100, 500);
+//         Machine* m1 = new Machine(&fms, &bms);
+//         m1->setPosition(100, 100);
+//         Machine* m2 = new Machine(&fms, &bms);
+//         m2->setPosition(100, 300);
+//         Machine* m3 = new Machine(&fms, &bms);
+//         m3->setPosition(100, 500);
 
+        auto k = new Knob;
+        k->setPosition(10, 10);
+        k->update();
+        fms.appendWidget(k);
+        
         /* Setup root view of the main window. */        
         View* view = new View(&fms);
         window.setView(view);

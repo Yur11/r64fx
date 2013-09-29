@@ -10,6 +10,7 @@ add_executable(r64fx
     machine_scenes.cpp
     machine_widgets.cpp
     Machine.cpp
+    Knob.cpp
 )
 
 link_directories(${CMAKE_BINARY_DIR}/base)
