@@ -99,6 +99,11 @@ struct Program{
         m2->setPosition(100, 300);
         Machine* m3 = new Machine(&fms, &bms);
         m3->setPosition(100, 500);
+
+        auto k = new Knob;
+        k->setPosition(10, 10);
+        k->update();
+        m3->front()->appendWidget(k);
         
         /* Setup root view of the main window. */        
         View* view = new View(&fms);

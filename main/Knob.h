@@ -28,7 +28,7 @@ public:
     
     int npoints = 12;
     
-    float radius = 100.0;
+    float radius = 25.0;
     
     virtual void render();
     
