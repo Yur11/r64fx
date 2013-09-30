@@ -19,16 +19,16 @@ public:
     float min_value = 0.0;
     float max_value = 1.0;
     
-    float angle = 0.0;
+    float angle = 45;
     
     inline float value()
     {
         return (max_value - min_value) * (angle - min_angle) / (max_angle - min_angle) + min_value;
     }
     
-    int npoints = 12;
+    int npoints = 21;
     
-    float radius = 75.0;
+    float radius = 50.0;
     
     virtual void render();
     

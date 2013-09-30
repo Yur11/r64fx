@@ -108,7 +108,8 @@ void Knob::update()
 void Knob::mousePressEvent(MouseEvent* event)
 {
     grabMouseInput();
-    prev_mouse_y = event->position().y;
+    prev_mouse_y = event->originalPosition().y;
+    cout << "prev_mouse_y: " << prev_mouse_y << "\n";
     event->has_been_handled = true;
 }
 
@@ -122,16 +123,20 @@ void Knob::mouseReleaseEvent(MouseEvent* event)
 
 void Knob::mouseMoveEvent(MouseEvent* event)
 {
-    auto mouse_y = event->position().y;
+    auto mouse_y = event->originalPosition().y;
     
     if(Widget::isMouseGrabber())
     {
-        angle += (mouse_y - prev_mouse_y);
+        angle += (prev_mouse_y - mouse_y);
         if(angle < min_angle)
             angle = min_angle;
         else if(angle > max_angle)
             angle = max_angle;
 
+        cout << "mouse_y: " << mouse_y << "\n";
+        cout << "diff:    " << (prev_mouse_y - mouse_y) << "\n";
+        cout << "angle:   " << angle << "\n";
+        
         event->has_been_handled = true;
     }
     
