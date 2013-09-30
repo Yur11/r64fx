@@ -121,6 +121,12 @@ public:
     
     virtual void keyReleaseEvent(KeyEvent* event);
     
+    /** @brief Transform event from the window coordinates to the coordinate system of the View. 
+     
+        This includes scale and translation.
+     */
+    void transformEvent(Event* event);
+    
     VerticalSplitView* splitVertically(float ratio);
     
     HorizontalSplitView* splitHorizontally(float ratio);

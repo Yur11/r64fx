@@ -8,7 +8,10 @@ namespace r64fx{
         
 class View;
     
-/** @brief A collection of widgets that can be rendered together and share input events. */
+/** @brief A collection of widgets that can be rendered together and share input events. 
+ 
+    The (0, 0) point is in the lower left corner.
+ */
 class Scene{
     std::vector<Widget*> _widgets;
             

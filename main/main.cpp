@@ -83,7 +83,7 @@ struct Program{
         }
 
         tr.loadLanguage("en");
-
+        
         Dummy::initDebugMenu();
         
         FrontMachineScene fms;
@@ -110,7 +110,39 @@ struct Program{
         window.setView(view);
 
         
+        int max_texture_size;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+        cout << "max texture size = " << max_texture_size << "\n";
+        
+        /** Smooth the screen via texture postprocessing. */
+        int fb_texture_width = 2048;
+        int fb_texture_height = 2048;
+        GLuint fb_texture;
+        glEnable(GL_TEXTURE_2D);
+        glGenTextures(1, &fb_texture);
+        glBindTexture(GL_TEXTURE_2D, fb_texture);
+        glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+        
+        GLfloat flargest;
+        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &flargest);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, flargest);
+        
+        unsigned char* bytes = new unsigned char[fb_texture_width * fb_texture_height * 4];
+        for(int i=0; i<fb_texture_width * fb_texture_height * 4; i++)
+        {
+            bytes[i] = 30;
+        }
+//         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fb_texture_width, fb_texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, 4, fb_texture_width, fb_texture_height, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
+        delete[] bytes;
+        
+        glDisable(GL_TEXTURE_2D);
+        
 //         start_jack_thread();
+        
+        glEnable(GL_MULTISAMPLE_ARB);
         
         /* Main event loop. */
         int gc_counter = 256;
@@ -121,8 +153,35 @@ struct Program{
             //Process other stuff here.
 
             window.render();
-            window.swapBuffers();
             glFinish();
+            
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, fb_texture);
+            glCopyTexImage2D(
+                GL_TEXTURE_2D, 0, GL_RGBA,
+                0, 0, fb_texture_width, fb_texture_height,
+                0
+            );
+            
+            glBegin(GL_QUADS);
+                glTexCoord2f(0.0, 0.0);
+                glVertex2f(0.0, 0.0);
+                
+                glTexCoord2f(float(window.width()) / float(fb_texture_width), 0.0);
+                glVertex2f(window.width(), 0.0);
+                
+                glTexCoord2f(1.0, 1.0);
+                glVertex2f(float(window.width()) / float(fb_texture_width), float(window.height()) / float(fb_texture_height));
+                
+                glTexCoord2f(0.0, 1.0);
+                glVertex2f(0.0, float(window.height()) / float(fb_texture_height));
+            glEnd();
+            
+            glDisable(GL_TEXTURE_2D);
+            
+            glFinish();
+            window.swapBuffers();
+            
             if(!gc_counter)
             {
                 gc_counter = 256;

@@ -226,20 +226,12 @@ void View::render()
 }
 
 
-void View::transform_event(Event* event)
-{
-    *event -= Point<float>(x(), y());
-    *event -= _offset * scaleFactor();
-    *event *= (1.0/scaleFactor());
-}
-
-
 void View::mousePressEvent(MouseEvent* event)
 {
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_event(event);
+    transformEvent(event);
     event->_view = this;
     _scene->mousePressEvent(event);
     
@@ -256,7 +248,7 @@ void View::mouseReleaseEvent(MouseEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_event(event);
+    transformEvent(event);
     event->_view = this;
     _scene->mouseReleaseEvent(event);
 }
@@ -267,7 +259,7 @@ void View::mouseMoveEvent(MouseEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_event(event);
+    transformEvent(event);
     event->_view = this;
     _scene->mouseMoveEvent(event);
 }
@@ -278,7 +270,7 @@ void View::mouseWheelEvent(MouseEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_event(event);
+    transformEvent(event);
     event->_view = this;
     _scene->mouseWheelEvent(event);
     
@@ -313,7 +305,7 @@ void View::keyPressEvent(KeyEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_event(event);
+    transformEvent(event);
     event->_view = this;
     _scene->keyPressEvent(event);
 }
@@ -324,9 +316,17 @@ void View::keyReleaseEvent(KeyEvent* event)
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
 #endif//DEBUG
-    transform_event(event);
+    transformEvent(event);
     event->_view = this;
     _scene->keyReleaseEvent(event);
+}
+
+
+void View::transformEvent(Event* event)
+{
+    *event -= Point<float>(x(), y());
+    *event -= _offset * scaleFactor();
+    *event *= (1.0/scaleFactor());
 }
 
 

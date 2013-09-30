@@ -1,3 +1,5 @@
+/** @file geometry.h defines a bunch of class that are usefull when working with geometric objects. */
+
 #ifndef R64FX_GUI_GEOMETRY_H
 #define R64FX_GUI_GEOMETRY_H
 

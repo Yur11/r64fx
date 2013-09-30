@@ -23,6 +23,8 @@ unsigned int pressed_mouse_buttons = 0;
     
 Window::Window(int width, int height, const char* title)
 {
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1); 
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     _window = SDL_CreateWindow(title, 0, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     if(!_window)
     {

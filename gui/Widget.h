@@ -19,7 +19,19 @@ class Scene;
 class Window;
 
 
-/** @brief Base class for user interface widgets. */
+/** @brief Base class for UI widgets. 
+ 
+    Widgets are used to construct the user interface of a program.
+    They form a parent/child relations with each other, as well as
+    with the Scene instances.
+    
+    Each widget has a position value that is set in the coordinte system
+    of it's parent, either another widget or a Scene.
+    The (0, 0) point is in the lower left corner.
+    
+    Each widget has a bunch of event handlers for rendering and also mouse and keyboard input.
+    Reimplement these as needed.
+ */
 class Widget : public Disposable{
     friend class Scene;
     Point<float> _position;
@@ -230,6 +242,7 @@ public:
     /** @brief Make this widget a keyboard grabber. */
     inline void grabKeyboardInput() { setKeyboardGrabber(this); }
     
+    /** @brief Ungrab the keyboard.  */
     inline void ungrabKeyboardInput() { setKeyboardGrabber(nullptr); }
     
     bool isMouseGrabber();
