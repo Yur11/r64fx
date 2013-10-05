@@ -34,7 +34,7 @@ void bezier_points(const std::vector<Point<float>> &in, std::vector<Point<float>
     for(int i=1; i<(int)out.size()-1; i++)
     {
         int n = intermadiate_points.size() - 1;
-        while(n > 2)
+        while(n > 1)
         {
             for(int j=0; j<n; j++)
             {
