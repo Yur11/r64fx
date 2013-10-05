@@ -21,8 +21,6 @@ public:
     Window(int width = 640, int height = 480, const char* title = "Window");
    ~Window();
    
-    void render();
-   
 #ifdef USE_SDL2
     inline SDL_Window* sdl_window() const { return _window; }
 #endif//USE_SDL2
@@ -32,6 +30,8 @@ public:
     void swapBuffers();
     
     virtual Size<int> size();
+    
+    virtual void updateMaxSize();
     
     virtual void updateGeometry();
     

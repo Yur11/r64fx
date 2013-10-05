@@ -20,6 +20,7 @@ add_library(r64fx_gui
     Message.cpp
     Keyboard.cpp
     KeyboardShortcut.cpp
+    bezier.cpp
 ) 
 target_link_libraries(r64fx_gui 
     r64fx_utf8string

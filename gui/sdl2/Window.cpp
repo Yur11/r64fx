@@ -60,21 +60,6 @@ Window::~Window()
 }
 
 
-void Window::render()
-{
-#ifdef DEBUG
-    if(!view())
-    {
-        cerr << "View is null!\n";
-        abort();
-    }
-#endif//DEBUG
-
-    view()->render();
-    
-    render_overlay_menus();
-}
-
 
 void Window::makeCurrent()
 {
@@ -93,6 +78,12 @@ Size<int> Window::size()
     Size<int> s;
     SDL_GetWindowSize(_window, &s.w, &s.h);
     return s;
+}
+
+
+void Window::updateMaxSize()
+{
+    SDL_SetWindowMaximumSize(_window, max_width, max_height);
 }
 
 

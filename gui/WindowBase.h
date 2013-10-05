@@ -15,6 +15,8 @@ class WindowBase{
     
     Widget* overlay_menu_at(int x, int y);
     
+    GLuint _cache_texture = 0;
+    
 protected:
     void render_overlay_menus();
     
@@ -22,6 +24,28 @@ public:
     WindowBase();
     
     virtual ~WindowBase();
+    
+    void renderAll();
+    
+    void cacheFrambuffer();
+    
+    void renderCached();
+    
+    inline void render()
+    {
+        renderAll();
+        glEnable(GL_TEXTURE_2D);
+            cacheFrambuffer();
+            renderCached();
+        glDisable(GL_TEXTURE_2D);
+    }
+    
+    int max_width = 1024;
+    int max_height = 1024;
+    
+    virtual void updateMaxSize() = 0;
+    
+    void updateCacheTexture();
     
     inline void setView(SplittableView* view) { _view = view; }
     inline SplittableView* view() const { return _view; }
