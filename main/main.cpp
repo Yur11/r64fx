@@ -16,6 +16,7 @@
 #include "Machine.h"
 
 #include "Knob.h"
+#include "sockets_and_wires.h"
 
 using namespace std;
 
@@ -107,6 +108,10 @@ struct Program{
         fms.counterpart_scene = &bms;
         bms.counterpart_scene = &fms;
         
+        vector<Wire*> wires;
+        fms.wires = &wires;
+        bms.wires = &wires;
+        
         /* removeme */
         Machine* m1 = new Machine(&fms, &bms);
         m1->setPosition(100, 100);
@@ -120,6 +125,23 @@ struct Program{
         k->update();
         m3->front()->appendWidget(k);
         
+        auto sa = new Socket;
+        sa->setPosition(10, 10);
+        sa->update();
+        m3->back()->appendWidget(sa);
+        
+        auto sb = new Socket;
+        sb->setPosition(400, 10);
+        sb->update();
+        m3->back()->appendWidget(sb);
+        auto pb = sb->toSceneCoords(sb->position()) + sb->size().toPoint() * 0.5;
+        
+        Wire* wire = new Wire;
+        wire->setA(sa);
+        wire->setB(sb);
+        wire->update();
+        wires.push_back(wire);
+        
         /* Setup root view of the main window. */        
         View* view = new View(&fms);
         window.setView(view);
@@ -127,7 +149,6 @@ struct Program{
         
         int max_texture_size;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-        cout << "max texture size = " << max_texture_size << "\n";
         
 //         start_jack_thread();
         
@@ -141,7 +162,7 @@ struct Program{
 
             //Process other stuff here.
 
-            window.render();            
+            window.render();
             window.swapBuffers();
             
             if(!gc_counter)

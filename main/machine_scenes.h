@@ -3,6 +3,7 @@
 
 #include "Scene.h"
 #include "machine_widgets.h"
+#include "sockets_and_wires.h"
 
 namespace r64fx{
     
@@ -21,8 +22,16 @@ class MachineScene : public Scene{
     bool rubberband_in_progress = false;
     
     bool can_drop = false;
+
+protected:    
+    void render_wires();
     
 public:
+    /* Making this thing public for debugging purposes. */
+    std::vector<Wire*>* wires;
+    
+    void updateWires();
+    
     MachineScene* counterpart_scene = nullptr;
     
     virtual void render();
@@ -50,11 +59,15 @@ public:
     
     
 /** @brief Scene with machines and wires. Front. */
-class FrontMachineScene : public MachineScene{    
+class FrontMachineScene : public MachineScene{
+public:
+    virtual void render();
 };
 
 
 class BackMachineScene : public MachineScene{
+public:
+    virtual void render();
 };
 
 

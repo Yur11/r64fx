@@ -69,6 +69,38 @@ void MachineScene::render()
 }
 
 
+void MachineScene::render_wires()
+{
+    for(auto w : *wires)
+    {
+        glColor3f(1.0, 0.0, 0.0);
+        glBegin(GL_LINE_STRIP);
+            for(auto v : w->vertices)
+            {
+                glVertex2f(v.x, v.y);
+            }
+        glEnd();
+        
+        glPointSize(5.0);
+            glColor3f(0.0, 0.0, 1.0);
+            glBegin(GL_POINTS);
+                for(auto p : w->points)
+                {
+                    glVertex2f(p.x, p.y);
+                }
+            glEnd();
+        glPointSize(1.0);
+    }
+}
+
+
+void MachineScene::updateWires()
+{
+    for(auto w : *wires)
+        w->update();
+}
+
+
 void MachineScene::mousePressEvent(MouseEvent* event)
 {
     mouse_position = counterpart_scene->mouse_position = event->position();
@@ -199,6 +231,22 @@ void MachineScene::endDrag()
     drag_start_position = {0.0, 0.0};
     drag_in_progress = false;
     can_drop = false;
+    
+    updateWires();
+}
+
+
+void FrontMachineScene::render()
+{
+    render_wires();
+    MachineScene::render();
+}
+
+
+void BackMachineScene::render()
+{
+    MachineScene::render();
+    render_wires();
 }
 
     

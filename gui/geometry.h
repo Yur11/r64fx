@@ -76,6 +76,12 @@ template<typename T> struct Size{
     inline Point<T> toPoint() const { return Point<T>(w, h); }
 };
     
+
+// template<typename T> Point<T> operator+(Point<T> p, Size<T> s)
+// {
+//     return Point<T>(p.x + s.w, p.y + s.h);
+// }
+
     
 /** @brief Rectange geometry primitive. */
 template<typename T> struct Rect{
@@ -180,6 +186,9 @@ struct Rubberband{
         return p1.x - p2.x != 0 && p1.y - p2.y != 0;
     }
 };
+
+
+
 
 
 }//namespace r64fx

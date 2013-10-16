@@ -11,6 +11,7 @@ add_executable(r64fx
     machine_widgets.cpp
     Machine.cpp
     Knob.cpp
+    sockets_and_wires.cpp
 )
 
 link_directories(${CMAKE_BINARY_DIR}/base)
