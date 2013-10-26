@@ -72,25 +72,7 @@ void MachineScene::render()
 void MachineScene::render_wires()
 {
     for(auto w : *wires)
-    {
-        glColor3f(1.0, 0.0, 0.0);
-        glBegin(GL_LINE_STRIP);
-            for(auto v : w->vertices)
-            {
-                glVertex2f(v.x, v.y);
-            }
-        glEnd();
-        
-        glPointSize(5.0);
-            glColor3f(0.0, 0.0, 1.0);
-            glBegin(GL_POINTS);
-                for(auto p : w->points)
-                {
-                    glVertex2f(p.x, p.y);
-                }
-            glEnd();
-        glPointSize(1.0);
-    }
+        w->render();
 }
 
 

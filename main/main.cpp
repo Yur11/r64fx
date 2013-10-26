@@ -80,6 +80,8 @@ struct Program{
 
         /* Initialize default texture and data paths for texture file lookup. */
         Texture::init(&data_paths);
+        
+        Wire::init();
 
         /* Initialize default font. */
         Font font(jura_book_font, jura_book_font_size);
@@ -128,18 +130,20 @@ struct Program{
         auto sa = new Socket;
         sa->setPosition(10, 10);
         sa->update();
-        m3->back()->appendWidget(sa);
+        sa->is_plugged = true;
+        m2->back()->appendWidget(sa);
         
         auto sb = new Socket;
         sb->setPosition(400, 10);
         sb->update();
+        sb->is_plugged = true;
         m3->back()->appendWidget(sb);
-        auto pb = sb->toSceneCoords(sb->position()) + sb->size().toPoint() * 0.5;
         
         Wire* wire = new Wire;
         wire->setA(sa);
         wire->setB(sb);
         wire->update();
+        wire->color = { 0.7, 0.7, 0.1, 0.0 };
         wires.push_back(wire);
         
         /* Setup root view of the main window. */        

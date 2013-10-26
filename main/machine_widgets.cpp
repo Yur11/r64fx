@@ -37,6 +37,7 @@ void MachineWidget::render()
 {
     glEnable(GL_TEXTURE_2D);
     surface_texture.bind();
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glBegin(GL_POLYGON);
         glTexCoord2f(0.0, 0.0);
         glVertex2f(0.0, 0.0);
