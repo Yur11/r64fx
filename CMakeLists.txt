@@ -28,7 +28,7 @@ link_directories(
     ${EXTRA_LIB_DIRS}
 )
 
-set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -g -O0")
+set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -g -O0 -I /home/yurii/local/include/ -L /home/yurii/local/lib")
 
 add_subdirectory(utf8string)
 add_subdirectory(json)
