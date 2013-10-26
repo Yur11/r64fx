@@ -26,10 +26,24 @@ using namespace std;
 #include "serialize.cpp"
 
 namespace r64fx{
+
+/* Default font is built into the binary. 
+ * Just in case the data paths are really messed up
+ * and we want to render text.
+ */    
 #include "jura_book_font.cpp"
-}//namespace r64fx
+    
+/** For widgets that render shadows and stuff.
+ *  Import it with extern.
+ *  Use only in the main module. 
+ */
+float light_angle = M_PI * 0.75;
 
 
+/** @brief Main program class. 
+ 
+    Just to avoid doing a lot of function forward-decalarations.
+ */
 struct Program{
     jack_client_t* jack_client;
     jack_status_t jack_status;
@@ -227,8 +241,10 @@ struct Program{
     
 } program;
 
+}//namespace r64fx
+
 
 int main()
 {
-    return program.main_thread();
+    return r64fx::program.main_thread();
 }
