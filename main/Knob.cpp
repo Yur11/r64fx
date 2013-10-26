@@ -109,7 +109,6 @@ void Knob::mousePressEvent(MouseEvent* event)
 {
     grabMouseInput();
     prev_mouse_y = event->originalPosition().y;
-    cout << "prev_mouse_y: " << prev_mouse_y << "\n";
     event->has_been_handled = true;
 }
 
@@ -132,10 +131,6 @@ void Knob::mouseMoveEvent(MouseEvent* event)
             angle = min_angle;
         else if(angle > max_angle)
             angle = max_angle;
-
-        cout << "mouse_y: " << mouse_y << "\n";
-        cout << "diff:    " << (prev_mouse_y - mouse_y) << "\n";
-        cout << "angle:   " << angle << "\n";
         
         event->has_been_handled = true;
     }
