@@ -15,7 +15,7 @@
 #include "Json.h"
 #include "Machine.h"
 
-#include "Knob.h"
+#include "knobs.h"
 #include "sockets_and_wires.h"
 
 using namespace std;
@@ -37,7 +37,7 @@ namespace r64fx{
  *  Import it with extern.
  *  Use only in the main module. 
  */
-float light_angle = M_PI * 0.75;
+float light_angle = 0.75 * M_PI;
 
 
 /** @brief Main program class. 
@@ -136,10 +136,24 @@ struct Program{
         Machine* m3 = new Machine(&fms, &bms);
         m3->setPosition(100, 500);
 
-        auto k = new Knob;
-        k->setPosition(10, 10);
-        k->update();
-        m3->front()->appendWidget(k);
+        TexturedKnobBackground txkbg("textures/knob_bg.png");
+        KnobHandleTypeA::init();
+        KnobHandleTypeA khta;
+        
+        auto k1 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        k1->setPosition(50, 20);
+        k1->update();
+        m3->front()->appendWidget(k1);
+      
+        auto k2 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        k2->setPosition(250, 20);
+        k2->update();
+        m3->front()->appendWidget(k2);
+        
+        auto k3 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        k3->setPosition(400, 20);
+        k3->update();
+        m3->front()->appendWidget(k3);
         
         auto sa = new Socket;
         sa->setPosition(10, 10);
