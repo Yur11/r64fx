@@ -3,6 +3,8 @@
 #ifndef R64FX_GUI_GEOMETRY_H
 #define R64FX_GUI_GEOMETRY_H
 
+#include <cmath>
+
 namespace r64fx{
     
 /** @brief Point geometric primitive. */
@@ -57,6 +59,25 @@ template<typename T> struct Point{
     inline Point<T> operator*=(Point<T> p)
     {
         return (*this) = (*this) * p;
+    }
+    
+    inline Point<T> rotated(float angle)
+    {
+        Point<T> p(x, y);
+        p.rotate(angle);
+        return p;
+    }
+    
+    inline void rotate(float angle)
+    {
+        float sin_angle = sin(angle);
+        float cos_angle = cos(angle);
+        float x_cos_angle = x * cos_angle;
+        float x_sin_angle = x * sin_angle;
+        float y_cos_angle = y * cos_angle;
+        float y_sin_angle = y * sin_angle;
+        x = x_cos_angle - y_sin_angle;
+        y = x_sin_angle + y_cos_angle;
     }
 };
 
@@ -129,8 +150,13 @@ template<typename T> struct Rect{
     
     template<typename OtherT> Rect<OtherT> to() { return Rect<OtherT>(left, top, right, bottom); }
     
+    /** @brief Move the rect. */
     inline Rect<T> operator+(Point<T> point) { return Rect<T>(position() + point, size()); }
     inline Rect<T> operator-(Point<T> point) { return Rect<T>(position() - point, size()); }
+    
+    /** @brief Outset/Inset */
+    inline Rect<T> operator+(T val) { return Rect<T>(left - val, top + val, right + val, bottom - val); }
+    inline Rect<T> operator-(T val) { return this->operator+(-val); }    
 };
     
 
