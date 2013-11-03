@@ -42,6 +42,14 @@ public:
     
     inline void free() { glDeleteTextures(1, &_texture); _width = _height = 0; }
     
+    inline void repeat_s() { glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); }
+    inline void repeat_t() { glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); }
+    inline void repeat() { repeat_s(); repeat_t(); }
+    
+    inline void clamp_s() { glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP); }
+    inline void clamp_t() { glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP); }
+    inline void clamp() { clamp_s(); clamp_t(); }
+    
     static void init(std::vector<std::string>* data_paths);
     
     static Texture defaultTexture();
