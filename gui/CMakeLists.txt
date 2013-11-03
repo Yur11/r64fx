@@ -21,6 +21,7 @@ add_library(r64fx_gui
     Keyboard.cpp
     KeyboardShortcut.cpp
     bezier.cpp
+    rotations.cpp
 ) 
 target_link_libraries(r64fx_gui 
     r64fx_utf8string

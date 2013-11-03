@@ -10,7 +10,7 @@ add_executable(r64fx
     machine_scenes.cpp
     machine_widgets.cpp
     Machine.cpp
-    Knob.cpp
+    knobs.cpp
     sockets_and_wires.cpp
 )
 
