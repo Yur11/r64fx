@@ -1,6 +1,7 @@
 #include "knobs.h"
 #include "MouseEvent.h"
 #include "bezier.h"
+#include "Window.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -29,7 +30,8 @@ void BasicKnob::update()
 void BasicKnob::mousePressEvent(MouseEvent* event)
 {
     grabMouseInput();
-    prev_mouse_y = event->originalPosition().y;
+    Mouse::setRelativeMode(true);
+    Mouse::relativePosition();//Kluge!
     event->has_been_handled = true;
 }
 
@@ -37,28 +39,23 @@ void BasicKnob::mousePressEvent(MouseEvent* event)
 void BasicKnob::mouseReleaseEvent(MouseEvent* event)
 {
     ungrabMouseInput();
+    Mouse::setRelativeMode(false);
     event->has_been_handled = true;
 }
 
 
 void BasicKnob::mouseMoveEvent(MouseEvent* event)
-{
-    auto mouse_y = event->originalPosition().y;
-    
+{    
     if(Widget::isMouseGrabber())
     {
-        angle -= (prev_mouse_y - mouse_y);
+        angle -= Mouse::relativePosition().y;
         if(angle < min_angle)
             angle = min_angle;
         else if(angle > max_angle)
             angle = max_angle;
         
         event->has_been_handled = true;
-        
-        this->update();
     }
-    
-    prev_mouse_y = mouse_y;
 }
 
 
@@ -108,6 +105,7 @@ void KnobHandleTypeA::init()
 {
     knob_a_base_tex = Texture("textures/knob_a.png");
     knob_a_shiny_tex = Texture("textures/brushed_metal_knob_top.png");
+    knob_a_base_tex.clamp();
     
 #ifdef DEBUG
     assert(knob_a_base_tex.isGood());

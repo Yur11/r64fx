@@ -11,7 +11,6 @@ namespace r64fx{
     
 /** @brief Base class for knob widgets. */    
 class BasicKnob : public Widget, public Padding{
-    float prev_mouse_y = 0.0;
     
 protected:
     float rad_angle = 0.0;
