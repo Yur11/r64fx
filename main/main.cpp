@@ -38,7 +38,7 @@ namespace r64fx{
 
     
 #ifdef USE_SDL2
-typedef SDL2Window WindowImplementation_t;
+typedef SDL2Window Window_t;
 #endif//USE_SDL2
     
     
@@ -90,7 +90,7 @@ struct Program{
          * Most of the things in the gui can be done only after this step.
          * This is true for everything that has to do with rendering or texture loading.
          */
-        WindowImplementation_t window(800, 600, "r64fx");
+        Window_t window(800, 600, "r64fx");
 
         window.makeCurrent();
         
@@ -206,7 +206,7 @@ struct Program{
         int gc_counter = 256;
         for(;;)
         {
-            WindowImplementation_t::processEvents();
+            Window_t::processEvents();
 
             //Process other stuff here.
 
@@ -222,7 +222,7 @@ struct Program{
             {
                 gc_counter--;
             }
-            if(WindowImplementation_t::shouldQuit()) break;
+            if(Window_t::shouldQuit()) break;
             usleep(300);
         }
         
@@ -230,7 +230,7 @@ struct Program{
 
         /* Cleanup things up before exiting. */
         Texture::cleanup();
-        WindowImplementation_t::cleanup();
+        Window_t::cleanup();
         
         return 0;
     }
