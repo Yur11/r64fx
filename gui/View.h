@@ -8,7 +8,7 @@
 
 namespace r64fx{
     
-class WindowBase;
+class Window;
 class SplitView;
 class VerticalSplitView;
 class HorizontalSplitView;
@@ -27,7 +27,7 @@ protected:
 public: 
     virtual ~SplittableView(){}
     
-    void findParentViewOrWindow(SplitView* &view, WindowBase* &window);
+    void findParentViewOrWindow(SplitView* &view, Window* &window);
     
     inline Rect<int> rect() const { return _rect; }
     

@@ -6,7 +6,7 @@
 
 namespace r64fx{
 
-class WindowBase;
+class Window;
 class SplittableView;
 class View;
 class Scene;

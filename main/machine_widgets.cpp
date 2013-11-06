@@ -13,7 +13,7 @@ using namespace std;
 
 namespace r64fx{
 
-    
+
 MachineWidget::MachineWidget(Widget* parent) : Widget(parent)
 {
     resize(19 * 100, 1.75 * 100);

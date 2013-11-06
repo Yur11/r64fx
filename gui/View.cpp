@@ -1,7 +1,7 @@
 #include "View.h"
 #include "MouseEvent.h"
 #include "KeyEvent.h"
-#include "WindowBase.h"
+#include "Window.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -50,9 +50,9 @@ SplitView* parent_for_view_down_the_tree(SplittableView* root, SplittableView* v
 }
 
     
-void SplittableView::findParentViewOrWindow(SplitView* &view, WindowBase* &window)
+void SplittableView::findParentViewOrWindow(SplitView* &view, Window* &window)
 {
-    for(auto w : WindowBase::allInstances())
+    for(auto w : Window::allInstances())
     {
         if(w->view() == this)
         {
@@ -61,7 +61,7 @@ void SplittableView::findParentViewOrWindow(SplitView* &view, WindowBase* &windo
         }
     }
     
-    for(auto w : WindowBase::allInstances())
+    for(auto w : Window::allInstances())
     {
         SplitView* split_view = parent_for_view_down_the_tree(w->view(), this);
         if(split_view)
@@ -86,7 +86,7 @@ View::View(Scene* scene)
             {
                 auto view = (View*) data;
                 SplitView* parent_view = nullptr;
-                WindowBase* parent_window = nullptr;
+                Window* parent_window = nullptr;
                 view->findParentViewOrWindow(parent_view, parent_window);
                 if(parent_view)
                 {
@@ -110,7 +110,7 @@ View::View(Scene* scene)
             {
                 auto view = (View*) data;
                 SplitView* parent_view = nullptr;
-                WindowBase* parent_window = nullptr;
+                Window* parent_window = nullptr;
                 view->findParentViewOrWindow(parent_view, parent_window);
                 if(parent_view)
                 {
@@ -134,7 +134,7 @@ View::View(Scene* scene)
             {
                 auto view = (View*) data;
                 SplitView* parent_view = nullptr;
-                WindowBase* parent_window = nullptr;
+                Window* parent_window = nullptr;
                 view->findParentViewOrWindow(parent_view, parent_window);
                 if(parent_view)
                 {
@@ -463,7 +463,7 @@ void SplitView::mouseMoveEvent(MouseEvent* event)
          * but since we don't have the handle here, lets just do it on all the windows.
          * Shouldn't be much of an overhead.
          */
-        for(auto w : WindowBase::allInstances())
+        for(auto w : Window::allInstances())
         {
             w->updateGeometry();
         }

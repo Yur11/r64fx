@@ -2,7 +2,7 @@
 #define R64FX_MACHINE_WIDGETS_H
 
 #include "Widget.h"
-#include "Texture.h"
+#include "TextureAtlas.h"
 
 namespace r64fx{
     

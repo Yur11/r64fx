@@ -2,7 +2,7 @@
 #include "MouseEvent.h"
 #include "KeyEvent.h"
 #include "Menu.h"
-#include "WindowBase.h"
+#include "Window.h"
 #include <iostream>
 
 

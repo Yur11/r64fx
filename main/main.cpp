@@ -5,7 +5,13 @@
 #include <jack/jack.h>
 
 #include "Config.h"
-#include "Window.h"
+
+#ifdef USE_SDL2
+#include "SDL2Window.h"
+#else
+#error "No valid Window implementation present!"
+#endif//USE_SDL2
+
 #include "Icon.h"
 #include "Dummy.h"
 #include "TextEdit.h"
@@ -14,6 +20,9 @@
 #include "gc.h"
 #include "Json.h"
 #include "Machine.h"
+#include "TextureAtlas.h"
+
+#include "geometry_io.h"
 
 #include "knobs.h"
 #include "sockets_and_wires.h"
@@ -27,6 +36,12 @@ using namespace std;
 
 namespace r64fx{
 
+    
+#ifdef USE_SDL2
+typedef SDL2Window WindowImplementation_t;
+#endif//USE_SDL2
+    
+    
 /* Default font is built into the binary. 
  * Just in case the data paths are really messed up
  * and we want to render text.
@@ -61,8 +76,8 @@ struct Program{
 //             return 1;
 //         }
 //         
-        
-        if(!Window::init())
+
+        if(!SDL2Window::init())
         {
             cerr << "Failed to init GUI!\n";
             return 2;
@@ -75,7 +90,8 @@ struct Program{
          * Most of the things in the gui can be done only after this step.
          * This is true for everything that has to do with rendering or texture loading.
          */
-        Window window(800, 600, "r64fx");
+        WindowImplementation_t window(800, 600, "r64fx");
+
         window.makeCurrent();
         
         /* 
@@ -190,11 +206,11 @@ struct Program{
         int gc_counter = 256;
         for(;;)
         {
-            Window::processEvents();
+            WindowImplementation_t::processEvents();
 
             //Process other stuff here.
 
-            window.render();
+            window.render();            
             window.swapBuffers();
             
             if(!gc_counter)
@@ -206,7 +222,7 @@ struct Program{
             {
                 gc_counter--;
             }
-            if(Window::shouldQuit()) break;
+            if(WindowImplementation_t::shouldQuit()) break;
             usleep(300);
         }
         
@@ -214,7 +230,7 @@ struct Program{
 
         /* Cleanup things up before exiting. */
         Texture::cleanup();
-        Window::cleanup();
+        WindowImplementation_t::cleanup();
         
         return 0;
     }

@@ -1,9 +1,10 @@
 #include "Machine.h"
-
+#include "Texture.h"
 #include "Dummy.h"
 
+
 namespace r64fx{
-    
+
     
 Machine::Machine(/*Graph* graph, */FrontMachineScene* fms, BackMachineScene* bms)
 : _fms(fms)

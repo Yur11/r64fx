@@ -5,7 +5,7 @@
 
 namespace r64fx{
 
-class WindowBase;
+class Window;
 class View;
 class Scene;
 
@@ -33,11 +33,11 @@ class Scene;
     has found it's destination and should be left alone.
  */
 class Event{
-    friend class WindowBase;
+    friend class Window;
     friend class View;
     friend class Scene;
     
-    WindowBase* _origin_window = nullptr;
+    Window* _origin_window = nullptr;
     View* _view = nullptr;
     Scene* _scene = nullptr;
     
@@ -66,7 +66,7 @@ public:
     {}
     
     /** @brief A window that originated the event. */
-    inline WindowBase* originWindow() const { return _origin_window; }
+    inline Window* originWindow() const { return _origin_window; }
     
     /** @brief A leaf View instance that this event was dispatched to or nullptr. */
     inline View* view() const { return _view; }
@@ -130,7 +130,7 @@ public:
     inline void operator*=(float coeff) { _position *= coeff; }
     
 private:
-    inline void setOriginWindow(WindowBase* window) { _origin_window = window; }
+    inline void setOriginWindow(Window* window) { _origin_window = window; }
 
     inline void setScene(Scene* scene) { _scene = scene; }
     

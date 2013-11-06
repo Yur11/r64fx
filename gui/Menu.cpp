@@ -1,6 +1,6 @@
 #include "Menu.h"
 #include "MouseEvent.h"
-#include "WindowBase.h"
+#include "Window.h"
 
 #include <iostream>
 
