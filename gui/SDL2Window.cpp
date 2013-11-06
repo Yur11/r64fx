@@ -1,4 +1,4 @@
-/* SDL2 Implementation of Window */
+#include "SDL2Window.h"
 
 #include <iostream>
 #include <vector>
@@ -7,13 +7,13 @@
 #include <assert.h>
 #endif//DEBUG
 
-#include "../View.h"
+#include "View.h"
 
 using namespace std;
 
 namespace r64fx{
    
-vector<Window*> all_windows;
+vector<SDL2Window*> all_sdl2_windows;
 Window* focused_window = nullptr;
 Window* last_focused_window = nullptr;
 bool tracking_mouse = false;
@@ -21,7 +21,7 @@ bool should_quit = false;
 unsigned int pressed_mouse_buttons = 0;
 
     
-Window::Window(int width, int height, const char* title)
+SDL2Window::SDL2Window(int width, int height, const char* title)
 {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1); 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
@@ -39,7 +39,7 @@ Window::Window(int width, int height, const char* title)
         abort();
     }
         
-    all_windows.push_back(this);
+    all_sdl2_windows.push_back(this);
     
     trackMouse(true);
     
@@ -47,13 +47,13 @@ Window::Window(int width, int height, const char* title)
 }
 
 
-Window::~Window()
+SDL2Window::~SDL2Window()
 {
-    for(int i=0; i<(int)all_windows.size(); i++)
+    for(int i=0; i<(int)all_sdl2_windows.size(); i++)
     {
-        if(all_windows[i] == this)
+        if(all_sdl2_windows[i] == this)
         {
-            all_windows.erase( all_windows.begin() + i );
+            all_sdl2_windows.erase( all_sdl2_windows.begin() + i );
             break;
         }
     }
@@ -61,19 +61,19 @@ Window::~Window()
 
 
 
-void Window::makeCurrent()
+void SDL2Window::makeCurrent()
 {
     SDL_GL_MakeCurrent(_window, _gl_context);
 }
 
 
-void Window::swapBuffers()
+void SDL2Window::swapBuffers()
 {
     SDL_GL_SwapWindow(_window);
 }
 
 
-Size<int> Window::size()
+Size<int> SDL2Window::size()
 {
     Size<int> s;
     SDL_GetWindowSize(_window, &s.w, &s.h);
@@ -81,13 +81,13 @@ Size<int> Window::size()
 }
 
 
-void Window::updateMaxSize()
+void SDL2Window::updateMaxSize()
 {
     SDL_SetWindowMaximumSize(_window, max_width, max_height);
 }
 
 
-void Window::updateGeometry()
+void SDL2Window::updateGeometry()
 {
      /* Hack. Send these events to the window for it to resize properly. */
     SDL_Event event;
@@ -104,32 +104,38 @@ void Window::updateGeometry()
 }
 
 
-bool Window::init()
+void SDL2Window::warpMouse(int x, int y)
+{
+    SDL_WarpMouseInWindow(_window, x, height() - y);
+}
+
+
+bool SDL2Window::init()
 {
     return SDL_Init(SDL_INIT_VIDEO) == 0;
 }
     
 
-void Window::cleanup()
+void SDL2Window::cleanup()
 {
     SDL_Quit();
 }
     
     
-void Window::trackMouse(bool on)
+void SDL2Window::trackMouse(bool on)
 {
     tracking_mouse = on;
 }
 
 
-bool Window::shouldQuit()
+bool SDL2Window::shouldQuit()
 {
     return should_quit;
 }
 
 
         
-void Window::processEvents()
+void SDL2Window::processEvents()
 {    
     static SDL_Event event;
     while(SDL_PollEvent(&event))
@@ -270,11 +276,11 @@ void Window::processEvents()
                 if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
                 {
                     auto w = SDL_GetWindowFromID(event.window.windowID);
-                    for(int i=0; i<(int)all_windows.size(); i++)
+                    for(int i=0; i<(int)all_sdl2_windows.size(); i++)
                     {
-                        if(all_windows[i]->sdl_window() == w)
+                        if(all_sdl2_windows[i]->sdl_window() == w)
                         {
-                            focused_window = all_windows[i];
+                            focused_window = all_sdl2_windows[i];
                             last_focused_window = focused_window;
                             break;
                         }
