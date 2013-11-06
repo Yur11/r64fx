@@ -3,6 +3,20 @@
 #ifndef R64FX_GUI_GEOMETRY_H
 #define R64FX_GUI_GEOMETRY_H
 
+/*
+
+    !!! (0, 0) is at the bottom left !!! (OpenGL default)
+    
+    
+     (x, y+h)   top     (x+w, y+h)
+         -----------------
+         |               |
+   left  |               |  right
+         |               |
+         -----------------
+     (x, y)    bottom   (x+w, y)
+*/
+
 #include <cmath>
 
 namespace r64fx{
@@ -79,6 +93,8 @@ template<typename T> struct Point{
         x = x_cos_angle - y_sin_angle;
         y = x_sin_angle + y_cos_angle;
     }
+    
+    inline bool operator==(const Point<T> &other) { return this->x == other.x && this->y == other.y; }
 };
 
 
@@ -95,13 +111,9 @@ template<typename T> struct Size{
     Size<T>(Point<T> p) : Size<T>(p.x, p.y) {}
     
     inline Point<T> toPoint() const { return Point<T>(w, h); }
-};
     
-
-// template<typename T> Point<T> operator+(Point<T> p, Size<T> s)
-// {
-//     return Point<T>(p.x + s.w, p.y + s.h);
-// }
+    inline bool operator==(const Size<T> &other) { return this->w == other.w && this->h == other.h; }
+};
 
     
 /** @brief Rectange geometry primitive. */
@@ -156,7 +168,19 @@ template<typename T> struct Rect{
     
     /** @brief Outset/Inset */
     inline Rect<T> operator+(T val) { return Rect<T>(left - val, top + val, right + val, bottom - val); }
-    inline Rect<T> operator-(T val) { return this->operator+(-val); }    
+    inline Rect<T> operator-(T val) { return this->operator+(-val); }
+    
+    inline bool operator==(const Rect<T> &other) 
+    { 
+        return 
+            this->left = other.left && 
+            this->top = other.top &&
+            this->right = other.right &&
+            this->bottom = other.bottom
+        ;
+    }
+    
+    inline bool isNull() { return !width() || !height(); }
 };
     
 
