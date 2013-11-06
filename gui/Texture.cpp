@@ -86,16 +86,16 @@ Texture::Texture(std::string name)
         return;
     }
     
-    _width = png_get_image_width(png_ptr, png_info);
-    _height = png_get_image_height(png_ptr, png_info);
+    auto width = png_get_image_width(png_ptr, png_info);
+    auto height = png_get_image_height(png_ptr, png_info);
     
     
     png_set_interlace_handling(png_ptr);
     png_read_update_info(png_ptr, png_info);
     
-    png_byte* data = new png_byte[_height * png_get_rowbytes(png_ptr, png_info)];
-    png_bytep* row_pointers = new png_bytep[_height];
-    for(int i=0; i<_height; i++)
+    png_byte* data = new png_byte[height * png_get_rowbytes(png_ptr, png_info)];
+    png_bytep* row_pointers = new png_bytep[height];
+    for(int i=0; i<(int)height; i++)
     {
         row_pointers[i] = data + i * png_get_rowbytes(png_ptr, png_info);
     }
@@ -103,7 +103,7 @@ Texture::Texture(std::string name)
     png_read_image(png_ptr, row_pointers);
     fclose(file);
     
-    load_to_vram(_width, _height, channel_count, mode, data);
+    load_to_vram(width, height, channel_count, mode, data);
     
     delete[] row_pointers;
     delete[] data;
@@ -118,18 +118,19 @@ void Texture::load_to_vram(int width, int height, int channel_count, int mode, u
     
     glGenTextures(1, &_texture);
     glBindTexture(GL_TEXTURE_2D, _texture);
-    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    
-    
-    gluBuild2DMipmaps(GL_TEXTURE_2D, channel_count, width, height, mode, GL_UNSIGNED_BYTE, bytes);
-//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
-    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+        
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
     glDisable(GL_TEXTURE_2D);
+    
+    _width = width;
+    _height = height;
 }
 
 

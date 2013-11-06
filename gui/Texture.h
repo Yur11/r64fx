@@ -4,6 +4,8 @@
 #include <GL/gl.h>
 #include <string>
 #include <vector>
+#include "geometry.h"
+
 
 namespace r64fx{
     
@@ -18,6 +20,11 @@ public:
     Texture() {}
     
     Texture(std::string name);
+   
+    Texture(int width, int height, int channel_count, int mode)
+    {
+        load_to_vram(width, height, channel_count, mode, nullptr);
+    }
     
     Texture(int width, int height, int channel_count, int mode, unsigned char* bytes)
     {
@@ -60,6 +67,7 @@ public:
     
     static void cleanup();
 };
+
     
 }//namespace r64fx
 
