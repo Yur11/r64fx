@@ -2,8 +2,8 @@
 
 add_library(r64fx_gui
     SHARED
-    WindowBase.cpp
     Window.cpp
+    SDL2Window.cpp
     View.cpp
     Scene.cpp
     Widget.cpp
@@ -13,6 +13,7 @@ add_library(r64fx_gui
     TextEdit.cpp
     Icon.cpp
     Texture.cpp
+    TextureAtlas.cpp
     Config.cpp
     Action.cpp
     Menu.cpp
