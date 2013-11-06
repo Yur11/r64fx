@@ -1,4 +1,7 @@
 #include "Keyboard.h"
+
+#ifdef USE_SDL2
+
 #include <map>
 
 using namespace std;
@@ -256,3 +259,5 @@ const char* Keyboard::Key::str(unsigned int key)
 
 
 }//namespace r64fx
+
+#endif//USE_SDL2
