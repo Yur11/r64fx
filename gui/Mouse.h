@@ -19,6 +19,19 @@ struct Mouse{
         int x, y;
         return SDL_GetMouseState(&x, &y);
     }
+    
+    inline static void setRelativeMode(bool on)
+    {
+        SDL_SetRelativeMouseMode((SDL_bool)on);
+    }
+    
+
+    inline static Point<float> relativePosition()
+    {
+        int x, y;
+        SDL_GetRelativeMouseState(&x, &y);
+        return Point<float>(x, y);
+    }
 #endif//USE_SDL2
 };
     
