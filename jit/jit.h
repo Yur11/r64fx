@@ -759,7 +759,7 @@ struct Mem16{
     explicit Mem16(void* addr)
     {
 #ifdef DEBUG
-        assert(addr % 2 == 0);
+        assert((long int)addr % 2 == 0);
 #endif//DEBUG
         this->addr = (long int) addr;
     }
@@ -771,7 +771,7 @@ struct Mem32{
     explicit Mem32(void* addr)
     {
 #ifdef DEBUG
-        assert(addr % 4 == 0);
+        assert((long int)addr % 4 == 0);
 #endif//DEBUG
         this->addr = (long int) addr;
     }
@@ -783,7 +783,7 @@ struct Mem64{
     explicit Mem64(void* addr)
     {
 #ifdef DEBUG
-        assert(addr % 8 == 0);
+        assert((long int)addr % 8 == 0);
 #endif//DEBUG
         this->addr = (long int) addr;
     }
@@ -795,7 +795,7 @@ struct Mem128{
     explicit Mem128(void* addr)
     {
 #ifdef DEBUG
-        assert(addr % 16 == 0);
+        assert((long int)addr % 16 == 0);
 #endif//DEBUG
         this->addr = (long int) addr;
     }
@@ -807,7 +807,7 @@ struct Mem256{
     explicit Mem256(void* addr)
     {
 #ifdef DEBUG
-        assert(addr % 32 == 0);
+        assert((long int)addr % 32 == 0);
 #endif//DEBUG
         this->addr = (long int) addr;
     }
