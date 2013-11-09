@@ -29,10 +29,10 @@
 
 using namespace std;
 
-#include "data_paths.cpp"
-#include "filesystem.cpp"
-#include "translator.cpp"
-#include "serialize.cpp"
+#include "data_paths.cxx"
+#include "filesystem.cxx"
+#include "translator.cxx"
+#include "serialize.cxx"
 
 namespace r64fx{
 
@@ -46,7 +46,7 @@ typedef SDL2Window Window_t;
  * Just in case the data paths are really messed up
  * and we want to render text.
  */    
-#include "jura_book_font.cpp"
+#include "jura_book_font.cxx"
     
 /** For widgets that render shadows and stuff.
  *  Import it with extern.
@@ -63,7 +63,6 @@ struct Program{
     jack_client_t* jack_client;
     jack_status_t jack_status;
     bool jack_thread_should_be_running;
-    
     
     int main_thread()
     {

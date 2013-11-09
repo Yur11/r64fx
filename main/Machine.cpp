@@ -4,7 +4,6 @@
 
 
 namespace r64fx{
-
     
 Machine::Machine(/*Graph* graph, */FrontMachineScene* fms, BackMachineScene* bms)
 : _fms(fms)
