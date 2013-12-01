@@ -49,7 +49,10 @@ typedef SDL2Window Window_t;
  * Just in case the data paths are really messed up
  * and we want to render text.
  */    
-#include "jura_book_font.cxx"
+
+const vector<unsigned char> jura_book_font = {
+    #include "jura_book_font.ttf.h"
+};
     
 /** For widgets that render shadows and stuff.
  *  Import it with extern.
@@ -116,7 +119,7 @@ struct Program{
         Wire::init();
 
         /* Initialize default font. */
-        Font font(jura_book_font, jura_book_font_size);
+        Font font(jura_book_font.data(), jura_book_font.size());
         font.setFaceSize(16);
         if(font.isOk())
         {
