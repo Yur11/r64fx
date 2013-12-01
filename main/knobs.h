@@ -1,9 +1,9 @@
 #ifndef R64FX_KNOBS_H
 #define R64FX_KNOBS_H
 
-#include "Widget.h"
-#include "rotations.h"
-#include "Texture.h"
+#include "gui/Widget.h"
+#include "gui/rotations.h"
+#include "gui/Texture.h"
 
 
 namespace r64fx{

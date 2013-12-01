@@ -1,7 +1,7 @@
 #include "knobs.h"
-#include "MouseEvent.h"
-#include "bezier.h"
-#include "Window.h"
+#include "gui/MouseEvent.h"
+#include "gui/bezier.h"
+#include "gui/Window.h"
 
 #ifdef DEBUG
 #include <iostream>

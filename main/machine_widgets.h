@@ -1,8 +1,8 @@
 #ifndef R64FX_MACHINE_WIDGETS_H
 #define R64FX_MACHINE_WIDGETS_H
 
-#include "Widget.h"
-#include "TextureAtlas.h"
+#include "gui/Widget.h"
+#include "gui/TextureAtlas.h"
 
 namespace r64fx{
     

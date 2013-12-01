@@ -1,7 +1,7 @@
 #include "machine_scenes.h"
-#include "Keyboard.h"
-#include "MouseEvent.h"
-#include "KeyEvent.h"
+#include "gui/Keyboard.h"
+#include "gui/MouseEvent.h"
+#include "gui/KeyEvent.h"
 #include <algorithm>
 
 #ifdef DEBUG

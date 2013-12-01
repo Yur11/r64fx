@@ -1,7 +1,7 @@
 #ifndef R64FX_MACHINE_SCENES_H
 #define R64FX_MACHINE_SCENES_H
 
-#include "Scene.h"
+#include "gui/Scene.h"
 #include "machine_widgets.h"
 #include "sockets_and_wires.h"
 

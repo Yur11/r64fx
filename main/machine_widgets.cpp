@@ -1,6 +1,6 @@
 #include "machine_widgets.h"
 #include "machine_scenes.h"
-#include "MouseEvent.h"
+#include "gui/MouseEvent.h"
 
 #ifdef DEBUG
 #include <iostream>

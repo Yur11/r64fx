@@ -2,7 +2,7 @@
 #define R64FX_GUI_WIDGET_H
 
 #include <vector>
-#include "Utf8String.h"
+#include "utf8string/Utf8String.h"
 #include <GL/glu.h>
 #include "geometry.h"
 #include "events.h"

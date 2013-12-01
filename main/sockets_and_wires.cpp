@@ -1,6 +1,6 @@
 #include "sockets_and_wires.h"
-#include "bezier.h"
-#include "MouseEvent.h"
+#include "gui/bezier.h"
+#include "gui/MouseEvent.h"
 
 #ifdef DEBUG
 #include <iostream>

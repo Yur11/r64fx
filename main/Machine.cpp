@@ -1,6 +1,6 @@
 #include "Machine.h"
-#include "Texture.h"
-#include "Dummy.h"
+#include "gui/Texture.h"
+#include "gui/Dummy.h"
 
 
 namespace r64fx{

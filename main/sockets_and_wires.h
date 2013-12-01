@@ -1,7 +1,7 @@
 #ifndef R64FX_SOCKETS_AND_WIRES_H
 #define R64FX_SOCKETS_AND_WIRES_H
 
-#include "Widget.h"
+#include "gui/Widget.h"
 
 namespace r64fx{
     

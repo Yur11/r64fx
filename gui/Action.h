@@ -3,7 +3,7 @@
 
 #include "Message.h"
 #include "Icon.h"
-#include "Utf8String.h"
+#include "utf8string/Utf8String.h"
 
 namespace r64fx{
 

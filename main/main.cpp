@@ -4,25 +4,23 @@
 #include <cstring>
 #include <jack/jack.h>
 
-#include "Config.h"
-
 #ifdef USE_SDL2
-#include "SDL2Window.h"
+#include "gui/SDL2Window.h"
 #else
 #error "No valid Window implementation present!"
 #endif//USE_SDL2
 
-#include "Icon.h"
-#include "Dummy.h"
-#include "TextEdit.h"
-#include "Keyboard.h"
-#include "Font.h"
-#include "gc.h"
-#include "Json.h"
+#include "gui/Icon.h"
+#include "gui/Dummy.h"
+#include "gui/TextEdit.h"
+#include "gui/Keyboard.h"
+#include "gui/Font.h"
+#include "gc/gc.h"
+#include "json/Json.h"
 #include "Machine.h"
-#include "TextureAtlas.h"
+#include "gui/TextureAtlas.h"
 
-#include "geometry_io.h"
+#include "gui/geometry_io.h"
 
 #include "knobs.h"
 #include "sockets_and_wires.h"
@@ -33,6 +31,11 @@ using namespace std;
 #include "filesystem.cxx"
 #include "translator.cxx"
 #include "serialize.cxx"
+
+string shader =
+    #include "mul_matrix.glsl.h"
+;
+
 
 namespace r64fx{
 
