@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     char ch;
     
     if(fread(&ch, 1, 1, file) == 1)
-        cout << (ch>=16? "":" ") << "0x" << (unsigned int) ch;
+        cout << (ch>=16? "":" ") << "0x" << (unsigned int) (unsigned char) ch;
     else
     {
         cerr << argv[0] << ": File \"" << argv[1] << "\" seems to be empty!\n";
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
         }
         else
             cout << ' ';
-        cout << (ch>=16? "":" ") << "0x" << (unsigned int) ch;
+        cout << (ch>=16? "":" ") << "0x" << (unsigned int) (unsigned char) ch;
     }
         
     return 0;
