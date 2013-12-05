@@ -1,8 +1,10 @@
 #include "Texture.h"
-#include <png.h>
+#include "shared_sources/read_png.h"
 #include <GL/glu.h>
-#include <iostream>
 #include <vector>
+#ifdef DEBUG
+#include <assert.h>
+#endif//DEBUG
 
 using namespace std;
 
@@ -29,83 +31,28 @@ Texture::Texture(std::string name)
     
     if(!file)
     {
-        cerr << "Texture: Failed to find and read texture file '" << name << "' !\n";
+        cerr << "Texture: Failed to find and read texture file \"" << name << "\" !\n";
         return;
     }
     
-    char header[8];
-    if(fread(header, 1, 8, file) < 8)
+    unsigned char* data;
+    int width, height, nchannels;
+    if(!read_png(file, data, nchannels, width, height))
     {
-        cerr << "Texture: Failed to read file header for '" << name << "' !\n";
+        cerr << "Texture: Error reading png file: \"" << name << "\" !\n";
         fclose(file);
         return;
     }
     
-    png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-    if(!png_ptr)
-    {
-        cerr << "Texture: Failed to create png read structure!\n";
-        fclose(file);
-        return;
-    }
+    cout << width << "x" << height << ": " << nchannels << "\n";
     
-    png_infop png_info = png_create_info_struct(png_ptr);
-    if(!png_info)
-    {
-        cerr << "Texture: Failed to create png info structure!\n";
-        fclose(file);
-        return;
-    }
-    
-    if(setjmp(png_jmpbuf(png_ptr)))
-    {
-        cerr << "Texture: Error during init_io!\n";
-        fclose(file);
-        return;
-    }
-    
-    png_init_io(png_ptr, file);
-    png_set_sig_bytes(png_ptr, 8);
-    
-    png_read_info(png_ptr, png_info);
-    
-    auto channel_count = png_get_channels(png_ptr, png_info);
-    int mode;
-    if(channel_count == 3)
-    {
-        mode = GL_RGB;
-    }
-    else if(channel_count == 4)
-    {
-        mode = GL_RGBA;
-    }
-    else
-    {
-        cerr << "Texture: Image format not supported!\n";
-        fclose(file);
-        return;
-    }
-    
-    auto width = png_get_image_width(png_ptr, png_info);
-    auto height = png_get_image_height(png_ptr, png_info);
-    
-    
-    png_set_interlace_handling(png_ptr);
-    png_read_update_info(png_ptr, png_info);
-    
-    png_byte* data = new png_byte[height * png_get_rowbytes(png_ptr, png_info)];
-    png_bytep* row_pointers = new png_bytep[height];
-    for(int i=0; i<(int)height; i++)
-    {
-        row_pointers[i] = data + i * png_get_rowbytes(png_ptr, png_info);
-    }
-    
-    png_read_image(png_ptr, row_pointers);
     fclose(file);
     
-    load_to_vram(width, height, channel_count, mode, data);
+#ifdef DEBUG
+    assert(nchannels == 3 || nchannels == 4);
+#endif//DEBUG
+    load_to_vram(width, height, nchannels, (nchannels == 3 ? GL_RGB : GL_RGBA), data);
     
-    delete[] row_pointers;
     delete[] data;
     
     all_textures.push_back(*this);
@@ -126,11 +73,32 @@ void Texture::load_to_vram(int width, int height, int channel_count, int mode, u
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
         
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, mode, GL_UNSIGNED_BYTE, bytes);
     glDisable(GL_TEXTURE_2D);
     
     _width = width;
     _height = height;
+}
+
+
+Texture::Texture(vector<unsigned char> resource_bytes)
+{
+    int channel_count = resource_bytes[0];
+    
+    union{
+        int num;
+        unsigned char bytes[4];
+    } cast;
+    
+    for(int i=0; i<4; i++)
+        cast.bytes[i] = resource_bytes[i+1];
+    int width = cast.num;
+    
+    for(int i=0; i<4; i++)
+        cast.bytes[i] = resource_bytes[i+5];
+    int height = cast.num;
+    
+    load_to_vram(width, height, channel_count, (channel_count == 3 ? GL_RGB : GL_RGBA), resource_bytes.data() + 9);
 }
 
 

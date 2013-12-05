@@ -53,7 +53,8 @@ typedef SDL2Window Window_t;
 const vector<unsigned char> jura_book_font = {
     #include "jura_book_font.ttf.h"
 };
-    
+
+
 /** For widgets that render shadows and stuff.
  *  Import it with extern.
  *  Use only in the main module. 

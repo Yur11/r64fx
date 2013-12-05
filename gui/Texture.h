@@ -31,6 +31,14 @@ public:
         load_to_vram(width, height, channel_count, mode, bytes);
     }
     
+    /** Load image data from a resource. 
+     *  Byte 0 encodes the channel count.
+     *  Bytes 1-4 encode the image width as int.
+     *  Bytes 5-8 encode the image height as int.
+     *  Followed by data.
+     */
+    Texture(std::vector<unsigned char> resource_bytes);
+    
    ~Texture();
     
     inline bool operator==(const Texture &other)
