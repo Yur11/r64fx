@@ -24,6 +24,13 @@ template<typename T> std::ostream &operator<<(std::ostream &out, const Rect<T> &
     return out;
 }
 
+inline std::ostream &operator<<(std::ostream &out, Matrix3x3 &m)
+{
+    for(int row=0; row<3; row++)
+        for(int col=0; col<3; col++)
+            out << m(col, row) << (col < 2 ? ", " : "\n");
+}
+
 }//namespace r64fx
 
 #endif//R64FX_GUI_GEOMETRY_IO_H
