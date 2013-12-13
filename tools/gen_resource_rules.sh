@@ -11,6 +11,6 @@ do
     eval "$1 $i > $TARGET_NAME.h"
     
     printf "$TARGET_NAME.h: $1 $i\n"
-    printf "\t@echo \"`basename $1` $TARGET_NAME.h\"\n"
+    printf "\t@echo \"Building $TARGET_NAME.h\"\n"
     printf "\t@$1 $i > $TARGET_NAME.h\n\n"
 done

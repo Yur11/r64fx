@@ -27,7 +27,7 @@ do
     do
         target_name="$(printf "$object_file_prefix"; printf "_`basename $cpp_file | sed -e 's/.cpp/.o/g'`")"
         eval "$CXX -MM `realpath $cpp_file` -MT $target_name"
-        printf "\t@echo \"CXX \$@\"\n"
+        printf "\t@echo \"Building \$@\"\n"
         printf "\t@$CXX $CXX_FLAGS -c `realpath $cpp_file` -o $target_name\n\n"
         
         object_file_list="$object_file_list $target_name"
