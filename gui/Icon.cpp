@@ -36,38 +36,8 @@ void Icon::render()
     }
     else
     {
-//         glColor3f(1.0, 0.0, 0.0);
-//         glBegin(GL_LINE_LOOP);
-//             glVertex2f(0.0, 0.0);
-//             glVertex2f(size.w, 0.0);
-//             glVertex2f(size.w, size.h);
-//             glVertex2f(0.0, size.h);
-//         glEnd();
     }
 }
-
-
-Icon Icon::find(std::string name, Size<float> size)
-{
-    auto it = all_icons.find(name);
-    if(it == all_icons.end())
-    {
-        Texture texture("icons/" + name + ".png");
-        if(texture.isGood())
-        {
-            Icon icon(size, texture);
-            all_icons[name] = icon;
-            return icon;
-        }
-        else
-        {
-            return defaultIcon();
-        }
-    }
-    else
-        return it->second;
-}
-
 
 Icon Icon::defaultIcon(Size<float> size)
 {

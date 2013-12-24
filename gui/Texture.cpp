@@ -9,44 +9,44 @@
 using namespace std;
 
 namespace r64fx{
-   
-    
-vector<Texture> all_textures;
-std::vector<std::string>* texture_data_paths;
+  
+extern string data_prefix;
+
+Texture default_texture;
+
     
 Texture::Texture(std::string name)
-{    
-    FILE* file = fopen(name.c_str(), "rb");//Try absolute path first.
-    if(!file && texture_data_paths)
+{
+    (*this) = Texture(fopen((data_prefix + name).c_str(), "r"), true);
+    if(!isGood())
     {
-        /* Check all known data directories. */
-        for(auto it=texture_data_paths->begin(); it!=texture_data_paths->end(); it++)
-        {
-            auto &path = *it;
-            file = fopen((path + name).c_str(), "rb");
-            if(file)
-                break;
-        }
+        cerr << "Problems reading file \"" << name << "\" !\n";
     }
-    
-    if(!file)
+}
+
+
+Texture::Texture(FILE* fd, bool close_fd)
+{
+    if(!fd)
     {
-        cerr << "Texture: Failed to find and read texture file \"" << name << "\" !\n";
+        cerr << "Texture: Bad file descriptor !\n";
         return;
     }
     
     unsigned char* data;
     int width, height, nchannels;
-    if(!read_png(file, data, nchannels, width, height))
+    if(!read_png(fd, data, nchannels, width, height))
     {
-        cerr << "Texture: Error reading png file: \"" << name << "\" !\n";
-        fclose(file);
+        cerr << "Texture: Error reading png file!\n";
+        if(close_fd)
+            fclose(fd);
         return;
     }
     
     cout << width << "x" << height << ": " << nchannels << "\n";
     
-    fclose(file);
+    if(close_fd)
+        fclose(fd);
     
 #ifdef DEBUG
     assert(nchannels == 3 || nchannels == 4);
@@ -54,8 +54,6 @@ Texture::Texture(std::string name)
     load_to_vram(width, height, nchannels, (nchannels == 3 ? GL_RGB : GL_RGBA), data);
     
     delete[] data;
-    
-    all_textures.push_back(*this);
 }
 
 
@@ -107,76 +105,55 @@ Texture::~Texture()
 }
 
 
-
-Texture default_texture;
-Texture transparent_16x16;
-
-
-void Texture::init(std::vector<std::string>* data_paths)
+void Texture::free() 
 {
-    texture_data_paths = data_paths;
-    
-    /** Create default texture. */
+    glDeleteTextures(1, &_texture); 
+    _width = _height = 0; 
+}
+
+
+void Texture::init()
+{
     const int width = 32;
     const int height = 32;
-    const int mode = GL_RGBA;
-    unsigned char bytes[width * height * 4];
-    
-    for(int y=0; y<height; y++)
+
+    auto data = new unsigned char[width*height*3];
+    for(int x=0; x<width; x++)
     {
-        for(int x=0; x<width; x++)
+        for(int y=0; y<height; y++)
         {
-            unsigned color;
-            if(y < height / 2)
+            for(int c=0; c<3; c++)
             {
-                if(x < width / 2)
-                {
-                    color = 0;
-                }
-                else
-                {
-                    color = 255;
-                }
+                data[y*width + x + c] = 0;
             }
-            else
-            {
-                if(x < width / 2)
-                {
-                    color = 255;
-                }
-                else
-                {
-                    color = 0;
-                }
-            }
-            
-            for(int ch=0; ch<3; ch++)
-            {
-                bytes[width * y * 4 + x * 4 + ch] = color;
-            }
-            
-            bytes[width * y * 4 + x * 4 + 3] = 255;
         }
     }
     
-    default_texture = Texture(width, height, 4, mode, bytes);
-
-
-    /* Create transparent 16x16 texture. */
-    for(int y=0; y<16; y++)
+    for(int x=0; x<width/2; x++)
     {
-        for(int x=0; x<16; x++)
+        for(int y=0; y<height/2; y++)
         {
-            for(int ch=0; ch<3; ch++)
+            for(int c=0; c<3; c++)
             {
-                bytes[16 * y * 4 + x * 4 + ch] = 0;
+                data[y*width + x + c] = 255;
             }
-
-            bytes[16 * y * 4 + x * 4 + 3] = 0;
         }
     }
-
-    transparent_16x16 = Texture(16, 16, 4, GL_RGBA, bytes);
+    
+    for(int x=width/2; x<width; x++)
+    {
+        for(int y=height/2; y<height; y++)
+        {
+            for(int c=0; c<3; c++)
+            {
+                data[y*width + x + c] = 255;
+            }
+        }
+    }
+    
+    default_texture = Texture(width, height, 3, GL_RGB, data);
+    
+    delete[] data;
 }
 
 
@@ -191,16 +168,10 @@ Texture Texture::badTexture()
     return Texture();
 }
 
-
-Texture Texture::transparent16x16()
-{
-    return transparent_16x16;
-}
-
-
 void Texture::cleanup()
 {
-    all_textures.clear();
+    if(default_texture.isGood())
+        default_texture.free();
 }
     
 }//namespace r64fx

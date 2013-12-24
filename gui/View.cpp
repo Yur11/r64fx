@@ -2,6 +2,7 @@
 #include "MouseEvent.h"
 #include "KeyEvent.h"
 #include "Window.h"
+#include "Translation.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -18,6 +19,11 @@ using namespace std;
 
 namespace r64fx{
     
+Icon View::split_view_vert_icon;
+Icon View::split_view_hor_icon;
+Icon View::close_view_icon;
+    
+
 /** Returns nullptr if view is not found down the tree or the parent SplitView of the target view. */
 SplitView* parent_for_view_down_the_tree(SplittableView* root, SplittableView* view)
 {
@@ -80,8 +86,8 @@ View::View(Scene* scene)
     setScene(scene);
     
     split_view_vert_act = new Action(
-        Icon::find("split_vertically", 24, 24),
-        "Split Vertically",  
+        split_view_vert_icon,
+        tr("split_vertically"),  
         Message([](void* source, void* data)->void*
             {
                 auto view = (View*) data;
@@ -104,8 +110,8 @@ View::View(Scene* scene)
     );
     
     split_view_hor_act = new Action(
-        Icon::find("split_horizontally", 24, 24),
-        "Split Horizontally",     
+        split_view_hor_icon,
+        tr("split_horizontally"),     
         Message([](void* source, void* data)->void*
             {
                 auto view = (View*) data;
@@ -128,8 +134,8 @@ View::View(Scene* scene)
     );
     
     close_view_act = new Action(
-        Icon::find("close_view", 24, 24),
-        "Close View",
+        close_view_icon,
+        tr("close_view"),
         Message([](void* source, void* data)->void*
             {
                 auto view = (View*) data;

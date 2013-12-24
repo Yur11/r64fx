@@ -24,7 +24,7 @@ class SplittableView : public Disposable{
 protected:
     Rect<int> _rect;
     
-public: 
+public:     
     virtual ~SplittableView(){}
     
     void findParentViewOrWindow(SplitView* &view, Window* &window);
@@ -61,8 +61,6 @@ public:
     
 /** @brief A view that can render a scene with a given projection. */
 class View : public SplittableView{
-    
-private:
     friend class Window;
     Scene* _scene = nullptr;
     float _scale_factor = 1.0;
@@ -79,6 +77,10 @@ private:
     View(const View&){}
     
 public:
+    static Icon split_view_vert_icon;
+    static Icon split_view_hor_icon;
+    static Icon close_view_icon;
+    
     View(Scene* scene = nullptr);
     
     virtual ~View();

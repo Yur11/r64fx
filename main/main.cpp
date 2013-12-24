@@ -10,6 +10,7 @@
 #error "No valid Window implementation present!"
 #endif//USE_SDL2
 
+#include "gui/Translation.h"
 #include "gui/Icon.h"
 #include "gui/Dummy.h"
 #include "gui/TextEdit.h"
@@ -27,9 +28,6 @@
 
 using namespace std;
 
-#include "data_paths.cxx"
-#include "filesystem.cxx"
-#include "translator.cxx"
 #include "serialize.cxx"
 
 string shader =
@@ -43,7 +41,10 @@ namespace r64fx{
 #ifdef USE_SDL2
 typedef SDL2Window Window_t;
 #endif//USE_SDL2
-    
+
+
+string data_prefix;
+
     
 /* Default font is built into the binary. 
  * Just in case the data paths are really messed up
@@ -71,23 +72,24 @@ struct Program{
     jack_status_t jack_status;
     bool jack_thread_should_be_running;
     
-    int main_thread()
+    int main_thread(int argc, char* argv[])
     {
         using namespace r64fx;
         
-//         jack_client = jack_client_open("r64fx", JackNullOption, &jack_status);
-//         if(!jack_client)
-//         {
-//             cerr << "Failed to create jack client!\n";
-//             return 1;
-//         }
-//         
-
-        if(!SDL2Window::init())
+        /* Set data paths */
+        if(argc < 2)
         {
-            cerr << "Failed to init GUI!\n";
-            return 2;
+            cerr << "Give me a path to r64fx data directory!\n";
+            return 1;
         }
+            
+        r64fx::data_prefix = argv[1];
+        
+        if(data_prefix.back() != '/')
+            data_prefix.push_back('/');
+        
+        if(argc > 2)
+            cerr << "Warning: ignoring extra " << (argc-2) << " command line arguments!\n";
         
         /*
          * Main window opened by default. 
@@ -96,6 +98,12 @@ struct Program{
          * Most of the things in the gui can be done only after this step.
          * This is true for everything that has to do with rendering or texture loading.
          */
+        if(!SDL2Window::init())
+        {
+            cerr << "Failed to init GUI!\n";
+            return 2;
+        }
+        
         Window_t window(800, 600, "r64fx");
 
         window.makeCurrent();
@@ -111,11 +119,10 @@ struct Program{
         /* This (re)creates a texture used for caching the viewport. */
         window.updateCacheTexture();
 
+        Texture::init();
+        
         /* Init all the keyboard related stuff. */
         Keyboard::init();
-
-        /* Initialize default texture and data paths for texture file lookup. */
-        Texture::init(&data_paths);
         
         Wire::init();
 
@@ -133,7 +140,7 @@ struct Program{
         }
 
         /* Set the UI language. */
-        tr.loadLanguage("en");
+        tr.loadLanguage("ru");
         
         /* removeme. */
         Dummy::initDebugMenu();
@@ -195,6 +202,11 @@ struct Program{
         wire->update();
         wire->color = { 0.7, 0.7, 0.1, 0.0 };
         wires.push_back(wire);
+        
+        /* Setup View icons. */
+        View::split_view_vert_icon = Icon({24, 24}, "textures/split_vertically.png");
+        View::split_view_hor_icon  = Icon({24, 24}, "textures/split_horizontally.png");
+        View::close_view_icon      = Icon({24, 24}, "textures/close_view.png");
         
         /* Setup root view of the main window. */        
         View* view = new View(&fms);
@@ -280,7 +292,7 @@ struct Program{
 }//namespace r64fx
 
 
-int main()
+int main(int argc, char* argv[])
 {
-    return r64fx::program.main_thread();
+    return r64fx::program.main_thread(argc, argv);
 }

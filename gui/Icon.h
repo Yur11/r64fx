@@ -16,19 +16,14 @@ public:
     : _texture(texture)
     , size(size)
     {}
+    
+    Icon(Size<float> size, std::string tex_file)
+    : Icon(size, Texture(tex_file))
+    {}
 
     void render();
-
-    static Icon find(std::string name, Size<float> size = Size<float>(32, 32));
     
-    inline static Icon find(std::string name, float width, float height)
-    {
-        return Icon::find(name, Size<float>(width, height));
-    }
-
     static Icon defaultIcon(Size<float> size = Size<float>(18, 18));
-    
-    static Icon loadFrom(std::vector<std::string>* data_paths);
 };
     
 }//namespace r64fx

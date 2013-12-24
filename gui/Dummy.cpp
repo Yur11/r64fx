@@ -70,12 +70,6 @@ void Dummy::initDebugMenu()
     if(_debug_menu) return;
     
     _debug_menu = new Menu;
-    _debug_menu->appendAction(new Action(Icon::find("D1", 18, 18), "Hello",     Message(on_menu_click)));
-    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Doctor",    Message(on_menu_click)));
-    _debug_menu->appendAction(new Action(/*Icon::find("D1", 32, 32),*/ "Name",      Message(on_menu_click)));
-    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Continue",  Message(on_menu_click)));
-    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Yesterday", Message(on_menu_click)));
-    _debug_menu->appendAction(new Action(Icon::find("D1", 32, 32), "Tommorow",  Message(on_menu_click)));
     _debug_menu->setPadding(5);
     _debug_menu->update();
 }
