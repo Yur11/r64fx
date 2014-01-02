@@ -1,6 +1,8 @@
 #ifndef R64FX_GUI_COLOR_H
 #define R64FX_GUI_COLOR_H
 
+#include <GL/glew.h>
+
 namespace r64fx{
     
 struct Color{
