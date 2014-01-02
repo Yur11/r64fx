@@ -55,7 +55,7 @@ jura_book_font.ttf.h: file2numlist $(SRC_DIR)/data/fonts/Jura/Jura-Book.ttf
 	@./file2numlist $(SRC_DIR)/data/fonts/Jura/Jura-Book.ttf > jura_book_font.ttf.h
 
 r64fx: $(object_files)
-	@printf "Linking r64fx..." && $(CXX) $^ -o $@ -lSDL2 -lGL -lGLU -lftgl -lpng -ljack -lsndfile && printf "\nOK\n"
+	@printf "Linking r64fx..." && $(CXX) $^ -o $@ -lSDL2 -lGL -lGLU -lGLEW -lftgl -lpng -ljack -lsndfile && printf "\nOK\n"
 
 clean:
 	@$(RM) *.o r64fx *.sh build_rules *.h file2numlist file2str png2numlist
