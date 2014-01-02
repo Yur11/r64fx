@@ -1,7 +1,7 @@
 #ifndef R64FX_GUI_TEXTURE_H
 #define R64FX_GUI_TEXTURE_H
 
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <string>
 #include <vector>
 #include "geometry.h"

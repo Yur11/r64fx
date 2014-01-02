@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "utf8string/Utf8String.h"
-#include <GL/glu.h>
+#include <GL/glew.h>
 #include "geometry.h"
 #include "events.h"
 #include "Color.h"
