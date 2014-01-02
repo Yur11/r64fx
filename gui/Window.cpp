@@ -27,50 +27,12 @@ Window::~Window()
 }
 
 
-void Window::renderAll()
-{
-#ifdef DEBUG
-    if(!view())
-    {
-        cerr << "View is null!\n";
-        abort();
-    }
-#endif//DEBUG
 
-    view()->render();
+void Window::render()
+{
+    _view->render();
     
     render_overlay_menus();
-    
-    glFinish();
-}
-
-
-void Window::cacheFrambuffer()
-{
-    glBindTexture(GL_TEXTURE_2D, _cache_texture);
-    glCopyTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA,
-        0, 0, max_width, max_height,
-        0
-    );
-}
-
-
-void Window::renderCached()
-{
-    glBegin(GL_QUADS);
-        glTexCoord2f(0.0, 0.0);
-        glVertex2f(0.0, 0.0);
-        
-        glTexCoord2f(float(width()) / float(max_width), 0.0);
-        glVertex2f(width(), 0.0);
-        
-        glTexCoord2f(1.0, 1.0);
-        glVertex2f(float(width()) / float(max_width), float(height()) / float(max_height));
-        
-        glTexCoord2f(0.0, 1.0);
-        glVertex2f(0.0, float(height()) / float(max_height));
-    glEnd();
     
     glFinish();
 }
@@ -90,38 +52,6 @@ void Window::render_overlay_menus()
     }
     glDisable(GL_BLEND);
     glEnable(GL_SCISSOR_TEST);
-}
-
-
-void Window::updateCacheTexture()
-{
-    if(_cache_texture != 0)
-    {
-        glDeleteTextures(1, &_cache_texture);
-    }
-    
-    glEnable(GL_TEXTURE_2D);
-
-    glGenTextures(1, &_cache_texture);
-    glBindTexture(GL_TEXTURE_2D, _cache_texture);
-    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    
-    GLfloat flargest;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &flargest);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, flargest);
-    
-    unsigned char* bytes = new unsigned char[max_width * max_height * 4];
-    for(int i=0; i<max_width * max_height * 4; i++)
-    {
-        bytes[i] = 30;
-    }
-//         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, max_width, max_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
-    gluBuild2DMipmaps(GL_TEXTURE_2D, 4, max_width, max_height, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
-    delete[] bytes;
-    
-    glDisable(GL_TEXTURE_2D);
 }
 
 
@@ -309,6 +239,25 @@ void Window::initKeyReleaseEvent(int x, int y, unsigned int scancode, unsigned i
 
 void Window::initTextInputEvent(Utf8String text)
 {
+}
+
+
+bool Window::initGlew()
+{
+    auto status = glewInit();
+    if(status != GLEW_OK)
+    {
+        cerr << "Failed to init GLEW!\n";
+        return false;
+    }
+    
+    if(!GLEW_VERSION_2_0)
+    {
+        cerr << "OpenGL 2.0 not supported!\n";
+        return false;
+    }
+    
+    return true;
 }
 
     
