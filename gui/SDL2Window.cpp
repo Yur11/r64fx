@@ -81,12 +81,6 @@ Size<int> SDL2Window::size()
 }
 
 
-void SDL2Window::updateMaxSize()
-{
-    SDL_SetWindowMaximumSize(_window, max_width, max_height);
-}
-
-
 void SDL2Window::updateGeometry()
 {
      /* Hack. Send these events to the window for it to resize properly. */

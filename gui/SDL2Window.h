@@ -26,8 +26,6 @@ public:
     
     virtual Size<int> size();
     
-    virtual void updateMaxSize();
-    
     virtual void updateGeometry();
     
     virtual void warpMouse(int x, int y);
