@@ -245,20 +245,23 @@ class Matrix3x3{
 public:
     Matrix3x3() { loadIdentity(); }
     
-    Matrix3x3(float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22) 
-    {
-        (*this)(0, 0) = m00;
-        (*this)(1, 0) = m10;
-        (*this)(2, 0) = m20;
-        (*this)(0, 1) = m01;
-        (*this)(1, 1) = m11;
-        (*this)(2, 1) = m21;
-        (*this)(0, 2) = m02;
-        (*this)(1, 2) = m12;
-        (*this)(2, 2) = m22;
+    Matrix3x3(
+        float m00, float m10, float m20, 
+        float m01, float m11, float m21, 
+        float m02, float m12, float m22
+    ) : data {
+        m00, m10, m20,
+        m01, m11, m21,
+        m02, m12, m22
     }
+    {}
     
     float &operator()(int col, int row)
+    {
+        return data[row*3 + col];
+    }
+    
+    float operator()(int col, int row) const
     {
         return data[row*3 + col];
     }
@@ -267,7 +270,14 @@ public:
     
     void loadMainDiagonal(float val);
     
-    inline void loadIdentity() { fill(0.0); loadMainDiagonal(1.0); }
+    inline void loadIdentity() 
+    { 
+        (*this) = {
+            1.0, 0.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 0.0, 1.0
+        };
+    }
     
     void scale(float w, float h);
     
@@ -277,24 +287,10 @@ public:
 };
 
 
-inline Matrix3x3 operator*(Matrix3x3 a, Matrix3x3 b)
-{    
-    Matrix3x3 m;
-    for(int row=0; row<3; row++)
-    {
-        for(int col=0; col<3; col++)
-        {
-            float sum = 0.0;
-            for(int i=0; i<3; i++)
-            {
-                sum += a(i, row) * b(col, i);
-            }
-            m(col, row) = sum;
-        }
-    }
-    
-    return m;
-}
+Matrix3x3 operator*(Matrix3x3 &a, Matrix3x3 &b);
+Matrix3x3 operator*(const Matrix3x3 &a, Matrix3x3 &b);
+Matrix3x3 operator*(Matrix3x3 &a, const Matrix3x3 &b);
+Matrix3x3 operator*(const Matrix3x3 &a, const Matrix3x3 &b);
 
 
 inline Point<float> operator*(Matrix3x3 m, Point<float> p)
@@ -304,7 +300,6 @@ inline Point<float> operator*(Matrix3x3 m, Point<float> p)
         m(0, 1) * p.x + m(1, 1) * p.y + m(2, 1)
     );
 }
-
 
 }//namespace r64fx
 
