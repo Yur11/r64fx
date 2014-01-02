@@ -30,11 +30,6 @@ using namespace std;
 
 #include "serialize.cxx"
 
-string shader =
-    #include "mul_matrix.glsl.h"
-;
-
-
 namespace r64fx{
 
     
@@ -108,24 +103,16 @@ struct Program{
 
         window.makeCurrent();
         
-        /* 
-         * Max size is set to (WindowBase::max_width, WindowBase::max_height).
-         * These must be powers of 2.
-         */
-        window.max_width = 2048;
-        window.max_height = 2048;
-        window.updateMaxSize(); 
+        /* Can be done only after we have obtained the OpenGL context. */
+        if(!Window::initGlew())
+            return 3;
         
-        /* This (re)creates a texture used for caching the viewport. */
-        window.updateCacheTexture();
-
         Texture::init();
         
-        /* Init all the keyboard related stuff. */
         Keyboard::init();
         
         Wire::init();
-
+        
         /* Initialize default font. */
         Font font(jura_book_font.data(), jura_book_font.size());
         font.setFaceSize(16);
