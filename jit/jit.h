@@ -3,10 +3,21 @@
 
 #ifdef DEBUG
 #include <assert.h>
+#include <sstream>
 #endif//DEBUG
 
 namespace r64fx{
 
+    
+void* alloc_pages_raw(int npages);
+
+void* alloc_alligned_raw(int alignment, int nbytes);
+    
+template<typename T> T alloc_pages(int npages) { return (T) alloc_pages_raw(npages); }
+
+template<typename T> T alloc_alligned(int alignment, int nbytes) { return (T) alloc_alligned_raw(alignment, nbytes); }
+
+    
 /* Usefull binary constants. */
 const unsigned int b00 = 0;
 const unsigned int b01 = 1;
@@ -528,6 +539,9 @@ public:
     {
         this->byte = byte;
     }
+    
+    inline operator unsigned char() const { return byte; }
+    inline operator   signed char() const { return byte; }
 };
 
 class Imm16{
@@ -542,6 +556,9 @@ public:
     {
         bytes.word = word;
     }
+    
+    inline operator unsigned short() const { return bytes.word; }
+    inline operator   signed short() const { return bytes.word; }
 };
 
 
@@ -557,6 +574,9 @@ public:
     {
         bytes.dword = dword;
     }
+    
+    inline operator unsigned int() const { return bytes.dword; }
+    inline operator   signed int() const { return bytes.dword; }
 };
 
 
@@ -574,6 +594,9 @@ public:
     {
         bytes.qword = qword;
     }
+    
+    inline operator unsigned long int() const { return bytes.qword; }
+    inline operator   signed long int() const { return bytes.qword; }
 }; 
 
 
@@ -601,14 +624,20 @@ public:
     inline unsigned char code() const { return _bits; }
     
     /** @brief R or B bit of the REX prefix.*/
-    inline bool prefix_bit() const { return _bits & b1000; }
+    inline bool prefix_bit() const { return _bits & b1000; }    
 };
 
-
 class GPR64 : public Register{
+#ifdef DEBUG
+    static const char* names[];
+#endif//DEBUG
     
 public:
     explicit GPR64(const unsigned char bits) : Register(bits) {}
+    
+#ifdef DEBUG
+    inline const char* name() const { return names[Register::code()]; }
+#endif//DEBUG
 };
 
 const GPR64
@@ -632,9 +661,16 @@ const GPR64
 
 
 class GPR32 : public Register{
+#ifdef DEBUG
+    static const char* names[];
+#endif//DEBUG
     
 public:
     explicit GPR32(const unsigned char bits) : Register(bits) {}
+    
+#ifdef DEBUG
+    inline const char* name() const { return names[Register::code()]; }
+#endif//DEBUG
 };
 
 const GPR32
@@ -658,9 +694,16 @@ const GPR32
 
 
 class GPR16 : public Register{
+#ifdef DEBUG
+    static const char* names[];
+#endif//DEBUG
     
 public:
     explicit GPR16(const unsigned char bits) : Register(bits) {}
+    
+#ifdef DEBUG
+    inline const char* name() const { return names[Register::code()]; }
+#endif//DEBUG
 };
 
 const GPR16
@@ -676,9 +719,16 @@ const GPR16
 
 
 class GPR8 : public Register{
-
+#ifdef DEBUG
+    static const char* names[];
+#endif//DEBUG
+    
 public:
     explicit GPR8(const unsigned char bits) : Register(bits) {}
+    
+#ifdef DEBUG
+    inline const char* name() const { return names[Register::code()]; }
+#endif//DEBUG
 };
 
 const GPR8
@@ -694,9 +744,16 @@ const GPR8
 
 
 class Xmm : public Register{
-
+#ifdef DEBUG
+    static const char* names[];
+#endif//DEBUG
+    
 public:
     explicit Xmm(const unsigned char bits) : Register(bits) {}
+    
+#ifdef DEBUG
+    inline const char* name() const { return names[Register::code()]; }
+#endif//DEBUG
 };
 
 const Xmm
@@ -836,11 +893,19 @@ const unsigned char Scale8 = b11;
 
 class CmpCode{
     unsigned int _code;
+    
+#ifdef DEBUG
+    static const char* names[];
+#endif//DEBUG
 
 public:
     CmpCode(unsigned int code) : _code(code) {}
 
     inline unsigned int code() const { return _code; }
+    
+#ifdef DEBUG
+    inline const char* name() const { return names[code()]; }
+#endif//DEBUG
 };
 
 /** @brief Codes used with cmpps. */
@@ -915,8 +980,13 @@ public:
 class Assembler{
     CodeBuffer bytes;
     bool must_free;
-
+    
 public:
+    
+#ifdef DEBUG
+    std::ostringstream dump;
+#endif//DEBUG
+    
     Assembler(int npages = 1) : bytes(npages), must_free(true)
     {
 
@@ -949,17 +1019,38 @@ public:
     /** @brief Insert one or more nop instructions. */
     inline void nop(int count = 1)
     {
-        while(count--) bytes << 0x90;
+        while(count--) 
+        {
+#ifdef DEBUG
+            dump << (void*)ip() << "    nop\n";
+#endif//DEBUG
+            bytes << 0x90;
+        }
     }
 
     inline void ret()
     {
+#ifdef DEBUG
+        dump << (void*)ip() << "    ret\n";
+#endif//DEBUG
         bytes << 0xC3;
     }
 
-    inline void rdtsc() { bytes << 0x0F << 0x31; }
+    inline void rdtsc() 
+    {
+#ifdef DEBUG
+        dump << (void*)ip() << "    rdtsc\n";
+#endif//DEBUG
+        bytes << 0x0F << 0x31; 
+    }
     
-    inline void rdpmc() { bytes << 0x0F << 0x33; }
+    inline void rdpmc() 
+    { 
+#ifdef DEBUG
+        dump << (void*)ip() << "    rdpmc\n";
+#endif//DEBUG
+        bytes << 0x0F << 0x33; 
+    }
 
     void add(GPR32 reg, Mem32 mem);
     void add(Mem32 mem, GPR32 reg);
@@ -1021,6 +1112,16 @@ public:
 
 
     /* SSE */
+private:
+    void sse_ps_instruction(unsigned char second_opcode, Xmm dst, Xmm src);
+    void sse_ps_instruction(unsigned char second_opcode, Xmm reg, Mem128 mem);
+    void sse_ps_instruction(unsigned char second_opcode, Xmm reg, Base base, Disp8 disp);
+    
+    void sse_ss_instruction(unsigned char third_opcode, Xmm dst, Xmm src);
+    void sse_ss_instruction(unsigned char third_opcode, Xmm reg, Mem32 mem);
+    void sse_ss_instruction(unsigned char third_opcode, Xmm reg, Base base, Disp8 disp);
+    
+public:
     void addps(Xmm dst, Xmm src);
     void addps(Xmm reg, Mem128 mem);
     void addps(Xmm reg, Base base, Disp8 disp = Disp8(0));
