@@ -5,3 +5,4 @@ script
 tools/build_resource
 example
 .directory
+jit/tryjit
