@@ -2,6 +2,7 @@
 #define R64FX_MACHINE_H
 
 #include "machine_scenes.h"
+#include "dsp/Graph.h"
 
 namespace r64fx{
     
@@ -13,7 +14,7 @@ class Machine{
     MachineWidget* _back;
     
 public:
-    Machine(/*Graph* graph, */FrontMachineScene* fms, BackMachineScene* bms);
+    Machine(FrontMachineScene* fms, BackMachineScene* bms);
 
     virtual ~Machine();
     
