@@ -54,6 +54,8 @@ void BasicKnob::mouseMoveEvent(MouseEvent* event)
         else if(angle > max_angle)
             angle = max_angle;
         
+        value_changed.send(this);
+        
         event->has_been_handled = true;
     }
 }

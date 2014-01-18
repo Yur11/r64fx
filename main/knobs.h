@@ -33,6 +33,8 @@ public:
         return (max_value - min_value) * (angle - min_angle) / (max_angle - min_angle) + min_value;
     }
     
+    Message value_changed;
+    
     float radius = 50.0;
         
     virtual void update();
