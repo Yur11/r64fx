@@ -29,6 +29,8 @@ inline std::ostream &operator<<(std::ostream &out, Matrix3x3 &m)
     for(int row=0; row<3; row++)
         for(int col=0; col<3; col++)
             out << m(col, row) << (col < 2 ? ", " : "\n");
+        
+    return out;
 }
 
 }//namespace r64fx
