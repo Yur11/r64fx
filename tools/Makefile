@@ -2,12 +2,12 @@ CXX                 =  g++ -std=c++11
 
 SRC_DIR             =   $(shell cat src_dir)
 INC                 =   -I $(SRC_DIR)  -I . -I /usr/include/freetype2
-CXXFLAGS            ?=  -DDEBUG -DUSE_SDL2
+CXXFLAGS            ?=  -DDEBUG -DUSE_SDL2 -g -Wall
 
 MKDIR               =   mkdir -p
 
 #Subdirectoies that store the sources of r64fx itself.
-R64FX_SOURCE_DIRS   =   utf8string jit gc gui json main
+R64FX_SOURCE_DIRS   =   utf8string jit gc gui dsp json main
 
 #Subdirectoies that may store glsl files that have to be compiled into resources.
 GLSL_DIRS           =  $(SRC_DIR)/gui
