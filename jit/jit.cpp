@@ -26,6 +26,7 @@ void* alloc_alligned_raw(int alignment, int nbytes)
 CodeBuffer::CodeBuffer(int npages) : _npages(npages)
 {
     begin = end = alloc_pages<unsigned char*>(npages);
+    mprotect(begin, getpagesize() * npages, PROT_READ | PROT_WRITE | PROT_EXEC);
 }
 
 
@@ -62,12 +63,6 @@ CodeBuffer &CodeBuffer::operator<<(Imm64 imm)
         end += 1;
     }
     return *this;
-}
-
-
-void CodeBuffer::allowExecution()
-{
-    mprotect(begin, getpagesize() * npages(), PROT_EXEC);
 }
 
 
@@ -846,6 +841,7 @@ void Assembler::cmpps(CmpCode kind, Xmm dst, Xmm src)
 }
 
 
+/* Segfaults! */
 void Assembler::cmpps(CmpCode kind, Xmm reg, Mem128 mem)
 {
 #ifdef DEBUG
@@ -855,7 +851,7 @@ void Assembler::cmpps(CmpCode kind, Xmm reg, Mem128 mem)
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
     bytes << 0x0F << 0xC2;
     bytes << ModRM(b00, reg.code(), b101);
-    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 5);
     bytes << kind.code();
 }
 
@@ -1058,6 +1054,34 @@ void Assembler::movaps(Base base, Disp8 disp, Xmm reg)
 }
 
 
+void Assembler::movss(Xmm reg, Mem32 mem)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    movss " << reg.name() << ", [" << (void*)mem.addr << "]\n";
+#endif//DEBUG
+    
+    bytes << 0xF3;
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0x10;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::movss(Mem32 mem, Xmm reg)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    movss [" << (void*)mem.addr << "], " << reg.name() << "\n";
+#endif//DEBUG
+    
+    bytes << 0xF3;
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0x11;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
+}
+
+
 #ifdef DEBUG
 /* Debug stuff to print a single byte as 4 numbers, 2 bits each.*/
 union ShufByte{
@@ -1074,7 +1098,7 @@ union ShufByte{
 
 std::ostream &operator<<(std::ostream &ost, ShufByte shufbyte)
 {
-    ost << shufbyte.pair.b76 << ", " << shufbyte.pair.b54 << ", " << shufbyte.pair.b32 << ", " << shufbyte.pair.b10;
+    ost << (int)shufbyte.pair.b76 << ", " << (int)shufbyte.pair.b54 << ", " << (int)shufbyte.pair.b32 << ", " << (int)shufbyte.pair.b10;
     return ost;
 }
 #endif//DEBUG
