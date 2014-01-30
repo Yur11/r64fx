@@ -13,7 +13,7 @@ class Menu : public VerticalContainer{
     Widget* highlighted_widget = nullptr;
     
 public:
-    Menu(Font* font = Font::defaultFont(), Widget* parent = nullptr);
+    Menu(Font* font, Widget* parent = nullptr);
     
     void appendAction(Action* act);
     

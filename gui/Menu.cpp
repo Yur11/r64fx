@@ -33,21 +33,30 @@ struct ActionWidget : public Widget, public Padding{
     
     virtual void render()
     {
+        glDisable(GL_TEXTURE_2D);
+        
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+       
         action->icon().render();
-        glPushMatrix();
-            if(is_highlighted)
-                glColor3f(0.7, 0.9, 0.9);
-            else
-                glColor3f(0.9, 0.7, 0.7);
-            glTranslatef(action->icon().size.w + 5, 2.0, 0.0);
-            font->render(action->name().stdstr);
-        glPopMatrix();
+        font->prepare();
+        if(is_highlighted)
+            font->setRGBA(0.7, 0.9, 0.9, 1.0);
+        else
+            font->setRGBA(0.9, 0.7, 0.7, 1.0);
+        font->setPenX(action->icon().size.w + 5);
+        font->setPenY(2.0);
+        font->render(action->name().stdstr);
+        
+        glUseProgram(0);
+        
+        glDisable(GL_BLEND);
     }
     
     virtual void update()
     {
         float new_height = (font->ascender() + font->descender());
-        setWidth(paddingLeft() + font->estimatedTextWidth(action->name().stdstr) + new_height + 10 + paddingRight());
+        setWidth(paddingLeft() + font->lineAdvance(action->name().stdstr) + new_height + 10 + paddingRight());
         setHeight(paddingTop() + new_height + paddingBottom());
         action->setIconSize(Size<float>(new_height * 1.5, new_height * 1.5));
     }
@@ -83,13 +92,11 @@ void Menu::render()
 
 void Menu::mousePressEvent(MouseEvent* event)
 {
-//     cout << "press: " << event->x() << ", " << event->y() << "\n"; 
 }
 
 
 void Menu::mouseReleaseEvent(MouseEvent* event)
 {
-//     cout << "release: " << event->x() << ", " << event->y() << "\n";
     if(event->buttons() | Mouse::Button::Left)
     {
         auto widget = childAt(event->position());
@@ -104,7 +111,6 @@ void Menu::mouseReleaseEvent(MouseEvent* event)
 
 void Menu::mouseMoveEvent(MouseEvent* event)
 {
-//     cout << "move: " << event->x() << ", " << event->y() << "\n"; 
     auto widget = childAt(event->position());
     if(widget)
     {
