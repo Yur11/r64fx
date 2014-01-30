@@ -17,7 +17,7 @@ Texture default_texture;
     
 Texture::Texture(std::string name)
 {
-    (*this) = Texture(fopen((data_prefix + name).c_str(), "r"), true);
+    (*this) = Texture(fopen(name.c_str(), "r"), true);
     if(!isGood())
     {
         cerr << "Problems reading file \"" << name << "\" !\n";
@@ -59,20 +59,14 @@ Texture::Texture(FILE* fd, bool close_fd)
 
 void Texture::load_to_vram(int width, int height, int channel_count, int mode, unsigned char* bytes)
 {
-    glEnable(GL_TEXTURE_2D);
-    
     glGenTextures(1, &_texture);
     glBindTexture(GL_TEXTURE_2D, _texture);
-    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
         
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, mode, GL_UNSIGNED_BYTE, bytes);
-    glDisable(GL_TEXTURE_2D);
     
     _width = width;
     _height = height;

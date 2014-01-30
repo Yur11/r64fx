@@ -47,7 +47,7 @@ void TextEdit::render()
             float cursor_x = Padding::paddingLeft();
             int n = cursor_position;
 
-            cursor_x += font()->ftfont().Advance(text.c_str(), n);
+            cursor_x += font()->lineAdvance(text[n]);
             
             glBegin(GL_LINES);
                 glVertex2f(cursor_x, Padding::paddingTop());
@@ -106,7 +106,7 @@ void TextEdit::mouseMoveEvent(MouseEvent* event)
             float x = Padding::paddingLeft();
             if(char_index > 0)
             {
-                x += font()->ftfont().Advance(text.c_str(), char_index);
+                x += font()->lineAdvance(text[char_index]);
             }
             text_selection.drag_start(char_index, x);
             prev_mouse_grabber = Widget::mouseInputGrabber();
@@ -188,7 +188,7 @@ int TextEdit::charAt(float x)
     int i=0;
     while(i<(int)text.size())
     {
-        int adv = font()->ftfont().Advance(text.c_str(), i);
+        int adv = font()->lineAdvance(text[i]);
         if(adv > x) return i;
         i++;
     }

@@ -26,7 +26,7 @@ public:
         Centered
     };
     
-    TextLine(Utf8String text = "", Font* font = Font::defaultFont(), Widget* parent = nullptr) 
+    TextLine(Utf8String text, Font* font, Widget* parent = nullptr) 
     : Widget(parent)
     , _font(font)
     , text_color(0.0, 0.0, 0.0)
