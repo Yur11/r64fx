@@ -24,6 +24,9 @@ Icon View::split_view_hor_icon;
 Icon View::close_view_icon;
     
 
+/** Removeme */
+extern Font* debug_font;
+
 /** Returns nullptr if view is not found down the tree or the parent SplitView of the target view. */
 SplitView* parent_for_view_down_the_tree(SplittableView* root, SplittableView* view)
 {
@@ -171,7 +174,7 @@ View::View(Scene* scene)
         )
     );
     
-    _context_menu = new Menu;
+    _context_menu = new Menu(debug_font);
     _context_menu->appendAction(split_view_vert_act);
     _context_menu->appendAction(split_view_hor_act);
     _context_menu->appendAction(close_view_act);
