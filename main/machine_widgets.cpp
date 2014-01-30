@@ -1,6 +1,7 @@
 #include "machine_widgets.h"
 #include "machine_scenes.h"
 #include "gui/MouseEvent.h"
+#include "gui/TexturedRect.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -12,7 +13,6 @@ using namespace std;
 
 
 namespace r64fx{
-
 
 MachineWidget::MachineWidget(Widget* parent) : Widget(parent)
 {
@@ -35,23 +35,31 @@ void MachineWidget::safelySetSurfaceTexture(Texture texture)
 
 void MachineWidget::render()
 {
-    glEnable(GL_TEXTURE_2D);
-    surface_texture.bind();
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glBegin(GL_POLYGON);
-        glTexCoord2f(0.0, 0.0);
-        glVertex2f(0.0, 0.0);
-        
-        glTexCoord2f(0.0, height() / surface_texture.height());
-        glVertex2f(0.0, height());
-        
-        glTexCoord2f(width() / surface_texture.width(), height() / surface_texture.height());
-        glVertex2f(width(), height());
-        
-        glTexCoord2f(width() / surface_texture.width(), 0.0);
-        glVertex2f(width(), 0.0);
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
+//     glEnable(GL_TEXTURE_2D);
+//     surface_texture.bind();
+//     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//     glBegin(GL_POLYGON);
+//         glTexCoord2f(0.0, 0.0);
+//         glVertex2f(0.0, 0.0);
+//         
+//         glTexCoord2f(0.0, height() / surface_texture.height());
+//         glVertex2f(0.0, height());
+//         
+//         glTexCoord2f(width() / surface_texture.width(), height() / surface_texture.height());
+//         glVertex2f(width(), height());
+//         
+//         glTexCoord2f(width() / surface_texture.width(), 0.0);
+//         glVertex2f(width(), 0.0);
+//     glEnd();
+//     glDisable(GL_TEXTURE_2D);
+ 
+    TexturedRect::render(
+        0.0, 0.0, width(), height(),
+        0.0, 0.0, width() / surface_texture.width(), height() / surface_texture.height(),
+        surface_texture.id()
+    );
+    
+    glUseProgram(0);
     
     Widget::render();
 }
