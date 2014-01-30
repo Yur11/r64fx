@@ -3,7 +3,7 @@
 
 #include "gui/Scene.h"
 #include "machine_widgets.h"
-#include "sockets_and_wires.h"
+#include "Wire.h"
 
 namespace r64fx{
     
