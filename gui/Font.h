@@ -1,57 +1,104 @@
 #ifndef R64FX_GUI_FONT_H
 #define R64FX_GUI_FONT_H
 
-#include <FTGL/ftgl.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include "Shader.h"
 #include <string>
+#include <map>
 
 namespace r64fx{
     
-/** @brief Font instances and configuration. */
 class Font{
-    FTGLTextureFont _ftfont;
+    static GLuint rect_vbo;
+    static FT_Library freetype;
+    static ShadingProgram font_shading_program;
+    static GLint vertex_coord_attribute;
+    static GLint x_uniform;
+    static GLint y_uniform;
+    static GLint w_uniform;
+    static GLint h_uniform;
+    static GLint r_uniform;
+    static GLint g_uniform;
+    static GLint b_uniform;
+    static GLint a_uniform;
+    static GLint glyph_width_coeff_uniform;
+    static GLuint glyph_sampler;
+    static GLint glyph_sampler_uniform;
+    
+    FT_Face _ft_face;
+    float _height;
+    float _ascender;
+    float _descender;
+    bool _has_kerning;
+    bool _is_ok = false;
+    
+    struct Glyph{
+        friend class Font;
+        GLuint tex;
+        
+        float width;
+        float height;
+        float width_coeff; //Used to correct the right tex coord in the shaders,
+                           //in case the texture image got padded to be a multipe of 4.
+                           //This is needed for mipmapping to work properly.
+        
+        float bearing_x;
+        float bearing_y;
+        float advance;
+        
+        unsigned int index;
+        
+        void render(float x, float y);        
+    };
+    
+    std::map<std::string, Glyph*> _index;
+    
+    Font::Glyph* fetchGlyph(std::string utf8_char);
+    
+    float _pen_x = 0.0;
+    float _pen_y = 0.0;
     
 public:
-    Font(std::string path) : _ftfont(path.c_str()) {}
+    static bool init();
     
-    Font(const Font &other) : _ftfont(other._ftfont) {};
+    Font(std::string file_path, int size);
     
-    Font(const unsigned char* bytes, unsigned int nbytes) : _ftfont(FTGLTextureFont(bytes, nbytes)) {}
-
-    Font(FTGLTextureFont ftfont) : _ftfont(ftfont) {}
+    ~Font();
     
-    inline bool isOk() { return !_ftfont.Error(); }
+    inline bool isOk() const { return _is_ok; }
     
-    inline void render(const char* text) { _ftfont.Render(text); }
+    inline float height() const { return _height; }
     
-    inline void render(std::string str) { render(str.c_str()); }
+    inline float ascender() const { return _ascender; }
     
-    inline void setFaceSize(unsigned int size, unsigned int resolution = 72) { _ftfont.FaceSize(size, resolution); }
+    inline float descender() const { return _descender; }
     
-    inline float estimatedTextWidth(const char* str) { return _ftfont.Advance(str); }
+    void prepare();
     
-    inline float estimatedTextWidth(std::string str) { return estimatedTextWidth(str.c_str()); }
+    void setR(float r);
     
-    inline float ascender() { return _ftfont.Ascender(); }
+    void setG(float r);
     
-    inline float descender() { return _ftfont.Descender(); }
+    void setB(float r);
     
-    inline FTTextureFont &ftfont() { return _ftfont; }
+    void setA(float r);
+        
+    void setRGBA(float r, float g, float b, float a);
     
-    static void initDefaultFont(Font* font);
-
-    static Font* defaultFont();
+    void render(std::string utf8_text);
     
-    /** @brief Load a font from file and add it to the font library with a given font name.
-     
-        @return Returns nullptr if the font has failed to load.
-     */
-    static Font* loadFont(std::string fontname, std::string path);
+    void renderChar(std::string utf8_char);
     
-    /** @brief Find a font in the font library by the name. 
-     
-        @return Function returns nullptr on failure.
-     */
-    static Font* find(std::string fontname);
+    float lineAdvance(std::string utf8_text);
+    
+    float charAdvance(std::string utf8_char);
+    
+    inline void setPenX(float x) { _pen_x = x; };
+    inline void setPenY(float y) { _pen_y = y; };
+    
+    inline float penX() const { return _pen_x; }
+    inline float penY() const { return _pen_y; }
 };
     
 }//namespace r64fx
