@@ -301,6 +301,13 @@ inline Point<float> operator*(Matrix3x3 m, Point<float> p)
     );
 }
 
+template<typename T> void swap(T &a, T &b)
+{
+    T tmp = a;
+    a = b;
+    b = tmp;
+}
+
 }//namespace r64fx
 
 #endif//R64FX_GUI_GEOMETRY_H
