@@ -1,9 +1,13 @@
+#include <string>
 #include "Machine.h"
 #include "gui/Texture.h"
 #include "gui/Dummy.h"
 
+using namespace std;
 
 namespace r64fx{
+    
+extern string data_prefix;
     
 Machine::Machine(FrontMachineScene* fms, BackMachineScene* bms)
 : _fms(fms)
@@ -12,8 +16,8 @@ Machine::Machine(FrontMachineScene* fms, BackMachineScene* bms)
     _front = new MachineWidget;
     _back = new MachineWidget;
     
-    _front->safelySetSurfaceTexture(Texture("textures/grainy_greenish.png"));
-    _back->safelySetSurfaceTexture(Texture("textures/grainy_dark.png"));
+    _front->safelySetSurfaceTexture(Texture(data_prefix + "textures/grainy_greenish.png"));
+    _back->safelySetSurfaceTexture(Texture(data_prefix + "textures/grainy_dark.png"));
     
     _front->clicked = Message([](void* source, void* data)->void*{
         auto machine = (Machine*) data;
