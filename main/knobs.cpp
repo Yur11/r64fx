@@ -2,6 +2,7 @@
 #include "gui/MouseEvent.h"
 #include "gui/bezier.h"
 #include "gui/Window.h"
+#include "gui/TexturedRect.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -11,7 +12,7 @@ using namespace std;
 
 namespace r64fx{
     
-extern float light_angle;
+extern string data_prefix;
 
 BasicKnob::BasicKnob(Widget* parent) : Widget(parent)
 {
@@ -75,25 +76,8 @@ void TexturedKnobBackground::render(Rect<float> rect)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    glEnable(GL_TEXTURE_2D);
-    _tex.bind();
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    
-    glBegin(GL_QUADS);
-        glTexCoord2f(0.0, 1.0);
-        glVertex2f(0.0, 0.0);
-        
-        glTexCoord2f(1.0, 1.0);
-        glVertex2f(rect.width(), 0.0);
-        
-        glTexCoord2f(1.0, 0.0);
-        glVertex2f(rect.width(), rect.height());
-        
-        glTexCoord2f(0.0, 0.0);
-        glVertex2f(0.0, rect.height());
-    glEnd();
-    
-    glDisable(GL_TEXTURE_2D);
+    TexturedRect::render(0.0, 0.0, rect.width(), rect.height(), 0.0, 0.0, 1.0, -1.0, _tex.id());
+    glUseProgram(0);
     
     glDisable(GL_BLEND);
 }
@@ -105,8 +89,8 @@ Texture knob_a_shiny_tex;
 
 void KnobHandleTypeA::init()
 {
-    knob_a_base_tex = Texture("textures/knob_a.png");
-    knob_a_shiny_tex = Texture("textures/brushed_metal_knob_top.png");
+    knob_a_base_tex = Texture(data_prefix + "textures/knob_a.png");
+    knob_a_shiny_tex = Texture(data_prefix + "textures/brushed_metal_knob_top.png");
     knob_a_base_tex.clamp();
     
 #ifdef DEBUG
@@ -121,52 +105,29 @@ void KnobHandleTypeA::render(Rect<float> rect, float angle, float radius)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    glEnable(GL_TEXTURE_2D);
-    
     glPushMatrix();
     glTranslatef(rect.width() * 0.5, rect.height() * 0.5, 0.0);
     glScalef(-1.0, 1.0, 1.0);
     glRotatef(angle, 0.0, 0.0, 1.0);
 
     rect = rect - radius * 0.3777;
-
-    knob_a_base_tex.bind();
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     
-    glBegin(GL_QUADS);
-        glTexCoord2f(0.0, 0.0);
-        glVertex2f(-rect.width() * 0.5, -rect.height() * 0.5);
-        
-        glTexCoord2f(1.0, 0.0);
-        glVertex2f( rect.width() * 0.5, -rect.height() * 0.5);
-        
-        glTexCoord2f(1.0, 1.0);
-        glVertex2f( rect.width() * 0.5,  rect.height() * 0.5);
-        
-        glTexCoord2f(0.0, 1.0);
-        glVertex2f(-rect.width() * 0.5,  rect.height() * 0.5);
-    glEnd();
+    TexturedRect::render(
+        -rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height(),
+        0.0, 0.0, 1.0, 1.0,
+        knob_a_base_tex.id()
+    );
     
     rect = rect - radius * 0.2;
     
-    knob_a_shiny_tex.bind();
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    
-    
     glRotatef(-angle, 0.0, 0.0, 1.0);
-    glBegin(GL_QUADS);
-        glTexCoord2f(0.0, 0.0);
-        glVertex2f(-rect.width() * 0.5, -rect.height() * 0.5);
-        
-        glTexCoord2f(1.0, 0.0);
-        glVertex2f( rect.width() * 0.5, -rect.height() * 0.5);
-        
-        glTexCoord2f(1.0, 1.0);
-        glVertex2f( rect.width() * 0.5,  rect.height() * 0.5);
-        
-        glTexCoord2f(0.0, 1.0);
-        glVertex2f(-rect.width() * 0.5,  rect.height() * 0.5);
-    glEnd();
+    
+    TexturedRect::render(
+        -rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height(),
+        0.0, 0.0, 1.0, 1.0,
+        knob_a_shiny_tex.id()
+    );
+    glUseProgram(0);
     
     glPopMatrix();
     
