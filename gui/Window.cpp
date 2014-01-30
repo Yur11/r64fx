@@ -33,8 +33,6 @@ void Window::render()
     _view->render();
     
     render_overlay_menus();
-    
-    glFinish();
 }
 
 
@@ -251,9 +249,9 @@ bool Window::initGlew()
         return false;
     }
     
-    if(!GLEW_VERSION_2_0)
+    if(!GLEW_VERSION_3_0)
     {
-        cerr << "OpenGL 2.0 not supported!\n";
+        cerr << "OpenGL 3.0 not supported!\n";
         return false;
     }
     
