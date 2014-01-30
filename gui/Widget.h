@@ -26,7 +26,7 @@ class Window;
     with the Scene instances.
     
     Each widget has a position value that is set in the coordinte system
-    of it's parent, either another widget or a Scene.
+    of it's parent, which is either another widget or a Scene.
     The (0, 0) point is in the lower left corner.
     
     Each widget has a bunch of event handlers for rendering and also mouse and keyboard input.
@@ -87,7 +87,7 @@ public:
     
     /** @brief Set a new position for the widget. 
      
-        Position defines the coordintes of the top left corner of the widget 
+        Position defines the coordintes of the bottom left corner of the widget 
         within the local coordinte system of the parent widget.
         This value is used by Widget::render_children() method.
         For widgets without a parent, position has no meaning.
@@ -116,7 +116,7 @@ public:
     /** @brief The x coordinte of the left edge of the bounding rect. */
     inline float x() const { return _position.x; }
     
-    /** @brief The y coordinte of the top edge of the bounding rect. */
+    /** @brief The y coordinte of the bottom edge of the bounding rect. */
     inline float y() const { return _position.y; }
     
     /** @brief Resize the bounding rect of the widget. */
@@ -152,7 +152,7 @@ public:
     */
     virtual void render();
 
-    /** @brief Tell the widget to use newly added information. */
+    /** @brief Tell the widget to use the newly added information. */
     virtual void update();
     
     /** @brief Send a mouse press event to the widget. */
@@ -222,6 +222,7 @@ public:
     /** @brief Fetch the root widget of the tree that this widget belongs to. */
     Widget* root(); 
     
+    /** @brief Find a Scene instance that this widget belongs to. */
     inline Scene* scene() { return root()->_scene; }
 
     /** @brief Set the mouse grabber to be a widget or nullptr. */
@@ -254,7 +255,7 @@ private:
     
 public:
     
-    static Widget* stub();
+//     static Widget* stub();
 };
     
 }//r64fx
