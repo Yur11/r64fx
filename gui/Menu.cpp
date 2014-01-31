@@ -31,14 +31,14 @@ struct ActionWidget : public Widget, public Padding{
         setPaddingBottom(5.0);
     }
     
-    virtual void render()
+    virtual void render(RenderingContextId_t context_id)
     {
         glDisable(GL_TEXTURE_2D);
         
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
        
-        action->icon().render();
+        action->icon().render(context_id);
         font->prepare();
         if(is_highlighted)
             font->setRGBA(0.7, 0.9, 0.9, 1.0);
@@ -46,7 +46,7 @@ struct ActionWidget : public Widget, public Padding{
             font->setRGBA(0.9, 0.7, 0.7, 1.0);
         font->setPenX(action->icon().size.w + 5);
         font->setPenY(2.0);
-        font->render(action->name().stdstr);
+        font->render(context_id, action->name().stdstr);
         
         glUseProgram(0);
         
@@ -76,17 +76,17 @@ void Menu::appendAction(Action* act)
 }
 
 
-void Menu::render()
+void Menu::render(RenderingContextId_t context_id)
 {
-    glColor3f(0.0, 0.01, 0.0);
-    glBegin(GL_POLYGON);
-        glVertex2f(0.0, 0.0);
-        glVertex2f(width(), 0.0);
-        glVertex2f(width(), height());
-        glVertex2f(0.0, height());
-    glEnd();
+//     glColor3f(0.0, 0.01, 0.0);
+//     glBegin(GL_POLYGON);
+//         glVertex2f(0.0, 0.0);
+//         glVertex2f(width(), 0.0);
+//         glVertex2f(width(), height());
+//         glVertex2f(0.0, height());
+//     glEnd();
     
-    render_children();
+    render_children(context_id);
 }
 
 

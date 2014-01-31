@@ -302,7 +302,7 @@ void Font::setRGBA(float r, float g, float b, float a)
 }
 
 
-void Font::render(std::string utf8_text)
+void Font::render(RenderingContextId_t context_id, std::string utf8_text)
 {
     Utf8String utf8_str;
     utf8_str.stdstr = utf8_text;

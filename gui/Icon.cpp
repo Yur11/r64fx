@@ -10,11 +10,11 @@ namespace r64fx{
 
 map<string, Icon> all_icons;
 
-void Icon::render()
+void Icon::render(RenderingContextId_t context_id)
 {
     if(_texture.isGood())
     {        
-        TexturedRect::render(0.0, 0.0, size.w, size.h, 0.0, 0.0, 1.0, 1.0, _texture.id());
+        TexturedRect::render(context_id, 0.0, 0.0, size.w, size.h, 0.0, 0.0, 1.0, 1.0, _texture.id());
     }
 }
 

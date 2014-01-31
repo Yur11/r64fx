@@ -21,7 +21,7 @@ public:
     : Icon(size, Texture(tex_file))
     {}
 
-    void render();
+    void render(RenderingContextId_t context_id);
     
     static Icon defaultIcon(Size<float> size = Size<float>(18, 18));
 };

@@ -71,12 +71,12 @@ TexturedKnobBackground::TexturedKnobBackground(Texture tex)
 }
 
 
-void TexturedKnobBackground::render(Rect<float> rect)
+void TexturedKnobBackground::render(RenderingContextId_t context_id, Rect<float> rect)
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    TexturedRect::render(0.0, 0.0, rect.width(), rect.height(), 0.0, 0.0, 1.0, -1.0, _tex.id());
+    TexturedRect::render(context_id, 0.0, 0.0, rect.width(), rect.height(), 0.0, 0.0, 1.0, -1.0, _tex.id());
     glUseProgram(0);
     
     glDisable(GL_BLEND);
@@ -100,7 +100,7 @@ void KnobHandleTypeA::init()
 }
 
 
-void KnobHandleTypeA::render(Rect<float> rect, float angle, float radius)
+void KnobHandleTypeA::render(RenderingContextId_t context_id, Rect<float> rect, float angle, float radius)
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -113,6 +113,7 @@ void KnobHandleTypeA::render(Rect<float> rect, float angle, float radius)
     rect = rect - radius * 0.3777;
     
     TexturedRect::render(
+        context_id,
         -rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height(),
         0.0, 0.0, 1.0, 1.0,
         knob_a_base_tex.id()
@@ -123,6 +124,7 @@ void KnobHandleTypeA::render(Rect<float> rect, float angle, float radius)
     glRotatef(-angle, 0.0, 0.0, 1.0);
     
     TexturedRect::render(
+        context_id,
         -rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height(),
         0.0, 0.0, 1.0, 1.0,
         knob_a_shiny_tex.id()

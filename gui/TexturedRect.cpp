@@ -83,7 +83,7 @@ bool TexturedRect::init()
 }
 
 
-void TexturedRect::render(float x, float y, float w, float h, float tex_x, float tex_y, float tex_w, float tex_h, GLuint tex)
+void TexturedRect::render(RenderingContextId_t context_id, float x, float y, float w, float h, float tex_x, float tex_y, float tex_w, float tex_h, GLuint tex)
 {
     shading_program.use();
     float geom[4] = { x, y, w, h };

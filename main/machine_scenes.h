@@ -24,7 +24,7 @@ class MachineScene : public Scene{
     bool can_drop = false;
 
 protected:    
-    void render_wires();
+    void render_wires(RenderingContextId_t context_id);
     
 public:
     /* Making this thing public for debugging purposes. */
@@ -34,7 +34,7 @@ public:
     
     MachineScene* counterpart_scene = nullptr;
     
-    virtual void render();
+    virtual void render(RenderingContextId_t context_id);
 
     virtual void mousePressEvent(MouseEvent*);
     
@@ -61,13 +61,13 @@ public:
 /** @brief Scene with machines and wires. Front. */
 class FrontMachineScene : public MachineScene{
 public:
-    virtual void render();
+    virtual void render(RenderingContextId_t context_id);
 };
 
 
 class BackMachineScene : public MachineScene{
 public:
-    virtual void render();
+    virtual void render(RenderingContextId_t context_id);
 };
 
 

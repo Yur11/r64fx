@@ -295,7 +295,7 @@ void Wire::update()
     init_cap_vertices(Cap2, wire_points[wire_points.size()-1], wire_points[wire_points.size()-2]);
 }
 
-void Wire::render()
+void Wire::render(RenderingContextId_t context_id)
 {   
     float color[4] = {1.0, 0.7, 0.3, 0.0};
     

@@ -33,7 +33,7 @@ void MachineWidget::safelySetSurfaceTexture(Texture texture)
 }
 
 
-void MachineWidget::render()
+void MachineWidget::render(RenderingContextId_t context_id)
 {
 //     glEnable(GL_TEXTURE_2D);
 //     surface_texture.bind();
@@ -54,6 +54,7 @@ void MachineWidget::render()
 //     glDisable(GL_TEXTURE_2D);
  
     TexturedRect::render(
+        context_id,
         0.0, 0.0, width(), height(),
         0.0, 0.0, width() / surface_texture.width(), height() / surface_texture.height(),
         surface_texture.id()
@@ -61,7 +62,7 @@ void MachineWidget::render()
     
     glUseProgram(0);
     
-    Widget::render();
+    Widget::render(context_id);
 }
 
 

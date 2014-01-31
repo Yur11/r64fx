@@ -41,7 +41,7 @@ public:
     
     virtual void resize(int left, int top, int right, int bottom) = 0;
     
-    virtual void render() = 0;
+    virtual void render(RenderingContextId_t) = 0;
     
     virtual void mousePressEvent(MouseEvent* event) = 0;
     
@@ -109,7 +109,7 @@ public:
     
     inline float scaleFactor() const { return _scale_factor; }
       
-    virtual void render();
+    virtual void render(RenderingContextId_t context_id);
     
     virtual void mousePressEvent(MouseEvent* event);
     
@@ -175,7 +175,7 @@ public:
     inline SplittableView* viewA() const { return _a; }
     inline SplittableView* viewB() const { return _b; }
     
-    virtual void render();
+    virtual void render(RenderingContextId_t context_id);
     
     virtual void mousePressEvent(MouseEvent* event);
     

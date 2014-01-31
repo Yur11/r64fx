@@ -13,9 +13,9 @@ using namespace std;
 
 namespace r64fx{
     
-void MachineScene::render()
+void MachineScene::render(RenderingContextId_t context_id)
 {
-    Scene::render();
+    Scene::render(context_id);
     if(!selected_widgets.empty())
     {
         glColor3f(0.0, 0.0, 1.0);
@@ -69,10 +69,10 @@ void MachineScene::render()
 }
 
 
-void MachineScene::render_wires()
+void MachineScene::render_wires(RenderingContextId_t context_id)
 {
     for(auto w : *wires)
-        w->render();
+        w->render(context_id);
 }
 
 
@@ -218,17 +218,17 @@ void MachineScene::endDrag()
 }
 
 
-void FrontMachineScene::render()
+void FrontMachineScene::render(RenderingContextId_t context_id)
 {
-    render_wires();
-    MachineScene::render();
+    render_wires(context_id);
+    MachineScene::render(context_id);
 }
 
 
-void BackMachineScene::render()
+void BackMachineScene::render(RenderingContextId_t context_id)
 {
-    MachineScene::render();
-    render_wires();
+    MachineScene::render(context_id);
+    render_wires(context_id);
 }
 
     

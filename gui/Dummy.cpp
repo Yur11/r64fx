@@ -25,11 +25,11 @@ void* on_menu_click(void* source, void* data)
 
 Menu* _debug_menu = nullptr;
     
-void Dummy::render()
+void Dummy::render(RenderingContextId_t context_id)
 {    
     glColor3f(1.0, 0.0, 0.0);
     
-    render_bounding_rect();
+    render_bounding_rect(context_id);
     
     glPointSize(5.0);
     glColor3f(0.0, 0.0, 1.0);

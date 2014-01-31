@@ -14,7 +14,7 @@ class Dummy : public Widget{
 public:
     Dummy(float width, float height, Widget* parent = nullptr) : Widget(parent) { resize(width, height); }
     
-    virtual void render();
+    virtual void render(RenderingContextId_t context_id);
     
     virtual void mousePressEvent(MouseEvent* event);
     

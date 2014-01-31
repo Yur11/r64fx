@@ -212,7 +212,7 @@ void View::resize(int left, int top, int right, int bottom)
 }
     
     
-void View::render()
+void View::render(RenderingContextId_t context_id)
 {    
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
@@ -228,7 +228,7 @@ void View::render()
     
     glTranslatef(_offset.x, _offset.y, 0.0);
     
-    _scene->render();
+    _scene->render(context_id);
     glPopMatrix();
     glDisable(GL_SCISSOR_TEST);
     
@@ -405,10 +405,10 @@ void SplitView::replaceSubView(SplittableView* old_view, SplittableView* new_vie
 }
 
 
-void SplitView::render()
+void SplitView::render(RenderingContextId_t context_id)
 {
-    viewA()->render();
-    viewB()->render();
+    viewA()->render(context_id);
+    viewB()->render(context_id);
     
     if(separatorIsHovered())
         if(separatorIsGrabbed())

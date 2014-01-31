@@ -24,7 +24,7 @@ public:
     
     virtual ~MachineWidget();
     
-    virtual void render();
+    virtual void render(RenderingContextId_t context_id);
 
     Message clicked;
     

@@ -28,7 +28,7 @@ public:
     
     inline bool isPlugged() const { return _wire != nullptr; }
     
-    virtual void render();
+    virtual void render(RenderingContextId_t context_id);
     
     virtual void update();
     

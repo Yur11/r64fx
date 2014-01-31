@@ -30,7 +30,7 @@ Window::~Window()
 
 void Window::render()
 {
-    _view->render();
+    _view->render(0);
     
     render_overlay_menus();
 }
@@ -45,7 +45,7 @@ void Window::render_overlay_menus()
     {
         glPushMatrix();
         glTranslatef(menu->x(), menu->y(), 0.0);
-        menu->render();
+        menu->render(0);
         glPopMatrix();
     }
     glDisable(GL_BLEND);

@@ -29,12 +29,13 @@ Socket::Socket(Widget* parent) : Widget(parent)
 }
 
 
-void Socket::render()
+void Socket::render(RenderingContextId_t context_id)
 {    
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     TexturedRect::render(
+        context_id,
         0.0, 0.0, width(), height(),
         0.0, 0.0, 1.0, 1.0,
         Socket::texture.id()

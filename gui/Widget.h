@@ -5,6 +5,7 @@
 #include "utf8string/Utf8String.h"
 #include <GL/glew.h>
 #include "geometry.h"
+#include "RenderingContext.h"
 #include "events.h"
 #include "Color.h"
 #include "Message.h"
@@ -12,7 +13,7 @@
 
 
 namespace r64fx{
-
+    
 class MouseEvent;
 class KeyEvent;
 class Scene;
@@ -50,9 +51,9 @@ class Widget : public Disposable{
     Window* _window;
     
 protected:
-    void render_children();
+    void render_children(RenderingContextId_t context_id);
     
-    void render_bounding_rect();
+    void render_bounding_rect(RenderingContextId_t context_id);
 
     std::vector<Widget*> _children;
     
@@ -150,7 +151,7 @@ public:
      
         This method should be implemented by subclasses to do their rendering.
     */
-    virtual void render();
+    virtual void render(RenderingContextId_t context_id);
 
     /** @brief Tell the widget to use the newly added information. */
     virtual void update();
