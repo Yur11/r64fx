@@ -13,16 +13,21 @@ using namespace std;
 
 namespace r64fx{
    
-vector<SDL2Window*> all_sdl2_windows;
 Window* focused_window = nullptr;
 Window* last_focused_window = nullptr;
 bool tracking_mouse = false;
 bool should_quit = false;
 unsigned int pressed_mouse_buttons = 0;
 
+
+SDL2Window* SDL2Window::all_sdl2_windows[max_rendering_context_count];
+
     
-SDL2Window::SDL2Window(int width, int height, const char* title)
+SDL2Window::SDL2Window(RenderingContextId_t context_id, int width, int height, const char* title)
+: _context_id(context_id)
 {
+    all_sdl2_windows[context_id] = this;
+    
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1); 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     _window = SDL_CreateWindow(title, 0, 0, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
@@ -39,7 +44,6 @@ SDL2Window::SDL2Window(int width, int height, const char* title)
         abort();
     }
         
-    all_sdl2_windows.push_back(this);
     
     trackMouse(true);
     
@@ -47,16 +51,24 @@ SDL2Window::SDL2Window(int width, int height, const char* title)
 }
 
 
-SDL2Window::~SDL2Window()
+SDL2Window* SDL2Window::create(int width, int height, const char* title)
 {
-    for(int i=0; i<(int)all_sdl2_windows.size(); i++)
+    for(int i=0; i<max_rendering_context_count; i++)
     {
-        if(all_sdl2_windows[i] == this)
+        if(all_sdl2_windows[i] == nullptr)
         {
-            all_sdl2_windows.erase( all_sdl2_windows.begin() + i );
-            break;
+            all_sdl2_windows[i] = new SDL2Window(i, width, height, title);
+            return all_sdl2_windows[i];
         }
     }
+    
+    return nullptr;
+}
+
+
+SDL2Window::~SDL2Window()
+{
+    all_sdl2_windows[_context_id] = nullptr;
 }
 
 
@@ -70,6 +82,12 @@ void SDL2Window::makeCurrent()
 void SDL2Window::swapBuffers()
 {
     SDL_GL_SwapWindow(_window);
+}
+
+
+void SDL2Window::render()
+{
+    Window::render(_context_id);
 }
 
 
@@ -101,6 +119,12 @@ void SDL2Window::updateGeometry()
 void SDL2Window::warpMouse(int x, int y)
 {
     SDL_WarpMouseInWindow(_window, x, height() - y);
+}
+
+
+RenderingContextId_t SDL2Window::contextId()
+{
+    return _context_id;
 }
 
 
@@ -270,7 +294,7 @@ void SDL2Window::processEvents()
                 if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
                 {
                     auto w = SDL_GetWindowFromID(event.window.windowID);
-                    for(int i=0; i<(int)all_sdl2_windows.size(); i++)
+                    for(int i=0; i<(int)max_rendering_context_count; i++)
                     {
                         if(all_sdl2_windows[i]->sdl_window() == w)
                         {

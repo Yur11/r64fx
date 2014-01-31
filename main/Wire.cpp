@@ -117,28 +117,72 @@ Wire::Wire(Socket* source_socket, Socket* sink_socket)
 , _source_socket(source_socket)
 , _sink_socket(sink_socket)
 {
-    glGenVertexArrays(3, vao);
+    for(int i=0; i<max_rendering_context_count; i++)
+        for(int j=0; j<3; j++)
+            vao[i][j] = 0;
+    
     glGenBuffers(3, vbo);
     
-    glBindVertexArray(vao[Body]);
     glBindBuffer(GL_ARRAY_BUFFER, vbo[Body]);
     glBufferData(GL_ARRAY_BUFFER, node_count * 2 * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(vertex_data_attribute);
-    glVertexAttribPointer(vertex_data_attribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
     
-    glBindVertexArray(vao[Cap1]);
     glBindBuffer(GL_ARRAY_BUFFER, vbo[Cap1]);
     glBufferData(GL_ARRAY_BUFFER, cap_vertex_count * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[Cap2]);
+    glBufferData(GL_ARRAY_BUFFER, cap_vertex_count * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+
+void Wire::setupForContext(RenderingContextId_t context_id)
+{
+#ifdef DEBUG
+    assert(vao[context_id][Body] == 0);
+    assert(vao[context_id][Cap1] == 0);
+    assert(vao[context_id][Cap2] == 0);
+#endif//DEBUG
+    
+    GLuint handle[3];
+    glGenVertexArrays(3, handle);
+    
+    for(int i=0; i<3; i++)
+        vao[context_id][i] = handle[i];
+    
+    glBindVertexArray(vao[context_id][Body]);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[Body]);
     glEnableVertexAttribArray(vertex_data_attribute);
     glVertexAttribPointer(vertex_data_attribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
     
-    glBindVertexArray(vao[Cap2]);
+    glBindVertexArray(vao[context_id][Cap1]);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[Cap1]);
+    glEnableVertexAttribArray(vertex_data_attribute);
+    glVertexAttribPointer(vertex_data_attribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    
+    glBindVertexArray(vao[context_id][Cap2]);
     glBindBuffer(GL_ARRAY_BUFFER, vbo[Cap2]);
-    glBufferData(GL_ARRAY_BUFFER, cap_vertex_count * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
     glEnableVertexAttribArray(vertex_data_attribute);
     glVertexAttribPointer(vertex_data_attribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
     
     glBindVertexArray(0);
+}
+
+
+void Wire::cleanupForContext(RenderingContextId_t context_id)
+{
+#ifdef DEBUG
+    assert(vao[context_id][Body] != 0);
+    assert(vao[context_id][Cap1] != 0);
+    assert(vao[context_id][Cap2] != 0);
+#endif//DEBUG
+    
+    GLuint handle[3];
+    
+    for(int i=0; i<3; i++)
+        handle[i] = vao[context_id][i];
+    
+    glDeleteVertexArrays(3, handle);
 }
 
 
@@ -304,13 +348,13 @@ void Wire::render(RenderingContextId_t context_id)
     glUniform1f(sampler_uniform, sampler);
     glUniform4fv(color_uniform, 1, color);
     
-    glBindVertexArray(vao[Body]);
+    glBindVertexArray(vao[context_id][Body]);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, node_count * 2);
     
-    glBindVertexArray(vao[Cap1]);
+    glBindVertexArray(vao[context_id][Cap1]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, cap_vertex_count);
     
-    glBindVertexArray(vao[Cap2]);
+    glBindVertexArray(vao[context_id][Cap2]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, cap_vertex_count);
     
     glBindVertexArray(0);

@@ -27,16 +27,15 @@ Window::~Window()
 }
 
 
-
-void Window::render()
+void Window::render(RenderingContextId_t context_id)
 {
-    _view->render(0);
+    _view->render(context_id);
     
-    render_overlay_menus();
+    render_overlay_menus(context_id);
 }
 
 
-void Window::render_overlay_menus()
+void Window::render_overlay_menus(RenderingContextId_t context_id)
 {
     glDisable(GL_SCISSOR_TEST);
     glEnable(GL_BLEND);
@@ -45,7 +44,7 @@ void Window::render_overlay_menus()
     {
         glPushMatrix();
         glTranslatef(menu->x(), menu->y(), 0.0);
-        menu->render(0);
+        menu->render(context_id);
         glPopMatrix();
     }
     glDisable(GL_BLEND);

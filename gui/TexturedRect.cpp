@@ -9,7 +9,8 @@ using namespace std;
 
 namespace r64fx{
    
-GLuint             TexturedRect::rect_vbo;
+GLuint             TexturedRect::vao[max_rendering_context_count];
+GLuint             TexturedRect::vbo;
 ShadingProgram     TexturedRect::shading_program;
 GLint              TexturedRect::vertex_coord_attribute;
 GLint              TexturedRect::geometry_uniform;
@@ -50,22 +51,10 @@ bool TexturedRect::init()
         return false;
     }
     
-    float vbo_data[8] = {
-        0.0, 0.0,  1.0, 0.0,
-        0.0, 1.0,  1.0, 1.0
-    };
-
-    glGenBuffers(1, &rect_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, rect_vbo);
-    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vbo_data, GL_STATIC_DRAW);
-    
     vertex_coord_attribute = glGetAttribLocation(shading_program.id(), "vertex_coord");
 #ifdef DEBUG
     assert(vertex_coord_attribute != -1);
 #endif//DEBUG
-    
-    glVertexAttribPointer(vertex_coord_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(vertex_coord_attribute);
     
     geometry_uniform   = glGetUniformLocation(shading_program.id(), "geometry");
     tex_coord_uniform  = glGetUniformLocation(shading_program.id(), "tex_coord");
@@ -79,7 +68,42 @@ bool TexturedRect::init()
     
     glGenSamplers(1, &sampler);
     
+    float vbo_data[8] = {
+        0.0, 0.0,  1.0, 0.0,
+        0.0, 1.0,  1.0, 1.0
+    };
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vbo_data, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
     return true;
+}
+
+
+void TexturedRect::setupForContext(RenderingContextId_t context_id)
+{
+#ifdef DEBUG
+    assert(vao[context_id] == 0);
+#endif//DEBUG
+    
+    glGenVertexArrays(1, vao + context_id);
+    glBindVertexArray(vao[context_id]);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glEnableVertexAttribArray(vertex_coord_attribute);
+    glVertexAttribPointer(vertex_coord_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glBindVertexArray(0);
+}
+
+    
+void TexturedRect::cleanupForContext(RenderingContextId_t context_id)
+{
+#ifdef DEBUG
+    assert(vao[context_id] != 0);
+#endif//DEBUG
+    
+    glDeleteVertexArrays(1, vao + context_id);
 }
 
 
@@ -93,8 +117,10 @@ void TexturedRect::render(RenderingContextId_t context_id, float x, float y, flo
     glBindTexture(GL_TEXTURE_2D, tex);
     glBindSampler(tex, sampler);
     glUniform1f(sampler_uniform, sampler);
-    glBindBuffer(GL_ARRAY_BUFFER, rect_vbo);
+    
+    glBindVertexArray(vao[context_id]);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
 }
     
 }//namespace r64fx

@@ -108,9 +108,9 @@ struct Program{
             return 2;
         }
         
-        Window_t window(800, 600, "r64fx");
+        auto window = Window_t::create(800, 600, "r64fx");
 
-        window.makeCurrent();
+        window->makeCurrent();
         
         /* Can be done only after we have obtained the OpenGL context. */
         if(!Window::initGlew())
@@ -121,6 +121,7 @@ struct Program{
         Texture::init();
 
         TexturedRect::init();
+        TexturedRect::setupForContext(window->contextId());
         
         Socket::init();
         
@@ -224,6 +225,7 @@ struct Program{
         wire->update();
         wire->color = { 0.7, 0.7, 0.1, 0.0 };
         wires.push_back(wire);
+        wire->setupForContext(window->contextId());
         
         /* Setup View icons. */
         View::split_view_vert_icon = Icon({24, 24}, data_prefix + "textures/split_vertically.png");
@@ -232,7 +234,7 @@ struct Program{
         
         /* Setup root view of the main window. */        
         View* view = new View(&fms);
-        window.setView(view);
+        window->setView(view);
 // 
 //         
 //         int max_texture_size;
@@ -403,9 +405,9 @@ struct Program{
         {
             Window_t::processEvents();
             
-            window.makeCurrent();
-            window.render();
-            window.swapBuffers();
+            window->makeCurrent();
+            window->render();
+            window->swapBuffers();
             
             if(!gc_counter)
             {

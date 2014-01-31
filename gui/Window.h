@@ -16,14 +16,16 @@ class Window{
     Widget* overlay_menu_at(int x, int y);
     
 protected:
-    void render_overlay_menus();
+    void render_overlay_menus(RenderingContextId_t context_id);
+    
+    void render(RenderingContextId_t context_id);
     
 public:
     Window();
     
     virtual ~Window();
     
-    void render();
+    virtual void render() = 0;
         
     inline void setView(SplittableView* view) { _view = view; }
     inline SplittableView* view() const { return _view; }

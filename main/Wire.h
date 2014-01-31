@@ -35,7 +35,7 @@ class Wire{
         Cap2 = 2
     };
     
-    GLuint vao[3];
+    GLuint vao[max_rendering_context_count][3];
     GLuint vbo[3];
     
     void calculate_perpendicular_points(Point<float> in_a, Point<float> in_b, Point<float> in_c, Point<float> &out_a, Point<float> &out_b);
@@ -54,6 +54,10 @@ public:
     static void init();
     
     Wire(Socket* source_socket, Socket* sink_socket);
+    
+    void setupForContext(RenderingContextId_t context_id);
+    
+    void cleanupForContext(RenderingContextId_t context_id);
     
     Color color;
     
