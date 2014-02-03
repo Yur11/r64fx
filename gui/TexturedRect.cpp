@@ -9,6 +9,7 @@ using namespace std;
 
 namespace r64fx{
    
+TexturedRect*      TexturedRect::singleton_instance;
 GLuint             TexturedRect::vao[max_rendering_context_count];
 GLuint             TexturedRect::vbo;
 ShadingProgram     TexturedRect::shading_program;
@@ -78,15 +79,23 @@ bool TexturedRect::init()
     glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vbo_data, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
+    singleton_instance = new TexturedRect;
+    
     return true;
 }
 
 
 void TexturedRect::setupForContext(RenderingContextId_t context_id)
 {
+    cout << "TexturedRect::setupForContext: " << context_id << "\n";
+
+    if(vao[context_id] !=0)
+    {
 #ifdef DEBUG
-    assert(vao[context_id] == 0);
+        cerr << "TexturedRect: Extra setup for context: " << context_id << " !\n";
 #endif//DEBUG
+        return;
+    }
     
     glGenVertexArrays(1, vao + context_id);
     glBindVertexArray(vao[context_id]);
@@ -99,9 +108,13 @@ void TexturedRect::setupForContext(RenderingContextId_t context_id)
     
 void TexturedRect::cleanupForContext(RenderingContextId_t context_id)
 {
+    if(vao[context_id] == 0)
+    {
 #ifdef DEBUG
-    assert(vao[context_id] != 0);
+        cerr << "TexturedRect: Extra cleanup for context: " << context_id << " !\n";
 #endif//DEBUG
+        return;
+    }
     
     glDeleteVertexArrays(1, vao + context_id);
 }
@@ -121,6 +134,12 @@ void TexturedRect::render(RenderingContextId_t context_id, float x, float y, flo
     glBindVertexArray(vao[context_id]);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
+}
+
+
+void TexturedRect::cleanup()
+{
+    delete[] singleton_instance;
 }
     
 }//namespace r64fx

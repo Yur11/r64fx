@@ -11,6 +11,7 @@
 #error "No valid Window implementation present!"
 #endif//USE_SDL2
 
+#include "gui/RenderingContext.h"
 #include "gui/Translation.h"
 #include "gui/Icon.h"
 #include "gui/Dummy.h"
@@ -109,8 +110,6 @@ struct Program{
         }
         
         auto window = Window_t::create(800, 600, "r64fx");
-
-        window->makeCurrent();
         
         /* Can be done only after we have obtained the OpenGL context. */
         if(!Window::initGlew())
@@ -121,7 +120,6 @@ struct Program{
         Texture::init();
 
         TexturedRect::init();
-        TexturedRect::setupForContext(window->contextId());
         
         Socket::init();
         
@@ -225,7 +223,6 @@ struct Program{
         wire->update();
         wire->color = { 0.7, 0.7, 0.1, 0.0 };
         wires.push_back(wire);
-        wire->setupForContext(window->contextId());
         
         /* Setup View icons. */
         View::split_view_vert_icon = Icon({24, 24}, data_prefix + "textures/split_vertically.png");
@@ -235,7 +232,22 @@ struct Program{
         /* Setup root view of the main window. */        
         View* view = new View(&fms);
         window->setView(view);
-// 
+                
+        auto window2 = SDL2Window::create(640, 480, "window2");
+        Scene scene2;
+        View* view2 = new View(&fms);
+        window2->setView(view2);
+        
+        auto window3 = SDL2Window::create(640, 480, "window3");
+        window3->makeCurrent();
+        Scene scene3;
+        View* view3 = new View(&bms);
+        window3->setView(view3);
+        
+        window->setup();
+//         window2->setup();
+//         window3->setup();
+// // 
 //         
 //         int max_texture_size;
 //         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
@@ -404,10 +416,7 @@ struct Program{
         for(;;)
         {
             Window_t::processEvents();
-            
-            window->makeCurrent();
-            window->render();
-            window->swapBuffers();
+            Window::renderAllActive();
             
             if(!gc_counter)
             {

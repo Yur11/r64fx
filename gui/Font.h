@@ -10,8 +10,9 @@
 
 namespace r64fx{
     
-class Font{
-    static GLuint rect_vbo;
+class Font : public RenderingContextAware{
+    static GLuint vao[max_rendering_context_count];
+    static GLuint vbo;
     static FT_Library freetype;
     static ShadingProgram font_shading_program;
     static GLint vertex_coord_attribute;
@@ -66,6 +67,10 @@ public:
     Font(std::string file_path, int size);
     
     ~Font();
+    
+    virtual void setupForContext(RenderingContextId_t context_id);
+    
+    virtual void cleanupForContext(RenderingContextId_t context_id);
     
     inline bool isOk() const { return _is_ok; }
     

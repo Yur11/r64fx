@@ -7,7 +7,8 @@
 namespace r64fx{
     
 /** @brief A rendering method shared by several parts of the program. */
-class TexturedRect{
+class TexturedRect : public RenderingContextAware{
+    static TexturedRect* singleton_instance;
     static GLuint vao[max_rendering_context_count];
     static GLuint vbo;
     static ShadingProgram shading_program;
@@ -18,15 +19,19 @@ class TexturedRect{
     static GLint sampler_uniform;
     
     TexturedRect() {}
+
+    virtual void setupForContext(RenderingContextId_t context_id);
+    
+    virtual void cleanupForContext(RenderingContextId_t context_id);
     
 public:
     static bool init();
     
-    static void setupForContext(RenderingContextId_t context_id);
-    
-    static void cleanupForContext(RenderingContextId_t context_id);
+    inline static TexturedRect* instance() { return singleton_instance; }
     
     static void render(RenderingContextId_t context_id, float x, float y, float w, float h, float tex_x, float tex_y, float tex_w, float tex_h, GLuint tex);
+    
+    static void cleanup();
 };
     
 }//namespace r64fx

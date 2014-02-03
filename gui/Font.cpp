@@ -12,7 +12,8 @@ using namespace std;
 
 namespace r64fx{
     
-GLuint           Font::rect_vbo;
+GLuint           Font::vao[max_rendering_context_count];
+GLuint           Font::vbo;
 FT_Library       Font::freetype;
 ShadingProgram   Font::font_shading_program;
 GLint            Font::vertex_coord_attribute;
@@ -180,22 +181,22 @@ bool Font::init()
         return false;
     }
     
-    glGenBuffers(1, &rect_vbo);
+    glGenBuffers(1, &vbo);
     
     float vbo_data[8] = {
         0.0, 1.0,  1.0, 1.0,
         0.0, 0.0,  1.0, 0.0
     };
     
-    glBindBuffer(GL_ARRAY_BUFFER, rect_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vbo_data, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     vertex_coord_attribute = glGetAttribLocation(font_shading_program.id(), "vertex_coord");
 #ifdef DEBUG
     assert(vertex_coord_attribute != -1);
 #endif//DEBUG
-    glVertexAttribPointer(vertex_coord_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(vertex_coord_attribute);
+    
     
     x_uniform = glGetUniformLocation(font_shading_program.id(), "x");
     y_uniform = glGetUniformLocation(font_shading_program.id(), "y");
@@ -262,10 +263,45 @@ Font::~Font()
 }
 
 
+void Font::setupForContext(RenderingContextId_t context_id)
+{
+    cout << "Font: setup for context: " << context_id << "\n";
+    
+    if(vao[context_id] != 0)
+    {
+#ifdef DEBUG
+        cerr << "Font: Double setup for context: " << context_id << "\n";
+#endif//DEBUG
+        return;
+    }
+    
+    glGenVertexArrays(1, vao + context_id);
+    glBindVertexArray(vao[context_id]);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glEnableVertexAttribArray(vertex_coord_attribute);
+    glVertexAttribPointer(vertex_coord_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glBindVertexArray(0);
+}
+
+
+void Font::cleanupForContext(RenderingContextId_t context_id)
+{
+    if(vao[context_id] == 0)
+    {
+#ifdef DEBUG
+        cerr << "Font: Double cleanup for context: " << context_id << "\n";
+#endif//DEBUG
+        return;
+    }
+    
+    glDeleteVertexArrays(1, vao + context_id);
+}
+
+
 void Font::prepare()
 {
     font_shading_program.use();
-    glBindBuffer(GL_ARRAY_BUFFER, rect_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
 }
     
     
@@ -324,11 +360,13 @@ void Font::render(RenderingContextId_t context_id, std::string utf8_text)
             _pen_x -= delta.x >> 6;
         }
     
+        glBindVertexArray(vao[context_id]);
         glyph->render(_pen_x, _pen_y);
         _pen_x += glyph->advance;
+        glBindVertexArray(0);
         
         prev_index = glyph->index;
-    }
+    }    
 }
 
 void Font::renderChar(std::string utf8_char)
@@ -339,7 +377,6 @@ void Font::renderChar(std::string utf8_char)
 #endif//DEBUG
     
     font_shading_program.use();
-    glBindBuffer(GL_ARRAY_BUFFER, rect_vbo);
     
     glyph->render(_pen_x, _pen_y);
     _pen_x += glyph->advance;

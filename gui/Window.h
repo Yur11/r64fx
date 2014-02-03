@@ -45,9 +45,7 @@ public:
     void closeAllOverlayMenus();
 
     static std::vector<Window*> allInstances();
-    
-    virtual void makeCurrent() = 0;
-    
+        
     virtual void warpMouse(int x, int y) = 0;
     
     /** @brief Create and deliver a new mouse press event, taking into acount possible overlays. */
@@ -68,6 +66,8 @@ public:
     void initTextInputEvent(Utf8String text);
     
     static bool initGlew();
+
+    static void renderAllActive();
 };    
 
 }//namespace r64fx

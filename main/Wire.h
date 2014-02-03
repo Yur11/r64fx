@@ -5,7 +5,7 @@
 
 namespace r64fx{
     
-class Wire{
+class Wire : public RenderingContextAware{
     static ShadingProgram shading_program;
     
     /** 
@@ -55,9 +55,11 @@ public:
     
     Wire(Socket* source_socket, Socket* sink_socket);
     
-    void setupForContext(RenderingContextId_t context_id);
+    ~Wire();
     
-    void cleanupForContext(RenderingContextId_t context_id);
+    virtual void setupForContext(RenderingContextId_t context_id);
+    
+    virtual void cleanupForContext(RenderingContextId_t context_id);
     
     Color color;
     

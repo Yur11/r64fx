@@ -257,5 +257,12 @@ bool Window::initGlew()
     return true;
 }
 
+
+void Window::renderAllActive()
+{
+    for(auto w : _all_window_instances)
+        w->render();
+}
+
     
 }//namespace r64fx

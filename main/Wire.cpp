@@ -28,9 +28,6 @@ void Wire::init()
 {
     init_shader();
     init_textures();
-    
-    glGenSamplers(2, &sampler);
-    glBindSampler(sampler, texture);
 }
 
 
@@ -107,7 +104,10 @@ void Wire::init_textures()
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_1D, GL_GENERATE_MIPMAP, GL_TRUE);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RED, tex_size, 0, GL_RED, GL_UNSIGNED_BYTE, tex_bytes);    
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RED, tex_size, 0, GL_RED, GL_UNSIGNED_BYTE, tex_bytes);  
+    
+    glGenSamplers(1, &sampler);
+    glBindSampler(texture, sampler);
 }
 
 
@@ -132,17 +132,25 @@ Wire::Wire(Socket* source_socket, Socket* sink_socket)
     glBindBuffer(GL_ARRAY_BUFFER, vbo[Cap2]);
     glBufferData(GL_ARRAY_BUFFER, cap_vertex_count * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
     
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);    
+}
+
+Wire::~Wire()
+{
 }
 
 
 void Wire::setupForContext(RenderingContextId_t context_id)
-{
+{    
+    cout << "Wire::setupForContext " << context_id << "\n";
+    
+    if(vao[context_id][Body] != 0 || vao[context_id][Cap1] != 0 || vao[context_id][Cap2] != 0)
+    {
 #ifdef DEBUG
-    assert(vao[context_id][Body] == 0);
-    assert(vao[context_id][Cap1] == 0);
-    assert(vao[context_id][Cap2] == 0);
+        cerr << "Wire: Double setup for context: " << context_id << "\n";
 #endif//DEBUG
+        return;
+    }
     
     GLuint handle[3];
     glGenVertexArrays(3, handle);
@@ -171,11 +179,13 @@ void Wire::setupForContext(RenderingContextId_t context_id)
 
 void Wire::cleanupForContext(RenderingContextId_t context_id)
 {
+    if(vao[context_id][Body] == 0 || vao[context_id][Cap1] == 0 || vao[context_id][Cap2] == 0)
+    {
 #ifdef DEBUG
-    assert(vao[context_id][Body] != 0);
-    assert(vao[context_id][Cap1] != 0);
-    assert(vao[context_id][Cap2] != 0);
+        cerr << "Wire: Double cleanup for context: " << context_id << "\n";
 #endif//DEBUG
+        return;
+    }
     
     GLuint handle[3];
     
@@ -273,6 +283,8 @@ void Wire::init_cap_vertices(int item, Point<float> v1, Point<float> v2)
 
 void Wire::update()
 {
+    cout << "Update wire\n";
+    
 #ifdef DEBUG
     assert(_source_socket != nullptr);
     assert(_sink_socket != nullptr);
@@ -345,6 +357,7 @@ void Wire::render(RenderingContextId_t context_id)
     
     shading_program.use();
     
+    glBindTexture(GL_TEXTURE_1D, texture);
     glUniform1f(sampler_uniform, sampler);
     glUniform4fv(color_uniform, 1, color);
     
