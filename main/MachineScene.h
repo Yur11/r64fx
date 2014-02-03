@@ -1,13 +1,14 @@
-#ifndef R64FX_MACHINE_SCENES_H
-#define R64FX_MACHINE_SCENES_H
+#ifndef R64FX_MAIN_MACHINE_SCENE_H
+#define R64FX_MAIN_MACHINE_SCENE_H
 
 #include "gui/Scene.h"
-#include "machine_widgets.h"
+#include "MachineWidget.h"
 #include "Wire.h"
 
 namespace r64fx{
     
 
+/** @brief Base class for the FrontMachineScene and the BackMachineScene. */
 class MachineScene : public Scene{
     std::vector<MachineWidget*> selected_widgets;
     /** Current mouse position. Updated with every mouse move event. */
@@ -65,6 +66,7 @@ public:
 };
 
 
+/** @brief Scene with machines and wires. Back. */
 class BackMachineScene : public MachineScene{
 public:
     virtual void render(RenderingContextId_t context_id);
@@ -74,4 +76,4 @@ public:
     
 }//namespace r64fx
 
-#endif//R64FX_MACHINE_SCENES_H
+#endif//R64FX_MAIN_MACHINE_SCENE_H

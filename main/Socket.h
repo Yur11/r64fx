@@ -34,6 +34,8 @@ public:
     
     virtual void mousePressEvent(MouseEvent* event);
     
+    virtual void mouseReleaseEvent(MouseEvent* event);
+    
     virtual void mouseMoveEvent(MouseEvent* event);
 
     inline Point<float> center() const 
@@ -44,7 +46,7 @@ public:
         };
     }
     
-    Message drag_started;
+    Message clicked;
 };
 
     

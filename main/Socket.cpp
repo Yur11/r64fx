@@ -60,6 +60,12 @@ void Socket::mousePressEvent(MouseEvent* event)
 }
 
 
+void Socket::mouseReleaseEvent(MouseEvent* event)
+{
+    clicked(this);
+}
+
+
 void Socket::mouseMoveEvent(MouseEvent* event)
 {
 

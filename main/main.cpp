@@ -238,11 +238,11 @@ struct Program{
         View* view2 = new View(&fms);
         window2->setView(view2);
         
-        auto window3 = SDL2Window::create(640, 480, "window3");
-        window3->makeCurrent();
-        Scene scene3;
-        View* view3 = new View(&bms);
-        window3->setView(view3);
+//         auto window3 = SDL2Window::create(640, 480, "window3");
+//         window3->makeCurrent();
+//         Scene scene3;
+//         View* view3 = new View(&bms);
+//         window3->setView(view3);
         
         window->setup();
 //         window2->setup();

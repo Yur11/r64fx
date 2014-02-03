@@ -1,5 +1,5 @@
-#include "machine_widgets.h"
-#include "machine_scenes.h"
+#include "MachineWidget.h"
+#include "MachineScene.h"
 #include "gui/MouseEvent.h"
 #include "gui/TexturedRect.h"
 

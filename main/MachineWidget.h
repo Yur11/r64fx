@@ -1,5 +1,5 @@
-#ifndef R64FX_MACHINE_WIDGETS_H
-#define R64FX_MACHINE_WIDGETS_H
+#ifndef R64FX_MAIN_MACHINE_WIDGET_H
+#define R64FX_MAIN_MACHINE_WIDGET_H
 
 #include "gui/Widget.h"
 #include "gui/TextureAtlas.h"
@@ -43,4 +43,4 @@ public:
     
 }//namespace r64fx
 
-#endif//R64FX_MACHINE_WIDGETS_H
+#endif//R64FX_MACHINE_WIDGET_H

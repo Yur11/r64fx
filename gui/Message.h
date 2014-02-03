@@ -21,7 +21,9 @@ struct Message{
     Message();
     
     /** @brief Send a message  */
-    inline void send(void* caller) { callback(caller, data); }
+    inline void* send(void* caller) { return callback(caller, data); }
+    
+    inline void* operator()(void* caller) { return callback(caller, data); }
     
     void clear();
 };

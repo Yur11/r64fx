@@ -1,7 +1,7 @@
 #ifndef R64FX_MACHINE_H
 #define R64FX_MACHINE_H
 
-#include "machine_scenes.h"
+#include "MachineScene.h"
 #include "dsp/Graph.h"
 
 namespace r64fx{
