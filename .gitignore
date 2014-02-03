@@ -6,3 +6,4 @@ tools/build_resource
 example
 .directory
 jit/tryjit
+doc/html
