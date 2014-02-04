@@ -19,6 +19,10 @@ public:
     
     /** @brief Tell the garbage collector that this instance is no longer needed and should be destroyed. */
     virtual void deleteLater();
+  
+protected:
+    /** @brief Called just before destruction. */
+    virtual void beforeDestruction() {}
 };
 
 class gc{
