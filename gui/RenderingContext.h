@@ -1,7 +1,8 @@
 #ifndef R64FX_GUI_RENDERING_CONTEXT_H
 #define R64FX_GUI_RENDERING_CONTEXT_H
 
-#include "shared_sources/LinkedItem.h"
+#include <vector>
+#include "gc/gc.h"
 
 namespace r64fx{
    
@@ -11,6 +12,7 @@ const RenderingContextId_t max_rendering_context_count = 4;
 
 const RenderingContextId_t BadRenderingContextId = -1;
 
+class RenderingContextAware;
 
 /** @brief Base class for rendering contexts.
  *  
@@ -20,16 +22,24 @@ const RenderingContextId_t BadRenderingContextId = -1;
  *  I.e. opengl vertex array objects.
  * 
  *  Each context has an integer id with a value in the range 0 .. max_rendering_context_count-1.
- *  
- *  When rendering for a specific window, and id of that window's context shall be passed dowm the rendering tree
- *  to tell the RenderingContextAware objects which vbo-s to use.
  * 
  *  Inherit from this class and reimplement the makeCurrent() method.
  *  You must use the getFreeId() method to get an id for the new instance.
  */
-class RenderingContext{
+class RenderingContext : protected Disposable{
+    friend class RenderingContextAware;
+    
     static RenderingContext* all_rendering_contexts[max_rendering_context_count];
+    static RenderingContext* current_context;
     RenderingContextId_t _id;
+    
+    std::vector<RenderingContextAware*> new_items;    
+    std::vector<RenderingContextAware*> active_items;
+    std::vector<RenderingContextAware*> discarded_items;
+    
+    static void registerItem(RenderingContextAware* item);
+    
+    static void discardItem(RenderingContextAware* item);
     
 public:
     /** @brief Mark all instances as being non setup. 
@@ -59,22 +69,39 @@ public:
     
     inline RenderingContextId_t id() const { return _id; };
         
-    /** @brief Make this context current. */
-    virtual void makeCurrent() = 0;
+    /** @brief Make this context current. 
+     
+        Reimplementations must explicitly call this base class method!
+     */
+    virtual void makeCurrent();
+        
+    /** @brief Currently bound context. */
+    inline RenderingContext* current() const { return current_context; }
     
-    /** @brief Teach all RenderingContextAware objects about this context. */
-    void setup();
+    /** @brief Perform opengl context specific operation for this contexts. 
+     
+        This includes vertex array object allocations and deallocations.
+        makeCurrent() must be called pror to calling this function.
+     */
+    void update();
     
-    /** @brief Make all RenderingContextAware object forgets about this context. */
-    void cleanup();    
+    /** @brief */
+    void cleanup();
+    
+protected:
+    virtual void beforeDestruction();
 };
 
 
-/** @brief Base class for all objects aware of the rendering context. */
-class RenderingContextAware : public LinkedItem<RenderingContextAware>{
+/** @brief Base class for all objects aware of the rendering context. 
+ 
+    All RenderingContextAwares instances must be allocated on the heap
+    and shall be discarded by calling discard().
+    Never delete them directly.
+ */
+class RenderingContextAware : private Disposable{
     friend class RenderingContext;
-    static RenderingContextAware* first_item;
-    
+        
     bool is_setup_for[max_rendering_context_count];
    
 protected:
@@ -85,7 +112,9 @@ protected:
 public:
     RenderingContextAware();
     
-    virtual ~RenderingContextAware();
+    virtual ~RenderingContextAware() {};
+
+    void discard();
 };
 
     

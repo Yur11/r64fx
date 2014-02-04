@@ -66,7 +66,7 @@ public:
     
     Font(std::string file_path, int size);
     
-    ~Font();
+    virtual ~Font();
     
     virtual void setupForContext(RenderingContextId_t context_id);
     

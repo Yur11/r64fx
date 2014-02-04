@@ -68,6 +68,12 @@ public:
 
 /** @brief Scene with machines and wires. Back. */
 class BackMachineScene : public MachineScene{
+    friend class Machine;
+    
+    std::vector<Socket*> _active_sockets;
+    
+    void handleSocketClick(Socket* socket);
+    
 public:
     virtual void render(RenderingContextId_t context_id);
 };

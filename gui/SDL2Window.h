@@ -10,7 +10,7 @@ namespace r64fx{
     
 class SDL2_GL_RenderingContext;
     
-class SDL2Window : public Window, public RenderingContext{
+class SDL2Window : public Window{
     SDL_Window* _window;
     SDL_GLContext _gl_context;
     
@@ -21,7 +21,7 @@ class SDL2Window : public Window, public RenderingContext{
 public:
     static SDL2Window* create(int width = 640, int height = 480, const char* title = "Window");
     
-   ~SDL2Window();
+    virtual ~SDL2Window();
        
     void swapBuffers();
     
@@ -35,7 +35,17 @@ public:
     
     virtual void updateGeometry();
     
+    virtual void show();
+    
+    virtual void hide();
+    
     virtual void warpMouse(int x, int y);
+    
+    virtual bool isShown();
+    
+    virtual bool isMaximized();
+
+    virtual bool isMinimized();
 
     static bool init();
     
@@ -46,8 +56,6 @@ public:
     static bool shouldQuit();//Temporary
     
     static void processEvents();    
-    
-    static void renderAllActive();
 };
     
 };

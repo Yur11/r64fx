@@ -23,6 +23,8 @@ class TexturedRect : public RenderingContextAware{
     virtual void setupForContext(RenderingContextId_t context_id);
     
     virtual void cleanupForContext(RenderingContextId_t context_id);
+
+    virtual ~TexturedRect() {};
     
 public:
     static bool init();

@@ -138,7 +138,6 @@ void MachineScene::keyPressEvent(KeyEvent* event)
     if(event->key() == Keyboard::Key::Tab)
     {
 #ifdef DEBUG
-        cout << "tab: " << this << "\n";
         assert(event->view() != nullptr);
 #endif//DEBUG
         replace_me_callback(event->view(), this, counterpart_scene);
@@ -225,11 +224,42 @@ void FrontMachineScene::render(RenderingContextId_t context_id)
 }
 
 
+
+void BackMachineScene::handleSocketClick(Socket* socket)
+{
+#ifdef DEBUG
+    assert(socket != nullptr);
+#endif//DEBUG
+    
+    if(socket->isPlugged())
+    {
+    }
+    else
+    {
+        if(_active_sockets.empty())
+        {
+            _active_sockets.push_back(socket);
+        }
+        else
+        {
+            auto a = socket;
+            auto b = _active_sockets[0];
+            
+            auto wire = new Wire(a, b);
+            wire->update();
+            wire->color = { 0.7, 0.7, 0.1, 0.0 };
+            wires->push_back(wire);
+            
+            _active_sockets.clear();
+        }
+    }
+}
+
+
 void BackMachineScene::render(RenderingContextId_t context_id)
 {
     MachineScene::render(context_id);
     render_wires(context_id);
 }
-
     
 }//namespace r64fx

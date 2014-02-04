@@ -1,11 +1,43 @@
 #include "RenderingContext.h"
-#include <iostream>
 
+#ifdef DEBUG
+#include <assert.h>
+#include <iostream>
 using namespace std;
+#endif//DEBUG
 
 namespace r64fx{
 
 RenderingContext* RenderingContext::all_rendering_contexts[max_rendering_context_count];
+
+RenderingContext* RenderingContext::current_context = nullptr;
+
+
+void RenderingContext::registerItem(RenderingContextAware* item)
+{
+    for(RenderingContextId_t id=0; id<max_rendering_context_count; id++)
+    {
+        auto ctx = all_rendering_contexts[id];
+        if(ctx)
+            ctx->new_items.push_back(item);
+    }
+}
+
+    
+void RenderingContext::discardItem(RenderingContextAware* item)
+{
+    for(RenderingContextId_t id=0; id<max_rendering_context_count; id++)
+    {
+        if(all_rendering_contexts[id])
+        {
+            all_rendering_contexts[id]->discarded_items.push_back(item);
+            
+            for(auto it=all_rendering_contexts[id]->active_items.begin(); it!=all_rendering_contexts[id]->active_items.end(); it++)
+                if(*it == item)
+                    all_rendering_contexts[id]->active_items.erase(it);
+        }            
+    }
+}
 
 
 RenderingContextId_t RenderingContext::getFreeId()
@@ -21,12 +53,28 @@ RenderingContext::RenderingContext(RenderingContextId_t id)
 : _id(id)
 {
     all_rendering_contexts[id] = this;
+    
+    /* Copy items from the current context to this one. */
+    if(current_context)
+    {
+        for(auto item : current_context->new_items)
+            new_items.push_back(item);
+        
+        for(auto item : current_context->active_items)
+            new_items.push_back(item);
+    }
 }
 
 
 RenderingContext::~RenderingContext()
 {
     all_rendering_contexts[_id] = nullptr;
+}
+
+
+void RenderingContext::makeCurrent()
+{
+    current_context = this;
 }
 
 
@@ -37,54 +85,71 @@ void RenderingContext::init()
 }
 
 
-void RenderingContext::setup()
+void RenderingContext::update()
 {
-    makeCurrent();
-    for(auto item = RenderingContextAware::first_item; item != nullptr; item = item->nextItem())
+#ifdef DEBUG
+    assert(current_context == this);
+#endif//DEBUG
+ 
+    if(!new_items.empty())
     {
-        if(item->is_setup_for[RenderingContext::id()])
-            continue;
-        item->setupForContext(this->id());
-        item->is_setup_for[RenderingContext::id()] = true;
+        cout << "RenderingContext " << id() << " update " << new_items.size() << " items\n";
+        
+        for(auto item : new_items)
+        {
+            item->setupForContext(id());
+            active_items.push_back(item);
+        }
+        new_items.clear();
+    }
+    
+    if(!discarded_items.empty())
+    {
+        cout << "RenderingContext " << id() << " discard " << new_items.size() << " items\n";
+        
+        for(auto item : discarded_items)
+        {
+            item->cleanupForContext(id());
+            item->deleteLater();
+        }
+        discarded_items.clear();
     }
 }
 
 
 void RenderingContext::cleanup()
 {
-    makeCurrent();
-    for(auto item = RenderingContextAware::first_item; item != nullptr; item = item->nextItem())
+    while(!discarded_items.empty())
     {
-        if(!item->is_setup_for[RenderingContext::id()])
-            continue;
-        item->cleanupForContext(this->id());
-        item->is_setup_for[RenderingContext::id()] = false;
+        discarded_items.back()->cleanupForContext(id());
+        discarded_items.pop_back();
+    }
+    
+    while(!active_items.empty())
+    {
+        active_items.back()->cleanupForContext(id());
+        active_items.pop_back();
     }
 }
 
-    
-RenderingContextAware* RenderingContextAware::first_item = nullptr;
 
+void RenderingContext::beforeDestruction()
+{
+    makeCurrent();
+    cleanup();
+}
 
+   
 RenderingContextAware::RenderingContextAware()
 {
-    for(RenderingContextId_t i=0; i<max_rendering_context_count; i++)
-    {
-        is_setup_for[i] = false;
-    }
-    
-    this->next = first_item;
-    first_item = this;   
+    RenderingContext::registerItem(this);
 }
 
 
-RenderingContextAware::~RenderingContextAware()
+void RenderingContextAware::discard()
 {
-    if(this == first_item)
-        first_item = nullptr;
-    remove();
+    RenderingContext::discardItem(this);
 }
-
 
     
 }//namespace r64fx

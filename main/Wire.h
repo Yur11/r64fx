@@ -55,7 +55,7 @@ public:
     
     Wire(Socket* source_socket, Socket* sink_socket);
     
-    ~Wire();
+    virtual ~Wire();
     
     virtual void setupForContext(RenderingContextId_t context_id);
     

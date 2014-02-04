@@ -80,8 +80,13 @@ void MachineWidget::mousePressEvent(MouseEvent* event)
     
 void MachineWidget::mouseReleaseEvent(MouseEvent* event)
 {
-    about_to_be_dragged = false;
-    event->has_been_handled = true;
+    Widget::mouseReleaseEvent(event);
+    
+    if(!event->has_been_handled)
+    {
+        about_to_be_dragged = false;
+        event->has_been_handled = true;
+    }
 }
     
     

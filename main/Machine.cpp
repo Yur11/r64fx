@@ -3,6 +3,8 @@
 #include "gui/Texture.h"
 #include "gui/Dummy.h"
 
+#include <iostream>
+
 using namespace std;
 
 namespace r64fx{
@@ -63,6 +65,17 @@ void Machine::setPosition(Point<float> p)
 {
     _front->setPosition(p);
     _back->setPosition(p);
+}
+
+
+void Machine::addSocket(Socket* socket)
+{
+    _back->appendWidget(socket);
+    socket->clicked = { [](void* source, void* data) -> void* {
+        auto machine = (Machine*) data;
+        machine->backScene()->handleSocketClick((Socket*)source);
+        return nullptr;
+    }, this};
 }
     
 }//namespace r64fx

@@ -12,7 +12,7 @@ class Machine{
     
     MachineWidget* _front;
     MachineWidget* _back;
-    
+        
 public:
     Machine(FrontMachineScene* fms, BackMachineScene* bms);
 
@@ -31,6 +31,8 @@ public:
     inline void setPosition(float x, float y) { setPosition(Point<float>(x, y)); }
     
     inline Point<float> position() const { return _front->position(); }
+    
+    void addSocket(Socket* socket);
 };
     
 }//namespace r64fx

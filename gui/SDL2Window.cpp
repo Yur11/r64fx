@@ -22,8 +22,10 @@ unsigned int pressed_mouse_buttons = 0;
 
     
 SDL2Window::SDL2Window(RenderingContextId_t id, int width, int height, const char* title)
-: RenderingContext(id)
+: Window(id)
 {
+    setEventCallback(SDL2Window::processEvents);
+    
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1); 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
@@ -64,8 +66,6 @@ SDL2Window* SDL2Window::create(int width, int height, const char* title)
     else 
     {
         auto window = new SDL2Window(id, width, height, title);
-        window->makeCurrent();
-        window->setup();
         return window;
     }
 }
@@ -73,7 +73,8 @@ SDL2Window* SDL2Window::create(int width, int height, const char* title)
 
 SDL2Window::~SDL2Window()
 {
-    RenderingContext::cleanup();
+    cout << "Window: " << this << " destroyed!\n";
+    
     SDL_GL_DeleteContext(_gl_context);
     SDL_DestroyWindow(_window);
     
@@ -98,6 +99,7 @@ void SDL2Window::swapBuffers()
 void SDL2Window::makeCurrent()
 {
     SDL_GL_MakeCurrent(_window, _gl_context);
+    RenderingContext::makeCurrent();
 }
 
 
@@ -134,9 +136,39 @@ void SDL2Window::updateGeometry()
 }
 
 
+void SDL2Window::show()
+{
+    SDL_ShowWindow(_window);
+}
+
+
+void SDL2Window::hide()
+{
+    SDL_HideWindow(_window);
+}
+
+
 void SDL2Window::warpMouse(int x, int y)
 {
     SDL_WarpMouseInWindow(_window, x, height() - y);
+}
+
+
+bool SDL2Window::isShown()
+{
+    return SDL_GetWindowFlags(_window) & SDL_WINDOW_SHOWN;
+}
+
+
+bool SDL2Window::isMaximized()
+{
+    return SDL_GetWindowFlags(_window) & SDL_WINDOW_MAXIMIZED;
+}
+
+
+bool SDL2Window::isMinimized()
+{
+    return SDL_GetWindowFlags(_window) & SDL_WINDOW_MINIMIZED;
 }
 
 
@@ -180,13 +212,7 @@ void SDL2Window::processEvents()
     while(SDL_PollEvent(&event))
     {
         switch(event.type)
-        {
-            case SDL_QUIT:
-            {
-                should_quit = true;
-                break;
-            }
-            
+        {            
             /* Keyboard */
             case SDL_KEYDOWN:
             {
@@ -274,9 +300,7 @@ void SDL2Window::processEvents()
                 assert(window != nullptr);
 #endif//DEBUG
                 window->makeCurrent();
-                
-                cout << "click: " << window->id() << "\n";
-                
+                                
                 if(event.button.button == SDL_BUTTON_LEFT)
                     pressed_mouse_buttons |= Mouse::Button::Left;
                 else if(event.button.button == SDL_BUTTON_MIDDLE)
@@ -342,43 +366,20 @@ void SDL2Window::processEvents()
                 
                 if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
                 {
-//                     auto w = SDL_GetWindowFromID(event.window.windowID);
-//                     for(int i=0; i<(int)all_sdl2_windows.size(); i++)
-//                     {
-//                         if(all_sdl2_windows[i]->sdl_window() == w)
-//                         {
-//                             focused_window = all_sdl2_windows[i];
-//                             last_focused_window = focused_window;
-//                             break;
-//                         }
-//                     }
                 }
                 else if(event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
                 {
                 }
                 else if(event.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
-                    window->makeCurrent();
-                    
                     int w = event.window.data1;
                     int h = event.window.data2;
-                    
-                    glViewport(0, 0, w, h);
-                    glMatrixMode(GL_PROJECTION);
-                    glLoadIdentity();
-                    
-                    /* (0, 0) is in the bottom left corner. */
-                    glOrtho(0, w, 0, h, -1, 1);
-                    
-                    glMatrixMode(GL_MODELVIEW);
-                    glLoadIdentity();
-                    
-                    window->view()->resize(0, h, w, 0);
+                    window->request_projection_update(w, h);
                 }
                 else if(event.window.event == SDL_WINDOWEVENT_CLOSE)
                 {
-                    window->makeCurrent();
-                    delete window;
+                    window->hide();
+                    window->discard();
                 }
                 break;
             }
@@ -391,6 +392,5 @@ void SDL2Window::processEvents()
         }
     }
 }
-
     
 }//namespace r64fx

@@ -110,6 +110,7 @@ struct Program{
         }
         
         auto window = Window_t::create(800, 600, "r64fx");
+        window->makeCurrent();
         
         /* Can be done only after we have obtained the OpenGL context. */
         if(!Window::initGlew())
@@ -212,17 +213,17 @@ struct Program{
         auto sa = new Socket;
         sa->setPosition(10, 10);
         sa->update();
-        m2->back()->appendWidget(sa);
+        m2->addSocket(sa);
         
         auto sb = new Socket;
         sb->setPosition(400, 10);
         sb->update();
-        m3->back()->appendWidget(sb);
+        m3->addSocket(sb);
         
-        Wire* wire = new Wire(sa, sb);
-        wire->update();
-        wire->color = { 0.7, 0.7, 0.1, 0.0 };
-        wires.push_back(wire);
+//         Wire* wire = new Wire(sa, sb);
+//         wire->update();
+//         wire->color = { 0.7, 0.7, 0.1, 0.0 };
+//         wires.push_back(wire);
         
         /* Setup View icons. */
         View::split_view_vert_icon = Icon({24, 24}, data_prefix + "textures/split_vertically.png");
@@ -244,7 +245,6 @@ struct Program{
 //         View* view3 = new View(&bms);
 //         window3->setView(view3);
         
-        window->setup();
 //         window2->setup();
 //         window3->setup();
 // // 
@@ -410,13 +410,12 @@ struct Program{
 //         jack_activate(jack_client);
 
         glEnable(GL_MULTISAMPLE);
-        
+
         /* Main event loop. */
         int gc_counter = 256;
-        for(;;)
-        {
-            Window_t::processEvents();
-            Window::renderAllActive();
+        while(Window::count() > 0)
+        {       
+            Window::mainSequence();
             
             if(!gc_counter)
             {
@@ -427,10 +426,9 @@ struct Program{
             {
                 gc_counter--;
             }
-            if(Window_t::shouldQuit()) break;
             usleep(300);
         }
-
+        
 //         jack_deactivate(jack_client);
         
 //         delete[] input_buffer;
@@ -442,8 +440,12 @@ struct Program{
         /* Cleanup things up before exiting. */
 //         jack_client_close(jack_client);
 //         delete graph;
+
+        TexturedRect::cleanup();
         Texture::cleanup();
         Window_t::cleanup();
+        
+        gc::deleteGarbage();
         
         return 0;
     }

@@ -139,7 +139,7 @@ void TexturedRect::render(RenderingContextId_t context_id, float x, float y, flo
 
 void TexturedRect::cleanup()
 {
-    delete[] singleton_instance;
+    singleton_instance->discard();
 }
     
 }//namespace r64fx

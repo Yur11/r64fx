@@ -33,7 +33,7 @@ class Window;
     Each widget has a bunch of event handlers for rendering and also mouse and keyboard input.
     Reimplement these as needed.
  */
-class Widget : public Disposable{
+class Widget{
     friend class Scene;
     Point<float> _position;
     Size<float> _size;

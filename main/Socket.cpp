@@ -56,13 +56,12 @@ void Socket::update()
 
 void Socket::mousePressEvent(MouseEvent* event)
 {
-
+    clicked(this);
 }
 
 
 void Socket::mouseReleaseEvent(MouseEvent* event)
 {
-    clicked(this);
 }
 
 

@@ -283,8 +283,6 @@ void Wire::init_cap_vertices(int item, Point<float> v1, Point<float> v2)
 
 void Wire::update()
 {
-    cout << "Update wire\n";
-    
 #ifdef DEBUG
     assert(_source_socket != nullptr);
     assert(_sink_socket != nullptr);

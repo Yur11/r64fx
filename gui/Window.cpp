@@ -6,9 +6,12 @@ using namespace std;
 
 namespace r64fx{
             
+Window::VoidFun Window::event_callback = nullptr;
+    
 vector<Window*> _all_window_instances;
     
-Window::Window()
+Window::Window(RenderingContextId_t id)
+: RenderingContext(id)
 {
     _all_window_instances.push_back(this);
 }
@@ -16,14 +19,22 @@ Window::Window()
 
 Window::~Window()
 {
-    for(int i=0; i<(int)_all_window_instances.size(); i++)
-    {
-        if(_all_window_instances[i] == this)
-        {
-            _all_window_instances.erase(_all_window_instances.begin() + i);
-            break;
-        }
-    }
+}
+
+
+void Window::update_projection()
+{
+    glViewport(0, 0, new_w, new_h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    
+    /* (0, 0) is in the bottom left corner. */
+    glOrtho(0, new_w, 0, new_h, -1, 1);
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    
+    view()->resize(0, new_h, new_w, 0);
 }
 
 
@@ -101,6 +112,22 @@ void Window::closeAllOverlayMenus()
 std::vector<Window*> Window::allInstances()
 {
     return _all_window_instances;
+}
+
+
+void Window::discard()
+{
+    /* Remove this window from the main main sequence. */
+    for(int i=0; i<(int)_all_window_instances.size(); i++)
+    {
+        if(_all_window_instances[i] == this)
+        {
+            _all_window_instances.erase(_all_window_instances.begin() + i);
+            break;
+        }
+    }
+    
+    deleteLater();
 }
 
 
@@ -258,10 +285,23 @@ bool Window::initGlew()
 }
 
 
-void Window::renderAllActive()
+void Window::mainSequence()
 {
+    event_callback();
+    
     for(auto w : _all_window_instances)
+    {
+        w->makeCurrent();
+        
+        if(w->projection_update_needed)
+        {
+            w->update_projection();
+            w->projection_update_needed = false;
+        }
+        
+        w->update();
         w->render();
+    }
 }
 
     
