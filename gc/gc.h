@@ -9,11 +9,10 @@ namespace r64fx{
     Classes that wish to have their instance destruction managed in such a way
     should inherit from the Disposable class an call deleteLater() when needed.
     It's not safe to access an object after its deleteLater() metod has been called.
-    
-    Disposable instances can be deleted manually, but in such case, deleteLater() must
-    not be called on them!
  */
 class Disposable{
+    friend class gc;
+    
 public:
     virtual ~Disposable() {}
     

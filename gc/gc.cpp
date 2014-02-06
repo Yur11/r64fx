@@ -20,6 +20,7 @@ int gc::deleteGarbage()
     int obj_count = disposable_objects.size();
     for(auto obj : disposable_objects)
     {
+        obj->beforeDestruction();
         delete obj;
     }
     disposable_objects.clear();
