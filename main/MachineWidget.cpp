@@ -1,7 +1,7 @@
 #include "MachineWidget.h"
 #include "MachineScene.h"
 #include "gui/MouseEvent.h"
-#include "gui/TexturedRect.h"
+#include "gui/RectPainter.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -53,12 +53,19 @@ void MachineWidget::render(RenderingContextId_t context_id)
 //     glEnd();
 //     glDisable(GL_TEXTURE_2D);
  
-    TexturedRect::render(
-        context_id,
-        0.0, 0.0, width(), height(),
-        0.0, 0.0, width() / surface_texture.width(), height() / surface_texture.height(),
-        surface_texture.id()
-    );
+//     RectPainter::render(
+//         context_id,
+//         0.0, 0.0, width(), height(),
+//         0.0, 0.0, width() / surface_texture.width(), height() / surface_texture.height(),
+//         surface_texture.id()
+//     );
+    
+    RectPainter::prepare();
+    RectPainter::setTexCoords(0.0, 0.0, width() / surface_texture.width(), height() / surface_texture.height());
+    RectPainter::setTexture(surface_texture.id());
+    RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
+    RectPainter::setCoords(0.0, 0.0, width(), height());
+    RectPainter::render(context_id);
     
     glUseProgram(0);
     

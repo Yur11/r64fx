@@ -3,6 +3,7 @@
 #include "KeyEvent.h"
 #include "Window.h"
 #include "Translation.h"
+#include "RectPainter.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -410,15 +411,21 @@ void SplitView::render(RenderingContextId_t context_id)
     viewA()->render(context_id);
     viewB()->render(context_id);
     
+    RectPainter::prepare();
+    RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
+    RectPainter::setTexture(RectPainter::plainTexture());
+    
     if(separatorIsHovered())
         if(separatorIsGrabbed())
-            glColor3f(0.3, 0.6, 0.3);
+            RectPainter::setColor(0.3, 0.6, 0.3, 1.0);
         else
-            glColor3f(0.3, 0.3, 0.3);
+            RectPainter::setColor(0.3, 0.3, 0.3, 1.0);
     else
-        glColor3f(0.0, 0.0, 0.0);
+        RectPainter::setColor(0.0, 0.0, 0.0, 1.0);
     
-    render_separator();
+    set_separator_coords();
+    
+    RectPainter::renderOutline(context_id);
 }
     
 void SplitView::mousePressEvent(MouseEvent* event)
@@ -558,12 +565,9 @@ void VerticalSplitView::resize(int left, int top, int right, int bottom)
 }
 
 
-void VerticalSplitView::render_separator()
+void VerticalSplitView::set_separator_coords()
 {
-    glBegin(GL_LINES);
-        glVertex2f(_rect.left, _rect.bottom + height() * splitRatio());
-        glVertex2f(_rect.right, _rect.bottom + height() * splitRatio());
-    glEnd();
+    RectPainter::setCoords(_rect.left, _rect.bottom + height() * splitRatio(), _rect.width(), 0.0);
 }
 
 
@@ -594,12 +598,9 @@ void HorizontalSplitView::resize(int left, int top, int right, int bottom)
 }
     
     
-void HorizontalSplitView::render_separator()
-{
-    glBegin(GL_LINES);
-        glVertex2f(_rect.left + width() * splitRatio(), _rect.top);
-        glVertex2f(_rect.left + width() * splitRatio(), _rect.bottom);
-    glEnd();
+void HorizontalSplitView::set_separator_coords()
+{    
+    RectPainter::setCoords(_rect.left + width() * splitRatio(), _rect.bottom, 0.0, _rect.height());
 }
 
 

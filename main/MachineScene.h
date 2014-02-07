@@ -18,9 +18,6 @@ class MachineScene : public Scene{
     /** Position of the mouse at the moment the drag was started. Is set to {0.0, 0.0}  upon mouse release event.*/
     Point<float> drag_start_position = {0.0, 0.0};
     bool drag_in_progress = false;
-    /** Rubberband selection rect. */
-    Rubberband rubberband;
-    bool rubberband_in_progress = false;
     
     bool can_drop = false;
 

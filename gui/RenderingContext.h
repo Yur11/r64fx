@@ -26,7 +26,7 @@ class RenderingContextAware;
  *  Inherit from this class and reimplement the makeCurrent() method.
  *  You must use the getFreeId() method to get an id for the new instance.
  */
-class RenderingContext : protected Disposable{
+class RenderingContext : public Disposable{
     friend class RenderingContextAware;
     
     static RenderingContext* all_rendering_contexts[max_rendering_context_count];
@@ -87,7 +87,7 @@ public:
     
     /** @brief */
     void cleanup();
-    
+        
 protected:
     virtual void beforeDestruction();
 };
@@ -99,7 +99,7 @@ protected:
     and shall be discarded by calling discard().
     Never delete them directly.
  */
-class RenderingContextAware : private Disposable{
+class RenderingContextAware : public Disposable{
     friend class RenderingContext;
         
     bool is_setup_for[max_rendering_context_count];

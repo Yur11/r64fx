@@ -1,6 +1,6 @@
 #include "Socket.h"
 #include "gui/MouseEvent.h"
-#include "gui/TexturedRect.h"
+#include "gui/RectPainter.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -34,14 +34,21 @@ void Socket::render(RenderingContextId_t context_id)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    TexturedRect::render(
-        context_id,
-        0.0, 0.0, width(), height(),
-        0.0, 0.0, 1.0, 1.0,
-        Socket::texture.id()
-    );
+    RectPainter::prepare();
+    RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
+    RectPainter::setTexture(Socket::texture.id());
+    RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
+    RectPainter::setCoords(0.0, 0.0, width(), height());
+    RectPainter::render(context_id);
     
-    glUseProgram(0);
+//     RectPainter::render(
+//         context_id,
+//         0.0, 0.0, width(), height(),
+//         0.0, 0.0, 1.0, 1.0,
+//         Socket::texture.id()
+//     );
+//     
+//     glUseProgram(0);
     
     glDisable(GL_BLEND);    
 }

@@ -109,10 +109,6 @@ void Widget::mousePressEvent(MouseEvent* event)
     
 void Widget::mouseReleaseEvent(MouseEvent* event)
 {
-    cout << "Widget::mouseReleaseEvent\n";
-    
-//     event->widget = this;
-    
     auto child = childAt(event->position()); 
     if(child)
     {
@@ -124,8 +120,6 @@ void Widget::mouseReleaseEvent(MouseEvent* event)
     
 void Widget::mouseMoveEvent(MouseEvent* event)
 {
-//     event->widget = this;
-    
     auto child = childAt(event->position()); 
     if(child)
     {

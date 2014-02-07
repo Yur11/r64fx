@@ -151,7 +151,7 @@ class SplitView : public SplittableView{
     SplittableView* _b = nullptr;
 
 protected:
-    virtual void render_separator() = 0;
+    virtual void set_separator_coords() = 0;
     
     virtual Rect<float> separatorRect() = 0;
     
@@ -193,7 +193,7 @@ public:
 
 class VerticalSplitView : public SplitView{
 protected:
-    virtual void render_separator();
+    virtual void set_separator_coords();
     
     virtual Rect<float> separatorRect();
     
@@ -208,7 +208,7 @@ public:
 
 class HorizontalSplitView : public SplitView{
 protected:
-    virtual void render_separator();
+    virtual void set_separator_coords();
     
     virtual Rect<float> separatorRect();
     

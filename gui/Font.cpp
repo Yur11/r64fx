@@ -286,6 +286,8 @@ void Font::setupForContext(RenderingContextId_t context_id)
 
 void Font::cleanupForContext(RenderingContextId_t context_id)
 {
+    cout << "Font: cleanup for context: " << context_id << "\n";
+    
     if(vao[context_id] == 0)
     {
 #ifdef DEBUG

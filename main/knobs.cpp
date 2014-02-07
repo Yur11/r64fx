@@ -2,7 +2,7 @@
 #include "gui/MouseEvent.h"
 #include "gui/bezier.h"
 #include "gui/Window.h"
-#include "gui/TexturedRect.h"
+#include "gui/RectPainter.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -76,9 +76,13 @@ void TexturedKnobBackground::render(RenderingContextId_t context_id, Rect<float>
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    TexturedRect::render(context_id, 0.0, 0.0, rect.width(), rect.height(), 0.0, 0.0, 1.0, -1.0, _tex.id());
-    glUseProgram(0);
-    
+    RectPainter::prepare();
+    RectPainter::setTexCoords(0.0, 0.0, 1.0, -1.0);
+    RectPainter::setTexture(_tex.id());
+    RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
+    RectPainter::setCoords(0.0, 0.0, rect.width(), rect.height());
+    RectPainter::render(context_id);
+        
     glDisable(GL_BLEND);
 }
 
@@ -112,24 +116,36 @@ void KnobHandleTypeA::render(RenderingContextId_t context_id, Rect<float> rect, 
 
     rect = rect - radius * 0.3777;
     
-    TexturedRect::render(
-        context_id,
-        -rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height(),
-        0.0, 0.0, 1.0, 1.0,
-        knob_a_base_tex.id()
-    );
+    RectPainter::prepare();
+    RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
+    RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
+    
+    RectPainter::setTexture(knob_a_base_tex.id());
+    RectPainter::setCoords(-rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height());
+    RectPainter::render(context_id);
+    
+//     RectPainter::render(
+//         context_id,
+//         -rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height(),
+//         0.0, 0.0, 1.0, 1.0,
+//         knob_a_base_tex.id()
+//     );
     
     rect = rect - radius * 0.2;
     
     glRotatef(-angle, 0.0, 0.0, 1.0);
     
-    TexturedRect::render(
-        context_id,
-        -rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height(),
-        0.0, 0.0, 1.0, 1.0,
-        knob_a_shiny_tex.id()
-    );
-    glUseProgram(0);
+    RectPainter::setTexture(knob_a_shiny_tex.id());
+    RectPainter::setCoords(-rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height());
+    RectPainter::render(context_id);
+    
+//     RectPainter::render(
+//         context_id,
+//         -rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height(),
+//         0.0, 0.0, 1.0, 1.0,
+//         knob_a_shiny_tex.id()
+//     );
+//     glUseProgram(0);
     
     glPopMatrix();
     

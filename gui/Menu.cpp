@@ -1,6 +1,7 @@
 #include "Menu.h"
 #include "MouseEvent.h"
 #include "Window.h"
+#include "RectPainter.h"
 
 #include <iostream>
 
@@ -78,13 +79,15 @@ void Menu::appendAction(Action* act)
 
 void Menu::render(RenderingContextId_t context_id)
 {
-//     glColor3f(0.0, 0.01, 0.0);
-//     glBegin(GL_POLYGON);
-//         glVertex2f(0.0, 0.0);
-//         glVertex2f(width(), 0.0);
-//         glVertex2f(width(), height());
-//         glVertex2f(0.0, height());
-//     glEnd();
+    RectPainter::prepare();
+    
+    RectPainter::setTexture(RectPainter::plainTexture());
+    RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
+    
+    RectPainter::setColor(0.0, 0.01, 0.0, 0.85);
+    
+    RectPainter::setCoords(0.0, 0.0, width(), height());
+    RectPainter::render(context_id);
     
     render_children(context_id);
 }

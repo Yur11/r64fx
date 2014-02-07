@@ -68,6 +68,8 @@ public:
     void update();
     
     void render(RenderingContextId_t context_id);
+    
+    void unplug();
 };
     
 }//namespace r64fx

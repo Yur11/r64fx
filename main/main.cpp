@@ -17,7 +17,7 @@
 #include "gui/Dummy.h"
 #include "gui/TextEdit.h"
 #include "gui/Keyboard.h"
-#include "gui/TexturedRect.h"
+#include "gui/RectPainter.h"
 #include "gui/Font.h"
 #include "gc/gc.h"
 #include "json/Json.h"
@@ -120,7 +120,7 @@ struct Program{
         
         Texture::init();
 
-        TexturedRect::init();
+        RectPainter::init();
         
         Socket::init();
         
@@ -426,6 +426,7 @@ struct Program{
             {
                 gc_counter--;
             }
+            
             usleep(300);
         }
         
@@ -441,7 +442,7 @@ struct Program{
 //         jack_client_close(jack_client);
 //         delete graph;
 
-        TexturedRect::cleanup();
+        RectPainter::cleanup();
         Texture::cleanup();
         Window_t::cleanup();
         

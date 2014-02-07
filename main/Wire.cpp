@@ -1,6 +1,5 @@
 #include "Wire.h"
 #include "gui/bezier.h"
-#include "gui/TexturedRect.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -117,6 +116,9 @@ Wire::Wire(Socket* source_socket, Socket* sink_socket)
 , _source_socket(source_socket)
 , _sink_socket(sink_socket)
 {
+    _source_socket->_wire = this;
+    _sink_socket->_wire = this;
+    
     for(int i=0; i<max_rendering_context_count; i++)
         for(int j=0; j<3; j++)
             vao[i][j] = 0;
@@ -141,9 +143,7 @@ Wire::~Wire()
 
 
 void Wire::setupForContext(RenderingContextId_t context_id)
-{    
-    cout << "Wire::setupForContext " << context_id << "\n";
-    
+{        
     if(vao[context_id][Body] != 0 || vao[context_id][Cap1] != 0 || vao[context_id][Cap2] != 0)
     {
 #ifdef DEBUG
@@ -179,6 +179,8 @@ void Wire::setupForContext(RenderingContextId_t context_id)
 
 void Wire::cleanupForContext(RenderingContextId_t context_id)
 {
+    cout << "Wire::cleanupForContext " << context_id << "\n";
+    
     if(vao[context_id][Body] == 0 || vao[context_id][Cap1] == 0 || vao[context_id][Cap2] == 0)
     {
 #ifdef DEBUG
@@ -369,8 +371,15 @@ void Wire::render(RenderingContextId_t context_id)
     glDrawArrays(GL_TRIANGLE_FAN, 0, cap_vertex_count);
     
     glBindVertexArray(0);
-    
-    glUseProgram(0);
+}
+
+
+void Wire::unplug()
+{
+    _source_socket->_wire = nullptr;
+    _sink_socket->_wire = nullptr;
+    _source_socket = nullptr;
+    _sink_socket = nullptr;
 }
 
 }//namespace r64fx

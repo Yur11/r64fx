@@ -1,7 +1,7 @@
 #include "Icon.h"
 #include <map>
 #include <iostream>
-#include "TexturedRect.h"
+#include "RectPainter.h"
 
 
 using namespace std;
@@ -14,7 +14,12 @@ void Icon::render(RenderingContextId_t context_id)
 {
     if(_texture.isGood())
     {        
-        TexturedRect::render(context_id, 0.0, 0.0, size.w, size.h, 0.0, 0.0, 1.0, 1.0, _texture.id());
+        RectPainter::prepare();
+        RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
+        RectPainter::setTexture(_texture.id());
+        RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
+        RectPainter::setCoords(0.0, 0.0, size.w, size.h);
+        RectPainter::render(context_id);
     }
 }
 
