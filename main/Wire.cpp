@@ -353,13 +353,13 @@ void Wire::update()
 
 void Wire::render(RenderingContextId_t context_id)
 {   
-    float color[4] = {1.0, 0.7, 0.3, 0.0};
+    float color_vec[4] = { color.r, color.g, color.b, color.a};
     
     shading_program.use();
     
     glBindTexture(GL_TEXTURE_1D, texture);
     glUniform1f(sampler_uniform, sampler);
-    glUniform4fv(color_uniform, 1, color);
+    glUniform4fv(color_uniform, 1, color_vec);
     
     glBindVertexArray(vao[context_id][Body]);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, node_count * 2);

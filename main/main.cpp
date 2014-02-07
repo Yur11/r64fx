@@ -234,20 +234,17 @@ struct Program{
         View* view = new View(&fms);
         window->setView(view);
                 
-        auto window2 = SDL2Window::create(640, 480, "window2");
-        Scene scene2;
-        View* view2 = new View(&fms);
-        window2->setView(view2);
-        
+//         auto window2 = SDL2Window::create(640, 480, "window2");
+//         Scene scene2;
+//         View* view2 = new View(&fms);
+//         window2->setView(view2);
+//         
 //         auto window3 = SDL2Window::create(640, 480, "window3");
 //         window3->makeCurrent();
 //         Scene scene3;
 //         View* view3 = new View(&bms);
 //         window3->setView(view3);
-        
-//         window2->setup();
-//         window3->setup();
-// // 
+
 //         
 //         int max_texture_size;
 //         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);

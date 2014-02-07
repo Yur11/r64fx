@@ -240,7 +240,7 @@ void BackMachineScene::handleSocketClick(Socket* socket)
             
             auto wire = new Wire(a, b);
             wire->update();
-            wire->color = { 0.7, 0.7, 0.1, 0.0 };
+            wire->color = { 0.7, 0.7, 0.1, 1.0 };
             wires->push_back(wire);
             
             _active_sockets.clear();
