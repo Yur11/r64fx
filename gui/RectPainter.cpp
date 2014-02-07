@@ -1,4 +1,4 @@
-#include "TexturedRect.h"
+#include "RectPainter.h"
 #include <iostream>
 
 #ifdef DEBUG
@@ -9,21 +9,23 @@ using namespace std;
 
 namespace r64fx{
    
-TexturedRect*      TexturedRect::singleton_instance;
-GLuint             TexturedRect::vao[max_rendering_context_count];
-GLuint             TexturedRect::vbo;
-ShadingProgram     TexturedRect::shading_program;
-GLint              TexturedRect::vertex_coord_attribute;
-GLint              TexturedRect::geometry_uniform;
-GLint              TexturedRect::tex_coord_uniform;
-GLuint             TexturedRect::sampler;
-GLint              TexturedRect::sampler_uniform;
+RectPainter*       RectPainter::singleton_instance;
+GLuint             RectPainter::vao[max_rendering_context_count];
+GLuint             RectPainter::vbo;
+ShadingProgram     RectPainter::shading_program;
+GLint              RectPainter::vertex_coord_attribute;
+GLint              RectPainter::geometry_uniform;
+GLint              RectPainter::tex_coord_uniform;
+GLuint             RectPainter::sampler;
+GLint              RectPainter::sampler_uniform;
+GLint              RectPainter::color_uniform;
+GLuint             RectPainter::plain_tex;
     
     
-bool TexturedRect::init()
+bool RectPainter::init()
 {
     VertexShader vs(
-        #include "TexturedRect.vert.h"
+        #include "RectPainter.vert.h"
     );
     
     if(!vs.isOk())
@@ -34,7 +36,7 @@ bool TexturedRect::init()
     }
     
     FragmentShader fs(
-        #include "TexturedRect.frag.h"
+        #include "RectPainter.frag.h"
     );
     
     if(!fs.isOk())
@@ -60,18 +62,20 @@ bool TexturedRect::init()
     geometry_uniform   = glGetUniformLocation(shading_program.id(), "geometry");
     tex_coord_uniform  = glGetUniformLocation(shading_program.id(), "tex_coord");
     sampler_uniform    = glGetUniformLocation(shading_program.id(), "sampler");
+    color_uniform      = glGetUniformLocation(shading_program.id(), "color");
     
 #ifdef DEBUG
     assert(geometry_uniform != -1);
     assert(tex_coord_uniform != -1);
     assert(sampler_uniform != -1);
+    assert(color_uniform != -1);
 #endif//DEBUG
     
     glGenSamplers(1, &sampler);
     
     float vbo_data[8] = {
         0.0, 0.0,  1.0, 0.0,
-        0.0, 1.0,  1.0, 1.0
+        1.0, 1.0,  0.0, 1.0
     };
 
     glGenBuffers(1, &vbo);
@@ -79,20 +83,29 @@ bool TexturedRect::init()
     glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vbo_data, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    singleton_instance = new TexturedRect;
+    unsigned char plain_tex_data[16 * 16 * 4];
+    for(int i=0; i<16*16*4; i++)
+        plain_tex_data[i] = 255;
+        
+    glGenTextures(1, &plain_tex);
+    glBindTexture(GL_TEXTURE_2D, plain_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, plain_tex_data);
+    
+    singleton_instance = new RectPainter;
     
     return true;
 }
 
 
-void TexturedRect::setupForContext(RenderingContextId_t context_id)
+void RectPainter::setupForContext(RenderingContextId_t context_id)
 {
-    cout << "TexturedRect::setupForContext: " << context_id << "\n";
+    cout << "RectPainter::setupForContext: " << context_id << "\n";
 
     if(vao[context_id] !=0)
     {
 #ifdef DEBUG
-        cerr << "TexturedRect: Extra setup for context: " << context_id << " !\n";
+        cerr << "RectPainter: Extra setup for context: " << context_id << " !\n";
 #endif//DEBUG
         return;
     }
@@ -106,12 +119,14 @@ void TexturedRect::setupForContext(RenderingContextId_t context_id)
 }
 
     
-void TexturedRect::cleanupForContext(RenderingContextId_t context_id)
+void RectPainter::cleanupForContext(RenderingContextId_t context_id)
 {
+    cout << "RectPainter::cleanupForContext: " << context_id << "\n";
+    
     if(vao[context_id] == 0)
     {
 #ifdef DEBUG
-        cerr << "TexturedRect: Extra cleanup for context: " << context_id << " !\n";
+        cerr << "RectPainter: Extra cleanup for context: " << context_id << " !\n";
 #endif//DEBUG
         return;
     }
@@ -120,24 +135,55 @@ void TexturedRect::cleanupForContext(RenderingContextId_t context_id)
 }
 
 
-void TexturedRect::render(RenderingContextId_t context_id, float x, float y, float w, float h, float tex_x, float tex_y, float tex_w, float tex_h, GLuint tex)
+void RectPainter::prepare()
 {
     shading_program.use();
-    float geom[4] = { x, y, w, h };
-    glUniform4fv(geometry_uniform, 1, geom);
-    float tex_coord[4] = { tex_x, tex_y, tex_w, tex_h };
-    glUniform4fv(tex_coord_uniform, 1, tex_coord);
+}
+
+
+void RectPainter::setCoords(float* vec)
+{
+    glUniform4fv(geometry_uniform, 1, vec);
+}
+
+
+void RectPainter::setTexture(GLuint tex)
+{
     glBindTexture(GL_TEXTURE_2D, tex);
     glBindSampler(tex, sampler);
     glUniform1f(sampler_uniform, sampler);
-    
+}
+
+
+void RectPainter::setTexCoords(float* vec)
+{
+    glUniform4fv(tex_coord_uniform, 1, vec);
+}
+
+
+void RectPainter::setColor(float* vec)
+{
+    glUniform4fv(color_uniform, 1, vec);
+}
+
+
+void RectPainter::render(RenderingContextId_t context_id)
+{
     glBindVertexArray(vao[context_id]);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     glBindVertexArray(0);
 }
 
 
-void TexturedRect::cleanup()
+void RectPainter::renderOutline(RenderingContextId_t context_id)
+{
+    glBindVertexArray(vao[context_id]);
+    glDrawArrays(GL_LINE_LOOP, 0, 4);
+    glBindVertexArray(0);
+}
+
+
+void RectPainter::cleanup()
 {
     singleton_instance->discard();
 }
