@@ -34,7 +34,10 @@ void RenderingContext::discardItem(RenderingContextAware* item)
             
             for(auto it=all_rendering_contexts[id]->active_items.begin(); it!=all_rendering_contexts[id]->active_items.end(); it++)
                 if(*it == item)
+                {
                     all_rendering_contexts[id]->active_items.erase(it);
+                    break;
+                }
         }            
     }
 }
