@@ -20,15 +20,16 @@
 #include "gui/RectPainter.h"
 #include "gui/Font.h"
 #include "gc/gc.h"
-#include "json/Json.h"
-#include "Machine.h"
 #include "gui/TextureAtlas.h"
 #include "gui/geometry_io.h"
+#include "gui/HorizontalMenu.h"
 
 #include "dsp/Processor.h"
 #include "SawtoothOsc.h"
 #include "MonophonicMixer.h"
 
+#include "json/Json.h"
+#include "Machine.h"
 #include "knobs.h"
 #include "Wire.h"
 
@@ -233,6 +234,66 @@ struct Program{
         /* Setup root view of the main window. */        
         View* view = new View(&fms);
         window->setView(view);
+        
+        
+        HorizontalMenu hm(debug_font);
+        hm.setPosition(0, 0);
+        fms.appendWidget(&hm);
+        
+        Menu session_menu(debug_font);
+        Menu edit_menu(debug_font);
+        Menu view_menu(debug_font);
+        Menu help_menu(debug_font);
+
+        auto hello_act = new Action("Hello", {[](void* source, void* data)->void*{
+            auto act = (Action*) source;
+            cout << act->name().stdstr << "\n";
+            return nullptr;
+        }, this});
+        
+        auto doctor_act = new Action("Doctor", {[](void* source, void* data)->void*{
+            auto act = (Action*) source;
+            cout << act->name().stdstr << "\n";
+            return nullptr;
+        }, this});
+        
+        auto name_act = new Action("Name", {[](void* source, void* data)->void*{
+            auto act = (Action*) source;
+            cout << act->name().stdstr << "\n";
+            return nullptr;
+        }, this});
+        
+        auto continue_act = new Action("Continue", {[](void* source, void* data)->void*{
+            auto act = (Action*) source;
+            cout << act->name().stdstr << "\n";
+            return nullptr;
+        }, this});
+        
+        auto yesterday_act = new Action("Yesterday", {[](void* source, void* data)->void*{
+            auto act = (Action*) source;
+            cout << act->name().stdstr << "\n";
+            return nullptr;
+        }, this});
+        
+        auto tommorow_act = new Action("Tommorow", {[](void* source, void* data)->void*{
+            auto act = (Action*) source;
+            cout << act->name().stdstr << "\n";
+            return nullptr;
+        }, this});
+        
+        session_menu.appendAction(hello_act);
+        session_menu.appendAction(doctor_act);
+        session_menu.appendAction(name_act);
+        session_menu.appendAction(continue_act);
+        session_menu.appendAction(yesterday_act);
+        session_menu.appendAction(tommorow_act);
+        session_menu.update();
+        
+        hm.appendMenu("Session", &session_menu);
+        hm.appendMenu("Edit", &edit_menu);
+        hm.appendMenu("View", &view_menu);
+        hm.appendMenu("Help", &help_menu);
+        hm.update();
                 
 //         auto window2 = SDL2Window::create(640, 480, "window2");
 //         Scene scene2;
