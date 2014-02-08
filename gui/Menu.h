@@ -2,8 +2,7 @@
 #define R64FX_GUI_MENU_H
 
 #include "containers.h"
-#include "Action.h"
-#include "Font.h"
+#include "ActionWidget.h"
 
 
 namespace r64fx{
