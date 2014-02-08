@@ -82,6 +82,10 @@ void MachineScene::mousePressEvent(MouseEvent* event)
 void MachineScene::mouseReleaseEvent(MouseEvent* event)
 {
     mouse_position = counterpart_scene->mouse_position = event->position();
+    Scene::mouseReleaseEvent(event);
+    if(event->has_been_handled)
+        return;
+    
     if(drag_in_progress)
     {
         endDrag();
@@ -97,6 +101,9 @@ void MachineScene::mouseReleaseEvent(MouseEvent* event)
 void MachineScene::mouseMoveEvent(MouseEvent* event)
 {
     mouse_position = counterpart_scene->mouse_position = event->position();
+    Scene::mouseReleaseEvent(event);
+    if(event->has_been_handled)
+        return;
     
     if(drag_in_progress)
        processDrag();
@@ -123,6 +130,10 @@ void MachineScene::keyPressEvent(KeyEvent* event)
     
 void MachineScene::keyReleaseEvent(KeyEvent* event)
 {
+    Scene::keyPressEvent(event);
+    if(event->has_been_handled)
+        return;
+    
     Scene::keyReleaseEvent(event);
 }
 
