@@ -51,9 +51,9 @@ class Widget{
     Window* _window;
     
 protected:
-    void render_children(RenderingContextId_t context_id);
+    void render_children();
     
-    void render_bounding_rect(RenderingContextId_t context_id);
+    void render_bounding_rect();
 
     std::vector<Widget*> _children;
     
@@ -151,7 +151,7 @@ public:
      
         This method should be implemented by subclasses to do their rendering.
     */
-    virtual void render(RenderingContextId_t context_id);
+    virtual void render();
 
     /** @brief Tell the widget to use the newly added information. */
     virtual void update();

@@ -96,8 +96,6 @@ void RenderingContext::update()
  
     if(!new_items.empty())
     {
-        cout << "RenderingContext " << id() << " update " << new_items.size() << " items\n";
-        
         for(auto item : new_items)
         {
             item->setupForContext(id());
@@ -108,8 +106,6 @@ void RenderingContext::update()
     
     if(!discarded_items.empty())
     {
-        cout << "RenderingContext " << id() << " discard " << new_items.size() << " items\n";
-        
         for(auto item : discarded_items)
         {
             item->cleanupForContext(id());

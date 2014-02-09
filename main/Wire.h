@@ -67,7 +67,7 @@ public:
     
     void update();
     
-    void render(RenderingContextId_t context_id);
+    void render();
     
     void unplug();
 };

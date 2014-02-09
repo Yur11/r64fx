@@ -71,7 +71,7 @@ TexturedKnobBackground::TexturedKnobBackground(Texture tex)
 }
 
 
-void TexturedKnobBackground::render(RenderingContextId_t context_id, Rect<float> rect)
+void TexturedKnobBackground::render(Rect<float> rect)
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -81,7 +81,7 @@ void TexturedKnobBackground::render(RenderingContextId_t context_id, Rect<float>
     RectPainter::setTexture(_tex.id());
     RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
     RectPainter::setCoords(0.0, 0.0, rect.width(), rect.height());
-    RectPainter::render(context_id);
+    RectPainter::render();
         
     glDisable(GL_BLEND);
 }
@@ -104,7 +104,7 @@ void KnobHandleTypeA::init()
 }
 
 
-void KnobHandleTypeA::render(RenderingContextId_t context_id, Rect<float> rect, float angle, float radius)
+void KnobHandleTypeA::render( Rect<float> rect, float angle, float radius)
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -122,31 +122,16 @@ void KnobHandleTypeA::render(RenderingContextId_t context_id, Rect<float> rect, 
     
     RectPainter::setTexture(knob_a_base_tex.id());
     RectPainter::setCoords(-rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height());
-    RectPainter::render(context_id);
-    
-//     RectPainter::render(
-//         context_id,
-//         -rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height(),
-//         0.0, 0.0, 1.0, 1.0,
-//         knob_a_base_tex.id()
-//     );
-    
+    RectPainter::render();
+
     rect = rect - radius * 0.2;
     
     glRotatef(-angle, 0.0, 0.0, 1.0);
     
     RectPainter::setTexture(knob_a_shiny_tex.id());
     RectPainter::setCoords(-rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height());
-    RectPainter::render(context_id);
-    
-//     RectPainter::render(
-//         context_id,
-//         -rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height(),
-//         0.0, 0.0, 1.0, 1.0,
-//         knob_a_shiny_tex.id()
-//     );
-//     glUseProgram(0);
-    
+    RectPainter::render();
+
     glPopMatrix();
     
     glDisable(GL_TEXTURE_2D);

@@ -351,8 +351,10 @@ void Wire::update()
     init_cap_vertices(Cap2, wire_points[wire_points.size()-1], wire_points[wire_points.size()-2]);
 }
 
-void Wire::render(RenderingContextId_t context_id)
+void Wire::render()
 {   
+    auto context_id = RenderingContext::current()->id();
+    
     float color_vec[4] = { color.r, color.g, color.b, color.a};
     
     shading_program.use();

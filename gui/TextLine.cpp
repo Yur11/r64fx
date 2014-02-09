@@ -5,7 +5,7 @@ using namespace std;
 
 namespace r64fx{
 
-void TextLine::render(RenderingContextId_t context_id)
+void TextLine::render()
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -21,7 +21,7 @@ void TextLine::render(RenderingContextId_t context_id)
     _font->setPenX(paddingLeft());
     _font->setPenY(paddingBottom() + _font->descender());
 
-    _font->render(context_id, text.stdstr);
+    _font->render(text.stdstr);
     
     glUseProgram(0);
     

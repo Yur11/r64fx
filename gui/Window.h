@@ -28,10 +28,8 @@ class Window : public RenderingContext{
 protected:
     inline static void setEventCallback(VoidFun fun) { event_callback = fun; }
     
-    void render_overlay_menus(RenderingContextId_t context_id);
-    
-    void render(RenderingContextId_t context_id);
-    
+    void render_overlay_menus();
+        
     inline void request_projection_update(int w, int h) 
     { 
         projection_update_needed = true;
@@ -44,7 +42,7 @@ public:
     
     virtual ~Window();
     
-    virtual void render() = 0;
+    virtual void render();
         
     inline void setView(SplittableView* view) { _view = view; }
     inline SplittableView* view() const { return _view; }

@@ -76,7 +76,7 @@ public:
     virtual void makeCurrent();
         
     /** @brief Currently bound context. */
-    inline RenderingContext* current() const { return current_context; }
+    inline static RenderingContext* current() { return current_context; }
     
     /** @brief Perform opengl context specific operation for this contexts. 
      

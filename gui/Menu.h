@@ -16,7 +16,7 @@ public:
     
     void appendAction(Action* act);
     
-    virtual void render(RenderingContextId_t context_id);
+    virtual void render();
     
     virtual void mousePressEvent(MouseEvent* event);
 

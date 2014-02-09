@@ -18,7 +18,7 @@ struct ActionWidget : public Widget, public Padding{
     
     ActionWidget(Action* act, Font* font, Widget* parent = nullptr);
     
-    virtual void render(RenderingContextId_t context_id);
+    virtual void render();
     
     virtual void update();
     

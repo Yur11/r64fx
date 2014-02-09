@@ -57,10 +57,10 @@ public:
     , handle(handle)
     {}
     
-    virtual void render(RenderingContextId_t context_id)
+    virtual void render()
     {
-        background->render(context_id, Widget::rect());
-        handle->render(context_id, Widget::rect(), angle, radius);
+        background->render(Widget::rect());
+        handle->render(Widget::rect(), angle, radius);
     }
 };
 
@@ -72,7 +72,7 @@ public:
     TexturedKnobBackground(Texture tex);
     TexturedKnobBackground(std::string tex) : TexturedKnobBackground(Texture(tex)) {}
     
-    void render(RenderingContextId_t context_id, Rect<float> rect);
+    void render(Rect<float> rect);
 };
 
 
@@ -80,7 +80,7 @@ class KnobHandleTypeA{
 public:
     static void init();
     
-    void render(RenderingContextId_t context_id, Rect<float> rect, float angle, float radius);
+    void render(Rect<float> rect, float angle, float radius);
 };
 
     

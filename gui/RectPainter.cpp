@@ -167,17 +167,17 @@ void RectPainter::setColor(float* vec)
 }
 
 
-void RectPainter::render(RenderingContextId_t context_id)
+void RectPainter::render()
 {
-    glBindVertexArray(vao[context_id]);
+    glBindVertexArray(vao[RenderingContext::current()->id()]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     glBindVertexArray(0);
 }
 
 
-void RectPainter::renderOutline(RenderingContextId_t context_id)
+void RectPainter::renderOutline()
 {
-    glBindVertexArray(vao[context_id]);
+    glBindVertexArray(vao[RenderingContext::current()->id()]);
     glDrawArrays(GL_LINE_LOOP, 0, 4);
     glBindVertexArray(0);
 }

@@ -56,32 +56,26 @@ void Widget::insertWidget(Widget* widget, int index)
 }
     
  
-void Widget::render_children(RenderingContextId_t context_id)
+void Widget::render_children()
 {
     for(auto &child : _children)
     {
         glPushMatrix();
         glTranslatef(child->x(), child->y(), 0.0);
-        child->render(context_id);
+        child->render();
         glPopMatrix();
     }
 }
     
     
-void Widget::render_bounding_rect(RenderingContextId_t context_id)
+void Widget::render_bounding_rect()
 {
-//     glBegin(GL_LINE_LOOP);
-//         glVertex2f(0.0, 0.0);
-//         glVertex2f(0.0, height());
-//         glVertex2f(width(), height());
-//         glVertex2f(width(), 0.0);
-//     glEnd();
 }
     
     
-void Widget::render(RenderingContextId_t context_id)
+void Widget::render()
 {
-    render_children(context_id);
+    render_children();
 }
 
 

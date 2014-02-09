@@ -14,9 +14,9 @@ using namespace std;
 
 namespace r64fx{
     
-void MachineScene::render(RenderingContextId_t context_id)
+void MachineScene::render()
 {
-    Scene::render(context_id);
+    Scene::render();
     if(!selected_widgets.empty())
     {
         RectPainter::prepare();
@@ -30,7 +30,7 @@ void MachineScene::render(RenderingContextId_t context_id)
             auto size = w->size();
             
             RectPainter::setCoords(position.x, position.y, size.w, size.h);
-            RectPainter::renderOutline(context_id);
+            RectPainter::renderOutline();
         }
         
         if(drag_in_progress)
@@ -46,17 +46,17 @@ void MachineScene::render(RenderingContextId_t context_id)
                 auto size = w->size();                
                 
                 RectPainter::setCoords(position.x, position.y, size.w, size.h);
-                RectPainter::renderOutline(context_id);
+                RectPainter::renderOutline();
             }
         }
     }
 }
 
 
-void MachineScene::render_wires(RenderingContextId_t context_id)
+void MachineScene::render_wires()
 {
     for(auto w : *wires)
-        w->render(context_id);
+        w->render();
 }
 
 
@@ -82,9 +82,6 @@ void MachineScene::mousePressEvent(MouseEvent* event)
 void MachineScene::mouseReleaseEvent(MouseEvent* event)
 {
     mouse_position = counterpart_scene->mouse_position = event->position();
-    Scene::mouseReleaseEvent(event);
-    if(event->has_been_handled)
-        return;
     
     if(drag_in_progress)
     {
@@ -101,9 +98,6 @@ void MachineScene::mouseReleaseEvent(MouseEvent* event)
 void MachineScene::mouseMoveEvent(MouseEvent* event)
 {
     mouse_position = counterpart_scene->mouse_position = event->position();
-    Scene::mouseReleaseEvent(event);
-    if(event->has_been_handled)
-        return;
     
     if(drag_in_progress)
        processDrag();
@@ -204,10 +198,10 @@ void MachineScene::endDrag()
 }
 
 
-void FrontMachineScene::render(RenderingContextId_t context_id)
+void FrontMachineScene::render()
 {
-    render_wires(context_id);
-    MachineScene::render(context_id);
+    render_wires();
+    MachineScene::render();
 }
 
 
@@ -260,10 +254,10 @@ void BackMachineScene::handleSocketClick(Socket* socket)
 }
 
 
-void BackMachineScene::render(RenderingContextId_t context_id)
+void BackMachineScene::render()
 {
-    MachineScene::render(context_id);
-    render_wires(context_id);
+    MachineScene::render();
+    render_wires();
 }
     
 }//namespace r64fx

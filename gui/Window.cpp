@@ -22,6 +22,13 @@ Window::~Window()
 }
 
 
+void Window::render()
+{
+    _view->render();
+    render_overlay_menus();
+}
+
+
 void Window::update_projection()
 {
     glViewport(0, 0, new_w, new_h);
@@ -38,15 +45,7 @@ void Window::update_projection()
 }
 
 
-void Window::render(RenderingContextId_t context_id)
-{
-    _view->render(context_id);
-    
-    render_overlay_menus(context_id);
-}
-
-
-void Window::render_overlay_menus(RenderingContextId_t context_id)
+void Window::render_overlay_menus()
 {
     glDisable(GL_SCISSOR_TEST);
     glEnable(GL_BLEND);
@@ -55,7 +54,7 @@ void Window::render_overlay_menus(RenderingContextId_t context_id)
     {
         glPushMatrix();
         glTranslatef(menu->x(), menu->y(), 0.0);
-        menu->render(context_id);
+        menu->render();
         glPopMatrix();
     }
     glDisable(GL_BLEND);

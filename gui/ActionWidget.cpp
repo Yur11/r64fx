@@ -12,14 +12,14 @@ ActionWidget::ActionWidget(Action* act, Font* font, Widget* parent)
 }
 
 
-void ActionWidget::render(RenderingContextId_t context_id)
+void ActionWidget::render()
 {
     glDisable(GL_TEXTURE_2D);
     
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    action->icon().render(context_id);
+    action->icon().render();
     font->prepare();
     if(is_highlighted)
         font->setRGBA(0.7, 0.9, 0.9, 1.0);
@@ -27,7 +27,7 @@ void ActionWidget::render(RenderingContextId_t context_id)
         font->setRGBA(0.9, 0.7, 0.7, 1.0);
     font->setPenX(action->icon().size.w + 5);
     font->setPenY(2.0);
-    font->render(context_id, action->name().stdstr);
+    font->render(action->name().stdstr);
     
     glUseProgram(0);
     

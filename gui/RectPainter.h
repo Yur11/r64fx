@@ -65,9 +65,9 @@ public:
         setColor(vec);
     }
     
-    static void render(RenderingContextId_t context_id);
+    static void render();
     
-    static void renderOutline(RenderingContextId_t context_id);
+    static void renderOutline();
             
     static void cleanup();
 };

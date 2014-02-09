@@ -13,7 +13,7 @@ namespace r64fx{
     
     
     
-void Scene::render(RenderingContextId_t context_id)
+void Scene::render()
 {    
     glClearColor(0.2, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -23,7 +23,7 @@ void Scene::render(RenderingContextId_t context_id)
         glPushMatrix();
         auto position = widget->position();
         glTranslated(position.x, position.y, 0.0);
-        widget->render(context_id);
+        widget->render();
         glPopMatrix();
     }
 }

@@ -9,7 +9,7 @@ using namespace std;
 
 namespace r64fx{
     
-void TextEdit::render(RenderingContextId_t context_id)
+void TextEdit::render()
 {    
     /* Draw background. */
     glColor(this->backgroundColor());
@@ -21,7 +21,7 @@ void TextEdit::render(RenderingContextId_t context_id)
     glEnd();
     
     /* Draw text. */
-    TextLine::render(context_id);
+    TextLine::render();
     
     if(text_selection.drag_occured())
     {

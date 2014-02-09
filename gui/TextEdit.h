@@ -115,7 +115,7 @@ public:
     
     inline Color backgroundColor() const { return background_color; }
     
-    virtual void render(RenderingContextId_t context_id);
+    virtual void render();
     
     virtual void mousePressEvent(MouseEvent* event);
     

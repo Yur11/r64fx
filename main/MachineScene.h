@@ -22,7 +22,7 @@ class MachineScene : public Scene{
     bool can_drop = false;
 
 protected:    
-    void render_wires(RenderingContextId_t context_id);
+    void render_wires();
     
 public:
     /* Making this thing public for debugging purposes. */
@@ -32,7 +32,7 @@ public:
     
     MachineScene* counterpart_scene = nullptr;
     
-    virtual void render(RenderingContextId_t context_id);
+    virtual void render();
 
     virtual void mousePressEvent(MouseEvent*);
     
@@ -59,7 +59,7 @@ public:
 /** @brief Scene with machines and wires. Front. */
 class FrontMachineScene : public MachineScene{
 public:
-    virtual void render(RenderingContextId_t context_id);
+    virtual void render();
 };
 
 
@@ -72,7 +72,7 @@ class BackMachineScene : public MachineScene{
     void handleSocketClick(Socket* socket);
     
 public:
-    virtual void render(RenderingContextId_t context_id);
+    virtual void render();
 };
 
 

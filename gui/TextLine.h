@@ -50,7 +50,7 @@ public:
     
     inline float minWidth() const { return _min_width; }
     
-    virtual void render(RenderingContextId_t context_id);
+    virtual void render();
     
     /** @brief Update widget to fit the text. */
     void update();

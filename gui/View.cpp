@@ -213,7 +213,7 @@ void View::resize(int left, int top, int right, int bottom)
 }
     
     
-void View::render(RenderingContextId_t context_id)
+void View::render()
 {    
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
@@ -229,7 +229,7 @@ void View::render(RenderingContextId_t context_id)
     
     glTranslatef(_offset.x, _offset.y, 0.0);
     
-    _scene->render(context_id);
+    _scene->render();
     glPopMatrix();
     glDisable(GL_SCISSOR_TEST);
     
@@ -406,10 +406,10 @@ void SplitView::replaceSubView(SplittableView* old_view, SplittableView* new_vie
 }
 
 
-void SplitView::render(RenderingContextId_t context_id)
+void SplitView::render()
 {
-    viewA()->render(context_id);
-    viewB()->render(context_id);
+    viewA()->render();
+    viewB()->render();
     
     RectPainter::prepare();
     RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
@@ -425,7 +425,7 @@ void SplitView::render(RenderingContextId_t context_id)
     
     set_separator_coords();
     
-    RectPainter::renderOutline(context_id);
+    RectPainter::renderOutline();
 }
     
 void SplitView::mousePressEvent(MouseEvent* event)

@@ -29,7 +29,7 @@ public:
   
     inline const std::vector<Widget*> &widgets() { return _widgets; }
   
-    virtual void render(RenderingContextId_t context_id);
+    virtual void render();
     
     virtual void mousePressEvent(MouseEvent*);
     

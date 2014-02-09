@@ -92,7 +92,7 @@ public:
         
     void setRGBA(float r, float g, float b, float a);
     
-    void render(RenderingContextId_t context_id, std::string utf8_text);
+    void render(std::string utf8_text);
     
     void renderChar(std::string utf8_char);
     

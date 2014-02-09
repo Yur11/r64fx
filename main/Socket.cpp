@@ -29,7 +29,7 @@ Socket::Socket(Widget* parent) : Widget(parent)
 }
 
 
-void Socket::render(RenderingContextId_t context_id)
+void Socket::render()
 {    
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -39,17 +39,8 @@ void Socket::render(RenderingContextId_t context_id)
     RectPainter::setTexture(Socket::texture.id());
     RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
     RectPainter::setCoords(0.0, 0.0, width(), height());
-    RectPainter::render(context_id);
-    
-//     RectPainter::render(
-//         context_id,
-//         0.0, 0.0, width(), height(),
-//         0.0, 0.0, 1.0, 1.0,
-//         Socket::texture.id()
-//     );
-//     
-//     glUseProgram(0);
-    
+    RectPainter::render();
+
     glDisable(GL_BLEND);    
 }
 

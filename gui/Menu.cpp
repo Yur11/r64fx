@@ -32,7 +32,7 @@ void Menu::appendAction(Action* act)
 }
 
 
-void Menu::render(RenderingContextId_t context_id)
+void Menu::render()
 {
     RectPainter::prepare();
     
@@ -42,9 +42,9 @@ void Menu::render(RenderingContextId_t context_id)
     RectPainter::setColor(0.0, 0.01, 0.0, 0.85);
     
     RectPainter::setCoords(0.0, 0.0, width(), height());
-    RectPainter::render(context_id);
+    RectPainter::render();
     
-    render_children(context_id);
+    render_children();
 }
 
 

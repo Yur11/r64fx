@@ -10,7 +10,7 @@ namespace r64fx{
 
 map<string, Icon> all_icons;
 
-void Icon::render(RenderingContextId_t context_id)
+void Icon::render()
 {
     if(_texture.isGood())
     {        
@@ -19,7 +19,7 @@ void Icon::render(RenderingContextId_t context_id)
         RectPainter::setTexture(_texture.id());
         RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
         RectPainter::setCoords(0.0, 0.0, size.w, size.h);
-        RectPainter::render(context_id);
+        RectPainter::render();
     }
 }
 
