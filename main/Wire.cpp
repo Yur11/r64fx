@@ -1,5 +1,6 @@
 #include "Wire.h"
 #include "gui/bezier.h"
+#include "gui/Projection2D.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -13,6 +14,7 @@ ShadingProgram Wire::shading_program;
     
 GLint Wire::vertex_data_attribute;
 
+GLint Wire::scale_and_offset_uniform;
 GLint Wire::color_uniform;
 GLint Wire::sampler_uniform;
 
@@ -73,9 +75,11 @@ void Wire::init_shader()
     assert(vertex_data_attribute != -1);
 #endif//DEBUG
 
+    scale_and_offset_uniform = glGetUniformLocation(shading_program.id(), "scale_and_offset");
     sampler_uniform = glGetUniformLocation(shading_program.id(), "sampler");
     color_uniform = glGetUniformLocation(shading_program.id(), "color");
 #ifdef DEBUG
+    assert(scale_and_offset_uniform != -1);
     assert(sampler_uniform != -1);
     assert(color_uniform != -1);
 #endif//DEBUG
@@ -352,12 +356,14 @@ void Wire::update()
 }
 
 void Wire::render()
-{   
+{       
     auto context_id = RenderingContext::current()->id();
     
     float color_vec[4] = { color.r, color.g, color.b, color.a};
     
     shading_program.use();
+    
+    glUniform4fv(scale_and_offset_uniform, 1, current_2d_projection->vec());
     
     glBindTexture(GL_TEXTURE_1D, texture);
     glUniform1f(sampler_uniform, sampler);

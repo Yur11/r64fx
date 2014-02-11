@@ -16,6 +16,7 @@ class Wire : public RenderingContextAware{
      */
     static GLint vertex_data_attribute;
 
+    static GLint scale_and_offset_uniform;
     static GLint color_uniform;
     static GLint sampler_uniform;
     
