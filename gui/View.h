@@ -4,6 +4,7 @@
 #include "Scene.h"
 #include "Menu.h"
 #include "MouseEvent.h"
+#include "Projection2D.h"
 
 
 namespace r64fx{

@@ -21,10 +21,16 @@ void Scene::render()
     for(auto widget : _widgets)
     {
         glPushMatrix();
+        auto p = *current_2d_projection;
+        
         auto position = widget->position();
         glTranslated(position.x, position.y, 0.0);
+        current_2d_projection->translate(position.x, position.y);
+        
         widget->render();
+        
         glPopMatrix();
+        *current_2d_projection = p;
     }
 }
 

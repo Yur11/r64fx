@@ -29,9 +29,14 @@ void Window::render()
 }
 
 
-void Window::update_projection()
+void Window::update_viewport()
 {
     glViewport(0, 0, new_w, new_h);
+}
+
+
+void Window::update_projection()
+{
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     
@@ -42,6 +47,8 @@ void Window::update_projection()
     glLoadIdentity();
     
     view()->resize(0, new_h, new_w, 0);
+    
+    *current_2d_projection = Projection2D::ortho2d(0, new_w, 0, new_h);
 }
 
 
@@ -53,9 +60,15 @@ void Window::render_overlay_menus()
     for(auto &menu : _overlay_menus)
     {
         glPushMatrix();
+        auto p = *current_2d_projection;
+        
         glTranslatef(menu->x(), menu->y(), 0.0);
+        current_2d_projection->translate(menu->x(), menu->y());
+        
         menu->render();
+        
         glPopMatrix();
+        *current_2d_projection = p;
     }
     glDisable(GL_BLEND);
     glEnable(GL_SCISSOR_TEST);
@@ -292,10 +305,11 @@ void Window::mainSequence()
     {
         w->makeCurrent();
         
-        if(w->projection_update_needed)
+        if(w->viewport_update_needed)
         {
+            w->update_viewport();
             w->update_projection();
-            w->projection_update_needed = false;
+            w->viewport_update_needed = false;
         }
         
         w->update();

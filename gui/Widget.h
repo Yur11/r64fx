@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include "geometry.h"
 #include "RenderingContext.h"
+#include "Projection2D.h"
 #include "events.h"
 #include "Color.h"
 #include "Message.h"

@@ -222,15 +222,24 @@ void View::render()
     glScissor(x(), y(), width(), height());
     
     glEnable(GL_SCISSOR_TEST);
+    
     glPushMatrix();
+    auto p = *current_2d_projection;
+    
     glTranslatef(x(), y(), 0.0);
+    current_2d_projection->translate(x(), y());
 
     glScalef(scaleFactor(), scaleFactor(), 1.0);
+    current_2d_projection->scale(scaleFactor(), scaleFactor());
     
     glTranslatef(_offset.x, _offset.y, 0.0);
+    current_2d_projection->translate(_offset.x, _offset.y);
     
     _scene->render();
+    
     glPopMatrix();
+    *current_2d_projection = p;
+    
     glDisable(GL_SCISSOR_TEST);
     
 }
@@ -428,6 +437,7 @@ void SplitView::render()
     RectPainter::renderOutline();
 }
     
+    
 void SplitView::mousePressEvent(MouseEvent* event)
 {   
     auto ra = viewA()->rect().to<float>();
@@ -448,6 +458,7 @@ void SplitView::mousePressEvent(MouseEvent* event)
         }
     }
 }
+
 
 void SplitView::mouseReleaseEvent(MouseEvent* event)
 {   

@@ -19,9 +19,11 @@ class Window : public RenderingContext{
     
     Widget* overlay_menu_at(int x, int y);
     
-    bool projection_update_needed = false;
+    bool viewport_update_needed = false;
     int new_w;
     int new_h;
+        
+    void update_viewport();
     
     void update_projection();
     
@@ -30,9 +32,9 @@ protected:
     
     void render_overlay_menus();
         
-    inline void request_projection_update(int w, int h) 
+    inline void request_viewport_update(int w, int h) 
     { 
-        projection_update_needed = true;
+        viewport_update_needed = true;
         new_w = w;
         new_h = h;
     }
