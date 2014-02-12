@@ -123,12 +123,6 @@ void RenderingContext::cleanup()
         discarded_items.back()->cleanupForContext(id());
         discarded_items.pop_back();
     }
-    
-    while(!active_items.empty())
-    {
-        active_items.back()->cleanupForContext(id());
-        active_items.pop_back();
-    }
 }
 
 
