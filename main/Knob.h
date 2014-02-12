@@ -1,5 +1,5 @@
-#ifndef R64FX_KNOBS_H
-#define R64FX_KNOBS_H
+#ifndef R64FX_MAIN_KNOB_H
+#define R64FX_MAIN_KNOB_H
 
 #include "gui/Widget.h"
 #include "gui/rotations.h"
@@ -12,12 +12,11 @@ namespace r64fx{
 /** @brief Base class for knob widgets. */    
 class BasicKnob : public Widget, public Padding{
     
+    
 protected:
     float rad_angle = 0.0;
     
-public:
-    static void init();
-    
+public:    
     BasicKnob(Widget* parent = nullptr);
     
     float min_angle = 45;

@@ -1,4 +1,4 @@
-#include "knobs.h"
+#include "Knob.h"
 #include "gui/MouseEvent.h"
 #include "gui/bezier.h"
 #include "gui/Window.h"
@@ -13,6 +13,7 @@ using namespace std;
 namespace r64fx{
     
 extern string data_prefix;
+
 
 BasicKnob::BasicKnob(Widget* parent) : Widget(parent)
 {
@@ -110,6 +111,7 @@ void KnobHandleTypeA::render( Rect<float> rect, float angle, float radius)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glPushMatrix();
+    
     glTranslatef(rect.width() * 0.5, rect.height() * 0.5, 0.0);
     glScalef(-1.0, 1.0, 1.0);
     glRotatef(angle, 0.0, 0.0, 1.0);
