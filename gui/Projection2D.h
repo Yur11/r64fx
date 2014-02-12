@@ -46,6 +46,11 @@ public:
     inline float tx() const { return sxsytxty[2]; }
     inline float ty() const { return sxsytxty[3]; }
     
+    inline Point<float> project(Point<float> p)
+    {
+        return { p.x * sx() + tx(), p.y * sy() + ty() };
+    }
+    
     static void resetCurrentProjection();
 };
 
