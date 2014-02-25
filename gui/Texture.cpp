@@ -1,6 +1,7 @@
 #include "Texture.h"
+#include "Error.h"
 #include "shared_sources/read_png.h"
-#include <GL/glu.h>
+#include <GL/glew.h>
 #include <vector>
 #ifdef DEBUG
 #include <assert.h>
@@ -59,14 +60,16 @@ Texture::Texture(FILE* fd, bool close_fd)
 
 void Texture::load_to_vram(int width, int height, int channel_count, int mode, unsigned char* bytes)
 {
-    glGenTextures(1, &_texture);
-    glBindTexture(GL_TEXTURE_2D, _texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-        
+    glGenTextures(1, &_texture);                                  CHECK_FOR_GL_ERRORS;
+    glBindTexture(GL_TEXTURE_2D, _texture);                       CHECK_FOR_GL_ERRORS;
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);  CHECK_FOR_GL_ERRORS;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);               CHECK_FOR_GL_ERRORS;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);  CHECK_FOR_GL_ERRORS;
+            
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, mode, GL_UNSIGNED_BYTE, bytes);
+    CHECK_FOR_GL_ERRORS;
+   
+    glBindTexture(GL_TEXTURE_2D, 0);   CHECK_FOR_GL_ERRORS;
     
     _width = width;
     _height = height;

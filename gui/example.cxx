@@ -1,35 +1,36 @@
 #include <iostream>
 #include <unistd.h>
 #include "Config.h"
-#include "Window.h"
+#include "SDL2Window.h"
 #include "Scene.h"
 #include "Dummy.h"
 #include "containers.h"
 #include "TextEdit.h"
 #include "Keyboard.h"
 #include "Icon.h"
-#include "MenuItem.h"
-#include "menus.h"
 
 using namespace std;
+
+namespace r64fx{
+    
+string data_prefix = "../data/";
+
+Font* debug_font = nullptr;
+    
+}//namespace r64fx
+
 using namespace r64fx;
 
 
 int main()
 {
-    if(!Config::init())
-    {
-        cerr << "Failed to init configuration!\n";
-        return 1;
-    }
-    
-    if(!Window::init())
+    if(!SDL2Window::init())
     {
         cerr << "Failed to init GUI!\n";
         return 2;
     }
     
-    Window window(800, 600, "My window");
+    auto window = SDL2Window::create(800, 600, "My window");
     Scene scene;
     View view(&scene);
     
@@ -47,23 +48,15 @@ int main()
     c.update();
     
     scene.appendWidget(&c);
+    window->setView(&view);
     
-    window.setView(&view);
-    for(;;)
-    {
-        Window::processEvents();
-        
-        //Process other stuff here.
-        
-        window.render();
-        window.swapBuffers();
-        if(Window::shouldQuit()) break;
-        usleep(3000);
+    while(Window::count() > 0)
+    {       
+        Window::mainSequence();
     }
     
-    Keyboard::endTextInput();
         
-    Window::cleanup();    
+    window->cleanup();    
     
     return 0;
 }

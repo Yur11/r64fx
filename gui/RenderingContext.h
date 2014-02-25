@@ -101,8 +101,6 @@ protected:
  */
 class RenderingContextAware : public Disposable{
     friend class RenderingContext;
-        
-    bool is_setup_for[max_rendering_context_count];
    
 protected:
     virtual void setupForContext(RenderingContextId_t context_id) = 0;

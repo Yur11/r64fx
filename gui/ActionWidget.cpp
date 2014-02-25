@@ -1,4 +1,5 @@
 #include "ActionWidget.h"
+#include "Error.h"
 
 namespace r64fx{
     
@@ -14,10 +15,11 @@ ActionWidget::ActionWidget(Action* act, Font* font, Widget* parent)
 
 void ActionWidget::render()
 {
-    glDisable(GL_TEXTURE_2D);
-    
     glEnable(GL_BLEND);
+    CHECK_FOR_GL_ERRORS; 
+    
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    CHECK_FOR_GL_ERRORS; 
     
     action->icon().render();
     font->prepare();
@@ -30,8 +32,10 @@ void ActionWidget::render()
     font->render(action->name().stdstr);
     
     glUseProgram(0);
+    CHECK_FOR_GL_ERRORS; 
     
     glDisable(GL_BLEND);
+    CHECK_FOR_GL_ERRORS; 
 }
 
 

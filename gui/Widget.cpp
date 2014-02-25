@@ -60,15 +60,15 @@ void Widget::render_children()
 {
     for(auto &child : _children)
     {
-        glPushMatrix();
+//         glPushMatrix();
         auto p = *current_2d_projection;
         
-        glTranslatef(child->x(), child->y(), 0.0);
+//         glTranslatef(child->x(), child->y(), 0.0);
         current_2d_projection->translate(child->x(), child->y());
         
         child->render();
         
-        glPopMatrix();
+//         glPopMatrix();
         *current_2d_projection = p;
     }
 }

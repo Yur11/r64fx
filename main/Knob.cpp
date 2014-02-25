@@ -1,4 +1,5 @@
 #include "Knob.h"
+#include "gui/Error.h"
 #include "gui/MouseEvent.h"
 #include "gui/bezier.h"
 #include "gui/Window.h"
@@ -75,7 +76,9 @@ TexturedKnobBackground::TexturedKnobBackground(Texture tex)
 void TexturedKnobBackground::render(Rect<float> rect)
 {
     glEnable(GL_BLEND);
+    CHECK_FOR_GL_ERRORS;
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    CHECK_FOR_GL_ERRORS;
     
     RectPainter::prepare();
     RectPainter::setTexCoords(0.0, 0.0, 1.0, -1.0);
@@ -85,6 +88,7 @@ void TexturedKnobBackground::render(Rect<float> rect)
     RectPainter::render();
         
     glDisable(GL_BLEND);
+    CHECK_FOR_GL_ERRORS;
 }
 
 
@@ -96,7 +100,7 @@ void KnobHandleTypeA::init()
 {
     knob_a_base_tex = Texture(data_prefix + "textures/knob_a.png");
     knob_a_shiny_tex = Texture(data_prefix + "textures/brushed_metal_knob_top.png");
-    knob_a_base_tex.clamp();
+    glActiveTexture(GL_TEXTURE0 + 0);
     
 #ifdef DEBUG
     assert(knob_a_base_tex.isGood());
@@ -107,14 +111,14 @@ void KnobHandleTypeA::init()
 
 void KnobHandleTypeA::render( Rect<float> rect, float angle, float radius)
 {
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);                                 CHECK_FOR_GL_ERRORS;
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  CHECK_FOR_GL_ERRORS;
     
-    glPushMatrix();
+//     glPushMatrix();
     
-    glTranslatef(rect.width() * 0.5, rect.height() * 0.5, 0.0);
-    glScalef(-1.0, 1.0, 1.0);
-    glRotatef(angle, 0.0, 0.0, 1.0);
+//     glTranslatef(rect.width() * 0.5, rect.height() * 0.5, 0.0);
+//     glScalef(-1.0, 1.0, 1.0);
+//     glRotatef(angle, 0.0, 0.0, 1.0);
 
     rect = rect - radius * 0.3777;
     
@@ -128,17 +132,17 @@ void KnobHandleTypeA::render( Rect<float> rect, float angle, float radius)
 
     rect = rect - radius * 0.2;
     
-    glRotatef(-angle, 0.0, 0.0, 1.0);
+//     glRotatef(-angle, 0.0, 0.0, 1.0);
     
     RectPainter::setTexture(knob_a_shiny_tex.id());
     RectPainter::setCoords(-rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height());
     RectPainter::render();
 
-    glPopMatrix();
+//     glPopMatrix();
     
-    glDisable(GL_TEXTURE_2D);
+//     glDisable(GL_TEXTURE_2D);
     
-    glDisable(GL_BLEND);
+    glDisable(GL_BLEND);     CHECK_FOR_GL_ERRORS;
 }
 
 

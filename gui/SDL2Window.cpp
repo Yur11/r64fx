@@ -29,6 +29,7 @@ SDL2Window::SDL2Window(RenderingContextId_t id, int width, int height, const cha
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1); 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     
     _window = SDL_CreateWindow(
         title, 
@@ -374,7 +375,7 @@ void SDL2Window::processEvents()
                 {
                     int w = event.window.data1;
                     int h = event.window.data2;
-                    window->request_projection_update(w, h);
+                    window->request_viewport_update(w, h);
                 }
                 else if(event.window.event == SDL_WINDOWEVENT_CLOSE)
                 {

@@ -11,18 +11,21 @@
 #error "No valid Window implementation present!"
 #endif//USE_SDL2
 
+#include "gui/Error.h"
 #include "gui/RenderingContext.h"
 #include "gui/Translation.h"
 #include "gui/Icon.h"
 #include "gui/Dummy.h"
 #include "gui/TextEdit.h"
 #include "gui/Keyboard.h"
+#include "gui/RectVertices.h"
 #include "gui/RectPainter.h"
 #include "gui/Font.h"
 #include "gc/gc.h"
 #include "gui/TextureAtlas.h"
 #include "gui/geometry_io.h"
 #include "gui/HorizontalMenu.h"
+#include "gui/Dummy.h"
 
 #include "dsp/Processor.h"
 #include "SawtoothOsc.h"
@@ -30,7 +33,7 @@
 
 #include "json/Json.h"
 #include "Machine.h"
-#include "knobs.h"
+#include "Knob.h"
 #include "Wire.h"
 
 using namespace std;
@@ -116,11 +119,23 @@ struct Program{
         /* Can be done only after we have obtained the OpenGL context. */
         if(!Window::initGlew())
             return 3;
-
+        
+        Mouse::init();
+        
         Keyboard::init();
         
         Texture::init();
+        
+        if(!Painter::init())
+        {
+            cerr << "Failed to init painter!\n";
+            return 4;
+        }
 
+        Painter::init();
+        
+        RectVertices::init();
+        
         RectPainter::init();
         
         Socket::init();
@@ -221,10 +236,10 @@ struct Program{
         sb->update();
         m3->addSocket(sb);
         
-//         Wire* wire = new Wire(sa, sb);
-//         wire->update();
-//         wire->color = { 0.7, 0.7, 0.1, 0.0 };
-//         wires.push_back(wire);
+        Wire* wire = new Wire(sa, sb);
+        wire->update();
+        wire->color = { 0.7, 0.7, 0.1, 0.0 };
+        wires.push_back(wire);
         
         /* Setup View icons. */
         View::split_view_vert_icon = Icon({24, 24}, data_prefix + "textures/split_vertically.png");
@@ -309,6 +324,8 @@ struct Program{
 //         
 //         int max_texture_size;
 //         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+//         cout << "max_texture_size = " << max_texture_size << "\n";
+//         return 0;
         
 //         jack_status_t jack_status;
 //         jack_client = jack_client_open("r64fx", JackNullOption, &jack_status);
@@ -466,8 +483,14 @@ struct Program{
 //         cout << graph->debug() << "\n";
 
 //         jack_activate(jack_client);
+        
+        Dummy dummy(100, 100);
+        dummy.setPosition(0, 0);
+        fms.appendWidget(&dummy);
+        
 
         glEnable(GL_MULTISAMPLE);
+        CHECK_FOR_GL_ERRORS;
 
         /* Main event loop. */
         int gc_counter = 256;
@@ -500,6 +523,8 @@ struct Program{
 //         jack_client_close(jack_client);
 //         delete graph;
 
+        Mouse::cleanup();
+//         RectVertices::cleanup();
         RectPainter::cleanup();
         Texture::cleanup();
         Window_t::cleanup();

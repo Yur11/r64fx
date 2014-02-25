@@ -8,7 +8,7 @@ in float tex_coord;
 
 void main()
 {
-   vec4 texel = texture1D(sampler, tex_coord);
+   vec4 texel = texture(sampler, tex_coord);
    
    gl_FragColor = vec4(
        color.r * texel.r, 

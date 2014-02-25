@@ -223,21 +223,21 @@ void View::render()
     
     glEnable(GL_SCISSOR_TEST);
     
-    glPushMatrix();
+//     glPushMatrix();
     auto p = *current_2d_projection;
     
-    glTranslatef(x(), y(), 0.0);
+//     glTranslatef(x(), y(), 0.0);
     current_2d_projection->translate(x(), y());
 
-    glScalef(scaleFactor(), scaleFactor(), 1.0);
+//     glScalef(scaleFactor(), scaleFactor(), 1.0);
     current_2d_projection->scale(scaleFactor(), scaleFactor());
     
-    glTranslatef(_offset.x, _offset.y, 0.0);
+//     glTranslatef(_offset.x, _offset.y, 0.0);
     current_2d_projection->translate(_offset.x, _offset.y);
     
     _scene->render();
     
-    glPopMatrix();
+//     glPopMatrix();
     *current_2d_projection = p;
     
     glDisable(GL_SCISSOR_TEST);

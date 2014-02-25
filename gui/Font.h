@@ -24,6 +24,7 @@ class Font : public RenderingContextAware{
     static GLint g_uniform;
     static GLint b_uniform;
     static GLint a_uniform;
+    static GLint projection_uniform;
     static GLint glyph_width_coeff_uniform;
     static GLuint glyph_sampler;
     static GLint glyph_sampler_uniform;

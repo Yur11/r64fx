@@ -3,7 +3,10 @@
 #include "KeyEvent.h"
 #include "Menu.h"
 #include "Window.h"
+#include "RectVertices.h"
+#include "Error.h"
 #include <iostream>
+#include <assert.h>
 
 
 using namespace std;
@@ -26,17 +29,17 @@ void* on_menu_click(void* source, void* data)
 Menu* _debug_menu = nullptr;
     
 void Dummy::render()
-{    
-    glColor3f(1.0, 0.0, 0.0);
-    
-    render_bounding_rect();
-    
-    glPointSize(5.0);
-    glColor3f(0.0, 0.0, 1.0);
-    glBegin(GL_POINTS);
-    glVertex2f(_last_mouse_move.x, _last_mouse_move.y);
-    glEnd();
-    glPointSize(1.0);
+{  
+    auto rv = RectVertices::instance();
+    rv->setRect(rect());
+        
+    Painter::enable();
+    Painter::setColor({1.0, 1.0, 1.0, 1.0});
+    Painter::useCurrent2dProjection();
+    rv->bindArray();
+    Painter::paint(GL_TRIANGLE_STRIP, rv->size());
+    rv->unbindArray();
+    Painter::disable();
 }
 
 

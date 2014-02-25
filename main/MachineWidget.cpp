@@ -1,5 +1,6 @@
 #include "MachineWidget.h"
 #include "MachineScene.h"
+#include "gui/Error.h"
 #include "gui/MouseEvent.h"
 #include "gui/RectPainter.h"
 
@@ -43,6 +44,7 @@ void MachineWidget::render()
     RectPainter::render();
     
     glUseProgram(0);
+    CHECK_FOR_GL_ERRORS;
     
     Widget::render();
 }

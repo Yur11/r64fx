@@ -1,4 +1,5 @@
 #include "Socket.h"
+#include "gui/Error.h"
 #include "gui/MouseEvent.h"
 #include "gui/RectPainter.h"
 
@@ -32,7 +33,9 @@ Socket::Socket(Widget* parent) : Widget(parent)
 void Socket::render()
 {    
     glEnable(GL_BLEND);
+    CHECK_FOR_GL_ERRORS;
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    CHECK_FOR_GL_ERRORS;
     
     RectPainter::prepare();
     RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
@@ -41,7 +44,8 @@ void Socket::render()
     RectPainter::setCoords(0.0, 0.0, width(), height());
     RectPainter::render();
 
-    glDisable(GL_BLEND);    
+    glDisable(GL_BLEND);
+    CHECK_FOR_GL_ERRORS;
 }
 
 

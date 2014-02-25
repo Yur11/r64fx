@@ -188,12 +188,12 @@ struct TextureAtlas::Node{
             else
                 glColor3f(0.0, 1.0, 0.0);
             
-            glBegin(GL_LINE_LOOP);
-                glVertex2f(rect.left, rect.bottom);
-                glVertex2f(rect.right, rect.bottom);
-                glVertex2f(rect.right, rect.top);
-                glVertex2f(rect.left, rect.top);
-            glEnd();
+//             glBegin(GL_LINE_LOOP);
+//                 glVertex2f(rect.left, rect.bottom);
+//                 glVertex2f(rect.right, rect.bottom);
+//                 glVertex2f(rect.right, rect.top);
+//                 glVertex2f(rect.left, rect.top);
+//             glEnd();
         }
     }
 #endif//DEBUG

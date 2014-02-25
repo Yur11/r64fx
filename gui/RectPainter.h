@@ -3,6 +3,7 @@
 
 #include "Shader.h"
 #include "RenderingContext.h"
+#include "geometry.h"
 
 namespace r64fx{
     
@@ -15,7 +16,7 @@ class RectPainter : public RenderingContextAware{
     static GLint vertex_coord_attribute;
     static GLint geometry_uniform;
     static GLint tex_coord_uniform;
-    static GLuint sampler;
+    static GLint scale_and_shift_uniform;
     static GLint sampler_uniform;
     static GLint color_uniform;
     static GLuint plain_tex;
@@ -39,12 +40,19 @@ public:
     
     static void prepare();
     
+    static void useCurrent2dProjection();
+    
     static void setCoords(float* vec);
     
     inline static void setCoords(float x, float y, float w, float h) 
     {
         float vec[4] = { x, y, w, h };
         setCoords(vec);
+    }
+    
+    inline static void setCoords(Point<float> p, Size<float> s)
+    {
+        setCoords(p.x, p.y, s.w, s.h);
     }
     
     static void setTexture(GLuint tex);

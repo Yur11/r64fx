@@ -8,7 +8,7 @@ in vec2 fragment_tex_coord;
 
 void main()
 {
-    vec4 texel = texture(sampler, fragment_tex_coord);
+    vec4 texel = texture2D(sampler, fragment_tex_coord);
     
     gl_FragColor = vec4(
         texel.r * color.r,
@@ -16,6 +16,4 @@ void main()
         texel.b * color.b, 
         texel.a * color.a
     );
-    
-    
 }

@@ -63,6 +63,9 @@ public:
     inline FragmentShader fragmentShader() const { return _fs; }
     
     void free();
+    
+    /** @brief Create a shading program using the vertex shader and fragment shader texts. */     
+    static ShadingProgram create(const char* vs_text, const char* fs_text);
 };
 
     

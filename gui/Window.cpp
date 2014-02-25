@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "Error.h"
 #include "KeyEvent.h"
 #include <iostream>
 
@@ -55,23 +56,28 @@ void Window::update_projection()
 void Window::render_overlay_menus()
 {
     glDisable(GL_SCISSOR_TEST);
+    CHECK_FOR_GL_ERRORS;
     glEnable(GL_BLEND);
+    CHECK_FOR_GL_ERRORS;
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    CHECK_FOR_GL_ERRORS;
     for(auto &menu : _overlay_menus)
     {
-        glPushMatrix();
+//         glPushMatrix();
         auto p = *current_2d_projection;
         
-        glTranslatef(menu->x(), menu->y(), 0.0);
+//         glTranslatef(menu->x(), menu->y(), 0.0);
         current_2d_projection->translate(menu->x(), menu->y());
         
         menu->render();
         
-        glPopMatrix();
+//         glPopMatrix();
         *current_2d_projection = p;
     }
     glDisable(GL_BLEND);
+    CHECK_FOR_GL_ERRORS;
     glEnable(GL_SCISSOR_TEST);
+    CHECK_FOR_GL_ERRORS;
 }
 
 

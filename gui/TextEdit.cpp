@@ -12,13 +12,13 @@ namespace r64fx{
 void TextEdit::render()
 {    
     /* Draw background. */
-    glColor(this->backgroundColor());
-    glBegin(GL_TRIANGLE_FAN);
-        glVertex2f(0.0, 0.0);
-        glVertex2f(Widget::width() - 1, 0.0);
-        glVertex2f(Widget::width() - 1, Widget::height() -1);
-        glVertex2f(0.0,                 Widget::height() -1);
-    glEnd();
+//     glColor(this->backgroundColor());
+//     glBegin(GL_TRIANGLE_FAN);
+//         glVertex2f(0.0, 0.0);
+//         glVertex2f(Widget::width() - 1, 0.0);
+//         glVertex2f(Widget::width() - 1, Widget::height() -1);
+//         glVertex2f(0.0,                 Widget::height() -1);
+//     glEnd();
     
     /* Draw text. */
     TextLine::render();
@@ -31,13 +31,13 @@ void TextEdit::render()
         float right = text_selection.right() - 1;
         float bottom = Widget::height() - Padding::paddingBottom() - 1;
                     
-        glColor4f(0.0, 0.0, 1.0, 1.0);
-        glBegin(GL_LINE_LOOP);
-            glVertex2f(left, top);
-            glVertex2f(right, top);
-            glVertex2f(right, bottom);
-            glVertex2f(left, bottom);
-        glEnd();
+//         glColor4f(0.0, 0.0, 1.0, 1.0);
+//         glBegin(GL_LINE_LOOP);
+//             glVertex2f(left, top);
+//             glVertex2f(right, top);
+//             glVertex2f(right, bottom);
+//             glVertex2f(left, bottom);
+//         glEnd();
     }
     else
     {
@@ -49,10 +49,10 @@ void TextEdit::render()
 
             cursor_x += font()->lineAdvance(text[n]);
             
-            glBegin(GL_LINES);
-                glVertex2f(cursor_x, Padding::paddingTop());
-                glVertex2f(cursor_x, Widget::height() - Padding::paddingBottom());
-            glEnd();
+//             glBegin(GL_LINES);
+//                 glVertex2f(cursor_x, Padding::paddingTop());
+//                 glVertex2f(cursor_x, Widget::height() - Padding::paddingBottom());
+//             glEnd();
         }
     }
 }
