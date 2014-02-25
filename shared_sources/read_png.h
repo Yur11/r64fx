@@ -7,7 +7,7 @@
 namespace r64fx{
     
     
-bool read_png(FILE* file, unsigned char* &data, int &nchannels, int &width, int &height)
+inline bool read_png(FILE* file, unsigned char* &data, int &nchannels, int &width, int &height)
 {
     using namespace std;
     
