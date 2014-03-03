@@ -3,6 +3,7 @@
 #include "gui/MouseEvent.h"
 #include "gui/bezier.h"
 #include "gui/Window.h"
+#include "gui/Painter.h"
 #include "gui/RectPainter.h"
 
 #ifdef DEBUG

@@ -3,6 +3,8 @@
 #include "KeyEvent.h"
 #include "Window.h"
 #include "Translation.h"
+#include "Painter.h"
+#include "RectVertices.h"
 #include "RectPainter.h"
 
 #ifdef DEBUG

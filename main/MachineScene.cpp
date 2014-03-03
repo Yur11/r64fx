@@ -2,6 +2,7 @@
 #include "gui/Keyboard.h"
 #include "gui/MouseEvent.h"
 #include "gui/KeyEvent.h"
+#include "gui/Painter.h"
 #include "gui/RectPainter.h"
 #include <algorithm>
 

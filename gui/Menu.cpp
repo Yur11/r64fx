@@ -1,6 +1,8 @@
 #include "Menu.h"
 #include "MouseEvent.h"
 #include "Window.h"
+#include "Painter.h"
+#include "RectVertices.h"
 #include "RectPainter.h"
 
 #include <iostream>

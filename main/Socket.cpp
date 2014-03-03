@@ -1,6 +1,8 @@
 #include "Socket.h"
 #include "gui/Error.h"
 #include "gui/MouseEvent.h"
+#include "gui/Painter.h"
+#include "gui/RectVertices.h"
 #include "gui/RectPainter.h"
 
 #ifdef DEBUG

@@ -18,8 +18,9 @@
 #include "gui/Dummy.h"
 #include "gui/TextEdit.h"
 #include "gui/Keyboard.h"
-#include "gui/RectVertices.h"
 #include "gui/RectPainter.h"
+#include "gui/RectVertices.h"
+#include "gui/Painter.h"
 #include "gui/Font.h"
 #include "gc/gc.h"
 #include "gui/TextureAtlas.h"
@@ -81,6 +82,10 @@ struct Program{
     Graph* graph;
     
     
+    float num1 = 1.0;
+    float num2 = 1.0;
+    
+    
     int main_thread(int argc, char* argv[])
     {
         using namespace r64fx;
@@ -131,12 +136,12 @@ struct Program{
             cerr << "Failed to init painter!\n";
             return 4;
         }
-
-        Painter::init();
         
         RectVertices::init();
         
         RectPainter::init();
+        
+        Icon::init();
         
         Socket::init();
         
@@ -355,7 +360,7 @@ struct Program{
 //             cerr << "Failed to create midi input port!\n";
 //             abort();
 //         }
-        
+//         
 //         audio_buffer_size = jack_get_buffer_size(jack_client);
 //         
 //         input_buffer = new float[audio_buffer_size];
@@ -371,7 +376,7 @@ struct Program{
 //             return nullptr;
 //         }, this);
 //         
-        
+//         
 //         SawtoothOsc osc;
 //         auto osc_slot1 = osc.getSlot();
 //         assert(osc_slot1 != nullptr);
@@ -386,7 +391,7 @@ struct Program{
 //         freq2_addr = osc.frequencyPort()->at(osc_slot2);
 //         freq3_addr = osc.frequencyPort()->at(osc_slot3);
 //         freq4_addr = osc.frequencyPort()->at(osc_slot4);
-        
+//         
 //         MonophonicMixer mix;
 //         auto mix_slot1 = mix.getSlot();
 //         assert(mix_slot1 != nullptr);
@@ -481,7 +486,7 @@ struct Program{
 //         graph->render(audio_buffer_size);
 //         
 //         cout << graph->debug() << "\n";
-
+// 
 //         jack_activate(jack_client);
         
         Dummy dummy(100, 100);
@@ -512,18 +517,19 @@ struct Program{
         }
         
 //         jack_deactivate(jack_client);
-        
+//         
 //         delete[] input_buffer;
 //         delete[] output_buffer;
 // 
 //         while(!cycle_waiting)
 //             usleep(100);
-
-        /* Cleanup things up before exiting. */
+// 
+//         /* Cleanup things up before exiting. */
 //         jack_client_close(jack_client);
 //         delete graph;
 
         Mouse::cleanup();
+        Icon::cleanup();
 //         RectVertices::cleanup();
         RectPainter::cleanup();
         Texture::cleanup();
@@ -628,6 +634,13 @@ struct Program{
             jack_cycle_signal(jack_client, 0);
 
             graph->run();
+            
+//             for(int i=0; i<1000*500; i++)
+//             {
+//                 num1 += num2;
+//                 num1 *= 0.5;
+//                 num1 *= 0.3;
+//             }
         }
     }
     
