@@ -28,18 +28,55 @@ void* on_menu_click(void* source, void* data)
 
 Menu* _debug_menu = nullptr;
     
+
+Dummy::Dummy(float width, float height, Widget* parent) 
+: Widget(parent) 
+, pv(4)
+{ 
+    resize(width, height);
+    
+    const auto &r = rect();
+    
+    float data[16] = {
+        r.left, r.bottom,
+        r.right, r.bottom,
+        r.left, r.top,
+        r.right, r.top,
+        0.0, 0.0,
+        1.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0,
+    };
+    
+    pv.bindBuffer();
+    pv.setData(data);
+    pv.unbindBuffer();
+}
+
+
 void Dummy::render()
 {  
-    auto rv = RectVertices::instance();
-    rv->setRect(rect());
-        
+    static float angle = 0.0;
+    
     Painter::enable();
-    Painter::setColor({1.0, 1.0, 1.0, 1.0});
     Painter::useCurrent2dProjection();
-    rv->bindArray();
-    Painter::paint(GL_TRIANGLE_STRIP, rv->size());
-    rv->unbindArray();
+    Painter::setColor(0.0, 1.0, 0.0, 0.5);
+    Painter::useNoTexture();
+    
+    float pos[2] = { width() + 10.0 * cos(angle), height() + 10.0 * sin(angle) };
+    pv.bindBuffer();
+    pv.setPositions(pos, 2, 6);
+    pv.unbindBuffer();
+    
+    pv.bindArray();
+    pv.render(GL_TRIANGLE_STRIP);
+    pv.unbindArray();
+    
     Painter::disable();
+    
+    angle += 0.1;
+    if(angle >= M_PI*2.0) 
+        angle = 0.0;
 }
 
 
