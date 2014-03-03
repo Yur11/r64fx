@@ -15,17 +15,19 @@ namespace r64fx{
 /** @brief A handy wrapper for vertex buffer objects. 
  */
 template<typename VertexT> class Vertices : public RenderingContextAware{
-    const unsigned int _size;
+    const int _nbytes;
     GLuint _vbo = 0;
     GLuint _vao[max_rendering_context_count];
     
 public:
-    Vertices(const int size, VertexT* data = nullptr, GLenum usage = GL_STATIC_DRAW)
-    : _size(size)
+    Vertices(const int nbytes, VertexT* data = nullptr, GLenum usage = GL_STATIC_DRAW)
+    : _nbytes(nbytes)
     {
         glGenBuffers(1, &_vbo);
+        CHECK_FOR_GL_ERRORS;
         this->bindBuffer();
-        glBufferData(GL_ARRAY_BUFFER, _size * sizeof(VertexT), data, usage);
+        glBufferData(GL_ARRAY_BUFFER, nbytes, data, usage);
+        CHECK_FOR_GL_ERRORS;
         this->unbindBuffer();
         
         for(int i=0; i<max_rendering_context_count; i++)
@@ -35,9 +37,11 @@ public:
     ~Vertices()
     {
         glDeleteBuffers(1, &_vbo);
+        CHECK_FOR_GL_ERRORS;
     }
     
-    inline unsigned int size() const { return _size; }
+//     inline unsigned int vertexCount() const { return _vertex_count; }
+    inline int nbytes() const { return _nbytes; }
     
     inline GLuint id() const { return _vbo; }
     
@@ -49,9 +53,9 @@ public:
     
     inline static void unbindArray() { glBindVertexArray(0); CHECK_FOR_GL_ERRORS;  }
     
-    inline void setVertices(VertexT* vertices, int size, int index = 0)
+    inline void setVertices(VertexT* vertices, int vertex_count, int index = 0)
     {
-        glBufferSubData(GL_ARRAY_BUFFER, index, size * sizeof(VertexT), vertices);
+        glBufferSubData(GL_ARRAY_BUFFER, index, vertex_count * sizeof(VertexT), vertices);
         CHECK_FOR_GL_ERRORS;
     }
     
@@ -70,7 +74,7 @@ public:
         glGenVertexArrays(1, _vao + context_id);   CHECK_FOR_GL_ERRORS; 
         glBindVertexArray(_vao[context_id]);       CHECK_FOR_GL_ERRORS; 
         glBindBuffer(GL_ARRAY_BUFFER, _vbo);       CHECK_FOR_GL_ERRORS; 
-        VertexT::setupAttributes();
+        VertexT::setupAttributes(nbytes());
         glBindVertexArray(0);                      CHECK_FOR_GL_ERRORS; 
     }
     
