@@ -24,13 +24,41 @@ template<typename T> T max(T a, T b)
 Menu::Menu(Font* font, Widget* parent)
 :VerticalContainer(parent)
 ,_font(font)
+, pv(4)
 {
+    float tex_coords[8] = {
+        0.0, 0.0,
+        1.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0
+    };
+    pv.bindBuffer();
+    pv.setTexCoords(tex_coords, 8);
+    pv.unbindBuffer();
 }
 
 
 void Menu::appendAction(Action* act)
 {
     appendWidget(new ActionWidget(act, _font));
+}
+
+
+void Menu::update()
+{
+    const auto &r = rect();
+    
+    float pos[8] = {
+        r.left, r.bottom,
+        r.right, r.bottom,
+        r.left, r.top,
+        r.right, r.top
+    };
+    pv.bindBuffer();
+    pv.setPositions(pos, 8);
+    pv.unbindBuffer();
+    
+    VerticalContainer::update();
 }
 
 
@@ -41,10 +69,21 @@ void Menu::render()
     RectPainter::setTexture(RectPainter::plainTexture());
     RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
     
-    RectPainter::setColor(0.0, 0.01, 0.0, 0.85);
+    RectPainter::setColor(0.0, 0.01, 0.0, 0.7);
     
     RectPainter::setCoords(0.0, 0.0, width(), height());
     RectPainter::render();
+    
+//     Painter::enable();
+//     Painter::useCurrent2dProjection();
+//     Painter::useNoTexture();
+//     Painter::setColor(0.0, 0.0, 0.0, 0.0);
+//     
+//     pv.bindArray();
+//     pv.render(GL_TRIANGLE_STRIP);
+//     pv.unbindArray();
+//     
+//     Painter::disable();
     
     render_children();
 }

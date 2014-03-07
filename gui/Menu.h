@@ -11,10 +11,14 @@ class Menu : public VerticalContainer{
     Font* _font;
     Widget* highlighted_widget = nullptr;
     
+    PainterVertices pv;
+    
 public:
     Menu(Font* font, Widget* parent = nullptr);
     
     void appendAction(Action* act);
+    
+    void update();
     
     virtual void render();
     
