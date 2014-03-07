@@ -3,7 +3,7 @@
 
 #include "gui/Widget.h"
 #include "gui/Texture.h"
-#include "gui/Shader.h"
+#include "gui/Painter.h"
 
 namespace r64fx{
     
@@ -16,6 +16,8 @@ class Socket : public Widget{
     static Texture texture;
 
     Wire* _wire = nullptr;
+    
+    PainterVertices pv;
     
 public:
     static void init();

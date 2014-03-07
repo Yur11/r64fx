@@ -27,7 +27,7 @@ void Socket::init()
 }
     
     
-Socket::Socket(Widget* parent) : Widget(parent)
+Socket::Socket(Widget* parent) : Widget(parent), pv(4)
 {
 }
 
@@ -39,12 +39,16 @@ void Socket::render()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     CHECK_FOR_GL_ERRORS;
     
-    RectPainter::prepare();
-    RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
-    RectPainter::setTexture(Socket::texture.id());
-    RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
-    RectPainter::setCoords(0.0, 0.0, width(), height());
-    RectPainter::render();
+    Painter::enable();
+    Painter::setColor(1.0, 1.0, 1.0, 1.0);
+    Painter::setTexture(Socket::texture.id());
+    Painter::useCurrent2dProjection();
+    
+    pv.bindArray();
+    pv.render(GL_TRIANGLE_STRIP);
+    pv.unbindArray();
+    
+    Painter::disable();
 
     glDisable(GL_BLEND);
     CHECK_FOR_GL_ERRORS;
@@ -55,6 +59,22 @@ void Socket::update()
 {
     setWidth(radius * 2.0);
     setHeight(radius * 2.0);
+    
+    static float data[16] = {
+        0.0, 0.0,
+        width(), 0.0,
+        0.0, height(),
+        width(), height(),
+        
+        0.0, 0.0,
+        1.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0
+    };
+    
+    pv.bindBuffer();
+    pv.setData(data);
+    pv.unbindBuffer();
 }
 
 
