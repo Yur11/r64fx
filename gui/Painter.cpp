@@ -13,8 +13,11 @@ GLint            Painter::tex_coord_attr;
 GLint            Painter::sxsytxty_uniform; //Projection2D
 GLint            Painter::color_uniform;
 GLint            Painter::sampler_uniform;
+GLint            Painter::texturing_mode_uniform;
 
 GLuint           Painter::plain_tex;
+
+int              Painter::current_texturing_mode = Painter::RGBA;
 
 bool Painter::init()
 {
@@ -68,6 +71,14 @@ bool Painter::init()
     if(color_uniform == -1)
     {
         cerr << "Failed to get color_uniform location!\n";
+        return false;
+    }
+    
+    texturing_mode_uniform = glGetUniformLocation(sp.id(), "texturing_mode");
+    CHECK_FOR_GL_ERRORS;
+    if(texturing_mode_uniform == -1)
+    {
+        cerr << "Failed to get texturing_mode_uniform location!\n";
         return false;
     }
     
@@ -167,7 +178,7 @@ void PainterVertices::setTexCoords(float* ptr, int nfloats, int offset)
 {
     glBufferSubData(
         GL_ARRAY_BUFFER, 
-        nfloats * sizeof(float) + offset * sizeof(float), 
+        nbytes() / 2 + offset * sizeof(float), 
         nfloats * sizeof(float), 
         ptr
     );

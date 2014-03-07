@@ -21,8 +21,11 @@ class Painter : public Vertices<Painter>{
     static GLint sxsytxty_uniform;
     static GLint color_uniform;
     static GLint sampler_uniform;
+    static GLint texturing_mode_uniform;
     
     static GLuint plain_tex;
+    
+    static int current_texturing_mode;
     
 public:
     static bool init();
@@ -41,6 +44,14 @@ public:
     inline static void enable() { sp.use(); };
     
     inline static void disable() { glUseProgram(0); CHECK_FOR_GL_ERRORS;  }
+    
+    static const int RGBA = 1;
+    
+    static const int RedAsAlpha = 2;
+    
+    inline static void setTexturingMode(unsigned int mode) { glUniform1i(texturing_mode_uniform, mode); CHECK_FOR_GL_ERRORS; current_texturing_mode = mode; }
+    
+    inline static int currentTexturingMode() { return current_texturing_mode; }
     
     inline static void useCurrent2dProjection() { glUniform4fv(sxsytxty_uniform, 1, current_2d_projection->vec); CHECK_FOR_GL_ERRORS;  }
     
