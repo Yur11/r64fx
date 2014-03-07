@@ -53,9 +53,7 @@ SDL2Window::SDL2Window(RenderingContextId_t id, int width, int height, const cha
     
 //     all_sdl2_windows.push_back(this);
 
-    SDL_SetWindowData(_window, "window", this);
-    
-    updateGeometry();
+    SDL_SetWindowData(_window, "window", this);    
 }
 
 

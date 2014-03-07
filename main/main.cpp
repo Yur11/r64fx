@@ -110,7 +110,6 @@ struct Program{
          * This creates an OpenGL context.
          * 
          * Most of the things in the gui can be done only after this step.
-         * This is true for everything that has to do with rendering or texture loading.
          */
         if(!SDL2Window::init())
         {
@@ -124,6 +123,8 @@ struct Program{
         /* Can be done only after we have obtained the OpenGL context. */
         if(!Window::initGlew())
             return 3;
+        
+        SplitView::init();
         
         Mouse::init();
         

@@ -9,6 +9,7 @@
 
 #ifdef DEBUG
 #include <iostream>
+#include <assert.h>
 
 #define MAKE_SURE_WE_HAVE_A_SCENE\
     if(!_scene)\
@@ -211,6 +212,10 @@ void View::resize(int left, int top, int right, int bottom)
     _rect.top = top;
     _rect.right = right; 
     _rect.bottom = bottom;
+#ifdef DEBUG
+    assert(_rect.width() >= 0);
+    assert(_rect.height() >= 0);
+#endif//DEBUG
     _scale_center = Point<float>(left + width()*0.5, bottom + height()*0.5);
 }
     
@@ -219,31 +224,37 @@ void View::render()
 {    
 #ifdef DEBUG
     MAKE_SURE_WE_HAVE_A_SCENE
+    if(width() < 0)
+    {
+        cout << "View::render: width == " << width() << "\n";
+    }
+    
+    if(height() < 0)
+    {
+        cout << "View::render: height == " << height() << "\n";
+    }
 #endif//DEBUG
     
     glScissor(x(), y(), width(), height());
+    CHECK_FOR_GL_ERRORS;
     
     glEnable(GL_SCISSOR_TEST);
+    CHECK_FOR_GL_ERRORS;
     
-//     glPushMatrix();
     auto p = *current_2d_projection;
     
-//     glTranslatef(x(), y(), 0.0);
     current_2d_projection->translate(x(), y());
 
-//     glScalef(scaleFactor(), scaleFactor(), 1.0);
     current_2d_projection->scale(scaleFactor(), scaleFactor());
     
-//     glTranslatef(_offset.x, _offset.y, 0.0);
     current_2d_projection->translate(_offset.x, _offset.y);
     
     _scene->render();
     
-//     glPopMatrix();
     *current_2d_projection = p;
     
     glDisable(GL_SCISSOR_TEST);
-    
+    CHECK_FOR_GL_ERRORS;
 }
 
 
@@ -407,6 +418,28 @@ void View::zoomOnce(float scale_coeff, Point<float> mouse_position)
     
 
 /* ==== SplitView ======================================================================= */
+
+/* 2 separator vertices */
+PainterVertices* sepv = nullptr;
+
+void SplitView::init()
+{
+    sepv = new PainterVertices(2);
+    
+    static float data[8] = {
+        0.0, 0.0,
+        0.0, 0.0,
+        
+        0.0, 0.0,
+        1.0, 1.0
+    };
+    
+    sepv->bindBuffer();
+    sepv->setData(data);
+    sepv->unbindBuffer();
+}
+
+
 void SplitView::replaceSubView(SplittableView* old_view, SplittableView* new_view)
 {
     if(old_view == viewA())
@@ -422,21 +455,24 @@ void SplitView::render()
     viewA()->render();
     viewB()->render();
     
-    RectPainter::prepare();
-    RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
-    RectPainter::setTexture(RectPainter::plainTexture());
-    
+    Painter::enable();
     if(separatorIsHovered())
         if(separatorIsGrabbed())
-            RectPainter::setColor(0.3, 0.6, 0.3, 1.0);
+            Painter::setColor(0.3, 0.6, 0.3, 1.0);
         else
-            RectPainter::setColor(0.3, 0.3, 0.3, 1.0);
+            Painter::setColor(0.3, 0.3, 0.3, 1.0);
     else
-        RectPainter::setColor(0.0, 0.0, 0.0, 1.0);
-    
+        Painter::setColor(0.0, 0.0, 0.0, 1.0);
+
+    Painter::useNoTexture();
+    Painter::useCurrent2dProjection();
+
     set_separator_coords();
+    sepv->bindArray();
+    sepv->render(GL_LINES);
+    sepv->unbindArray();
     
-    RectPainter::renderOutline();
+    Painter::disable();
 }
     
     
@@ -485,7 +521,7 @@ void SplitView::mouseReleaseEvent(MouseEvent* event)
 void SplitView::mouseMoveEvent(MouseEvent* event)
 {
     if(separatorIsGrabbed())
-    {
+    {        
         moveSeparator(event->position());
         
         /* Kluge: We only need to update  geometry of the parent parent view,
@@ -574,13 +610,25 @@ void VerticalSplitView::resize(int left, int top, int right, int bottom)
     int split_height = (height() * splitRatio());
     
     viewA()->resize(left, top - (height() - split_height), right, bottom);
-    viewB()->resize(left, top, right, bottom + split_height);    
+
+    viewB()->resize(left, top, right, bottom + split_height);
 }
 
 
 void VerticalSplitView::set_separator_coords()
 {
-    RectPainter::setCoords(_rect.left, _rect.bottom + height() * splitRatio(), _rect.width(), 0.0);
+    float x1 = _rect.left;
+    float x2 = _rect.right;
+    float y =  _rect.bottom + height() * splitRatio();
+    
+    float pos[4] = {
+        x1, y,
+        x2, y
+    };
+    
+    sepv->bindBuffer();
+    sepv->setPositions(pos, 4);
+    sepv->unbindBuffer();
 }
 
 
@@ -593,7 +641,7 @@ Rect<float> VerticalSplitView::separatorRect()
 
 void VerticalSplitView::moveSeparator(Point<float> p)
 {
-    setSplitRatio( p.y / _rect.height() );
+    setSplitRatio( (p.y - _rect.bottom) / _rect.height() );
 }
 
 
@@ -603,7 +651,7 @@ void HorizontalSplitView::resize(int left, int top, int right, int bottom)
     _rect.top = top;
     _rect.right = right; 
     _rect.bottom = bottom; 
-
+    
     int split_width = (width() * splitRatio());
     
     viewA()->resize(left, top, left + split_width, bottom);
@@ -613,7 +661,18 @@ void HorizontalSplitView::resize(int left, int top, int right, int bottom)
     
 void HorizontalSplitView::set_separator_coords()
 {    
-    RectPainter::setCoords(_rect.left + width() * splitRatio(), _rect.bottom, 0.0, _rect.height());
+    float x = _rect.left + width() * splitRatio();
+    float y1 = _rect.bottom;
+    float y2 = _rect.top;
+    
+    float pos[4] = {
+        x, y1,
+        x, y2
+    };
+    
+    sepv->bindBuffer();
+    sepv->setPositions(pos, 4);
+    sepv->unbindBuffer();
 }
 
 
@@ -626,7 +685,16 @@ Rect<float> HorizontalSplitView::separatorRect()
 
 void HorizontalSplitView::moveSeparator(Point<float> p)
 {
-    setSplitRatio( p.x / _rect.width() );
+    setSplitRatio( (p.x - _rect.left)  / _rect.width() );
+#ifdef DEBUG
+    if(splitRatio() > 1.0)
+    {
+        cerr << "splitRatio() == " << splitRatio() << "\n";
+        cerr << "p.x: "  << p.x << "\n";
+        cerr << "_rect.width() == " << _rect.width() << "\n";
+        abort();
+    }
+#endif//DEBUG
 }
 
 

@@ -46,7 +46,7 @@ public:
     
     virtual void render();
         
-    inline void setView(SplittableView* view) { _view = view; }
+    void setView(SplittableView* view);
     inline SplittableView* view() const { return _view; }
     
     virtual Size<int> size() = 0;

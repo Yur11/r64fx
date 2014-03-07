@@ -1,7 +1,11 @@
 #include "Window.h"
 #include "Error.h"
 #include "KeyEvent.h"
+
+#ifdef DEBUG
 #include <iostream>
+#include <assert.h>
+#endif//DEBUG
 
 using namespace std;
 
@@ -30,6 +34,15 @@ void Window::render()
 }
 
 
+void Window::setView(SplittableView* view)
+{
+    _view = view;
+    new_w = width();
+    new_h = height();
+    update_projection();
+}
+
+
 void Window::update_viewport()
 {
     glViewport(0, 0, new_w, new_h);
@@ -37,16 +50,7 @@ void Window::update_viewport()
 
 
 void Window::update_projection()
-{
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    
-    /* (0, 0) is in the bottom left corner. */
-    glOrtho(0, new_w, 0, new_h, -1, 1);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
+{    
     view()->resize(0, new_h, new_w, 0);
     
     *current_2d_projection = Projection2D::ortho2d(0, new_w, 0, new_h);
@@ -225,7 +229,17 @@ void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int
     if(Widget::mouseInputGrabber())
         Widget::mouseInputGrabber()->mouseMoveEvent(&event);
     else
+    {
+#ifdef DEBUG
+        if(x >= view()->width())
+        {
+            cerr << "x == " << x << "\n";
+            cerr << "view->width() == " << view()->width() << "\n";
+            abort();
+        }
+#endif//DEBUG
         view()->mouseMoveEvent(&event);
+    }
 }
 
 

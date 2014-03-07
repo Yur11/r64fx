@@ -150,7 +150,7 @@ class SplitView : public SplittableView{
     bool _separator_is_grabbed = false;
     SplittableView* _a = nullptr;
     SplittableView* _b = nullptr;
-
+    
 protected:
     virtual void set_separator_coords() = 0;
     
@@ -159,6 +159,8 @@ protected:
     virtual void moveSeparator(Point<float> p) = 0;
     
 public:
+    static void init();
+
     virtual ~SplitView() {}
     
     inline bool separatorIsHovered() const { return _separator_is_hovered; }
