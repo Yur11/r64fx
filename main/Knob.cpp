@@ -5,6 +5,7 @@
 #include "gui/Window.h"
 #include "gui/Painter.h"
 #include "gui/RectPainter.h"
+#include "gui/geometry_io.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -17,7 +18,8 @@ namespace r64fx{
 extern string data_prefix;
 
 
-BasicKnob::BasicKnob(Widget* parent) : Widget(parent)
+BasicKnob::BasicKnob(Widget* parent) 
+: Widget(parent)
 {
     
 }
@@ -57,7 +59,8 @@ void BasicKnob::mouseMoveEvent(MouseEvent* event)
             angle = min_angle;
         else if(angle > max_angle)
             angle = max_angle;
-        
+
+        this->rotated();
         value_changed.send(this);
         
         event->has_been_handled = true;
@@ -110,38 +113,83 @@ void KnobHandleTypeA::init()
 }
 
 
-void KnobHandleTypeA::render( Rect<float> rect, float angle, float radius)
+KnobHandleTypeA::KnobHandleTypeA() : pv(8)
+{
+    static float data[16] = {
+        0.0, 0.0,
+        1.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0,
+        
+        0.0, 0.0,
+        1.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0
+    };
+    
+    pv.bindBuffer();
+    pv.setTexCoords(data, 16);
+    pv.unbindBuffer();
+}
+
+
+void KnobHandleTypeA::update(Point<float> center, float angle, float radius)
+{
+    radius *= 0.6;
+    
+    Point<float> p[4] = {
+        { -radius, -radius },
+        {  radius, -radius },
+        { -radius,  radius },
+        {  radius,  radius }
+    };
+    
+    for(int i=0; i<4; i++)
+    {
+        p[i].rotate( - angle * M_PI / 180);
+    }
+
+    radius *= 0.7;
+
+    float data[16] = {
+        p[0].x + center.x, p[0].y + center.y,
+        p[1].x + center.x, p[1].y + center.y,
+        p[2].x + center.x, p[2].y + center.y,
+        p[3].x + center.x, p[3].y + center.y,
+        
+        -radius + center.x, -radius + center.y,
+         radius + center.x, -radius + center.y,
+        -radius + center.x,  radius + center.y,
+         radius + center.x,  radius + center.y
+    };
+    
+    pv.bindBuffer();
+    pv.setPositions(data, 16);
+    pv.unbindBuffer();
+}
+
+
+void KnobHandleTypeA::render()
 {
     glEnable(GL_BLEND);                                 CHECK_FOR_GL_ERRORS;
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  CHECK_FOR_GL_ERRORS;
     
-//     glPushMatrix();
+    Painter::enable();
+    Painter::useCurrent2dProjection();
+    Painter::setColor(1.0, 1.0, 1.0, 1.0);
+    Painter::setTexturingMode(Painter::RGBA);
     
-//     glTranslatef(rect.width() * 0.5, rect.height() * 0.5, 0.0);
-//     glScalef(-1.0, 1.0, 1.0);
-//     glRotatef(angle, 0.0, 0.0, 1.0);
-
-    rect = rect - radius * 0.3777;
+    pv.bindArray();
     
-    RectPainter::prepare();
-    RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
-    RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
+    Painter::setTexture(knob_a_base_tex.id());
+    pv.render(GL_TRIANGLE_STRIP, 4);
     
-    RectPainter::setTexture(knob_a_base_tex.id());
-    RectPainter::setCoords(-rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height());
-    RectPainter::render();
-
-    rect = rect - radius * 0.2;
+    Painter::setTexture(knob_a_shiny_tex.id());
+    pv.render(GL_TRIANGLE_STRIP, 4, 4);
     
-//     glRotatef(-angle, 0.0, 0.0, 1.0);
+    pv.unbindArray();
     
-    RectPainter::setTexture(knob_a_shiny_tex.id());
-    RectPainter::setCoords(-rect.width() * 0.5, -rect.height() * 0.5, rect.width(), rect.height());
-    RectPainter::render();
-
-//     glPopMatrix();
-    
-//     glDisable(GL_TEXTURE_2D);
+    Painter::disable();
     
     glDisable(GL_BLEND);     CHECK_FOR_GL_ERRORS;
 }

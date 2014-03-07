@@ -3,6 +3,7 @@
 
 #include "gui/Widget.h"
 #include "gui/rotations.h"
+#include "gui/Painter.h"
 #include "gui/Texture.h"
 
 
@@ -12,9 +13,10 @@ namespace r64fx{
 /** @brief Base class for knob widgets. */    
 class BasicKnob : public Widget, public Padding{
     
-    
 protected:
     float rad_angle = 0.0;
+        
+    virtual void rotated() = 0;
     
 public:    
     BasicKnob(Widget* parent = nullptr);
@@ -37,7 +39,7 @@ public:
     float radius = 50.0;
         
     virtual void update();
-    
+        
     virtual void mousePressEvent(MouseEvent* event);
     
     virtual void mouseReleaseEvent(MouseEvent* event);
@@ -50,16 +52,24 @@ template<typename BackgroundT, typename HandleT> class Knob : public BasicKnob{
     BackgroundT* background;
     HandleT* handle;
     
+    virtual void rotated()
+    {
+        handle->update(Point<float>(width() * 0.5, height() * 0.5), angle, radius);
+    }
+    
 public:
     Knob(BackgroundT* background, HandleT* handle)
     : background(background)
     , handle(handle)
-    {}
+    {
+        update();
+        handle->update(Point<float>(width() * 0.5, height() * 0.5), angle, radius);
+    }
     
     virtual void render()
     {
         background->render(Widget::rect());
-        handle->render(Widget::rect(), angle, radius);
+        handle->render();
     }
 };
 
@@ -75,11 +85,18 @@ public:
 };
 
 
+/* Rotating base + Shiny top. */
 class KnobHandleTypeA{
+    PainterVertices pv;
+    
 public:
+    KnobHandleTypeA();
+    
     static void init();
     
-    void render(Rect<float> rect, float angle, float radius);
+    void update(Point<float> center, float angle, float radius);
+    
+    void render();
 };
 
     

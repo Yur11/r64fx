@@ -183,50 +183,50 @@ struct Program{
         KnobHandleTypeA::init();
         KnobHandleTypeA khta;
         
-        auto k1 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        auto k1 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, new KnobHandleTypeA);
         k1->setPosition(50, 20);
         k1->min_value = 0.1;
         k1->max_value = 880.0;
         k1->update();
         m3->front()->appendWidget(k1);
       
-        auto k2 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        auto k2 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, new KnobHandleTypeA);
         k2->setPosition(160, 20);
         k2->update();
         m3->front()->appendWidget(k2);
         
-        auto k3 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        auto k3 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, new KnobHandleTypeA);
         k3->setPosition(280, 20);
         k3->min_value = 0.1;
         k3->max_value = 880.0;
         k3->update();
         m3->front()->appendWidget(k3);
         
-        auto k4 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        auto k4 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, new KnobHandleTypeA);
         k4->setPosition(390, 20);
         k4->update();
         m3->front()->appendWidget(k4);
         
-        auto k5 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        auto k5 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, new KnobHandleTypeA);
         k5->setPosition(510, 20);
         k5->min_value = 0.1;
         k5->max_value = 880.0;
         k5->update();
         m3->front()->appendWidget(k5);
       
-        auto k6 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        auto k6 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, new KnobHandleTypeA);
         k6->setPosition(620, 20);
         k6->update();
         m3->front()->appendWidget(k6);
         
-        auto k7 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        auto k7 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, new KnobHandleTypeA);
         k7->setPosition(740, 20);
         k7->min_value = 0.01;
         k7->max_value = 100.0;
         k7->update();
         m3->front()->appendWidget(k7);
         
-        auto k8 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, &khta);
+        auto k8 = new Knob<TexturedKnobBackground, KnobHandleTypeA>(&txkbg, new KnobHandleTypeA);
         k8->setPosition(850, 20);
         k8->update();
         m3->front()->appendWidget(k8);
@@ -256,64 +256,64 @@ struct Program{
         window->setView(view);
         
         
-        HorizontalMenu hm(debug_font);
-        hm.setPosition(0, 0);
-        fms.appendWidget(&hm);
-        
-        Menu session_menu(debug_font);
-        Menu edit_menu(debug_font);
-        Menu view_menu(debug_font);
-        Menu help_menu(debug_font);
-
-        auto hello_act = new Action("Hello", {[](void* source, void* data)->void*{
-            auto act = (Action*) source;
-            cout << act->name().stdstr << "\n";
-            return nullptr;
-        }, this});
-        
-        auto doctor_act = new Action("Doctor", {[](void* source, void* data)->void*{
-            auto act = (Action*) source;
-            cout << act->name().stdstr << "\n";
-            return nullptr;
-        }, this});
-        
-        auto name_act = new Action("Name", {[](void* source, void* data)->void*{
-            auto act = (Action*) source;
-            cout << act->name().stdstr << "\n";
-            return nullptr;
-        }, this});
-        
-        auto continue_act = new Action("Continue", {[](void* source, void* data)->void*{
-            auto act = (Action*) source;
-            cout << act->name().stdstr << "\n";
-            return nullptr;
-        }, this});
-        
-        auto yesterday_act = new Action("Yesterday", {[](void* source, void* data)->void*{
-            auto act = (Action*) source;
-            cout << act->name().stdstr << "\n";
-            return nullptr;
-        }, this});
-        
-        auto tommorow_act = new Action("Tommorow", {[](void* source, void* data)->void*{
-            auto act = (Action*) source;
-            cout << act->name().stdstr << "\n";
-            return nullptr;
-        }, this});
-        
-        session_menu.appendAction(hello_act);
-        session_menu.appendAction(doctor_act);
-        session_menu.appendAction(name_act);
-        session_menu.appendAction(continue_act);
-        session_menu.appendAction(yesterday_act);
-        session_menu.appendAction(tommorow_act);
-        session_menu.update();
-        
-        hm.appendMenu("Session", &session_menu);
-        hm.appendMenu("Edit", &edit_menu);
-        hm.appendMenu("View", &view_menu);
-        hm.appendMenu("Help", &help_menu);
-        hm.update();
+//         HorizontalMenu hm(debug_font);
+//         hm.setPosition(0, 0);
+//         fms.appendWidget(&hm);
+//         
+//         Menu session_menu(debug_font);
+//         Menu edit_menu(debug_font);
+//         Menu view_menu(debug_font);
+//         Menu help_menu(debug_font);
+// 
+//         auto hello_act = new Action("Hello", {[](void* source, void* data)->void*{
+//             auto act = (Action*) source;
+//             cout << act->name().stdstr << "\n";
+//             return nullptr;
+//         }, this});
+//         
+//         auto doctor_act = new Action("Doctor", {[](void* source, void* data)->void*{
+//             auto act = (Action*) source;
+//             cout << act->name().stdstr << "\n";
+//             return nullptr;
+//         }, this});
+//         
+//         auto name_act = new Action("Name", {[](void* source, void* data)->void*{
+//             auto act = (Action*) source;
+//             cout << act->name().stdstr << "\n";
+//             return nullptr;
+//         }, this});
+//         
+//         auto continue_act = new Action("Continue", {[](void* source, void* data)->void*{
+//             auto act = (Action*) source;
+//             cout << act->name().stdstr << "\n";
+//             return nullptr;
+//         }, this});
+//         
+//         auto yesterday_act = new Action("Yesterday", {[](void* source, void* data)->void*{
+//             auto act = (Action*) source;
+//             cout << act->name().stdstr << "\n";
+//             return nullptr;
+//         }, this});
+//         
+//         auto tommorow_act = new Action("Tommorow", {[](void* source, void* data)->void*{
+//             auto act = (Action*) source;
+//             cout << act->name().stdstr << "\n";
+//             return nullptr;
+//         }, this});
+//         
+//         session_menu.appendAction(hello_act);
+//         session_menu.appendAction(doctor_act);
+//         session_menu.appendAction(name_act);
+//         session_menu.appendAction(continue_act);
+//         session_menu.appendAction(yesterday_act);
+//         session_menu.appendAction(tommorow_act);
+//         session_menu.update();
+//         
+//         hm.appendMenu("Session", &session_menu);
+//         hm.appendMenu("Edit", &edit_menu);
+//         hm.appendMenu("View", &view_menu);
+//         hm.appendMenu("Help", &help_menu);
+//         hm.update();
                 
 //         auto window2 = SDL2Window::create(640, 480, "window2");
 //         Scene scene2;
@@ -489,10 +489,10 @@ struct Program{
 // 
 //         jack_activate(jack_client);
         
-        Dummy dummy(100, 100);
-        dummy.setPosition(0, 0);
-        fms.appendWidget(&dummy);
-        
+//         Dummy dummy(100, 100);
+//         dummy.setPosition(0, 0);
+//         fms.appendWidget(&dummy);
+//         
 
         glEnable(GL_MULTISAMPLE);
         CHECK_FOR_GL_ERRORS;
