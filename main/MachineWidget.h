@@ -3,6 +3,7 @@
 
 #include "gui/Widget.h"
 #include "gui/TextureAtlas.h"
+#include "gui/Painter.h"
 
 namespace r64fx{
     
@@ -10,10 +11,11 @@ namespace r64fx{
 /** @brief A machine shown in the MachineScene. */
 class MachineWidget : public Widget{
     bool about_to_be_dragged = false;
+    PainterVertices pv;
     
 public:
     MachineWidget(Widget* parent = nullptr);
-
+    
     Texture surface_texture;
     
     /** @brief Set a texture to be used as a surface texture for this widget. 
@@ -23,6 +25,8 @@ public:
     void safelySetSurfaceTexture(Texture texture);
     
     virtual ~MachineWidget();
+    
+    void update();
     
     virtual void render();
 

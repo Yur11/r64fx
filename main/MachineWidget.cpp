@@ -17,9 +17,10 @@ using namespace std;
 
 namespace r64fx{
 
-MachineWidget::MachineWidget(Widget* parent) : Widget(parent)
+MachineWidget::MachineWidget(Widget* parent) : Widget(parent), pv(4)
 {
     resize(19 * 100, 1.75 * 100);
+    update();
 }
 
 
@@ -36,17 +37,51 @@ void MachineWidget::safelySetSurfaceTexture(Texture texture)
 }
 
 
+void MachineWidget::update()
+{
+    float texw = float(width()) / 64.0;
+    float texh = float(height()) / 64.0;
+    
+    static float data[16] = {
+        0.0, 0.0,
+        width(), 0.0,
+        0.0, height(),
+        width(), height(),
+        
+        0.0, 0.0,
+        texw, 0.0,
+        0.0, texh,
+        texw, texh
+    };
+    
+    pv.bindBuffer();
+    pv.setData(data);
+    pv.unbindBuffer();
+}
+
+
 void MachineWidget::render()
 {
-    RectPainter::prepare();
-    RectPainter::setTexCoords(0.0, 0.0, width() / surface_texture.width(), height() / surface_texture.height());
-    RectPainter::setTexture(surface_texture.id());
-    RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
-    RectPainter::setCoords(0.0, 0.0, width(), height());
-    RectPainter::render();
+//     RectPainter::prepare();
+//     RectPainter::setTexCoords(0.0, 0.0, width() / surface_texture.width(), height() / surface_texture.height());
+//     RectPainter::setTexture(surface_texture.id());
+//     RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
+//     RectPainter::setCoords(0.0, 0.0, width(), height());
+//     RectPainter::render();
+//     
+//     glUseProgram(0);
+//     CHECK_FOR_GL_ERRORS;
     
-    glUseProgram(0);
-    CHECK_FOR_GL_ERRORS;
+    Painter::enable();
+    Painter::setColor(1.0, 1.0, 1.0, 1.0);
+    Painter::setTexture(surface_texture.id());
+    Painter::useCurrent2dProjection();
+    
+    pv.bindArray();
+    pv.render(GL_TRIANGLE_STRIP);
+    pv.unbindArray();
+    
+    Painter::disable();
     
     Widget::render();
 }
