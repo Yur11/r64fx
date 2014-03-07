@@ -22,17 +22,16 @@ void ActionWidget::render()
     CHECK_FOR_GL_ERRORS; 
     
     action->icon().render();
-    font->prepare();
+    font->enable();
     if(is_highlighted)
-        font->setRGBA(0.7, 0.9, 0.9, 1.0);
+        font->setColor(0.7, 0.9, 0.9, 1.0);
     else
-        font->setRGBA(0.9, 0.7, 0.7, 1.0);
+        font->setColor(0.9, 0.7, 0.7, 1.0);
     font->setPenX(action->icon().size.w + 5);
     font->setPenY(2.0);
     font->render(action->name().stdstr);
     
-    glUseProgram(0);
-    CHECK_FOR_GL_ERRORS; 
+    font->disable();
     
     glDisable(GL_BLEND);
     CHECK_FOR_GL_ERRORS; 

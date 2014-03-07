@@ -13,13 +13,8 @@ void TextLine::render()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     CHECK_FOR_GL_ERRORS;
     
-    _font->prepare();
-    _font->setRGBA(
-        textColor().red(),
-        textColor().green(),
-        textColor().blue(),
-        textColor().alpha()
-    );
+    _font->enable();
+    _font->setColor(textColor());
     
     _font->setPenX(paddingLeft());
     _font->setPenY(paddingBottom() + _font->descender());
