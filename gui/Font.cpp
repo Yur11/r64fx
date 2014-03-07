@@ -14,51 +14,35 @@ using namespace std;
 
 namespace r64fx{
     
-GLuint           Font::vao[max_rendering_context_count];
-GLuint           Font::vbo;
 FT_Library       Font::freetype;
-ShadingProgram   Font::font_shading_program;
-GLint            Font::vertex_coord_attribute;
-GLint            Font::x_uniform;
-GLint            Font::y_uniform;
-GLint            Font::w_uniform;
-GLint            Font::h_uniform;
-GLint            Font::r_uniform;
-GLint            Font::g_uniform;
-GLint            Font::b_uniform;
-GLint            Font::a_uniform;
-GLint            Font::projection_uniform;
-GLint            Font::glyph_width_coeff_uniform;
-GLuint           Font::glyph_sampler;
-GLint            Font::glyph_sampler_uniform;
-
+PainterVertices* Font::pv;
 
 unsigned char* tmp_buffer = nullptr;
 const unsigned int tmp_buffer_size = 1024 * 64;
     
 
 void Font::Glyph::render(float x, float y)
-{
-    glUniform1f(x_uniform, x);
-    CHECK_FOR_GL_ERRORS; 
-    glUniform1f(y_uniform, y - height + bearing_y);
-    CHECK_FOR_GL_ERRORS; 
-    glUniform1f(w_uniform, width);
-    CHECK_FOR_GL_ERRORS; 
-    glUniform1f(h_uniform, height);
-    CHECK_FOR_GL_ERRORS; 
-    glUniform1f(glyph_width_coeff_uniform, width_coeff);
-    CHECK_FOR_GL_ERRORS; 
-    glActiveTexture(GL_TEXTURE0 + 0);
-    CHECK_FOR_GL_ERRORS;
-    glBindTexture(GL_TEXTURE_2D, tex);
-    CHECK_FOR_GL_ERRORS; 
-//     glBindSampler(0, glyph_sampler);
-//     CHECK_FOR_GL_ERRORS; 
-    glUniform1i(glyph_sampler_uniform, 0);
-    CHECK_FOR_GL_ERRORS; 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    CHECK_FOR_GL_ERRORS; 
+{    
+    float dy = height - bearing_y;
+    
+    float pos[8] = {
+        x,            y - dy,
+        x + width,    y - dy,
+        x,            y + height - dy,
+        x + width,    y + height - dy,
+    };
+    
+    pv->bindBuffer();
+    pv->setPositions(pos, 8);
+    pv->setTexCoords(&width_coeff, 1, 2);
+    pv->setTexCoords(&width_coeff, 1, 6);
+    pv->unbindBuffer();
+    
+    Painter::setTexture(tex);
+    
+    pv->bindArray();
+    pv->render(GL_TRIANGLE_STRIP);
+    pv->unbindArray();
 }
 
 
@@ -187,96 +171,23 @@ bool Font::init()
         return false;
     }
     
-    VertexShader vs(
-        #include "Font.vert.h"
-    );
+    pv = new PainterVertices(4);
     
-    if(!vs.isOk())
-    {
-        cerr << "Error in vertex shader!\n";
-        cerr << vs.infoLog() << "\n";
-        return false;
-    }
-    
-    FragmentShader fs(
-        #include "Font.frag.h"
-    );
-    
-    if(!fs.isOk())
-    {
-        cerr << "Error in fragment shader!\n";
-        cerr << fs.infoLog() << "\n";
-        return false;
-    }
-    
-    font_shading_program = ShadingProgram(vs, fs);
-    if(!font_shading_program.isOk())
-    {
-        cerr << "Error with shading program!\n";
-        cerr << font_shading_program.infoLog();
-        return false;
-    }
-    
-    glGenBuffers(1, &vbo);
-    
-    float vbo_data[8] = {
-        0.0, 1.0,  1.0, 1.0,
-        0.0, 0.0,  1.0, 0.0
+    float data[16] = {
+        0.0, 0.0,
+        0.0, 0.0,
+        0.0, 0.0,
+        0.0, 0.0,
+        
+        0.0, 1.0,
+        1.0, 1.0,
+        0.0, 0.0,
+        1.0, 0.0
     };
     
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    CHECK_FOR_GL_ERRORS; 
-    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vbo_data, GL_STATIC_DRAW);
-    CHECK_FOR_GL_ERRORS; 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    CHECK_FOR_GL_ERRORS; 
-    
-    vertex_coord_attribute = glGetAttribLocation(font_shading_program.id(), "vertex_coord");
-    CHECK_FOR_GL_ERRORS; 
-#ifdef DEBUG
-    assert(vertex_coord_attribute != -1);
-#endif//DEBUG
-    
-    
-    x_uniform = glGetUniformLocation(font_shading_program.id(), "x");
-    CHECK_FOR_GL_ERRORS; 
-    y_uniform = glGetUniformLocation(font_shading_program.id(), "y");
-    CHECK_FOR_GL_ERRORS; 
-    w_uniform = glGetUniformLocation(font_shading_program.id(), "w");
-    CHECK_FOR_GL_ERRORS; 
-    h_uniform = glGetUniformLocation(font_shading_program.id(), "h");
-    CHECK_FOR_GL_ERRORS; 
-    r_uniform = glGetUniformLocation(font_shading_program.id(), "r");
-    CHECK_FOR_GL_ERRORS; 
-    g_uniform = glGetUniformLocation(font_shading_program.id(), "g");
-    CHECK_FOR_GL_ERRORS; 
-    b_uniform = glGetUniformLocation(font_shading_program.id(), "b");
-    CHECK_FOR_GL_ERRORS; 
-    a_uniform = glGetUniformLocation(font_shading_program.id(), "a");
-    CHECK_FOR_GL_ERRORS; 
-    projection_uniform = glGetUniformLocation(font_shading_program.id(), "sxsytxty");
-    CHECK_FOR_GL_ERRORS; 
-    glyph_width_coeff_uniform = glGetUniformLocation(font_shading_program.id(), "glyph_width_coeff");
-    CHECK_FOR_GL_ERRORS; 
-    glyph_sampler_uniform = glGetUniformLocation(font_shading_program.id(), "glyph_sampler");
-    CHECK_FOR_GL_ERRORS; 
-   
-#ifdef DEBUG
-    assert(x_uniform != -1);
-    assert(y_uniform != -1);
-    assert(w_uniform != -1);
-    assert(h_uniform != -1);
-    assert(r_uniform != -1);
-    assert(g_uniform != -1);
-    assert(b_uniform != -1);
-    assert(a_uniform != -1);
-    assert(projection_uniform != -1);
-    assert(glyph_width_coeff_uniform != -1);
-    assert(glyph_sampler_uniform != -1);
-#endif//DEBUG
-    
-    glGenSamplers(1, &glyph_sampler);
-    CHECK_FOR_GL_ERRORS; 
+    pv->bindBuffer();
+    pv->setData(data);
+    pv->unbindBuffer();
     
     tmp_buffer = new unsigned char[tmp_buffer_size];
     
@@ -317,89 +228,6 @@ Font::~Font()
 }
 
 
-void Font::setupForContext(RenderingContextId_t context_id)
-{
-    cout << "Font: setup for context: " << context_id << "\n";
-    
-    if(vao[context_id] != 0)
-    {
-#ifdef DEBUG
-        cerr << "Font: Double setup for context: " << context_id << "\n";
-#endif//DEBUG
-        return;
-    }
-    
-    glGenVertexArrays(1, vao + context_id);
-    CHECK_FOR_GL_ERRORS; 
-    glBindVertexArray(vao[context_id]);
-    CHECK_FOR_GL_ERRORS; 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    CHECK_FOR_GL_ERRORS; 
-    glEnableVertexAttribArray(vertex_coord_attribute);
-    CHECK_FOR_GL_ERRORS; 
-    glVertexAttribPointer(vertex_coord_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    CHECK_FOR_GL_ERRORS; 
-    glBindVertexArray(0);
-    CHECK_FOR_GL_ERRORS; 
-}
-
-
-void Font::cleanupForContext(RenderingContextId_t context_id)
-{
-    cout << "Font: cleanup for context: " << context_id << "\n";
-    
-    if(vao[context_id] == 0)
-    {
-#ifdef DEBUG
-        cerr << "Font: Double cleanup for context: " << context_id << "\n";
-#endif//DEBUG
-        return;
-    }
-    
-    glDeleteVertexArrays(1, vao + context_id);
-}
-
-
-void Font::prepare()
-{
-    font_shading_program.use();
-    glUniform4fv(projection_uniform, 1, current_2d_projection->vec);
-}
-    
-    
-void Font::setR(float r)
-{
-    glUniform1f(r_uniform, r);
-}
-
-
-void Font::setG(float g)
-{
-    glUniform1f(g_uniform, g);
-}
-
-
-void Font::setB(float b)
-{
-    glUniform1f(b_uniform, b);
-}
-
-
-void Font::setA(float a)
-{
-    glUniform1f(a_uniform, a);
-}
-
-
-void Font::setRGBA(float r, float g, float b, float a)
-{
-    setR(r);
-    setG(g);
-    setB(b);
-    setA(a);
-}
-
-
 void Font::render(std::string utf8_text)
 {
     auto context_id = RenderingContext::current()->id();
@@ -414,7 +242,7 @@ void Font::render(std::string utf8_text)
     {
         auto glyph = fetchGlyph(utf8_str[i]);
 #ifdef DEBUG
-    assert(glyph != nullptr);
+        assert(glyph != nullptr);
 #endif//DEBUG
         
         if(_has_kerning && i > 0)
@@ -426,11 +254,7 @@ void Font::render(std::string utf8_text)
     
         if(glyph->tex != 0)
         {
-            glBindVertexArray(vao[context_id]);
-            CHECK_FOR_GL_ERRORS; 
             glyph->render(_pen_x, _pen_y);
-            glBindVertexArray(0);
-            CHECK_FOR_GL_ERRORS; 
         }
 
         _pen_x += glyph->advance;
@@ -446,7 +270,7 @@ void Font::renderChar(std::string utf8_char)
     assert(glyph != nullptr);
 #endif//DEBUG
     
-    font_shading_program.use();
+//     font_shading_program.use();
     
     glyph->render(_pen_x, _pen_y);
     _pen_x += glyph->advance;

@@ -3,31 +3,16 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include "Shader.h"
+#include "Painter.h"
 #include "RenderingContext.h"
 #include <string>
 #include <map>
 
 namespace r64fx{
     
-class Font : public RenderingContextAware{
-    static GLuint vao[max_rendering_context_count];
-    static GLuint vbo;
+class Font{
     static FT_Library freetype;
-    static ShadingProgram font_shading_program;
-    static GLint vertex_coord_attribute;
-    static GLint x_uniform;
-    static GLint y_uniform;
-    static GLint w_uniform;
-    static GLint h_uniform;
-    static GLint r_uniform;
-    static GLint g_uniform;
-    static GLint b_uniform;
-    static GLint a_uniform;
-    static GLint projection_uniform;
-    static GLint glyph_width_coeff_uniform;
-    static GLuint glyph_sampler;
-    static GLint glyph_sampler_uniform;
+    static PainterVertices* pv;
     
     FT_Face _ft_face;
     float _height;
@@ -42,9 +27,8 @@ class Font : public RenderingContextAware{
         
         float width;
         float height;
-        float width_coeff; //Used to correct the right tex coord in the shaders,
+        float width_coeff; //Used to correct the right tex coord in,
                            //in case the texture image got padded to be a multipe of 4.
-                           //This is needed for mipmapping to work properly.
         
         float bearing_x;
         float bearing_y;
@@ -69,10 +53,6 @@ public:
     
     virtual ~Font();
     
-    virtual void setupForContext(RenderingContextId_t context_id);
-    
-    virtual void cleanupForContext(RenderingContextId_t context_id);
-    
     inline bool isOk() const { return _is_ok; }
     
     inline float height() const { return _height; }
@@ -81,17 +61,13 @@ public:
     
     inline float descender() const { return _descender; }
     
-    void prepare();
+    void enable() { Painter::enable(); Painter::setTexturingMode(Painter::RedAsAlpha); }
     
-    void setR(float r);
-    
-    void setG(float r);
-    
-    void setB(float r);
-    
-    void setA(float r);
+    inline static void disable() { Painter::setTexturingMode(Painter::RGBA); Painter::disable(); }
         
-    void setRGBA(float r, float g, float b, float a);
+    inline static void setColor(Color color) { Painter::setColor(color); }
+    
+    inline void setColor(float r, float g, float b, float a) { setColor({ r, g, b, a }); }
     
     void render(std::string utf8_text);
     
