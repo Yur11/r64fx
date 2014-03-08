@@ -688,7 +688,7 @@ public:
     void xorps(Xmm dst, Xmm src);
     void xorps(Xmm reg, Mem128 mem);
     void xorps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
+    
     void cmpps(CmpCode kind, Xmm dst, Xmm src);
     void cmpps(CmpCode kind, Xmm reg, Mem128 mem);
     void cmpps(CmpCode kind, Xmm reg, Base base, Disp8 disp = Disp8(0));
@@ -725,10 +725,18 @@ public:
     void pshufd(Xmm dst, Xmm src, unsigned char imm);
     void pshufd(Xmm reg, Mem128 mem, unsigned char imm);
     void pshufd(Xmm reg, Base base, Disp8 disp, unsigned char imm);
-    inline void pshufd(Xmm reg, Base base, unsigned imm)
+    inline void pshufd(Xmm reg, Base base, unsigned char imm)
     {
         pshufd(reg, base, Disp8(0), imm);
     }
+    
+    void cvtps2dq(Xmm dst, Xmm src);
+    void cvtps2dq(Xmm reg, Mem128 mem);
+    void cvtps2dq(Xmm reg, Base base, Disp8 disp = Disp8(0));
+    
+    void cvtdq2ps(Xmm dst, Xmm src);
+    void cvtdq2ps(Xmm reg, Mem128 mem);
+    void cvtdq2ps(Xmm reg, Base base, Disp8 disp = Disp8(0));
 
 };//Assembler
 

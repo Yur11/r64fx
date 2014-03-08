@@ -949,7 +949,8 @@ void Assembler::movups(Xmm reg, Base base, Disp8 disp)
     dump << (void*)ip() << "    movups" << reg.name() << ", [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ]\n";
 #endif//DEBUG
     
-    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    if(reg.prefix_bit() || base.reg.prefix_bit()) 
+        bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
     bytes << 0x0F << 0x10;
     if(disp.byte == 0)
         encode_modrm_and_sib_base(bytes, reg, base);
@@ -977,7 +978,8 @@ void Assembler::movups(Base base, Disp8 disp, Xmm reg)
     dump << (void*)ip() << "    movups [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ], " << reg.name() << "\n";
 #endif//DEBUG
     
-    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    if(reg.prefix_bit() || base.reg.prefix_bit()) 
+        bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
     bytes << 0x0F << 0x11;
     if(disp.byte == 0)
         encode_modrm_and_sib_base(bytes, reg, base);
@@ -1017,7 +1019,8 @@ void Assembler::movaps(Xmm reg, Base base, Disp8 disp)
     dump << (void*)ip() << "    movups" << reg.name() << ", [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ]\n";
 #endif//DEBUG
     
-    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    if(reg.prefix_bit() || base.reg.prefix_bit()) 
+        bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
     bytes << 0x0F << 0x28;
     if(disp.byte == 0)
         encode_modrm_and_sib_base(bytes, reg, base);
@@ -1045,7 +1048,8 @@ void Assembler::movaps(Base base, Disp8 disp, Xmm reg)
     dump << (void*)ip() << "    movups [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ], " << reg.name() << "\n";
 #endif//DEBUG
     
-    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    if(reg.prefix_bit() || base.reg.prefix_bit()) 
+        bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
     bytes << 0x0F << 0x29;
     if(disp.byte == 0)
         encode_modrm_and_sib_base(bytes, reg, base);
@@ -1139,8 +1143,9 @@ void Assembler::pshufd(Xmm dst, Xmm src, unsigned char imm)
     dump << "(" << ShufByte(imm) <<  ")\n";
 #endif//DEBUG
     
+    bytes << 0x66;
     if(dst.prefix_bit() || src.prefix_bit()) bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
-    bytes << 0x66 << 0x0F << 0x70;
+    bytes << 0x0F << 0x70;
     bytes << ModRM(b11, dst.code(), src.code());
     bytes << imm;
 }
@@ -1153,8 +1158,9 @@ void Assembler::pshufd(Xmm reg, Mem128 mem, unsigned char imm)
     dump << "(" << ShufByte(imm) <<  ")\n";
 #endif//DEBUG
     
+    bytes << 0x66;
     if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
-    bytes << 0x66 << 0x0F << 0x70;
+    bytes << 0x0F << 0x70;
     bytes << ModRM(b00, reg.code(), b101);
     bytes << Rip32(mem.addr, bytes.codeEnd() + 5);
     bytes << imm;
@@ -1168,13 +1174,102 @@ void Assembler::pshufd(Xmm reg, Base base, Disp8 disp, unsigned char imm)
     dump << "(" << ShufByte(imm) <<  ")\n";
 #endif//DEBUG
     
-    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
-    bytes << 0x66 << 0x0F << 0x70;
+    bytes << 0x66;
+    if(reg.prefix_bit() || base.reg.prefix_bit())
+        bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0x70;
     if(disp.byte == 0)
         encode_modrm_and_sib_base(bytes, reg, base);
     else
         encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
     bytes << imm;
+}
+
+
+void Assembler::cvtps2dq(Xmm dst, Xmm src)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    cvtps2dq " << dst.name() << ", " << src.name() << "\n";
+#endif//DEBUG
+    
+    bytes << 0x66;
+    if(dst.prefix_bit() || src.prefix_bit())
+        bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x0F << 0x5B;
+    bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::cvtps2dq(Xmm reg, Mem128 mem)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    cvtps2dq " << reg.name() << ", [" << (void*)mem.addr << "], "; 
+#endif//DEBUG
+    
+    bytes << 0x66;
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0x5B;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::cvtps2dq(Xmm reg, Base base, Disp8 disp)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    cvtps2dq " << reg.name() << ", [" << base.reg.name() << " + " << (unsigned int) disp.byte << "], "; 
+#endif//DEBUG
+    
+    bytes << 0x66;
+    if(reg.prefix_bit() || base.reg.prefix_bit()) 
+        bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0x5B;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+}
+
+
+void Assembler::cvtdq2ps(Xmm dst, Xmm src)
+{
+    #ifdef DEBUG
+    dump << (void*)ip() << "    cvtdq2ps " << dst.name() << ", " << src.name() << "\n";
+#endif//DEBUG
+    
+    if(dst.prefix_bit() || src.prefix_bit())
+        bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x0F << 0x5B;
+    bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::cvtdq2ps(Xmm reg, Mem128 mem)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    cvtdq2ps " << reg.name() << ", [" << (void*)mem.addr << "], "; 
+#endif//DEBUG
+    
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0x5B;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::cvtdq2ps(Xmm reg, Base base, Disp8 disp)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    cvtdq2ps " << reg.name() << ", [" << base.reg.name() << " + " << (unsigned int) disp.byte << "], "; 
+#endif//DEBUG
+    
+    if(reg.prefix_bit() || base.reg.prefix_bit()) 
+        bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0x5B;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
 }
 
 }//namespace r64fx
