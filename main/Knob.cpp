@@ -4,7 +4,6 @@
 #include "gui/bezier.h"
 #include "gui/Window.h"
 #include "gui/Painter.h"
-#include "gui/RectPainter.h"
 #include "gui/geometry_io.h"
 
 #ifdef DEBUG
@@ -60,7 +59,7 @@ void BasicKnob::mouseMoveEvent(MouseEvent* event)
         else if(angle > max_angle)
             angle = max_angle;
 
-        this->rotated();
+        update();
         value_changed.send(this);
         
         event->has_been_handled = true;
@@ -68,54 +67,18 @@ void BasicKnob::mouseMoveEvent(MouseEvent* event)
 }
 
 
-TexturedKnobBackground::TexturedKnobBackground(Texture tex)
-: _tex(tex)
+ShinyKnob::ShinyKnob(Texture bg, Texture fg, Texture shiny)
+: bg(bg)
+, fg(fg)
+, shiny(shiny)
+, pv(12)
 {
-#ifdef DEBUG
-    assert(_tex.isGood());
-#endif//DEBUG
-}
-
-
-void TexturedKnobBackground::render(Rect<float> rect)
-{
-    glEnable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS;
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    CHECK_FOR_GL_ERRORS;
-    
-    RectPainter::prepare();
-    RectPainter::setTexCoords(0.0, 0.0, 1.0, -1.0);
-    RectPainter::setTexture(_tex.id());
-    RectPainter::setColor(1.0, 1.0, 1.0, 1.0);
-    RectPainter::setCoords(0.0, 0.0, rect.width(), rect.height());
-    RectPainter::render();
+    float data[24] = {
+        0.0, 1.0,
+        1.0, 1.0,
+        0.0, 0.0,
+        1.0, 0.0,
         
-    glDisable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS;
-}
-
-
-Texture knob_a_base_tex;
-Texture knob_a_shiny_tex;
-
-
-void KnobHandleTypeA::init()
-{
-    knob_a_base_tex = Texture(data_prefix + "textures/knob_a.png");
-    knob_a_shiny_tex = Texture(data_prefix + "textures/brushed_metal_knob_top.png");
-    glActiveTexture(GL_TEXTURE0 + 0);
-    
-#ifdef DEBUG
-    assert(knob_a_base_tex.isGood());
-    assert(knob_a_shiny_tex.isGood());
-#endif//DEBUG
-}
-
-
-KnobHandleTypeA::KnobHandleTypeA() : pv(8)
-{
-    static float data[16] = {
         0.0, 0.0,
         1.0, 0.0,
         0.0, 1.0,
@@ -128,20 +91,24 @@ KnobHandleTypeA::KnobHandleTypeA() : pv(8)
     };
     
     pv.bindBuffer();
-    pv.setTexCoords(data, 16);
+    pv.setTexCoords(data, 24);
     pv.unbindBuffer();
 }
 
 
-void KnobHandleTypeA::update(Point<float> center, float angle, float radius)
+void ShinyKnob::update()
 {
-    radius *= 0.6;
+    BasicKnob::update();
+    
+    auto c = Point<float>( width() * 0.5, height() * 0.5 );
+    
+    float r = radius * 0.6;
     
     Point<float> p[4] = {
-        { -radius, -radius },
-        {  radius, -radius },
-        { -radius,  radius },
-        {  radius,  radius }
+        { -r, -r },
+        {  r, -r },
+        { -r,  r },
+        {  r,  r }
     };
     
     for(int i=0; i<4; i++)
@@ -149,49 +116,56 @@ void KnobHandleTypeA::update(Point<float> center, float angle, float radius)
         p[i].rotate( - angle * M_PI / 180);
     }
 
-    radius *= 0.7;
+    r *= 0.7;
 
-    float data[16] = {
-        p[0].x + center.x, p[0].y + center.y,
-        p[1].x + center.x, p[1].y + center.y,
-        p[2].x + center.x, p[2].y + center.y,
-        p[3].x + center.x, p[3].y + center.y,
+    float data[24] = {
+        /* bg */
+        0.0, 0.0,
+        width(), 0.0,
+        0.0, height(),
+        width(), height(),
         
-        -radius + center.x, -radius + center.y,
-         radius + center.x, -radius + center.y,
-        -radius + center.x,  radius + center.y,
-         radius + center.x,  radius + center.y
+        /* rotated fg */
+        p[0].x + c.x, p[0].y + c.y,
+        p[1].x + c.x, p[1].y + c.y,
+        p[2].x + c.x, p[2].y + c.y,
+        p[3].x + c.x, p[3].y + c.y,
+        
+        /* shiny fg */
+        -r + c.x, -r + c.y,
+         r + c.x, -r + c.y,
+        -r + c.x,  r + c.y,
+         r + c.x,  r + c.y
     };
     
     pv.bindBuffer();
-    pv.setPositions(data, 16);
+    pv.setPositions(data, 24);
     pv.unbindBuffer();
 }
 
 
-void KnobHandleTypeA::render()
+void ShinyKnob::render()
 {
-    glEnable(GL_BLEND);                                 CHECK_FOR_GL_ERRORS;
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  CHECK_FOR_GL_ERRORS;
+    glEnable(GL_BLEND);
+    CHECK_FOR_GL_ERRORS;
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    CHECK_FOR_GL_ERRORS;
     
-    Painter::enable();
     Painter::useCurrent2dProjection();
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
-    Painter::setTexturingMode(Painter::RGBA);
     
     pv.bindArray();
     
-    Painter::setTexture(knob_a_base_tex.id());
-    pv.render(GL_TRIANGLE_STRIP, 4);
+    Painter::setTexture(bg.id());
+    pv.render(GL_TRIANGLE_STRIP, 4, 0);
     
-    Painter::setTexture(knob_a_shiny_tex.id());
+    Painter::setTexture(fg.id());
     pv.render(GL_TRIANGLE_STRIP, 4, 4);
     
+    Painter::setTexture(shiny.id());
+    pv.render(GL_TRIANGLE_STRIP, 4, 8);
+    
     pv.unbindArray();
-    
-    Painter::disable();
-    
-    glDisable(GL_BLEND);     CHECK_FOR_GL_ERRORS;
 }
 
 

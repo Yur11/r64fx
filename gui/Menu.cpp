@@ -2,8 +2,6 @@
 #include "MouseEvent.h"
 #include "Window.h"
 #include "Painter.h"
-#include "RectVertices.h"
-#include "RectPainter.h"
 
 #include <iostream>
 
@@ -46,6 +44,8 @@ void Menu::appendAction(Action* act)
 
 void Menu::update()
 {
+    VerticalContainer::update();
+    
     const auto &r = rect();
     
     float pos[8] = {
@@ -57,32 +57,31 @@ void Menu::update()
     pv.bindBuffer();
     pv.setPositions(pos, 8);
     pv.unbindBuffer();
-    
-    VerticalContainer::update();
 }
 
 
 void Menu::render()
 {
-    RectPainter::prepare();
-    
-    RectPainter::setTexture(RectPainter::plainTexture());
-    RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
-    
-    RectPainter::setColor(0.0, 0.01, 0.0, 0.7);
-    
-    RectPainter::setCoords(0.0, 0.0, width(), height());
-    RectPainter::render();
-    
+//     RectPainter::prepare();
+//     
+//     RectPainter::setTexture(RectPainter::plainTexture());
+//     RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
+//     
+//     RectPainter::setColor(0.0, 0.01, 0.0, 0.7);
+//     
+//     RectPainter::setCoords(0.0, 0.0, width(), height());
+//     RectPainter::render();
+//     
 //     Painter::enable();
-//     Painter::useCurrent2dProjection();
-//     Painter::useNoTexture();
-//     Painter::setColor(0.0, 0.0, 0.0, 0.0);
-//     
-//     pv.bindArray();
-//     pv.render(GL_TRIANGLE_STRIP);
-//     pv.unbindArray();
-//     
+        
+    Painter::useCurrent2dProjection();
+    Painter::useNoTexture();
+    Painter::setColor(0.0, 0.0, 0.0, 0.7);
+    
+    pv.bindArray();
+    pv.render(GL_TRIANGLE_STRIP);
+    pv.unbindArray();
+    
 //     Painter::disable();
     
     render_children();

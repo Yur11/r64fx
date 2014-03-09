@@ -3,8 +3,6 @@
 #include "gui/Error.h"
 #include "gui/MouseEvent.h"
 #include "gui/Painter.h"
-#include "gui/RectVertices.h"
-#include "gui/RectPainter.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -72,7 +70,7 @@ void MachineWidget::render()
 //     glUseProgram(0);
 //     CHECK_FOR_GL_ERRORS;
     
-    Painter::enable();
+//     Painter::enable();
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
     Painter::setTexture(surface_texture.id());
     Painter::useCurrent2dProjection();
@@ -81,7 +79,7 @@ void MachineWidget::render()
     pv.render(GL_TRIANGLE_STRIP);
     pv.unbindArray();
     
-    Painter::disable();
+//     Painter::disable();
     
     Widget::render();
 }

@@ -2,8 +2,6 @@
 #include "gui/Error.h"
 #include "gui/MouseEvent.h"
 #include "gui/Painter.h"
-#include "gui/RectVertices.h"
-#include "gui/RectPainter.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -39,7 +37,7 @@ void Socket::render()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     CHECK_FOR_GL_ERRORS;
     
-    Painter::enable();
+//     Painter::enable();
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
     Painter::setTexture(Socket::texture.id());
     Painter::useCurrent2dProjection();
@@ -48,7 +46,7 @@ void Socket::render()
     pv.render(GL_TRIANGLE_STRIP);
     pv.unbindArray();
     
-    Painter::disable();
+//     Painter::disable();
 
     glDisable(GL_BLEND);
     CHECK_FOR_GL_ERRORS;

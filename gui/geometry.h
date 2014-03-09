@@ -160,6 +160,11 @@ template<typename T> struct Rect{
         return width() + other.width() >= rightmost - leftmost && height() + other.height() >= topmost - bottommost;
     }
     
+    Point<float> center() const
+    {
+        return Point<float>( left + width() * 0.5, bottom + height() * 0.5 );
+    }
+    
     template<typename OtherT> Rect<OtherT> to() { return Rect<OtherT>(left, top, right, bottom); }
     
     /** @brief Move the rect. */

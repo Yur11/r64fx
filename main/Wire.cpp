@@ -350,10 +350,10 @@ void Wire::update()
     
     
     
-    control_points[1] = {
+    control_points[1] = Point<float> (
         leftmost.x + (rightmost.x - leftmost.x) * 0.5,
         bottommost.y - 500
-    };
+    );
     
     bezier_points(control_points, wire_points);
     

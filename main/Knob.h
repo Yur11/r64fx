@@ -14,10 +14,7 @@ namespace r64fx{
 class BasicKnob : public Widget, public Padding{
     
 protected:
-    float rad_angle = 0.0;
         
-    virtual void rotated() = 0;
-    
 public:    
     BasicKnob(Widget* parent = nullptr);
     
@@ -48,55 +45,22 @@ public:
 };
 
 
-template<typename BackgroundT, typename HandleT> class Knob : public BasicKnob{
-    BackgroundT* background;
-    HandleT* handle;
+/** @brief Knob with a shiny part*/
+class ShinyKnob : public BasicKnob{
+    Texture bg, fg, shiny;
     
-    virtual void rotated()
-    {
-        handle->update(Point<float>(width() * 0.5, height() * 0.5), angle, radius);
-    }
-    
-public:
-    Knob(BackgroundT* background, HandleT* handle)
-    : background(background)
-    , handle(handle)
-    {
-        update();
-        handle->update(Point<float>(width() * 0.5, height() * 0.5), angle, radius);
-    }
-    
-    virtual void render()
-    {
-        background->render(Widget::rect());
-        handle->render();
-    }
-};
-
-
-class TexturedKnobBackground{
-    Texture _tex;
-    
-public:
-    TexturedKnobBackground(Texture tex);
-    TexturedKnobBackground(std::string tex) : TexturedKnobBackground(Texture(tex)) {}
-    
-    void render(Rect<float> rect);
-};
-
-
-/* Rotating base + Shiny top. */
-class KnobHandleTypeA{
     PainterVertices pv;
     
 public:
-    KnobHandleTypeA();
+    ShinyKnob(Texture bg, Texture fg, Texture shiny);
     
-    static void init();
+    ShinyKnob(std::string bg, std::string fg, std::string shiny):
+    ShinyKnob(Texture(bg), Texture(fg), Texture(shiny))
+    {}
     
-    void update(Point<float> center, float angle, float radius);
+    virtual void update();
     
-    void render();
+    virtual void render();
 };
 
     

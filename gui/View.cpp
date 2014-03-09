@@ -4,8 +4,6 @@
 #include "Window.h"
 #include "Translation.h"
 #include "Painter.h"
-#include "RectVertices.h"
-#include "RectPainter.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -455,7 +453,7 @@ void SplitView::render()
     viewA()->render();
     viewB()->render();
     
-    Painter::enable();
+//     Painter::enable();
     if(separatorIsHovered())
         if(separatorIsGrabbed())
             Painter::setColor(0.3, 0.6, 0.3, 1.0);
@@ -472,7 +470,7 @@ void SplitView::render()
     sepv->render(GL_LINES);
     sepv->unbindArray();
     
-    Painter::disable();
+//     Painter::disable();
 }
     
     

@@ -2,7 +2,6 @@
 #include <map>
 #include <iostream>
 #include "Painter.h"
-#include "RectVertices.h"
 
 
 using namespace std;
@@ -28,7 +27,7 @@ void Icon::render()
         pv->setPositions(pos, 6, 2);
         pv->unbindBuffer();
         
-        Painter::enable();
+//         Painter::enable();
         Painter::useCurrent2dProjection();
         Painter::setColor(color);
         Painter::setTexture(_texture.id());
@@ -37,7 +36,7 @@ void Icon::render()
         pv->render(GL_TRIANGLE_STRIP);
         pv->unbindArray();
         
-        Painter::disable();
+//         Painter::disable();
     }
 }
 

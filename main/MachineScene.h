@@ -20,11 +20,15 @@ class MachineScene : public Scene{
     bool drag_in_progress = false;
     
     bool can_drop = false;
+    
+    PainterVertices pv;
 
 protected:    
     void render_wires();
     
 public:
+    MachineScene();
+    
     /* Making this thing public for debugging purposes. */
     std::vector<Wire*>* wires;
     

@@ -3,7 +3,6 @@
 #include "gui/MouseEvent.h"
 #include "gui/KeyEvent.h"
 #include "gui/Painter.h"
-#include "gui/RectPainter.h"
 #include <algorithm>
 
 #ifdef DEBUG
@@ -15,39 +14,76 @@ using namespace std;
 
 namespace r64fx{
     
+MachineScene::MachineScene()
+: pv(4)
+{
+    float tex_coords[8] = {
+        0.0, 0.0,
+        1.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0
+    };
+    
+    pv.bindBuffer();
+    pv.setTexCoords(tex_coords, 8);
+    pv.unbindBuffer();
+}
+    
+    
 void MachineScene::render()
 {
     Scene::render();
     if(!selected_widgets.empty())
     {
-        RectPainter::prepare();
-        RectPainter::setTexture(RectPainter::plainTexture());
-        RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
-        RectPainter::setColor(0.0, 0.0, 1.0, 1.0);
+        Painter::useNoTexture();
+        Painter::setColor(0.0, 0.0, 1.0, 1.0);
+        Painter::useCurrent2dProjection();
          
         for(auto w : selected_widgets)
         {
-            auto position = w->position();
-            auto size = w->size();
+            auto r = w->rect();
             
-            RectPainter::setCoords(position.x, position.y, size.w, size.h);
-            RectPainter::renderOutline();
+            float pos[8] = {
+                r.left, r.bottom,
+                r.right, r.bottom,
+                r.right, r.top,
+                r.left, r.top
+            };
+            
+            pv.bindBuffer();
+            pv.setPositions(pos, 8);
+            pv.unbindBuffer();
+            
+            pv.bindArray();
+            pv.render(GL_LINE_LOOP);
+            pv.unbindArray();
         }
         
         if(drag_in_progress)
         {
             if(can_drop)
-                RectPainter::setColor(0.0, 1.0, 0.0, 1.0);
+                Painter::setColor(0.0, 1.0, 0.0, 1.0);
             else
-                RectPainter::setColor(1.0, 0.0, 0.0, 1.0);
+                Painter::setColor(1.0, 0.0, 0.0, 1.0);
             
             for(auto w : selected_widgets)
             {
-                auto position = w->position() + drag_position - drag_start_position;
-                auto size = w->size();                
+                auto r = w->rect() + (drag_position - drag_start_position);
+
+                float pos[8] = {
+                    r.left, r.bottom,
+                    r.right, r.bottom,
+                    r.right, r.top,
+                    r.left, r.top
+                };
                 
-                RectPainter::setCoords(position.x, position.y, size.w, size.h);
-                RectPainter::renderOutline();
+                pv.bindBuffer();
+                pv.setPositions(pos, 8);
+                pv.unbindBuffer();
+                
+                pv.bindArray();
+                pv.render(GL_LINE_LOOP);
+                pv.unbindArray();
             }
         }
     }
@@ -56,8 +92,10 @@ void MachineScene::render()
 
 void MachineScene::render_wires()
 {
+    Painter::disable();
     for(auto w : *wires)
         w->render();
+    Painter::enable();
 }
 
 

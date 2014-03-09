@@ -3,7 +3,6 @@
 #include "KeyEvent.h"
 #include "Menu.h"
 #include "Window.h"
-#include "RectVertices.h"
 #include "Error.h"
 #include <iostream>
 #include <assert.h>
@@ -58,7 +57,7 @@ void Dummy::render()
 {  
     static float angle = 0.0;
     
-    Painter::enable();
+//     Painter::enable();
     Painter::useCurrent2dProjection();
     Painter::setColor(0.0, 1.0, 0.0, 0.5);
     Painter::useNoTexture();
@@ -72,7 +71,7 @@ void Dummy::render()
     pv.render(GL_TRIANGLE_STRIP);
     pv.unbindArray();
     
-    Painter::disable();
+//     Painter::disable();
     
     angle += 0.1;
     if(angle >= M_PI*2.0) 

@@ -29,7 +29,7 @@ public:
     void update();
     
     virtual void render();
-
+    
     Message clicked;
     
     Message dragged;

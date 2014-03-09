@@ -61,9 +61,9 @@ public:
     
     inline float descender() const { return _descender; }
     
-    void enable() { Painter::enable(); Painter::setTexturingMode(Painter::RedAsAlpha); }
+    void enable() { /*Painter::enable();*/ Painter::setTexturingMode(Painter::RedAsAlpha); }
     
-    inline static void disable() { Painter::setTexturingMode(Painter::RGBA); Painter::disable(); }
+    inline static void disable() { Painter::setTexturingMode(Painter::RGBA); /*Painter::disable();*/ }
         
     inline static void setColor(Color color) { Painter::setColor(color); }
     
