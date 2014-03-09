@@ -64,9 +64,10 @@ void Texture::load_to_vram(int width, int height, int channel_count, int mode, u
     glBindTexture(GL_TEXTURE_2D, _texture);                                          CHECK_FOR_GL_ERRORS;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);                CHECK_FOR_GL_ERRORS;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);  CHECK_FOR_GL_ERRORS;
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);                     CHECK_FOR_GL_ERRORS;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, mode, GL_UNSIGNED_BYTE, bytes);
     CHECK_FOR_GL_ERRORS;
+    
+    glGenerateMipmap(GL_TEXTURE_2D);                                                 CHECK_FOR_GL_ERRORS;
    
     glBindTexture(GL_TEXTURE_2D, 0);                                                 CHECK_FOR_GL_ERRORS;
     
