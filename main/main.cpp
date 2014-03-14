@@ -35,6 +35,8 @@
 #include "Knob.h"
 #include "Wire.h"
 
+#include "AudioData.h"
+
 using namespace std;
 
 #include "serialize.cxx"
@@ -58,30 +60,14 @@ Font* debug_font = nullptr;
  */
 struct Program{
     jack_client_t* jack_client;
-    bool cycle_waiting;
     int audio_buffer_size;
 
     /* removethis */
-    jack_port_t* input_port;
     jack_port_t* output_port;
-    float* input_buffer;
     float* output_buffer;
     jack_port_t* midi_input_port;
-    float* freq1_addr;
-    float* freq2_addr;
-    float* freq3_addr;
-    float* freq4_addr;
-    
-    float* level1_addr;
-    float* level2_addr;
-    float* level3_addr;
-    float* level4_addr;
-    
-    Graph* graph;
-    
-    
-    float num1 = 1.0;
-    float num2 = 1.0;
+    AudioData* audio_data;
+    float time_coeff = 1.0;
     
     
     int main_thread(int argc, char* argv[])
@@ -102,6 +88,18 @@ struct Program{
         
         if(argc > 2)
             cerr << "Warning: ignoring extra " << (argc-2) << " command line arguments!\n";
+
+        if(!init_jack_client())
+            return 1;
+        
+        AudioData ad((data_prefix + "drum_loop_mono.wav").c_str());
+        if(!ad.size())
+        {
+            return 1;
+        }
+        
+        audio_data = &ad;
+        audio_data->calculateLinear();
         
         /*
          * Main window opened by default. 
@@ -164,7 +162,6 @@ struct Program{
         fms.wires = &wires;
         bms.wires = &wires;
         
-        graph = new Graph;
         
         /* removeme */
         Machine* m1 = new Machine(&fms, &bms);
@@ -180,10 +177,20 @@ struct Program{
         
         auto k1 = new ShinyKnob(fg, bg, shiny);
         k1->setPosition(50, 20);
-        k1->min_value = 0.1;
-        k1->max_value = 880.0;
+        k1->min_value = 1.0 / 4.0;
+        k1->max_value = 4.0;
         k1->update();
         m3->front()->appendWidget(k1);
+        k1->value_changed = {
+            [](void* source, void* data)->void*{
+                auto program = (Program*)data;
+                auto knob = (BasicKnob*)source;
+                program->time_coeff = knob->value();
+                cout << program->time_coeff << "\n";
+                return nullptr;
+            },
+            this
+        };
       
         auto sa = new Socket;
         sa->setPosition(10, 10);
@@ -214,6 +221,16 @@ struct Program{
 
         Painter::enable();
 
+        float f = -1.0;
+        float df = 2.0 / audio_buffer_size;
+        for(int i=0; i<audio_buffer_size; i++)
+        {
+            output_buffer[i] = f * 0.5;
+            f += df;
+        }
+        
+        jack_activate(jack_client);
+        
         /* Main event loop. */
         int gc_counter = 256;
         while(Window::count() > 0)
@@ -232,6 +249,9 @@ struct Program{
             
             usleep(300);
         }
+        
+        jack_deactivate(jack_client);
+        jack_client_close(jack_client);
 
         Mouse::cleanup();
         Icon::cleanup();
@@ -246,106 +266,141 @@ struct Program{
 
     void jack_thread()
     {
-        static int i = 0;
+        float seconds = float(audio_data->size()) / float(audio_data->samplerate());
+        cout << seconds << " seconds\n";
+        cout << (seconds * audio_data->samplerate()) << "\n";
+        cout << audio_data->size() << "\n";
+        float t = 0.0;
+        
         for(;;)
         {
-//             cout << i << "\n";
-            i++;
-            cycle_waiting = true;
             auto nframes = jack_cycle_wait(jack_client);
-            cycle_waiting = false;
-//             cout << "_\n";
             
-            auto jack_input_buffer = jack_port_get_buffer(input_port, audio_buffer_size);
             auto jack_output_buffer = jack_port_get_buffer(output_port, audio_buffer_size);
-            
-            memcpy(input_buffer, jack_input_buffer, sizeof(float) * audio_buffer_size);
             memcpy(jack_output_buffer, output_buffer, sizeof(float) * audio_buffer_size);
             
-            /* Should we use audio_buffer_size for midi too? */
-            auto midi_input_buffer = jack_port_get_buffer(midi_input_port, audio_buffer_size);
-            auto event_count = jack_midi_get_event_count(midi_input_buffer);
-            for(int i=0; i<(int)event_count; i++)
-            {
-                jack_midi_event_t event;
-                jack_midi_event_get(&event, midi_input_buffer, 0);
-                
-                union{
-                    unsigned char value;
-                    struct{
-                        unsigned char high:4;
-                        unsigned char low:4;
-                    } half;
-                } byte;
-                
-                if(event.size == 3)
-                {
-                    byte.value = event.buffer[0];
-                    
-                    if(byte.half.low == b1001)
-                    {
-                        cout << "Note On: Chan:  " << (int)byte.half.high << "\n";
-                        unsigned char key = event.buffer[1];
-                        unsigned char vel = event.buffer[2];
-                        cout << "key: " << (int)key << ", vel: " << (int)vel << "\n";
-                        float freq = 440.0 * pow(2, float(key - 69) / 12);
-                        cout << "freq: " << freq << "\n";
-                    }
-                    else if(byte.half.low == b1000)
-                    {
-                        cout << "Note Off: Chan: " << (int)byte.half.high << "\n";
-                        unsigned char key = event.buffer[1];
-                        unsigned char vel = event.buffer[2];
-                        cout << "key: " << (int)key << ", vel: " << (int)vel << "\n";
-                    }
-                    else if(byte.half.low == b1011)
-                    {
-                        cout << "Control Change: Chan: " << (int)byte.half.high << "\n";
-                        unsigned char key = event.buffer[1];
-                        unsigned char vel = event.buffer[2];
-                        cout << "key: " << (int)key << ", vel: " << (int)vel << "\n";
-                    }
-                    else if(byte.half.low == b1010)
-                    {
-                        cout << "Polyphonic Aftertouch: Chan: " << (int)byte.half.high << "\n";
-                        unsigned char key = event.buffer[1];
-                        unsigned char val = event.buffer[2];
-                        cout << "key: " << (int)key << ", val: " << (int)val << "\n";
-                    }
-                    else if(byte.half.low == b1110)
-                    {
-                        cout << "Pitch Wheel: Chan: " << (int)byte.half.high << "\n";
-                        unsigned int low = event.buffer[1] & b01111111;
-                        unsigned int high  = event.buffer[2] & b01111111;
-                        int val = (high << 7) + low - 8192;
-                    }
-                }
-                else if(event.size == 2)
-                {
-                    byte.value = event.buffer[0];
-                    
-                    if(byte.half.low == b1101)
-                    {
-                        cout << "Channel Aftertouch: Chan: " << (int)byte.half.high << "\n";
-                        unsigned char val = event.buffer[1];
-                        cout << "val: " << (int)val << "\n";
-                    }
-                    
-                }
-            }
+//             /* Should we use audio_buffer_size for midi too? */
+//             auto midi_input_buffer = jack_port_get_buffer(midi_input_port, audio_buffer_size);
+//             auto event_count = jack_midi_get_event_count(midi_input_buffer);
+//             for(int i=0; i<(int)event_count; i++)
+//             {
+//                 jack_midi_event_t event;
+//                 jack_midi_event_get(&event, midi_input_buffer, 0);
+//                 
+//                 union{
+//                     unsigned char value;
+//                     struct{
+//                         unsigned char high:4;
+//                         unsigned char low:4;
+//                     } half;
+//                 } byte;
+//                 
+//                 if(event.size == 3)
+//                 {
+//                     byte.value = event.buffer[0];
+//                     
+//                     if(byte.half.low == b1001)
+//                     {
+//                         cout << "Note On: Chan:  " << (int)byte.half.high << "\n";
+//                         unsigned char key = event.buffer[1];
+//                         unsigned char vel = event.buffer[2];
+//                         cout << "key: " << (int)key << ", vel: " << (int)vel << "\n";
+//                         float freq = 440.0 * pow(2, float(key - 69) / 12);
+//                         cout << "freq: " << freq << "\n";
+//                     }
+//                     else if(byte.half.low == b1000)
+//                     {
+//                         cout << "Note Off: Chan: " << (int)byte.half.high << "\n";
+//                         unsigned char key = event.buffer[1];
+//                         unsigned char vel = event.buffer[2];
+//                         cout << "key: " << (int)key << ", vel: " << (int)vel << "\n";
+//                     }
+//                     else if(byte.half.low == b1011)
+//                     {
+//                         cout << "Control Change: Chan: " << (int)byte.half.high << "\n";
+//                         unsigned char key = event.buffer[1];
+//                         unsigned char vel = event.buffer[2];
+//                         cout << "key: " << (int)key << ", vel: " << (int)vel << "\n";
+//                     }
+//                     else if(byte.half.low == b1010)
+//                     {
+//                         cout << "Polyphonic Aftertouch: Chan: " << (int)byte.half.high << "\n";
+//                         unsigned char key = event.buffer[1];
+//                         unsigned char val = event.buffer[2];
+//                         cout << "key: " << (int)key << ", val: " << (int)val << "\n";
+//                     }
+//                     else if(byte.half.low == b1110)
+//                     {
+//                         cout << "Pitch Wheel: Chan: " << (int)byte.half.high << "\n";
+//                         unsigned int low = event.buffer[1] & b01111111;
+//                         unsigned int high  = event.buffer[2] & b01111111;
+//                         int val = (high << 7) + low - 8192;
+//                     }
+//                 }
+//                 else if(event.size == 2)
+//                 {
+//                     byte.value = event.buffer[0];
+//                     
+//                     if(byte.half.low == b1101)
+//                     {
+//                         cout << "Channel Aftertouch: Chan: " << (int)byte.half.high << "\n";
+//                         unsigned char val = event.buffer[1];
+//                         cout << "val: " << (int)val << "\n";
+//                     }
+//                     
+//                 }
+//             }
             
             jack_cycle_signal(jack_client, 0);
-
-            graph->run();
             
-//             for(int i=0; i<1000*500; i++)
-//             {
-//                 num1 += num2;
-//                 num1 *= 0.5;
-//                 num1 *= 0.3;
-//             }
+            float dt = 1.0 / float(audio_data->samplerate());
+            dt *= time_coeff;
+            for(int n=0; n<audio_buffer_size; n++)
+            {
+                output_buffer[n] = audio_data->readLinear(t);
+                t+=dt;
+                while(t >= seconds)
+                    t -= seconds;
+            }
         }
     }
+    
+    
+    bool init_jack_client()
+    {
+        jack_client = jack_client_open("r64fx", JackNullOption, nullptr);
+        if(!jack_client)
+        {
+            cerr << "Failed to init jack client!\n";
+            return false;
+        }
+        
+        output_port = jack_port_register(jack_client, "out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+        if(!output_port)
+        {
+            cerr << "Failed to create output port!\n";
+            return false;
+        }
+        
+        int code = jack_set_process_thread(jack_client, [](void* arg)->void*{ 
+            auto* program = (Program*) arg;
+            program->jack_thread();
+            return nullptr;
+        }, this);
+        
+        if(code != 0)
+        {
+            cerr << "Failed to set jack thread callback!\n";
+            return false;
+        }
+        
+        audio_buffer_size = jack_get_buffer_size(jack_client);
+        output_buffer = new float[audio_buffer_size];
+        
+        return true;
+    }
+    
+    
     
 } program;
 
