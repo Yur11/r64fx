@@ -10,7 +10,7 @@ namespace r64fx{
 
 map<string, Icon> all_icons;
 
-PainterVertices* Icon::pv;
+Painter* Icon::p;
 
 
 void Icon::render()
@@ -23,18 +23,18 @@ void Icon::render()
             size.w, size.h
         };
         
-        pv->bindBuffer();
-        pv->setPositions(pos, 6, 2);
-        pv->unbindBuffer();
+        p->bindBuffer();
+        p->setPositions(pos, 6, 2);
+        p->unbindBuffer();
         
 //         Painter::enable();
         Painter::useCurrent2dProjection();
         Painter::setColor(color);
         Painter::setTexture(_texture.id());
         
-        pv->bindArray();
-        pv->render(GL_TRIANGLE_STRIP);
-        pv->unbindArray();
+        p->bindArray();
+        p->render(GL_TRIANGLE_STRIP);
+        p->unbindArray();
         
 //         Painter::disable();
     }
@@ -43,7 +43,7 @@ void Icon::render()
 
 void Icon::init()
 {
-    pv = new PainterVertices(4);
+    p = new Painter(4);
     
     float data[16] = {
         0.0, 0.0,
@@ -57,15 +57,15 @@ void Icon::init()
         1.0, 1.0
     };
     
-    pv->bindBuffer();
-    pv->setData(data);
-    pv->unbindBuffer();
+    p->bindBuffer();
+    p->setData(data);
+    p->unbindBuffer();
 }
 
 
 void Icon::cleanup()
 {
-    pv->deleteLater();
+    p->deleteLater();
 }
 
 

@@ -9,7 +9,7 @@ namespace r64fx{
     
 class Icon{
     Texture _texture;
-    static PainterVertices* pv;
+    static Painter* p;
     
 public:
     Size<float> size;

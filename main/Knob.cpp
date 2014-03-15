@@ -71,7 +71,7 @@ ShinyKnob::ShinyKnob(Texture bg, Texture fg, Texture shiny)
 : bg(bg)
 , fg(fg)
 , shiny(shiny)
-, pv(12)
+, p(12)
 {
     float data[24] = {
         0.0, 1.0,
@@ -90,9 +90,9 @@ ShinyKnob::ShinyKnob(Texture bg, Texture fg, Texture shiny)
         1.0, 1.0
     };
     
-    pv.bindBuffer();
-    pv.setTexCoords(data, 24);
-    pv.unbindBuffer();
+    p.bindBuffer();
+    p.setTexCoords(data, 24);
+    p.unbindBuffer();
 }
 
 
@@ -104,7 +104,7 @@ void ShinyKnob::update()
     
     float r = radius * 0.6;
     
-    Point<float> p[4] = {
+    Point<float> pt[4] = {
         { -r, -r },
         {  r, -r },
         { -r,  r },
@@ -113,7 +113,7 @@ void ShinyKnob::update()
     
     for(int i=0; i<4; i++)
     {
-        p[i].rotate( - angle * M_PI / 180);
+        pt[i].rotate( - angle * M_PI / 180);
     }
 
     r *= 0.7;
@@ -126,10 +126,10 @@ void ShinyKnob::update()
         width(), height(),
         
         /* rotated fg */
-        p[0].x + c.x, p[0].y + c.y,
-        p[1].x + c.x, p[1].y + c.y,
-        p[2].x + c.x, p[2].y + c.y,
-        p[3].x + c.x, p[3].y + c.y,
+        pt[0].x + c.x, pt[0].y + c.y,
+        pt[1].x + c.x, pt[1].y + c.y,
+        pt[2].x + c.x, pt[2].y + c.y,
+        pt[3].x + c.x, pt[3].y + c.y,
         
         /* shiny fg */
         -r + c.x, -r + c.y,
@@ -138,9 +138,9 @@ void ShinyKnob::update()
          r + c.x,  r + c.y
     };
     
-    pv.bindBuffer();
-    pv.setPositions(data, 24);
-    pv.unbindBuffer();
+    p.bindBuffer();
+    p.setPositions(data, 24);
+    p.unbindBuffer();
 }
 
 
@@ -154,18 +154,18 @@ void ShinyKnob::render()
     Painter::useCurrent2dProjection();
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
     
-    pv.bindArray();
+    p.bindArray();
     
     Painter::setTexture(bg.id());
-    pv.render(GL_TRIANGLE_STRIP, 4, 0);
+    p.render(GL_TRIANGLE_STRIP, 4, 0);
     
     Painter::setTexture(fg.id());
-    pv.render(GL_TRIANGLE_STRIP, 4, 4);
+    p.render(GL_TRIANGLE_STRIP, 4, 4);
     
     Painter::setTexture(shiny.id());
-    pv.render(GL_TRIANGLE_STRIP, 4, 8);
+    p.render(GL_TRIANGLE_STRIP, 4, 8);
     
-    pv.unbindArray();
+    p.unbindArray();
 }
 
 

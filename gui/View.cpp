@@ -418,11 +418,11 @@ void View::zoomOnce(float scale_coeff, Point<float> mouse_position)
 /* ==== SplitView ======================================================================= */
 
 /* 2 separator vertices */
-PainterVertices* sepv = nullptr;
+Painter* sepv = nullptr;
 
 void SplitView::init()
 {
-    sepv = new PainterVertices(2);
+    sepv = new Painter(2);
     
     static float data[8] = {
         0.0, 0.0,

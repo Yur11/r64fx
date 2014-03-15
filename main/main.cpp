@@ -89,8 +89,8 @@ struct Program{
         if(argc > 2)
             cerr << "Warning: ignoring extra " << (argc-2) << " command line arguments!\n";
 
-        if(!init_jack_client())
-            return 1;
+//         if(!init_jack_client())
+//             return 1;
         
         AudioData ad((data_prefix + "drum_loop_mono.wav").c_str());
         if(!ad.size())
@@ -221,15 +221,15 @@ struct Program{
 
         Painter::enable();
 
-        float f = -1.0;
-        float df = 2.0 / audio_buffer_size;
-        for(int i=0; i<audio_buffer_size; i++)
-        {
-            output_buffer[i] = f * 0.5;
-            f += df;
-        }
+//         float f = -1.0;
+//         float df = 2.0 / audio_buffer_size;
+//         for(int i=0; i<audio_buffer_size; i++)
+//         {
+//             output_buffer[i] = f * 0.5;
+//             f += df;
+//         }
         
-        jack_activate(jack_client);
+//         jack_activate(jack_client);
         
         /* Main event loop. */
         int gc_counter = 256;
@@ -250,8 +250,8 @@ struct Program{
             usleep(300);
         }
         
-        jack_deactivate(jack_client);
-        jack_client_close(jack_client);
+//         jack_deactivate(jack_client);
+//         jack_client_close(jack_client);
 
         Mouse::cleanup();
         Icon::cleanup();

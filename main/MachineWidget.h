@@ -11,7 +11,7 @@ namespace r64fx{
 /** @brief A machine shown in the MachineScene. */
 class MachineWidget : public Widget{
     bool about_to_be_dragged = false;
-    PainterVertices pv;
+    Painter p;
     
 public:
     MachineWidget(Widget* parent = nullptr);

@@ -15,7 +15,7 @@ using namespace std;
 
 namespace r64fx{
 
-MachineWidget::MachineWidget(Widget* parent) : Widget(parent), pv(4)
+MachineWidget::MachineWidget(Widget* parent) : Widget(parent), p(4)
 {
     resize(19 * 100, 1.75 * 100);
     update();
@@ -52,9 +52,9 @@ void MachineWidget::update()
         texw, texh
     };
     
-    pv.bindBuffer();
-    pv.setData(data);
-    pv.unbindBuffer();
+    p.bindBuffer();
+    p.setData(data);
+    p.unbindBuffer();
 }
 
 
@@ -75,9 +75,9 @@ void MachineWidget::render()
     Painter::setTexture(surface_texture.id());
     Painter::useCurrent2dProjection();
     
-    pv.bindArray();
-    pv.render(GL_TRIANGLE_STRIP);
-    pv.unbindArray();
+    p.bindArray();
+    p.render(GL_TRIANGLE_STRIP);
+    p.unbindArray();
     
 //     Painter::disable();
     

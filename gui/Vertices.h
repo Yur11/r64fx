@@ -40,7 +40,6 @@ public:
         CHECK_FOR_GL_ERRORS;
     }
     
-//     inline unsigned int vertexCount() const { return _vertex_count; }
     inline int nbytes() const { return _nbytes; }
     
     inline GLuint id() const { return _vbo; }

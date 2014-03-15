@@ -116,28 +116,28 @@ void Painter::setTexture(GLuint tex)
 }
 
 
-Painter::Vertex::Vertex(float x, float y, float s, float t)
-: vec{ x, y, s, t }
-{
-    
-}
+// Painter::Vertex::Vertex(float x, float y, float s, float t)
+// : vec{ x, y, s, t }
+// {
+//     
+// }
 
 
-void Painter::Vertex::setupAttributes(int nbytes)
-{
-    glEnableVertexAttribArray(position_attr);
-    CHECK_FOR_GL_ERRORS; 
-    glVertexAttribPointer(position_attr, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, 0);
-    CHECK_FOR_GL_ERRORS; 
+// void Painter::Vertex::setupAttributes(int nbytes)
+// {
+//     glEnableVertexAttribArray(position_attr);
+//     CHECK_FOR_GL_ERRORS; 
+//     glVertexAttribPointer(position_attr, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, 0);
+//     CHECK_FOR_GL_ERRORS; 
+//     
+//     glEnableVertexAttribArray(tex_coord_attr);
+//     CHECK_FOR_GL_ERRORS; 
+//     glVertexAttribPointer(tex_coord_attr, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)(sizeof(float)*2));
+//     CHECK_FOR_GL_ERRORS; 
+// }
     
-    glEnableVertexAttribArray(tex_coord_attr);
-    CHECK_FOR_GL_ERRORS; 
-    glVertexAttribPointer(tex_coord_attr, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)(sizeof(float)*2));
-    CHECK_FOR_GL_ERRORS; 
-}
     
-    
-void PainterVertices::setupAttributes(int nbytes)
+void Painter::setupAttributes(int nbytes)
 {
     glEnableVertexAttribArray(Painter::position_attr);
     CHECK_FOR_GL_ERRORS;
@@ -150,7 +150,7 @@ void PainterVertices::setupAttributes(int nbytes)
 }
 
 
-void PainterVertices::setData(float *ptr)
+void Painter::setData(float *ptr)
 {
     glBufferSubData(
         GL_ARRAY_BUFFER,
@@ -162,7 +162,7 @@ void PainterVertices::setData(float *ptr)
 }
 
 
-void PainterVertices::setPositions(float* ptr, int nfloats, int offset)
+void Painter::setPositions(float* ptr, int nfloats, int offset)
 {
     glBufferSubData(
         GL_ARRAY_BUFFER, 
@@ -174,7 +174,7 @@ void PainterVertices::setPositions(float* ptr, int nfloats, int offset)
 }
     
     
-void PainterVertices::setTexCoords(float* ptr, int nfloats, int offset)
+void Painter::setTexCoords(float* ptr, int nfloats, int offset)
 {
     glBufferSubData(
         GL_ARRAY_BUFFER, 
@@ -186,7 +186,7 @@ void PainterVertices::setTexCoords(float* ptr, int nfloats, int offset)
 }
 
 
-void PainterVertices::render(GLenum mode, int nvertices, int offset)
+void Painter::render(GLenum mode, int nvertices, int offset)
 {
     glDrawArrays(mode, offset, nvertices);
     CHECK_FOR_GL_ERRORS;

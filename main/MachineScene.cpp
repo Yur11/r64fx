@@ -15,7 +15,7 @@ using namespace std;
 namespace r64fx{
     
 MachineScene::MachineScene()
-: pv(4)
+: p(4)
 {
     float tex_coords[8] = {
         0.0, 0.0,
@@ -24,9 +24,9 @@ MachineScene::MachineScene()
         1.0, 1.0
     };
     
-    pv.bindBuffer();
-    pv.setTexCoords(tex_coords, 8);
-    pv.unbindBuffer();
+    p.bindBuffer();
+    p.setTexCoords(tex_coords, 8);
+    p.unbindBuffer();
 }
     
     
@@ -50,13 +50,13 @@ void MachineScene::render()
                 r.left, r.top
             };
             
-            pv.bindBuffer();
-            pv.setPositions(pos, 8);
-            pv.unbindBuffer();
+            p.bindBuffer();
+            p.setPositions(pos, 8);
+            p.unbindBuffer();
             
-            pv.bindArray();
-            pv.render(GL_LINE_LOOP);
-            pv.unbindArray();
+            p.bindArray();
+            p.render(GL_LINE_LOOP);
+            p.unbindArray();
         }
         
         if(drag_in_progress)
@@ -77,13 +77,13 @@ void MachineScene::render()
                     r.left, r.top
                 };
                 
-                pv.bindBuffer();
-                pv.setPositions(pos, 8);
-                pv.unbindBuffer();
+                p.bindBuffer();
+                p.setPositions(pos, 8);
+                p.unbindBuffer();
                 
-                pv.bindArray();
-                pv.render(GL_LINE_LOOP);
-                pv.unbindArray();
+                p.bindArray();
+                p.render(GL_LINE_LOOP);
+                p.unbindArray();
             }
         }
     }

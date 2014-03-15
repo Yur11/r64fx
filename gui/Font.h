@@ -12,7 +12,7 @@ namespace r64fx{
     
 class Font{
     static FT_Library freetype;
-    static PainterVertices* pv;
+    static Painter* p;
     
     FT_Face _ft_face;
     float _height;

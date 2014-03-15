@@ -25,7 +25,7 @@ void Socket::init()
 }
     
     
-Socket::Socket(Widget* parent) : Widget(parent), pv(4)
+Socket::Socket(Widget* parent) : Widget(parent), p(4)
 {
 }
 
@@ -42,9 +42,9 @@ void Socket::render()
     Painter::setTexture(Socket::texture.id());
     Painter::useCurrent2dProjection();
     
-    pv.bindArray();
-    pv.render(GL_TRIANGLE_STRIP);
-    pv.unbindArray();
+    p.bindArray();
+    p.render(GL_TRIANGLE_STRIP);
+    p.unbindArray();
     
 //     Painter::disable();
 
@@ -70,9 +70,9 @@ void Socket::update()
         1.0, 1.0
     };
     
-    pv.bindBuffer();
-    pv.setData(data);
-    pv.unbindBuffer();
+    p.bindBuffer();
+    p.setData(data);
+    p.unbindBuffer();
 }
 
 

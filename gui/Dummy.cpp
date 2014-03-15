@@ -30,7 +30,7 @@ Menu* _debug_menu = nullptr;
 
 Dummy::Dummy(float width, float height, Widget* parent) 
 : Widget(parent) 
-, pv(4)
+, p(4)
 { 
     resize(width, height);
     
@@ -47,9 +47,9 @@ Dummy::Dummy(float width, float height, Widget* parent)
         1.0, 1.0,
     };
     
-    pv.bindBuffer();
-    pv.setData(data);
-    pv.unbindBuffer();
+    p.bindBuffer();
+    p.setData(data);
+    p.unbindBuffer();
 }
 
 
@@ -63,13 +63,13 @@ void Dummy::render()
     Painter::useNoTexture();
     
     float pos[2] = { width() + 10.0 * cos(angle), height() + 10.0 * sin(angle) };
-    pv.bindBuffer();
-    pv.setPositions(pos, 2, 6);
-    pv.unbindBuffer();
+    p.bindBuffer();
+    p.setPositions(pos, 2, 6);
+    p.unbindBuffer();
     
-    pv.bindArray();
-    pv.render(GL_TRIANGLE_STRIP);
-    pv.unbindArray();
+    p.bindArray();
+    p.render(GL_TRIANGLE_STRIP);
+    p.unbindArray();
     
 //     Painter::disable();
     

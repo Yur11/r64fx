@@ -22,7 +22,7 @@ template<typename T> T max(T a, T b)
 Menu::Menu(Font* font, Widget* parent)
 :VerticalContainer(parent)
 ,_font(font)
-, pv(4)
+, p(4)
 {
     float tex_coords[8] = {
         0.0, 0.0,
@@ -30,9 +30,9 @@ Menu::Menu(Font* font, Widget* parent)
         0.0, 1.0,
         1.0, 1.0
     };
-    pv.bindBuffer();
-    pv.setTexCoords(tex_coords, 8);
-    pv.unbindBuffer();
+    p.bindBuffer();
+    p.setTexCoords(tex_coords, 8);
+    p.unbindBuffer();
 }
 
 
@@ -54,9 +54,9 @@ void Menu::update()
         r.left, r.top,
         r.right, r.top
     };
-    pv.bindBuffer();
-    pv.setPositions(pos, 8);
-    pv.unbindBuffer();
+    p.bindBuffer();
+    p.setPositions(pos, 8);
+    p.unbindBuffer();
 }
 
 
@@ -78,9 +78,9 @@ void Menu::render()
     Painter::useNoTexture();
     Painter::setColor(0.0, 0.0, 0.0, 0.7);
     
-    pv.bindArray();
-    pv.render(GL_TRIANGLE_STRIP);
-    pv.unbindArray();
+    p.bindArray();
+    p.render(GL_TRIANGLE_STRIP);
+    p.unbindArray();
     
 //     Painter::disable();
     

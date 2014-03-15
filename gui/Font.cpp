@@ -15,7 +15,7 @@ using namespace std;
 namespace r64fx{
     
 FT_Library       Font::freetype;
-PainterVertices* Font::pv;
+Painter*         Font::p;
 
 unsigned char* tmp_buffer = nullptr;
 const unsigned int tmp_buffer_size = 1024 * 64;
@@ -32,17 +32,17 @@ void Font::Glyph::render(float x, float y)
         x + width,    y + height - dy,
     };
     
-    pv->bindBuffer();
-    pv->setPositions(pos, 8);
-    pv->setTexCoords(&width_coeff, 1, 2);
-    pv->setTexCoords(&width_coeff, 1, 6);
-    pv->unbindBuffer();
+    p->bindBuffer();
+    p->setPositions(pos, 8);
+    p->setTexCoords(&width_coeff, 1, 2);
+    p->setTexCoords(&width_coeff, 1, 6);
+    p->unbindBuffer();
     
     Painter::setTexture(tex);
     
-    pv->bindArray();
-    pv->render(GL_TRIANGLE_STRIP);
-    pv->unbindArray();
+    p->bindArray();
+    p->render(GL_TRIANGLE_STRIP);
+    p->unbindArray();
 }
 
 
@@ -171,7 +171,7 @@ bool Font::init()
         return false;
     }
     
-    pv = new PainterVertices(4);
+    p = new Painter(4);
     
     float data[16] = {
         0.0, 0.0,
@@ -185,9 +185,9 @@ bool Font::init()
         1.0, 0.0
     };
     
-    pv->bindBuffer();
-    pv->setData(data);
-    pv->unbindBuffer();
+    p->bindBuffer();
+    p->setData(data);
+    p->unbindBuffer();
     
     tmp_buffer = new unsigned char[tmp_buffer_size];
     

@@ -49,7 +49,7 @@ public:
 class ShinyKnob : public BasicKnob{
     Texture bg, fg, shiny;
     
-    PainterVertices pv;
+    Painter p;
     
 public:
     ShinyKnob(Texture bg, Texture fg, Texture shiny);

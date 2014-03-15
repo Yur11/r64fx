@@ -17,7 +17,7 @@ class Socket : public Widget{
 
     Wire* _wire = nullptr;
     
-    PainterVertices pv;
+    Painter p;
     
 public:
     static void init();

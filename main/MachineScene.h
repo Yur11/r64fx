@@ -21,7 +21,7 @@ class MachineScene : public Scene{
     
     bool can_drop = false;
     
-    PainterVertices pv;
+    Painter p;
 
 protected:    
     void render_wires();

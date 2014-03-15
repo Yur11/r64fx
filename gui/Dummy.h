@@ -11,7 +11,7 @@ class Menu;
 /** @brief Just a dummy widget that draws a rectangle. */
 class Dummy : public Widget{
     Point<float> _last_mouse_move;
-    PainterVertices pv;
+    Painter p;
     
 public:
     Dummy(float width, float height, Widget* parent = nullptr);
