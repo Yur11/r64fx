@@ -1,4 +1,5 @@
 #include "Program.h"
+#include "gui/Translation.h"
 #include "gui/WindowImplementation.h"
 #include "DenseWaveformPainter.h"
 
@@ -22,9 +23,7 @@ Program::Program(int argc, char* argv[])
     {
         _status = 2; 
         return;
-    }
-    
-    initScenes();
+    }    
 }
 
 
@@ -58,19 +57,19 @@ void Program::quit()
 
 bool Program::initData(int argc, char* argv[])
 {
-//     if(argc < 2)
-//     {
-//         cerr << "Give me a path to r64fx data directory!\n";
-//         return false;
-//     }
-//         
-//     _data_prefix = argv[1];
-//     
-//     if(_data_prefix.back() != '/')
-//         _data_prefix.push_back('/');
-//     
-//     if(argc > 2)
-//         cerr << "Warning: ignoring extra " << (argc-2) << " command line arguments!\n";
+    if(argc < 2)
+    {
+        cerr << "Give me a path to r64fx data directory!\n";
+        return false;
+    }
+        
+    _data_prefix = argv[1];
+    
+    if(_data_prefix.back() != '/')
+        _data_prefix.push_back('/');
+    
+    if(argc > 2)
+        cerr << "Warning: ignoring extra " << (argc-2) << " command line arguments!\n";
     
     return true;
 }
@@ -78,6 +77,8 @@ bool Program::initData(int argc, char* argv[])
 
 bool Program::initGui()
 {
+    tr.loadLanguage(_data_prefix + "translations/en/");
+    
     if(!init_window_implementation())
         return false;
     
@@ -121,7 +122,7 @@ bool Program::initGui()
     
     Font::init();
     
-    auto font = new Font("./data/fonts/FreeSans.ttf", 20);
+    auto font = new Font("./data/fonts/FreeSans.ttf", 14);
     if(!font->isOk())
     {
         delete font;
@@ -130,6 +131,33 @@ bool Program::initGui()
     
     Font::setDefaultFont(font);
 
+    _split_view_vert_act = new Action(
+        tr("split_vertically"), 
+        [](void*) -> void*
+        {
+            View::splitViewVertically(View::activeView());
+            return nullptr;
+        }
+    );
+    
+    _split_view_hor_act = new Action(
+        tr("split_horizontally"),
+        [](void*) -> void*
+        {
+            View::splitViewHorizontally(View::activeView());
+            return nullptr;
+        }
+    );
+    
+    _close_view_act = new Action(
+        tr("close_view"),
+        [](void*) -> void*
+        {
+            View::closeView(View::activeView());
+            return nullptr;
+        }
+    );
+    
     _infs = new InformationScene;
     
     _fms = new FrontMachineScene;
@@ -142,13 +170,13 @@ bool Program::initGui()
     auto root_view = new View(_fms);
     window->setView(root_view);
     
-    return true;
-}
-
-
-void Program::initScenes()
-{
+    root_view->split_vert_act = _split_view_vert_act;
+    root_view->split_hor_act = _split_view_hor_act;
+    root_view->close_act = _close_view_act;
     
+    root_view->updateContextMenu();
+    
+    return true;
 }
 
 

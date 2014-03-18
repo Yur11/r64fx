@@ -23,13 +23,15 @@ void ActionWidget::render()
     
     action->icon().render();
     font->enable();
+    font->useCurrent2dProjection();
+    
     if(is_highlighted)
         font->setColor(0.7, 0.9, 0.9, 1.0);
     else
         font->setColor(0.9, 0.7, 0.7, 1.0);
     font->setPenX(action->icon().size.w + 5);
     font->setPenY(2.0);
-    font->render(action->name().stdstr);
+        font->render(action->name().stdstr);
     
     font->disable();
     

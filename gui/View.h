@@ -57,6 +57,12 @@ public:
     virtual void keyReleaseEvent(KeyEvent* event) = 0;
 
     SplittableView* findParentForView(SplittableView* view);
+    
+    /** @brief Very unsafe cast to View. 
+        
+        Use only if you know that this view is indeed a leaf.
+     */
+    inline View* toView() { return (View*)this; }
 };
 
     
@@ -67,24 +73,37 @@ class View : public SplittableView{
     float _scale_factor = 1.0;
     Point<float> _scale_center = {0.0, 0.0};
     Point<float> _offset = {0.0, 0.0};
-    
-    Action* split_view_vert_act;
-    Action* split_view_hor_act;
-    Action* close_view_act;
+
     Menu* _context_menu;
     
     void transform_event(Event* event);
     
-    View(const View&){}
-    
+    static View* _active_view;
+        
 public:
-    static Icon split_view_vert_icon;
-    static Icon split_view_hor_icon;
-    static Icon close_view_icon;
+    static VerticalSplitView* splitViewVertically(View* view);
+    
+    static HorizontalSplitView* splitViewHorizontally(View* view);
+    
+    static void closeView(View* view);
+    
+    static View* activeView() { return _active_view; }
+    
+    static Action* split_vert_act;
+    
+    static Action* split_hor_act;
+    
+    static Action* close_act;
     
     View(Scene* scene = nullptr);
     
     virtual ~View();
+    
+    View* newCopy();
+   
+    void updateContextMenu();
+    
+    inline Menu* contextMenu() { return _context_menu; }
     
     virtual void resize(int left, int top, int right, int bottom);
     

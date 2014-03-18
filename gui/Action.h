@@ -11,20 +11,26 @@ namespace r64fx{
 class Action{
     Icon _icon;
     Utf8String _name;
-    Message _message;
-
+    typedef void* (*Callback)(void*);
+    Callback _callback;
+    void* _data;
+    
 public:
-    Action(Icon icon, Utf8String name, Message message = Message())
+    Action(Icon icon, Utf8String name, Callback callback = Action::callbackStub(), void* data = nullptr)
     : _icon(icon)
     , _name(name)
-    , _message(message)
+    , _callback(callback)
+    , _data(data)
+    {}
+    
+    
+    Action(Utf8String name, Callback callback = Action::callbackStub(), void* data = nullptr)
+    : _name(name)
+    , _callback(callback)
+    , _data(data)
     {}
 
-    Action(Utf8String name, Message message = Message())
-    : _icon(Icon::defaultIcon())
-    , _name(name)
-    , _message(message)
-    {}
+    static Callback callbackStub();
 
     inline void setIcon(Icon icon) { _icon = icon; }
     
@@ -36,11 +42,7 @@ public:
 
     inline Utf8String name() const { return _name; }
 
-    inline void setMessage(Message message) { _message = message; }
-
-    inline Message message() const { return _message; }
-
-    inline void trigger() { _message.send(this); }
+    inline void trigger() { _callback(_data); }
 };
 
 }//namespace r64fx

@@ -87,6 +87,9 @@ public:
     /** @brief Remove child at the given position. */
     inline void removeWidget(int i) { child(i)->setParent(nullptr); }
     
+    /** @brief Remove all child widgets from this widget. */
+    void clear();
+    
     /** @brief Set a new position for the widget. 
      
         Position defines the coordintes of the bottom left corner of the widget 

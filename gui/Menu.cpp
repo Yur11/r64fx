@@ -48,12 +48,20 @@ void Menu::update()
     
     const auto &r = rect();
     
+//     float pos[8] = {
+//         r.left, r.bottom,
+//         r.right, r.bottom,
+//         r.left, r.top,
+//         r.right, r.top
+//     };
+    
     float pos[8] = {
-        r.left, r.bottom,
-        r.right, r.bottom,
-        r.left, r.top,
-        r.right, r.top
+        0.0, 0.0,
+        r.width(), 0.0,
+        0.0, r.height(),
+        r.width(), r.height()
     };
+    
     p.bindBuffer();
     p.setPositions(pos, 8);
     p.unbindBuffer();
@@ -61,19 +69,7 @@ void Menu::update()
 
 
 void Menu::render()
-{
-//     RectPainter::prepare();
-//     
-//     RectPainter::setTexture(RectPainter::plainTexture());
-//     RectPainter::setTexCoords(0.0, 0.0, 1.0, 1.0);
-//     
-//     RectPainter::setColor(0.0, 0.01, 0.0, 0.7);
-//     
-//     RectPainter::setCoords(0.0, 0.0, width(), height());
-//     RectPainter::render();
-//     
-//     Painter::enable();
-        
+{        
     Painter::useCurrent2dProjection();
     Painter::useNoTexture();
     Painter::setColor(0.0, 0.0, 0.0, 0.7);
@@ -81,9 +77,7 @@ void Menu::render()
     p.bindArray();
     p.render(GL_TRIANGLE_STRIP);
     p.unbindArray();
-    
-//     Painter::disable();
-    
+        
     render_children();
 }
 

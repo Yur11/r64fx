@@ -9,9 +9,7 @@
 using namespace std;
 
 namespace r64fx{
-    
-extern string data_prefix;
-    
+        
 std::string Translation::operator()(std::string key)
 {
     auto it = find(key);
@@ -22,8 +20,8 @@ std::string Translation::operator()(std::string key)
     if(file == nullptr)
     {
 #ifdef DEBUG
+        cerr << "Looking in \"" << lang_dir << "\".\n";
         cerr << "Failed to find translation for \"" << key << "\"!\n";
-        cerr << "Looking in \"" << lang_dir << "\".";
 #endif//DEBUG
         operator[](key) = key;
         return key;
@@ -41,9 +39,9 @@ std::string Translation::operator()(std::string key)
 }
 
 
-void Translation::loadLanguage(std::string lang)
+void Translation::loadLanguage(std::string lang_dir)
 {
-//     lang_dir = data_prefix + "translations/" + lang + "/";
+    this->lang_dir = lang_dir;
 }
     
 }//namespace r64fx

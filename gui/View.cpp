@@ -21,13 +21,6 @@ using namespace std;
 
 namespace r64fx{
     
-Icon View::split_view_vert_icon;
-Icon View::split_view_hor_icon;
-Icon View::close_view_icon;
-    
-
-/** Removeme */
-extern Font* debug_font;
 
 /** Returns nullptr if view is not found down the tree or the parent SplitView of the target view. */
 SplitView* parent_for_view_down_the_tree(SplittableView* root, SplittableView* view)
@@ -86,113 +79,136 @@ void SplittableView::findParentViewOrWindow(SplitView* &view, Window* &window)
 
     
 /* ==== View ================================================================================ */
+View* View::_active_view = nullptr;
+Action* View::split_vert_act = nullptr;
+Action* View::split_hor_act = nullptr;
+Action* View::close_act = nullptr;
+
+
 View::View(Scene* scene)
 {
     setScene(scene);
-    
-    split_view_vert_act = new Action(
-        split_view_vert_icon,
-        "split_vertically",  
-        Message([](void* source, void* data)->void*
-            {
-                auto view = (View*) data;
-                SplitView* parent_view = nullptr;
-                Window* parent_window = nullptr;
-                view->findParentViewOrWindow(parent_view, parent_window);
-                if(parent_view)
-                {
-                    parent_view->replaceSubView(view, view->splitVertically(0.5));
-                }
-                else if(parent_window)
-                {
-                    parent_window->setView(view->splitVertically(0.5));
-                }
-                parent_window->updateGeometry();
-                return nullptr;
-            },
-            this
-        )
-    );
-    
-    split_view_hor_act = new Action(
-        split_view_hor_icon,
-        "split_horizontally",     
-        Message([](void* source, void* data)->void*
-            {
-                auto view = (View*) data;
-                SplitView* parent_view = nullptr;
-                Window* parent_window = nullptr;
-                view->findParentViewOrWindow(parent_view, parent_window);
-                if(parent_view)
-                {
-                    parent_view->replaceSubView(view, view->splitHorizontally(0.5));
-                }
-                else if(parent_window)
-                {
-                    parent_window->setView(view->splitHorizontally(0.5));
-                }
-                parent_window->updateGeometry();
-                return nullptr;
-            },
-            this
-        )
-    );
-    
-    close_view_act = new Action(
-        close_view_icon,
-        "close_view",
-        Message([](void* source, void* data)->void*
-            {
-                auto view = (View*) data;
-                SplitView* parent_view = nullptr;
-                Window* parent_window = nullptr;
-                view->findParentViewOrWindow(parent_view, parent_window);
-                if(parent_view)
-                {
-                    SplitView* parent_view_of_parent = nullptr;
-                    parent_view->findParentViewOrWindow(parent_view_of_parent, parent_window);
-                    SplittableView* view_to_keep = (
-                        parent_view->viewB() == view ?
-                        parent_view->viewA() : parent_view->viewB()
-                    );
-                    if(parent_view_of_parent)
-                    {
-                        parent_view_of_parent->replaceSubView(parent_view, view_to_keep);
-                    }
-                    else
-                    {
-                        parent_window->setView(view_to_keep);
-                    }
-                    
-                    parent_window->updateGeometry();
-                    
-                    view->deleteLater();
-                    parent_view->deleteLater();
-                }
-                
-                return nullptr;
-            },
-            this
-        )
-    );
-    
     _context_menu = new Menu;
-    _context_menu->appendAction(split_view_vert_act);
-    _context_menu->appendAction(split_view_hor_act);
-    _context_menu->appendAction(close_view_act);
-    _context_menu->setPadding(5);
-    _context_menu->update();
 }
 
 
 View::~View()
 {
     delete _context_menu;
-    delete split_view_vert_act;
-    delete split_view_hor_act;
-    delete close_view_act;
 }
 
+
+View* View::newCopy()
+{
+    auto view = new View(scene());
+    view->setOffset(offset());
+    view->setScaleFactor(scaleFactor());
+    view->split_vert_act  = this->split_vert_act;
+    view->split_hor_act   = this->split_hor_act;
+    view->close_act       = this->close_act;
+    return view;
+}
+
+
+void View::updateContextMenu()
+{
+    _context_menu->clear();
+    if(split_hor_act)
+        _context_menu->appendAction(split_hor_act);
+    if(split_vert_act)
+        _context_menu->appendAction(split_vert_act);
+    
+    if(close_act)
+    {
+        SplitView* parent_view = nullptr;
+        Window* parent_window = nullptr;
+        findParentViewOrWindow(parent_view, parent_window);
+        
+        if(parent_view)
+            _context_menu->appendAction(close_act);
+    }
+    
+    _context_menu->update();
+}
+
+
+VerticalSplitView* View::splitViewVertically(View* view)
+{
+    SplitView* parent_view = nullptr;
+    Window* parent_window = nullptr;
+    view->findParentViewOrWindow(parent_view, parent_window);
+    auto split_view = view->splitVertically(0.5);
+    if(parent_view)
+    {
+        parent_view->replaceSubView(view, split_view);
+    }
+    else if(parent_window)
+    {
+        parent_window->setView(split_view);
+    }
+    parent_window->updateGeometry();
+    
+    split_view->viewA()->toView()->updateContextMenu();
+    split_view->viewB()->toView()->updateContextMenu();
+    
+    return split_view;
+}
+
+
+HorizontalSplitView* View::splitViewHorizontally(View* view)
+{
+    SplitView* parent_view = nullptr;
+    Window* parent_window = nullptr;
+    view->findParentViewOrWindow(parent_view, parent_window);
+    auto split_view = view->splitHorizontally(0.5);
+    if(parent_view)
+    {
+        parent_view->replaceSubView(view, split_view);
+    }
+    else if(parent_window)
+    {
+        parent_window->setView(split_view);
+    }
+    parent_window->updateGeometry();
+    
+    split_view->viewA()->toView()->updateContextMenu();
+    split_view->viewB()->toView()->updateContextMenu();
+    
+    return split_view;
+}
+
+
+void View::closeView(View* view)
+{
+    SplitView* parent_view = nullptr;
+    Window* parent_window = nullptr;
+    view->findParentViewOrWindow(parent_view, parent_window);
+    if(parent_view)
+    {
+        SplitView* parent_view_of_parent = nullptr;
+        parent_view->findParentViewOrWindow(parent_view_of_parent, parent_window);
+        SplittableView* view_to_keep = (
+            parent_view->viewB() == view ?
+            parent_view->viewA() : parent_view->viewB()
+        );
+        if(parent_view_of_parent)
+        {
+            parent_view_of_parent->replaceSubView(parent_view, view_to_keep);
+        }
+        else
+        {
+            parent_window->setView(view_to_keep);
+        }
+        
+        parent_window->updateGeometry();
+        
+        view->deleteLater();
+        parent_view->deleteLater();
+        
+        if(dynamic_cast<View*>(view_to_keep))
+            view_to_keep->toView()->updateContextMenu();
+    }
+}
 
 void View::setScene(Scene* scene)
 {
@@ -270,6 +286,8 @@ void View::mousePressEvent(MouseEvent* event)
         event->originWindow()->showOverlayMenu(event->original_x(), event->original_y(), _context_menu);
         event->has_been_handled = true;
     }
+    
+    _active_view = this;
 }
     
     
@@ -364,10 +382,7 @@ VerticalSplitView* View::splitVertically(float ratio)
 {
     auto a = this;
     
-    auto b = new View;
-    b->setScene(a->scene());
-    b->setOffset(a->offset());
-    b->setScaleFactor(a->scaleFactor());
+    auto b = a->newCopy();
     
     VerticalSplitView* vsv = new VerticalSplitView;
     vsv->setViewA(a);
@@ -383,11 +398,8 @@ HorizontalSplitView* View::splitHorizontally(float ratio)
 {
     auto a = this;
     
-    auto b = new View;
-    b->setScene(a->scene());
-    b->setOffset(a->offset());
-    b->setScaleFactor(a->scaleFactor());
-    
+    auto b = a->newCopy();
+
     HorizontalSplitView* hsv = new HorizontalSplitView;
     hsv->setViewA(a);
     hsv->setViewB(b);
@@ -453,7 +465,6 @@ void SplitView::render()
     viewA()->render();
     viewB()->render();
     
-//     Painter::enable();
     if(separatorIsHovered())
         if(separatorIsGrabbed())
             Painter::setColor(0.3, 0.6, 0.3, 1.0);
@@ -469,8 +480,6 @@ void SplitView::render()
     sepv->bindArray();
     sepv->render(GL_LINES);
     sepv->unbindArray();
-    
-//     Painter::disable();
 }
     
     

@@ -24,17 +24,18 @@ class Program{
     BackMachineScene* _bms;
     
     std::vector<Wire*> _wires;
+    
+    Action* _split_view_vert_act;
+    Action* _split_view_hor_act;
+    Action* _close_view_act;
         
     jack_client_t* _jack_client;
     
     /** @brief Parse command-line arguments and initialize data paths. */
     bool initData(int argc, char* argv[]);
     
-    /** @brief Initialize core gui functionality including OpenGL context. */
+    /** @brief Initialize gui functionality including OpenGL context. */
     bool initGui();
-    
-    /** @brief Initialize available scenes. */
-    void initScenes();
     
     /** @brief Run garbage collector if needed. */
     void gcSequence();

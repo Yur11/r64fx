@@ -269,9 +269,7 @@ void Font::renderChar(std::string utf8_char)
 #ifdef DEBUG
     assert(glyph != nullptr);
 #endif//DEBUG
-    
-//     font_shading_program.use();
-    
+        
     glyph->render(_pen_x, _pen_y);
     _pen_x += glyph->advance;
 }

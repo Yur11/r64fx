@@ -13,7 +13,7 @@ class Translation : public std::map<std::string, std::string>{
 public:
     std::string operator()(std::string key);
     
-    void loadLanguage(std::string lang);
+    void loadLanguage(std::string lang_dir);
 };
 
 
