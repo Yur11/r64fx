@@ -14,7 +14,7 @@ class Menu : public VerticalContainer{
     Painter p;
     
 public:
-    Menu(Font* font, Widget* parent = nullptr);
+    Menu(Font* font = Font::defaultFont(), Widget* parent = nullptr);
     
     void appendAction(Action* act);
     

@@ -82,6 +82,26 @@ public:
     
     inline float penX() const { return _pen_x; }
     inline float penY() const { return _pen_y; }
+   
+private:
+    static Font* _default_font;
+    
+    static std::map<std::string, Font*> _common_fonts;
+   
+public:
+    inline static void setDefaultFont(Font* font)
+    {
+        _default_font = font;
+    }
+    
+    inline static Font* defaultFont()
+    {
+        return _default_font;
+    }
+    
+    static void addCommonFont(std::string name, Font* font);
+    
+    static Font* find(std::string name);
 };
     
 }//namespace r64fx

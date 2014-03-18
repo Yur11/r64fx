@@ -44,7 +44,7 @@ Texture::Texture(FILE* fd, bool close_fd)
         return;
     }
     
-    cout << width << "x" << height << ": " << nchannels << "\n";
+//     cout << width << "x" << height << ": " << nchannels << "\n";
     
     if(close_fd)
         fclose(fd);

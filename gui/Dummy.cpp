@@ -111,7 +111,7 @@ void Dummy::initDebugMenu()
 {
     if(_debug_menu) return;
     
-    _debug_menu = new Menu(debug_font);
+    _debug_menu = new Menu;
     _debug_menu->setPadding(5);
     _debug_menu->update();
 }

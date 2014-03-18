@@ -43,7 +43,7 @@ std::string Translation::operator()(std::string key)
 
 void Translation::loadLanguage(std::string lang)
 {
-    lang_dir = data_prefix + "translations/" + lang + "/";
+//     lang_dir = data_prefix + "translations/" + lang + "/";
 }
     
 }//namespace r64fx

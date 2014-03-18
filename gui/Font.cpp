@@ -318,5 +318,26 @@ float Font::charAdvance(std::string utf8_char)
     
     return glyph->advance;
 }
+
+
+Font* Font::_default_font = nullptr;
+
+std::map<std::string, Font*> Font::_common_fonts;
+
+
+void Font::addCommonFont(std::string name, Font* font)
+{
+    _common_fonts[name] = font;
+}
+
+
+Font* Font::find(std::string name)
+{
+    auto it = _common_fonts.find(name);
+    if(it == _common_fonts.end())
+        return _default_font;
+    else
+        return it->second;
+}
     
 }//namespace r64fx

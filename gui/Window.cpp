@@ -28,7 +28,7 @@ Window::~Window()
 
 
 void Window::render()
-{
+{    
     _view->render();
     render_overlay_menus();
 }
@@ -67,15 +67,12 @@ void Window::render_overlay_menus()
     CHECK_FOR_GL_ERRORS;
     for(auto &menu : _overlay_menus)
     {
-//         glPushMatrix();
         auto p = *current_2d_projection;
         
-//         glTranslatef(menu->x(), menu->y(), 0.0);
         current_2d_projection->translate(menu->x(), menu->y());
         
         menu->render();
         
-//         glPopMatrix();
         *current_2d_projection = p;
     }
     glDisable(GL_BLEND);

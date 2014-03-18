@@ -57,10 +57,10 @@ SDL_Cursor* create_cursor_from_png(string file_name)
     
 void Mouse::init()
 {
-    smile_cursor = create_cursor_from_png(data_prefix + "textures/alpha_smile.png");
-#ifdef DEBUG
-    assert(smile_cursor != nullptr);
-#endif//DEBUG
+//     smile_cursor = create_cursor_from_png("textures/alpha_smile.png");
+// #ifdef DEBUG
+//     assert(smile_cursor != nullptr);
+// #endif//DEBUG
 }
 
 

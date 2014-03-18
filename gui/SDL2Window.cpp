@@ -13,12 +13,9 @@ using namespace std;
 
 namespace r64fx{
    
-// Window* focused_window = nullptr;
-// Window* last_focused_window = nullptr;
 bool tracking_mouse = false;
 bool should_quit = false;
 unsigned int pressed_mouse_buttons = 0;
-// vector<SDL2Window*> all_sdl2_windows;
 
     
 SDL2Window::SDL2Window(RenderingContextId_t id, int width, int height, const char* title)
@@ -51,8 +48,6 @@ SDL2Window::SDL2Window(RenderingContextId_t id, int width, int height, const cha
         abort();
     }
     
-//     all_sdl2_windows.push_back(this);
-
     SDL_SetWindowData(_window, "window", this);    
 }
 
@@ -76,16 +71,6 @@ SDL2Window::~SDL2Window()
     
     SDL_GL_DeleteContext(_gl_context);
     SDL_DestroyWindow(_window);
-    
-    
-//     for(auto it=all_sdl2_windows.begin(); it!=all_sdl2_windows.end(); it++)
-//     {
-//         if(*it == this)
-//         {
-//             all_sdl2_windows.erase(it);
-//             break;
-//         }
-//     }
 }
 
 
@@ -106,7 +91,7 @@ void SDL2Window::render()
 {
     makeCurrent();
     Window::render();
-//     swapBuffers();
+    swapBuffers();
 }
 
 

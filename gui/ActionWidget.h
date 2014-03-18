@@ -16,7 +16,7 @@ struct ActionWidget : public Widget, public Padding{
     bool is_highlighted = false;
     bool showing_icon = true;
     
-    ActionWidget(Action* act, Font* font, Widget* parent = nullptr);
+    ActionWidget(Action* act, Font* font = Font::defaultFont(), Widget* parent = nullptr);
     
     virtual void render();
     

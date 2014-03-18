@@ -92,7 +92,7 @@ View::View(Scene* scene)
     
     split_view_vert_act = new Action(
         split_view_vert_icon,
-        tr("split_vertically"),  
+        "split_vertically",  
         Message([](void* source, void* data)->void*
             {
                 auto view = (View*) data;
@@ -116,7 +116,7 @@ View::View(Scene* scene)
     
     split_view_hor_act = new Action(
         split_view_hor_icon,
-        tr("split_horizontally"),     
+        "split_horizontally",     
         Message([](void* source, void* data)->void*
             {
                 auto view = (View*) data;
@@ -140,7 +140,7 @@ View::View(Scene* scene)
     
     close_view_act = new Action(
         close_view_icon,
-        tr("close_view"),
+        "close_view",
         Message([](void* source, void* data)->void*
             {
                 auto view = (View*) data;
@@ -176,7 +176,7 @@ View::View(Scene* scene)
         )
     );
     
-    _context_menu = new Menu(debug_font);
+    _context_menu = new Menu;
     _context_menu->appendAction(split_view_vert_act);
     _context_menu->appendAction(split_view_hor_act);
     _context_menu->appendAction(close_view_act);

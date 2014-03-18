@@ -18,7 +18,7 @@ Texture Socket::texture;
 
 void Socket::init()
 {
-    texture = Texture(data_prefix + "textures/socket.png");
+    texture = Texture("./data/textures/socket.png");
 #ifdef DEBUG
     assert(texture.isGood());
 #endif//DEBUG
