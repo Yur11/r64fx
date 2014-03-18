@@ -7,3 +7,6 @@ example
 .directory
 jit/tryjit
 doc/html
+file_dialog_qt/*.o
+file_dialog_qt/Makefile
+file_dialog_qt/file_dialog_qt

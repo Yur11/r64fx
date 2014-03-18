@@ -34,6 +34,7 @@
 #include "Machine.h"
 #include "Knob.h"
 #include "Wire.h"
+#include "DenseWaveformPainter.h"
 
 #include "AudioData.h"
 
@@ -101,6 +102,9 @@ struct Program{
         audio_data = &ad;
         audio_data->calculateLinear();
         
+        float tex_data[400];
+        audio_data->calculateBipolarSummary(tex_data, 400);
+        
         /*
          * Main window opened by default. 
          * This creates an OpenGL context.
@@ -127,10 +131,16 @@ struct Program{
         Keyboard::init();
         
         Texture::init();
+
+        if(!DenseWaveformPainter::init())
+        {
+            cerr << "Failed to init DenseWaveformPainter!\n";
+            return 4;
+        }
         
         if(!Painter::init())
         {
-            cerr << "Failed to init painter!\n";
+            cerr << "Failed to init Painter!\n";
             return 4;
         }
         
@@ -219,6 +229,41 @@ struct Program{
         glEnable(GL_MULTISAMPLE);
         CHECK_FOR_GL_ERRORS;
 
+        DenseWaveformPainter dwp(4);
+        
+        float vertex_data[16] = {
+            /* position */
+            0.0, 0.0,
+            400.0, 0.0,
+            0.0, 100.0,
+            400.0, 100.0,
+            
+            /* ref color */
+            0.0, 
+            0.0,
+            1.0, 
+            1.0,
+            
+            /* tex coord */
+            0.0, 
+            1.0,
+            0.0, 
+            1.0
+        };
+        
+        dwp.bindBuffer();
+        dwp.setData(vertex_data);
+        dwp.unbindBuffer();
+        
+        GLuint waveform_tex;
+        glGenTextures(1, &waveform_tex);                                               CHECK_FOR_GL_ERRORS;
+        glBindTexture(GL_TEXTURE_1D, waveform_tex);                                    CHECK_FOR_GL_ERRORS;
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);              CHECK_FOR_GL_ERRORS;
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);              CHECK_FOR_GL_ERRORS;
+        glTexImage1D(GL_TEXTURE_1D, 0, GL_RG32F, 200, 0, GL_RG, GL_FLOAT, tex_data);      CHECK_FOR_GL_ERRORS;
+        glGenerateMipmap(GL_TEXTURE_1D);                                               CHECK_FOR_GL_ERRORS;
+        glBindTexture(GL_TEXTURE_1D, 0);                                               CHECK_FOR_GL_ERRORS;
+        
         Painter::enable();
 
 //         float f = -1.0;
@@ -236,6 +281,19 @@ struct Program{
         while(Window::count() > 0)
         {       
             Window::mainSequence();
+            
+            dwp.enable();
+            dwp.setColor(0.0, 1.0, 0.0, 0.0);
+            dwp.setTexture( waveform_tex );
+            dwp.useCurrent2dProjection();
+            
+            dwp.bindArray();
+            dwp.render(GL_TRIANGLE_STRIP);
+            dwp.unbindArray();
+            
+            window->swapBuffers();
+        
+            Painter::enable();
             
             if(!gc_counter)
             {

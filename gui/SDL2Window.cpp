@@ -106,7 +106,7 @@ void SDL2Window::render()
 {
     makeCurrent();
     Window::render();
-    swapBuffers();
+//     swapBuffers();
 }
 
 

@@ -51,6 +51,10 @@ public:
     float readNearest(float t);
     
     float readLinear(float t);
+    
+    void calculateSummary(float* buffer, int nsamples);
+    
+    void calculateBipolarSummary(float* buffer, int nsamples);
 };
     
 }//namespace r64fx
