@@ -25,6 +25,13 @@ class Program{
     
     std::vector<Wire*> _wires;
     
+    Action* _hello_act;
+    Action* _doctor_act;
+    Action* _name_act;
+    Action* _continue_act;
+    Action* _yesterday_act;
+    Action* _tommorow_act;
+    
     Action* _split_view_vert_act;
     Action* _split_view_hor_act;
     Action* _close_view_act;

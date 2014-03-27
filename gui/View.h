@@ -79,7 +79,9 @@ class View : public SplittableView{
     void transform_event(Event* event);
     
     static View* _active_view;
-        
+    
+    static View* _currently_rendered;
+            
 public:
     static VerticalSplitView* splitViewVertically(View* view);
     
@@ -94,6 +96,8 @@ public:
     static Action* split_hor_act;
     
     static Action* close_act;
+    
+    inline static View* currentlyRendered() { return _currently_rendered; }
     
     View(Scene* scene = nullptr);
     

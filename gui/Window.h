@@ -27,6 +27,8 @@ class Window : public RenderingContext{
     
     void update_projection();
     
+    static bool _redraw_requested;
+    
 protected:
     inline static void setEventCallback(VoidFun fun) { event_callback = fun; }
     
@@ -64,7 +66,7 @@ public:
     void closeAllOverlayMenus();
 
     static std::vector<Window*> allInstances();
-    
+        
     inline static unsigned int count() { return allInstances().size(); }
     
     /** @brief Tell this window to get destroyed. */

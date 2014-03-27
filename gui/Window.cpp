@@ -202,7 +202,7 @@ void Window::initMouseReleaseEvent(int x, int y, unsigned int buttons, unsigned 
 
     
 void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int keyboard_modifiers)
-{
+{    
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setOriginWindow(this);
     
@@ -214,7 +214,7 @@ void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int
             /* Event goes to the menu. */
             event -= menu->position();
             menu->mouseMoveEvent(&event);
-            return;
+            goto _exit;
         }
     }
     
@@ -232,6 +232,10 @@ void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int
 #endif//DEBUG
         view()->mouseMoveEvent(&event);
     }
+    
+_exit:
+    if(event.hovered_widget == nullptr)
+        HoverableWidget::reset();
 }
 
 

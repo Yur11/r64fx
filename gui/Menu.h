@@ -21,12 +21,6 @@ public:
     void update();
     
     virtual void render();
-    
-    virtual void mousePressEvent(MouseEvent* event);
-
-    virtual void mouseReleaseEvent(MouseEvent* event);
-    
-    virtual void mouseMoveEvent(MouseEvent* event);
 };
     
 }//namespace r64fx

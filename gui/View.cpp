@@ -80,6 +80,8 @@ void SplittableView::findParentViewOrWindow(SplitView* &view, Window* &window)
     
 /* ==== View ================================================================================ */
 View* View::_active_view = nullptr;
+View* View::_currently_rendered = nullptr;
+
 Action* View::split_vert_act = nullptr;
 Action* View::split_hor_act = nullptr;
 Action* View::close_act = nullptr;
@@ -251,6 +253,8 @@ void View::render()
         cout << "View::render: height == " << height() << "\n";
     }
 #endif//DEBUG
+
+    _currently_rendered = this;
     
     gl::Scissor(x(), y(), width(), height());
     

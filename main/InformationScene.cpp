@@ -15,6 +15,7 @@ InformationScene::InformationScene()
     appendWidget(panel);
     panel->setPosition(0.0, 0.0);
     panel->resize(2000, 24);
+    panel->setPaddingBottom(2.0);
     panel->update();
 }
 
@@ -36,7 +37,7 @@ InformationScene::Panel::Panel()
 
 void InformationScene::Panel::update()
 {
-//     HorizontalContainer::update();
+    HorizontalContainer::update();
     
     float data[8] = {
         0.0, 0.0,
@@ -52,12 +53,14 @@ void InformationScene::Panel::update()
 
 void InformationScene::Panel::render()
 {    
-    p.setColor(0.618, 0.618, 0.618, 1.0);
+    p.setColor(0.0, 0.0, 0.0, 1.0);
     p.useNoTexture();
     p.useCurrent2dProjection();
     p.bindArray();
     p.render(GL_TRIANGLE_STRIP);
     p.unbindArray();
+    
+    render_children();
 }
     
 }//namespace r64fx

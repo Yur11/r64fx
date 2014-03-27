@@ -87,6 +87,15 @@ bool Program::initGui()
     initActions();
 
     _infs = new InformationScene;
+    for(auto act : {_hello_act, _doctor_act, _name_act, _continue_act, _yesterday_act, _tommorow_act})
+    {
+        auto aw = new ActionWidget(act);
+        aw->showing_icon = false;
+        aw->update();
+        _infs->panel->appendWidget(aw);
+    }
+    
+    _infs->panel->update();
     
     _fms = new FrontMachineScene;
     _bms = new BackMachineScene;
@@ -138,7 +147,7 @@ void Program::mainThread()
     Painter::enable();
     
     while(Window::count() > 0)
-    {       
+    {               
         Window::mainSequence();
         Program::gcSequence();
         
@@ -189,6 +198,66 @@ void Program::initCommonTexture2D(std::string name, GLenum internal_format, int 
 
 void Program::initActions()
 {
+    _hello_act = new Action(
+        "hello",
+        "Hello",
+        [](void*) -> void*
+        {
+            cout << "Hello\n";
+            return nullptr;
+        }
+    );
+    
+    _doctor_act = new Action(
+        "doctor",
+        "Doctor",
+        [](void*) -> void*
+        {
+            cout << "Doctor\n";
+            return nullptr;
+        }
+    );
+    
+    _name_act = new Action(
+        "name",
+        "Name",
+        [](void*) -> void*
+        {
+            cout << "Name\n";
+            return nullptr;
+        }
+    );
+    
+    _continue_act = new Action(
+        "continue",
+        "Continue",
+        [](void*) -> void*
+        {
+            cout << "Continue\n";
+            return nullptr;
+        }
+    );
+    
+    _yesterday_act = new Action(
+        "yesterday",
+        "Yesterday",
+        [](void*) -> void*
+        {
+            cout << "Yesterday\n";
+            return nullptr;
+        }
+    );
+    
+    _tommorow_act = new Action(
+        "tommorow",
+        "Tommorow",
+        [](void*) -> void*
+        {
+            cout << "Tommorow\n";
+            return nullptr;
+        }
+    );
+    
     _split_view_vert_act = new Action(
         "split_vertically",
         tr("split_vertically"),

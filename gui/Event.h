@@ -8,6 +8,7 @@ namespace r64fx{
 class Window;
 class View;
 class Scene;
+class HoverableWidget;
 
 /** @brief Base class for keyboard, mouse and other events. 
  
@@ -16,7 +17,7 @@ class Scene;
     The event is created by the window and is delivered
     down through the splitted views, to the scene 
     and further down the widget tree. As it does do 
-    the view and scene pointers a set.
+    the view and scene pointers are set.
     
     If no widget is grabbing mouse or keyboard input i.e.
     the event is delivered in a normal way, the event mouse position
@@ -53,6 +54,8 @@ class Event{
 public:
     /** @brief Indicates whether the event has found it's destination. */
     bool has_been_handled = false;
+    
+    HoverableWidget* hovered_widget = nullptr;
     
     Event(Point<float> position, unsigned buttons, unsigned int keyboard_modifiers = Keyboard::Modifier::None) 
     : _original_position(position)
