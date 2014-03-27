@@ -1,8 +1,11 @@
 #include "Texture.h"
-#include "Error.h"
-#include "shared_sources/read_png.h"
-#include <GL/glew.h>
+#include <shared_sources/read_png.h>
 #include <vector>
+#include <map>
+#include <algorithm>
+#include <stdlib.h>
+#include <cmath>
+
 #ifdef DEBUG
 #include <assert.h>
 #endif//DEBUG
@@ -10,165 +13,159 @@
 using namespace std;
 
 namespace r64fx{
-  
-extern string data_prefix;
-
-Texture default_texture;
 
     
-Texture::Texture(std::string name)
+static map<string, Texture*> common_textures;
+    
+    
+Texture::Kind Texture1D::kind()
 {
-    (*this) = Texture(fopen(name.c_str(), "r"), true);
-    if(!isGood())
-    {
-        cerr << "Problems reading file \"" << name << "\" !\n";
-    }
+    return Texture::Kind::Tex1D;
 }
 
 
-Texture::Texture(FILE* fd, bool close_fd)
+Texture::Kind Texture2D::kind()
 {
-    if(!fd)
-    {
-        cerr << "Texture: Bad file descriptor !\n";
-        return;
-    }
-    
-    unsigned char* data;
-    int width, height, nchannels;
-    if(!read_png(fd, data, nchannels, width, height))
-    {
-        cerr << "Texture: Error reading png file!\n";
-        if(close_fd)
-            fclose(fd);
-        return;
-    }
-    
-//     cout << width << "x" << height << ": " << nchannels << "\n";
-    
-    if(close_fd)
-        fclose(fd);
-    
-#ifdef DEBUG
-    assert(nchannels == 3 || nchannels == 4);
-#endif//DEBUG
-    load_to_vram(width, height, nchannels, (nchannels == 3 ? GL_RGB : GL_RGBA), data);
-    
-    delete[] data;
+    return Texture::Kind::Tex2D;
 }
-
-
-void Texture::load_to_vram(int width, int height, int channel_count, int mode, unsigned char* bytes)
-{
-    glGenTextures(1, &_texture);                                                     CHECK_FOR_GL_ERRORS;
-    glBindTexture(GL_TEXTURE_2D, _texture);                                          CHECK_FOR_GL_ERRORS;
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);                CHECK_FOR_GL_ERRORS;
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);  CHECK_FOR_GL_ERRORS;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, mode, GL_UNSIGNED_BYTE, bytes);
-    CHECK_FOR_GL_ERRORS;
     
-    glGenerateMipmap(GL_TEXTURE_2D);                                                 CHECK_FOR_GL_ERRORS;
-   
-    glBindTexture(GL_TEXTURE_2D, 0);                                                 CHECK_FOR_GL_ERRORS;
     
-    _width = width;
-    _height = height;
-}
-
-
-Texture::Texture(vector<unsigned char> resource_bytes)
-{
-    int channel_count = resource_bytes[0];
-    
-    union{
-        int num;
-        unsigned char bytes[4];
-    } cast;
-    
-    for(int i=0; i<4; i++)
-        cast.bytes[i] = resource_bytes[i+1];
-    int width = cast.num;
-    
-    for(int i=0; i<4; i++)
-        cast.bytes[i] = resource_bytes[i+5];
-    int height = cast.num;
-    
-    load_to_vram(width, height, channel_count, (channel_count == 3 ? GL_RGB : GL_RGBA), resource_bytes.data() + 9);
-}
-
-
 Texture::~Texture()
 {
+    gl::DeleteTextures(1, &_gl_name);
 }
 
 
-void Texture::free() 
+void Texture::addCommonTexture(std::string name, Texture* tex)
 {
-    glDeleteTextures(1, &_texture); 
-    _width = _height = 0; 
+    common_textures[name] = tex;
 }
 
 
-void Texture::init()
+Texture* Texture::find(std::string name)
 {
-    const int width = 32;
-    const int height = 32;
+    auto it = common_textures.find(name);
+    if(it == common_textures.end())
+        return nullptr;
+    else
+        return it->second;
+}
 
-    auto data = new unsigned char[width*height*3];
-    for(int x=0; x<width; x++)
+
+void Texture::freeCommonTextures()
+{
+    for(auto p : common_textures)
     {
-        for(int y=0; y<height; y++)
-        {
-            for(int c=0; c<3; c++)
-            {
-                data[y*width + x + c] = 0;
-            }
-        }
+        delete p.second;
     }
     
-    for(int x=0; x<width/2; x++)
+    common_textures.clear();
+}
+
+
+Texture1D::Texture1D(GLuint gl_name, int nchannels, int nlevels, GLsizei w)
+: Texture(gl_name), _nchannels(nchannels), _nlevels(nlevels), _w(w)
+{
+}
+    
+    
+Texture2D* Texture2D::loadBaseLevel(string path, GLenum internal_format, GLenum format, unsigned int flags)
+{
+    auto file = fopen(path.c_str(), "rb");
+    if(!file)
     {
-        for(int y=0; y<height/2; y++)
-        {
-            for(int c=0; c<3; c++)
-            {
-                data[y*width + x + c] = 255;
-            }
-        }
+        cerr << "Texture2D failed to open file " << path << " !\n";
+        return nullptr;
     }
     
-    for(int x=width/2; x<width; x++)
+    unsigned char* data; 
+    int nchannels; 
+    int width; 
+    int height;
+    if(!read_png(file, data, nchannels, width, height))
     {
-        for(int y=height/2; y<height; y++)
-        {
-            for(int c=0; c<3; c++)
-            {
-                data[y*width + x + c] = 255;
-            }
-        }
+        cerr << "Texture2D failed to read png file " << path << " !\n";
+        return nullptr;
     }
+    fclose(file);
+
+    int nlevels = flags & Texture::AllocMipmaps ? log2(max(width, height)) + 1 : 1;
     
-    default_texture = Texture(width, height, 3, GL_RGB, data);
+    GLuint name;
+    gl::GenTextures(1, &name);
+    gl::BindTexture(GL_TEXTURE_2D, name);
+    gl::TexStorage2D(GL_TEXTURE_2D, nlevels, internal_format, width, height);
+    gl::TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data);
     
-    delete[] data;
+    free(data);
+    
+    return new Texture2D(name, nchannels, nlevels, width, height);
 }
 
 
-Texture Texture::defaultTexture()
+Texture2D* Texture2D::loadMipmaps(string dir_path, GLenum internal_format, GLenum format)
 {
-    return default_texture;
-}
+    if(dir_path.back() != '/')
+        dir_path.push_back('/');
+    
+    auto tex = loadBaseLevel((dir_path + "0.png").c_str(), internal_format, format);
+    if(!tex)
+        return nullptr;
+    
+    int expected_width = tex->width(); 
+    int expected_height = tex->height();
+    
+    for(int i=1; i<tex->nlevels(); i++)
+    {
+        if(expected_width > 1)
+            expected_width >>= 1;
+        
+        if(expected_height)
+            expected_height >>= 1;
+        
+        char buff[8];
+        auto nchars = sprintf(buff, "%d", i);
+        string pp = dir_path + string(buff, nchars) + ".png";
+        
+        auto file = fopen(pp.c_str(), "rb");
+        if(!file)
+        {
+            cerr << "Texture2D failed to open file " << pp << "!\n";
+            continue;
+        }
 
-
-Texture Texture::badTexture()
-{
-    return Texture();
-}
-
-void Texture::cleanup()
-{
-    if(default_texture.isGood())
-        default_texture.free();
+        unsigned char* data; 
+        int nchannels;
+        int width;
+        int height;
+        
+        if(!read_png(file, data, nchannels, width, height))
+        {
+            cerr << "Texture2D failed to read png file " << dir_path << " !\nignoring\n";
+            continue;
+        }
+        fclose(file);
+        
+        if(width != expected_width || height != expected_height)
+        {
+            free(data);
+            cerr << "Bad mipmap size " << width << 'x' << height << " for " << pp << "!\nignoring\n";
+            continue;
+        }
+        
+        if(nchannels != tex->nchannels())
+        {
+            free(data);
+            cerr << "Bad mipmap format " << nchannels << " for " << pp << "!\nignoring\n";
+            continue;
+        }
+        
+        gl::TexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data);
+        
+        free(data);
+    }
+        
+    return tex;
 }
     
 }//namespace r64fx

@@ -1,97 +1,99 @@
 #ifndef R64FX_GUI_TEXTURE_H
 #define R64FX_GUI_TEXTURE_H
 
-#include <GL/glew.h>
+#include "gl.h"
 #include <string>
-#include <vector>
-#include "geometry.h"
-
 
 namespace r64fx{
     
-/** @brief A texture handle. */
 class Texture{
-    GLuint _texture = 0;
-    int _width = 0;
-    int _height = 0;
+protected:
+    GLuint _gl_name;
     
-    void load_to_vram(int width, int height, int channel_count, int mode, unsigned char* bytes);
+    Texture(GLuint gl_name)
+    : _gl_name(gl_name)
+    {}
     
 public:
-    Texture() {}
+    /* Flags */
+    static const unsigned int NoMipmaps = 0;
+    static const unsigned int AllocMipmaps = 1;
     
-    /** @brief Create a texture from file.*/
-    Texture(std::string name);
+    enum class Kind{
+       Tex1D,
+       Tex2D 
+    };
     
-    /** @brief Create a texture from a file descriptor. 
-     
-        @param fd - must be an open file descriptor.
-        @param close_fd - if true, will call fclose() on fd.
-     */
-    Texture(FILE* fd, bool close_fd = true);
-   
-    /** @brief Create an empty texture with the parameters give. */
-    Texture(int width, int height, int channel_count, int mode)
-    {
-        load_to_vram(width, height, channel_count, mode, nullptr);
-    }
+    virtual Texture::Kind kind() = 0;
     
-    /** @brief Create a texture from a memory buffer. */
-    Texture(int width, int height, int channel_count, int mode, unsigned char* bytes)
-    {
-        load_to_vram(width, height, channel_count, mode, bytes);
-    }
+    virtual ~Texture();
     
-    /** Load image data from a resource. 
-     *  Byte 0 encodes the channel count.
-     *  Bytes 1-4 encode the image width as int.
-     *  Bytes 5-8 encode the image height as int.
-     *  Followed by data.
-     */
-    Texture(std::vector<unsigned char> resource_bytes);
+    inline GLuint glName() const { return _gl_name; }
     
-   ~Texture();
-   
-    void free();
+    static void addCommonTexture(std::string name, Texture* tex);
     
-    inline bool operator==(const Texture &other)
-    {
-        return _texture == other._texture;
-    }
+    static Texture* find(std::string name);
     
-    inline bool operator!=(const Texture &other)
-    {
-        return _texture != other._texture;
-    }
-   
-    inline int width() const { return _width; }
-    inline int height() const { return _width; }
+    template<typename T> inline T to() { return (T)this; }
     
-    GLuint id() const { return _texture; }
-    
-    inline void bind(int mode = GL_TEXTURE_2D) { glBindTexture(mode, _texture); }
-    
-    inline bool isGood() const { return _width && _height; }
-        
-//     inline void repeat_s() { glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); }
-//     inline void repeat_t() { glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); }
-//     inline void repeat() { repeat_s(); repeat_t(); }
-//     
-//     inline void clamp_s() { glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP); }
-//     inline void clamp_t() { glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP); }
-//     inline void clamp() { clamp_s(); clamp_t(); }
-
-    inline void parameter(GLenum pname, GLint param)   { glTexParameteri(GL_TEXTURE_2D, pname, param); }
-    inline void parameter(GLenum pname, GLfloat param) { glTexParameteri(GL_TEXTURE_2D, pname, param); }
-
-    static void init();
-    
-    static Texture defaultTexture();
-    
-    static Texture badTexture();
-    
-    static void cleanup();
+    static void freeCommonTextures();
 };
+
+
+class Texture1D : public Texture{
+protected:
+    int _nchannels;
+    int _nlevels;
+    GLsizei _w;
+    
+    Texture1D(GLuint gl_name, int nchannels, int nlevels, GLsizei w);
+    
+public:
+    virtual Texture::Kind kind();
+    
+    inline int nchannels() const { return _nchannels; }
+    
+    inline int nlevels() const { return _nlevels; }
+    
+    inline GLsizei width() const { return _w; }
+
+    inline void bind() const { gl::BindTexture(GL_TEXTURE_1D, glName()); }
+};
+
+
+class Texture2D : public Texture1D{
+protected:
+    GLsizei _h;
+    
+    Texture2D(GLuint gl_name, int nchannels, int nlevels, GLsizei w, GLsizei h)
+    : Texture1D(gl_name, nchannels, nlevels, w), _h(h)
+    {}
+    
+public:
+    virtual Texture::Kind kind();
+    
+    inline GLsizei height() const { return _h; }
+    
+    inline void bind() const { gl::BindTexture(GL_TEXTURE_2D, glName()); }
+    
+    static Texture2D* loadBaseLevel(std::string path, GLenum internal_format, GLenum format, unsigned int flags = Texture::AllocMipmaps);
+    
+    /** @brief Load mipmaps from a directory.
+
+        The directory must contain mipmap image files calles < mipmap_level >.png
+        
+        For example:
+            0.png
+            1.png
+            2.png
+            etc...
+     
+        @return Returns a heap allocated Texture2D* handle or nullptr on failure.
+     */
+    static Texture2D* loadMipmaps(std::string dir_path, GLenum internal_format, GLenum format);
+};
+
+
 
     
 }//namespace r64fx
