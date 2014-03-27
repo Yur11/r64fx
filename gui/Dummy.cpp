@@ -62,7 +62,7 @@ void Dummy::render()
     Painter::setColor(0.0, 1.0, 0.0, 0.5);
     Painter::useNoTexture();
     
-    float pos[2] = { width() + 10.0 * cos(angle), height() + 10.0 * sin(angle) };
+    float pos[2] = { float(width() + 10.0 * cos(angle)), float(height() + 10.0 * sin(angle)) };
     p.bindBuffer();
     p.setPositions(pos, 2, 6);
     p.unbindBuffer();
