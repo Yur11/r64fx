@@ -75,21 +75,21 @@ public:
     inline static void enable() { sp.use(); };
     
     /** @brief Calls glUseProgram(0); */
-    inline static void disable() { glUseProgram(0); CHECK_FOR_GL_ERRORS;  }
+    inline static void disable() { gl::UseProgram(0); }
     
     static const int RGBA = 1;
     
     static const int RedAsAlpha = 2;
     
-    inline static void setTexturingMode(unsigned int mode) { glUniform1i(texturing_mode_uniform, mode); CHECK_FOR_GL_ERRORS; current_texturing_mode = mode; }
+    inline static void setTexturingMode(unsigned int mode) { gl::Uniform1i(texturing_mode_uniform, mode); current_texturing_mode = mode; }
     
     inline static int currentTexturingMode() { return current_texturing_mode; }
     
-    inline static void useCurrent2dProjection() { glUniform4fv(sxsytxty_uniform, 1, current_2d_projection->vec); CHECK_FOR_GL_ERRORS;  }
+    inline static void useCurrent2dProjection() { gl::Uniform4fv(sxsytxty_uniform, 1, current_2d_projection->vec); }
     
-    inline static void setProjection(Projection2D projection) { glUniform4fv(sxsytxty_uniform, 1, projection.vec); CHECK_FOR_GL_ERRORS;  }
+    inline static void setProjection(Projection2D projection) { gl::Uniform4fv(sxsytxty_uniform, 1, projection.vec); }
     
-    inline static void setColor(Color color) { glUniform4fv(color_uniform, 1, color.vec); CHECK_FOR_GL_ERRORS;  }
+    inline static void setColor(Color color) { gl::Uniform4fv(color_uniform, 1, color.vec); }
     
     inline static void setColor(float r, float g, float b, float a) { setColor({r, g, b, a}); }
     

@@ -23,6 +23,9 @@ const unsigned int tmp_buffer_size = 1024 * 64;
 
 void Font::Glyph::render(float x, float y)
 {    
+    x = float(int(x)) + 0.0;
+    y = float(int(y)) + 0.0;
+    
     float dy = height - bearing_y;
     
     float pos[8] = {
@@ -123,18 +126,12 @@ Font::Glyph* Font::fetchGlyph(std::string utf8_char)
         }
         
         GLuint tex;
-        glGenTextures(1, &tex);
-        CHECK_FOR_GL_ERRORS; 
-        glBindTexture(GL_TEXTURE_2D, tex);
-        CHECK_FOR_GL_ERRORS; 
-        glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-        CHECK_FOR_GL_ERRORS; 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        CHECK_FOR_GL_ERRORS; 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        CHECK_FOR_GL_ERRORS;
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        CHECK_FOR_GL_ERRORS;
+        gl::GenTextures(1, &tex);
+        gl::BindTexture(GL_TEXTURE_2D, tex);
+        gl::TexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 //         glTexStorage2D(GL_TEXTURE_2D, 4, GL_R8, w, h);
 //         CHECK_FOR_GL_ERRORS;
@@ -229,9 +226,7 @@ Font::~Font()
 
 
 void Font::render(std::string utf8_text)
-{
-    auto context_id = RenderingContext::current()->id();
-    
+{    
     Utf8String utf8_str;
     utf8_str.stdstr = utf8_text;
     auto str_size = utf8_str.size();
@@ -249,7 +244,7 @@ void Font::render(std::string utf8_text)
         {
             FT_Vector delta; 
             FT_Get_Kerning(_ft_face, prev_index, glyph->index, FT_KERNING_DEFAULT, &delta); 
-            _pen_x -= delta.x >> 6;
+            _pen_x += delta.x >> 6;
         }
     
         if(glyph->tex != 0)

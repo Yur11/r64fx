@@ -1,5 +1,4 @@
 #include "TextLine.h"
-#include "Error.h"
 #include <iostream>
 
 using namespace std;
@@ -8,10 +7,8 @@ namespace r64fx{
 
 void TextLine::render()
 {
-    glEnable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS;
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    CHECK_FOR_GL_ERRORS;
+    gl::Enable(GL_BLEND);
+    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     _font->enable();
     _font->setColor(textColor());
@@ -21,11 +18,9 @@ void TextLine::render()
 
     _font->render(text.stdstr);
     
-    glUseProgram(0);
-    CHECK_FOR_GL_ERRORS;
+    Painter::enable();
     
-    glDisable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS;
+    gl::Disable(GL_BLEND);
 }
 
 

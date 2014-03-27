@@ -1,5 +1,9 @@
 #include "ActionWidget.h"
-#include "Error.h"
+#ifdef DEBUG
+#include <assert.h>
+#include <iostream>
+using namespace std;
+#endif//DEBUG
 
 namespace r64fx{
     
@@ -15,13 +19,11 @@ ActionWidget::ActionWidget(Action* act, Font* font, Widget* parent)
 
 void ActionWidget::render()
 {
-    glEnable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS; 
+    gl::Enable(GL_BLEND);
     
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    CHECK_FOR_GL_ERRORS; 
+    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    action->icon().render();
+    icon.render();
     font->enable();
     font->useCurrent2dProjection();
     
@@ -29,23 +31,36 @@ void ActionWidget::render()
         font->setColor(0.7, 0.9, 0.9, 1.0);
     else
         font->setColor(0.9, 0.7, 0.7, 1.0);
-    font->setPenX(action->icon().size.w + 5);
+    int x_offset = 4.0 + icon.size.w;
+    while(!(x_offset / 2))
+        x_offset++;
+    font->setPenX(x_offset);
     font->setPenY(2.0);
-        font->render(action->name().stdstr);
+        font->render(action->caption);
     
     font->disable();
     
-    glDisable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS; 
+    gl::Disable(GL_BLEND);
 }
 
 
 void ActionWidget::update()
 {
     float new_height = (font->ascender() + font->descender());
-    setWidth(paddingLeft() + font->lineAdvance(action->name().stdstr) + new_height + 10 + paddingRight());
+    setWidth(paddingLeft() + font->lineAdvance(action->caption) + new_height + 10 + paddingRight());
     setHeight(paddingTop() + new_height + paddingBottom());
-    action->setIconSize(Size<float>(new_height * 1.5, new_height * 1.5));
+    
+    if(icon.texture == nullptr)
+    {
+        auto tex = Texture::find(action->name);
+        if(tex)
+        {
+#ifdef DEBUG
+            assert(tex->kind() == Texture::Kind::Tex2D);
+#endif//DEBUG
+            icon.texture = (Texture2D*)tex;
+        }
+    }    
 }
 
     

@@ -16,7 +16,9 @@ class Scene{
     std::vector<Widget*> _widgets;
             
 public:
-    bool is_scalable = true;
+    float scale_step = 1.1;
+    float scroll_x_step = 10.0;
+    float scroll_y_step = 10.0;
     
     /** @brief A request callback to replace this scene with another in the host View. */
     void (*replace_me_callback)(View* view, Scene* old_scene, Scene* new_scene);

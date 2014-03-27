@@ -128,6 +128,9 @@ void View::updateContextMenu()
             _context_menu->appendAction(close_act);
     }
     
+    _context_menu->setPadding(5.0);
+    _context_menu->setPaddingTop(2.0);
+    
     _context_menu->update();
 }
 
@@ -249,11 +252,9 @@ void View::render()
     }
 #endif//DEBUG
     
-    glScissor(x(), y(), width(), height());
-    CHECK_FOR_GL_ERRORS;
+    gl::Scissor(x(), y(), width(), height());
     
-    glEnable(GL_SCISSOR_TEST);
-    CHECK_FOR_GL_ERRORS;
+    gl::Enable(GL_SCISSOR_TEST);
     
     auto p = *current_2d_projection;
     
@@ -267,8 +268,7 @@ void View::render()
     
     *current_2d_projection = p;
     
-    glDisable(GL_SCISSOR_TEST);
-    CHECK_FOR_GL_ERRORS;
+    gl::Disable(GL_SCISSOR_TEST);
 }
 
 
@@ -327,20 +327,20 @@ void View::mouseWheelEvent(MouseEvent* event)
         if(event->buttons() & Mouse::Button::WheelUp)
         {
             if(event->keyboardModifiers() & Keyboard::Modifier::Ctrl)
-                zoomInOnce(event->originalPosition() - Point<float>(x(), y()));
+                zoomOnce(_scene->scale_step, event->originalPosition() - Point<float>(x(), y()));
             else if(event->keyboardModifiers() & Keyboard::Modifier::Shift)
-                translate(10.0, 0.0);
+                translate(_scene->scroll_x_step, 0.0);
             else
-                translate(0.0, -10.0);
+                translate(0.0, -(_scene->scroll_y_step));
         }
         else if(event->buttons() & Mouse::Button::WheelDown)
         {
             if(event->keyboardModifiers() & Keyboard::Modifier::Ctrl)
-                zoomOutOnce(event->originalPosition() - Point<float>(x(), y()));
+                zoomOnce(1.0 / _scene->scale_step, event->originalPosition() - Point<float>(x(), y()));
             else if(event->keyboardModifiers() & Keyboard::Modifier::Shift)
-                translate(-10.0, 0.0);
+                translate(-(_scene->scroll_x_step), 0.0);
             else
-                translate(0.0, 10.0);
+                translate(0.0, _scene->scroll_y_step);
         }
         
         event->has_been_handled = true;
@@ -624,9 +624,9 @@ void VerticalSplitView::resize(int left, int top, int right, int bottom)
 
 void VerticalSplitView::set_separator_coords()
 {
-    float x1 = _rect.left;
-    float x2 = _rect.right;
-    float y =  _rect.bottom + height() * splitRatio();
+    float x1 = float(int(_rect.left)) + 0.5;
+    float x2 = float(int(_rect.right)) + 0.5;
+    float y =  float(int(_rect.bottom + height() * splitRatio())) + 0.5;
     
     float pos[4] = {
         x1, y,
@@ -668,9 +668,9 @@ void HorizontalSplitView::resize(int left, int top, int right, int bottom)
     
 void HorizontalSplitView::set_separator_coords()
 {    
-    float x = _rect.left + width() * splitRatio();
-    float y1 = _rect.bottom;
-    float y2 = _rect.top;
+    float x = float(int(_rect.left + width() * splitRatio())) + 0.5;
+    float y1 = float(int(_rect.bottom)) + 0.5;
+    float y2 = float(int(_rect.top)) + 0.5;
     
     float pos[4] = {
         x, y1,

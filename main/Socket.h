@@ -13,7 +13,7 @@ class Wire;
 class Socket : public Widget{
     friend class Wire;
     bool mouse_pressed = false;
-    static Texture texture;
+    static Texture2D* texture;
 
     Wire* _wire = nullptr;
     

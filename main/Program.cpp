@@ -10,51 +10,7 @@ using namespace std;
 
 namespace r64fx{
     
-
-Program::Program(int argc, char* argv[])
-{
-    if(!initData(argc, argv))
-    {
-        _status = 1; 
-        return;
-    }
     
-    if(!initGui())
-    {
-        _status = 2; 
-        return;
-    }    
-}
-
-
-Program::~Program()
-{
-    
-}
-
-    
-void Program::mainThread()
-{
-    if(_status != 0)
-        return;
-    
-    
-    while(Window::count() > 0)
-    {       
-        Window::mainSequence();
-        Program::gcSequence();
-        
-        usleep(300);
-    }
-}
-
-
-void Program::quit()
-{
-    cerr << "We should really tell the program to quit now!\n";
-}
-
-
 bool Program::initData(int argc, char* argv[])
 {
     if(argc < 2)
@@ -100,29 +56,21 @@ bool Program::initGui()
     
     Keyboard::init();
     
-    Texture::init();
-
     if(!Painter::init())
     {
         cerr << "Failed to init Painter!\n";
         return false;
     }
     
-    if(!DenseWaveformPainter::init())
-    {
-        cerr << "Failed to init DenseWaveformPainter!\n";
-        return false;
-    }
-    
-    Icon::init();
-    
-    Socket::init();
-    
-    Wire::init();
-    
+//     if(!DenseWaveformPainter::init())
+//     {
+//         cerr << "Failed to init DenseWaveformPainter!\n";
+//         return false;
+//     }
+
     Font::init();
     
-    auto font = new Font("./data/fonts/FreeSans.ttf", 14);
+    auto font = new Font( _data_prefix + "fonts/FreeSans.ttf", 14);
     if(!font->isOk())
     {
         delete font;
@@ -130,34 +78,14 @@ bool Program::initGui()
     }
     
     Font::setDefaultFont(font);
+        
+    initTextures();
+    
+    Icon::default_size = { 14, 14 };
+    Icon::init();
+    
+    initActions();
 
-    _split_view_vert_act = new Action(
-        tr("split_vertically"), 
-        [](void*) -> void*
-        {
-            View::splitViewVertically(View::activeView());
-            return nullptr;
-        }
-    );
-    
-    _split_view_hor_act = new Action(
-        tr("split_horizontally"),
-        [](void*) -> void*
-        {
-            View::splitViewHorizontally(View::activeView());
-            return nullptr;
-        }
-    );
-    
-    _close_view_act = new Action(
-        tr("close_view"),
-        [](void*) -> void*
-        {
-            View::closeView(View::activeView());
-            return nullptr;
-        }
-    );
-    
     _infs = new InformationScene;
     
     _fms = new FrontMachineScene;
@@ -167,7 +95,7 @@ bool Program::initGui()
     _fms->wires = &_wires;
     _bms->wires = &_wires;
     
-    auto root_view = new View(_fms);
+    auto root_view = new View(_infs);
     window->setView(root_view);
     
     root_view->split_vert_act = _split_view_vert_act;
@@ -177,6 +105,119 @@ bool Program::initGui()
     root_view->updateContextMenu();
     
     return true;
+}
+    
+
+Program::Program(int argc, char* argv[])
+{
+    if(!initData(argc, argv))
+    {
+        _status = 1; 
+        return;
+    }
+    
+    if(!initGui())
+    {
+        _status = 2; 
+        return;
+    }    
+}
+
+
+Program::~Program()
+{
+    
+}
+
+    
+void Program::mainThread()
+{
+    if(_status != 0)
+        return;
+    
+    Painter::enable();
+    
+    while(Window::count() > 0)
+    {       
+        Window::mainSequence();
+        Program::gcSequence();
+        
+        usleep(300);
+    }
+}
+
+
+void Program::quit()
+{
+    cerr << "We should really tell the program to quit now!\n";
+}
+
+
+void Program::initTextures()
+{
+    initCommonTexture2D("close_view");
+    initCommonTexture2D("split_horizontally");
+    initCommonTexture2D("split_vertically");
+}
+
+
+void Program::initCommonTexture2D(std::string name, GLenum internal_format, int expected_chan_count)
+{
+    GLenum format;
+    if(expected_chan_count == 4)
+        format = GL_RGBA;
+    else if(expected_chan_count == 3)
+        format = GL_RGB;
+    else if(expected_chan_count == 1)
+        format = GL_RED;
+    else
+    {
+        cerr << "Program::initCommonTexture2D(): Bad channel count !\n" << expected_chan_count << "\n";
+        return;
+    }
+        
+    auto tex = Texture2D::loadMipmaps(_data_prefix + "textures/" + name, internal_format, format);
+    if(!tex)
+    {
+        cerr << "Failed to load texture " << name << " !\n";
+        return;
+    }
+    
+    Texture::addCommonTexture(name, tex);
+}
+
+
+void Program::initActions()
+{
+    _split_view_vert_act = new Action(
+        "split_vertically",
+        tr("split_vertically"),
+        [](void*) -> void*
+        {
+            View::splitViewVertically(View::activeView());
+            return nullptr;
+        }
+    );
+    
+    _split_view_hor_act = new Action(
+        "split_horizontally",
+        tr("split_horizontally"),
+        [](void*) -> void*
+        {
+            View::splitViewHorizontally(View::activeView());
+            return nullptr;
+        }
+    );
+    
+    _close_view_act = new Action(
+        "close_view",
+        tr("close_view"),
+        [](void*) -> void*
+        {
+            View::closeView(View::activeView());
+            return nullptr;
+        }
+    );
 }
 
 

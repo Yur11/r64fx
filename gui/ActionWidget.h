@@ -1,8 +1,10 @@
 #ifndef R64FX_GUI_ACTION_WIDGET_H
 #define R64FX_GUI_ACTION_WIDGET_H
 
+#include "Widget.h"
 #include "Action.h"
 #include "Font.h"
+#include "Icon.h"
 
 namespace r64fx{
 
@@ -15,6 +17,8 @@ struct ActionWidget : public Widget, public Padding{
     Font* font;
     bool is_highlighted = false;
     bool showing_icon = true;
+    
+    Icon icon;
     
     ActionWidget(Action* act, Font* font = Font::defaultFont(), Widget* parent = nullptr);
     

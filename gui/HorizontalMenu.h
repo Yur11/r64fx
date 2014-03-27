@@ -13,7 +13,7 @@ class HorizontalMenu : public HorizontalContainer{
 public:
     HorizontalMenu(Font* font, Widget* parent = nullptr);
     
-    void appendMenu(Utf8String name, Menu* menu);
+    void appendMenu(std::string name, std::string caption, Menu* menu);
     
     virtual void mousePressEvent(MouseEvent* event);
 };

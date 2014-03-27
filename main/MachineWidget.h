@@ -2,7 +2,7 @@
 #define R64FX_MAIN_MACHINE_WIDGET_H
 
 #include "gui/Widget.h"
-#include "gui/TextureAtlas.h"
+#include "gui/Texture.h"
 #include "gui/Painter.h"
 
 namespace r64fx{
@@ -16,13 +16,7 @@ class MachineWidget : public Widget{
 public:
     MachineWidget(Widget* parent = nullptr);
     
-    Texture surface_texture;
-    
-    /** @brief Set a texture to be used as a surface texture for this widget. 
-     
-        Will set the default texture if the texture given is not good.
-     */
-    void safelySetSurfaceTexture(Texture texture);
+    Texture2D* surface_texture = nullptr;
     
     virtual ~MachineWidget();
     

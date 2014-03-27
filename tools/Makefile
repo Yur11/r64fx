@@ -2,7 +2,7 @@ CXX                 =  g++ -std=c++11
 
 SRC_DIR             =   $(shell cat src_dir)
 INC                 =   -I $(SRC_DIR)  -I . -I /usr/include/freetype2
-CXXFLAGS            ?=  -DDEBUG -DUSE_SDL2 -g -Wall
+CXXFLAGS            ?=  -DDEBUG -DDEBUG_GL_ERRORS -DABORT_ON_GL_ERROR -DUSE_SDL2 -g -Wall
 
 MKDIR               =   mkdir -p
 
@@ -11,8 +11,6 @@ R64FX_SOURCE_DIRS   =   utf8string jit gc gui dsp json main
 
 #Subdirectoies that may store glsl files that have to be compiled into resources.
 GLSL_DIRS           =  $(SRC_DIR)/gui $(SRC_DIR)/main
-
-PNG_RESOURCE_DIRS   =  $(SRC_DIR)/data/textures
 
 .VPATH              =  $(GLSL_DIRS) $(PNG_RESOURCE_DIRS)
 
@@ -25,9 +23,7 @@ file2str:$(SRC_DIR)/tools/file2str.cpp
 
 file2numlist: $(SRC_DIR)/tools/file2numlist.cpp
 	@printf "Building file2numlist tool...\n" && $(CXX) $^ -O2 -o file2numlist
-	
-png2numlist: $(SRC_DIR)/tools/png2numlist.cpp
-	@printf "Building png2numlist tool...\n" && $(CXX) -I $(SRC_DIR) $^ -O2 -o png2numlist -lpng
+
 
 
 #helper scripts
@@ -37,13 +33,11 @@ gen_build_rules.sh: src_dir
 gen_resource_rules.sh: src_dir
 	@ln -sf $(SRC_DIR)/tools/gen_resource_rules.sh
 
-autoconfig: gen_build_rules.sh gen_resource_rules.sh file2str png2numlist jura_book_font.ttf.h
+autoconfig: gen_build_rules.sh gen_resource_rules.sh file2str jura_book_font.ttf.h
 	@$(RM) build_rules; \
 printf "Building resources..."; \
-./gen_resource_rules.sh ./file2str '*.glsl' $(GLSL_DIRS) >> build_rules; \
 ./gen_resource_rules.sh ./file2str '*.vert' $(GLSL_DIRS) >> build_rules; \
 ./gen_resource_rules.sh ./file2str '*.frag' $(GLSL_DIRS) >> build_rules; \
-./gen_resource_rules.sh ./png2numlist '*.png' $(PNG_RESOURCE_DIRS) >> build_rules; \
 printf "\nAnalyzing sources..."; \
 ./gen_build_rules.sh '$(CXX) $(INC) $(CXXFLAGS)' $(R64FX_SOURCE_DIRS) >> build_rules; \
 printf "\n"
@@ -58,4 +52,4 @@ r64fx: $(object_files)
 	@printf "Linking r64fx..." && $(CXX) $^ -o $@ -lSDL2 -lGL -lGLU -lGLEW -lfreetype -lpng -ljack -lsndfile && printf "\nOK\n"
 
 clean:
-	@$(RM) *.o r64fx *.sh build_rules *.h file2numlist file2str png2numlist
+	@$(RM) *.o r64fx *.sh build_rules *.h file2numlist file2str

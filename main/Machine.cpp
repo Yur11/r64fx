@@ -18,8 +18,8 @@ Machine::Machine(FrontMachineScene* fms, BackMachineScene* bms)
     _front = new MachineWidget;
     _back = new MachineWidget;
     
-    _front->safelySetSurfaceTexture(Texture("./data/textures/grainy_greenish.png"));
-    _back->safelySetSurfaceTexture(Texture("./data/textures/grainy_dark.png"));
+//     _front->safelySetSurfaceTexture(Texture("./data/textures/grainy_greenish.png"));
+//     _back->safelySetSurfaceTexture(Texture("./data/textures/grainy_dark.png"));
     
     _front->clicked = Message([](void* source, void* data)->void*{
         auto machine = (Machine*) data;

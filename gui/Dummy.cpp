@@ -19,7 +19,7 @@ extern Font* debug_font;
 void* on_menu_click(void* source, void* data)
 {
     auto act = (Action*) source;
-    cout << act->name().stdstr << "\n";
+    cout << act->name << "\n";
     
     return nullptr;
 }

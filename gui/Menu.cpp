@@ -72,7 +72,7 @@ void Menu::render()
 {        
     Painter::useCurrent2dProjection();
     Painter::useNoTexture();
-    Painter::setColor(0.0, 0.0, 0.0, 0.7);
+    Painter::setColor(0.0, 0.0, 0.0, 1.0);
     
     p.bindArray();
     p.render(GL_TRIANGLE_STRIP);

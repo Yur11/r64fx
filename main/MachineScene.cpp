@@ -92,10 +92,8 @@ void MachineScene::render()
 
 void MachineScene::render_wires()
 {
-    Painter::disable();
     for(auto w : *wires)
         w->render();
-    Painter::enable();
 }
 
 

@@ -47,16 +47,18 @@ public:
 
 /** @brief Knob with a shiny part*/
 class ShinyKnob : public BasicKnob{
-    Texture bg, fg, shiny;
+    Texture2D* bg;
+    Texture2D* fg;
+    Texture2D* shiny;
     
     Painter p;
     
 public:
-    ShinyKnob(Texture bg, Texture fg, Texture shiny);
+    ShinyKnob(Texture2D* bg, Texture2D* fg, Texture2D* shiny);
     
-    ShinyKnob(std::string bg, std::string fg, std::string shiny):
-    ShinyKnob(Texture(bg), Texture(fg), Texture(shiny))
-    {}
+//     ShinyKnob(std::string bg, std::string fg, std::string shiny):
+//     ShinyKnob(Texture(bg), Texture(fg), Texture(shiny))
+//     {}
     
     virtual void update();
     

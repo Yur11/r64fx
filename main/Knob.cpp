@@ -67,7 +67,7 @@ void BasicKnob::mouseMoveEvent(MouseEvent* event)
 }
 
 
-ShinyKnob::ShinyKnob(Texture bg, Texture fg, Texture shiny)
+ShinyKnob::ShinyKnob(Texture2D* bg, Texture2D* fg, Texture2D* shiny)
 : bg(bg)
 , fg(fg)
 , shiny(shiny)
@@ -146,26 +146,26 @@ void ShinyKnob::update()
 
 void ShinyKnob::render()
 {
-    glEnable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS;
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    CHECK_FOR_GL_ERRORS;
+    gl::Enable(GL_BLEND);
+    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     Painter::useCurrent2dProjection();
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
     
     p.bindArray();
     
-    Painter::setTexture(bg.id());
+    Painter::setTexture(bg->glName());
     p.render(GL_TRIANGLE_STRIP, 4, 0);
     
-    Painter::setTexture(fg.id());
+    Painter::setTexture(fg->glName());
     p.render(GL_TRIANGLE_STRIP, 4, 4);
     
-    Painter::setTexture(shiny.id());
+    Painter::setTexture(shiny->glName());
     p.render(GL_TRIANGLE_STRIP, 4, 8);
     
     p.unbindArray();
+    
+    gl::Disable(GL_BLEND);
 }
 
 

@@ -90,8 +90,7 @@ void Wire::init_shader()
 
 void Wire::init_textures()
 {
-    glGenTextures(1, &texture);
-    CHECK_FOR_GL_ERRORS;
+    gl::GenTextures(1, &texture);
     
     const int tex_size = 32; //Size of a single side.
     const int c = tex_size / 2;
@@ -103,30 +102,16 @@ void Wire::init_textures()
         tex_bytes[i] = 255 * sin((float(i) / float(tex_size)) * M_PI);
     }
     
-    glActiveTexture(GL_TEXTURE0);
-    CHECK_FOR_GL_ERRORS;
+    gl::ActiveTexture(GL_TEXTURE0);
     
-    glBindTexture(GL_TEXTURE_1D, texture);
-    CHECK_FOR_GL_ERRORS;
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-    CHECK_FOR_GL_ERRORS;
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    CHECK_FOR_GL_ERRORS;
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    CHECK_FOR_GL_ERRORS;
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    CHECK_FOR_GL_ERRORS;
-    glTexParameteri(GL_TEXTURE_1D, GL_GENERATE_MIPMAP, GL_TRUE);
-    CHECK_FOR_GL_ERRORS;
-    glTexStorage1D(GL_TEXTURE_1D, 1, GL_R32F, tex_size);
-    CHECK_FOR_GL_ERRORS;
-    glTexSubImage1D(GL_TEXTURE_1D, 0, 0, tex_size, GL_RED, GL_UNSIGNED_BYTE, tex_bytes);
-    CHECK_FOR_GL_ERRORS;
-    
-    glGenSamplers(1, &sampler);
-    CHECK_FOR_GL_ERRORS;
-    glBindSampler(0, sampler);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindTexture(GL_TEXTURE_1D, texture);
+    gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+    gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    gl::TexParameteri(GL_TEXTURE_1D, GL_GENERATE_MIPMAP, GL_TRUE);
+    gl::TexStorage1D(GL_TEXTURE_1D, 1, GL_R32F, tex_size);
+    gl::TexSubImage1D(GL_TEXTURE_1D, 0, 0, tex_size, GL_RED, GL_UNSIGNED_BYTE, tex_bytes);
 }
 
 
@@ -143,26 +128,18 @@ Wire::Wire(Socket* source_socket, Socket* sink_socket)
         for(int j=0; j<3; j++)
             vao[i][j] = 0;
     
-    glGenBuffers(3, vbo);
-    CHECK_FOR_GL_ERRORS;
+    gl::GenBuffers(3, vbo);
     
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[Body]);
-    CHECK_FOR_GL_ERRORS;
-    glBufferData(GL_ARRAY_BUFFER, node_count * 2 * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindBuffer(GL_ARRAY_BUFFER, vbo[Body]);
+    gl::BufferData(GL_ARRAY_BUFFER, node_count * 2 * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
     
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[Cap1]);
-    CHECK_FOR_GL_ERRORS;
-    glBufferData(GL_ARRAY_BUFFER, cap_vertex_count * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindBuffer(GL_ARRAY_BUFFER, vbo[Cap1]);
+    gl::BufferData(GL_ARRAY_BUFFER, cap_vertex_count * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
     
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[Cap2]);
-    CHECK_FOR_GL_ERRORS;
-    glBufferData(GL_ARRAY_BUFFER, cap_vertex_count * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindBuffer(GL_ARRAY_BUFFER, vbo[Cap2]);
+    gl::BufferData(GL_ARRAY_BUFFER, cap_vertex_count * 4 * sizeof(float), nullptr, GL_STATIC_DRAW);
     
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 Wire::~Wire()
@@ -181,41 +158,27 @@ void Wire::setupForContext(RenderingContextId_t context_id)
     }
     
     GLuint handle[3];
-    glGenVertexArrays(3, handle);
-    CHECK_FOR_GL_ERRORS;
+    gl::GenVertexArrays(3, handle);
     
     for(int i=0; i<3; i++)
         vao[context_id][i] = handle[i];
     
-    glBindVertexArray(vao[context_id][Body]);
-    CHECK_FOR_GL_ERRORS;
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[Body]);
-    CHECK_FOR_GL_ERRORS;
-    glEnableVertexAttribArray(vertex_data_attribute);
-    CHECK_FOR_GL_ERRORS;
-    glVertexAttribPointer(vertex_data_attribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindVertexArray(vao[context_id][Body]);
+    gl::BindBuffer(GL_ARRAY_BUFFER, vbo[Body]);
+    gl::EnableVertexAttribArray(vertex_data_attribute);
+    gl::VertexAttribPointer(vertex_data_attribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
     
-    glBindVertexArray(vao[context_id][Cap1]);
-    CHECK_FOR_GL_ERRORS;
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[Cap1]);
-    CHECK_FOR_GL_ERRORS;
-    glEnableVertexAttribArray(vertex_data_attribute);
-    CHECK_FOR_GL_ERRORS;
-    glVertexAttribPointer(vertex_data_attribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindVertexArray(vao[context_id][Cap1]);
+    gl::BindBuffer(GL_ARRAY_BUFFER, vbo[Cap1]);
+    gl::EnableVertexAttribArray(vertex_data_attribute);
+    gl::VertexAttribPointer(vertex_data_attribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
     
-    glBindVertexArray(vao[context_id][Cap2]);
-    CHECK_FOR_GL_ERRORS;
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[Cap2]);
-    CHECK_FOR_GL_ERRORS;
-    glEnableVertexAttribArray(vertex_data_attribute);
-    CHECK_FOR_GL_ERRORS;
-    glVertexAttribPointer(vertex_data_attribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindVertexArray(vao[context_id][Cap2]);
+    gl::BindBuffer(GL_ARRAY_BUFFER, vbo[Cap2]);
+    gl::EnableVertexAttribArray(vertex_data_attribute);
+    gl::VertexAttribPointer(vertex_data_attribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
     
-    glBindVertexArray(0);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindVertexArray(0);
 }
 
 
@@ -236,8 +199,7 @@ void Wire::cleanupForContext(RenderingContextId_t context_id)
     for(int i=0; i<3; i++)
         handle[i] = vao[context_id][i];
     
-    glDeleteVertexArrays(3, handle);
-    CHECK_FOR_GL_ERRORS;
+    gl::DeleteVertexArrays(3, handle);
 }
 
 
@@ -320,12 +282,9 @@ void Wire::init_cap_vertices(int item, Point<float> v1, Point<float> v2)
         angle += angle_delta;
     }
     
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[item]);
-    CHECK_FOR_GL_ERRORS;
-    glBufferSubData(GL_ARRAY_BUFFER, 0, (cap_vertex_count) * 4 * sizeof(float), buffer_data);
-    CHECK_FOR_GL_ERRORS;
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindBuffer(GL_ARRAY_BUFFER, vbo[item]);
+    gl::BufferSubData(GL_ARRAY_BUFFER, 0, (cap_vertex_count) * 4 * sizeof(float), buffer_data);
+    gl::BindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 
@@ -389,12 +348,9 @@ void Wire::update()
     buffer_data[6] = 0.9;
     buffer_data[7] = 0.0;
     
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[Body]);
-    CHECK_FOR_GL_ERRORS;
-    glBufferSubData(GL_ARRAY_BUFFER, 0, buffer_data_size * sizeof(float), buffer_data);
-    CHECK_FOR_GL_ERRORS;
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindBuffer(GL_ARRAY_BUFFER, vbo[Body]);
+    gl::BufferSubData(GL_ARRAY_BUFFER, 0, buffer_data_size * sizeof(float), buffer_data);
+    gl::BindBuffer(GL_ARRAY_BUFFER, 0);
    
     init_cap_vertices(Cap1, wire_points[0], wire_points[1]);
     init_cap_vertices(Cap2, wire_points[wire_points.size()-1], wire_points[wire_points.size()-2]);
@@ -406,37 +362,23 @@ void Wire::render()
     
     shading_program.use();
     
-    glUniform4fv(scale_and_offset_uniform, 1, current_2d_projection->vec);
-    CHECK_FOR_GL_ERRORS;
-    glUniform4fv(color_uniform, 1, color.vec);
-    CHECK_FOR_GL_ERRORS;
-    glUniform1i(sampler_uniform, 0);
-    CHECK_FOR_GL_ERRORS;
+    gl::Uniform4fv(scale_and_offset_uniform, 1, current_2d_projection->vec);
+    gl::Uniform4fv(color_uniform, 1, color.vec);
+    gl::Uniform1i(sampler_uniform, 0);
 
-    glActiveTexture(GL_TEXTURE0 + 0);
-    CHECK_FOR_GL_ERRORS;
-    glBindTexture(GL_TEXTURE_1D, texture);
-    CHECK_FOR_GL_ERRORS;
-    glBindSampler(0, sampler);
-    CHECK_FOR_GL_ERRORS;
+    gl::ActiveTexture(GL_TEXTURE0 + 0);
+    gl::BindTexture(GL_TEXTURE_1D, texture);
     
-    glBindVertexArray(vao[context_id][Body]);
-    CHECK_FOR_GL_ERRORS;
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, node_count * 2);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindVertexArray(vao[context_id][Body]);
+    gl::DrawArrays(GL_TRIANGLE_STRIP, 0, node_count * 2);
     
-    glBindVertexArray(vao[context_id][Cap1]);
-    CHECK_FOR_GL_ERRORS;
-    glDrawArrays(GL_TRIANGLE_FAN, 0, cap_vertex_count);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindVertexArray(vao[context_id][Cap1]);
+    gl::DrawArrays(GL_TRIANGLE_FAN, 0, cap_vertex_count);
     
-    glBindVertexArray(vao[context_id][Cap2]);
-    CHECK_FOR_GL_ERRORS;
-    glDrawArrays(GL_TRIANGLE_FAN, 0, cap_vertex_count);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindVertexArray(vao[context_id][Cap2]);
+    gl::DrawArrays(GL_TRIANGLE_FAN, 0, cap_vertex_count);
     
-    glBindVertexArray(0);
-    CHECK_FOR_GL_ERRORS;
+    gl::BindVertexArray(0);
 }
 
 

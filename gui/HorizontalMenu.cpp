@@ -27,9 +27,9 @@ HorizontalMenu::HorizontalMenu(Font* font, Widget* parent)
 }
     
     
-void HorizontalMenu::appendMenu(Utf8String name, Menu* menu)
+void HorizontalMenu::appendMenu(std::string name, std::string caption, Menu* menu)
 {
-    auto aw = new HorizontalMenuItemWidget(menu, new Action(name), _font, this);
+    auto aw = new HorizontalMenuItemWidget(menu, new Action(name, caption), _font, this);
 }
 
 

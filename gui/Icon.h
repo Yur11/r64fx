@@ -8,21 +8,18 @@
 namespace r64fx{
     
 class Icon{
-    Texture _texture;
     static Painter* p;
     
 public:
+    Texture2D* texture = nullptr;
+    
     Size<float> size;
     
     Color color = { 1.0, 1.0, 1.0, 1.0 };
     
-    Icon(Size<float> size = Size<float>(32, 32), Texture texture = Texture::badTexture())
-    : _texture(texture)
+    Icon(Size<float> size = Icon::default_size, Texture2D* texture = nullptr)
+    : texture(texture)
     , size(size)
-    {}
-    
-    Icon(Size<float> size, std::string tex_file)
-    : Icon(size, Texture(tex_file))
     {}
     
     void render();
@@ -31,7 +28,7 @@ public:
     
     static void cleanup();
     
-    static Icon defaultIcon(Size<float> size = Size<float>(18, 18));
+    static Size<float> default_size;
 };
     
 }//namespace r64fx

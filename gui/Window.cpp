@@ -59,12 +59,9 @@ void Window::update_projection()
 
 void Window::render_overlay_menus()
 {
-    glDisable(GL_SCISSOR_TEST);
-    CHECK_FOR_GL_ERRORS;
-    glEnable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS;
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    CHECK_FOR_GL_ERRORS;
+    gl::Disable(GL_SCISSOR_TEST);
+    gl::Enable(GL_BLEND);
+    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for(auto &menu : _overlay_menus)
     {
         auto p = *current_2d_projection;
@@ -75,10 +72,8 @@ void Window::render_overlay_menus()
         
         *current_2d_projection = p;
     }
-    glDisable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS;
-    glEnable(GL_SCISSOR_TEST);
-    CHECK_FOR_GL_ERRORS;
+    gl::Disable(GL_BLEND);
+    gl::Enable(GL_SCISSOR_TEST);
 }
 
 

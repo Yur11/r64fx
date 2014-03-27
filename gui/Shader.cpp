@@ -8,17 +8,13 @@ namespace r64fx{
     
 Shader::Shader(const char* text, GLenum shader_type)
 {
-    _shader = glCreateShader(shader_type);
-    CHECK_FOR_GL_ERRORS;
+    _shader = gl::CreateShader(shader_type);
     if(!_shader)
         return;
     
-    glShaderSource(_shader, 1, &text, nullptr);
-    CHECK_FOR_GL_ERRORS;
-    glCompileShader(_shader);
-    CHECK_FOR_GL_ERRORS;
+    gl::ShaderSource(_shader, 1, &text, nullptr);
+    gl::CompileShader(_shader);
 }
-
 
 bool Shader::isOk()
 {
@@ -26,8 +22,7 @@ bool Shader::isOk()
         return false;
     
     int param;
-    glGetShaderiv(_shader, GL_COMPILE_STATUS, &param);
-    CHECK_FOR_GL_ERRORS;
+    gl::GetShaderiv(_shader, GL_COMPILE_STATUS, &param);
     return param == GL_TRUE;
 }
 
@@ -36,32 +31,26 @@ const char* Shader::infoLog()
 {
     static char buffer[1024];
     int length;
-    glGetShaderInfoLog(_shader, 1024, &length, buffer);
-    CHECK_FOR_GL_ERRORS;
+    gl::GetShaderInfoLog(_shader, 1024, &length, buffer);
     return buffer;
 }
 
 
 void Shader::free()
 { 
-    glDeleteShader(_shader); 
-    CHECK_FOR_GL_ERRORS;
+    gl::DeleteShader(_shader); 
 }
 
 
 ShadingProgram::ShadingProgram(VertexShader vs, FragmentShader fs) : _vs(vs), _fs(fs) 
 {
-    _program = glCreateProgram();
-    CHECK_FOR_GL_ERRORS;
+    _program = gl::CreateProgram();
     if(!_program)
         return;
     
-    glAttachShader(_program, vs.id());
-    CHECK_FOR_GL_ERRORS;
-    glAttachShader(_program, fs.id());
-    CHECK_FOR_GL_ERRORS;
-    glLinkProgram(_program);
-    CHECK_FOR_GL_ERRORS;
+    gl::AttachShader(_program, vs.id());
+    gl::AttachShader(_program, fs.id());
+    gl::LinkProgram(_program);
 }
 
 
@@ -71,8 +60,7 @@ bool ShadingProgram::isOk()
         return false;
     
     int param;
-    glGetProgramiv(_program, GL_LINK_STATUS, &param);
-    CHECK_FOR_GL_ERRORS;
+    gl::GetProgramiv(_program, GL_LINK_STATUS, &param);
     return param == GL_TRUE;
 }
 
@@ -81,23 +69,20 @@ const char* ShadingProgram::infoLog()
 {
     static char buffer[1024];
     int length;
-    glGetProgramInfoLog(_program, 1024, &length, buffer);
-    CHECK_FOR_GL_ERRORS;
+    gl::GetProgramInfoLog(_program, 1024, &length, buffer);
     return buffer;
 }
 
 
 void ShadingProgram::use()
 {
-    glUseProgram(_program);
-    CHECK_FOR_GL_ERRORS;
+    gl::UseProgram(_program);
 }
 
 
 void ShadingProgram::free() 
 { 
-    glDeleteProgram(_program); 
-    CHECK_FOR_GL_ERRORS;
+    gl::DeleteProgram(_program); 
 }
 
 

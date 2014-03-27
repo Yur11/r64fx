@@ -2,7 +2,7 @@
 #include "Widget.h"
 #include "MouseEvent.h"
 #include "KeyEvent.h"
-#include "Error.h"
+#include "gl.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -16,23 +16,18 @@ namespace r64fx{
     
 void Scene::render()
 {    
-    glClearColor(0.2, 0.2, 0.2, 1.0);
-    CHECK_FOR_GL_ERRORS; 
-    glClear(GL_COLOR_BUFFER_BIT);
-    CHECK_FOR_GL_ERRORS; 
+    gl::ClearColor(0.2, 0.2, 0.2, 1.0);
+    gl::Clear(GL_COLOR_BUFFER_BIT);
     
     for(auto widget : _widgets)
     {
-//         glPushMatrix();
         auto p = *current_2d_projection;
         
         auto position = widget->position();
-//         glTranslated(position.x, position.y, 0.0);
         current_2d_projection->translate(position.x, position.y);
         
         widget->render();
         
-//         glPopMatrix();
         *current_2d_projection = p;
     }
 }

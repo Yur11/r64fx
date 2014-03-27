@@ -12,10 +12,11 @@ map<string, Icon> all_icons;
 
 Painter* Icon::p;
 
+Size<float> Icon::default_size = { 16, 16 };
 
 void Icon::render()
 {
-    if(_texture.isGood())
+    if(texture)
     {           
         float pos[6] = {
             size.w, 0.0,
@@ -27,16 +28,13 @@ void Icon::render()
         p->setPositions(pos, 6, 2);
         p->unbindBuffer();
         
-//         Painter::enable();
         Painter::useCurrent2dProjection();
         Painter::setColor(color);
-        Painter::setTexture(_texture.id());
+        Painter::setTexture(texture->glName());
         
         p->bindArray();
         p->render(GL_TRIANGLE_STRIP);
-        p->unbindArray();
-        
-//         Painter::disable();
+        p->unbindArray();        
     }
 }
 
@@ -66,12 +64,6 @@ void Icon::init()
 void Icon::cleanup()
 {
     p->deleteLater();
-}
-
-
-Icon Icon::defaultIcon(Size<float> size)
-{
-    return Icon(size, Texture::badTexture());
 }
 
     

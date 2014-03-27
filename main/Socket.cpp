@@ -14,14 +14,14 @@ namespace r64fx{
 
 extern string data_prefix;
     
-Texture Socket::texture;
+Texture2D* Socket::texture = nullptr;
 
 void Socket::init()
 {
-    texture = Texture("./data/textures/socket.png");
-#ifdef DEBUG
-    assert(texture.isGood());
-#endif//DEBUG
+//     texture = Texture("./data/textures/socket.png");
+// #ifdef DEBUG
+//     assert(texture.isGood());
+// #endif//DEBUG
 }
     
     
@@ -32,14 +32,11 @@ Socket::Socket(Widget* parent) : Widget(parent), p(4)
 
 void Socket::render()
 {    
-    glEnable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS;
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    CHECK_FOR_GL_ERRORS;
+    gl::Enable(GL_BLEND);
+    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-//     Painter::enable();
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
-    Painter::setTexture(Socket::texture.id());
+    Painter::setTexture(Socket::texture->glName());
     Painter::useCurrent2dProjection();
     
     p.bindArray();
@@ -48,8 +45,7 @@ void Socket::render()
     
 //     Painter::disable();
 
-    glDisable(GL_BLEND);
-    CHECK_FOR_GL_ERRORS;
+    gl::Disable(GL_BLEND);
 }
 
 

@@ -37,6 +37,13 @@ class Program{
     /** @brief Initialize gui functionality including OpenGL context. */
     bool initGui();
     
+    /** */
+    void initTextures();
+    
+    void initCommonTexture2D(std::string name, GLenum internal_format = GL_RGBA8, int expected_chan_count = 4);
+            
+    void initActions();
+        
     /** @brief Run garbage collector if needed. */
     void gcSequence();
 

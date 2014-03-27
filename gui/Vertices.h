@@ -23,11 +23,9 @@ public:
     Vertices(const int nbytes, VertexT* data = nullptr, GLenum usage = GL_STATIC_DRAW)
     : _nbytes(nbytes)
     {
-        glGenBuffers(1, &_vbo);
-        CHECK_FOR_GL_ERRORS;
+        gl::GenBuffers(1, &_vbo);
         this->bindBuffer();
-        glBufferData(GL_ARRAY_BUFFER, nbytes, data, usage);
-        CHECK_FOR_GL_ERRORS;
+        gl::BufferData(GL_ARRAY_BUFFER, nbytes, data, usage);
         this->unbindBuffer();
         
         for(int i=0; i<max_rendering_context_count; i++)
@@ -36,31 +34,29 @@ public:
     
     ~Vertices()
     {
-        glDeleteBuffers(1, &_vbo);
-        CHECK_FOR_GL_ERRORS;
+        gl::DeleteBuffers(1, &_vbo);
     }
     
     inline int nbytes() const { return _nbytes; }
     
     inline GLuint id() const { return _vbo; }
     
-    inline void bindBuffer() { glBindBuffer(GL_ARRAY_BUFFER, _vbo); CHECK_FOR_GL_ERRORS;  }
+    inline void bindBuffer() { gl::BindBuffer(GL_ARRAY_BUFFER, _vbo);  }
     
-    inline static void unbindBuffer() { glBindBuffer(GL_ARRAY_BUFFER, 0); CHECK_FOR_GL_ERRORS;  }
+    inline static void unbindBuffer() { gl::BindBuffer(GL_ARRAY_BUFFER, 0);  }
     
-    inline void bindArray() { glBindVertexArray(_vao[RenderingContext::current()->id()]); CHECK_FOR_GL_ERRORS; }
+    inline void bindArray() { gl::BindVertexArray(_vao[RenderingContext::current()->id()]); }
     
-    inline static void unbindArray() { glBindVertexArray(0); CHECK_FOR_GL_ERRORS;  }
+    inline static void unbindArray() { gl::BindVertexArray(0); }
     
     inline void setVertices(VertexT* vertices, int vertex_count, int index = 0)
     {
-        glBufferSubData(GL_ARRAY_BUFFER, index, vertex_count * sizeof(VertexT), vertices);
-        CHECK_FOR_GL_ERRORS;
+        gl::BufferSubData(GL_ARRAY_BUFFER, index, vertex_count * sizeof(VertexT), vertices);
     }
     
     virtual void setupForContext(RenderingContextId_t context_id)
     {
-        std::cout << "Vertices::setupForContext " << context_id << "\n";
+//         std::cout << "Vertices::setupForContext " << context_id << "\n";
         
         if(_vao[context_id] !=0)
         {
@@ -70,16 +66,16 @@ public:
             return;
         }
         
-        glGenVertexArrays(1, _vao + context_id);   CHECK_FOR_GL_ERRORS; 
-        glBindVertexArray(_vao[context_id]);       CHECK_FOR_GL_ERRORS; 
-        glBindBuffer(GL_ARRAY_BUFFER, _vbo);       CHECK_FOR_GL_ERRORS; 
+        gl::GenVertexArrays(1, _vao + context_id); 
+        gl::BindVertexArray(_vao[context_id]);
+        gl::BindBuffer(GL_ARRAY_BUFFER, _vbo);
         VertexT::setupAttributes(nbytes());
-        glBindVertexArray(0);                      CHECK_FOR_GL_ERRORS; 
+        gl::BindVertexArray(0);
     }
     
     virtual void cleanupForContext(RenderingContextId_t context_id)
     {
-        std::cout << "Vertices::cleanupForContext " << context_id << "\n";
+//         std::cout << "Vertices::cleanupForContext " << context_id << "\n";
         
         if(_vao[context_id] == 0)
         {

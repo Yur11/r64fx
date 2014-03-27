@@ -1,7 +1,7 @@
 #ifndef R64FX_GUI_SHADER_H
 #define R64FX_GUI_SHADER_H
 
-#include <GL/glew.h>
+#include "gl.h"
 
 namespace r64fx{
     

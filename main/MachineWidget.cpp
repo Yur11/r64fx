@@ -26,15 +26,6 @@ MachineWidget::~MachineWidget()
 {
 }
 
-
-void MachineWidget::safelySetSurfaceTexture(Texture texture)
-{
-    surface_texture = texture;
-    if(!surface_texture.isGood())
-        surface_texture = Texture::defaultTexture();
-}
-
-
 void MachineWidget::update()
 {
     float texw = float(width()) / 64.0;
@@ -72,7 +63,7 @@ void MachineWidget::render()
     
 //     Painter::enable();
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
-    Painter::setTexture(surface_texture.id());
+    Painter::setTexture(surface_texture->glName());
     Painter::useCurrent2dProjection();
     
     p.bindArray();

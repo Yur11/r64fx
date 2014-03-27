@@ -61,11 +61,11 @@ public:
     inline static void enable() { sp.use(); };
     
     /** @brief Calls glUseProgram(0); */
-    inline static void disable() { glUseProgram(0); CHECK_FOR_GL_ERRORS;  }
+    inline static void disable() { gl::UseProgram(0);  }
     
-    inline static void useCurrent2dProjection() { glUniform4fv(sxsytxty_uniform, 1, current_2d_projection->vec); CHECK_FOR_GL_ERRORS;  }
+    inline static void useCurrent2dProjection() { gl::Uniform4fv(sxsytxty_uniform, 1, current_2d_projection->vec); }
     
-    inline static void setProjection(Projection2D projection) { glUniform4fv(sxsytxty_uniform, 1, projection.vec); CHECK_FOR_GL_ERRORS;  }
+    inline static void setProjection(Projection2D projection) { gl::Uniform4fv(sxsytxty_uniform, 1, projection.vec); }
     
     inline static void setColor(Color color) { /*glUniform4fv(color_uniform, 1, color.vec); CHECK_FOR_GL_ERRORS;*/  }
     
