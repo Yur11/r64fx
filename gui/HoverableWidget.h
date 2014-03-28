@@ -22,10 +22,8 @@ public:
     ~HoverableWidget() {}
     
     inline bool isHovered() { return _current_hovered == this; }
-    
-    bool isHoveredInView(View* view);
-    
-    inline bool shouldBeRenderedAsHovered() { return isHoveredInView(_hover_view); }
+        
+    bool shouldBeRenderedAsHovered();
     
     virtual void mouseMoveEvent(MouseEvent* event);
     

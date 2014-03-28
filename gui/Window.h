@@ -22,13 +22,13 @@ class Window : public RenderingContext{
     bool viewport_update_needed = false;
     int new_w;
     int new_h;
+    
+    static bool mouse_is_hovering_menu;
         
     void update_viewport();
     
     void update_projection();
-    
-    static bool _redraw_requested;
-    
+        
 protected:
     inline static void setEventCallback(VoidFun fun) { event_callback = fun; }
     
@@ -64,6 +64,8 @@ public:
     void closeOverlayMenu(Menu* menu);
     
     void closeAllOverlayMenus();
+    
+    inline static bool mouseIsHoveringMenu() { return  mouse_is_hovering_menu; }
 
     static std::vector<Window*> allInstances();
         

@@ -55,6 +55,7 @@ public:
     /** @brief Indicates whether the event has found it's destination. */
     bool has_been_handled = false;
     
+    /** @brief Is set by the HoverableWidget on mouse move event. */
     HoverableWidget* hovered_widget = nullptr;
     
     Event(Point<float> position, unsigned buttons, unsigned int keyboard_modifiers = Keyboard::Modifier::None) 

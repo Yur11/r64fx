@@ -1,4 +1,7 @@
 #include "ActionWidget.h"
+#include "MouseEvent.h"
+#include "Window.h"
+
 #ifdef DEBUG
 #include <assert.h>
 #include <iostream>
@@ -27,8 +30,8 @@ void ActionWidget::render()
     font->enable();
     font->useCurrent2dProjection();
     
-    if(isHovered())
-        font->setColor(0.95, 0.95, 0.95, 1.0);
+    if(shouldBeRenderedAsHovered())
+        font->setColor(1.0, 1.0, 1.0, 1.0);
     else
         font->setColor(0.75, 0.75, 0.75, 1.0);
     int x_offset = 4.0 + icon.size.w;
@@ -68,6 +71,8 @@ void ActionWidget::mousePressEvent(MouseEvent* event)
 {
     if(action)
         action->trigger();
+    
+    event->originWindow()->closeAllOverlayMenus();
 }
     
 }//namespace r64fx

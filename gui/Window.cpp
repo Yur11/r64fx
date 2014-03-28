@@ -14,6 +14,8 @@ namespace r64fx{
 Window::VoidFun Window::event_callback = nullptr;
     
 vector<Window*> _all_window_instances;
+
+bool Window::mouse_is_hovering_menu = false;
     
 Window::Window(RenderingContextId_t id)
 : RenderingContext(id)
@@ -205,6 +207,8 @@ void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int
 {    
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setOriginWindow(this);
+ 
+    mouse_is_hovering_menu = false;
     
     if(!_overlay_menus.empty())
     {
@@ -212,6 +216,7 @@ void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int
         if(menu)
         {
             /* Event goes to the menu. */
+            mouse_is_hovering_menu = true;
             event -= menu->position();
             menu->mouseMoveEvent(&event);
             goto _exit;

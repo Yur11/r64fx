@@ -20,7 +20,7 @@ public:
     
     void update();
     
-    virtual void render();
+    virtual void render();    
 };
     
 }//namespace r64fx

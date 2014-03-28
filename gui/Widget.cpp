@@ -287,9 +287,4 @@ Widget* Widget::findLeafAt(float x, float y)
 }
 
 
-// Widget* Widget::stub()
-// {
-//     return &stub_widget;
-// }
-
 }//namespace r64fx

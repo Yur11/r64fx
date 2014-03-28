@@ -15,7 +15,7 @@ InformationScene::InformationScene()
     appendWidget(panel);
     panel->setPosition(0.0, 0.0);
     panel->resize(2000, 24);
-    panel->setPaddingBottom(2.0);
+    panel->setPaddingTop(4.0);
     panel->update();
 }
 
