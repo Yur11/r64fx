@@ -3,7 +3,6 @@
 #include "KeyEvent.h"
 #include "Menu.h"
 #include "Window.h"
-#include "Error.h"
 #include <iostream>
 #include <assert.h>
 

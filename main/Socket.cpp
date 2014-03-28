@@ -1,5 +1,4 @@
 #include "Socket.h"
-#include "gui/Error.h"
 #include "gui/MouseEvent.h"
 #include "gui/Painter.h"
 

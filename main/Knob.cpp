@@ -1,5 +1,4 @@
 #include "Knob.h"
-#include "gui/Error.h"
 #include "gui/MouseEvent.h"
 #include "gui/bezier.h"
 #include "gui/Window.h"

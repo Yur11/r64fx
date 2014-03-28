@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "utf8string/Utf8String.h"
-#include <GL/glew.h>
+#include "gl.h"
 #include "geometry.h"
 #include "RenderingContext.h"
 #include "Projection2D.h"

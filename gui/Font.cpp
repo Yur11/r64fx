@@ -2,7 +2,6 @@
 
 #include "Font.h"
 #include "Projection2D.h"
-#include "Error.h"
 #include "utf8string/Utf8String.h"
 #include "ConvertUTF.h"
 

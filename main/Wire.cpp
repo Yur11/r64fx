@@ -1,5 +1,4 @@
 #include "Wire.h"
-#include "gui/Error.h"
 #include "gui/bezier.h"
 #include "gui/Projection2D.h"
 

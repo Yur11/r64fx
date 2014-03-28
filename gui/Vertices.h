@@ -3,7 +3,6 @@
 
 #include "Shader.h"
 #include "RenderingContext.h"
-#include "Error.h"
 
 #ifdef DEBUG
 #include <iostream>

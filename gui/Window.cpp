@@ -1,5 +1,4 @@
 #include "Window.h"
-#include "Error.h"
 #include "KeyEvent.h"
 
 #ifdef DEBUG
