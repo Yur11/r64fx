@@ -23,8 +23,12 @@ class Window : public RenderingContext{
     int new_w;
     int new_h;
     
+    bool full_repaint = false;    
+    
     static bool mouse_is_hovering_menu;
         
+    static Window* currently_rendered_window;
+    
     void update_viewport();
     
     void update_projection();
@@ -58,6 +62,10 @@ public:
     inline int width() { return size().w; }
     
     inline int height() { return size().h; }
+
+    inline bool fullRepaint() const { return full_repaint; }
+    
+    inline void doFullRepaint() { full_repaint = true; }
     
     void showOverlayMenu(int x, int y, Menu* menu);
     
@@ -106,6 +114,8 @@ public:
     static bool initGlew();
     
     static void mainSequence();
+    
+    inline static Window* currentlyRenderedWindow() { return currently_rendered_window; }
 };    
 
 }//namespace r64fx

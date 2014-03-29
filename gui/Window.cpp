@@ -10,12 +10,12 @@ using namespace std;
 
 namespace r64fx{
             
-Window::VoidFun Window::event_callback = nullptr;
-    
+Window::VoidFun Window::event_callback = nullptr;    
 vector<Window*> _all_window_instances;
-
 bool Window::mouse_is_hovering_menu = false;
+Window* Window::currently_rendered_window = nullptr;
     
+
 Window::Window(RenderingContextId_t id)
 : RenderingContext(id)
 {
@@ -30,8 +30,11 @@ Window::~Window()
 
 void Window::render()
 {    
+    currently_rendered_window = this;
     _view->render();
-    render_overlay_menus();
+    if(full_repaint)
+        render_overlay_menus();
+    currently_rendered_window = nullptr;
 }
 
 
@@ -106,6 +109,8 @@ void Window::showOverlayMenu(int x, int y, Menu* menu)
     
     menu->setPosition(x, y);
     _overlay_menus.push_back(menu);
+    
+    doFullRepaint();
 }
 
     
@@ -121,6 +126,7 @@ void Window::closeOverlayMenu(Menu* menu)
 void Window::closeAllOverlayMenus()
 {
     _overlay_menus.clear();
+    doFullRepaint();
 }
 
 
@@ -209,6 +215,8 @@ void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int
  
     mouse_is_hovering_menu = false;
     
+    static HoverableWidget* prev_hovered_widget = nullptr;
+    
     if(!_overlay_menus.empty())
     {
         Widget* menu = overlay_menu_at(x, y);
@@ -239,7 +247,18 @@ void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int
     
 _exit:
     if(event.hovered_widget == nullptr)
+    {
         HoverableWidget::reset();
+        if(prev_hovered_widget != nullptr)
+        {
+            auto view = event.view();
+            if(view)
+                view->getRepainted();
+        }
+    }
+ 
+    
+    prev_hovered_widget = event.hovered_widget;
 }
 
 
@@ -334,6 +353,9 @@ void Window::mainSequence()
         
         w->update();
         w->render();
+        
+        if(w->full_repaint)
+            w->full_repaint = false;
     }
 }
 

@@ -236,43 +236,50 @@ void View::resize(int left, int top, int right, int bottom)
     assert(_rect.height() >= 0);
 #endif//DEBUG
     _scale_center = Point<float>(left + width()*0.5, bottom + height()*0.5);
+    
+    getRepainted();
 }
     
     
 void View::render()
 {    
+    if(needs_repainting || Window::currentlyRenderedWindow()->fullRepaint())
+    {
 #ifdef DEBUG
-    MAKE_SURE_WE_HAVE_A_SCENE
-    if(width() < 0)
-    {
-        cout << "View::render: width == " << width() << "\n";
-    }
-    
-    if(height() < 0)
-    {
-        cout << "View::render: height == " << height() << "\n";
-    }
+        MAKE_SURE_WE_HAVE_A_SCENE
+        if(width() < 0)
+        {
+            cout << "View::render: width == " << width() << "\n";
+        }
+        
+        if(height() < 0)
+        {
+            cout << "View::render: height == " << height() << "\n";
+        }
 #endif//DEBUG
 
-    _currently_rendered = this;
-    
-    gl::Scissor(x(), y(), width(), height());
-    
-    gl::Enable(GL_SCISSOR_TEST);
-    
-    auto p = *current_2d_projection;
-    
-    current_2d_projection->translate(x(), y());
+        _currently_rendered = this;
+        
+        gl::Scissor(x(), y(), width(), height());
+        
+        gl::Enable(GL_SCISSOR_TEST);
+        
+        auto p = *current_2d_projection;
+        
+        current_2d_projection->translate(x(), y());
 
-    current_2d_projection->scale(scaleFactor(), scaleFactor());
-    
-    current_2d_projection->translate(_offset.x, _offset.y);
-    
-    _scene->render();
-    
-    *current_2d_projection = p;
-    
-    gl::Disable(GL_SCISSOR_TEST);
+        current_2d_projection->scale(scaleFactor(), scaleFactor());
+        
+        current_2d_projection->translate(_offset.x, _offset.y);
+        
+        _scene->render();
+        
+        *current_2d_projection = p;
+        
+        gl::Disable(GL_SCISSOR_TEST);
+        
+        needs_repainting = false;
+    }
 }
 
 
@@ -348,6 +355,8 @@ void View::mouseWheelEvent(MouseEvent* event)
         }
         
         event->has_been_handled = true;
+        
+        getRepainted();
     }
 }
 

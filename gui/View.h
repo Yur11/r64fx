@@ -5,6 +5,7 @@
 #include "Menu.h"
 #include "MouseEvent.h"
 #include "Projection2D.h"
+#include "Repaintable.h"
 
 
 namespace r64fx{
@@ -67,7 +68,7 @@ public:
 
     
 /** @brief A view that can render a scene with a given projection. */
-class View : public SplittableView{
+class View : public SplittableView, public Repaintable{
     friend class Window;
     Scene* _scene = nullptr;
     float _scale_factor = 1.0;
@@ -77,11 +78,11 @@ class View : public SplittableView{
     Menu* _context_menu;
     
     void transform_event(Event* event);
-    
+        
     static View* _active_view;
     
     static View* _currently_rendered;
-            
+                
 public:
     static VerticalSplitView* splitViewVertically(View* view);
     
@@ -134,7 +135,7 @@ public:
     inline float scaleFactor() const { return _scale_factor; }
       
     virtual void render();
-    
+        
     virtual void mousePressEvent(MouseEvent* event);
     
     virtual void mouseReleaseEvent(MouseEvent* event);

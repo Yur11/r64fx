@@ -53,7 +53,7 @@ void ActionWidget::update()
     setWidth(paddingLeft() + font->lineAdvance(action->caption) + new_height + 10 + paddingRight());
     setHeight(paddingTop() + new_height + paddingBottom());
     
-    if(action && icon.texture == nullptr)
+    if(showing_icon && action && icon.texture == nullptr)
     {
         auto tex = Texture::find(action->name);
         if(tex)
@@ -73,6 +73,14 @@ void ActionWidget::mousePressEvent(MouseEvent* event)
         action->trigger();
     
     event->originWindow()->closeAllOverlayMenus();
+}
+
+
+void ActionWidget::mouseEnterEvent(MouseEvent* event)
+{
+    auto view = event->view();
+    if(view)
+     view->getRepainted();
 }
     
 }//namespace r64fx

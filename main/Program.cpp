@@ -146,6 +146,7 @@ void Program::mainThread()
     
     Painter::enable();
     
+    
     while(Window::count() > 0)
     {               
         Window::mainSequence();

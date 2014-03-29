@@ -29,6 +29,8 @@ struct ActionWidget : public HoverableWidget, public Padding{
     inline void trigger() { action->trigger(); }
     
     virtual void mousePressEvent(MouseEvent* event);
+    
+    virtual void mouseEnterEvent(MouseEvent* event);
 };
     
     

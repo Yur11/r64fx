@@ -8,7 +8,7 @@ namespace r64fx{
 InformationScene::InformationScene()
 {
     scale_step = 1.0;
-    scroll_x_step = 0.0;
+    scroll_x_step = 5.0;
     scroll_y_step = 0.0;
     
     panel = new Panel;
@@ -38,6 +38,7 @@ InformationScene::Panel::Panel()
 void InformationScene::Panel::update()
 {
     HorizontalContainer::update();
+    setWidth(1000);
     
     float data[8] = {
         0.0, 0.0,
