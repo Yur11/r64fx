@@ -7,11 +7,9 @@ using namespace r64fx;
 
 typedef long int (*Fun)(void);
 
-float a[8] = {1.0, 21.1234, 3.0, 4.0, 5.0, 6.1, 7.0, 8.0};
-float b[4] = {1.1, 2.2, 3.3, 4.4};
-float c[4] = {0.0, 0.0, 0.0, 0.0};
+int a[4] = { 0, 0, 0, 0 };
+int b[8] = { 1, 2, 3, 4, -4, -3, 1, -1 };
 
-int d[4] = { -1, -1, -133, -1 };
 
 template<typename T>
 void dump(T* p)
@@ -26,10 +24,14 @@ int main()
     CodeBuffer cb;
     Assembler as(cb);
 
-    
-    as.mov(rax, Imm64(d));
-    as.cvtdq2ps(xmm0, Base(rax));
-    as.movaps(Mem128(b), xmm0);
+    as.movaps(xmm0, Mem128(a));
+    as.mov(rbx, Imm64(b));
+    as.mov(rcx, Imm64(101010101));
+    auto loop = Mem8(as.ip());
+        as.psubd(xmm0, Base(rbx), Disp8(4*sizeof(int)));
+        as.sub(rcx, 1);
+        as.jnz(loop);
+    as.movaps(Mem128(a), xmm0);
     
     as.ret();
     
@@ -37,8 +39,6 @@ int main()
     
     dump(a);
     dump(b);
-    dump(c);
-    dump(d);
     
     cout << "---------\n";
     
@@ -46,8 +46,6 @@ int main()
     
     dump(a);
     dump(b);
-    dump(c);
-    dump(d);
     
     return 0;
 }

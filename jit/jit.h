@@ -737,6 +737,14 @@ public:
     void cvtdq2ps(Xmm dst, Xmm src);
     void cvtdq2ps(Xmm reg, Mem128 mem);
     void cvtdq2ps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+    
+    void paddd(Xmm dst, Xmm src);
+    void paddd(Xmm reg, Mem128 mem);
+    void paddd(Xmm reg, Base base, Disp8 disp = Disp8(0));
+    
+    void psubd(Xmm dst, Xmm src);
+    void psubd(Xmm reg, Mem128 mem);
+    void psubd(Xmm reg, Base base, Disp8 disp = Disp8(0));
 
 };//Assembler
 

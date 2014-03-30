@@ -821,7 +821,6 @@ ENCODE_SSE_PS_INSTRUCTION(orps,    0x56)
 ENCODE_SSE_PS_INSTRUCTION(xorps,   0x57)
 
 
-
 #ifdef DEBUG
 const char* CmpCode::names[] = {
     "eq", "lt", "le", "unord", "neq", "nlt", "nle", "ord"
@@ -1233,7 +1232,7 @@ void Assembler::cvtps2dq(Xmm reg, Base base, Disp8 disp)
 
 void Assembler::cvtdq2ps(Xmm dst, Xmm src)
 {
-    #ifdef DEBUG
+#ifdef DEBUG
     dump << (void*)ip() << "    cvtdq2ps " << dst.name() << ", " << src.name() << "\n";
 #endif//DEBUG
     
@@ -1266,6 +1265,96 @@ void Assembler::cvtdq2ps(Xmm reg, Base base, Disp8 disp)
     if(reg.prefix_bit() || base.reg.prefix_bit()) 
         bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
     bytes << 0x0F << 0x5B;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+}
+
+
+void Assembler::paddd(Xmm dst, Xmm src)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    paddd " << dst.name() << ", " << src.name() << "\n";
+#endif//DEBUG
+    
+    bytes << 0x66;
+    if(dst.prefix_bit() || src.prefix_bit())
+        bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x0F << 0xFE;
+    bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::paddd(Xmm reg, Mem128 mem)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    paddd " << reg.name() << ", [" << (void*)mem.addr << "], "; 
+#endif//DEBUG
+    
+    bytes << 0x66;
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0xFE;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::paddd(Xmm reg, Base base, Disp8 disp)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    paddd " << reg.name() << ", [" << base.reg.name() << " + " << (unsigned int) disp.byte << "], "; 
+#endif//DEBUG
+    
+    bytes << 0x66;
+    if(reg.prefix_bit() || base.reg.prefix_bit()) 
+        bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0xFE;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(bytes, reg, base, disp);
+}
+
+
+void Assembler::psubd(Xmm dst, Xmm src)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    psubd " << dst.name() << ", " << src.name() << "\n";
+#endif//DEBUG
+    
+    bytes << 0x66;
+    if(dst.prefix_bit() || src.prefix_bit())
+        bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    bytes << 0x0F << 0xFA;
+    bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::psubd(Xmm reg, Mem128 mem)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    psubd " << reg.name() << ", [" << (void*)mem.addr << "], "; 
+#endif//DEBUG
+    
+    bytes << 0x66;
+    if(reg.prefix_bit()) bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    bytes << 0x0F << 0xFA;
+    bytes << ModRM(b00, reg.code(), b101);
+    bytes << Rip32(mem.addr, bytes.codeEnd() + 4);
+}
+
+
+void Assembler::psubd(Xmm reg, Base base, Disp8 disp)
+{
+#ifdef DEBUG
+    dump << (void*)ip() << "    psubd " << reg.name() << ", [" << base.reg.name() << " + " << (unsigned int) disp.byte << "], "; 
+#endif//DEBUG
+    
+    bytes << 0x66;
+    if(reg.prefix_bit() || base.reg.prefix_bit()) 
+        bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    bytes << 0x0F << 0xFA;
     if(disp.byte == 0)
         encode_modrm_and_sib_base(bytes, reg, base);
     else
