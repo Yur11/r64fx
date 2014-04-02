@@ -26,7 +26,7 @@ class Imm8{
     unsigned char byte;
     
 public:
-    explicit Imm8(unsigned char byte)
+    Imm8(unsigned char byte)
     {
         this->byte = byte;
     }
@@ -295,7 +295,7 @@ const Ymm
 struct Mem8{
     long int addr;
     
-    explicit Mem8(void* addr)
+    Mem8(void* addr)
     {
         this->addr = (long int) addr;
     }
@@ -304,7 +304,7 @@ struct Mem8{
 struct Mem16{
     long int addr;
     
-    explicit Mem16(void* addr)
+    Mem16(void* addr)
     {
 #ifdef DEBUG
         assert((long int)addr % 2 == 0);
@@ -316,7 +316,7 @@ struct Mem16{
 struct Mem32{
     long int addr;
     
-    explicit Mem32(void* addr)
+    Mem32(void* addr)
     {
 #ifdef DEBUG
         assert((long int)addr % 4 == 0);
@@ -328,7 +328,7 @@ struct Mem32{
 struct Mem64{
     long int addr;
     
-    explicit Mem64(void* addr)
+    Mem64(void* addr)
     {
 #ifdef DEBUG
         assert((long int)addr % 8 == 0);
@@ -340,7 +340,7 @@ struct Mem64{
 struct Mem128{
     long int addr;
     
-    explicit Mem128(void* addr)
+    Mem128(void* addr)
     {
 #ifdef DEBUG
         assert((long int)addr % 16 == 0);
@@ -352,7 +352,7 @@ struct Mem128{
 struct Mem256{
     long int addr;
     
-    explicit Mem256(void* addr)
+    Mem256(void* addr)
     {
 #ifdef DEBUG
         assert((long int)addr % 32 == 0);
