@@ -27,8 +27,6 @@ class Font{
         
         float width;
         float height;
-        float width_coeff; //Used to correct the right tex coord in,
-                           //in case the texture image got padded to be a multipe of 4.
         
         float bearing_x;
         float bearing_y;

@@ -36,8 +36,6 @@ void Font::Glyph::render(float x, float y)
     
     p->bindBuffer();
     p->setPositions(pos, 8);
-    p->setTexCoords(&width_coeff, 1, 2);
-    p->setTexCoords(&width_coeff, 1, 6);
     p->unbindBuffer();
     
     Painter::setTexture(tex);
@@ -97,15 +95,16 @@ Font::Glyph* Font::fetchGlyph(std::string utf8_char)
     
     if(w > 0)
     {
+        /* Width has to be divisible by 4. */
         if(w % 4)
         {
             auto diff = 4 - (w % 4);
             w+=diff;
             
             int nbytes = w*h;
-    #ifdef DEBUG
+#ifdef DEBUG
             assert(nbytes <= (int)tmp_buffer_size);
-    #endif//DEBUG
+#endif//DEBUG
 
             for(int y=0; y<bitmap.rows; y++)
             {
@@ -127,16 +126,10 @@ Font::Glyph* Font::fetchGlyph(std::string utf8_char)
         GLuint tex;
         gl::GenTextures(1, &tex);
         gl::BindTexture(GL_TEXTURE_2D, tex);
-        gl::TexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-//         glTexStorage2D(GL_TEXTURE_2D, 4, GL_R8, w, h);
-//         CHECK_FOR_GL_ERRORS;
-//         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RED, GL_UNSIGNED_BYTE, data);
-//         CHECK_FOR_GL_ERRORS;
-        
+        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, data);
         
         g->tex = tex;
@@ -146,9 +139,8 @@ Font::Glyph* Font::fetchGlyph(std::string utf8_char)
         g->tex = 0;
     }
     
-    g->width = bitmap.width;
+    g->width = w;
     g->height = h;
-    g->width_coeff = float(bitmap.width) / float(w);
     
     g->bearing_x = float(_ft_face->glyph->metrics.horiBearingX) / 64.0;
     g->bearing_y = float(_ft_face->glyph->metrics.horiBearingY) / 64.0;
@@ -200,7 +192,8 @@ Font::Font(std::string file_path, int size)
         return;
     }
     
-    if(FT_Set_Pixel_Sizes(_ft_face, 0, size) != 0)
+    if(FT_Set_Char_Size(_ft_face, 0, size * 64, 96, 96) != 0)
+//     if(FT_Set_Pixel_Sizes(_ft_face, 0, size) != 0)
     {
         cerr << "Failed to set font size to " << size << " pixels!\n";
         return;
@@ -238,6 +231,9 @@ void Font::render(std::string utf8_text)
 #ifdef DEBUG
         assert(glyph != nullptr);
 #endif//DEBUG
+    
+        if(_pen_x == 0)
+            _pen_x += glyph->bearing_x;
         
         if(_has_kerning && i > 0)
         {
@@ -248,7 +244,7 @@ void Font::render(std::string utf8_text)
     
         if(glyph->tex != 0)
         {
-            glyph->render(_pen_x, _pen_y);
+            glyph->render(_pen_x + glyph->bearing_x, _pen_y - 0.5);
         }
 
         _pen_x += glyph->advance;

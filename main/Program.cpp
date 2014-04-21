@@ -70,7 +70,7 @@ bool Program::initGui()
 
     Font::init();
     
-    auto font = new Font( _data_prefix + "fonts/FreeSans.ttf", 14);
+    auto font = new Font( _data_prefix + "fonts/FreeSans.ttf", 10);
     if(!font->isOk())
     {
         delete font;
