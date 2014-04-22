@@ -10,7 +10,7 @@ ShadingProgram   Painter::sp;
 GLint            Painter::position_attr;
 GLint            Painter::tex_coord_attr;
 
-GLint            Painter::sxsytxty_uniform; //Projection2D
+GLint            Painter::sxsytxty_uniform;
 GLint            Painter::color_uniform;
 GLint            Painter::sampler_uniform;
 GLint            Painter::texturing_mode_uniform;
@@ -85,8 +85,8 @@ bool Painter::init()
     gl::BindTexture(GL_TEXTURE_2D, plain_tex);
     gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    gl::TexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
     gl::TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, plain_tex_data);
+    gl::GenerateMipmap(GL_TEXTURE_2D);
     gl::BindTexture(GL_TEXTURE_2D, 0);
     
     return true;

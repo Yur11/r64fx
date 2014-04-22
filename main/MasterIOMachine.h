@@ -10,7 +10,7 @@ class MasterIOMachine : public Machine{
     std::vector<float*> master_output_buffers;
     
 public:
-    MasterIOMachine(FrontMachineScene* fms, BackMachineScene* bms);
+    MasterIOMachine(/*FrontMachineScene* fms, BackMachineScene* bms*/);
     
     
 };

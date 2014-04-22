@@ -28,7 +28,7 @@ void Icon::render()
         p->setPositions(pos, 6, 2);
         p->unbindBuffer();
         
-        Painter::useCurrent2dProjection();
+//         Painter::useCurrent2dProjection();
         Painter::setColor(color);
         Painter::setTexture(texture->glName());
         

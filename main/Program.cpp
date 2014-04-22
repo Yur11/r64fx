@@ -4,6 +4,9 @@
 #include "DenseWaveformPainter.h"
 
 #include "gui/Dummy.h"
+#include "gui/Keyboard.h"
+#include "gui/Font.h"
+#include "gui/Icon.h"
 
 #include <iostream>
 #include <unistd.h>
@@ -52,7 +55,7 @@ bool Program::initGui()
     if(!Window::initGlew())
         return false;
     
-    SplitView::init();
+//     SplitView::init();
     
     Mouse::init();
     
@@ -88,7 +91,7 @@ bool Program::initGui()
     
     initActions();
     
-    Dummy* dummy = new Dummy(100.0, 100.0);
+    Dummy* dummy = new Dummy(10.0, 10.0);
     
     window->setRootWidget(dummy);
 
@@ -150,11 +153,14 @@ void Program::mainThread()
     if(_status != 0)
         return;
 
-    gl::Enable(GL_SCISSOR_TEST);
-    gl::Enable(GL_BLEND);
-    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//     gl::Enable(GL_SCISSOR_TEST);
+//     gl::Enable(GL_BLEND);
+//     gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    glClearColor(0.78, 0.78, 0.78, 1.0);
     
     Painter::enable();
+    Painter::setTexturingMode(Painter::RGBA);
     
     while(Window::count() > 0)
     {               
@@ -268,35 +274,35 @@ void Program::initActions()
         }
     );
     
-    _split_view_vert_act = new Action(
-        "split_vertically",
-        tr("split_vertically"),
-        [](void*) -> void*
-        {
-            View::splitViewVertically(View::activeView());
-            return nullptr;
-        }
-    );
-    
-    _split_view_hor_act = new Action(
-        "split_horizontally",
-        tr("split_horizontally"),
-        [](void*) -> void*
-        {
-            View::splitViewHorizontally(View::activeView());
-            return nullptr;
-        }
-    );
-    
-    _close_view_act = new Action(
-        "close_view",
-        tr("close_view"),
-        [](void*) -> void*
-        {
-            View::closeView(View::activeView());
-            return nullptr;
-        }
-    );
+//     _split_view_vert_act = new Action(
+//         "split_vertically",
+//         tr("split_vertically"),
+//         [](void*) -> void*
+//         {
+//             View::splitViewVertically(View::activeView());
+//             return nullptr;
+//         }
+//     );
+//     
+//     _split_view_hor_act = new Action(
+//         "split_horizontally",
+//         tr("split_horizontally"),
+//         [](void*) -> void*
+//         {
+//             View::splitViewHorizontally(View::activeView());
+//             return nullptr;
+//         }
+//     );
+//     
+//     _close_view_act = new Action(
+//         "close_view",
+//         tr("close_view"),
+//         [](void*) -> void*
+//         {
+//             View::closeView(View::activeView());
+//             return nullptr;
+//         }
+//     );
 }
 
 

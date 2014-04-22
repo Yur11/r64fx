@@ -84,10 +84,8 @@ public:
     inline static void setTexturingMode(unsigned int mode) { gl::Uniform1i(texturing_mode_uniform, mode); current_texturing_mode = mode; }
     
     inline static int currentTexturingMode() { return current_texturing_mode; }
-    
-    inline static void useCurrent2dProjection() { gl::Uniform4fv(sxsytxty_uniform, 1, current_2d_projection->vec); }
-    
-    inline static void setProjection(Projection2D projection) { gl::Uniform4fv(sxsytxty_uniform, 1, projection.vec); }
+        
+    inline static void setProjection(float sxsytxty[4]) { gl::Uniform4fv(sxsytxty_uniform, 1, sxsytxty); }
     
     inline static void setColor(Color color) { gl::Uniform4fv(color_uniform, 1, color.vec); }
     

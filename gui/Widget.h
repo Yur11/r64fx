@@ -8,54 +8,26 @@
 #include "RenderingContext.h"
 #include "Projection2D.h"
 #include "events.h"
-#include "Color.h"
-#include "Message.h"
-#include "gc.h"
+#include "IteratorPair.h"
 
 
 namespace r64fx{
     
 class MouseEvent;
 class KeyEvent;
-class Scene;
 class Window;
 
-
-/** @brief Base class for UI widgets. 
- 
-    Widgets are used to construct the user interface of a program.
-    They form a parent/child relations with each other, as well as
-    with the Scene instances.
-    
-    Each widget has a position value that is set in the coordinte system
-    of it's parent, which is either another widget or a Scene.
-    The (0, 0) point is in the lower left corner.
-    
-    Each widget has a bunch of event handlers for rendering and also mouse and keyboard input.
-    Reimplement these as needed.
- */
 class Widget{
     friend class Scene;
     Point<float> _position;
     Size<float> _size;
+    
+    Point<float> projected_position; //In window coordinates.
 
     Widget* _parent = nullptr;
-    
-    /** Pointer to the scene that this widget belongs to. 
-        Some widgets may have this value be null.
-        However the root widget should have this pointer set to a valid address.
-        This way we can "climb" up the widget tree to the root
-        and obtain the scene pointer from there, without having to update this value for every child widget.
-    */
-    Scene* _scene = nullptr;
-    
+        
     Window* _window;
     
-protected:
-    void render_children();
-    
-    void render_bounding_rect();
-
     std::vector<Widget*> _children;
     
 public:
@@ -64,6 +36,8 @@ public:
     virtual ~Widget(){}
     
     template<typename T> T to() { return (T) this; }
+    
+    typedef std::vector<Widget*>::iterator Iterator;
     
     /** @brief Set a new parent for the widget. 
      
@@ -89,6 +63,10 @@ public:
     
     /** @brief Remove all child widgets from this widget. */
     void clear();
+    
+    virtual IteratorPair<Widget::Iterator> allChildren();
+    
+    virtual IteratorPair<Widget::Iterator> visibleChildren();
     
     /** @brief Set a new position for the widget. 
      
@@ -124,6 +102,8 @@ public:
     /** @brief The y coordinte of the bottom edge of the bounding rect. */
     inline float y() const { return _position.y; }
     
+    inline Point<float> projectedPosition() const { return projected_position; }
+    
     /** @brief Resize the bounding rect of the widget. */
     inline void resize(Size<float> s) { _size = s; }
     
@@ -149,13 +129,20 @@ public:
     inline float height() const { return _size.h; }
     
     /** @brief Widgets bounding rect. */
-    inline Rect<float> rect() const { return Rect<float>(position(), size()); }
+    inline Rect<float> boundingRect() const { return Rect<float>(position(), size()); }
+    
+    inline Rect<float> projectedRect() const { return Rect<float>(projectedPosition(), size()); }
     
     /** @brief Draw the widget. 
      
         This method should be implemented by subclasses to do their rendering.
     */
     virtual void render();
+    
+    /** @brief Recursivly calculate window coordinates for the widget tree. */
+    virtual void project(Point<float> offset);
+    
+    inline void project() { project(this->position()); }
 
     /** @brief Tell the widget to use the newly added information. */
     virtual void update();
@@ -228,7 +215,7 @@ public:
     Widget* root(); 
     
     /** @brief Find a Scene instance that this widget belongs to. */
-    inline Scene* scene() { return root()->_scene; }
+//     inline Scene* scene() { return root()->_scene; }
 
     /** @brief Set the mouse grabber to be a widget or nullptr. */
     static void setMouseGrabber(Widget* widget);

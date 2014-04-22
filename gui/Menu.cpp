@@ -46,7 +46,7 @@ void Menu::update()
 {
     VerticalContainer::update();
     
-    const auto &r = rect();
+    const auto &r = boundingRect();
         
     float pos[8] = {
         0.0, 0.0,
@@ -63,15 +63,13 @@ void Menu::update()
 
 void Menu::render()
 {        
-    Painter::useCurrent2dProjection();
+//     Painter::useCurrent2dProjection();
     Painter::useNoTexture();
     Painter::setColor(0.0, 0.0, 0.0, 1.0);
     
     p.bindArray();
     p.render(GL_TRIANGLE_STRIP);
-    p.unbindArray();
-        
-    render_children();
+    p.unbindArray();        
 }
 
     

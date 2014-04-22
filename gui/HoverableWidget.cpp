@@ -1,6 +1,7 @@
 #include "HoverableWidget.h"
-#include "View.h"
+// #include "View.h"
 #include "Window.h"
+#include "MouseEvent.h"
 
 using namespace std;
 
@@ -12,10 +13,10 @@ View* HoverableWidget::_hover_view = nullptr;
 
 bool HoverableWidget::shouldBeRenderedAsHovered()
 { 
-    return isHovered() && (
-        _hover_view == View::currentlyRendered() || 
-        Window::mouseIsHoveringMenu() //In case a menu is open.
-    ); 
+//     return isHovered() && (
+//         _hover_view == View::currentlyRendered() || 
+//         Window::mouseIsHoveringMenu() //In case a menu is open.
+//     ); 
 }
 
 

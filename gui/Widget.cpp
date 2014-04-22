@@ -61,31 +61,33 @@ void Widget::clear()
     while(!_children.empty())
         _children[_children.size() - 1]->setParent(nullptr);
 }
-    
- 
-void Widget::render_children()
+
+
+IteratorPair<Widget::Iterator> Widget::allChildren()
 {
-    for(auto &child : _children)
-    {
-        auto p = *current_2d_projection;
-        
-        current_2d_projection->translate(child->x(), child->y());
-        
-        child->render();
-        
-        *current_2d_projection = p;
-    }
+    return {_children.begin(), _children.end()};
+}    
+
+
+IteratorPair<Widget::Iterator> Widget::visibleChildren()
+{
+    return allChildren();
 }
     
-    
-void Widget::render_bounding_rect()
-{
-}
+
     
     
 void Widget::render()
 {
-    render_children();
+}
+
+
+void Widget::project(Point<float> offset)
+{
+    for(auto ch : _children)
+    {
+        ch->project( offset + ch->position() );
+    }
 }
 
 
@@ -159,7 +161,7 @@ Widget* Widget::childAt(float x, float y)
     for(int i=0; i<(int)childrenCount(); i++)
     {
         auto ch = child(i);
-        auto r = ch->rect();
+        auto r = ch->boundingRect();
         if(r.overlaps(x, y))
         {
             return ch;

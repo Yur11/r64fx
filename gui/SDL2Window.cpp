@@ -7,7 +7,7 @@
 #include <assert.h>
 #endif//DEBUG
 
-#include "View.h"
+#include "Mouse.h"
 
 using namespace std;
 
@@ -60,6 +60,7 @@ SDL2Window* SDL2Window::create(int width, int height, const char* title)
     else 
     {
         auto window = new SDL2Window(id, width, height, title);
+        window->initResizeEvent(width, height);
         return window;
     }
 }

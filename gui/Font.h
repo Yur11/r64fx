@@ -63,7 +63,7 @@ public:
     
     inline static void disable() { Painter::setTexturingMode(Painter::RGBA); }
     
-    inline static void useCurrent2dProjection() { Painter::useCurrent2dProjection(); }
+//     inline static void useCurrent2dProjection() { Painter::useCurrent2dProjection(); }
         
     inline static void setColor(Color color) { Painter::setColor(color); }
     

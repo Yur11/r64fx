@@ -1,55 +1,35 @@
 #ifndef R64FX_GUI_WINDOW_H
 #define R64FX_GUI_WINDOW_H
 
-#include "View.h"
-#include "Menu.h"
-#include "Event.h"
+#include <string>
+#include "geometry.h"
+#include "RenderingContext.h"
 #include "CallbackList.h"
 
 namespace r64fx{
+
+class Widget;
     
 /** @brief Base class for window implementations. */
 class Window : public RenderingContext{
     typedef void(*VoidFun)(void);
     
     static VoidFun event_callback;
-    
-    SplittableView* _view = nullptr;
-    
-    Widget* root_widget = nullptr;
-    
-    std::vector<Widget*> _overlay_menus;
-    
-    Widget* overlay_menu_at(int x, int y);
-    
-    bool viewport_update_needed = false;
-    int new_w;
-    int new_h;
-    
-    bool full_repaint = false;    
-    
-    static bool mouse_is_hovering_menu;
-        
+
     static Window* currently_rendered_window;
     
-    void update_viewport();
+    Widget* root_widget = nullptr;
+            
+    int w;
+    int h;
     
-    void update_projection();
-    
+    void updateGeometry();
+        
     CallbackList one_shot_list;
         
 protected:
     inline static void setEventCallback(VoidFun fun) { event_callback = fun; }
-    
-    void render_overlay_menus();
-        
-    inline void request_viewport_update(int w, int h) 
-    { 
-        viewport_update_needed = true;
-        new_w = w;
-        new_h = h;
-    }
-    
+                
 public:
     Window(RenderingContextId_t id);
     
@@ -57,31 +37,14 @@ public:
     
     virtual void render();
         
-    void setView(SplittableView* view);
-    inline SplittableView* view() const { return _view; }
-    
     inline void setRootWidget(Widget* widget) { root_widget = widget; }
     inline Widget* rootWidget() const { return root_widget; }
     
     virtual Size<int> size() = 0;
-    
-    virtual void updateGeometry() = 0;
-    
+        
     inline int width() { return size().w; }
     
     inline int height() { return size().h; }
-
-    inline bool fullRepaint() const { return full_repaint; }
-    
-    inline void doFullRepaint() { full_repaint = true; }
-    
-    void showOverlayMenu(int x, int y, Menu* menu);
-    
-    void closeOverlayMenu(Menu* menu);
-    
-    void closeAllOverlayMenus();
-    
-    inline static bool mouseIsHoveringMenu() { return  mouse_is_hovering_menu; }
 
     static std::vector<Window*> allInstances();
         
@@ -117,7 +80,7 @@ public:
     
     void initKeyReleaseEvent(int x, int y, unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers);
     
-    void initTextInputEvent(Utf8String text);
+    void initTextInputEvent(std::string text);
     
     void initResizeEvent(int w, int h);
         

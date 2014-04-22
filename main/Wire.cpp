@@ -361,7 +361,7 @@ void Wire::render()
     
     shading_program.use();
     
-    gl::Uniform4fv(scale_and_offset_uniform, 1, current_2d_projection->vec);
+//     gl::Uniform4fv(scale_and_offset_uniform, 1, current_2d_projection->vec);
     gl::Uniform4fv(color_uniform, 1, color.vec);
     gl::Uniform1i(sampler_uniform, 0);
 

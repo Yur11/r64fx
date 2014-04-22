@@ -59,7 +59,7 @@ void BasicKnob::mouseMoveEvent(MouseEvent* event)
             angle = max_angle;
 
         update();
-        value_changed.send(this);
+//         value_changed.send(this);
         
         event->has_been_handled = true;
     }
@@ -148,7 +148,7 @@ void ShinyKnob::render()
     gl::Enable(GL_BLEND);
     gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    Painter::useCurrent2dProjection();
+//     Painter::useCurrent2dProjection();
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
     
     p.bindArray();

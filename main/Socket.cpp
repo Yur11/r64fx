@@ -36,7 +36,7 @@ void Socket::render()
     
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
     Painter::setTexture(Socket::texture->glName());
-    Painter::useCurrent2dProjection();
+//     Painter::useCurrent2dProjection();
     
     p.bindArray();
     p.render(GL_TRIANGLE_STRIP);
@@ -73,7 +73,7 @@ void Socket::update()
 
 void Socket::mousePressEvent(MouseEvent* event)
 {
-    clicked(this);
+//     clicked(this);
 }
 
 

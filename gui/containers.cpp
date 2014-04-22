@@ -13,7 +13,7 @@ void HorizontalContainer::update()
     float chy = paddingTop();
     float new_width = 0.0;
     float new_height = 0.0;
-    for(auto ch : _children)
+    for(auto ch : allChildren())
     {
         ch->setX(chx);
         ch->setY(chy);
@@ -37,7 +37,7 @@ void VerticalContainer::update()
     float chy = paddingBottom();
     float new_width = 0.0;
     float new_height = 0.0;
-    for(auto it=_children.rbegin(); it != _children.rend(); it++)
+    for(auto it=allChildren().begin(); it != allChildren().end(); it++)
     {
         auto ch = *it;
         

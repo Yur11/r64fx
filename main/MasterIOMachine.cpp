@@ -2,8 +2,7 @@
 
 namespace r64fx{
     
-MasterIOMachine::MasterIOMachine(FrontMachineScene* fms, BackMachineScene* bms)
-: Machine(fms, bms)
+MasterIOMachine::MasterIOMachine(/*FrontMachineScene* fms, BackMachineScene* bms*/)
 {
     
 }

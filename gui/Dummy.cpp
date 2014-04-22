@@ -11,10 +11,6 @@ using namespace std;
 
 namespace r64fx{
     
-/** Removeme */
-extern Font* debug_font;
-
-
 void* on_menu_click(void* source, void* data)
 {
     auto act = (Action*) source;
@@ -30,66 +26,46 @@ Menu* _debug_menu = nullptr;
 Dummy::Dummy(float width, float height, Widget* parent) 
 : Widget(parent) 
 , p(4)
-{ 
-    resize(width, height);
-    
-    const auto &r = rect();
-    
-    float data[16] = {
-        r.left, r.bottom,
-        r.right, r.bottom,
-        r.left, r.top,
-        r.right, r.top,
+{
+    float tex_coords[8] = {
         0.0, 0.0,
         1.0, 0.0,
         0.0, 1.0,
-        1.0, 1.0,
+        1.0, 1.0
     };
     
     p.bindBuffer();
-    p.setData(data);
+    p.setTexCoords(tex_coords, 8);
     p.unbindBuffer();
 }
 
 
 void Dummy::render()
-{  
-    static float angle = 0.0;
+{      
+    auto r = boundingRect();
     
-//     Painter::enable();
-    Painter::useCurrent2dProjection();
-    Painter::setColor(0.0, 1.0, 0.0, 0.5);
+    float pos[8] = {
+        r.left,   r.bottom,
+        r.right,  r.bottom,
+        r.left,   r.top,
+        r.right,  r.top
+    };
+            
+    p.bindBuffer();
+    p.setPositions(pos, 8);
+    p.unbindBuffer();
+            
+    Painter::setColor(1.0, 0.0, 0.0, 1.0);
     Painter::useNoTexture();
     
-    float pos[2] = { float(width() + 10.0 * cos(angle)), float(height() + 10.0 * sin(angle)) };
-    p.bindBuffer();
-    p.setPositions(pos, 2, 6);
-    p.unbindBuffer();
-    
     p.bindArray();
-    p.render(GL_TRIANGLE_STRIP);
+    p.render(GL_LINE_STRIP, 4);
     p.unbindArray();
-    
-//     Painter::disable();
-    
-    angle += 0.1;
-    if(angle >= M_PI*2.0) 
-        angle = 0.0;
 }
 
 
 void Dummy::mousePressEvent(MouseEvent* event)
-{
-    if(event->buttons() & Mouse::Button::Right)
-    {
-        event->originWindow()->showOverlayMenu(event->original_x(), event->original_y(), _debug_menu);
-    }
-    else
-    {
-        auto p = toSceneCoords(event->position());
-        cout << "dummy: " << event->x() << ", " << event->y() << " [" << p.x << ", " << p.y << "]\n";
-    }
-    
+{    
     event->has_been_handled = true;
 }
 
@@ -102,7 +78,6 @@ void Dummy::mouseMoveEvent(MouseEvent* event)
 
 void Dummy::keyPressEvent(KeyEvent* event)
 {
-//     cout << "key: " << (int)event->ch() << "\n";
 }
 
 

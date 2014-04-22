@@ -63,7 +63,7 @@ void MachineWidget::render()
 //     Painter::enable();
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
     Painter::setTexture(surface_texture->glName());
-    Painter::useCurrent2dProjection();
+//     Painter::useCurrent2dProjection();
     
     p.bindArray();
     p.render(GL_TRIANGLE_STRIP);
@@ -81,7 +81,7 @@ void MachineWidget::mousePressEvent(MouseEvent* event)
     if(!event->has_been_handled && event->buttons() & Mouse::Button::Left)
     {
         about_to_be_dragged = true;
-        clicked.send(this);
+//         clicked.send(this);
         event->has_been_handled = true;
     }
 }
@@ -106,7 +106,7 @@ void MachineWidget::mouseMoveEvent(MouseEvent* event)
     {
         about_to_be_dragged = false;
         drag_start_mouse_position = event->position();
-        dragged.send(this);
+//         dragged.send(this);
         event->has_been_handled = true;
     }
 }

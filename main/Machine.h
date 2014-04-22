@@ -1,26 +1,27 @@
 #ifndef R64FX_MACHINE_H
 #define R64FX_MACHINE_H
 
-#include "MachineScene.h"
+#include "MachineWidget.h"
+#include "Socket.h"
 #include "dsp/Graph.h"
 
 namespace r64fx{
     
 class Machine{
-    FrontMachineScene* _fms;
-    BackMachineScene* _bms;
+//     FrontMachineScene* _fms;
+//     BackMachineScene* _bms;
     
     MachineWidget* _front;
     MachineWidget* _back;
         
 public:
-    Machine(FrontMachineScene* fms, BackMachineScene* bms);
+    Machine(/*FrontMachineScene* fms, BackMachineScene* bms*/);
 
     virtual ~Machine();
     
-    inline FrontMachineScene* frontScene() const { return _fms; }
-    
-    inline BackMachineScene* backScene() const { return _bms; }
+//     inline FrontMachineScene* frontScene() const { return _fms; }
+//     
+//     inline BackMachineScene* backScene() const { return _bms; }
     
     inline MachineWidget* front() const { return _front; }
     

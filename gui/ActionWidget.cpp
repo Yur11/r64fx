@@ -28,7 +28,7 @@ void ActionWidget::render()
     
     icon.render();
     font->enable();
-    font->useCurrent2dProjection();
+//     font->useCurrent2dProjection();
     
     if(shouldBeRenderedAsHovered())
         font->setColor(1.0, 1.0, 1.0, 1.0);
@@ -72,15 +72,15 @@ void ActionWidget::mousePressEvent(MouseEvent* event)
     if(action)
         action->trigger();
     
-    event->originWindow()->closeAllOverlayMenus();
+//     event->originWindow()->closeAllOverlayMenus();
 }
 
 
 void ActionWidget::mouseEnterEvent(MouseEvent* event)
 {
-    auto view = event->view();
-    if(view)
-     view->getRepainted();
+//     auto view = event->view();
+//     if(view)
+//      view->getRepainted();
 }
     
 }//namespace r64fx

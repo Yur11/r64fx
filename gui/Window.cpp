@@ -1,5 +1,8 @@
 #include "Window.h"
+#include "Widget.h"
+#include "MouseEvent.h"
 #include "KeyEvent.h"
+#include "Painter.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -12,7 +15,6 @@ namespace r64fx{
             
 Window::VoidFun Window::event_callback = nullptr;    
 vector<Window*> _all_window_instances;
-bool Window::mouse_is_hovering_menu = false;
 Window* Window::currently_rendered_window = nullptr;
     
 
@@ -31,108 +33,48 @@ Window::~Window()
 void Window::render()
 {    
     currently_rendered_window = this;
-//     _view->render();
+    
+    RenderingContext::makeCurrent();
+    RenderingContext::update();
+    
+    glClear(GL_COLOR_BUFFER_BIT);
+    
+    if(!one_shot_list.empty())
+    {
+        one_shot_list.exec();
+        one_shot_list.clear();
+    }
+    
 #ifdef DEBUG
     assert(root_widget != nullptr);
 #endif//DEBUG
     root_widget->render();
-//     if(full_repaint)
-//         render_overlay_menus();
     currently_rendered_window = nullptr;
 }
 
 
-void Window::setView(SplittableView* view)
+void Window::updateGeometry()
 {
-    _view = view;
-    new_w = width();
-    new_h = height();
-    update_projection();
-}
-
-
-void Window::update_viewport()
-{
-    glViewport(0, 0, new_w, new_h);
-}
-
-
-void Window::update_projection()
-{    
-//     view()->resize(0, new_h, new_w, 0);
-//     
-//     *current_2d_projection = Projection2D::ortho2d(0, new_w, 0, new_h);
-}
-
-
-void Window::render_overlay_menus()
-{
-    gl::Disable(GL_SCISSOR_TEST);
-    gl::Enable(GL_BLEND);
-    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    for(auto &menu : _overlay_menus)
-    {
-        auto p = *current_2d_projection;
-        
-        current_2d_projection->translate(menu->x(), menu->y());
-        
-        menu->render();
-        
-        *current_2d_projection = p;
-    }
-    gl::Disable(GL_BLEND);
-    gl::Enable(GL_SCISSOR_TEST);
-}
-
-
-Widget* Window::overlay_menu_at(int x, int y)
-{
-    for(auto &menu : _overlay_menus)
-    {
-        if(menu->rect().overlaps(x, y))
-        {
-            return menu;
-        }
-    }
+#ifdef DEBUG
+    assert(root_widget != nullptr);
+#endif//DEBUG
     
-    return nullptr;
-}
-
-
-void Window::showOverlayMenu(int x, int y, Menu* menu)
-{
-    if(y > height() / 2)
-    {
-        y -= menu->height();
-    }
+    glViewport(0, 0, w, h);
     
-    if(x > width()/ 2)
-    {
-        x -= menu->width();
-    }
+    root_widget->setPosition(0.0, 0.0);
+    root_widget->resize(w, h);
+ 
+    int hw = (w >> 1);
+    int hh = (h >> 1);
     
-    menu->setPosition(x, y);
-    _overlay_menus.push_back(menu);
+    float vec[4];
+    vec[0] = 1.0 / hw;     //sx
+    vec[1] = 1.0 / hh;     //sy
+    vec[2] = -1.0;     //tx
+    vec[3] = -1.0;     //ty
     
-    doFullRepaint();
+    Painter::setProjection(vec);
 }
-
-    
-void Window::closeOverlayMenu(Menu* menu)
-{
-    while(_overlay_menus.back() != menu)
-    {
-        _overlay_menus.pop_back();
-    }
-}
-
-
-void Window::closeAllOverlayMenus()
-{
-    _overlay_menus.clear();
-    doFullRepaint();
-}
-
 
 std::vector<Window*> Window::allInstances()
 {
@@ -321,18 +263,18 @@ void Window::initKeyReleaseEvent(int x, int y, unsigned int scancode, unsigned i
 }
 
 
-void Window::initTextInputEvent(Utf8String text)
+void Window::initTextInputEvent(std::string text)
 {
 }
 
 
 void Window::initResizeEvent(int w, int h)
 {
-    new_w = w;
-    new_h = h;
+    this->w = w;
+    this->h = h;
     one_shot_list.push_back([](void* data){
         auto window = (Window*) data;
-        window->update_viewport();
+        window->updateGeometry();
     }, this);
 }
 
@@ -362,20 +304,7 @@ void Window::mainSequence()
     
     for(auto w : _all_window_instances)
     {
-        w->makeCurrent();
-        
-        if(w->viewport_update_needed)
-        {
-            w->update_viewport();
-            w->update_projection();
-            w->viewport_update_needed = false;
-        }
-        
-        w->update();
         w->render();
-        
-        if(w->full_repaint)
-            w->full_repaint = false;
     }
 }
 
