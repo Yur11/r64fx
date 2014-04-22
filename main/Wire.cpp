@@ -8,6 +8,8 @@
 using namespace std;
 #endif//DEBUG
 
+#include <cmath>
+
 namespace r64fx{
     
 ShadingProgram Wire::shading_program;

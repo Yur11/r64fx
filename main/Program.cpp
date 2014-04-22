@@ -5,6 +5,7 @@
 
 #include "gui/Dummy.h"
 #include "gui/Keyboard.h"
+#include "gui/Mouse.h"
 #include "gui/Font.h"
 #include "gui/Icon.h"
 

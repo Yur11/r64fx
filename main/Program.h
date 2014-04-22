@@ -6,7 +6,6 @@
 #include <jack/jack.h>
 
 #include "InformationScene.h"
-#include "MachineScene.h"
 #include "gui/Action.h"
 #include "gui/gl.h"
 
@@ -18,12 +17,6 @@ class Program{
     int _status = 0;
     
     int _gc_counter = 256;
-
-//     InformationScene* _infs;
-//     FrontMachineScene* _fms;
-//     BackMachineScene* _bms;
-//     
-//     std::vector<Wire*> _wires;
     
     Action* _hello_act;
     Action* _doctor_act;
@@ -32,10 +25,6 @@ class Program{
     Action* _yesterday_act;
     Action* _tommorow_act;
     
-//     Action* _split_view_vert_act;
-//     Action* _split_view_hor_act;
-//     Action* _close_view_act;
-        
     jack_client_t* _jack_client;
     
     /** @brief Parse command-line arguments and initialize data paths. */
