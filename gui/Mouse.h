@@ -1,7 +1,7 @@
 #ifndef R64FX_GUI_MOUSE_H
 #define R64FX_GUI_MOUSE_H
 
-#include "geometry.h"
+#include "Point.h"
 
 #ifdef USE_SDL2
 #include <SDL2/SDL.h>

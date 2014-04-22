@@ -2,9 +2,9 @@
 #define R64FX_MAIN_KNOB_H
 
 #include "gui/Widget.h"
-#include "gui/rotations.h"
 #include "gui/Painter.h"
 #include "gui/Texture.h"
+#include "gui/Padding.h"
 
 
 namespace r64fx{

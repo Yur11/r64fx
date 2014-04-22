@@ -2,7 +2,7 @@
 #define R64FX_GUI_WINDOW_H
 
 #include <string>
-#include "geometry.h"
+#include "Rect.h"
 #include "RenderingContext.h"
 #include "CallbackList.h"
 

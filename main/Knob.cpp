@@ -3,7 +3,7 @@
 #include "gui/bezier.h"
 #include "gui/Window.h"
 #include "gui/Painter.h"
-#include "gui/geometry_io.h"
+
 
 #ifdef DEBUG
 #include <iostream>
@@ -112,7 +112,7 @@ void ShinyKnob::update()
     
     for(int i=0; i<4; i++)
     {
-        pt[i].rotate( - angle * M_PI / 180);
+//         pt[i].rotate( - angle * M_PI / 180);
     }
 
     r *= 0.7;

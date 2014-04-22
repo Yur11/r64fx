@@ -2,7 +2,7 @@
 #define R64FX_GUI_BEZIER_H
 
 #include <vector>
-#include "geometry.h"
+#include "Point.h"
 
 #ifdef DEBUG
 #include <iostream>

@@ -5,6 +5,7 @@
 #include "Action.h"
 #include "Font.h"
 #include "Icon.h"
+#include "Padding.h"
 
 namespace r64fx{
 

@@ -2,6 +2,7 @@
 #define R64FX_GUI_CONTANERS_WIDGETS_H
 
 #include "Widget.h"
+#include "Padding.h"
 #include <vector>
 
 namespace r64fx{

@@ -4,7 +4,7 @@
 #include <vector>
 #include "utf8string/Utf8String.h"
 #include "gl.h"
-#include "geometry.h"
+#include "Rect.h"
 #include "RenderingContext.h"
 #include "Projection2D.h"
 #include "events.h"
