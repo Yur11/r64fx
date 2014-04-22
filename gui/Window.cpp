@@ -31,13 +31,13 @@ Window::~Window()
 void Window::render()
 {    
     currently_rendered_window = this;
-    _view->render();
-// #ifdef DEBUG
-//     assert(root_widget != nullptr);
-// #endif//DEBUG
-//     root_widget->render();
-    if(full_repaint)
-        render_overlay_menus();
+//     _view->render();
+#ifdef DEBUG
+    assert(root_widget != nullptr);
+#endif//DEBUG
+    root_widget->render();
+//     if(full_repaint)
+//         render_overlay_menus();
     currently_rendered_window = nullptr;
 }
 
@@ -59,9 +59,9 @@ void Window::update_viewport()
 
 void Window::update_projection()
 {    
-    view()->resize(0, new_h, new_w, 0);
-    
-    *current_2d_projection = Projection2D::ortho2d(0, new_w, 0, new_h);
+//     view()->resize(0, new_h, new_w, 0);
+//     
+//     *current_2d_projection = Projection2D::ortho2d(0, new_w, 0, new_h);
 }
 
 
@@ -161,28 +161,28 @@ void Window::initMousePressEvent(int x, int y, unsigned int buttons, unsigned in
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setOriginWindow(this);
     
-    if(!_overlay_menus.empty())
-    {
-        Widget* menu = overlay_menu_at(x, y);
-        if(menu)
-        {
-            /* Deliver event to the menu. */
-            event -= menu->position();
-            menu->mousePressEvent(&event);
-            return;
-        }
-        else
-        {
-            /* Clicked elswere. */
-            closeAllOverlayMenus();
-        }
-    }
-    
-    
-    if(Widget::mouseInputGrabber())
-        Widget::mouseInputGrabber()->mousePressEvent(&event);
-    else
-        view()->mousePressEvent(&event);
+//     if(!_overlay_menus.empty())
+//     {
+//         Widget* menu = overlay_menu_at(x, y);
+//         if(menu)
+//         {
+//             /* Deliver event to the menu. */
+//             event -= menu->position();
+//             menu->mousePressEvent(&event);
+//             return;
+//         }
+//         else
+//         {
+//             /* Clicked elswere. */
+//             closeAllOverlayMenus();
+//         }
+//     }
+//     
+//     
+//     if(Widget::mouseInputGrabber())
+//         Widget::mouseInputGrabber()->mousePressEvent(&event);
+//     else
+//         view()->mousePressEvent(&event);
 }
 
     
@@ -191,24 +191,24 @@ void Window::initMouseReleaseEvent(int x, int y, unsigned int buttons, unsigned 
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setOriginWindow(this);
     
-    if(!_overlay_menus.empty())
-    {
-        Widget* menu = overlay_menu_at(x, y);
-        if(menu)
-        {
-            /* Event goes to the menu. */
-            event -= menu->position();
-            menu->mouseReleaseEvent(&event);
-            return;
-        }
-    }
-    else
-    {
-        if(Widget::mouseInputGrabber())
-            Widget::mouseInputGrabber()->mouseReleaseEvent(&event);
-        else
-            view()->mouseReleaseEvent(&event);
-    }
+//     if(!_overlay_menus.empty())
+//     {
+//         Widget* menu = overlay_menu_at(x, y);
+//         if(menu)
+//         {
+//             /* Event goes to the menu. */
+//             event -= menu->position();
+//             menu->mouseReleaseEvent(&event);
+//             return;
+//         }
+//     }
+//     else
+//     {
+//         if(Widget::mouseInputGrabber())
+//             Widget::mouseInputGrabber()->mouseReleaseEvent(&event);
+//         else
+//             view()->mouseReleaseEvent(&event);
+//     }
 }
 
     
@@ -217,52 +217,57 @@ void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setOriginWindow(this);
  
-    mouse_is_hovering_menu = false;
-    
-    static HoverableWidget* prev_hovered_widget = nullptr;
-    
-    if(!_overlay_menus.empty())
-    {
-        Widget* menu = overlay_menu_at(x, y);
-        if(menu)
-        {
-            /* Event goes to the menu. */
-            mouse_is_hovering_menu = true;
-            event -= menu->position();
-            menu->mouseMoveEvent(&event);
-            goto _exit;
-        }
-    }
-    
-    if(Widget::mouseInputGrabber())
-        Widget::mouseInputGrabber()->mouseMoveEvent(&event);
-    else
-    {
 #ifdef DEBUG
-        if(x >= view()->width())
-        {
-            cerr << "x == " << x << "\n";
-            cerr << "view->width() == " << view()->width() << "\n";
-            abort();
-        }
+    assert(root_widget != nullptr);
 #endif//DEBUG
-        view()->mouseMoveEvent(&event);
-    }
+    root_widget->mouseMoveEvent(&event);
     
-_exit:
-    if(event.hovered_widget == nullptr)
-    {
-        HoverableWidget::reset();
-        if(prev_hovered_widget != nullptr)
-        {
-            auto view = event.view();
-            if(view)
-                view->getRepainted();
-        }
-    }
- 
-    
-    prev_hovered_widget = event.hovered_widget;
+//     mouse_is_hovering_menu = false;
+//     
+//     static HoverableWidget* prev_hovered_widget = nullptr;
+//     
+//     if(!_overlay_menus.empty())
+//     {
+//         Widget* menu = overlay_menu_at(x, y);
+//         if(menu)
+//         {
+//             /* Event goes to the menu. */
+//             mouse_is_hovering_menu = true;
+//             event -= menu->position();
+//             menu->mouseMoveEvent(&event);
+//             goto _exit;
+//         }
+//     }
+//     
+//     if(Widget::mouseInputGrabber())
+//         Widget::mouseInputGrabber()->mouseMoveEvent(&event);
+//     else
+//     {
+// #ifdef DEBUG
+//         if(x >= view()->width())
+//         {
+//             cerr << "x == " << x << "\n";
+//             cerr << "view->width() == " << view()->width() << "\n";
+//             abort();
+//         }
+// #endif//DEBUG
+//         view()->mouseMoveEvent(&event);
+//     }
+//     
+// _exit:
+//     if(event.hovered_widget == nullptr)
+//     {
+//         HoverableWidget::reset();
+//         if(prev_hovered_widget != nullptr)
+//         {
+//             auto view = event.view();
+//             if(view)
+//                 view->getRepainted();
+//         }
+//     }
+//  
+//     
+//     prev_hovered_widget = event.hovered_widget;
 }
 
 
@@ -271,16 +276,16 @@ void Window::initMouseWheelEvent(int x, int y, int dx, int dy, unsigned int butt
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setButtons(event.buttons() | (dy > 0 ? Mouse::Button::WheelUp : Mouse::Button::WheelDown));
     
-    if(!_overlay_menus.empty())
-    {
-        Widget* menu = overlay_menu_at(x, y);
-        if(menu)
-        {
-            return;
-        }
-    }
-    
-    view()->mouseWheelEvent(&event);
+//     if(!_overlay_menus.empty())
+//     {
+//         Widget* menu = overlay_menu_at(x, y);
+//         if(menu)
+//         {
+//             return;
+//         }
+//     }
+//     
+//     view()->mouseWheelEvent(&event);
 }
 
     
@@ -289,14 +294,14 @@ void Window::initKeyPressEvent(int x, int y, unsigned int scancode, unsigned int
     KeyEvent event(x, y, buttons, scancode, keyboard_modifiers);
     event.setOriginWindow(this);
     
-    if(Widget::keyboardInputGrabber())
-    {
-        Widget::keyboardInputGrabber()->keyPressEvent(&event);
-    }
-    else
-    {
-        view()->keyPressEvent(&event);
-    }
+//     if(Widget::keyboardInputGrabber())
+//     {
+//         Widget::keyboardInputGrabber()->keyPressEvent(&event);
+//     }
+//     else
+//     {
+//         view()->keyPressEvent(&event);
+//     }
 }
 
     
@@ -305,14 +310,14 @@ void Window::initKeyReleaseEvent(int x, int y, unsigned int scancode, unsigned i
     KeyEvent event(x, y, buttons, scancode, keyboard_modifiers);
     event.setOriginWindow(this);
     
-    if(Widget::keyboardInputGrabber())
-    {
-        Widget::keyboardInputGrabber()->keyReleaseEvent(&event);
-    }
-    else
-    {
-        view()->keyReleaseEvent(&event);
-    }
+//     if(Widget::keyboardInputGrabber())
+//     {
+//         Widget::keyboardInputGrabber()->keyReleaseEvent(&event);
+//     }
+//     else
+//     {
+//         view()->keyReleaseEvent(&event);
+//     }
 }
 
 

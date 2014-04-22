@@ -3,6 +3,8 @@
 #include "gui/WindowImplementation.h"
 #include "DenseWaveformPainter.h"
 
+#include "gui/Dummy.h"
+
 #include <iostream>
 #include <unistd.h>
 
@@ -85,33 +87,37 @@ bool Program::initGui()
     Icon::init();
     
     initActions();
+    
+    Dummy* dummy = new Dummy(100.0, 100.0);
+    
+    window->setRootWidget(dummy);
 
-    _infs = new InformationScene;
-    for(auto act : {_hello_act, _doctor_act, _name_act, _continue_act, _yesterday_act, _tommorow_act})
-    {
-        auto aw = new ActionWidget(act);
-        aw->showing_icon = false;
-        aw->update();
-        _infs->panel->appendWidget(aw);
-    }
+//     _infs = new InformationScene;
+//     for(auto act : {_hello_act, _doctor_act, _name_act, _continue_act, _yesterday_act, _tommorow_act})
+//     {
+//         auto aw = new ActionWidget(act);
+//         aw->showing_icon = false;
+//         aw->update();
+//         _infs->panel->appendWidget(aw);
+//     }
     
-    _infs->panel->update();
-    
-    _fms = new FrontMachineScene;
-    _bms = new BackMachineScene;
-    _fms->counterpart_scene = _bms;
-    _bms->counterpart_scene = _fms;
-    _fms->wires = &_wires;
-    _bms->wires = &_wires;
-    
-    auto root_view = new View(_infs);
-    window->setView(root_view);
-    
-    root_view->split_vert_act = _split_view_vert_act;
-    root_view->split_hor_act = _split_view_hor_act;
-    root_view->close_act = _close_view_act;
-    
-    root_view->updateContextMenu();
+//     _infs->panel->update();
+//     
+//     _fms = new FrontMachineScene;
+//     _bms = new BackMachineScene;
+//     _fms->counterpart_scene = _bms;
+//     _bms->counterpart_scene = _fms;
+//     _fms->wires = &_wires;
+//     _bms->wires = &_wires;
+//     
+//     auto root_view = new View(_infs);
+//     window->setView(root_view);
+//     
+//     root_view->split_vert_act = _split_view_vert_act;
+//     root_view->split_hor_act = _split_view_hor_act;
+//     root_view->close_act = _close_view_act;
+//     
+//     root_view->updateContextMenu();
     
     return true;
 }
@@ -143,9 +149,12 @@ void Program::mainThread()
 {
     if(_status != 0)
         return;
+
+    gl::Enable(GL_SCISSOR_TEST);
+    gl::Enable(GL_BLEND);
+    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     Painter::enable();
-    
     
     while(Window::count() > 0)
     {               

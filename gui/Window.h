@@ -57,7 +57,7 @@ public:
     void setView(SplittableView* view);
     inline SplittableView* view() const { return _view; }
     
-    inline void setRoot(Widget* widget) { root_widget = root_widget; }
+    inline void setRootWidget(Widget* widget) { root_widget = widget; }
     inline Widget* rootWidget() const { return root_widget; }
     
     virtual Size<int> size() = 0;
