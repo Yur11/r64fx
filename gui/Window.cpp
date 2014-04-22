@@ -32,6 +32,10 @@ void Window::render()
 {    
     currently_rendered_window = this;
     _view->render();
+// #ifdef DEBUG
+//     assert(root_widget != nullptr);
+// #endif//DEBUG
+//     root_widget->render();
     if(full_repaint)
         render_overlay_menus();
     currently_rendered_window = nullptr;

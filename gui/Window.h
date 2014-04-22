@@ -15,6 +15,8 @@ class Window : public RenderingContext{
     
     SplittableView* _view = nullptr;
     
+    Widget* root_widget = nullptr;
+    
     std::vector<Widget*> _overlay_menus;
     
     Widget* overlay_menu_at(int x, int y);
@@ -54,6 +56,9 @@ public:
         
     void setView(SplittableView* view);
     inline SplittableView* view() const { return _view; }
+    
+    inline void setRoot(Widget* widget) { root_widget = root_widget; }
+    inline Widget* rootWidget() const { return root_widget; }
     
     virtual Size<int> size() = 0;
     
