@@ -20,7 +20,7 @@ template<typename T> struct Rect{
     
     inline T x() const { return left; }
     
-    inline T y() const { return bottom; }
+    inline T y() const { return top; }
     
     inline Point<T> position() const { return Point<T>(x(), y()); }
     

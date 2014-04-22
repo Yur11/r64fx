@@ -68,10 +68,10 @@ void Window::updateGeometry()
     int hh = (h >> 1);
     
     float vec[4];
-    vec[0] = 1.0 / hw;     //sx
-    vec[1] = 1.0 / hh;     //sy
-    vec[2] = -1.0;     //tx
-    vec[3] = -1.0;     //ty
+    vec[0] = 1.0 / hw;    //sx
+    vec[1] = -(1.0 / hh); //sy flipped around x axis
+    vec[2] = -1.0;        //tx
+    vec[3] =  1.0;        //ty
     
     Painter::setProjection(vec);
 }
