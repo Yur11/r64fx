@@ -326,6 +326,17 @@ void Window::initTextInputEvent(Utf8String text)
 }
 
 
+void Window::initResizeEvent(int w, int h)
+{
+    new_w = w;
+    new_h = h;
+    one_shot_list.push_back([](void* data){
+        auto window = (Window*) data;
+        window->update_viewport();
+    }, this);
+}
+
+
 bool Window::initGlew()
 {
     auto status = glewInit();

@@ -4,6 +4,7 @@
 #include "View.h"
 #include "Menu.h"
 #include "Event.h"
+#include "CallbackList.h"
 
 namespace r64fx{
     
@@ -34,6 +35,8 @@ class Window : public RenderingContext{
     void update_viewport();
     
     void update_projection();
+    
+    CallbackList one_shot_list;
         
 protected:
     inline static void setEventCallback(VoidFun fun) { event_callback = fun; }
@@ -115,6 +118,8 @@ public:
     void initKeyReleaseEvent(int x, int y, unsigned int scancode, unsigned int buttons, unsigned int keyboard_modifiers);
     
     void initTextInputEvent(Utf8String text);
+    
+    void initResizeEvent(int w, int h);
         
     static bool initGlew();
     

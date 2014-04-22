@@ -358,7 +358,7 @@ void SDL2Window::processEvents()
                 {
                     int w = event.window.data1;
                     int h = event.window.data2;
-                    window->request_viewport_update(w, h);
+                    window->initResizeEvent(w, h);
                 }
                 else if(event.window.event == SDL_WINDOWEVENT_CLOSE)
                 {
