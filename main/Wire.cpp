@@ -296,8 +296,8 @@ void Wire::update()
     assert(_sink_socket != nullptr);
 #endif//DEBUG
     
-    control_points[0] = _source_socket->toSceneCoords(_source_socket->center());
-    control_points[2] = _sink_socket->toSceneCoords(_sink_socket->center());
+//     control_points[0] = _source_socket->toSceneCoords(_source_socket->center());
+//     control_points[2] = _sink_socket->toSceneCoords(_sink_socket->center());
     
     if(control_points[0].x > control_points[2].x)
         swap(control_points[0], control_points[2]);

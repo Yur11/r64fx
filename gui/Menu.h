@@ -1,13 +1,13 @@
 #ifndef R64FX_GUI_MENU_H
 #define R64FX_GUI_MENU_H
 
-#include "containers.h"
 #include "ActionWidget.h"
+#include "LinearContainer.h"
 
 
 namespace r64fx{
     
-class Menu : public VerticalContainer{
+class Menu : public LinearContainer{
     Font* _font;
     Widget* highlighted_widget = nullptr;
     

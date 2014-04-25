@@ -20,7 +20,7 @@ template<typename T> T max(T a, T b)
 
     
 Menu::Menu(Font* font, Widget* parent)
-:VerticalContainer(parent)
+: LinearContainer(parent)
 ,_font(font)
 , p(4)
 {
@@ -44,8 +44,6 @@ void Menu::appendAction(Action* act)
 
 void Menu::update()
 {
-    VerticalContainer::update();
-    
     const auto &r = boundingRect();
         
     float pos[8] = {

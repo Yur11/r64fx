@@ -24,7 +24,11 @@ class Window : public RenderingContext{
     int h;
     
     void updateGeometry();
-        
+    
+    void projectRootWidget();
+    
+    void clipVisibleWidgets();
+    
     CallbackList one_shot_list;
         
 protected:

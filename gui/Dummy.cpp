@@ -27,6 +27,8 @@ Dummy::Dummy(float width, float height, Widget* parent)
 : Widget(parent) 
 , p(4)
 {
+    resize(width, height);
+    
     float tex_coords[8] = {
         0.0, 0.0,
         1.0, 0.0,
@@ -42,13 +44,19 @@ Dummy::Dummy(float width, float height, Widget* parent)
 
 void Dummy::render()
 {      
-    auto r = boundingRect();
+    auto br = boundingRect();
+    
+    auto pr = projectedRect();
+    
+    
+//     cout << "br: " << br.left << ", " << br.top << ", " << br.right << ", " << br.bottom << "\n";
+//     cout << "pr: " << pr.left << ", " << pr.top << ", " << pr.right << ", " << pr.bottom << "\n";
     
     float pos[8] = {
-        r.left,   r.bottom,
-        r.right,  r.bottom,
-        r.left,   r.top,
-        r.right,  r.top
+        pr.left,  pr.bottom,
+        pr.right,  pr.bottom,
+        pr.left,   pr.top,
+        pr.right,  pr.top
     };
             
     p.bindBuffer();
@@ -59,7 +67,7 @@ void Dummy::render()
     Painter::useNoTexture();
     
     p.bindArray();
-    p.render(GL_LINE_STRIP, 4);
+    p.render(GL_LINE_LOOP, 4);
     p.unbindArray();
 }
 
@@ -86,7 +94,6 @@ void Dummy::initDebugMenu()
     if(_debug_menu) return;
     
     _debug_menu = new Menu;
-    _debug_menu->setPadding(5);
     _debug_menu->update();
 }
     

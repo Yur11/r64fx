@@ -61,41 +61,46 @@ void Widget::clear()
     while(!_children.empty())
         _children[_children.size() - 1]->setParent(nullptr);
 }
-
-
-IteratorPair<Widget::Iterator> Widget::allChildren()
-{
-    return {_children.begin(), _children.end()};
-}    
-
-
-IteratorPair<Widget::Iterator> Widget::visibleChildren()
-{
-    return allChildren();
-}
-    
-
     
     
 void Widget::render()
 {
+    for(auto ch : /*visible*/_children)
+    {
+        ch->render();
+    }
+}
+
+
+void Widget::clip(Rect<float> rect)
+{
+    visible_children.clear();
+    for(auto ch : _children)
+    {
+        if(rect.overlaps(ch->projectedRect()))
+        {
+            visible_children.push_back(ch);
+            ch->clip(ch->projectedRect());
+        }
+    }
 }
 
 
 void Widget::project(Point<float> offset)
 {
+    projected_position = offset;
     for(auto ch : _children)
     {
-        ch->project( offset + ch->position() );
+        ch->project(projected_position + ch->position());
     }
 }
 
 
-void Widget::update()
+void Widget::updateVisuals()
 {
-    for(auto ch : _children)
+    for(auto ch : visible_children)
     {
-        ch->update();
+        ch->updateVisuals();
     }
 }
 
@@ -209,19 +214,6 @@ Point<float> Widget::toRootCoords(Point<float> point)
     else
     {
         return point;
-    }
-}
-
-
-Point<float> Widget::toSceneCoords(Point<float> point)
-{
-    if(_parent)
-    {
-        return _parent->toSceneCoords(position() + point);
-    }
-    else
-    {
-        return point + position(); //We also add our position within the scene, if we are the root widget.
     }
 }
 

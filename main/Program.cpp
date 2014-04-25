@@ -3,6 +3,7 @@
 #include "gui/WindowImplementation.h"
 #include "DenseWaveformPainter.h"
 
+#include "gui/LinearContainer.h"
 #include "gui/Dummy.h"
 #include "gui/Keyboard.h"
 #include "gui/Mouse.h"
@@ -92,36 +93,41 @@ bool Program::initGui()
     
     initActions();
     
-    Dummy* dummy = new Dummy(10.0, 10.0);
-    
-    window->setRootWidget(dummy);
+    LinearContainer* lc1 = new LinearContainer;
+    lc1->resize(window->width(), window->height());
 
-//     _infs = new InformationScene;
-//     for(auto act : {_hello_act, _doctor_act, _name_act, _continue_act, _yesterday_act, _tommorow_act})
-//     {
-//         auto aw = new ActionWidget(act);
-//         aw->showing_icon = false;
-//         aw->update();
-//         _infs->panel->appendWidget(aw);
-//     }
+    Dummy* dummy1 = new Dummy(100.0, 100.0);
+    Dummy* dummy2 = new Dummy(100.0, 100.0);
+    Dummy* dummy3 = new Dummy(100.0, 100.0);
+    Dummy* dummy4 = new Dummy(100.0, 100.0);
     
-//     _infs->panel->update();
-//     
-//     _fms = new FrontMachineScene;
-//     _bms = new BackMachineScene;
-//     _fms->counterpart_scene = _bms;
-//     _bms->counterpart_scene = _fms;
-//     _fms->wires = &_wires;
-//     _bms->wires = &_wires;
-//     
-//     auto root_view = new View(_infs);
-//     window->setView(root_view);
-//     
-//     root_view->split_vert_act = _split_view_vert_act;
-//     root_view->split_hor_act = _split_view_hor_act;
-//     root_view->close_act = _close_view_act;
-//     
-//     root_view->updateContextMenu();
+    lc1->appendWidget(dummy1);
+    lc1->appendWidget(dummy2);
+    lc1->appendWidget(dummy3);
+    lc1->appendWidget(dummy4);
+    lc1->alignHorizontally();
+    
+    
+    LinearContainer* lc2 = new LinearContainer;
+    lc2->resize(window->width(), window->height());
+
+    Dummy* dummy5 = new Dummy(100.0, 100.0);
+    Dummy* dummy6 = new Dummy(100.0, 100.0);
+    Dummy* dummy7 = new Dummy(100.0, 100.0);
+    Dummy* dummy8 = new Dummy(100.0, 100.0);
+    
+    lc2->appendWidget(dummy5);
+    lc2->appendWidget(dummy6);
+    lc2->appendWidget(dummy7);
+    lc2->appendWidget(dummy8);
+    lc2->alignHorizontally();
+    
+    LinearContainer* lc = new LinearContainer;
+    lc->appendWidget(lc1);
+    lc->appendWidget(lc2);
+    lc->alignVertically();
+    
+    window->setRootWidget(lc);
     
     return true;
 }
@@ -154,9 +160,8 @@ void Program::mainThread()
     if(_status != 0)
         return;
 
-//     gl::Enable(GL_SCISSOR_TEST);
-//     gl::Enable(GL_BLEND);
-//     gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    gl::Enable(GL_BLEND);
+    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glClearColor(0.78, 0.78, 0.78, 1.0);
     
@@ -274,36 +279,6 @@ void Program::initActions()
             return nullptr;
         }
     );
-    
-//     _split_view_vert_act = new Action(
-//         "split_vertically",
-//         tr("split_vertically"),
-//         [](void*) -> void*
-//         {
-//             View::splitViewVertically(View::activeView());
-//             return nullptr;
-//         }
-//     );
-//     
-//     _split_view_hor_act = new Action(
-//         "split_horizontally",
-//         tr("split_horizontally"),
-//         [](void*) -> void*
-//         {
-//             View::splitViewHorizontally(View::activeView());
-//             return nullptr;
-//         }
-//     );
-//     
-//     _close_view_act = new Action(
-//         "close_view",
-//         tr("close_view"),
-//         [](void*) -> void*
-//         {
-//             View::closeView(View::activeView());
-//             return nullptr;
-//         }
-//     );
 }
 
 
