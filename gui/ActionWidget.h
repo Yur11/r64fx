@@ -13,7 +13,7 @@ namespace r64fx{
  
     Can be used for buttons and menu items.
  */
-struct ActionWidget : public HoverableWidget, public Padding{
+struct ActionWidget : public HoverableWidget, public Padding<float>{
     Action* action;
     Font* font;
     bool is_highlighted = false;

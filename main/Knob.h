@@ -11,7 +11,7 @@ namespace r64fx{
 
     
 /** @brief Base class for knob widgets. */    
-class BasicKnob : public Widget, public Padding{
+class BasicKnob : public Widget, public Padding<float>{
     
 protected:
         

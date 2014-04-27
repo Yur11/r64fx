@@ -10,7 +10,7 @@
 namespace r64fx{
     
 /** @brief Widget that can render text. */
-class TextLine : public Widget, public Padding{
+class TextLine : public Widget, public Padding<float>{
     Font* _font;
     
     Color text_color;
