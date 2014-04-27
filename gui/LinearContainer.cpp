@@ -14,8 +14,8 @@ LinearContainer::LinearContainer(Widget* parent)
 void LinearContainer::alignVertically()
 {
     float w = 0.0;
-    float y = 0.0;
-    for(auto ch : _children)
+    float y = paddingTop();
+    for(auto ch : children)
     {
         ch->setY(y);
         y += ch->height();
@@ -23,15 +23,16 @@ void LinearContainer::alignVertically()
             w = ch->width();
     }
     
-    setWidth(w);
+    setWidth(w + paddingWidth());
+    setHeight(y + paddingBottom());
 }
 
 
 void LinearContainer::alignHorizontally()
 {
     float h = 0.0;
-    float x = 0.0;
-    for(auto ch: _children)
+    float x = paddingLeft();
+    for(auto ch: children)
     {
         ch->setX(x);
         x += ch->width();
@@ -39,7 +40,8 @@ void LinearContainer::alignHorizontally()
             h = ch->height();
     }
     
-    setHeight(h);
+    setWidth(x + paddingRight());
+    setHeight(h + paddingHeight());
 }
  
 }//namespace r64fx

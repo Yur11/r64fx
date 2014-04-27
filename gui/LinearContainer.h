@@ -2,10 +2,11 @@
 #define R64FX_LINEAR_CONTAINER_H
 
 #include "Widget.h"
+#include "Padding.h"
 
 namespace r64fx{
     
-class LinearContainer : public Widget{
+class LinearContainer : public Widget, public Padding<float>{
     
 public:
     LinearContainer(Widget* parent = nullptr);
