@@ -17,6 +17,8 @@ bool HoverableWidget::shouldBeRenderedAsHovered()
 //         _hover_view == View::currentlyRendered() || 
 //         Window::mouseIsHoveringMenu() //In case a menu is open.
 //     ); 
+    
+    return false;
 }
 
 

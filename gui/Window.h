@@ -25,11 +25,9 @@ class Window : public RenderingContext{
     
     void updateGeometry();
     
-    void projectRootWidget();
-    
-    void clipVisibleWidgets();
-    
     CallbackList one_shot_list;
+    
+    void runOneShotList();
         
 protected:
     inline static void setEventCallback(VoidFun fun) { event_callback = fun; }
@@ -93,6 +91,8 @@ public:
     static void mainSequence();
     
     inline static Window* currentlyRenderedWindow() { return currently_rendered_window; }
+    
+    inline void fireOnce(void (*fun)(void*), void* data) { one_shot_list.push_back(fun, data); }
 };    
 
 }//namespace r64fx

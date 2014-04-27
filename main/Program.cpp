@@ -9,6 +9,7 @@
 #include "gui/Mouse.h"
 #include "gui/Font.h"
 #include "gui/Icon.h"
+#include "gui/View.h"
 
 #include <iostream>
 #include <unistd.h>
@@ -94,7 +95,7 @@ bool Program::initGui()
     initActions();
     
     LinearContainer* lc1 = new LinearContainer;
-    lc1->resize(window->width(), window->height());
+    lc1->setPadding(10.0);
 
     Dummy* dummy1 = new Dummy(100.0, 100.0);
     Dummy* dummy2 = new Dummy(100.0, 100.0);
@@ -109,7 +110,7 @@ bool Program::initGui()
     
     
     LinearContainer* lc2 = new LinearContainer;
-    lc2->resize(window->width(), window->height());
+    lc2->setPadding(10.0);
 
     Dummy* dummy5 = new Dummy(100.0, 100.0);
     Dummy* dummy6 = new Dummy(100.0, 100.0);
@@ -127,7 +128,11 @@ bool Program::initGui()
     lc->appendWidget(lc2);
     lc->alignVertically();
     
-    window->setRootWidget(lc);
+    View* view = new View;
+    view->appendWidget(lc);
+    view->setOffset(200, 200);
+    
+    window->setRootWidget(view);
     
     return true;
 }
@@ -163,7 +168,7 @@ void Program::mainThread()
     gl::Enable(GL_BLEND);
     gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    glClearColor(0.78, 0.78, 0.78, 1.0);
+    gl::ClearColor(0.78, 0.78, 0.78, 1.0);
     
     Painter::enable();
     Painter::setTexturingMode(Painter::RGBA);

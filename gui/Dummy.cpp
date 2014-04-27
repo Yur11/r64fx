@@ -43,14 +43,8 @@ Dummy::Dummy(float width, float height, Widget* parent)
 
 
 void Dummy::render()
-{      
-    auto br = boundingRect();
-    
+{          
     auto pr = projectedRect();
-    
-    
-//     cout << "br: " << br.left << ", " << br.top << ", " << br.right << ", " << br.bottom << "\n";
-//     cout << "pr: " << pr.left << ", " << pr.top << ", " << pr.right << ", " << pr.bottom << "\n";
     
     float pos[8] = {
         pr.left,  pr.bottom,

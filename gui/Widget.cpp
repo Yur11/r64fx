@@ -23,11 +23,11 @@ void Widget::setParent(Widget* new_parent)
     if(_parent)
     {
         /* Remove me from the old parent. */
-        for(auto it = _parent->_children.begin(); it != _parent->_children.end(); it++)
+        for(auto it = _parent->children.widgets.begin(); it != _parent->children.widgets.end(); it++)
         {
             if(*it == this)
             {
-                _parent->_children.erase(it);
+                _parent->children.widgets.erase(it);
                 break;
             }
         }
@@ -37,35 +37,52 @@ void Widget::setParent(Widget* new_parent)
     
     if(_parent)
     {
-        _parent->_children.push_back(this);
+        _parent->children.widgets.push_back(this);
     }
+}
+
+
+Widget* Widget::Children::at(float x, float y)
+{
+    for(int i=0; i<(int)count(); i++)
+    {
+        auto ch = widgets[i];
+        auto r = ch->boundingRect();
+        if(r.overlaps(x, y))
+        {
+            return ch;
+        }
+    }
+    
+    return nullptr;
 }
 
 
 void Widget::appendWidget(Widget* widget)
 {
     widget->_parent = this;
-    _children.push_back(widget);
+    children.widgets.push_back(widget);
 }
 
 
 void Widget::insertWidget(Widget* widget, int index)
 {
     widget->_parent = this;
-    _children.insert(_children.begin() + index, widget);
+    children.widgets.insert(children.widgets.begin() + index, widget);
 }
 
 
 void Widget::clear()
 {
-    while(!_children.empty())
-        _children[_children.size() - 1]->setParent(nullptr);
+    while(!children.empty())
+        children.removeAt(children.widgets.size() - 1);
+    visible_children.clear();
 }
     
     
 void Widget::render()
 {
-    for(auto ch : /*visible*/_children)
+    for(auto ch : visible_children)
     {
         ch->render();
     }
@@ -75,23 +92,23 @@ void Widget::render()
 void Widget::clip(Rect<float> rect)
 {
     visible_children.clear();
-    for(auto ch : _children)
+    for(auto ch : children)
     {
         if(rect.overlaps(ch->projectedRect()))
         {
-            visible_children.push_back(ch);
+            visible_children.widgets.push_back(ch);
             ch->clip(ch->projectedRect());
         }
     }
 }
 
 
-void Widget::project(Point<float> offset)
+void Widget::project(Point<float> p)
 {
-    projected_position = offset;
-    for(auto ch : _children)
+    projected_position = position() + p;
+    for(auto ch : children)
     {
-        ch->project(projected_position + ch->position());
+        ch->project(projected_position);
     }
 }
 
@@ -109,7 +126,7 @@ void Widget::mousePressEvent(MouseEvent* event)
 {
 //     event->widget = this;
     
-    auto child = childAt(event->position()); 
+    auto child = visible_children.at(event->position()); 
     if(child)
     {
         *event -= child->position();
@@ -120,7 +137,7 @@ void Widget::mousePressEvent(MouseEvent* event)
     
 void Widget::mouseReleaseEvent(MouseEvent* event)
 {
-    auto child = childAt(event->position()); 
+    auto child = visible_children.at(event->position()); 
     if(child)
     {
         *event -= child->position();
@@ -131,7 +148,7 @@ void Widget::mouseReleaseEvent(MouseEvent* event)
     
 void Widget::mouseMoveEvent(MouseEvent* event)
 {
-    auto child = childAt(event->position()); 
+    auto child = visible_children.at(event->position()); 
     if(child)
     {
         *event -= child->position();
@@ -160,21 +177,6 @@ void Widget::textInputEvent(Utf8String text)
     
 }
 
-
-Widget* Widget::childAt(float x, float y)
-{
-    for(int i=0; i<(int)childrenCount(); i++)
-    {
-        auto ch = child(i);
-        auto r = ch->boundingRect();
-        if(r.overlaps(x, y))
-        {
-            return ch;
-        }
-    }
-    
-    return nullptr;
-}
 
 Point<float> Widget::toParentCoords(Point<float> point)
 {
@@ -266,19 +268,6 @@ bool Widget::isKeyboardGrabber()
     return keyboard_grabber == this;
 }
 
-
-Widget* Widget::findLeafAt(float x, float y)
-{
-    Widget* child = childAt(x, y);
-    if(child)
-    {
-        return child->findLeafAt(x - child->x(), y - child->y());
-    }
-    else
-    {
-        return this;
-    }
-}
 
 
 }//namespace r64fx

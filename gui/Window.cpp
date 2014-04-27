@@ -33,17 +33,7 @@ Window::~Window()
 void Window::render()
 {    
     currently_rendered_window = this;
-    
-    RenderingContext::makeCurrent();
-    RenderingContext::update();
-    
     glClear(GL_COLOR_BUFFER_BIT);
-    
-    if(!one_shot_list.empty())
-    {
-        one_shot_list.exec();
-        one_shot_list.clear();
-    }
     
 #ifdef DEBUG
     assert(root_widget != nullptr);
@@ -63,6 +53,8 @@ void Window::updateGeometry()
     
     root_widget->setPosition(0.0, 0.0);
     root_widget->resize(w, h);
+    root_widget->project(0.0, 0.0);
+    root_widget->clip(0.0, 0.0, float(w), float(h));
  
     int hw = (w >> 1);
     int hh = (h >> 1);
@@ -77,21 +69,9 @@ void Window::updateGeometry()
 }
 
 
-void Window::projectRootWidget()
+void Window::runOneShotList()
 {
-#ifdef DEBUG
-    assert(root_widget != nullptr);
-#endif//DEBUG
-    root_widget->project(root_widget->position());
-}
-
-
-void Window::clipVisibleWidgets()
-{
-#ifdef DEBUG
-    assert(root_widget != nullptr);
-#endif//DEBUG
-    root_widget->clip({0.0, 0.0, float(w), float(h)});
+    one_shot_list.exec();
 }
 
 
@@ -294,8 +274,7 @@ void Window::initResizeEvent(int w, int h)
     one_shot_list.push_back([](void* data){
         auto window = (Window*) data;
         window->updateGeometry();
-        window->projectRootWidget();
-        window->clipVisibleWidgets();
+        window->render();
     }, this);
 }
 
@@ -325,7 +304,9 @@ void Window::mainSequence()
     
     for(auto w : _all_window_instances)
     {
-        w->render();
+        w->makeCurrent();
+        w->update();
+        w->runOneShotList();
     }
 }
 

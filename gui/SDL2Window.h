@@ -33,7 +33,7 @@ public:
     
     virtual Size<int> size();
     
-    virtual void updateGeometry();
+//     virtual void updateGeometry();
     
     virtual void show();
     

@@ -16,7 +16,7 @@ template<typename T> struct Rect{
     , bottom(bottom)
     {}
     
-    Rect<T>(Point<T> p, Size<T> s) : Rect<T>(p.x, p.y + s.h, p.x + s.w, p.y) {}
+    Rect<T>(Point<T> p, Size<T> s) : Rect<T>(p.x, p.y, p.x + s.w, p.y + s.h) {}
     
     inline T x() const { return left; }
     
@@ -26,7 +26,7 @@ template<typename T> struct Rect{
     
     inline T width() const { return right - left; }
     
-    inline T height() const { return top - bottom; }
+    inline T height() const { return bottom - top; }
     
     inline Size<T> size() const { return Size<T>(width(), height()); }
     
@@ -37,21 +37,36 @@ template<typename T> struct Rect{
     
     inline bool overlaps(T x, T y) 
     {
-        return overlaps(Point<float>(x, y));
+        return overlaps(Point<T>(x, y));
     }
     
-    bool overlaps(Rect<float> other)
+    bool overlaps(Rect<T> other)
     {
-        auto leftmost = (left < other.left ? left : other.left);
-        auto rightmost = (right > other.right ? right : other.right);
-        auto topmost = (top > other.top ? top : other.top);
-        auto bottommost = (bottom < other.bottom ? bottom : other.bottom);
-        return width() + other.width() >= rightmost - leftmost && height() + other.height() >= topmost - bottommost;
+        auto leftmost    =  left   < other.left   ?  left    : other.left;
+        auto topmost     =  top    < other.top    ?  top     : other.top;
+        auto rightmost   =  right  > other.right  ?  right   : other.right;
+        auto bottommost  =  bottom > other.bottom ?  bottom  : other.bottom;
+        
+        return (rightmost - leftmost) < (width() + other.width()) && (bottommost - topmost) < (height() + other.height());
     }
     
-    Point<float> center() const
+    Point<T> center() const
     {
-        return Point<float>( left + width() * 0.5, bottom + height() * 0.5 );
+        return Point<T>( left + width() * 0.5, bottom + height() * 0.5 );
+    }
+    
+    /** @brief  Make sure a point fits inside this rect.*/
+    void fit(Point<T> &p)
+    {
+        if(p.x < left)
+            p.x = left;
+        else if(p.x > right)
+            p.x = right;
+        
+        if(p.y < top)
+            p.y = top;
+        else if(p.y > right)
+            p.y = right;
     }
     
     template<typename OtherT> Rect<OtherT> to() { return Rect<OtherT>(left, top, right, bottom); }
@@ -72,9 +87,7 @@ template<typename T> struct Rect{
             this->right = other.right &&
             this->bottom = other.bottom
         ;
-    }
-    
-    inline bool isNull() { return !width() || !height(); }
+    }    
 };
     
 }//namespace r64fx

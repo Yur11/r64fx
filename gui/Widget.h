@@ -20,17 +20,13 @@ class Widget{
     friend class Scene;
     Point<float> _position;
     Size<float> _size;
-    
-    Point<float> projected_position; //In window coordinates.
 
     Widget* _parent = nullptr;
         
     Window* _window;
     
 protected:
-    std::vector<Widget*> _children;
-    
-    std::vector<Widget*> visible_children;
+    Point<float> projected_position; //In window coordinates.
     
 public:
     Widget(Widget* parent = nullptr) { setParent(parent); }
@@ -44,6 +40,34 @@ public:
      */
     void setParent(Widget* parent);
     
+    
+    /** @brief A wrapper for containers with child widgets. */
+    class Children{
+        friend class Widget;
+        std::vector<Widget*> widgets;
+        
+    public:
+        inline Widget* operator[](unsigned int i) { return widgets[i]; }
+        
+        inline unsigned int count() { return widgets.size(); }
+        
+        Widget* at(float x, float y);
+        
+        inline Widget* at(Point<float> p) { return at(p.x, p.y); }
+        
+        void removeAt(int i) { widgets[i]->setParent(nullptr); }
+        
+        inline bool empty() const { return widgets.empty(); }
+        
+        inline void clear() { widgets.clear(); }
+        
+        inline auto begin() -> decltype(widgets.begin()) { return widgets.begin(); }
+        
+        inline auto end() -> decltype(widgets.end()) { return widgets.end(); }
+    };
+    
+    Children children, visible_children;
+    
     /** @brief Add child widget at the end of the list. 
      
         This widget will be set as a parent of the given widget.
@@ -56,40 +80,10 @@ public:
      */
     void insertWidget(Widget* widget, int index = 0);
     
-    
-    /** @brief The n'th child of the widget. 
+    /** @brief Remove all child widgets from this widget. 
      
-        WARNING: No boundary check is done. Allways check the childrenCount().
+        This also clears the visible_children list.
      */
-    inline Widget* child(unsigned int i) const { return _children[i]; };
-
-    
-    /** @brief Find a child in the local coordinte system of this widget. 
-     
-        @return Returns a widget or nullptr.
-     */
-    Widget* childAt(float x, float y);
-    
-    /** @brief Find a child in the local coordinte system of this widget. 
-     
-        Overloaded for convenience.
-     */
-    inline Widget* childAt(Point<float> p) { return childAt(p.x, p.y); }
-    
-    /** @brief Remove child at the given position. */
-    inline void removeWidget(int i) { child(i)->setParent(nullptr); }
-
-    inline bool hasChildren() const { return _children.empty(); }
-    
-    inline unsigned int childrenCount() const { return _children.size(); }
-    
-    /** WARNING: Can only be called if the widget has children! */
-    inline Widget* lastChild() const { return _children.back(); }
-    
-    /** WARNING: Can only be called if the widget has children! */
-    inline Widget* firstChild() const { return _children.front(); }
-    
-    /** @brief Remove all child widgets from this widget. */
     void clear();
     
     
@@ -168,8 +162,12 @@ public:
     /** @brief Update the list of visible widgets. */
     virtual void clip(Rect<float> rect);
     
+    inline void clip(float left, float top, float right, float bottom) { clip({ left, top, right, bottom }); }
+    
     /** @brief Recursivly calculate window coordinates for the widget tree. */
-    virtual void project(Point<float> offset);
+    virtual void project(Point<float> p);
+    
+    inline void project(float x, float y) { project({ x, y }); }
     
     /** @brief Recursivly (re)upload data to video memory for all visible widgets. */
     virtual void updateVisuals();
@@ -240,9 +238,7 @@ public:
     bool isMouseGrabber();
     
     bool isKeyboardGrabber();
-    
-private:
-    Widget* findLeafAt(float x, float y);
+
 };
     
 }//r64fx
