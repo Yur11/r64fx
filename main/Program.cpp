@@ -130,9 +130,22 @@ bool Program::initGui()
     
     View* view = new View;
     view->appendWidget(lc);
-    view->setOffset(200, 200);
+    view->setOffset(210, 200);
     
     window->setRootWidget(view);
+    
+    cout << "view:    " << view << "\n";
+    cout << "lc:      " << lc << "\n";
+    cout << "lc1:     " << lc1 << "\n";
+    cout << "lc2:     " << lc2 << "\n";
+    cout << "dummy1:  " << dummy1 << "\n";
+    cout << "dummy2:  " << dummy2 << "\n";
+    cout << "dummy3:  " << dummy3 << "\n";
+    cout << "dummy4:  " << dummy4 << "\n";
+    cout << "dummy5:  " << dummy5 << "\n";
+    cout << "dummy6:  " << dummy6 << "\n";
+    cout << "dummy7:  " << dummy7 << "\n";
+    cout << "dummy8:  " << dummy8 << "\n";
     
     return true;
 }

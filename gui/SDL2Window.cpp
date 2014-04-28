@@ -104,23 +104,6 @@ Size<int> SDL2Window::size()
 }
 
 
-// void SDL2Window::updateGeometry()
-// {
-//      /* Hack. Send these events to the window for it to resize properly. */
-//     SDL_Event event;
-//     event.type = SDL_WINDOWEVENT;
-//     
-//     event.window.event = SDL_WINDOWEVENT_FOCUS_GAINED;
-//     event.window.windowID = SDL_GetWindowID(_window);
-//     SDL_PushEvent(&event);
-//     
-//     event.window.event = SDL_WINDOWEVENT_RESIZED;
-//     event.window.data1 = width();
-//     event.window.data2 = height();
-//     SDL_PushEvent(&event);
-// }
-
-
 void SDL2Window::show()
 {
     SDL_ShowWindow(_window);
@@ -213,7 +196,7 @@ void SDL2Window::processEvents()
                 window->makeCurrent();
                 
                 window->initKeyPressEvent(
-                    x, window->height() - y,
+                    x, y,
                     event.key.keysym.scancode, 
                     pressed_mouse_buttons, 
                     event.key.keysym.mod
@@ -235,7 +218,7 @@ void SDL2Window::processEvents()
                 window->makeCurrent();
                 
                 window->initKeyReleaseEvent(
-                    x, window->height() - y,
+                    x, y,
                     event.key.keysym.scancode, 
                     pressed_mouse_buttons, 
                     event.key.keysym.mod
@@ -274,7 +257,7 @@ void SDL2Window::processEvents()
 #endif//DEBUG
                 window->makeCurrent();
                 
-                window->initMouseMoveEvent(event.motion.x, window->height() - event.motion.y, pressed_mouse_buttons, SDL_GetModState());
+                window->initMouseMoveEvent(event.motion.x, event.motion.y, pressed_mouse_buttons, SDL_GetModState());
                 break;
             }
             
@@ -292,7 +275,7 @@ void SDL2Window::processEvents()
                     pressed_mouse_buttons |= Mouse::Button::Middle;
                 else if(event.button.button == SDL_BUTTON_RIGHT)
                     pressed_mouse_buttons |= Mouse::Button::Right;
-                window->initMousePressEvent(event.button.x, window->height() - event.button.y, pressed_mouse_buttons, SDL_GetModState());
+                window->initMousePressEvent(event.button.x, event.button.y, pressed_mouse_buttons, SDL_GetModState());
                 break;
             }
             
@@ -310,7 +293,7 @@ void SDL2Window::processEvents()
                     pressed_mouse_buttons &= ~Mouse::Button::Middle;
                 else if(event.button.button == SDL_BUTTON_RIGHT)
                     pressed_mouse_buttons &= ~Mouse::Button::Right;
-                window->initMouseReleaseEvent(event.button.x, window->height() - event.button.y, pressed_mouse_buttons, SDL_GetModState());
+                window->initMouseReleaseEvent(event.button.x, event.button.y, pressed_mouse_buttons, SDL_GetModState());
                 break;
             }
             
@@ -327,7 +310,7 @@ void SDL2Window::processEvents()
 #endif//DEBUG
                 window->makeCurrent();
                 
-                window->initMouseWheelEvent(x, window->height() - y, event.wheel.x, event.wheel.y, pressed_mouse_buttons, SDL_GetModState());
+                window->initMouseWheelEvent(x, y, event.wheel.x, event.wheel.y, pressed_mouse_buttons, SDL_GetModState());
                 break;
             }
             

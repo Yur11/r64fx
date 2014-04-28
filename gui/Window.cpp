@@ -51,10 +51,9 @@ void Window::updateGeometry()
     
     glViewport(0, 0, w, h);
     
-    root_widget->setPosition(0.0, 0.0);
+    root_widget->setRelativePosition(0.0, 0.0);
     root_widget->resize(w, h);
-    root_widget->project(0.0, 0.0);
-    root_widget->clip(0.0, 0.0, float(w), float(h));
+    root_widget->projectToRootAndClipVisible();
  
     int hw = (w >> 1);
     int hh = (h >> 1);
@@ -102,28 +101,10 @@ void Window::initMousePressEvent(int x, int y, unsigned int buttons, unsigned in
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setOriginWindow(this);
     
-//     if(!_overlay_menus.empty())
-//     {
-//         Widget* menu = overlay_menu_at(x, y);
-//         if(menu)
-//         {
-//             /* Deliver event to the menu. */
-//             event -= menu->position();
-//             menu->mousePressEvent(&event);
-//             return;
-//         }
-//         else
-//         {
-//             /* Clicked elswere. */
-//             closeAllOverlayMenus();
-//         }
-//     }
-//     
-//     
-//     if(Widget::mouseInputGrabber())
-//         Widget::mouseInputGrabber()->mousePressEvent(&event);
-//     else
-//         view()->mousePressEvent(&event);
+#ifdef DEBUG
+    assert(root_widget != nullptr);
+#endif//DEBUG
+    root_widget->mousePressEvent(&event);
 }
 
     
@@ -132,24 +113,10 @@ void Window::initMouseReleaseEvent(int x, int y, unsigned int buttons, unsigned 
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setOriginWindow(this);
     
-//     if(!_overlay_menus.empty())
-//     {
-//         Widget* menu = overlay_menu_at(x, y);
-//         if(menu)
-//         {
-//             /* Event goes to the menu. */
-//             event -= menu->position();
-//             menu->mouseReleaseEvent(&event);
-//             return;
-//         }
-//     }
-//     else
-//     {
-//         if(Widget::mouseInputGrabber())
-//             Widget::mouseInputGrabber()->mouseReleaseEvent(&event);
-//         else
-//             view()->mouseReleaseEvent(&event);
-//     }
+#ifdef DEBUG
+    assert(root_widget != nullptr);
+#endif//DEBUG
+    root_widget->mouseReleaseEvent(&event);
 }
 
     
@@ -162,53 +129,6 @@ void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int
     assert(root_widget != nullptr);
 #endif//DEBUG
     root_widget->mouseMoveEvent(&event);
-    
-//     mouse_is_hovering_menu = false;
-//     
-//     static HoverableWidget* prev_hovered_widget = nullptr;
-//     
-//     if(!_overlay_menus.empty())
-//     {
-//         Widget* menu = overlay_menu_at(x, y);
-//         if(menu)
-//         {
-//             /* Event goes to the menu. */
-//             mouse_is_hovering_menu = true;
-//             event -= menu->position();
-//             menu->mouseMoveEvent(&event);
-//             goto _exit;
-//         }
-//     }
-//     
-//     if(Widget::mouseInputGrabber())
-//         Widget::mouseInputGrabber()->mouseMoveEvent(&event);
-//     else
-//     {
-// #ifdef DEBUG
-//         if(x >= view()->width())
-//         {
-//             cerr << "x == " << x << "\n";
-//             cerr << "view->width() == " << view()->width() << "\n";
-//             abort();
-//         }
-// #endif//DEBUG
-//         view()->mouseMoveEvent(&event);
-//     }
-//     
-// _exit:
-//     if(event.hovered_widget == nullptr)
-//     {
-//         HoverableWidget::reset();
-//         if(prev_hovered_widget != nullptr)
-//         {
-//             auto view = event.view();
-//             if(view)
-//                 view->getRepainted();
-//         }
-//     }
-//  
-//     
-//     prev_hovered_widget = event.hovered_widget;
 }
 
 
@@ -216,17 +136,6 @@ void Window::initMouseWheelEvent(int x, int y, int dx, int dy, unsigned int butt
 {
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setButtons(event.buttons() | (dy > 0 ? Mouse::Button::WheelUp : Mouse::Button::WheelDown));
-    
-//     if(!_overlay_menus.empty())
-//     {
-//         Widget* menu = overlay_menu_at(x, y);
-//         if(menu)
-//         {
-//             return;
-//         }
-//     }
-//     
-//     view()->mouseWheelEvent(&event);
 }
 
     
@@ -234,15 +143,6 @@ void Window::initKeyPressEvent(int x, int y, unsigned int scancode, unsigned int
 {
     KeyEvent event(x, y, buttons, scancode, keyboard_modifiers);
     event.setOriginWindow(this);
-    
-//     if(Widget::keyboardInputGrabber())
-//     {
-//         Widget::keyboardInputGrabber()->keyPressEvent(&event);
-//     }
-//     else
-//     {
-//         view()->keyPressEvent(&event);
-//     }
 }
 
     
@@ -250,15 +150,6 @@ void Window::initKeyReleaseEvent(int x, int y, unsigned int scancode, unsigned i
 {
     KeyEvent event(x, y, buttons, scancode, keyboard_modifiers);
     event.setOriginWindow(this);
-    
-//     if(Widget::keyboardInputGrabber())
-//     {
-//         Widget::keyboardInputGrabber()->keyReleaseEvent(&event);
-//     }
-//     else
-//     {
-//         view()->keyReleaseEvent(&event);
-//     }
 }
 
 
@@ -307,7 +198,19 @@ void Window::mainSequence()
         w->makeCurrent();
         w->update();
         w->runOneShotList();
+        w->render();
     }
+}
+
+
+void Window::issueRepaint()
+{
+//     cout << "issue_repaint\n";
+//     fireOnce([](void* data){
+//         auto window = (Window*) data;
+//         cout << "repaint\n";
+//         window->render();
+//     }, this);
 }
 
     

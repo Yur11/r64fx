@@ -58,13 +58,10 @@ void View::dropBottomScrollLimit()
     scroll_limits.bottom = numeric_limits<float>::max();
 }
 
-void View::project(Point<float> p)
+
+void View::projectToRootAndClipVisible(Rect<float> rect)
 {
-    projected_position = position() + p;
-    for(auto ch : children)
-    {
-        ch->project(projected_position + offset());
-    }
+    Widget::projectToRootAndClipVisible(rect + offset());
 }
 
 }//namespace r64fx

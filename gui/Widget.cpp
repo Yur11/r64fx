@@ -2,6 +2,8 @@
 #include "MouseEvent.h"
 #include "KeyEvent.h"
 
+#include <algorithm>
+
 #ifdef DEBUG
 #include <iostream>
 #include <assert.h>
@@ -23,11 +25,11 @@ void Widget::setParent(Widget* new_parent)
     if(_parent)
     {
         /* Remove me from the old parent. */
-        for(auto it = _parent->children.widgets.begin(); it != _parent->children.widgets.end(); it++)
+        for(auto it = _parent->children.begin(); it != _parent->children.end(); it++)
         {
             if(*it == this)
             {
-                _parent->children.widgets.erase(it);
+                _parent->children.erase(it);
                 break;
             }
         }
@@ -37,99 +39,84 @@ void Widget::setParent(Widget* new_parent)
     
     if(_parent)
     {
-        _parent->children.widgets.push_back(this);
+        _parent->children.push_back(this);
+        _parent->visible_children.setBeginIterator(_parent->children.begin());
+        _parent->visible_children.setEndIterator(_parent->children.end());
     }
-}
-
-
-Widget* Widget::Children::at(float x, float y)
-{
-    for(int i=0; i<(int)count(); i++)
-    {
-        auto ch = widgets[i];
-        auto r = ch->boundingRect();
-        if(r.overlaps(x, y))
-        {
-            return ch;
-        }
-    }
-    
-    return nullptr;
 }
 
 
 void Widget::appendWidget(Widget* widget)
 {
     widget->_parent = this;
-    children.widgets.push_back(widget);
+    children.push_back(widget);
 }
 
 
 void Widget::insertWidget(Widget* widget, int index)
 {
     widget->_parent = this;
-    children.widgets.insert(children.widgets.begin() + index, widget);
+    children.insert(children.begin() + index, widget);
 }
 
 
 void Widget::clear()
 {
     while(!children.empty())
-        children.removeAt(children.widgets.size() - 1);
-    visible_children.clear();
+        removeChild(children.size() - 1);
+}
+    
+    
+void Widget::projectToRootAndClipVisible(Rect<float> rect)
+{
+    absolute_position = rect.position() + this->relativePosition();
+    if(rect.overlaps(this->absoluteRect()))
+    {
+        is_visible = true;
+        
+        if(hasChildren())
+        {
+            for(auto w : allChildren())
+                w->projectToRootAndClipVisible(absoluteRect());
+            
+            sort(allChildren().begin(), allChildren().end(), [](Widget* a, Widget* b){
+                return (!a->isVisible()) && b->isVisible();
+            });
+            
+            auto b = allChildren().begin();
+            auto e = allChildren().end();
+            
+            while(!(*b)->isVisible())
+            {
+#ifdef DEBUG
+                assert(b != allChildren().end());
+#endif//DEBUG
+                b++;
+            }
+            
+            visible_children = { b, e };
+        }
+    }
+    else
+    {
+        is_visible = false;
+    }
 }
     
     
 void Widget::render()
 {
-    for(auto ch : visible_children)
+    for(auto ch : allChildren())
     {
         ch->render();
     }
 }
 
-
-void Widget::clip(Rect<float> rect)
-{
-    visible_children.clear();
-    for(auto ch : children)
-    {
-        if(rect.overlaps(ch->projectedRect()))
-        {
-            visible_children.widgets.push_back(ch);
-            ch->clip(ch->projectedRect());
-        }
-    }
-}
-
-
-void Widget::project(Point<float> p)
-{
-    projected_position = position() + p;
-    for(auto ch : children)
-    {
-        ch->project(projected_position);
-    }
-}
-
-
-void Widget::updateVisuals()
-{
-    for(auto ch : visible_children)
-    {
-        ch->updateVisuals();
-    }
-}
-
-
 void Widget::mousePressEvent(MouseEvent* event)
-{
-//     event->widget = this;
-    
-    auto child = visible_children.at(event->position()); 
+{        
+    auto child = find_widget_absolute(event->position(), visibleChildren());
     if(child)
     {
-        *event -= child->position();
         child->mousePressEvent(event);
     }
 }
@@ -137,10 +124,9 @@ void Widget::mousePressEvent(MouseEvent* event)
     
 void Widget::mouseReleaseEvent(MouseEvent* event)
 {
-    auto child = visible_children.at(event->position()); 
+    auto child = find_widget_absolute(event->position(), visibleChildren()); 
     if(child)
     {
-        *event -= child->position();
         child->mouseReleaseEvent(event);
     }
 }
@@ -148,10 +134,9 @@ void Widget::mouseReleaseEvent(MouseEvent* event)
     
 void Widget::mouseMoveEvent(MouseEvent* event)
 {
-    auto child = visible_children.at(event->position()); 
+    auto child = find_widget_absolute(event->position(), visibleChildren()); 
     if(child)
     {
-        *event -= child->position();
         child->mouseMoveEvent(event);
     }
 }
@@ -180,7 +165,7 @@ void Widget::textInputEvent(Utf8String text)
 
 Point<float> Widget::toParentCoords(Point<float> point)
 {
-    return position() + point;
+    return relativePosition() + point;
 }
 
 
@@ -198,11 +183,11 @@ Point<float> Widget::toSuperCoordinates(Point<float> point, Widget* super)
     
     if(_parent == super)
     {
-        return point + this->position();
+        return point + this->relativePosition();
     }
     else
     {
-        return _parent->toSuperCoordinates(point, super) + this->position();
+        return _parent->toSuperCoordinates(point, super) + this->relativePosition();
     }
 }
 
@@ -211,7 +196,7 @@ Point<float> Widget::toRootCoords(Point<float> point)
 {
     if(_parent)
     {
-        return _parent->toRootCoords(position() + point);
+        return _parent->toRootCoords(relativePosition() + point);
     }
     else
     {
@@ -267,6 +252,27 @@ bool Widget::isKeyboardGrabber()
 {
     return keyboard_grabber == this;
 }
+
+
+Widget* find_widget_relative(Point<float> p, WidgetIteratorPair range)
+{
+    for(auto w : range)
+        if(w->relativeRect().overlaps(p))
+            return w;
+    return nullptr;
+}
+
+
+Widget* find_widget_absolute(Point<float> p, WidgetIteratorPair range)
+{
+    for(auto w : range)
+    {
+        if(w->absoluteRect().overlaps(p))
+            return w;
+    }
+    return nullptr;
+}
+
 
 
 

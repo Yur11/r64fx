@@ -44,20 +44,23 @@ Dummy::Dummy(float width, float height, Widget* parent)
 
 void Dummy::render()
 {          
-    auto pr = projectedRect();
+    auto r = absoluteRect();
     
     float pos[8] = {
-        pr.left,  pr.bottom,
-        pr.right,  pr.bottom,
-        pr.left,   pr.top,
-        pr.right,  pr.top
+        r.left,   r.bottom,
+        r.right,  r.bottom,
+        r.left,   r.top,
+        r.right,  r.top
     };
             
     p.bindBuffer();
     p.setPositions(pos, 8);
     p.unbindBuffer();
-            
-    Painter::setColor(1.0, 0.0, 0.0, 1.0);
+         
+    if(is_pressed)
+        Painter::setColor(0.0, 1.0, 0.0, 1.0);
+    else
+        Painter::setColor(1.0, 0.0, 0.0, 1.0);
     Painter::useNoTexture();
     
     p.bindArray();
@@ -69,11 +72,22 @@ void Dummy::render()
 void Dummy::mousePressEvent(MouseEvent* event)
 {    
     event->has_been_handled = true;
+    is_pressed = true;
+    event->originWindow()->issueRepaint();
+}
+
+
+void Dummy::mouseReleaseEvent(MouseEvent* event)
+{
+    event->has_been_handled = true;
+    is_pressed = false;
+    event->originWindow()->issueRepaint();
 }
 
 
 void Dummy::mouseMoveEvent(MouseEvent* event)
 {
+    event->has_been_handled = true;
     _last_mouse_move = event->position();
 }
 

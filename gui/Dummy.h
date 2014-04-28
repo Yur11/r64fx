@@ -13,12 +13,16 @@ class Dummy : public Widget{
     Point<float> _last_mouse_move;
     Painter p;
     
+    bool is_pressed = false;
+    
 public:
     Dummy(float width, float height, Widget* parent = nullptr);
     
     virtual void render();
     
     virtual void mousePressEvent(MouseEvent* event);
+    
+    virtual void mouseReleaseEvent(MouseEvent* event);
     
     virtual void mouseMoveEvent(MouseEvent* event);
     

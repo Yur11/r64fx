@@ -28,17 +28,7 @@ public:
     void dropRightScrollLimit();
     void dropBottomScrollLimit();
     
-    /** @brief Draw the widget and it's visible children. */
-//     virtual void render();
-    
-    /** @brief Update the list of visible widgets. */
-//     virtual void clip(Rect<float> rect);
-    
-    /** @brief Recursivly calculate window coordinates for the widget tree. */
-    virtual void project(Point<float> p);
-    
-    /** @brief Recursivly (re)upload data to video memory for all visible widgets. */
-//     virtual void updateVisuals();
+    virtual void projectToRootAndClipVisible(Rect<float> rect);
 };
     
 }//namespace r64fx

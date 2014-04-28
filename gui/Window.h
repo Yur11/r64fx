@@ -28,7 +28,7 @@ class Window : public RenderingContext{
     CallbackList one_shot_list;
     
     void runOneShotList();
-        
+            
 protected:
     inline static void setEventCallback(VoidFun fun) { event_callback = fun; }
                 
@@ -93,6 +93,8 @@ public:
     inline static Window* currentlyRenderedWindow() { return currently_rendered_window; }
     
     inline void fireOnce(void (*fun)(void*), void* data) { one_shot_list.push_back(fun, data); }
+    
+    void issueRepaint();
 };    
 
 }//namespace r64fx

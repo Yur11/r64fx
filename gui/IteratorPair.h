@@ -7,7 +7,7 @@ template<typename IteratorT> class IteratorPair{
     IteratorT _begin, _end;
     
 public:
-    IteratorPair(IteratorT begin, IteratorT end)
+    IteratorPair(IteratorT begin = IteratorT(), IteratorT end = IteratorT())
     : _begin(begin)
     , _end(end)
     {}

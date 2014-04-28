@@ -44,7 +44,7 @@ void Menu::appendAction(Action* act)
 
 void Menu::update()
 {
-    const auto &r = boundingRect();
+    const auto &r = absoluteRect();
         
     float pos[8] = {
         0.0, 0.0,

@@ -32,7 +32,7 @@ template<typename T> struct Rect{
     
     inline bool overlaps(Point<T> point) 
     {
-        return point.x > left && point.x < right && point.y < top && point.y > bottom;
+        return point.x > left && point.x < right && point.y > top && point.y < bottom;
     }
     
     inline bool overlaps(T x, T y) 
@@ -76,7 +76,7 @@ template<typename T> struct Rect{
     inline Rect<T> operator-(Point<T> point) { return Rect<T>(position() - point, size()); }
     
     /** @brief Outset/Inset */
-    inline Rect<T> operator+(T val) { return Rect<T>(left - val, top + val, right + val, bottom - val); }
+    inline Rect<T> operator+(T val) { return Rect<T>(left + val, top + val, right + val, bottom + val); }
     inline Rect<T> operator-(T val) { return this->operator+(-val); }
     
     inline bool operator==(const Rect<T> &other) 

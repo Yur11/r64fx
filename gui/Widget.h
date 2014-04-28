@@ -11,22 +11,36 @@
 
 
 namespace r64fx{
-    
+
+class Widget;    
 class MouseEvent;
 class KeyEvent;
 class Window;
 
+typedef IteratorPair<std::vector<Widget*>::iterator>  WidgetIteratorPair;
+
 class Widget{
     friend class Scene;
-    Point<float> _position;
-    Size<float> _size;
+    Point<float> relative_position; //Parent coordinates.
+    Size<float>  _size;
 
     Widget* _parent = nullptr;
         
     Window* _window;
     
 protected:
-    Point<float> projected_position; //In window coordinates.
+    /* These are made protected to allow alternative more efficient 
+     * implementations of algorithms that use these fields. */
+    
+    std::vector<Widget*> children;
+
+    Point<float> absolute_position; //Root(Window) coordinates.
+                                    //Never set directly.
+                                    //Calculated by recursively accumulating relative positions.
+    
+    bool is_visible = true;
+    
+    WidgetIteratorPair visible_children;
     
 public:
     Widget(Widget* parent = nullptr) { setParent(parent); }
@@ -39,34 +53,14 @@ public:
      Use nullptr to detach the widget from any parent.
      */
     void setParent(Widget* parent);
+        
+    inline WidgetIteratorPair allChildren() { return { children.begin(), children.end() }; }
     
+    inline WidgetIteratorPair visibleChildren() { return visible_children; }
     
-    /** @brief A wrapper for containers with child widgets. */
-    class Children{
-        friend class Widget;
-        std::vector<Widget*> widgets;
-        
-    public:
-        inline Widget* operator[](unsigned int i) { return widgets[i]; }
-        
-        inline unsigned int count() { return widgets.size(); }
-        
-        Widget* at(float x, float y);
-        
-        inline Widget* at(Point<float> p) { return at(p.x, p.y); }
-        
-        void removeAt(int i) { widgets[i]->setParent(nullptr); }
-        
-        inline bool empty() const { return widgets.empty(); }
-        
-        inline void clear() { widgets.clear(); }
-        
-        inline auto begin() -> decltype(widgets.begin()) { return widgets.begin(); }
-        
-        inline auto end() -> decltype(widgets.end()) { return widgets.end(); }
-    };
+    inline bool isVisible() const { return is_visible; }
     
-    Children children, visible_children;
+    /** @brief  */
     
     /** @brief Add child widget at the end of the list. 
      
@@ -79,6 +73,13 @@ public:
         This widget will be set as a parent of the given widget.
      */
     void insertWidget(Widget* widget, int index = 0);
+    
+    inline int childrenCount() const { return children.size(); }
+    
+    inline bool hasChildren() const { return !children.empty(); }
+    
+    inline void removeChild(int i) { children[i]->setParent(nullptr); }
+    
     
     /** @brief Remove all child widgets from this widget. 
      
@@ -94,34 +95,25 @@ public:
         This value is used by Widget::render_children() method.
         For widgets without a parent, position has no meaning.
      */
-    inline void setPosition(Point<float> p) { _position = p; }
+    inline void setRelativePosition(Point<float> p) { relative_position = p; }
     
     /** @brief Set a new position for the widget. 
      
         Overloaded for convenience.
      */
-    inline void setPosition(float x, float y) { setPosition(Point<float>(x, y)); };
+    inline void setRelativePosition(float x, float y) { setRelativePosition(Point<float>(x, y)); };
+
+    inline void setRelativeX(float x) { relative_position.x = x; }
+    inline void setRelativeY(float y) { relative_position.y = y; }
     
     /** @brief  Coordintes of the top left corner of the widget ,
         within the local coordinte system of the parent widget.
         This value is used by Widget::render_children() method.
         For widgets without a parent, position has no meaning.
     */
-    inline Point<float> position() const { return _position; };
+    inline Point<float> relativePosition() const { return relative_position; };
     
-    /** @brief Set the x coordinte for the left edge of the bounding rect. */
-    inline void setX(float x) { _position.x = x; }
-    
-    /** @brief Set the y coordinte for the top edge of the bounding rect. */
-    inline void setY(float y) { _position.y = y; }
-    
-    /** @brief The x coordinte of the left edge of the bounding rect. */
-    inline float x() const { return _position.x; }
-    
-    /** @brief The y coordinte of the bottom edge of the bounding rect. */
-    inline float y() const { return _position.y; }
-    
-    inline Point<float> projectedPosition() const { return projected_position; }
+    inline Point<float> absolutePosition() const { return absolute_position; }
     
     /** @brief Resize the bounding rect of the widget. */
     inline void resize(Size<float> s) { _size = s; }
@@ -147,30 +139,22 @@ public:
     /** @brief Height of the bounding rect. */
     inline float height() const { return _size.h; }
     
-    /** @brief Widget's bounding rect. */
-    inline Rect<float> boundingRect() const { return Rect<float>(position(), size()); }
+    inline Rect<float> relativeRect() const { return { relative_position, _size }; }
     
-    /** @brief Widget's rect in window coordinates. 
-     
-        Call project to recalculate.
+    inline Rect<float> absoluteRect() const { return { absolute_position, _size }; }
+    
+    /** @brief Calculate absolute_position. Call recursively if visible.
+     * 
+     *  Widgets that are partially visible are considered to be visible.
+     *  The children list is sorted. 
+     *  In this default implementation they are moved to the end of the list.
      */
-    inline Rect<float> projectedRect() const { return Rect<float>(projectedPosition(), size()); }
+    virtual void projectToRootAndClipVisible(Rect<float> rect);
+    
+    inline void projectToRootAndClipVisible() { projectToRootAndClipVisible(relativeRect()); }
     
     /** @brief Draw the widget and it's visible children. */
     virtual void render();
-    
-    /** @brief Update the list of visible widgets. */
-    virtual void clip(Rect<float> rect);
-    
-    inline void clip(float left, float top, float right, float bottom) { clip({ left, top, right, bottom }); }
-    
-    /** @brief Recursivly calculate window coordinates for the widget tree. */
-    virtual void project(Point<float> p);
-    
-    inline void project(float x, float y) { project({ x, y }); }
-    
-    /** @brief Recursivly (re)upload data to video memory for all visible widgets. */
-    virtual void updateVisuals();
         
     /** @brief Send a mouse press event to the widget. */
     virtual void mousePressEvent(MouseEvent* event);
@@ -240,6 +224,14 @@ public:
     bool isKeyboardGrabber();
 
 };
+
+
+/** @brief Find a widget that overlaps the given point, using it's realative position. */
+Widget* find_widget_relative(Point<float> p, WidgetIteratorPair range);
+
+
+/** @brief Find a widget that overlaps the given point, using it's absolute position. */
+Widget* find_widget_absolute(Point<float> p, WidgetIteratorPair range);
     
 }//r64fx
 
