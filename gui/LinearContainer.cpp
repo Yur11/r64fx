@@ -43,5 +43,14 @@ void LinearContainer::alignHorizontally()
     setWidth(x + paddingRight());
     setHeight(h + paddingHeight());
 }
+
+
+void LinearContainer::projectToRootAndClipVisible(Rect<float> rect)
+{
+    Widget::projectToRootAndClipVisible(rect);
+    
+//     auto it = visibleChildren().begin();
+//     if(it == allChildren().begin();)
+}
  
 }//namespace r64fx

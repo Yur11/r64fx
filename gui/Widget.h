@@ -41,6 +41,8 @@ protected:
     bool is_visible = true;
     
     WidgetIteratorPair visible_children;
+        
+    virtual void projectToRootAndClipVisible(Rect<float> rect);
     
 public:
     Widget(Widget* parent = nullptr) { setParent(parent); }
@@ -143,16 +145,9 @@ public:
     
     inline Rect<float> absoluteRect() const { return { absolute_position, _size }; }
     
-    /** @brief Calculate absolute_position. Call recursively if visible.
-     * 
-     *  Widgets that are partially visible are considered to be visible.
-     *  The children list is sorted. 
-     *  In this default implementation they are moved to the end of the list.
-     */
-    virtual void projectToRootAndClipVisible(Rect<float> rect);
+    virtual void update();
     
-    inline void projectToRootAndClipVisible() { projectToRootAndClipVisible(relativeRect()); }
-    
+        
     /** @brief Draw the widget and it's visible children. */
     virtual void render();
         
@@ -184,8 +179,8 @@ public:
      */
     Point<float> toParentCoords(Point<float> point);
     
-    /** @brief Convert point from this widgets coordinte system to the coordinte system of a widget up the tree. */
-    Point<float> toSuperCoordinates(Point<float> point, Widget* super);
+//     /** @brief Convert point from this widgets coordinte system to the coordinte system of a widget up the tree. */
+//     Point<float> toSuperCoordinates(Point<float> point, Widget* super);
     
     /** @brief Convert point from this widgets coordinte system to the coordinte system of the root widget.
         

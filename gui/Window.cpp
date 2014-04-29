@@ -53,7 +53,7 @@ void Window::updateGeometry()
     
     root_widget->setRelativePosition(0.0, 0.0);
     root_widget->resize(w, h);
-    root_widget->projectToRootAndClipVisible();
+    root_widget->update();
  
     int hw = (w >> 1);
     int hh = (h >> 1);

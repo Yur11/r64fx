@@ -18,55 +18,6 @@ Widget* keyboard_grabber = nullptr;
 Widget* hovered_widget = nullptr;
 
 
-Widget stub_widget;
-
-void Widget::setParent(Widget* new_parent)
-{
-    if(_parent)
-    {
-        /* Remove me from the old parent. */
-        for(auto it = _parent->children.begin(); it != _parent->children.end(); it++)
-        {
-            if(*it == this)
-            {
-                _parent->children.erase(it);
-                break;
-            }
-        }
-    }
-    
-    _parent = new_parent;
-    
-    if(_parent)
-    {
-        _parent->children.push_back(this);
-        _parent->visible_children.setBeginIterator(_parent->children.begin());
-        _parent->visible_children.setEndIterator(_parent->children.end());
-    }
-}
-
-
-void Widget::appendWidget(Widget* widget)
-{
-    widget->_parent = this;
-    children.push_back(widget);
-}
-
-
-void Widget::insertWidget(Widget* widget, int index)
-{
-    widget->_parent = this;
-    children.insert(children.begin() + index, widget);
-}
-
-
-void Widget::clear()
-{
-    while(!children.empty())
-        removeChild(children.size() - 1);
-}
-    
-    
 void Widget::projectToRootAndClipVisible(Rect<float> rect)
 {
     absolute_position = rect.position() + this->relativePosition();
@@ -101,6 +52,60 @@ void Widget::projectToRootAndClipVisible(Rect<float> rect)
     {
         is_visible = false;
     }
+}
+
+
+void Widget::setParent(Widget* new_parent)
+{
+    if(_parent)
+    {
+        /* Remove me from the old parent. */
+        for(auto it = _parent->allChildren().begin(); it != _parent->allChildren().end(); it++)
+        {
+            if(*it == this)
+            {
+                _parent->children.erase(it);
+                break;
+            }
+        }
+    }
+    
+    _parent = new_parent;
+    
+    if(_parent)
+    {
+        _parent->children.push_back(this);
+    }
+}
+
+
+void Widget::appendWidget(Widget* widget)
+{
+    widget->_parent = this;
+    children.push_back(widget);
+}
+
+
+void Widget::insertWidget(Widget* widget, int index)
+{
+    widget->_parent = this;
+    children.insert(children.begin() + index, widget);
+}
+
+
+void Widget::clear()
+{
+    while(!children.empty())
+        removeChild(children.size() - 1);
+}
+
+
+void Widget::update()
+{
+    if(_parent == nullptr)
+        absolute_position = relative_position;
+    
+    projectToRootAndClipVisible(absoluteRect());
 }
     
     
@@ -169,27 +174,27 @@ Point<float> Widget::toParentCoords(Point<float> point)
 }
 
 
-Point<float> Widget::toSuperCoordinates(Point<float> point, Widget* super)
-{
-#ifdef DEBUG
-    assert(super != nullptr);
-    
-    if(!_parent)
-    {
-        cerr << "Widget::toSuperCoordinates(): The given super widget does not belong to this widget tree!\n";
-        abort();
-    }
-#endif//DEBUG
-    
-    if(_parent == super)
-    {
-        return point + this->relativePosition();
-    }
-    else
-    {
-        return _parent->toSuperCoordinates(point, super) + this->relativePosition();
-    }
-}
+// Point<float> Widget::toSuperCoordinates(Point<float> point, Widget* super)
+// {
+// #ifdef DEBUG
+//     assert(super != nullptr);
+//     
+//     if(!_parent)
+//     {
+//         cerr << "Widget::toSuperCoordinates(): The given super widget does not belong to this widget tree!\n";
+//         abort();
+//     }
+// #endif//DEBUG
+//     
+//     if(_parent == super)
+//     {
+//         return point + this->relativePosition();
+//     }
+//     else
+//     {
+//         return _parent->toSuperCoordinates(point, super) + this->relativePosition();
+//     }
+// }
 
     
 Point<float> Widget::toRootCoords(Point<float> point)
