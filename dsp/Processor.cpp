@@ -36,14 +36,14 @@ Slot* Processor::getSlot()
         if(slot->index() == (int)size() - 1)
             return nullptr;
         
-        if(slot->nextItem() == nullptr || slot->nextItem()->index() - slot->index() > 1)
+        if(slot->next() == nullptr || slot->next()->index() - slot->index() > 1)
         {
             slot->insert(new Slot(slot->index()+1));
-            return slot->nextItem();
+            return slot->next();
         }
         else 
         {
-            slot = slot->nextItem();
+            slot = slot->next();
         }
     }    
 }
@@ -52,7 +52,7 @@ Slot* Processor::getSlot()
 void Processor::freeSlot(Slot* slot)
 {
     if(slot == first_slot)
-        first_slot = slot->nextItem();
+        first_slot = slot->next();
     
     slot->remove();
 }
@@ -61,7 +61,7 @@ void Processor::freeSlot(Slot* slot)
 #ifdef DEBUG
 void Processor::debugSlots()
 {
-    for(auto slot=first_slot; slot!=nullptr; slot=slot->nextItem())
+    for(auto slot=first_slot; slot!=nullptr; slot=slot->next())
     {
         std::cout << slot->index() << "\n";
     }
