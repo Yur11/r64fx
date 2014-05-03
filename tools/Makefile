@@ -2,7 +2,7 @@ CXX                 =  g++ -std=c++11
 
 SRC_DIR             =   $(shell cat src_dir)
 INC                 =   -I $(SRC_DIR)  -I . -I /usr/include/freetype2
-CXXFLAGS            ?=  -DDEBUG -DDEBUG_GL_ERRORS -DABORT_ON_GL_ERROR -DUSE_SDL2 -g -Wall
+CXXFLAGS            ?=  -DDEBUG -DDEBUG_GL_ERRORS -DABORT_ON_GL_ERROR -DDEBUG_LINKED_ITEM_CHAIN -DUSE_SDL2 -g -Wall
 
 MKDIR               =   mkdir -p
 
