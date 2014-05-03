@@ -242,7 +242,7 @@ template<typename T> T* insert_to_list(T* &first_ptr, T* &last_ptr, T* existing_
     
     The list must not be empty.
  */
-template<typename T> Item* remove_from_list(T* &first_ptr, T* &last_ptr, T* item)
+template<typename T> T* remove_from_list(T* &first_ptr, T* &last_ptr, T* item)
 {
 #ifdef DEBUG_LINKED_ITEM_CHAIN
     assert(item != nullptr);
