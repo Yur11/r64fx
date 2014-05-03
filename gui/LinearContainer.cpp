@@ -15,12 +15,12 @@ void LinearContainer::alignVertically()
 {
     float w = 0.0;
     float y = paddingTop();
-    for(auto ch : children)
+    for(auto &ch : children)
     {
-        ch->setRelativeY(y);
-        y += ch->height();
-        if(w < ch->width())
-            w = ch->width();
+        ch.setRelativeY(y);
+        y += ch.height();
+        if(w < ch.width())
+            w = ch.width();
     }
     
     setWidth(w + paddingWidth());
@@ -32,12 +32,12 @@ void LinearContainer::alignHorizontally()
 {
     float h = 0.0;
     float x = paddingLeft();
-    for(auto ch: children)
+    for(auto &ch: children)
     {
-        ch->setRelativeX(x);
-        x += ch->width();
-        if(h < ch->height())
-            h = ch->height();
+        ch.setRelativeX(x);
+        x += ch.width();
+        if(h < ch.height())
+            h = ch.height();
     }
     
     setWidth(x + paddingRight());

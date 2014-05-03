@@ -7,6 +7,7 @@
 #include "Rect.h"
 #include "RenderingContext.h"
 #include "Projection2D.h"
+#include "shared_sources/LinkedItem.h"
 #include "IteratorPair.h"
 
 
@@ -17,22 +18,21 @@ class MouseEvent;
 class KeyEvent;
 class Window;
 
-typedef IteratorPair<std::vector<Widget*>::iterator>  WidgetIteratorPair;
+// typedef IteratorPair<std::vector<Widget*>::iterator>  WidgetIteratorPair;
+typedef IteratorPair<LinkedItemPointer<Widget>> WidgetIteratorPair;
 
-class Widget{
-    friend class Scene;
+class Widget : public LinkedItem<Widget>{
     Point<float> relative_position; //Parent coordinates.
     Size<float>  _size;
 
-    Widget* _parent = nullptr;
-        
-    Window* _window;
-    
+    Widget* parent_widget = nullptr;
+            
 protected:
     /* These are made protected to allow alternative more efficient 
      * implementations of algorithms that use these fields. */
     
-    std::vector<Widget*> children;
+//     std::vector<Widget*> children;
+    LinkedItemChain<Widget> children;
 
     Point<float> absolute_position; //Root(Window) coordinates.
                                     //Never set directly.
@@ -40,7 +40,7 @@ protected:
     
     bool is_visible = true;
     
-    WidgetIteratorPair visible_children;
+    WidgetIteratorPair visible_children = { nullptr, nullptr };
         
     virtual void projectToRootAndClipVisible(Rect<float> rect);
     
@@ -70,18 +70,10 @@ public:
      */
     virtual void appendWidget(Widget* widget);
     
-    /** @brief Insert child widget before the given index. Make sure the index is valid.
-     
-        This widget will be set as a parent of the given widget.
-     */
-    void insertWidget(Widget* widget, int index = 0);
-    
-    inline int childrenCount() const { return children.size(); }
-    
-    inline bool hasChildren() const { return !children.empty(); }
-    
-    inline void removeChild(int i) { children[i]->setParent(nullptr); }
-    
+    void insertWidget(Widget* existing_widget, Widget* widget);
+        
+    inline bool hasChildren() const { return !children.isEmpty(); }
+        
     
     /** @brief Remove all child widgets from this widget. 
      
