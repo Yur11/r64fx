@@ -59,9 +59,10 @@ void View::dropBottomScrollLimit()
 }
 
 
-void View::projectToRootAndClipVisible(Rect<float> rect)
+void View::projectToRootAndClipVisible(Point<float> parent_position, Rect<float> parent_visible_rect)
 {
-    Widget::projectToRootAndClipVisible(rect + offset());
+    
+    Widget::projectToRootAndClipVisible(parent_position + offset(), parent_visible_rect);
 }
 
 }//namespace r64fx

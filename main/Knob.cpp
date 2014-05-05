@@ -27,7 +27,7 @@ void BasicKnob::update()
 {
     float width = radius * 2 + paddingLeft() + paddingRight();
     float height = radius * 2 + paddingBottom() + paddingTop();
-    resize(width, height);
+    setSize(width, height);
 }
 
 
@@ -50,7 +50,7 @@ void BasicKnob::mouseReleaseEvent(MouseEvent* event)
 
 void BasicKnob::mouseMoveEvent(MouseEvent* event)
 {    
-    if(Widget::isMouseGrabber())
+    if(Widget::isMouseInputGrabber())
     {
         angle -= Mouse::relativePosition().y;
         if(angle < min_angle)

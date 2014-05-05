@@ -30,29 +30,16 @@ void TextEdit::render()
         float top = Padding::paddingTop() + 1;
         float right = text_selection.right() - 1;
         float bottom = Widget::height() - Padding::paddingBottom() - 1;
-                    
-//         glColor4f(0.0, 0.0, 1.0, 1.0);
-//         glBegin(GL_LINE_LOOP);
-//             glVertex2f(left, top);
-//             glVertex2f(right, top);
-//             glVertex2f(right, bottom);
-//             glVertex2f(left, bottom);
-//         glEnd();
     }
     else
     {
-        if(Widget::isKeyboardGrabber())
+        if(Widget::isKeyboardInputGrabber())
         {
             /* Draw cursor. */
             float cursor_x = Padding::paddingLeft();
             int n = cursor_position;
 
             cursor_x += font()->lineAdvance(text[n]);
-            
-//             glBegin(GL_LINES);
-//                 glVertex2f(cursor_x, Padding::paddingTop());
-//                 glVertex2f(cursor_x, Widget::height() - Padding::paddingBottom());
-//             glEnd();
         }
     }
 }
@@ -60,7 +47,7 @@ void TextEdit::render()
 
 void TextEdit::mousePressEvent(MouseEvent* event)
 {
-    if(!Widget::isKeyboardGrabber())
+    if(!Widget::isKeyboardInputGrabber())
     {
         prev_keyboard_grabber = Widget::keyboardInputGrabber();
         Widget::grabKeyboardInput();
@@ -87,7 +74,7 @@ void TextEdit::mouseReleaseEvent(MouseEvent* event)
         text_selection.drag_end();
         if(text_selection.left() == text_selection.right()) text_selection.clear();
     }
-    if(this->isMouseGrabber()) Widget::setMouseGrabber(prev_mouse_grabber);
+    if(isMouseInputGrabber()) Widget::setMouseGrabber(prev_mouse_grabber);
 }
 
 

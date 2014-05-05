@@ -32,7 +32,7 @@ void TextLine::update()
     if(width > _max_width) width = _max_width;
     if(width < _min_width) width = _min_width;
     
-    Widget::resize(width, height);
+    Widget::setSize(width, height);
 }
     
 }//namespace r64fx

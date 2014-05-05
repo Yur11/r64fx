@@ -15,7 +15,7 @@ public:
     
     void alignHorizontally();
     
-    void projectToRootAndClipVisible(Rect<float> rect);
+    void projectToRootAndClipVisible(Point<float> parent_position, Rect<float> parent_visible_rect);
 };
     
 }//namespace r64fx

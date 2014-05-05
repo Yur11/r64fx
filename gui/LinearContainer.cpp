@@ -17,10 +17,10 @@ void LinearContainer::alignVertically()
     float y = paddingTop();
     for(auto &ch : children)
     {
-        ch.setRelativeY(y);
-        y += ch.height();
-        if(w < ch.width())
-            w = ch.width();
+        ch.rect.set_y(y);
+        y += ch.rect.height();
+        if(w < ch.rect.width())
+            w = ch.rect.width();
     }
     
     setWidth(w + paddingWidth());
@@ -34,7 +34,7 @@ void LinearContainer::alignHorizontally()
     float x = paddingLeft();
     for(auto &ch: children)
     {
-        ch.setRelativeX(x);
+        ch.rect.set_x(x);
         x += ch.width();
         if(h < ch.height())
             h = ch.height();
@@ -45,9 +45,9 @@ void LinearContainer::alignHorizontally()
 }
 
 
-void LinearContainer::projectToRootAndClipVisible(Rect<float> rect)
+void LinearContainer::projectToRootAndClipVisible(Point<float> parent_position, Rect<float> parent_visible_rect)
 {
-    Widget::projectToRootAndClipVisible(rect);
+    Widget::projectToRootAndClipVisible(parent_position, parent_visible_rect);
     
 //     auto it = visibleChildren().begin();
 //     if(it == allChildren().begin();)

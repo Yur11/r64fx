@@ -28,7 +28,7 @@ public:
     void dropRightScrollLimit();
     void dropBottomScrollLimit();
     
-    virtual void projectToRootAndClipVisible(Rect<float> rect);
+    virtual void projectToRootAndClipVisible(Point<float> parent_position, Rect<float> parent_visible_rect);
 };
     
 }//namespace r64fx

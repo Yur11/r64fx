@@ -18,17 +18,59 @@ template<typename T> struct Rect{
     
     Rect<T>(Point<T> p, Size<T> s) : Rect<T>(p.x, p.y, p.x + s.w, p.y + s.h) {}
     
+    bool isBad() const { return left > right || top > bottom; }
+    
+    bool isGood() const { return left < right && top < bottom; }
+        
     inline T x() const { return left; }
     
     inline T y() const { return top; }
     
+    /** @brief Set rect position along the x axis. 
+        
+        Both left and right values are altered.
+     */
+    void set_x(T x) { auto w = width(); left = x; right = x + w; }
+    
+    /** @brief Set rect position along the y axis. 
+     
+        Both top and bottom values are altered.
+     */
+    void set_y(T y) { auto h = height(); top = y; bottom = y + h; }
+    
     inline Point<T> position() const { return Point<T>(x(), y()); }
+    
+    inline void setPosition(T x, T y) 
+    {
+        set_x(x);
+        set_y(y);
+    }
+    
+    inline void setPosition(Point<T> p)
+    {
+        setPosition(p.x, p.y);
+    }
     
     inline T width() const { return right - left; }
     
     inline T height() const { return bottom - top; }
     
+    void setWidth(T width) { right = left + width; }
+    
+    void setHeight(T height) { bottom = top + height; }
+    
     inline Size<T> size() const { return Size<T>(width(), height()); }
+    
+    inline void setSize(T w, T h)
+    {
+        setWidth(w);
+        setHeight(h);
+    }
+    
+    inline void setSize(Size<T> size)
+    {
+        setSize(size.w, size.h);
+    }
     
     inline bool overlaps(Point<T> point) 
     {
@@ -38,16 +80,6 @@ template<typename T> struct Rect{
     inline bool overlaps(T x, T y) 
     {
         return overlaps(Point<T>(x, y));
-    }
-    
-    bool overlaps(Rect<T> other)
-    {
-        auto leftmost    =  left   < other.left   ?  left    : other.left;
-        auto topmost     =  top    < other.top    ?  top     : other.top;
-        auto rightmost   =  right  > other.right  ?  right   : other.right;
-        auto bottommost  =  bottom > other.bottom ?  bottom  : other.bottom;
-        
-        return (rightmost - leftmost) < (width() + other.width()) && (bottommost - topmost) < (height() + other.height());
     }
     
     Point<T> center() const
@@ -89,6 +121,18 @@ template<typename T> struct Rect{
         ;
     }    
 };
+
+
+template<typename T> Rect<T> intersection_of(Rect<T> a, Rect<T> b)
+{
+    return {
+        a.left   > b.left   ? a.left   : b.left,
+        a.top    > b.top    ? a.top    : b.top,
+        a.right  < b.right  ? a.right  : b.right,
+        a.bottom < b.bottom ? a.bottom : b.bottom
+    };
+}
+
     
 }//namespace r64fx
 

@@ -7,11 +7,24 @@
 
 namespace r64fx{
     
-/** @brief Base class mixin for items that can form a linked list. 
+/** @brief Base class mixin for items that can form a linked list / chain. 
  
     Simply inherit from LinkedItems and pass the name of your child class as T.
     I.e. class MyClass : public LinkedItem< MyClass > {};
- */
+        
+    One disadvantage is that instances of LinkedItem may belong only to a single list at a time.
+    Thus one must make sure that a LinkedItem instance does not allready belong to a list before inserting.
+    Define the DEBUG_LINKED_ITEM_CHAIN macro to enable checks.
+    
+    On a plus side, no extra memory alocation is needed to form lists out of LinkedItem instances.
+    
+    Some helper classes are also available.
+    
+        - LinkedItemPointer - works as an iterator.
+        
+        - LinkedItemChain - pointer to a segment of the chain. One item, a range of several items ore the whole chain.
+                            Can give you the first and the last item.
+*/
 template<typename T> class LinkedItem{
     LinkedItem<T>* prev_item = nullptr;
     LinkedItem<T>* next_item = nullptr;
@@ -43,16 +56,11 @@ public:
         next_item = prev_item = nullptr;
     }
     
-    /** @brief Set pointers to nullptr, without affecting the siblings. 
-     
-        Usefull for clearing the list.
-     */
-    void reset()
-    {
-        prev_item = next_item = nullptr;
-    }
     
-    /** @brief Replace this item with another one.*/
+    /** @brief Replace this item with another one.
+     
+        This item is removed from the list.
+     */
     void replace(T* item)
     {
 #ifdef DEBUG_LINKED_ITEM_CHAIN
@@ -73,7 +81,10 @@ public:
 };
 
 
-/** @brief A wrapper around LinkedItem to be used as an iterator. */
+/** @brief A wrapper around LinkedItem to be used as an iterator. 
+ 
+    Will cast to true if can be dereferenced, otherwise false.
+ */
 template<typename T>
 class LinkedItemPointer{
     T* ptr;
@@ -93,24 +104,10 @@ public:
         return ptr;
     }
     
-    inline LinkedItemPointer<T> operator++(int)
-    {
-        auto old = ptr;
-        ptr = ptr->next();
-        return old;
-    }
-    
     inline LinkedItemPointer<T> operator--()
     {
         ptr = ptr->prev();
         return ptr;
-    }
-    
-    inline LinkedItemPointer<T> operator--(int)
-    {
-        auto old = ptr;
-        ptr = ptr->prev();
-        return old;
     }
     
     inline T &operator*()
@@ -135,15 +132,6 @@ public:
 };
 
 
-struct Item : public LinkedItem<Item>{
-    int num = false;
-    
-    Item(int num)
-    : num(num)
-    {}
-};
-
-
 /** @brief Insert a new item at the end of the list. 
     
     Parameters first_ptr and last_ptr are pointers to the first and the last item of the list respectively.
@@ -156,7 +144,7 @@ struct Item : public LinkedItem<Item>{
     The item's prev() pointer must be nullptr.
     If item is the first item of another list, the lists are linked.
  */
-template<typename T> Item* append_to_list(T* &first_ptr, T* &last_ptr, T* item)
+template<typename T> T* append_to_list(T* &first_ptr, T* &last_ptr, T* item)
 {
 #ifdef DEBUG_LINKED_ITEM_CHAIN
     assert(item != nullptr);
@@ -181,6 +169,9 @@ template<typename T> Item* append_to_list(T* &first_ptr, T* &last_ptr, T* item)
         last_ptr = item;
     }
     
+    while(last_ptr->next())
+            last_ptr = last_ptr->next();
+    
     return item;
 }
 
@@ -201,7 +192,7 @@ template<typename T> Item* append_to_list(T* &first_ptr, T* &last_ptr, T* item)
     It must be a valid object.
     Also it must not belong to a list.
  */
-template<typename T> T* insert_to_list(T* &first_ptr, T* &last_ptr, T* existing_item, T* new_item)
+template<typename T> T* insert_into_list(T* &first_ptr, T* &last_ptr, T* existing_item, T* new_item)
 {
 #ifdef DEBUG_LINKED_ITEM_CHAIN
     assert(new_item != nullptr);
@@ -283,7 +274,14 @@ template<typename T> bool list_is_empty(T* first_ptr, T* last_ptr)
 }
 
 
-/** @brief Container for linked items. */
+/** @brief Container for linked items. 
+ 
+    Pointer to the first and the last item in the chain are contained inside.
+    May point to only a part of a larger chain.
+ 
+    This should work with c++11 range based for loop.
+    Haven't tried this with std algorithms yet.
+ */
 template<typename T> class LinkedItemChain{
     T* first_item = nullptr; 
     T* last_item = nullptr;
@@ -295,21 +293,44 @@ public:
     
     T* last() const { return last_item; }
     
+    /** @brief Iterator to the first item in the chain. 
+     
+        Just like with stl containers.
+     */
     LinkedItemPointer<T> begin() const { return first_item; }
     
+    /** @brief Iterator to past the last item in the chain. 
+     
+        Just like with stl containers.
+     */
     LinkedItemPointer<T> end() const { return last_item ? last_item->next() : nullptr; }
     
     T* append(T* item) { return append_to_list(first_item, last_item, item); }
     
-    T* append(LinkedItemChain* other) 
+    void append(LinkedItemChain<T> other) 
     {
-        assert(this != other);
-        append(other->first());
+#ifdef DEBUG_LINKED_ITEM_CHAIN
+        assert(&other != this);
+#endif//DEBUG_LINKED_ITEM_CHAIN
+        append_to_list(first_item, last_item, other.first());
+        
     }
+
+    /** @brief Insert a new_item after an existing_item. 
+     
+        existing_item must belong to the chain.
+     */
+    T* insert(T* existing_item, T* new_item) { return insert_into_list(first_item, last_item, existing_item, new_item); }
     
+    /** @brief Remove an item from the chain. 
+     
+        item must belong to the chain.
+     */
+    T* remove(T* item) { return remove_from_list(first_item, last_item, item); };
+    
+    /** @brief Remove all items from the list. Break all links. */
     void clear() { return clear_list(first_item, last_item); }
 };
-
     
 }//namespace r64fx
 

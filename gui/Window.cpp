@@ -51,9 +51,10 @@ void Window::updateGeometry()
     
     glViewport(0, 0, w, h);
     
-    root_widget->setRelativePosition(0.0, 0.0);
-    root_widget->resize(w, h);
-    root_widget->update();
+    root_widget->setPosition(0.0, 0.0);
+    root_widget->setSize(w, h);
+    
+    root_widget->projectToRootAndClipVisible( {0.0, 0.0}, {0.0, 0.0, float(w), float(h)} );
  
     int hw = (w >> 1);
     int hh = (h >> 1);
@@ -71,6 +72,7 @@ void Window::updateGeometry()
 void Window::runOneShotList()
 {
     one_shot_list.exec();
+    one_shot_list.clear();
 }
 
 
@@ -101,6 +103,11 @@ void Window::initMousePressEvent(int x, int y, unsigned int buttons, unsigned in
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setOriginWindow(this);
     
+    if(Widget::mouseInputGrabber())
+    {
+        Widget::mouseInputGrabber()->mousePressEvent(&event);
+    }
+    
 #ifdef DEBUG
     assert(root_widget != nullptr);
 #endif//DEBUG
@@ -112,6 +119,11 @@ void Window::initMouseReleaseEvent(int x, int y, unsigned int buttons, unsigned 
 {
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setOriginWindow(this);
+    
+    if(Widget::mouseInputGrabber())
+    {
+        Widget::mouseInputGrabber()->mouseReleaseEvent(&event);
+    }
     
 #ifdef DEBUG
     assert(root_widget != nullptr);
@@ -125,6 +137,11 @@ void Window::initMouseMoveEvent(int x, int y, unsigned int buttons, unsigned int
     MouseEvent event(x, y, buttons, keyboard_modifiers);
     event.setOriginWindow(this);
  
+    if(Widget::mouseInputGrabber())
+    {
+        Widget::mouseInputGrabber()->mouseMoveEvent(&event);
+    }
+    
 #ifdef DEBUG
     assert(root_widget != nullptr);
 #endif//DEBUG

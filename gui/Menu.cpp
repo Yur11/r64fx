@@ -44,7 +44,7 @@ void Menu::appendAction(Action* act)
 
 void Menu::update()
 {
-    const auto &r = absoluteRect();
+    const auto &r = projectedRect();
         
     float pos[8] = {
         0.0, 0.0,

@@ -27,7 +27,7 @@ Dummy::Dummy(float width, float height, Widget* parent)
 : Widget(parent) 
 , p(4)
 {
-    resize(width, height);
+    setSize(width, height);
     
     float tex_coords[8] = {
         0.0, 0.0,
@@ -44,13 +44,13 @@ Dummy::Dummy(float width, float height, Widget* parent)
 
 void Dummy::render()
 {          
-    auto r = absoluteRect();
+    auto r = projectedRect();
     
     float pos[8] = {
-        r.left,   r.bottom,
-        r.right,  r.bottom,
-        r.left,   r.top,
-        r.right,  r.top
+        int(r.left)  + 0.5f,  int(r.bottom) + 0.5f,
+        int(r.right) + 0.5f,  int(r.bottom) + 0.5f,
+        int(r.left)  + 0.5f,  int(r.top)    + 0.5f,
+        int(r.right) + 0.5f,  int(r.top)    + 0.5f
     };
             
     p.bindBuffer();
@@ -73,6 +73,7 @@ void Dummy::mousePressEvent(MouseEvent* event)
 {    
     event->has_been_handled = true;
     is_pressed = true;
+    grabMouseInput();
     event->originWindow()->issueRepaint();
 }
 
@@ -81,6 +82,8 @@ void Dummy::mouseReleaseEvent(MouseEvent* event)
 {
     event->has_been_handled = true;
     is_pressed = false;
+    if(isMouseInputGrabber())
+        ungrabMouseInput();
     event->originWindow()->issueRepaint();
 }
 

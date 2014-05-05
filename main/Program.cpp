@@ -181,7 +181,7 @@ void Program::mainThread()
     gl::Enable(GL_BLEND);
     gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    gl::ClearColor(0.78, 0.78, 0.78, 1.0);
+    gl::ClearColor(0.84, 0.82, 0.81, 1.0);
     
     Painter::enable();
     Painter::setTexturingMode(Painter::RGBA);
