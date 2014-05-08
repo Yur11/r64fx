@@ -17,7 +17,7 @@ class Slider : public Widget{
     
     float coord2value_coeff = 1.0;
     float coord2value_offset = 0.0;
-    
+        
     float coord2value(float coord);
     
     float pos2value(Point<float> p);
@@ -33,14 +33,13 @@ public:
         parent
     ) {}
     
-    Orientation orientation = Orientation::Vertical;
+    Orientation orientation = Orientation::Horizontal;
     
     float prev_value = 1.0;
     float value = 1.0;
 
-    float handle_rect_w_ratio = 0.5;
-    float handle_rect_h_ratio = 0.18;
-    float handle_range_adjust = 0.97;
+    float handle_rect_w_ratio = 0.24;
+    float handle_rect_h_ratio = 0.5;
     
 protected:
     virtual void appearanceChangeEvent();
