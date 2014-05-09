@@ -33,13 +33,13 @@ public:
         parent
     ) {}
     
-    Orientation orientation = Orientation::Horizontal;
+    Orientation orientation = Orientation::Vertical;
     
     float prev_value = 1.0;
     float value = 1.0;
 
-    float handle_rect_w_ratio = 0.24;
-    float handle_rect_h_ratio = 0.5;
+    float handle_rect_w_ratio = 0.5;
+    float handle_rect_h_ratio = 0.24;
     
 protected:
     virtual void appearanceChangeEvent();

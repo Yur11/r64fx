@@ -63,6 +63,8 @@ void Widget::projectToRootAndClipVisible(Point<float> parent_position, Rect<floa
             if(!visible_list.isEmpty())
                 children.append(visible_list);
         }
+        
+        appearanceChangeEvent();
     }
     else
     {
@@ -116,6 +118,12 @@ Widget* Widget::visibleChildAt(Point<float> p)
         if(ch.visibleRect().overlaps(p))
             return &ch;
     return nullptr;
+}
+
+
+void Widget::appearanceChangeEvent()
+{
+    
 }
 
     

@@ -215,7 +215,7 @@ void Slider::render()
 {
     p.bindArray();
     
-    Painter::setColor(0.0, 0.0, 0.0, 1.0);
+    Painter::setColor(1.0, 1.0, 1.0, 1.0);
     p.setTexture(backround_tex->glName());
     p.render(GL_TRIANGLE_STRIP, 4, 0);
    

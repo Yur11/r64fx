@@ -118,6 +118,10 @@ public:
     
     Widget* visibleChildAt(Point<float> p);
         
+protected:
+    /**  */
+    virtual void appearanceChangeEvent();
+    
     /** @brief Draw the widget and it's visible children. */
     virtual void render();
         
@@ -142,6 +146,7 @@ public:
     /** @brief Send a text input event to the widget. */
     virtual void textInputEvent(Utf8String text);
     
+public:
     /** @brief Set the mouse grabber to be a widget or nullptr. */
     static void setMouseGrabber(Widget* widget);
     

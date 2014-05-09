@@ -1,7 +1,6 @@
 #include "Program.h"
 #include "gui/Translation.h"
 #include "gui/WindowImplementation.h"
-#include "DenseWaveformPainter.h"
 
 #include "gui/LinearContainer.h"
 #include "gui/Dummy.h"
@@ -10,6 +9,10 @@
 #include "gui/Font.h"
 #include "gui/Icon.h"
 #include "gui/View.h"
+
+#include "DenseWaveformPainter.h"
+#include "Slider.h"
+#include "Knob.h"
 
 #include <iostream>
 #include <unistd.h>
@@ -123,14 +126,65 @@ bool Program::initGui()
     lc2->appendWidget(dummy8);
     lc2->alignHorizontally();
     
+    Size<float> slider_size(50, 100);
+    LinearContainer* lc3 = new LinearContainer;
+    lc3->setPadding(10.0);
+    Slider* slider1 = new Slider("slider1/background", "slider1/handle");
+    slider1->setSize(slider_size);
+    Slider* slider2 = new Slider("slider1/background", "slider1/handle");
+    slider2->setSize(slider_size);
+    Slider* slider3 = new Slider("slider1/background", "slider1/handle");
+    slider3->setSize(slider_size);
+    Slider* slider4 = new Slider("slider1/background", "slider1/handle");
+    slider4->setSize(slider_size);
+    
+    Slider* slider5 = new Slider("slider1/background", "slider1/handle");
+    slider5->setSize(slider_size);
+    Slider* slider6 = new Slider("slider1/background", "slider1/handle");
+    slider6->setSize(slider_size);
+    Slider* slider7 = new Slider("slider1/background", "slider1/handle");
+    slider7->setSize(slider_size);
+    Slider* slider8 = new Slider("slider1/background", "slider1/handle");
+    slider8->setSize(slider_size);
+    
+    lc3->appendWidget(slider1);
+    lc3->appendWidget(slider2);
+    lc3->appendWidget(slider3);
+    lc3->appendWidget(slider4);
+    lc3->appendWidget(slider5);
+    lc3->appendWidget(slider6);
+    lc3->appendWidget(slider7);
+    lc3->appendWidget(slider8);
+    lc3->alignHorizontally();
+    
+    Size<float> knob_size(64, 64);
+    LinearContainer* lc4 = new LinearContainer;
+    lc4->setPadding(10.0);
+    Knob* knob1 = new Knob("knob1/background", "knob1/rotating", "knob1/shine");
+    knob1->setSize(knob_size);
+    Knob* knob2 = new Knob("knob1/background", "knob1/rotating", "knob1/shine");
+    knob2->setSize(knob_size);
+    Knob* knob3 = new Knob("knob1/background", "knob1/rotating", "knob1/shine");
+    knob3->setSize(knob_size);
+    Knob* knob4 = new Knob("knob1/background", "knob1/rotating", "knob1/shine");
+    knob4->setSize(knob_size);
+    lc4->appendWidget(knob1);
+    lc4->appendWidget(knob2);
+    lc4->appendWidget(knob3);
+    lc4->appendWidget(knob4);
+    lc4->alignVertically();
+    
+    
     LinearContainer* lc = new LinearContainer;
     lc->appendWidget(lc1);
     lc->appendWidget(lc2);
+    lc->appendWidget(lc3);
+    lc->appendWidget(lc4);
     lc->alignVertically();
     
     View* view = new View;
     view->appendWidget(lc);
-    view->setOffset(210, 200);
+    view->setOffset(10, 10);
     
     window->setRootWidget(view);
     
@@ -177,6 +231,8 @@ void Program::mainThread()
 {
     if(_status != 0)
         return;
+    
+    gl::Enable(GL_MULTISAMPLE);
 
     gl::Enable(GL_BLEND);
     gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -207,6 +263,13 @@ void Program::initTextures()
     initCommonTexture2D("close_view");
     initCommonTexture2D("split_horizontally");
     initCommonTexture2D("split_vertically");
+    
+    initCommonTexture2D("knob1/background");
+    initCommonTexture2D("knob1/rotating");
+    initCommonTexture2D("knob1/shine");
+    
+    initCommonTexture2D("slider1/background");
+    initCommonTexture2D("slider1/handle");
 }
 
 

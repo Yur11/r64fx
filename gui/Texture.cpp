@@ -94,6 +94,8 @@ Texture2D* Texture2D::loadBaseLevel(string path, GLenum internal_format, GLenum 
     GLuint name;
     gl::GenTextures(1, &name);
     gl::BindTexture(GL_TEXTURE_2D, name);
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     gl::TexStorage2D(GL_TEXTURE_2D, nlevels, internal_format, width, height);
     gl::TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data);
     

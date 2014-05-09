@@ -84,7 +84,7 @@ template<typename T> struct Rect{
     
     Point<T> center() const
     {
-        return Point<T>( left + width() * 0.5, bottom + height() * 0.5 );
+        return Point<T>( left + width() * 0.5, top + height() * 0.5 );
     }
     
     /** @brief  Make sure a point fits inside this rect.*/

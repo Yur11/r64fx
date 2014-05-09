@@ -56,13 +56,6 @@ template<typename T> struct Point{
         return (*this) = (*this) * p;
     }
     
-    inline Point<T> rotated(float angle)
-    {
-        Point<T> p(x, y);
-        p.rotate(angle);
-        return p;
-    }
-    
     inline bool operator==(const Point<T> &other) { return this->x == other.x && this->y == other.y; }
 };
     
