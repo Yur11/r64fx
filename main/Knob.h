@@ -12,31 +12,24 @@ namespace r64fx{
     
 /** @brief Base class for knob widgets. */    
 class BasicKnob : public Widget, public Padding<float>{
-    
-protected:
-        
+            
 public:    
     BasicKnob(Widget* parent = nullptr);
     
-    float min_angle = 45;
-    float max_angle = 315;
+    float min_angle = 25;
+    float max_angle = 335;
     
     float min_value = 0.0;
     float max_value = 1.0;
     
-    float angle = 45;
+    float angle = 25;
     
     inline float value()
     {
         return (max_value - min_value) * (angle - min_angle) / (max_angle - min_angle) + min_value;
     }
     
-//     Message value_changed;
-    
-    float radius = 50.0;
-        
-    virtual void update();
-        
+protected:
     virtual void mousePressEvent(MouseEvent* event);
     
     virtual void mouseReleaseEvent(MouseEvent* event);
@@ -45,22 +38,20 @@ public:
 };
 
 
-/** @brief Knob with a shiny part*/
-class ShinyKnob : public BasicKnob{
-    Texture2D* bg;
-    Texture2D* fg;
-    Texture2D* shiny;
-    
+
+class Knob : public BasicKnob{
     Painter p;
+    Texture2D* background_tex = nullptr;
+    Texture2D* rotatable_tex = nullptr;
+    Texture2D* foreground_tex = nullptr;
     
 public:
-    ShinyKnob(Texture2D* bg, Texture2D* fg, Texture2D* shiny);
+    Knob(Texture2D* background, Texture2D* rotatable, Texture2D* foreground = nullptr);
     
-//     ShinyKnob(std::string bg, std::string fg, std::string shiny):
-//     ShinyKnob(Texture(bg), Texture(fg), Texture(shiny))
-//     {}
-    
-    virtual void update();
+    Knob(std::string background, std::string rotatable, std::string foreground = "");
+
+protected:
+    virtual void appearanceChangeEvent();
     
     virtual void render();
 };

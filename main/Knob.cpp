@@ -3,7 +3,7 @@
 #include "gui/bezier.h"
 #include "gui/Window.h"
 #include "gui/Painter.h"
-
+#include <cmath>
 
 #ifdef DEBUG
 #include <iostream>
@@ -23,14 +23,6 @@ BasicKnob::BasicKnob(Widget* parent)
 }
 
     
-void BasicKnob::update()
-{
-    float width = radius * 2 + paddingLeft() + paddingRight();
-    float height = radius * 2 + paddingBottom() + paddingTop();
-    setSize(width, height);
-}
-
-
 void BasicKnob::mousePressEvent(MouseEvent* event)
 {
     grabMouseInput();
@@ -57,22 +49,25 @@ void BasicKnob::mouseMoveEvent(MouseEvent* event)
             angle = min_angle;
         else if(angle > max_angle)
             angle = max_angle;
-
-        update();
-//         value_changed.send(this);
         
+        appearanceChangeEvent();
         event->has_been_handled = true;
     }
 }
 
 
-ShinyKnob::ShinyKnob(Texture2D* bg, Texture2D* fg, Texture2D* shiny)
-: bg(bg)
-, fg(fg)
-, shiny(shiny)
-, p(12)
+Knob::Knob(Texture2D* background, Texture2D* rotatable, Texture2D* foreground)
+: p(12)
+, background_tex(background)
+, rotatable_tex(rotatable)
+, foreground_tex(foreground)
 {
-    float data[24] = {
+    static float data[24] = {
+        0.0, 0.0,
+        1.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0,
+        
         0.0, 1.0,
         1.0, 1.0,
         0.0, 0.0,
@@ -82,11 +77,6 @@ ShinyKnob::ShinyKnob(Texture2D* bg, Texture2D* fg, Texture2D* shiny)
         1.0, 0.0,
         0.0, 1.0,
         1.0, 1.0,
-        
-        0.0, 0.0,
-        1.0, 0.0,
-        0.0, 1.0,
-        1.0, 1.0
     };
     
     p.bindBuffer();
@@ -95,47 +85,72 @@ ShinyKnob::ShinyKnob(Texture2D* bg, Texture2D* fg, Texture2D* shiny)
 }
 
 
-void ShinyKnob::update()
+Knob::Knob(std::string background, std::string rotatable, std::string foreground)
+: Knob(
+    (Texture2D*) Texture::find(background),
+    (Texture2D*) Texture::find(rotatable),
+    (Texture2D*) Texture::find(foreground)
+){}
+
+
+void rotate_points(Point<float>* points, int npoints, float angle)
 {
-    BasicKnob::update();
+    auto rad = (angle * M_PI) / 180.0;
     
-    auto c = Point<float>( width() * 0.5, height() * 0.5 );
+    auto cosang = cos(rad);
+    auto sinang = sin(rad);
     
-    float r = radius * 0.6;
+    for(auto i=0; i<npoints; i++)
+    {
+        auto &p = points[i];
+        float x = p.x * cosang - p.y * sinang;
+        float y = p.x * sinang + p.y * cosang;
+        p.x = x;
+        p.y = y;
+    }
+}
+
+
+void Knob::appearanceChangeEvent()
+{
+    auto r = projectedRect();
     
-    Point<float> pt[4] = {
-        { -r, -r },
-        {  r, -r },
-        { -r,  r },
-        {  r,  r }
+    float data[24];
+    
+    data[0] = data[8] = data[16] = r.left;
+    data[1] = data[9] = data[17] = r.top;
+    
+    data[2] = data[10] = data[18] = r.right;
+    data[3] = data[11] = data[19] = r.top;
+    
+    data[4] = data[12] = data[20] = r.left;
+    data[5] = data[13] = data[21] = r.bottom;
+    
+    data[6] = data[14] = data[22] = r.right;
+    data[7] = data[15] = data[23] = r.bottom;
+    
+    Rect<float> rr = {
+        - r.width() * 0.5f,
+        - r.height() * 0.5f,
+        + r.width() * 0.5f,
+        + r.height() * 0.5f,
     };
+        
+    Point<float> pp[4] = {
+        { rr.left, rr.top },
+        { rr.right, rr.top },
+        { rr.left, rr.bottom },
+        { rr.right, rr.bottom }
+    };
+    
+    rotate_points(pp, 4, angle);
     
     for(int i=0; i<4; i++)
     {
-//         pt[i].rotate( - angle * M_PI / 180);
+        pp[i] += r.center();
+        data[i*2 + 8] = pp[i].x;
+        data[i*2 + 9] = pp[i].y;
     }
-
-    r *= 0.7;
-
-    float data[24] = {
-        /* bg */
-        0.0, 0.0,
-        width(), 0.0,
-        0.0, height(),
-        width(), height(),
-        
-        /* rotated fg */
-        pt[0].x + c.x, pt[0].y + c.y,
-        pt[1].x + c.x, pt[1].y + c.y,
-        pt[2].x + c.x, pt[2].y + c.y,
-        pt[3].x + c.x, pt[3].y + c.y,
-        
-        /* shiny fg */
-        -r + c.x, -r + c.y,
-         r + c.x, -r + c.y,
-        -r + c.x,  r + c.y,
-         r + c.x,  r + c.y
-    };
     
     p.bindBuffer();
     p.setPositions(data, 24);
@@ -143,28 +158,22 @@ void ShinyKnob::update()
 }
 
 
-void ShinyKnob::render()
-{
-    gl::Enable(GL_BLEND);
-    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
-//     Painter::useCurrent2dProjection();
+void Knob::render()
+{    
     Painter::setColor(1.0, 1.0, 1.0, 1.0);
     
     p.bindArray();
     
-    Painter::setTexture(bg->glName());
+    Painter::setTexture(background_tex->glName());
     p.render(GL_TRIANGLE_STRIP, 4, 0);
     
-    Painter::setTexture(fg->glName());
+    Painter::setTexture(rotatable_tex->glName());
     p.render(GL_TRIANGLE_STRIP, 4, 4);
     
-    Painter::setTexture(shiny->glName());
+    Painter::setTexture(foreground_tex->glName());
     p.render(GL_TRIANGLE_STRIP, 4, 8);
     
-    p.unbindArray();
-    
-    gl::Disable(GL_BLEND);
+    p.unbindArray();    
 }
 
 
