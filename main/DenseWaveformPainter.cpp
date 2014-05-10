@@ -80,7 +80,11 @@ bool DenseWaveformPainter::init()
     gl::BindTexture(GL_TEXTURE_1D, debug_tex);
     gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl::TexImage1D(GL_TEXTURE_1D, 0, GL_RED, data_size, 0, GL_RED, GL_FLOAT, data);
+    
+//     gl::TexImage1D(GL_TEXTURE_1D, 0, GL_R32F, data_size, 0, GL_RED, GL_FLOAT, data);
+    gl::TexStorage1D(GL_TEXTURE_1D, 1, GL_R32F, data_size);
+    gl::TexSubImage1D(GL_TEXTURE_1D, 0, 0, data_size, GL_RED, GL_FLOAT, data);
+    
     gl::GenerateMipmap(GL_TEXTURE_1D);
     gl::BindTexture(GL_TEXTURE_1D, 0);
 #endif//DEBUG

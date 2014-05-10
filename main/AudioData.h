@@ -54,7 +54,7 @@ public:
     
     void calculateSummary(float* buffer, int nsamples);
     
-    void calculateBipolarSummary(float* buffer, int nsamples);
+    void calculateSummaryStereo(float* buffer, int nsamples);
 };
     
 }//namespace r64fx

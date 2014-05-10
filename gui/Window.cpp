@@ -4,6 +4,8 @@
 #include "KeyEvent.h"
 #include "Painter.h"
 
+#include "main/DenseWaveformPainter.h"
+
 #ifdef DEBUG
 #include <iostream>
 #include <assert.h>
@@ -65,6 +67,10 @@ void Window::updateGeometry()
     vec[2] = -1.0;        //tx
     vec[3] =  1.0;        //ty
     
+    DenseWaveformPainter::enable();
+    DenseWaveformPainter::setProjection(vec);
+    
+    Painter::enable();
     Painter::setProjection(vec);
 }
 

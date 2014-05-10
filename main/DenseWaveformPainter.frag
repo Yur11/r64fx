@@ -15,14 +15,14 @@ void main()
     if(ref_color > 0)
     {
         if(tex.r > ref_color)
-            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+            gl_FragColor = vec4(0.3, 0.3, 0.3, 1.0);
         else
-            discard; 
+            discard;
     }
     else
     {
         if(tex.g < ref_color)
-            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+            gl_FragColor = vec4(0.3, 0.3, 0.3, 1.0);
         else
             discard; 
     }

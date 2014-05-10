@@ -58,6 +58,8 @@ public:
     inline GLsizei width() const { return _w; }
 
     inline void bind() const { gl::BindTexture(GL_TEXTURE_1D, glName()); }
+    
+    static Texture1D* loadBaseLevelData(void* data, int nbytes, int length, int nchannels, GLenum type, GLenum internal_format, GLenum format);
 };
 
 

@@ -67,6 +67,18 @@ Texture1D::Texture1D(GLuint gl_name, int nchannels, int nlevels, GLsizei w)
 : Texture(gl_name), _nchannels(nchannels), _nlevels(nlevels), _w(w)
 {
 }
+
+
+Texture1D* Texture1D::loadBaseLevelData(void* data, int nbytes, int width, int nchannels, GLenum type, GLenum internal_format, GLenum format)
+{
+    GLuint name;
+    gl::GenTextures(1, &name);
+    gl::BindTexture(GL_TEXTURE_1D, name);
+    gl::TexStorage1D(GL_TEXTURE_1D, 1, internal_format, width);
+    gl::TexSubImage1D(GL_TEXTURE_1D, 0, 0, width, format, type, data);
+    
+    return new Texture1D(name, nchannels, 1, width);
+}
     
     
 Texture2D* Texture2D::loadBaseLevel(string path, GLenum internal_format, GLenum format, unsigned int flags)

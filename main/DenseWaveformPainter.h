@@ -65,7 +65,7 @@ public:
     
 //     inline static void useCurrent2dProjection() { gl::Uniform4fv(sxsytxty_uniform, 1, current_2d_projection->vec); }
     
-//     inline static void setProjection(Projection2D projection) { gl::Uniform4fv(sxsytxty_uniform, 1, projection.vec); }
+    inline static void setProjection(float vec[4]) { gl::Uniform4fv(sxsytxty_uniform, 1, vec); }
     
     inline static void setColor(Color color) { /*glUniform4fv(color_uniform, 1, color.vec); CHECK_FOR_GL_ERRORS;*/  }
     

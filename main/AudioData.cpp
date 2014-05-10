@@ -137,7 +137,7 @@ void AudioData::calculateSummary(float* buffer, int nsamples)
 }
 
 
-void AudioData::calculateBipolarSummary(float* buffer, int nsamples)
+void AudioData::calculateSummaryStereo(float* buffer, int nsamples)
 {
 #ifdef DEBUG
     assert(linearData() != nullptr);

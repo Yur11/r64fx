@@ -13,6 +13,8 @@
 #include "DenseWaveformPainter.h"
 #include "Slider.h"
 #include "Knob.h"
+#include "AudioClipWidget.h"
+#include "AudioData.h"
 
 #include <iostream>
 #include <unistd.h>
@@ -73,11 +75,11 @@ bool Program::initGui()
         return false;
     }
     
-//     if(!DenseWaveformPainter::init())
-//     {
-//         cerr << "Failed to init DenseWaveformPainter!\n";
-//         return false;
-//     }
+    if(!DenseWaveformPainter::init())
+    {
+        cerr << "Failed to init DenseWaveformPainter!\n";
+        return false;
+    }
 
     Font::init();
     
@@ -105,10 +107,19 @@ bool Program::initGui()
     Dummy* dummy3 = new Dummy(100.0, 100.0);
     Dummy* dummy4 = new Dummy(100.0, 100.0);
     
+    
+    AudioData* ad1 = new AudioData((_data_prefix + "drum_loop_mono.wav").c_str());
+    ad1->calculateLinear();
+    
+    AudioClipWidget* acw1 = new AudioClipWidget(ad1);
+    acw1->updateWaveform();
+    acw1->setSize(200, 100);
+    
     lc1->appendWidget(dummy1);
     lc1->appendWidget(dummy2);
     lc1->appendWidget(dummy3);
     lc1->appendWidget(dummy4);
+    lc1->appendWidget(acw1);
     lc1->alignHorizontally();
     
     
