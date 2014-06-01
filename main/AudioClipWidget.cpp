@@ -35,7 +35,7 @@ void AudioClipWidget::updateWaveform()
         waveform_tex = nullptr;
     }
     
-    const int tex_size = 256;
+    const int tex_size = 800;
     float tex_data[tex_size];
     
     audio_data->calculateSummaryStereo(tex_data, tex_size);
@@ -45,6 +45,11 @@ void AudioClipWidget::updateWaveform()
         (tex_size/2) * sizeof(float),
         (tex_size/2), 1, GL_FLOAT, GL_RG32F, GL_RG
     );
+    
+    waveform_tex->bind();
+    gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    waveform_tex->unbind();
 }
 
 
@@ -53,10 +58,10 @@ void AudioClipWidget::appearanceChangeEvent()
     auto r = projectedRect();
     
     float p_data[16] = {
-        r.left, r.top,
-        r.right, r.top,
-        r.right, r.bottom,
-        r.left, r.bottom,
+        r.left  + 0.5, r.top    + 0.5,
+        r.right + 0.5, r.top    + 0.5,
+        r.right + 0.5, r.bottom + 0.5,
+        r.left  + 0.5, r.bottom + 0.5,
         
         0.0, 0.0,
         1.0, 0.0,

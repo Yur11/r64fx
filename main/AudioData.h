@@ -25,7 +25,7 @@ public:
     /** @brief Load audio data from file. */
     AudioData(const char* path);
     
-    virtual ~AudioData();
+    ~AudioData();
     
     /** @brief The number of floating point samples in one of the buffers. */
     inline long unsigned int size() const { return _size; }

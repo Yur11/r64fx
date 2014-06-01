@@ -347,6 +347,10 @@ struct Mem128{
 #endif//DEBUG
         this->addr = (long int) addr;
     }
+    
+    Mem128(float arr[4]) : Mem128((void*)arr) {}
+    Mem128(int arr[4]) : Mem128((void*)arr) {}
+    Mem128(unsigned int arr[4]) : Mem128((void*)arr) {}
 };
 
 struct Mem256{
@@ -539,16 +543,12 @@ public:
     void add(Mem64 mem, GPR64 reg);
     void add(GPR64 dst, GPR64 src);
 
-    void add(GPR64 reg, Base base);
+    void add(GPR64 reg, Base base, Disp8 disp = Disp8(0));
     void add(Base base, GPR64 reg);
 
     void add(GPR64 reg, Imm32 imm);
     inline
     void add(GPR64 reg, unsigned int imm) { add(reg, Imm32(imm)); }
-
-    void mov(GPR32 reg, Mem32 mem);
-    void mov(Mem32 mem, GPR32 reg);
-    void mov(GPR32 dst, GPR32 src);
 
     void sub(GPR32 reg, Mem32 mem);
     void sub(Mem32 mem, GPR32 reg);
@@ -565,6 +565,10 @@ public:
     void sub(GPR64 reg, Base base);
     void sub(Base base, GPR64 reg);
 
+    void mov(GPR32 reg, Mem32 mem);
+    void mov(Mem32 mem, GPR32 reg);
+    void mov(GPR32 dst, GPR32 src);
+    
     void mov(GPR64 reg, Mem64 mem);
     void mov(Mem64 mem, GPR64 reg);
     void mov(GPR64 dst, GPR64 src);
@@ -572,8 +576,11 @@ public:
     void mov(GPR64 reg, Imm64 imm);
     void mov(GPR64 reg, unsigned long int imm);
 
-    void mov(GPR64 reg, Base base);
-    void mov(Base base, GPR64 reg);
+    void mov(GPR64 reg, Base base, Disp8 disp = Disp8(0));
+    void mov(Base base, Disp8 disp, GPR64 reg);
+    inline 
+    void mov(Base base, GPR64 reg) { mov(base, Disp8(0), reg); }
+    void mov(Base base, GPR32 reg);
 
 
     void push(GPR64 reg);
@@ -582,11 +589,13 @@ public:
 
 
     void cmp(GPR64 reg, Imm32 imm);
+    inline void cmp(GPR64 reg, unsigned int imm) { cmp(reg, Imm32(imm)); }
 
     void jmp(Mem8 mem);
     void jnz(Mem8 mem);
     void jz(Mem8 mem);
     void je(Mem8 mem);
+    void jne(Mem8 mem);
     void jl(Mem8 mem);
 
 
@@ -700,6 +709,12 @@ public:
     inline void cmpltps(Xmm dst, Xmm src) { cmpps(LT, dst, src); }
     inline void cmpltps(Xmm reg, Mem128 mem) { cmpps(LT, reg, mem); }
 
+    inline void cmpnltps(Xmm dst, Xmm src) { cmpps(NLT, dst, src); }
+    inline void cmpnltps(Xmm reg, Mem128 mem) { cmpps(NLT, reg, mem); }
+    
+    inline void cmpeqps(Xmm dst, Xmm src) { cmpps(EQ, dst, src); }
+    inline void cmpeqps(Xmm reg, Mem128 mem) { cmpps(EQ, reg, mem); }
+    
     void movups(Xmm dst, Xmm src);
     void movups(Xmm reg, Mem128 mem);
     void movups(Xmm reg, Base base, Disp8 disp = Disp8(0));

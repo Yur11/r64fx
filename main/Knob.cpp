@@ -25,8 +25,9 @@ BasicKnob::BasicKnob(Widget* parent)
     
 void BasicKnob::mousePressEvent(MouseEvent* event)
 {
-    grabMouseInput();
-    Mouse::setRelativeMode(true);
+    if(!Widget::isMouseInputGrabber())
+        grabMouseInput();
+//     Mouse::setRelativeMode(true);
     Mouse::relativePosition();//Kluge!
     event->has_been_handled = true;
 }
@@ -44,7 +45,7 @@ void BasicKnob::mouseMoveEvent(MouseEvent* event)
 {    
     if(Widget::isMouseInputGrabber())
     {
-        angle -= Mouse::relativePosition().y;
+        angle -= Mouse::relativePosition().y * 2;
         if(angle < min_angle)
             angle = min_angle;
         else if(angle > max_angle)

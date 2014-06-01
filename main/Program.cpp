@@ -113,7 +113,7 @@ bool Program::initGui()
     
     AudioClipWidget* acw1 = new AudioClipWidget(ad1);
     acw1->updateWaveform();
-    acw1->setSize(200, 100);
+    acw1->setSize(800, 200);
     
     lc1->appendWidget(dummy1);
     lc1->appendWidget(dummy2);
