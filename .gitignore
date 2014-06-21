@@ -1,6 +1,7 @@
 build
 core
 .kateproject.d
+r64fx.kdev4
 script
 tools/build_resource
 example
