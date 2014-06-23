@@ -9,6 +9,7 @@
 #include "gui/Font.h"
 #include "gui/Icon.h"
 #include "gui/View.h"
+#include "gui/TextLine.h"
 
 #include "DenseWaveformPainter.h"
 #include "Slider.h"
@@ -82,17 +83,9 @@ bool Program::initGui()
     }
 
     Font::init();
-    
-    auto font = new Font( _data_prefix + "fonts/FreeSans.ttf", 10);
-    if(!font->isOk())
-    {
-        delete font;
-        return false;
-    }
-    
-    Font::setDefaultFont(font);
         
     initTextures();
+    initFonts();
     
     Icon::default_size = { 14, 14 };
     Icon::init();
@@ -131,10 +124,14 @@ bool Program::initGui()
     Dummy* dummy7 = new Dummy(100.0, 100.0);
     Dummy* dummy8 = new Dummy(100.0, 100.0);
     
+    TextLine* tl = new TextLine("Thank you! Спасибо! Obrigado! Coração Âÿ ありがとう");
+    tl->update();
+    
     lc2->appendWidget(dummy5);
     lc2->appendWidget(dummy6);
     lc2->appendWidget(dummy7);
     lc2->appendWidget(dummy8);
+    lc2->appendWidget(tl);
     lc2->alignHorizontally();
     
     Size<float> slider_size(50, 100);
@@ -371,6 +368,22 @@ void Program::initActions()
             return nullptr;
         }
     );
+}
+
+
+void Program::initFonts()
+{    
+    Font::init();
+    
+    auto font = new Font( _data_prefix + "fonts/FreeSans.ttf", 10);
+    if(!font->isOk())
+    {
+        delete font;
+        cerr << "Font is bad!\n";
+        abort();
+    }
+    
+    Font::setDefaultFont(font);
 }
 
 
