@@ -28,10 +28,10 @@ void Font::Glyph::render(float x, float y)
     float dy = height - bearing_y;
     
     float pos[8] = {
-        x,            y - dy,
-        x + width,    y - dy,
-        x,            y + height - dy,
-        x + width,    y + height - dy,
+        x,            y + dy - height,
+        x + width,    y + dy - height,
+        x,            y + dy,
+        x + width,    y + dy,
     };
     
     p->bindBuffer();
@@ -167,10 +167,10 @@ bool Font::init()
         0.0, 0.0,
         0.0, 0.0,
         
-        0.0, 1.0,
-        1.0, 1.0,
         0.0, 0.0,
-        1.0, 0.0
+        1.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0
     };
     
     p->bindBuffer();

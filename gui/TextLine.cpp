@@ -10,17 +10,22 @@ void TextLine::render()
     gl::Enable(GL_BLEND);
     gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    _font->enable();
+    auto r = projectedRect();
+    
+    Painter::setTexturingMode(Painter::RedAsAlpha);
+//     _font->enable();
     _font->setColor(textColor());
     
-    _font->setPenX(paddingLeft());
-    _font->setPenY(paddingBottom() + _font->descender());
+    _font->setPenX(r.left + paddingLeft());
+    _font->setPenY(r.bottom - _font->descender());
 
     _font->render(text.stdstr);
     
-    Painter::enable();
+    Painter::setTexturingMode(Painter::RGBA);
     
-    gl::Disable(GL_BLEND);
+//     Painter::enable();
+    
+//     gl::Disable(GL_BLEND);
 }
 
 
