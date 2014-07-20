@@ -21,6 +21,10 @@ namespace r64fx{
     Positions go into the first part (lower addresses), tex. coords. go into the second part (higher addresses).
     This allows us to update vertex positions in a single api call without touching tex. coords.
     
+    For example, a 4 vertex buffer whould look like this.
+    x1,y1,x2,y3,x3,y3,x4,y4,s1,t1,s2,t2,s3,t3,s4,t4
+    Where (x,y) are vertex coordinates and (s,t) are tex. coords.
+    
     The Vertices<> template provides automatic state management for multiple contexts.
  */
 class Painter : public Vertices<Painter>{
