@@ -2,6 +2,7 @@
 #include "Widget.h"
 #include "MouseEvent.h"
 #include "KeyEvent.h"
+#include "TextInputEvent.h"
 #include "Painter.h"
 
 #include "main/DenseWaveformPainter.h"
@@ -178,6 +179,12 @@ void Window::initKeyReleaseEvent(int x, int y, unsigned int scancode, unsigned i
 
 void Window::initTextInputEvent(std::string text)
 {
+    TextInputEvent event(text);
+    event.setOriginWindow(this);
+    if(Widget::keyboardInputGrabber())
+        Widget::keyboardInputGrabber()->textInputEvent(&event);
+    else
+        root_widget->textInputEvent(&event);
 }
 
 

@@ -58,7 +58,7 @@ public:
     /** @brief Is set by the HoverableWidget on mouse move event. */
     HoverableWidget* hovered_widget = nullptr;
     
-    Event(Point<float> position, unsigned buttons, unsigned int keyboard_modifiers = Keyboard::Modifier::None) 
+    Event(Point<float> position = Point<float>(), unsigned buttons = Mouse::Button::None, unsigned int keyboard_modifiers = Keyboard::Modifier::None) 
     : _original_position(position)
     , _position(position)
     , _buttons(buttons)

@@ -16,6 +16,7 @@ namespace r64fx{
 class Widget;    
 class MouseEvent;
 class KeyEvent;
+class TextInputEvent;
 class Window;
 
 typedef IteratorPair<LinkedItemPointer<Widget>> WidgetIteratorPair;
@@ -144,7 +145,7 @@ protected:
     virtual void keyReleaseEvent(KeyEvent* event);
     
     /** @brief Send a text input event to the widget. */
-    virtual void textInputEvent(Utf8String text);
+    virtual void textInputEvent(TextInputEvent* event);
     
 public:
     /** @brief Set the mouse grabber to be a widget or nullptr. */

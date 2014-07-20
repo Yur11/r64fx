@@ -103,7 +103,7 @@ class TextEdit : public TextLine{
     } text_selection;
     
 public:    
-    TextEdit(Utf8String inital_text, Font* font, Widget* parent = nullptr) 
+    TextEdit(Utf8String inital_text, Font* font = Font::defaultFont(), Widget* parent = nullptr) 
     : TextLine(inital_text, font, parent)
     , background_color(1.0, 1.0, 1.0)
     {
@@ -125,7 +125,7 @@ public:
     
     virtual void keyPressEvent(KeyEvent* event);
     
-    virtual void textInputEvent(Utf8String text);
+    virtual void textInputEvent(TextInputEvent* event);
     
     /** @brief Char index at x coord. Starting with 1. */
     int charAt(float x);

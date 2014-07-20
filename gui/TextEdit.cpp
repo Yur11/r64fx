@@ -2,6 +2,7 @@
 #include "MouseEvent.h"
 #include "KeyEvent.h"
 #include "Keyboard.h"
+#include "TextInputEvent.h"
 
 #include <iostream>
 
@@ -156,8 +157,14 @@ void TextEdit::keyPressEvent(KeyEvent* event)
 }
 
 
-void TextEdit::textInputEvent(Utf8String str)
+void TextEdit::textInputEvent(TextInputEvent* event)
 {
+#ifdef DEBUG
+    assert(event != nullptr);
+#endif//DEBUG
+    
+    Utf8String str(event->text);
+    
     cout << "text input: " << str.stdstr << "\n";
     for(int i=0; i<(int)str.size(); i++)
     {

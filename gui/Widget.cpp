@@ -180,7 +180,7 @@ void Widget::keyReleaseEvent(KeyEvent* event)
 }
 
 
-void Widget::textInputEvent(Utf8String text)
+void Widget::textInputEvent(TextInputEvent* event)
 {
     
 }
