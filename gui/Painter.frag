@@ -10,28 +10,35 @@ void main()
 {
     vec4 texel = texture(sampler, frag_tex_coord);
     
-    if(texturing_mode == 1)
+    switch(texturing_mode)
     {
-        /* rgba */
-        gl_FragColor = vec4(
-            color.r * texel.r,
-            color.g * texel.g,
-            color.b * texel.b,
-            color.a * texel.a
-        );
-    }
-    else if(texturing_mode == 2)
-    {
-        /* Red as alpha. */
-        gl_FragColor = vec4(
-            color.r,
-            color.g,
-            color.b,
-            color.a * texel.r
-        );
-    }
-    else
-    {
-        discard;
+        case 1:
+        {
+            /* rgba */
+            gl_FragColor = vec4(
+                color.r * texel.r,
+                color.g * texel.g,
+                color.b * texel.b,
+                color.a * texel.a
+            );
+            break;
+        }
+        
+        case 2:
+        {
+            /* Red as alpha. */
+            gl_FragColor = vec4(
+                color.r,
+                color.g,
+                color.b,
+                color.a * texel.r
+            );
+            break;
+        }
+        
+        default:
+        {
+            discard;
+        }
     }
 }
