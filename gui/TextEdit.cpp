@@ -13,13 +13,6 @@ namespace r64fx{
 void TextEdit::render()
 {    
     /* Draw background. */
-//     glColor(this->backgroundColor());
-//     glBegin(GL_TRIANGLE_FAN);
-//         glVertex2f(0.0, 0.0);
-//         glVertex2f(Widget::width() - 1, 0.0);
-//         glVertex2f(Widget::width() - 1, Widget::height() -1);
-//         glVertex2f(0.0,                 Widget::height() -1);
-//     glEnd();
     
     /* Draw text. */
     TextLine::render();

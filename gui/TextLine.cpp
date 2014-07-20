@@ -13,7 +13,6 @@ void TextLine::render()
     auto r = projectedRect();
     
     Painter::setTexturingMode(Painter::RedAsAlpha);
-//     _font->enable();
     _font->setColor(textColor());
     
     _font->setPenX(r.left + paddingLeft());
@@ -22,10 +21,6 @@ void TextLine::render()
     _font->render(text.stdstr);
     
     Painter::setTexturingMode(Painter::RGBA);
-    
-//     Painter::enable();
-    
-//     gl::Disable(GL_BLEND);
 }
 
 

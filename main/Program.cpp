@@ -9,7 +9,7 @@
 #include "gui/Font.h"
 #include "gui/Icon.h"
 #include "gui/View.h"
-#include "gui/TextLine.h"
+#include "gui/TextEdit.h"
 
 #include "DenseWaveformPainter.h"
 #include "Slider.h"
@@ -124,7 +124,7 @@ bool Program::initGui()
     Dummy* dummy7 = new Dummy(100.0, 100.0);
     Dummy* dummy8 = new Dummy(100.0, 100.0);
     
-    TextLine* tl = new TextLine("Thank you! Спасибо! Obrigado! Coração Âÿ ありがとう");
+    TextEdit* tl = new TextEdit("Thank you! Спасибо! Obrigado! Coração Âÿ ありがとう");
     tl->update();
     
     lc2->appendWidget(dummy5);
