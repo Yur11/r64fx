@@ -5,18 +5,55 @@ using namespace std;
 
 namespace r64fx{
 
+TextLine::TextLine(Utf8String text, Font* font, Widget* parent) 
+: Widget(parent)
+, _font(font)
+, text_color(0.0, 0.0, 0.0)
+, p(4)
+, text(text)
+{
+    
+    float tex_coords[8] = {
+        0.0, 0.0,
+        1.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0
+    };
+
+    p.bindBuffer();
+    p.setTexCoords(tex_coords, 8);
+    p.unbindBuffer();
+}
+    
+    
 void TextLine::render()
 {
-    gl::Enable(GL_BLEND);
-    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    auto br = projectedRect();
     
-    auto r = projectedRect();
+    _font->setPenX(br.left + paddingLeft());
+    auto r = _font->calculateBoundingBox(text.stdstr);
+    
+    float pos[8] = {
+        r.left,   r.top,
+        r.right,  r.top,
+        r.left,   r.bottom,
+        r.right,  r.bottom
+    };
+    
+    p.bindBuffer();
+    p.setPositions(pos, 8);
+    p.unbindBuffer();
+    
+    p.setColor(0.58, 0.79, 0.94, 1.0);
+    
+    p.bindArray();
+    p.render(GL_TRIANGLE_STRIP);
+    p.unbindArray();
     
     Painter::setTexturingMode(Painter::RedAsAlpha);
     _font->setColor(textColor());
     
-    _font->setPenX(r.left + paddingLeft());
-    _font->setPenY(r.bottom - _font->descender());
+    _font->setPenY(br.bottom - _font->descender());
 
     _font->render(text.stdstr);
     

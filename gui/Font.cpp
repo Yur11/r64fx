@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 
 #include "Font.h"
 #include "Projection2D.h"
@@ -262,6 +263,58 @@ void Font::renderChar(std::string utf8_char)
         
     glyph->render(_pen_x, _pen_y);
     _pen_x += glyph->advance;
+}
+
+
+Rect<float> Font::calculateBoundingBox(std::string utf8_text)
+{
+    float left = _pen_x;
+    float right = left;
+    float top = numeric_limits<float>::max();
+    float bottom = - numeric_limits<float>::max();
+    
+    Utf8String utf8_str;
+    utf8_str.stdstr = utf8_text;
+    auto str_size = utf8_str.size();
+    
+    FT_UInt prev_index;
+    
+    for(int i=0; i<str_size; i++)
+    {
+        auto glyph = fetchGlyph(utf8_str[i]);
+#ifdef DEBUG
+        assert(glyph != nullptr);
+#endif//DEBUG
+    
+        if(_pen_x == 0)
+            _pen_x += glyph->bearing_x;
+        
+        if(_has_kerning && i > 0)
+        {
+            FT_Vector delta; 
+            FT_Get_Kerning(_ft_face, prev_index, glyph->index, FT_KERNING_DEFAULT, &delta); 
+            _pen_x += delta.x >> 6;
+        }
+
+        float top_y = _pen_y - glyph->bearing_y;
+        float bottom_y = top_y + glyph->height;
+        
+        if(top_y < top)
+            top = top_y;
+        
+        if(bottom_y > bottom)
+            bottom = bottom_y;
+
+        _pen_x += glyph->advance;
+        right = _pen_x;
+        
+        prev_index = glyph->index;
+    }  
+
+    _pen_x = left; // We haven't rendered anyting. 
+                   // Return pen to the original position.
+    
+    return { left, top, right, bottom };
 }
 
 

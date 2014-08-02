@@ -375,7 +375,7 @@ void Program::initFonts()
 {    
     Font::init();
     
-    auto font = new Font( _data_prefix + "fonts/FreeSans.ttf", 10);
+    auto font = new Font( _data_prefix + "fonts/FreeSans.ttf", 20);
     if(!font->isOk())
     {
         delete font;

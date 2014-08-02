@@ -18,6 +18,8 @@ class TextLine : public Widget, public Padding<float>{
     float _max_width = 200;
     float _min_width = 10;
     
+    Painter p;
+    
 public:
     Utf8String text;
     
@@ -27,13 +29,7 @@ public:
         Centered
     };
     
-    TextLine(Utf8String text, Font* font = Font::defaultFont(), Widget* parent = nullptr) 
-    : Widget(parent)
-    , _font(font)
-    , text_color(0.0, 0.0, 0.0)
-    , text(text)
-    {
-    }
+    TextLine(Utf8String text, Font* font = Font::defaultFont(), Widget* parent = nullptr);
     
     inline Font* font() const { return _font; }
     

@@ -5,6 +5,7 @@
 #include FT_FREETYPE_H
 #include "Painter.h"
 #include "RenderingContext.h"
+#include "Rect.h"
 #include <string>
 #include <map>
 
@@ -72,6 +73,8 @@ public:
     void render(std::string utf8_text);
     
     void renderChar(std::string utf8_char);
+    
+    Rect<float> calculateBoundingBox(std::string utf8_text);
     
     float lineAdvance(std::string utf8_text);
     
