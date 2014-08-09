@@ -131,7 +131,7 @@ Font::Glyph* Font::fetchGlyph(std::string utf8_char)
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+        gl::TexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, GL_RED, GL_UNSIGNED_BYTE, data);
         
         g->tex = tex;
     }
