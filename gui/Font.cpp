@@ -26,20 +26,20 @@ void Font::Glyph::render(float x, float y)
     x = float(int(x)) + 0.0;
     y = float(int(y)) + 0.0;
     
-    float dy = height - bearing_y;
+    float dy = height() - bearing_y();
     
     float pos[8] = {
-        x,            y + dy - height,
-        x + width,    y + dy - height,
-        x,            y + dy,
-        x + width,    y + dy,
+        x,              y + dy - height(),
+        x + width(),    y + dy - height(),
+        x,              y + dy,
+        x + width(),    y + dy,
     };
     
     p->bindBuffer();
     p->setPositions(pos, 8);
     p->unbindBuffer();
     
-    Painter::setTexture(tex);
+    Painter::setTexture(texture());
     
     p->bindArray();
     p->render(GL_TRIANGLE_STRIP);
@@ -92,7 +92,7 @@ Font::Glyph* Font::fetchGlyph(std::string utf8_char)
     
     
     Glyph* g = new Glyph;
-    g->index = glyph_index;
+    g->m_index = glyph_index;
     
     if(w > 0)
     {
@@ -133,19 +133,19 @@ Font::Glyph* Font::fetchGlyph(std::string utf8_char)
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         gl::TexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, GL_RED, GL_UNSIGNED_BYTE, data);
         
-        g->tex = tex;
+        g->m_tex = tex;
     }
     else
     {
-        g->tex = 0;
+        g->m_tex = 0;
     }
     
-    g->width = w;
-    g->height = h;
+    g->m_width = w;
+    g->m_height = h;
     
-    g->bearing_x = float(_ft_face->glyph->metrics.horiBearingX) / 64.0;
-    g->bearing_y = float(_ft_face->glyph->metrics.horiBearingY) / 64.0;
-    g->advance   = float(_ft_face->glyph->metrics.horiAdvance) / 64.0;
+    g->m_bearing_x = float(_ft_face->glyph->metrics.horiBearingX) / 64.0;
+    g->m_bearing_y = float(_ft_face->glyph->metrics.horiBearingY) / 64.0;
+    g->m_advance   = float(_ft_face->glyph->metrics.horiAdvance) / 64.0;
     
     _index[utf8_char] = g;
     return g;
@@ -234,23 +234,23 @@ void Font::render(std::string utf8_text)
 #endif//DEBUG
     
         if(_pen_x == 0)
-            _pen_x += glyph->bearing_x;
+            _pen_x += glyph->bearing_x();
         
         if(_has_kerning && i > 0)
         {
             FT_Vector delta; 
-            FT_Get_Kerning(_ft_face, prev_index, glyph->index, FT_KERNING_DEFAULT, &delta); 
+            FT_Get_Kerning(_ft_face, prev_index, glyph->index(), FT_KERNING_DEFAULT, &delta); 
             _pen_x += delta.x >> 6;
         }
     
-        if(glyph->tex != 0)
+        if(glyph->texture() != 0)
         {
-            glyph->render(_pen_x + glyph->bearing_x, _pen_y - 0.5);
+            glyph->render(_pen_x + glyph->bearing_x(), _pen_y - 0.5);
         }
 
-        _pen_x += glyph->advance;
+        _pen_x += glyph->advance();
         
-        prev_index = glyph->index;
+        prev_index = glyph->index();
     }    
 }
 
@@ -262,7 +262,7 @@ void Font::renderChar(std::string utf8_char)
 #endif//DEBUG
         
     glyph->render(_pen_x, _pen_y);
-    _pen_x += glyph->advance;
+    _pen_x += glyph->advance();
 }
 
 
@@ -287,17 +287,17 @@ Rect<float> Font::calculateBoundingBox(std::string utf8_text)
 #endif//DEBUG
     
         if(_pen_x == 0)
-            _pen_x += glyph->bearing_x;
+            _pen_x += glyph->bearing_x();
         
         if(_has_kerning && i > 0)
         {
             FT_Vector delta; 
-            FT_Get_Kerning(_ft_face, prev_index, glyph->index, FT_KERNING_DEFAULT, &delta); 
+            FT_Get_Kerning(_ft_face, prev_index, glyph->index(), FT_KERNING_DEFAULT, &delta); 
             _pen_x += delta.x >> 6;
         }
 
-        float top_y = _pen_y - glyph->bearing_y;
-        float bottom_y = top_y + glyph->height;
+        float top_y = _pen_y - glyph->bearing_y();
+        float bottom_y = top_y + glyph->height();
         
         if(top_y < top)
             top = top_y;
@@ -305,10 +305,10 @@ Rect<float> Font::calculateBoundingBox(std::string utf8_text)
         if(bottom_y > bottom)
             bottom = bottom_y;
 
-        _pen_x += glyph->advance;
+        _pen_x += glyph->advance();
         right = _pen_x;
         
-        prev_index = glyph->index;
+        prev_index = glyph->index();
     }  
 
     _pen_x = left; // We haven't rendered anyting. 
@@ -338,12 +338,12 @@ float Font::lineAdvance(std::string utf8_text)
         if(_has_kerning && i > 0)
         {
             FT_Vector delta; 
-            FT_Get_Kerning(_ft_face, prev_index, glyph->index, FT_KERNING_DEFAULT, &delta); 
+            FT_Get_Kerning(_ft_face, prev_index, glyph->index(), FT_KERNING_DEFAULT, &delta); 
             advance -= delta.x >> 6;
         }
         
-        advance += glyph->advance;
-        prev_index = glyph->index;
+        advance += glyph->advance();
+        prev_index = glyph->index();
     }
     
     return advance;
@@ -357,7 +357,7 @@ float Font::charAdvance(std::string utf8_char)
     assert(glyph != nullptr);
 #endif//DEBUG
     
-    return glyph->advance;
+    return glyph->advance();
 }
 
 

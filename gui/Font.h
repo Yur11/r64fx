@@ -22,21 +22,36 @@ class Font{
     bool _has_kerning;
     bool _is_ok = false;
     
-    struct Glyph{
+public:
+    class Glyph{
         friend class Font;
-        GLuint tex;
+        GLuint m_tex;
         
-        float width;
-        float height;
+        float m_width;
+        float m_height;
         
-        float bearing_x;
-        float bearing_y;
-        float advance;
+        float m_bearing_x;
+        float m_bearing_y;
+        float m_advance;
         
-        unsigned int index;
+        unsigned int m_index;
+        
+    public:
+        inline GLuint texture() const { return m_tex; }
+        
+        inline float width() const { return m_width; }
+        inline float height() const { return m_height; }
+        
+        inline float bearing_x() const { return m_bearing_x; }
+        inline float bearing_y() const { return m_bearing_y; }
+        inline float advance() const { return m_advance; }
+        
+        inline unsigned int index() const { return m_index; }
         
         void render(float x, float y);        
     };
+    
+private:
     
     std::map<std::string, Glyph*> _index;
     
