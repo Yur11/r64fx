@@ -25,19 +25,45 @@ class Font{
 public:
     class Glyph{
         friend class Font;
-        GLuint m_tex;
+        unsigned char* m_bitmap = nullptr;
         
-        float m_width;
-        float m_height;
+        GLuint m_tex = 0;
         
-        float m_bearing_x;
-        float m_bearing_y;
-        float m_advance;
+        int m_width = 0.0;
+        int m_height = 0.0;
+        
+        int m_bearing_x = 0.0;
+        int m_bearing_y = 0.0;
+        int m_advance = 0.0;
         
         unsigned int m_index;
         
+        /** @brief Glyph ctor. 
+         
+            Build a glyph instance from the given data.
+            
+            @param width       Width of the bitmap. May be increased to become divisble by 4.
+            
+            @param height      Height of the bitmap.
+            
+            @param bearing_x   Distance from the origin.
+            
+            @param bearing_y   Hight above the base line.
+            
+            @param index       FreeType glyph index.
+            
+            @param bitmap      Bitmap buffer of size width*height.
+         */
+        Glyph(int width, int height, int bearing_x, int bearing_y, int advance, unsigned int index, unsigned char* bitmap);
+                
     public:
+        inline unsigned char* bitmap() const { return m_bitmap; }
+        
+        inline bool hasBitmap() const { return m_bitmap != nullptr; }
+        
         inline GLuint texture() const { return m_tex; }
+        
+        inline bool hasTexture() const { return m_tex != 0; }
         
         inline float width() const { return m_width; }
         inline float height() const { return m_height; }
@@ -47,6 +73,12 @@ public:
         inline float advance() const { return m_advance; }
         
         inline unsigned int index() const { return m_index; }
+
+        void freeBitmap();
+        
+        void loadTexture();
+        
+        void freeTexture();
         
         void render(float x, float y);        
     };
@@ -54,8 +86,6 @@ public:
 private:
     
     std::map<std::string, Glyph*> _index;
-    
-    Font::Glyph* fetchGlyph(std::string utf8_char);
     
     float _pen_x = 0.0;
     float _pen_y = 0.0;
@@ -101,6 +131,8 @@ public:
     inline float penX() const { return _pen_x; }
     inline float penY() const { return _pen_y; }
    
+    Font::Glyph* fetchGlyph(std::string utf8_char);
+   
 private:
     static Font* _default_font;
     
@@ -119,7 +151,7 @@ public:
     
     static void addCommonFont(std::string name, Font* font);
     
-    static Font* find(std::string name);
+    static Font* find(std::string name);    
 };
     
 }//namespace r64fx
