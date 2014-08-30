@@ -1,5 +1,5 @@
-#include "Mouse.h"
-#include "shared_sources/read_png.h"
+#include "Mouse.hpp"
+#include "shared_sources/read_png.hpp"
 
 #ifdef DEBUG
 #include <assert.h>
@@ -8,7 +8,7 @@
 #include <iostream>
 
 #ifdef USE_SDL2
-#include "SDL2/SDL_surface.h"
+#include <SDL2/SDL_surface.h>
 #endif//USE_SDL2
 
 using namespace std;

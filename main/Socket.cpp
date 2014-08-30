@@ -1,6 +1,6 @@
-#include "Socket.h"
-#include "gui/MouseEvent.h"
-#include "gui/Painter.h"
+#include "Socket.hpp"
+#include "gui/MouseEvent.hpp"
+#include "gui/Painter.hpp"
 
 #ifdef DEBUG
 #include <iostream>

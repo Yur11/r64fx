@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Processor.h"
+#include "Processor.hpp"
 
 using namespace std;
 using namespace r64fx;

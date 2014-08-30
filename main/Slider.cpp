@@ -1,5 +1,5 @@
-#include "Slider.h"
-#include "gui/MouseEvent.h"
+#include "Slider.hpp"
+#include "gui/MouseEvent.hpp"
 
 #include <iostream>
 using namespace std;

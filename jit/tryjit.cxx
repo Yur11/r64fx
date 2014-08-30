@@ -1,6 +1,6 @@
 #include <iostream>
 #include <iomanip>
-#include "jit.h"
+#include "jit.hpp"
 
 using namespace std;
 using namespace r64fx;

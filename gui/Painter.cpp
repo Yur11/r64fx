@@ -1,4 +1,4 @@
-#include "Painter.h"
+#include "Painter.hpp"
 #include <iostream>
 
 using namespace std;

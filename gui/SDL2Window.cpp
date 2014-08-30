@@ -1,4 +1,4 @@
-#include "SDL2Window.h"
+#include "SDL2Window.hpp"
 
 #include <iostream>
 #include <vector>
@@ -7,7 +7,7 @@
 #include <assert.h>
 #endif//DEBUG
 
-#include "Mouse.h"
+#include "Mouse.hpp"
 
 using namespace std;
 

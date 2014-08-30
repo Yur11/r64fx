@@ -1,7 +1,7 @@
-#include "Menu.h"
-#include "MouseEvent.h"
-#include "Window.h"
-#include "Painter.h"
+#include "Menu.hpp"
+#include "MouseEvent.hpp"
+#include "Window.hpp"
+#include "Painter.hpp"
 
 #include <iostream>
 

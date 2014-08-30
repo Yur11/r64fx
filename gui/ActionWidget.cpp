@@ -1,6 +1,6 @@
-#include "ActionWidget.h"
-#include "MouseEvent.h"
-#include "Window.h"
+#include "ActionWidget.hpp"
+#include "MouseEvent.hpp"
+#include "Window.hpp"
 
 #ifdef DEBUG
 #include <assert.h>

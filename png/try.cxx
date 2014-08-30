@@ -1,6 +1,6 @@
 #include <iostream>
-#include "png.h"
-#include "Image.h"
+#include "png.hpp"
+#include "Image.hpp"
 #include <cmath>
 
 using namespace std;

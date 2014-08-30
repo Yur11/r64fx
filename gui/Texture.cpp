@@ -1,5 +1,5 @@
-#include "Texture.h"
-#include <shared_sources/read_png.h>
+#include "Texture.hpp"
+#include "shared_sources/read_png.hpp"
 #include <vector>
 #include <map>
 #include <algorithm>

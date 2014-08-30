@@ -1,4 +1,4 @@
-#include "LinearContainer.h"
+#include "LinearContainer.hpp"
 
 #include <iostream>
 using namespace std;

@@ -1,6 +1,6 @@
-#include "Wire.h"
-#include "gui/bezier.h"
-#include "gui/Projection2D.h"
+#include "Wire.hpp"
+#include "gui/bezier.hpp"
+#include "gui/Projection2D.hpp"
 
 #ifdef DEBUG
 #include <iostream>

@@ -1,4 +1,4 @@
-#include "RenderingContext.h"
+#include "RenderingContext.hpp"
 
 #ifdef DEBUG
 #include <assert.h>

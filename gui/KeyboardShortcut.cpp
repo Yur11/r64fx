@@ -1,4 +1,4 @@
-#include "KeyboardShortcut.h"
+#include "KeyboardShortcut.hpp"
 
 using namespace std;
 

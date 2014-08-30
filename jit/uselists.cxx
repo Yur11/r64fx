@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
-#include "jit.h"
-#include "shared_sources/LinkedItem.h"
+#include "jit.hpp"
+#include "shared_sources/LinkedItem.hpp"
 
 using namespace std;
 using namespace r64fx;

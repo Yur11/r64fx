@@ -1,5 +1,5 @@
 #define R64FX_GUI_TRANSLATION_IMPLEMENTATION
-#include "Translation.h"
+#include "Translation.hpp"
 #undef R64FX_GUI_TRANSLATION_IMPLEMENTATION
 
 #ifdef DEBUG

@@ -1,8 +1,8 @@
-#include "TextEdit.h"
-#include "MouseEvent.h"
-#include "KeyEvent.h"
-#include "Keyboard.h"
-#include "TextInputEvent.h"
+#include "TextEdit.hpp"
+#include "MouseEvent.hpp"
+#include "KeyEvent.hpp"
+#include "Keyboard.hpp"
+#include "TextInputEvent.hpp"
 
 #include <iostream>
 

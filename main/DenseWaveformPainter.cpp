@@ -1,4 +1,4 @@
-#include "DenseWaveformPainter.h"
+#include "DenseWaveformPainter.hpp"
 #include <iostream>
 
 using namespace std;

@@ -1,9 +1,9 @@
 #include <iostream>
 #include <limits>
 
-#include "Font.h"
-#include "Projection2D.h"
-#include "utf8string/Utf8String.h"
+#include "Font.hpp"
+#include "Projection2D.hpp"
+#include "utf8string/Utf8String.hpp"
 #include "ConvertUTF.h"
 
 #ifdef DEBUG

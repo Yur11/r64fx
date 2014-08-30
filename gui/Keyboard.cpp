@@ -1,4 +1,4 @@
-#include "Keyboard.h"
+#include "Keyboard.hpp"
 
 #ifdef USE_SDL2
 

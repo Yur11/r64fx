@@ -1,4 +1,4 @@
-#include "jit.h"
+#include "jit.hpp"
 #include <unistd.h>
 #include <malloc.h>
 #include <sys/mman.h>
@@ -227,13 +227,12 @@ const char* CmpCode::names[] = {
 };
 #endif//DEBUG
 
-
-#include "private/mov.h"
-#include "private/add.h"
-#include "private/sub.h"
-#include "private/jmp.h"
-#include "private/sse.h"
-#include "private/other.h"
+#include "private/mov.hpp"
+#include "private/add.hpp"
+#include "private/sub.hpp"
+#include "private/jmp.hpp"
+#include "private/sse.hpp"
+#include "private/other.hpp"
 
 
 }//namespace r64fx

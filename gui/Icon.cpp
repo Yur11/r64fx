@@ -1,7 +1,7 @@
-#include "Icon.h"
+#include "Icon.hpp"
 #include <map>
 #include <iostream>
-#include "Painter.h"
+#include "Painter.hpp"
 
 
 using namespace std;

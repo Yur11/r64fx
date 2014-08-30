@@ -1,4 +1,4 @@
-#include "AudioClipWidget.h"
+#include "AudioClipWidget.hpp"
 
 #ifdef DEBUG
 #include <assert.h>

@@ -1,13 +1,13 @@
 #include <iostream>
 #include <unistd.h>
 #include "Config.h"
-#include "SDL2Window.h"
-#include "Scene.h"
-#include "Dummy.h"
-#include "containers.h"
-#include "TextEdit.h"
-#include "Keyboard.h"
-#include "Icon.h"
+#include "SDL2Window.hpp"
+#include "Scene.hpp"
+#include "Dummy.hpp"
+#include "containers.hpp"
+#include "TextEdit.hpp"
+#include "Keyboard.hpp"
+#include "Icon.hpp"
 
 using namespace std;
 

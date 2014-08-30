@@ -1,6 +1,6 @@
-#include "Widget.h"
-#include "MouseEvent.h"
-#include "KeyEvent.h"
+#include "Widget.hpp"
+#include "MouseEvent.hpp"
+#include "KeyEvent.hpp"
 
 #include <algorithm>
 

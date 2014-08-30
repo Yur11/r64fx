@@ -1,7 +1,7 @@
-#include "HoverableWidget.h"
+#include "HoverableWidget.hpp"
 // #include "View.h"
-#include "Window.h"
-#include "MouseEvent.h"
+#include "Window.hpp"
+#include "MouseEvent.hpp"
 
 using namespace std;
 

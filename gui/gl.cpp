@@ -1,4 +1,4 @@
-#include "gl.h"
+#include "gl.hpp"
 
 #ifdef DEBUG_GL_ERRORS
 #ifdef ABORT_ON_GL_ERROR

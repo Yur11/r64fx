@@ -1,8 +1,8 @@
-#include "Dummy.h"
-#include "MouseEvent.h"
-#include "KeyEvent.h"
-#include "Menu.h"
-#include "Window.h"
+#include "Dummy.hpp"
+#include "MouseEvent.hpp"
+#include "KeyEvent.hpp"
+#include "Menu.hpp"
+#include "Window.hpp"
 #include <iostream>
 #include <assert.h>
 

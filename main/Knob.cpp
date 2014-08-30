@@ -1,8 +1,8 @@
-#include "Knob.h"
-#include "gui/MouseEvent.h"
-#include "gui/bezier.h"
-#include "gui/Window.h"
-#include "gui/Painter.h"
+#include "Knob.hpp"
+#include "gui/MouseEvent.hpp"
+#include "gui/bezier.hpp"
+#include "gui/Window.hpp"
+#include "gui/Painter.hpp"
 #include <cmath>
 
 #ifdef DEBUG

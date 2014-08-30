@@ -1,4 +1,4 @@
-#include "SawtoothOsc.h"
+#include "SawtoothOsc.hpp"
 
 namespace r64fx{
 

@@ -1,11 +1,11 @@
-#include "Window.h"
-#include "Widget.h"
-#include "MouseEvent.h"
-#include "KeyEvent.h"
-#include "TextInputEvent.h"
-#include "Painter.h"
+#include "Window.hpp"
+#include "Widget.hpp"
+#include "MouseEvent.hpp"
+#include "KeyEvent.hpp"
+#include "TextInputEvent.hpp"
+#include "Painter.hpp"
 
-#include "main/DenseWaveformPainter.h"
+#include "main/DenseWaveformPainter.hpp"
 
 #ifdef DEBUG
 #include <iostream>
