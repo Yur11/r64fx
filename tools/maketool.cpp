@@ -95,6 +95,23 @@ string read_text_file(string path)
 }
 
 
+bool line_is_comment(const string &str)
+{
+    for(char ch : str)
+    {
+        if(ch == ' ')
+            continue;
+        
+        if(ch == '#')
+            return true;
+        else
+            return false;
+    }
+    
+    return false;
+}
+
+
 bool line_has_good_characters(const string &str, int &indent_level)
 {
     indent_level = 0;
@@ -246,6 +263,21 @@ void parse(const string &text, Rules &rules, Variables &variables)
         
         if(ch == '\n')
         {
+            if(str.empty())
+                continue;
+            
+            if(line_is_comment(str))
+            {
+                str.clear();
+                continue;
+            }
+            
+            while(str.back() == ' ' || str.back() == '\t')
+                str.pop_back();
+            
+            if(str.back() == '\\')
+                continue;
+            
             int indent_level;
             if(line_has_good_characters(str, indent_level))
             {
