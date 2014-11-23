@@ -33,6 +33,7 @@ const int rule_indent_level = 4;
 const int dir_flags = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
 
 struct Rule{
+    string dep_text;
     vector<string> deps;
     string body;
 };
@@ -40,7 +41,6 @@ struct Rule{
 struct Rules : public map<string, Rule*> {} rules;
 
 struct Variables : public map<string, string> {} variables;
-
 
 const unsigned int buff_size = 1024 * 16;
 char buff[buff_size];
@@ -149,6 +149,27 @@ inline string file_deref(string str)
 }
 
 
+void build_dep_list(const string &dep_text, vector<string> &dep_list)
+{
+    string str;
+    for(char ch : dep_text)
+    {
+        if(ch == ' ' || ch == '\t' || ch == '\n')
+        {
+            if(!str.empty())
+            {
+                dep_list.push_back(str);
+                str.clear();
+            }
+        }
+        else
+        {
+            str.push_back(ch);
+        }
+    }
+}
+
+
 void process_entery(const string &header_text, const string &body_text, Rules &rules, Variables &variables)
 {
     char ch;
@@ -169,23 +190,9 @@ void process_entery(const string &header_text, const string &body_text, Rules &r
             {
                 dep_text = header_text.substr(i + 1);
             }
+            
             dep_text.push_back(' ');
-            string str;
-            for(char ch : dep_text)
-            {
-                if(ch == ' ' || ch == '\t')
-                {
-                    if(!str.empty())
-                    {
-                        rule->deps.push_back(str);
-                        str.clear();
-                    }
-                }
-                else
-                {
-                    str.push_back(ch);
-                }
-            }
+            build_dep_list(dep_text, rule->deps);
             
             rule->body = body_text;
             
@@ -276,7 +283,10 @@ void parse(const string &text, Rules &rules, Variables &variables)
                 str.pop_back();
             
             if(str.back() == '\\')
+            {
+                str.pop_back();
                 continue;
+            }
             
             int indent_level;
             if(line_has_good_characters(str, indent_level))
@@ -329,11 +339,13 @@ void parse(const string &text, Rules &rules, Variables &variables)
 /* Substitute variables in text. 
    Return true is substitutions occured.
  */
-bool substitute_variables(string &text, const Variables &variables)
+bool substitute_variables(string &text)
 {
+    string new_text;
+    
     enum class State{
         Initial,
-        GotHash,
+        GotAtSign,
         GotBrace
     };
     
@@ -341,7 +353,7 @@ bool substitute_variables(string &text, const Variables &variables)
     
     bool substitutions_occurred = false;
     
-    int sub_begin = 0, sub_end = 0;
+    string key;
     for(unsigned int i=0; i<text.size(); i++)
     {
         char ch = text[i];
@@ -350,19 +362,28 @@ bool substitute_variables(string &text, const Variables &variables)
         {
             case State::Initial:
             {
-                if(ch == '#')
+                if(ch == '@')
                 {
-                    state = State::GotHash;
-                    sub_begin = i;
+                    state = State::GotAtSign;
+                }
+                else
+                {
+                    new_text.push_back(ch);
                 }
                 break;
             }
             
-            case State::GotHash:
+            case State::GotAtSign:
             {
                 if(ch == '{')
                 {
                     state = State::GotBrace;
+                }
+                else
+                {
+                    new_text.push_back('@');
+                    new_text.push_back(ch);
+                    state = State::Initial;
                 }
                 break;
             }
@@ -371,36 +392,33 @@ bool substitute_variables(string &text, const Variables &variables)
             {
                 if(ch == '}')
                 {
-                    sub_end = i;
-                    
                     /*Perform substitution.*/
-                    if(sub_begin + 2 == sub_end)
+                    if(key.empty())
                     {
-                        cout << "Warning: Got empty #{} in text!\n";
+                        cout << "Warning: Got empty @{} in text!\n";
                     }
                     else
-                    {
-                        int size = sub_end - sub_begin - 2;
-                        string key = text.substr(sub_begin + 2, size);
-                        while(key.back() == ' ' || key.back() == '\t')
-                            key.pop_back();
-                        while(key.front() == ' ' || key.front() == '\t')
-                            key = key.substr(1);
-
-                        string subst_text = "";
-                        
-                        auto it = variables.find(key);
-                        if(it != variables.end())
-                        {
-                            subst_text = it->second;
-                        }
-                        
-                        text = text.substr(0, sub_begin) + subst_text + text.substr(sub_end + 1);
+                    {                 
+                        new_text += variables[key];
+                        key.clear();
                         
                         substitutions_occurred = true;
                     }
                     
                     state = State::Initial;
+                }
+                else if(ch == ' ' || ch == '\t')
+                {
+                    //Skip
+                }
+                else if(ch == '\n')
+                {
+                    cerr << "Unexpected newline!\n";
+                    exit(1);
+                }
+                else
+                {
+                    key.push_back(ch);
                 }
             }
         }
@@ -413,17 +431,19 @@ bool substitute_variables(string &text, const Variables &variables)
         exit(1);
     }
     
+    text = new_text;
+    
     return substitutions_occurred;
 }
 
 
-void substitute_variables(Rules &rules, const Variables &variables)
+void substitute_variables(Rules &rules)
 {
     for(auto rule : rules)
     {
         auto name = rule.first;
         auto old_name = name;
-        if(substitute_variables(name, variables))
+        if(substitute_variables(name))
         {
             rules.erase(old_name);
             rules[name] = rule.second;
@@ -431,10 +451,10 @@ void substitute_variables(Rules &rules, const Variables &variables)
         
         for(auto &dep : rule.second->deps)
         {
-            substitute_variables(dep, variables);
+            substitute_variables(dep);
         }
         
-        substitute_variables(rule.second->body, variables);
+        substitute_variables(rule.second->body);
     }
 }
 
@@ -489,12 +509,43 @@ void touch_path(string path)
 }
 
 
+string find_common_prefix(const string &a, const string &b)
+{
+    string str;
+    for(int i=0; i<a.size() && i<b.size(); i++)
+    {
+        if(a[i] == b[i])
+            str.push_back(a[i]);
+        else
+            break;
+    }
+    
+    /* Chop up to the last / */
+    while(!str.empty() && str.back() != '/')
+        str.pop_back();
+    
+    return str;
+}
+
+
+string format_time_file_path(string target_name)
+{
+    string str = find_common_prefix(pwd(), target_name);
+    if(!str.empty())
+    {
+        str = target_name.substr(str.size());
+    }
+    return str + ".time";
+}
+
+
 void save_timestamp(string target_name, unsigned long timestamp)
 {
     if(timestamp == 0)
         return;
     
-    string name = target_name + ".time";
+    string name = format_time_file_path(target_name);
+    touch_path(name);
     auto file = fopen(name.c_str(), "w+");
     if(!file)
     {
@@ -518,7 +569,7 @@ unsigned long read_timestamp(string target_name)
 {
     unsigned long num = 0;
     
-    string name = target_name + ".time";
+    string name = format_time_file_path(target_name);
     auto file = fopen(name.c_str(), "r");
     if(file)
     {
@@ -539,12 +590,6 @@ unsigned long read_timestamp(string target_name)
 bool is_a_target(string path, const Rules &rules)
 {
     return rules.find(path) != rules.end();
-}
-
-
-void execute_body(string text)
-{
-    
 }
 
 
@@ -581,6 +626,9 @@ int make_target(string target, const Rules &rules)
         bool deps_updated = false;
         for(auto &dep : deps)
         {
+            if(dep.empty())
+                continue;
+            
             if(is_a_target(dep, rules))
             {
                 if(make_target(dep, rules) == TargetUpdated)
@@ -663,7 +711,7 @@ int main(int argc, char* argv[])
     
     text.push_back('\n');
     parse(text, rules, variables);
-    substitute_variables(rules, variables);
+    substitute_variables(rules);
     
     if(is_a_target(argv[1], rules))
     {
