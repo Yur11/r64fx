@@ -1,4 +1,4 @@
 {
   "name": "r64fx"
-, "files": [ { "directory": "", "filters": [ "*.cpp", "*.cxx", "*.hpp", "*.h", "*.glsl", "*.vert", "*.frag", "*.sh", ".kateproject", "Makefile" ] } ]
+, "files": [ { "directory": "", "filters": [ "*.cpp", "*.cxx", "*.hpp", "*.h", "*.glsl", "*.vert", "*.frag", "*.sh", ".kateproject", "*.config_rules", "*.build_rules" , "all" ] } ]
 }
