@@ -32,8 +32,9 @@ const int rule_indent_level = 4;
 
 const int dir_flags = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
 
+const int subst_iteration_limit = 1024;
+
 struct Rule{
-    string dep_text;
     vector<string> deps;
     string body;
 };
@@ -150,7 +151,7 @@ inline string file_deref(string str)
 
 
 void build_dep_list(const string &dep_text, vector<string> &dep_list)
-{
+{    
     string str;
     for(char ch : dep_text)
     {
@@ -166,6 +167,26 @@ void build_dep_list(const string &dep_text, vector<string> &dep_list)
         {
             str.push_back(ch);
         }
+    }
+    
+    if(!str.empty())
+        dep_list.push_back(str);
+}
+
+
+void rebuild_dep_lists()
+{
+    for(auto &rule : rules)
+    {
+        vector<string> new_deps;
+        auto &deps = rule.second->deps;
+        for(auto dep : deps)
+        {
+            build_dep_list(dep, new_deps);
+        }
+        
+        if(!new_deps.empty())
+            rule.second->deps = new_deps;
     }
 }
 
@@ -437,25 +458,35 @@ bool substitute_variables(string &text)
 }
 
 
-void substitute_variables(Rules &rules)
+bool substitute_variables(Rules &rules)
 {
+    bool substitutions_occurred = false;
+    
     for(auto rule : rules)
     {
         auto name = rule.first;
         auto old_name = name;
-        if(substitute_variables(name))
+        auto suboc = substitute_variables(name);
+        if(suboc)
         {
             rules.erase(old_name);
             rules[name] = rule.second;
+            substitutions_occurred = true;
         }
         
         for(auto &dep : rule.second->deps)
         {
-            substitute_variables(dep);
+            if(substitute_variables(dep))
+                substitutions_occurred = true;
         }
         
-        substitute_variables(rule.second->body);
+        if(substitute_variables(rule.second->body))
+        {
+            substitutions_occurred = true;
+        }
     }
+    
+    return substitutions_occurred;
 }
 
 
@@ -711,8 +742,18 @@ int main(int argc, char* argv[])
     
     text.push_back('\n');
     parse(text, rules, variables);
-    substitute_variables(rules);
-    
+    int subst_iteration_count = 0;
+    while(substitute_variables(rules))
+    {
+        rebuild_dep_lists();
+        if(subst_iteration_count > subst_iteration_limit)
+        {
+            cerr << "To many substitutions!\nAssuming a circular dependency is present!\nAborting!\n";
+            exit(1);
+        }
+        subst_iteration_count++;
+    }
+        
     if(is_a_target(argv[1], rules))
     {
         if(make_target(argv[1], rules) == TargetUp2Date)
