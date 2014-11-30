@@ -37,7 +37,7 @@ void Wire::init()
 void Wire::init_shader()
 {
     VertexShader vertex_shader(
-        #include "Wire.vert.h"
+        #include "main/Wire.vert.h"
     );
     
 #ifdef DEBUG
@@ -50,7 +50,7 @@ void Wire::init_shader()
 #endif//DEBUG
     
     FragmentShader fragment_shader(
-        #include "Wire.frag.h"
+        #include "main/Wire.frag.h"
     );
     
 #ifdef DEBUG

@@ -35,7 +35,7 @@ fi
 ##
 function build_tool()
 {
-    echo "Building $1"
+    echo "Building    $1"
     $PROJECT_COMPILER -O2 $SRC_DIR/tools/$1.cpp -o $1
 }
 
@@ -77,7 +77,7 @@ then
     TEXT="$TEXT\nSRC_DIR=$SRC_DIR"
     TEXT="$TEXT\nSUB_DIR=$SUB_DIR"
 
-    CONFIG_RULES_FILE="$SRC_DIR/$SUB_DIR/$SUB_DIR.config_rules"
+    CONFIG_RULES_FILE="$SRC_DIR/$SUB_DIR/$SUB_DIR.list"
     if [ ! -f $CONFIG_RULES_FILE ]
     then
         echo "Error: $1 does not seem to be a valid subproject!" 1>&2
@@ -85,7 +85,7 @@ then
     fi
     TEXT="\n$TEXT\n`cat $CONFIG_RULES_FILE`"
     
-    BUILD_RULES_FILE="$SUB_DIR.build_rules"
+    BUILD_RULES_FILE="$SUB_DIR.make_rules"
     if [ -f $BUILD_RULES_FILE ]
     then
         TEXT="$TEXT\n\n\n`cat $BUILD_RULES_FILE`"

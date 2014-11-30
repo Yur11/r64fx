@@ -7,8 +7,9 @@
 
 #include "main/DenseWaveformPainter.hpp"
 
-#ifdef DEBUG
 #include <iostream>
+
+#ifdef DEBUG
 #include <assert.h>
 #endif//DEBUG
 

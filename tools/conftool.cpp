@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
         }
         output_text += outstr;
 
-        output_text += "    echo \"Building " + subdir + "/" + o_file + "\"\n"; 
+        output_text += "    echo \"Building    " + subdir + "/" + o_file + "\"\n"; 
         output_text += "    " + cxx + " -c " + path + " -o " + subdir + "/" + o_file;
         
         output_text += "\n\n";    
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
     }
     output_text += "\n\n";
     
-    string output_file_name = subdir + ".build_rules";
+    string output_file_name = subdir + ".make_rules";
     auto file = fopen(output_file_name.c_str(), "w+");
     if(!file)
     {

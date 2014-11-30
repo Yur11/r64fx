@@ -1,8 +1,0 @@
-CPP_FILES = jit.cpp
-    
-configure
-    echo "Configuring @{SUB_DIR} ..."
-    ./conftool "@{PROJECT_COMPILER} -fPIC" "@{SRC_DIR}" "@{SUB_DIR}" "@{CPP_FILES}"
-
-jit.so: jit.build_rules @{jit_object_files}
-    @{PROJECT_COMPILER} -shared @{jit_object_files} -o jit.so

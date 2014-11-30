@@ -21,9 +21,9 @@ GLuint           DenseWaveformPainter::debug_tex;
 bool DenseWaveformPainter::init()
 {
     sp = ShadingProgram::create(
-        #include "DenseWaveformPainter.vert.h"
+        #include "main/DenseWaveformPainter.vert.h"
         ,
-        #include "DenseWaveformPainter.frag.h"
+        #include "main/DenseWaveformPainter.frag.h"
     );
     
     if(!sp.isOk())

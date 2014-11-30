@@ -22,9 +22,9 @@ int              Painter::current_texturing_mode = Painter::RGBA;
 bool Painter::init()
 {
     sp = ShadingProgram::create(
-        #include "Painter.vert.h"
+        #include "gui/Painter.vert.h"
         ,
-        #include "Painter.frag.h"
+        #include "gui/Painter.frag.h"
     );
     
     if(!sp.isOk())
