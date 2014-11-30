@@ -1,0 +1,54 @@
+CONFIG_FLAGS= -DUSE_SDL2 -DDEBUG_GL_ERRORS -I /usr/include/freetype2
+
+CPP_FILES =
+    Action.cpp
+    ActionWidget.cpp
+    CallbackList.cpp
+    ConvertUTF.cpp
+    Dummy.cpp
+    Font.cpp
+    HoverableWidget.cpp
+    Icon.cpp
+    Keyboard.cpp
+    KeyboardShortcut.cpp
+    LinearContainer.cpp
+    Menu.cpp
+    Mouse.cpp
+    Painter.cpp
+    Projection2D.cpp
+    RenderingContext.cpp
+    SDL2Window.cpp
+    Shader.cpp
+    TextEdit.cpp
+    TextLine.cpp
+    Texture.cpp
+    Translation.cpp
+    Vertices.cpp
+    View.cpp
+    Widget.cpp
+    Window.cpp
+    bezier.cpp
+    gl.cpp
+
+    
+configure : gui/Painter.vert.h gui/Painter.frag.h
+    echo "Configuring @{SUB_DIR}"
+    ./conftool "@{PROJECT_COMPILER} -fPIC @{CONFIG_FLAGS}" "@{SRC_DIR}" "@{SUB_DIR}" "@{CPP_FILES}"
+    
+config         : configure
+conf           : configure
+cf             : configure
+    
+    
+libgui.so: @{gui_object_files}
+    echo "Linking     libgui.so"
+    @{PROJECT_COMPILER} -shared @{gui_object_files} -o libgui.so -L . -lgc -lutf8string -lGL -lGLEW -lSDL2 -lfreetype
+    
+    
+gui/Painter.vert.h
+    echo "Writing     Painter.vert.h"
+    ./file2str @{SRC_DIR}/gui/Painter.vert > gui/Painter.vert.h
+    
+gui/Painter.frag.h
+    echo "Writing     Painter.frag.h"
+    ./file2str @{SRC_DIR}/gui/Painter.frag > gui/Painter.frag.h

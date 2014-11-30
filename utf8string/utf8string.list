@@ -1,0 +1,13 @@
+CPP_FILES = Utf8String.cpp
+    
+configure
+    echo "Configuring @{SUB_DIR}"
+    ./conftool "@{PROJECT_COMPILER} -fPIC" "@{SRC_DIR}" "@{SUB_DIR}" "@{CPP_FILES}"
+
+config         : configure
+conf           : configure
+cf             : configure
+    
+libutf8string.so: utf8string.make_rules @{utf8string_object_files}
+    echo "Linking     libutf8string.so"
+    @{PROJECT_COMPILER} -shared @{utf8string_object_files} -o libutf8string.so
