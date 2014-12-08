@@ -3,19 +3,16 @@
 ##
 # Configure variables!!
 ##
+PROJECT_NAME="r64fx"
+
 BUILD_DIR=`pwd`
+
 SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 if [ "$BUILD_DIR" == "$SRC_DIR" ]
 then
     printf "Refusing to do an in-source build!\nPlease use another directory!\n\nNOTE:  You can create and use a subdirectory.\n\n" 1>&2
     exit 1
 fi
-
-# if [ $# -eq 0 ] 
-# then
-#     echo "No input!" 1>&2
-#     exit 1
-# fi
 
 echo "$SRC_DIR" > SRC_DIR
 echo "$BUILD_DIR" > BUILD_DIR
@@ -47,49 +44,21 @@ function ensure_tool_exists()
     fi
 }
 
-if  [ "$1" == 'maketool' ] || [ "$1" == 'conftool' ] || [ "$1" == 'file2str' ]
+if  [ "$1" == 'maketool' ] || [ "$1" == 'conftool' ]
 then
     build_tool $1
     exit 0
+else
+    for i in "maketool" "conftool"
+    do
+        ensure_tool_exists $i
+    done
 fi
 
-for i in "maketool" "conftool" "file2str"
-do
-    ensure_tool_exists $i
-done
-
-
-##
-# Make target!!
-##
-if [ $# -eq 2 ]
+if [ ! -f "$SRC_DIR/$PROJECT_NAME.project" ]
 then
-    SUB_DIR=$1
-    
-    if [ ! -d "$SRC_DIR/$SUB_DIR" ]
-    then
-        echo "Error: $1 no such directory!" 1>&2
-        exit 1
-    fi
-    
-    TEXT="PROJECT_COMPILER=$PROJECT_COMPILER -I $SRC_DIR -I $BUILD_DIR"
-    TEXT="$TEXT\nBUILD_DIR=$BUILD_DIR"
-    TEXT="$TEXT\nSRC_DIR=$SRC_DIR"
-    TEXT="$TEXT\nSUB_DIR=$SUB_DIR"
-
-    CONFIG_RULES_FILE="$SRC_DIR/$SUB_DIR/$SUB_DIR.list"
-    if [ ! -f $CONFIG_RULES_FILE ]
-    then
-        echo "Error: $1 does not seem to be a valid subproject!" 1>&2
-        exit 1
-    fi
-    TEXT="\n$TEXT\n`cat $CONFIG_RULES_FILE`"
-    
-    BUILD_RULES_FILE="$SUB_DIR.make_rules"
-    if [ -f $BUILD_RULES_FILE ]
-    then
-        TEXT="$TEXT\n\n\n`cat $BUILD_RULES_FILE`"
-    fi
-    
-    printf "$TEXT\n" | ./maketool $2
+    echo "Failed to find $PROJECT_NAME.project file!\n"
+    exit 1
 fi
+
+./maketool $@ < $SRC_DIR/$PROJECT_NAME.project
