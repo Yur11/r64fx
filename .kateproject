@@ -10,9 +10,10 @@
       "*.vert", 
       "*.frag", 
       "*.sh", 
-      ".kateproject", 
       "*.list",
-      "*.make_rules" , 
+      "*project", 
+      "*.rules",
+      "*.objects",
       "all",
       "*.xcf",
       "*.txt"

@@ -1,0 +1,8 @@
+say
+    echo "@[BUILD_DIR]"
+    echo "@[SRC_DIR]"
+    echo "@[PROJECT_COMPILER]"
+    echo "@[FOO]"
+    echo "Just Saying!!"
+    
+@[jit/jit.project]
