@@ -43,12 +43,25 @@ struct Rules : public map<string, Rule*> {} rules;
 
 struct Variables : public map<string, string> {} variables;
 
+vector<string> include_dirs;
+
 const unsigned int buff_size = 1024 * 16;
 char buff[buff_size];
 
 string pwd()
 {
     return getcwd(buff, buff_size);
+}
+
+
+string strip_extra_chars(string str)
+{
+    while(str.front() == ' ' || str.front() == '\t' || str.front() == '\n' )
+        str = str.substr(1);
+    while(str.back() == ' ' || str.back() == '\t' || str.back() == '\n' )
+        str.pop_back(); 
+    
+    return str;
 }
 
 
@@ -96,6 +109,40 @@ string read_text_file(string path)
 }
 
 
+string read_included_file(const string &name)
+{
+    string file_name = strip_extra_chars(name);
+    for(auto &dir : include_dirs)
+    {
+        auto path = dir + file_name;
+        if(file_exists(path))
+        {
+            return read_text_file(path) + "\n";
+        }
+    }
+    
+    return "";   
+}
+
+
+void init_include_dirs()
+{
+    include_dirs.push_back(pwd());
+    if(file_exists("SRC_DIR"))
+    {
+        string src_dir = strip_extra_chars(read_text_file("SRC_DIR"));
+        if(!src_dir.empty())
+            include_dirs.push_back(src_dir);
+    }
+    
+    for(auto &dir : include_dirs)
+    {
+        if(dir.back() != '/')
+            dir.push_back('/');        
+    }
+}
+
+
 bool line_is_comment(const string &str)
 {
     for(char ch : str)
@@ -110,6 +157,100 @@ bool line_is_comment(const string &str)
     }
     
     return false;
+}
+
+
+bool line_is_include_directive(const string &line, string &key)
+{
+    string extra_chars;
+    
+    enum class State{
+        Initial,
+        GotAtSign,
+        GotSquare,
+        Done
+    };
+    
+    State state = State::Initial;
+    
+    for(char ch : line)
+    {
+        if(ch == '\n')
+        {
+            cerr << "Unexpected newline!\n";
+            exit(1);
+        }
+        
+        switch(state)
+        {
+            case State::Initial:
+            {
+                if(ch == ' ' || ch == '\t')
+                    continue;
+                else if(ch == '@')
+                    state = State::GotAtSign;
+                else
+                    return false;
+                break;
+            }
+            
+            case State::GotAtSign:
+            {
+                if(ch == '[')
+                    state = State::GotSquare;
+                else
+                {
+                    cerr << "Unexpected symbol " << ch << " !\n";
+                    exit(1);
+                }
+                break;
+            }
+            
+            case State::GotSquare:
+            {
+                if(ch == ']')
+                    state = State::Done;
+                else
+                    key.push_back(ch);
+                break;
+            }
+            
+            case State::Done:
+            {
+                if(ch == ' ' || ch == '\t')
+                    continue;
+                else
+                    extra_chars.push_back(ch);
+                break;
+            }
+        }
+    }
+    
+    if(state == State::Done)
+    {
+        if(!extra_chars.empty() && extra_chars[0] != '#')
+        {
+            cerr << "maketool: Warning, extra characters after include statement!\n";
+            cerr << "    " << extra_chars << "\n";
+        }
+        
+        if(key.empty())
+        {
+            cerr << "maketool: Empty include @[] statement!\n";
+            exit(0);
+        }
+        
+        return true;
+    }
+    else if(state == State::Initial)
+    {
+        return false;
+    }
+    else
+    {
+        cerr << "Include statement @[" << key <<  "... ends unexpectedly!\n";
+        exit(1);
+    }
 }
 
 
@@ -130,23 +271,6 @@ bool line_has_good_characters(const string &str, int &indent_level)
     }
     
     return false;
-}
-
-
-string strip_extra_chars(string str)
-{
-    while(str.front() == ' ' || str.front() == '\t' || str.front() == '\n' )
-        str = str.substr(1);
-    while(str.back() == ' ' || str.back() == '\t' || str.back() == '\n' )
-        str.pop_back(); 
-    
-    return str;
-}
-
-
-inline string file_deref(string str)
-{
-    return read_text_file(strip_extra_chars(str.substr(1, str.size() - 2)));
 }
 
 
@@ -249,7 +373,7 @@ void process_entery(const string &header_text, const string &body_text, Rules &r
             
             if(value_text.front() == '[' && value_text.back() == ']')
             {
-                variables[name_text] = strip_extra_chars(file_deref(value_text));
+                variables[name_text] = strip_extra_chars(read_text_file(strip_extra_chars(value_text.substr(1, value_text.size() - 1))));
             }
             else
             {
@@ -278,7 +402,7 @@ void process_entery(const string &header_text, const string &body_text, Rules &r
     }
 }
 
-void parse(const string &text, Rules &rules, Variables &variables)
+void parse(const string &text)
 {
     string str;//Current line.
     string header_text;
@@ -288,7 +412,7 @@ void parse(const string &text, Rules &rules, Variables &variables)
     for(unsigned int index=0; index<text.size(); index++)
     {
         char ch = text[index];
-        
+                
         if(ch == '\n')
         {
             if(str.empty())
@@ -300,11 +424,12 @@ void parse(const string &text, Rules &rules, Variables &variables)
                 continue;
             }
             
-            while(str.back() == ' ' || str.back() == '\t')
+            while(str.back() == ' ' || str.back() == '\t')//Strip extra chars.
                 str.pop_back();
             
             if(str.back() == '\\')
             {
+                //Concat with the next line.
                 str.pop_back();
                 continue;
             }
@@ -312,18 +437,28 @@ void parse(const string &text, Rules &rules, Variables &variables)
             int indent_level;
             if(line_has_good_characters(str, indent_level))
             {
+                
                 if(indent_level == 0)
                 {
-                    //Write results here!
-                    if(!header_text.empty())
+                    string key;
+                    if(line_is_include_directive(str, key))
                     {
-                        process_entery(header_text, body_text, rules, variables);
+                        //Parse another file.
+                        parse(read_included_file(key));
                     }
-                    
-                    header_text.clear();
-                    body_text.clear();
-                    
-                    header_text = str;
+                    else
+                    {
+                        //Write results here!
+                        if(!header_text.empty())
+                        {
+                            process_entery(header_text, body_text, rules, variables);
+                        }
+                        
+                        header_text.clear();
+                        body_text.clear();
+                        
+                        header_text = str;
+                    }
                 }
                 else if(indent_level >= rule_indent_level)
                 {
@@ -360,14 +495,15 @@ void parse(const string &text, Rules &rules, Variables &variables)
 /* Substitute variables in text. 
    Return true is substitutions occured.
  */
-bool substitute_variables(string &text)
+bool perform_substitutions(string &text)
 {
     string new_text;
     
     enum class State{
         Initial,
         GotAtSign,
-        GotBrace
+        GotCurly,
+        GotSquare
     };
     
     auto state = State::Initial;
@@ -398,7 +534,11 @@ bool substitute_variables(string &text)
             {
                 if(ch == '{')
                 {
-                    state = State::GotBrace;
+                    state = State::GotCurly;
+                }
+                else if(ch == '[')
+                {
+                    state = State::GotSquare;
                 }
                 else
                 {
@@ -409,7 +549,7 @@ bool substitute_variables(string &text)
                 break;
             }
             
-            case State::GotBrace:
+            case State::GotCurly:
             {
                 if(ch == '}')
                 {
@@ -441,11 +581,47 @@ bool substitute_variables(string &text)
                 {
                     key.push_back(ch);
                 }
+                break;
+            }
+            
+            case State::GotSquare:
+            {
+                if(ch == ']')
+                {
+                    if(key.empty())
+                    {
+                        cout << "Warning: Got empty @[] in text!\n";
+                    }
+                    else
+                    {                 
+                        if(file_exists(key))
+                            new_text += strip_extra_chars(read_text_file(strip_extra_chars(key)));
+                        key.clear();
+                        
+                        substitutions_occurred = true;
+                    }
+                    
+                    state = State::Initial;
+                }
+                else if(ch == ' ' || ch == '\t')
+                {
+                    //Skip
+                }
+                else if(ch == '\n')
+                {
+                    cerr << "Unexpected newline!\n";
+                    exit(1);
+                }
+                else
+                {
+                    key.push_back(ch);
+                }
+                break;
             }
         }
     }
     
-    if(state == State::GotBrace)
+    if(state == State::GotCurly)
     {
         cout << "Unexpected end of line!\n";
         cout << text << "\n";
@@ -458,7 +634,7 @@ bool substitute_variables(string &text)
 }
 
 
-bool substitute_variables(Rules &rules)
+bool perform_substitutions(Rules &rules)
 {
     bool substitutions_occurred = false;
     
@@ -466,7 +642,7 @@ bool substitute_variables(Rules &rules)
     {
         auto name = rule.first;
         auto old_name = name;
-        auto suboc = substitute_variables(name);
+        auto suboc = perform_substitutions(name);
         if(suboc)
         {
             rules.erase(old_name);
@@ -476,11 +652,11 @@ bool substitute_variables(Rules &rules)
         
         for(auto &dep : rule.second->deps)
         {
-            if(substitute_variables(dep))
+            if(perform_substitutions(dep))
                 substitutions_occurred = true;
         }
         
-        if(substitute_variables(rule.second->body))
+        if(perform_substitutions(rule.second->body))
         {
             substitutions_occurred = true;
         }
@@ -733,6 +909,8 @@ int main(int argc, char* argv[])
     
     atexit(cleanup);
     
+    init_include_dirs();
+    
     string text;
     char ch;
     while(fread(&ch, 1, 1, stdin) !=0)
@@ -741,9 +919,10 @@ int main(int argc, char* argv[])
     }
     
     text.push_back('\n');
-    parse(text, rules, variables);
+    parse(text);
+    
     int subst_iteration_count = 0;
-    while(substitute_variables(rules))
+    while(perform_substitutions(rules))
     {
         rebuild_dep_lists();
         if(subst_iteration_count > subst_iteration_limit)
