@@ -2,7 +2,7 @@
 #define R64FX_GUI_RENDERING_CONTEXT_H
 
 #include <vector>
-#include "gc/gc.hpp"
+#include "shared/Disposable.hpp"
 
 namespace r64fx{
    

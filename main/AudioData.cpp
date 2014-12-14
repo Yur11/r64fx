@@ -1,12 +1,11 @@
 #include "AudioData.hpp"
+#include <iostream>
 #include <sndfile.h>
 #include <cmath>
 
-#ifdef DEBUG
 #include <assert.h>
-#include <iostream>
+
 using namespace std;
-#endif//DEBUG
 
 namespace r64fx{
     

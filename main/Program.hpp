@@ -61,6 +61,8 @@ public:
     /** @brief Return status of the program. */
     inline int status() const { return _status; }
     
+    inline std::string dataPrefix() const { return _data_prefix; }
+    
     /** @brief Tell the program to quit. */
     void quit();
 };

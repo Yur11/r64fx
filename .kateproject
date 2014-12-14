@@ -3,19 +3,27 @@
   "files": [ { "directory": "", "filters": [ 
       "*.cpp", 
       "*.cxx",
+      "*.hpp",
       "*.c", 
-      "*.hpp", 
       "*.h", 
-      "*.glsl", 
+
+      "*.glsl",
       "*.vert", 
-      "*.frag", 
+      "*.frag",
+
       "*.sh", 
-      "*.list",
+
       "*project", 
       "*.rules",
       "*.objects",
       "all",
+
       "*.xcf",
+      "*.txt",
+      "*.png",
+
+      "*.md",
+      "*.html",
       "*.txt"
   ] } ]
 }

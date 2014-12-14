@@ -3,13 +3,5 @@ CPP_FILES =
     Processor.cpp
     
 configure
-    echo "Configuring @{SUB_DIR}"
-    ./conftool "@{PROJECT_COMPILER} -fPIC" "@{SRC_DIR}" "@{SUB_DIR}" "@{CPP_FILES}"
-
-config         : configure
-conf           : configure
-cf             : configure
+    ./conftool "@[PROJECT_COMPILER] @[INCLUDE_FLAGS] -fPIC" "@[SRC_DIR]" "dsp" "@{CPP_FILES}"
     
-libdsp.so: dsp.make_rules @{dsp_object_files}
-    echo "Linking     libdsp.so"
-    @{PROJECT_COMPILER} -shared @{dsp_object_files} -o libdsp.so

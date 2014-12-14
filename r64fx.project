@@ -1,8 +1,29 @@
-say
-    echo "@[BUILD_DIR]"
-    echo "@[SRC_DIR]"
-    echo "@[PROJECT_COMPILER]"
-    echo "@[FOO]"
-    echo "Just Saying!!"
+##
+# Main project file for r64fx.
+##
+
+
+configure: configure-shared configure-gui configure-main
     
-@[jit/jit.project]
+configure-shared
+    ./maketool configure < @[SRC_DIR]/shared/shared.project
+    
+configure-jit
+    ./maketool configure < @[SRC_DIR]/jit/jit.project
+    
+configure-dsp
+    ./maketool configure < @[SRC_DIR]/dsp/dsp.project
+    
+configure-gui
+    ./maketool configure < @[SRC_DIR]/gui/gui.project
+
+configure-main
+    ./maketool configure < @[SRC_DIR]/main/main.project
+    
+@[shared.rules]
+@[gui.rules]
+@[main.rules]
+    
+build-r64fx:  @[shared.objects] @[gui.objects] @[main.objects]
+    echo "Linking     executable"
+    @[PROJECT_COMPILER] -o r64fx @[shared.objects] @[gui.objects] @[main.objects] @[LINK_FLAGS]

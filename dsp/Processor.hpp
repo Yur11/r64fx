@@ -2,7 +2,7 @@
 #define R64FX_DSP_PROCESSOR_H
 
 #include "jit/jit.hpp"
-#include "shared_sources/LinkedItem.hpp"
+#include "shared/LinkedItem.hpp"
 #include <vector>
 
 namespace r64fx{

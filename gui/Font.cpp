@@ -3,7 +3,7 @@
 
 #include "Font.hpp"
 #include "Projection2D.hpp"
-#include "utf8string/Utf8String.hpp"
+#include "shared/Utf8String.hpp"
 #include "ConvertUTF.h"
 
 #ifdef DEBUG

@@ -1,0 +1,7 @@
+CPP_FILES = 
+    Disposable.cpp
+    Utf8String.cpp
+
+configure
+    echo "Configuring shared"
+    ./conftool "@[PROJECT_COMPILER] @[DEFS] @[INCLUDE_FLAGS] " "@[SRC_DIR]" "shared" "@{CPP_FILES}"

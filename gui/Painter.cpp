@@ -1,10 +1,14 @@
 #include "Painter.hpp"
 #include <iostream>
+#include "shared/read_text.hpp"
+#include "main/Program.hpp"
 
 using namespace std;
 
 namespace r64fx{
 
+extern Program* r64fx_program;
+    
 ShadingProgram   Painter::sp;
 
 GLint            Painter::position_attr;
@@ -21,11 +25,13 @@ int              Painter::current_texturing_mode = Painter::RGBA;
 
 bool Painter::init()
 {
-    sp = ShadingProgram::create(
-        #include "gui/Painter.vert.h"
-        ,
-        #include "gui/Painter.frag.h"
-    );
+    string vst, fst;
+    if(!read_text_file(r64fx_program->dataPrefix() + "shaders/Painter.vert", vst))
+        return false;
+    if(!read_text_file(r64fx_program->dataPrefix() + "shaders/Painter.frag", fst))
+        return false;
+    
+    sp = ShadingProgram::create(vst.c_str(), fst.c_str());
     
     if(!sp.isOk())
     {

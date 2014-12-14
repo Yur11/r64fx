@@ -2,12 +2,12 @@
 #define R64FX_GUI_WIDGET_H
 
 #include <vector>
-#include "utf8string/Utf8String.hpp"
+#include "shared/Utf8String.hpp"
 #include "gl.hpp"
 #include "Rect.hpp"
 #include "RenderingContext.hpp"
 #include "Projection2D.hpp"
-#include "shared_sources/LinkedItem.hpp"
+#include "shared/LinkedItem.hpp"
 #include "IteratorPair.hpp"
 
 

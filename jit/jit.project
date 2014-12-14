@@ -1,16 +1,4 @@
 CPP_FILES = jit.cpp
-    
-jitsay
-    echo "Jit is just saying someting!!"
-    
+       
 configure
-    echo "Configuring @{SUB_DIR}"
-    ./conftool "@{PROJECT_COMPILER} -fPIC" "@{SRC_DIR}" "@{SUB_DIR}" "@{CPP_FILES}"
-
-config         : configure
-conf           : configure
-cf             : configure
-    
-libjit.so: jit.rules @{jit_object_files}
-    echo "Linking     libjit.so"
-    @{PROJECT_COMPILER} -shared @{jit_object_files} -o libjit.so
+    ./conftool "@[PROJECT_COMPILER] @[INCLUDE_FLAGS] -fPIC" "@[SRC_DIR]" "jit" "@{CPP_FILES}"

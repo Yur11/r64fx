@@ -1,5 +1,5 @@
 #include "Mouse.hpp"
-#include "shared_sources/read_png.hpp"
+#include "shared/read_png.hpp"
 
 #ifdef DEBUG
 #include <assert.h>

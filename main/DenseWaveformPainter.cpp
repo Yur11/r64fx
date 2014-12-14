@@ -1,9 +1,13 @@
 #include "DenseWaveformPainter.hpp"
 #include <iostream>
+#include "shared/read_text.hpp"
+#include "main/Program.hpp"
 
 using namespace std;
 
 namespace r64fx{
+    
+extern Program* r64fx_program;
 
 ShadingProgram   DenseWaveformPainter::sp;
 
@@ -20,11 +24,13 @@ GLuint           DenseWaveformPainter::debug_tex;
 
 bool DenseWaveformPainter::init()
 {
-    sp = ShadingProgram::create(
-        #include "main/DenseWaveformPainter.vert.h"
-        ,
-        #include "main/DenseWaveformPainter.frag.h"
-    );
+    string vst, fst;
+    if(!read_text_file(r64fx_program->dataPrefix() + "shaders/DenseWaveformPainter.vert", vst))
+        return false;
+    if(!read_text_file(r64fx_program->dataPrefix() + "shaders/DenseWaveformPainter.frag", fst))
+        return false;
+    
+    sp = ShadingProgram::create(vst.c_str(), fst.c_str());
     
     if(!sp.isOk())
     {

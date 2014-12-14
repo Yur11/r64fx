@@ -1,5 +1,5 @@
-#ifndef R64FX_GC_H
-#define R64FX_GC_H
+#ifndef R64FX_SHARED_DISPOSABLE_H
+#define R64FX_SHARED_DISPOSABLE_H
 
 namespace r64fx{
     
@@ -35,4 +35,4 @@ public:
     
 }//namespace r64fx
 
-#endif//R64FX_GC_H
+#endif//R64FX_SHARED_DISPOSABLE_H

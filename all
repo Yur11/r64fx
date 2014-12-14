@@ -26,6 +26,29 @@ else
     PROJECT_COMPILER=`cat PROJECT_COMPILER`
 fi
 
+if [ ! -f INCLUDE_FLAGS ]
+then
+    INCLUDE_FLAGS="-I${BUILD_DIR} -I$SRC_DIR"
+    echo "$INCLUDE_FLAGS" > INCLUDE_FLAGS
+fi
+
+if [ ! -f DEFS ]
+then
+    DEFS="-DEBUG"
+    echo "$DEFS" > DEFS
+fi
+
+if [ ! -f GUI_DEFS ]
+then
+    GUI_DEFS="-DUSE_SDL2 -DDEBUG_GL_ERRORS -DABORT_ON_GL_ERROR"
+    echo "$GUI_DEFS" > GUI_DEFS
+fi
+
+if [ ! -f LINK_FLAGS ]
+then
+    LINK_FLAGS="-lGL -lGLU -lGLEW -lSDL2 -lpng -lfreetype -lsndfile -ljack"
+    echo "$LINK_FLAGS" > LINK_FLAGS
+fi
 
 ##
 # Build tools if needed!!
@@ -55,6 +78,10 @@ else
     done
 fi
 
+
+##
+# Process main project file!!
+##
 if [ ! -f "$SRC_DIR/$PROJECT_NAME.project" ]
 then
     echo "Failed to find $PROJECT_NAME.project file!\n"

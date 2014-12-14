@@ -6,7 +6,7 @@
 #include <sstream>
 #endif//DEBUG
 
-#include "shared_sources/binary_constants.hpp"
+#include "shared/binary_constants.hpp"
 
 namespace r64fx{
 

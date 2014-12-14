@@ -24,6 +24,9 @@ using namespace std;
 
 namespace r64fx{
     
+//REMOVE THIS!!!
+Program* r64fx_program = nullptr;
+
     
 bool Program::initData(int argc, char* argv[])
 {
@@ -32,7 +35,9 @@ bool Program::initData(int argc, char* argv[])
         cerr << "Give me a path to r64fx data directory!\n";
         return false;
     }
-        
+ 
+    r64fx_program = this;//REMOVE THIS!!!
+ 
     _data_prefix = argv[1];
     
     if(_data_prefix.back() != '/')

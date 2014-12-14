@@ -1,44 +1,14 @@
-CONFIG_FLAGS= -DUSE_SDL2 -DDEBUG_GL_ERRORS -I /usr/include/freetype2 -DDEBUG
+INCLUDES = -I /usr/include/freetype2
 
 CPP_FILES = 
     AudioClipWidget.cpp
     AudioData.cpp
     DenseWaveformPainter.cpp
-    InformationScene.cpp
     Knob.cpp
-    MonophonicMixer.cpp
     Program.cpp
-    SawtoothOsc.cpp
     Slider.cpp
-    Socket.cpp
-    Wire.cpp
     main.cpp
 
-    
-configure : main/DenseWaveformPainter.vert.h main/DenseWaveformPainter.frag.h main/Wire.vert.h main/Wire.frag.h
-    echo "Configuring @{SUB_DIR}"
-    ./conftool "@{PROJECT_COMPILER} @{CONFIG_FLAGS}" "@{SRC_DIR}" "@{SUB_DIR}" "@{CPP_FILES}"
-
-config         : configure
-conf           : configure
-cf             : configure
-    
-r64fx : @{main_object_files}
-    echo "Linking     r64fx"
-    @{PROJECT_COMPILER}  @{main_object_files} -o r64fx -L . -lgc -lgui -lutf8string -ldsp -ljit -lpng -lfreetype -lGL -lGLEW -lSDL2 -lsndfile -ljack
-
-main/DenseWaveformPainter.vert.h
-    echo "Writing     DenseWaveformPainter.vert.h"
-    ./file2str @{SRC_DIR}/main/DenseWaveformPainter.vert > main/DenseWaveformPainter.vert.h
-    
-main/DenseWaveformPainter.frag.h
-    echo "Writing     DenseWaveformPainter.frag.h"
-    ./file2str @{SRC_DIR}/main/DenseWaveformPainter.frag > main/DenseWaveformPainter.frag.h
-    
-main/Wire.vert.h
-    echo "Writing     Wire.vert.h"
-    ./file2str @{SRC_DIR}/main/Wire.vert > main/Wire.vert.h
-    
-main/Wire.frag.h
-    echo "Writing     Wire.frag.h"
-    ./file2str @{SRC_DIR}/main/Wire.frag > main/Wire.frag.h
+configure
+    echo "Configuring main"
+    ./conftool "@[PROJECT_COMPILER] @[DEFS] @[INCLUDE_FLAGS] @[GUI_DEFS] @{INCLUDES}" "@[SRC_DIR]" "main" "@{CPP_FILES}"
