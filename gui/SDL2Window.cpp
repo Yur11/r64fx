@@ -1,4 +1,6 @@
 #include "SDL2Window.hpp"
+#include "Mouse.hpp"
+#include <SDL2/SDL_syswm.h>
 
 #include <iostream>
 #include <vector>
@@ -6,8 +8,6 @@
 #ifdef DEBUG
 #include <assert.h>
 #endif//DEBUG
-
-#include "Mouse.hpp"
 
 using namespace std;
 
@@ -32,7 +32,7 @@ SDL2Window::SDL2Window(RenderingContextId_t id, int width, int height, const cha
         title, 
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
         width, height, 
-        SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL
+        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL
     );
     
     if(!_window)
@@ -137,6 +137,42 @@ bool SDL2Window::isMaximized()
 bool SDL2Window::isMinimized()
 {
     return SDL_GetWindowFlags(_window) & SDL_WINDOW_MINIMIZED;
+}
+
+
+void SDL2Window::turnIntoMenu()
+{
+    SDL_SysWMinfo info;
+    SDL_VERSION(&info.version);
+    
+    if(!SDL_GetWindowWMInfo(_window, &info))
+    {
+        cerr << "Failed to get window manager info!\n";
+        return;
+    }
+    
+    if(info.subsystem != SDL_SYSWM_X11)
+    {
+        cerr << "WM is not X11!\n";
+        return;
+    }
+
+    auto x11_display = info.info.x11.display;
+    auto x11_window = info.info.x11.window;
+    
+    auto atom_net_wm_window_type = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE", True);
+    auto atom_net_wm_window_type_menu = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE_MENU", True);
+    XChangeProperty(
+        x11_display, 
+        x11_window, 
+        atom_net_wm_window_type, 
+        XA_ATOM, 
+        32, 
+        PropModeReplace, 
+        (unsigned char*)&atom_net_wm_window_type_menu, 
+        1
+    );
+    XFlush(x11_display);
 }
 
 

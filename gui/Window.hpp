@@ -66,6 +66,8 @@ public:
     virtual bool isMaximized() = 0;
 
     virtual bool isMinimized() = 0;
+    
+    virtual void turnIntoMenu() = 0;
         
     /** @brief Create and deliver a new mouse press event, taking into acount possible overlays. */
     void initMousePressEvent(int x, int y, unsigned int buttons, unsigned int keyboard_modifiers);

@@ -25,5 +25,5 @@ configure-main
 @[main.rules]
     
 build-r64fx:  @[shared.objects] @[gui.objects] @[main.objects]
-    echo "Linking     executable"
+    echo "Linking     r64fx"
     @[PROJECT_COMPILER] -o r64fx @[shared.objects] @[gui.objects] @[main.objects] @[LINK_FLAGS]

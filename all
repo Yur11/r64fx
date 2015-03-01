@@ -46,7 +46,7 @@ fi
 
 if [ ! -f LINK_FLAGS ]
 then
-    LINK_FLAGS="-lGL -lGLU -lGLEW -lSDL2 -lpng -lfreetype -lsndfile -ljack"
+    LINK_FLAGS="-lGL -lGLU -lGLEW -lSDL2 -lpng -lfreetype -lsndfile -ljack -lX11"
     echo "$LINK_FLAGS" > LINK_FLAGS
 fi
 

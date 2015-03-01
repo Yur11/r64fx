@@ -199,6 +199,7 @@ bool Program::initGui()
     view->appendWidget(lc);
     view->setOffset(10, 10);
     
+    window->turnIntoMenu();
     window->setRootWidget(view);
     
     cout << "view:    " << view << "\n";
@@ -213,6 +214,8 @@ bool Program::initGui()
     cout << "dummy6:  " << dummy6 << "\n";
     cout << "dummy7:  " << dummy7 << "\n";
     cout << "dummy8:  " << dummy8 << "\n";
+    
+    window->show();
     
     return true;
 }

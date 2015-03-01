@@ -46,6 +46,8 @@ public:
     virtual bool isMaximized();
 
     virtual bool isMinimized();
+    
+    virtual void turnIntoMenu();
 
     static bool init();
     
