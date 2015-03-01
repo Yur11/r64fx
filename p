@@ -1,9 +1,16 @@
 #!/bin/sh
 
 ##
-# Configure variables!!
+# Configure variables.
 ##
+
 PROJECT_NAME="r64fx"
+
+DEFAULT_PROJECT_COMPILER="g++ -std=c++11"
+
+DEFAULT_DEFS="-DEBUG -DUSE_SDL2 -DDEBUG_GL_ERRORS -DABORT_ON_GL_ERROR"
+
+DEFAULT_LINK_FLAGS="-lGL -lGLU -lGLEW -lSDL2 -lpng -lfreetype -lsndfile -ljack -lX11"
 
 BUILD_DIR=`pwd`
 
@@ -34,25 +41,21 @@ fi
 
 if [ ! -f DEFS ]
 then
-    DEFS="-DEBUG"
+    DEFS="$DEFAULT_DEFS"
     echo "$DEFS" > DEFS
-fi
-
-if [ ! -f GUI_DEFS ]
-then
-    GUI_DEFS="-DUSE_SDL2 -DDEBUG_GL_ERRORS -DABORT_ON_GL_ERROR"
-    echo "$GUI_DEFS" > GUI_DEFS
 fi
 
 if [ ! -f LINK_FLAGS ]
 then
-    LINK_FLAGS="-lGL -lGLU -lGLEW -lSDL2 -lpng -lfreetype -lsndfile -ljack -lX11"
+    LINK_FLAGS="$DEFAULT_LINK_FLAGS"
     echo "$LINK_FLAGS" > LINK_FLAGS
 fi
+
 
 ##
 # Build tools if needed!!
 ##
+
 function build_tool()
 {
     echo "Building    $1"
@@ -82,6 +85,7 @@ fi
 ##
 # Process main project file!!
 ##
+
 if [ ! -f "$SRC_DIR/$PROJECT_NAME.project" ]
 then
     echo "Failed to find $PROJECT_NAME.project file!\n"

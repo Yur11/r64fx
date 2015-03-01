@@ -1,5 +1,5 @@
-#ifndef R64FX_GUI_SDL2_WINDOW_H
-#define R64FX_GUI_SDL2_WINDOW_H
+#ifndef R64FX_GUI_WINDOW_SDL2_H
+#define R64FX_GUI_WINDOW_SDL2_H
 
 #ifdef USE_SDL2
 
@@ -8,32 +8,27 @@
 
 namespace r64fx{
     
-class SDL2_GL_RenderingContext;
+class Window_SDL2 : public Window{
+    SDL_Window* m_SDL_Window;
     
-class SDL2Window : public Window{
-    SDL_Window* _window;
-    SDL_GLContext _gl_context;
+    Point<int> recoreded_mouse_position;
     
-    Point<int> _recoreded_mouse_position;
-    
-    SDL2Window(RenderingContextId_t id, int width = 640, int height = 480, const char* title = "Window");
+    Window_SDL2(int width = 640, int height = 480, const char* title = "Window");
     
 public:
-    static SDL2Window* create(int width = 640, int height = 480, const char* title = "Window");
+    static Window_SDL2* create(int width = 640, int height = 480, const char* title = "Window");
     
-    virtual ~SDL2Window();
+    virtual ~Window_SDL2();
        
     void swapBuffers();
     
-    inline SDL_Window* sdl_window() const { return _window; }
+    inline SDL_Window* sdl_window() const { return m_SDL_Window; }
     
     virtual void makeCurrent();
     
     virtual void render();
     
     virtual Size<int> size();
-    
-//     virtual void updateGeometry();
     
     virtual void show();
     
@@ -65,4 +60,4 @@ public:
 
 #endif//USE_SDL2
 
-#endif//R64FX_GUI_SDL2_WINDOW_H
+#endif//R64FX_GUI_WINDOW_SDL2_H

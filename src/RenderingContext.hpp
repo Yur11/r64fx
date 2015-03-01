@@ -2,7 +2,6 @@
 #define R64FX_GUI_RENDERING_CONTEXT_H
 
 #include <vector>
-#include "shared/Disposable.hpp"
 
 namespace r64fx{
    
@@ -26,7 +25,7 @@ class RenderingContextAware;
  *  Inherit from this class and reimplement the makeCurrent() method.
  *  You must use the getFreeId() method to get an id for the new instance.
  */
-class RenderingContext : public Disposable{
+class RenderingContext{
     friend class RenderingContextAware;
     
     static RenderingContext* all_rendering_contexts[max_rendering_context_count];

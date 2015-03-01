@@ -1,4 +1,0 @@
-CPP_FILES = jit.cpp
-       
-configure
-    ./conftool "@[PROJECT_COMPILER] @[INCLUDE_FLAGS] -fPIC" "@[SRC_DIR]" "jit" "@{CPP_FILES}"

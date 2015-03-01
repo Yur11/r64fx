@@ -1,7 +1,0 @@
-CPP_FILES =
-    Graph.cpp
-    Processor.cpp
-    
-configure
-    ./conftool "@[PROJECT_COMPILER] @[INCLUDE_FLAGS] -fPIC" "@[SRC_DIR]" "dsp" "@{CPP_FILES}"
-    

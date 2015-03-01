@@ -2,16 +2,15 @@
 #define R64FX_GUI_WINDOW_H
 
 #include <string>
+#include <vector>
 #include "Rect.hpp"
-#include "RenderingContext.hpp"
-#include "CallbackList.hpp"
 
 namespace r64fx{
 
 class Widget;
     
 /** @brief Base class for window implementations. */
-class Window : public RenderingContext{
+class Window{
     typedef void(*VoidFun)(void);
     
     static VoidFun event_callback;
@@ -25,15 +24,13 @@ class Window : public RenderingContext{
     
     void updateGeometry();
     
-    CallbackList one_shot_list;
-    
     void runOneShotList();
             
 protected:
     inline static void setEventCallback(VoidFun fun) { event_callback = fun; }
                 
 public:
-    Window(RenderingContextId_t id);
+    Window();
     
     virtual ~Window();
     
@@ -51,9 +48,6 @@ public:
     static std::vector<Window*> allInstances();
         
     inline static unsigned int count() { return allInstances().size(); }
-    
-    /** @brief Tell this window to get destroyed. */
-    void discard();
         
     virtual void show() = 0;
     
@@ -88,15 +82,9 @@ public:
     
     void initResizeEvent(int w, int h);
         
-    static bool initGlew();
-    
     static void mainSequence();
     
     inline static Window* currentlyRenderedWindow() { return currently_rendered_window; }
-    
-    inline void fireOnce(void (*fun)(void*), void* data) { one_shot_list.push_back(fun, data); }
-    
-    void issueRepaint();
 };    
 
 }//namespace r64fx

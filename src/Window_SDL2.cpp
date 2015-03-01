@@ -1,4 +1,4 @@
-#include "SDL2Window.hpp"
+#include "Window_SDL2.hpp"
 #include "Mouse.hpp"
 #include <SDL2/SDL_syswm.h>
 
@@ -18,134 +18,100 @@ bool should_quit = false;
 unsigned int pressed_mouse_buttons = 0;
 
     
-SDL2Window::SDL2Window(RenderingContextId_t id, int width, int height, const char* title)
-: Window(id)
+Window_SDL2::Window_SDL2(int width, int height, const char* title)
 {
-    setEventCallback(SDL2Window::processEvents);
-    
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1); 
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    
-    _window = SDL_CreateWindow(
+    setEventCallback(Window_SDL2::processEvents);
+        
+    m_SDL_Window = SDL_CreateWindow(
         title, 
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
         width, height, 
-        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL
+        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE
     );
     
-    if(!_window)
+    if(!m_SDL_Window)
     {
         cerr << "Failed to create SDL Window!\n";
         abort();
     }
 
-    _gl_context = SDL_GL_CreateContext(_window);
-    if(!_gl_context)
-    {
-        cerr << "Failed to create GL context!\n";
-        abort();
-    }
-    
-    SDL_SetWindowData(_window, "window", this);    
+    SDL_SetWindowData(m_SDL_Window, "window", this);    
 }
 
 
-SDL2Window* SDL2Window::create(int width, int height, const char* title)
-{
-    auto id = RenderingContext::getFreeId();
-    if(id == BadRenderingContextId)
-        return nullptr;
-    else 
-    {
-        auto window = new SDL2Window(id, width, height, title);
-        window->initResizeEvent(width, height);
-        return window;
-    }
-}
-
-
-SDL2Window::~SDL2Window()
+Window_SDL2::~Window_SDL2()
 {
     cout << "Window: " << this << " destroyed!\n";
     
-    SDL_GL_DeleteContext(_gl_context);
-    SDL_DestroyWindow(_window);
+    SDL_DestroyWindow(m_SDL_Window);
 }
 
 
-void SDL2Window::swapBuffers()
+void Window_SDL2::swapBuffers()
 {
-    SDL_GL_SwapWindow(_window);
 }
 
 
-void SDL2Window::makeCurrent()
+void Window_SDL2::makeCurrent()
 {
-    SDL_GL_MakeCurrent(_window, _gl_context);
-    RenderingContext::makeCurrent();
 }
 
 
-void SDL2Window::render()
+void Window_SDL2::render()
 {
-    makeCurrent();
-    Window::render();
-    swapBuffers();
 }
 
 
-Size<int> SDL2Window::size()
+Size<int> Window_SDL2::size()
 {
     Size<int> s;
-    SDL_GetWindowSize(_window, &s.w, &s.h);
+    SDL_GetWindowSize(m_SDL_Window, &s.w, &s.h);
     return s;
 }
 
 
-void SDL2Window::show()
+void Window_SDL2::show()
 {
-    SDL_ShowWindow(_window);
+    SDL_ShowWindow(m_SDL_Window);
 }
 
 
-void SDL2Window::hide()
+void Window_SDL2::hide()
 {
-    SDL_HideWindow(_window);
+    SDL_HideWindow(m_SDL_Window);
 }
 
 
-void SDL2Window::warpMouse(int x, int y)
+void Window_SDL2::warpMouse(int x, int y)
 {
-    SDL_WarpMouseInWindow(_window, x, height() - y);
+    SDL_WarpMouseInWindow(m_SDL_Window, x, height() - y);
 }
 
 
-bool SDL2Window::isShown()
+bool Window_SDL2::isShown()
 {
-    return SDL_GetWindowFlags(_window) & SDL_WINDOW_SHOWN;
+    return SDL_GetWindowFlags(m_SDL_Window) & SDL_WINDOW_SHOWN;
 }
 
 
-bool SDL2Window::isMaximized()
+bool Window_SDL2::isMaximized()
 {
-    return SDL_GetWindowFlags(_window) & SDL_WINDOW_MAXIMIZED;
+    return SDL_GetWindowFlags(m_SDL_Window) & SDL_WINDOW_MAXIMIZED;
 }
 
 
-bool SDL2Window::isMinimized()
+bool Window_SDL2::isMinimized()
 {
-    return SDL_GetWindowFlags(_window) & SDL_WINDOW_MINIMIZED;
+    return SDL_GetWindowFlags(m_SDL_Window) & SDL_WINDOW_MINIMIZED;
 }
 
 
-void SDL2Window::turnIntoMenu()
+void Window_SDL2::turnIntoMenu()
 {
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
     
-    if(!SDL_GetWindowWMInfo(_window, &info))
+    if(!SDL_GetWindowWMInfo(m_SDL_Window, &info))
     {
         cerr << "Failed to get window manager info!\n";
         return;
@@ -176,43 +142,42 @@ void SDL2Window::turnIntoMenu()
 }
 
 
-bool SDL2Window::init()
+bool Window_SDL2::init()
 {
-    RenderingContext::init();
-    return SDL_Init(SDL_INIT_VIDEO) == 0;
+    return false;
 }
     
 
-void SDL2Window::cleanup()
+void Window_SDL2::cleanup()
 {
     SDL_Quit();
 }
     
     
-void SDL2Window::trackMouse(bool on)
+void Window_SDL2::trackMouse(bool on)
 {
     tracking_mouse = on;
 }
 
 
-bool SDL2Window::shouldQuit()
+bool Window_SDL2::shouldQuit()
 {
     return should_quit;
 }
 
 
-/** @brief Get an SDL2Window that recieved the event or an alternative value if the window was nullptr. */
-SDL2Window* get_event_window_or_alternative(unsigned int window_id, SDL2Window* alternative = nullptr)
+/** @brief Get an Window_SDL2 that recieved the event or an alternative value if the window was nullptr. */
+Window_SDL2* get_event_window_or_alternative(unsigned int window_id, Window_SDL2* alternative = nullptr)
 {
-    auto window = (SDL2Window*) SDL_GetWindowData(SDL_GetWindowFromID(window_id), "window");
+    auto window = (Window_SDL2*) SDL_GetWindowData(SDL_GetWindowFromID(window_id), "window");
     return window ? window : alternative;
 }
 
         
-void SDL2Window::processEvents()
+void Window_SDL2::processEvents()
 {    
     static SDL_Event event;
-    static SDL2Window* window = nullptr;
+    static Window_SDL2* window = nullptr;
     while(SDL_PollEvent(&event))
     {
         switch(event.type)
@@ -383,7 +348,6 @@ void SDL2Window::processEvents()
                 else if(event.window.event == SDL_WINDOWEVENT_CLOSE)
                 {
                     window->hide();
-                    window->discard();
                 }
                 break;
             }
