@@ -3,3 +3,14 @@
 ##
 
 SRC = 
+    main.cpp
+    Image.cpp
+
+configure: 
+    ./conftool '@[PROJECT_COMPILER] @[INCLUDE_FLAGS] @[DEFS]' '@[SRC_DIR]' 'src' '@{SRC}'
+    
+@[src.rules]
+
+hello : @[src.objects]
+    echo "Linking hello..."
+    @[PROJECT_COMPILER] @[src.objects] -o hello @[LINK_FLAGS]
