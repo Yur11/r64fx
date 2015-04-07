@@ -5,6 +5,8 @@
 SRC = 
     main.cpp
     Image.cpp
+    Window.cpp
+    Window_SDL2.cpp
 
 configure: 
     ./conftool '@[PROJECT_COMPILER] @[INCLUDE_FLAGS] @[DEFS]' '@[SRC_DIR]' 'src' '@{SRC}'

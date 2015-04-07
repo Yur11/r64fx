@@ -4,13 +4,14 @@
 #include <string>
 #include <vector>
 #include "Rect.hpp"
+#include "Castable.hpp"
 
 namespace r64fx{
 
 class Widget;
     
 /** @brief Base class for window implementations. */
-class Window{
+class Window : public Castable{
     typedef void(*VoidFun)(void);
     
     static VoidFun event_callback;
@@ -30,12 +31,13 @@ protected:
     inline static void setEventCallback(VoidFun fun) { event_callback = fun; }
                 
 public:
+    
     Window();
     
     virtual ~Window();
     
-    virtual void render();
-        
+    virtual void flush() = 0;
+    
     inline void setRootWidget(Widget* widget) { root_widget = widget; }
     inline Widget* rootWidget() const { return root_widget; }
     
@@ -44,6 +46,14 @@ public:
     inline int width() { return size().w; }
     
     inline int height() { return size().h; }
+    
+    virtual void resize(int w, int h) = 0;
+    
+    inline void resize(Size<int> size) { resize(size.w, size.h); }
+    
+    inline void setWidth(int w) { resize(w, height()); }
+    
+    inline void setHeight(int h) { resize(width(), h); }
 
     static std::vector<Window*> allInstances();
         
@@ -62,7 +72,9 @@ public:
     virtual bool isMinimized() = 0;
     
     virtual void turnIntoMenu() = 0;
-        
+    
+    virtual bool isSDL2();
+           
     /** @brief Create and deliver a new mouse press event, taking into acount possible overlays. */
     void initMousePressEvent(int x, int y, unsigned int buttons, unsigned int keyboard_modifiers);
     

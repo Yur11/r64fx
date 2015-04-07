@@ -12,11 +12,9 @@ class Window_SDL2 : public Window{
     SDL_Window* m_SDL_Window;
     
     Point<int> recoreded_mouse_position;
-    
+
+public:    
     Window_SDL2(int width = 640, int height = 480, const char* title = "Window");
-    
-public:
-    static Window_SDL2* create(int width = 640, int height = 480, const char* title = "Window");
     
     virtual ~Window_SDL2();
        
@@ -24,11 +22,13 @@ public:
     
     inline SDL_Window* sdl_window() const { return m_SDL_Window; }
     
-    virtual void makeCurrent();
+    inline SDL_Surface* sdl_surface() const { return SDL_GetWindowSurface(sdl_window()); }
     
-    virtual void render();
+    virtual void flush();
     
     virtual Size<int> size();
+    
+    virtual void resize(int w, int h);
     
     virtual void show();
     
@@ -43,6 +43,8 @@ public:
     virtual bool isMinimized();
     
     virtual void turnIntoMenu();
+    
+    virtual bool isSDL2();
 
     static bool init();
     

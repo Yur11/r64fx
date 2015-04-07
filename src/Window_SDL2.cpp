@@ -52,13 +52,9 @@ void Window_SDL2::swapBuffers()
 }
 
 
-void Window_SDL2::makeCurrent()
+void Window_SDL2::flush()
 {
-}
-
-
-void Window_SDL2::render()
-{
+    SDL_UpdateWindowSurface(m_SDL_Window);
 }
 
 
@@ -67,6 +63,12 @@ Size<int> Window_SDL2::size()
     Size<int> s;
     SDL_GetWindowSize(m_SDL_Window, &s.w, &s.h);
     return s;
+}
+
+
+void Window_SDL2::resize(int w, int h)
+{
+    SDL_SetWindowSize(m_SDL_Window, w, h);
 }
 
 
@@ -142,6 +144,12 @@ void Window_SDL2::turnIntoMenu()
 }
 
 
+bool Window_SDL2::isSDL2()
+{
+    return true;
+}
+
+
 bool Window_SDL2::init()
 {
     return false;
@@ -194,8 +202,6 @@ void Window_SDL2::processEvents()
 #ifdef DEBUG
                 assert(window != nullptr);
 #endif//DEBUG
-                window->makeCurrent();
-                
                 window->initKeyPressEvent(
                     x, y,
                     event.key.keysym.scancode, 
@@ -216,8 +222,6 @@ void Window_SDL2::processEvents()
 #ifdef DEBUG
                 assert(window != nullptr);
 #endif//DEBUG
-                window->makeCurrent();
-                
                 window->initKeyReleaseEvent(
                     x, y,
                     event.key.keysym.scancode, 
@@ -238,8 +242,6 @@ void Window_SDL2::processEvents()
 #ifdef DEBUG
                 assert(window != nullptr);
 #endif//DEBUG
-                window->makeCurrent();
-                
                 std::string chr;
                 for(int i=0; i<SDL_TEXTINPUTEVENT_TEXT_SIZE && event.text.text[i]; i++)
                 {
@@ -256,8 +258,6 @@ void Window_SDL2::processEvents()
 #ifdef DEBUG
                 assert(window != nullptr);
 #endif//DEBUG
-                window->makeCurrent();
-                
                 window->initMouseMoveEvent(event.motion.x, event.motion.y, pressed_mouse_buttons, SDL_GetModState());
                 break;
             }
@@ -268,8 +268,6 @@ void Window_SDL2::processEvents()
 #ifdef DEBUG
                 assert(window != nullptr);
 #endif//DEBUG
-                window->makeCurrent();
-                                
                 if(event.button.button == SDL_BUTTON_LEFT)
                     pressed_mouse_buttons |= Mouse::Button::Left;
                 else if(event.button.button == SDL_BUTTON_MIDDLE)
@@ -286,8 +284,6 @@ void Window_SDL2::processEvents()
 #ifdef DEBUG
                 assert(window != nullptr);
 #endif//DEBUG
-                window->makeCurrent();
-                
                 if(event.button.button == SDL_BUTTON_LEFT)
                     pressed_mouse_buttons &= ~Mouse::Button::Left;
                 else if(event.button.button == ~SDL_BUTTON_MIDDLE)
@@ -309,8 +305,6 @@ void Window_SDL2::processEvents()
 #ifdef DEBUG
                 assert(window != nullptr);
 #endif//DEBUG
-                window->makeCurrent();
-                
                 window->initMouseWheelEvent(x, y, event.wheel.x, event.wheel.y, pressed_mouse_buttons, SDL_GetModState());
                 break;
             }

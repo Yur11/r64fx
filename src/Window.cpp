@@ -29,20 +29,15 @@ Window::~Window()
 }
 
 
-void Window::render()
-{    
-
-}
-
-
-void Window::updateGeometry()
-{
-}
-
-
 std::vector<Window*> Window::allInstances()
 {
     return all_window_instances;
+}
+
+
+bool Window::isSDL2()
+{
+    return false;
 }
 
 
