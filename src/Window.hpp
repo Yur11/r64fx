@@ -4,14 +4,13 @@
 #include <string>
 #include <vector>
 #include "Rect.hpp"
-#include "Castable.hpp"
 
 namespace r64fx{
 
 class Widget;
     
 /** @brief Base class for window implementations. */
-class Window : public Castable{
+class Window{
     typedef void(*VoidFun)(void);
     
     static VoidFun event_callback;

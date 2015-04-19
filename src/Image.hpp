@@ -30,7 +30,7 @@ public:
         calculateChannelIndices();
     }
     
-    inline char* data() const { return (char*)m_SDL_Surface->pixels; }
+    inline unsigned char* data() const { return (unsigned char*)m_SDL_Surface->pixels; }
     
     inline int width() const { return m_SDL_Surface->w; }
     
@@ -53,12 +53,12 @@ public:
     
     ~Image();
     
-    inline char* at(int x, int y) const 
+    inline unsigned char* at(int x, int y) const
     { 
         return data() + y * width() * channelCount() + x * channelCount();
     }
     
-    inline char* operator()(int x, int y) const
+    inline unsigned char* operator()(int x, int y) const
     {
         return at(x, y);
     }
