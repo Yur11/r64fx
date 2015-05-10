@@ -10,10 +10,10 @@ namespace r64fx{
     
 class Image{
     /* Channels indices. */
-    unsigned short ri = 5;
-    unsigned short gi = 5;
-    unsigned short bi = 5;
-    unsigned short ai = 5;
+    unsigned short ri = 4;
+    unsigned short gi = 4;
+    unsigned short bi = 4;
+    unsigned short ai = 4;
     
     void calculateChannelIndices();
     
@@ -37,8 +37,6 @@ public:
     inline int height() const { return m_SDL_Surface->h; }
     
     inline int channelCount() const { return m_SDL_Surface->format->BytesPerPixel; }
-    
-    inline bool hasAlpha() const { return m_SDL_Surface->format->Amask; }
     
     inline bool isGood() const { return m_SDL_Surface != nullptr && width() > 0 && height() > 0 && channelCount() > 0; }
     
@@ -67,6 +65,11 @@ public:
     inline unsigned short g() const { return gi; }
     inline unsigned short b() const { return bi; }
     inline unsigned short a() const { return ai; }
+    
+    inline bool hasRed()   const { return r() != 4; }
+    inline bool hasGreen() const { return g() != 4; }
+    inline bool hasBlue()  const { return b() != 4; }
+    inline bool hasAlpha() const { return a() != 4; }
   
     void fill(unsigned char r = 0, unsigned char g = 0, unsigned char b = 0, unsigned char a = 255);
 };

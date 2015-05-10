@@ -86,7 +86,7 @@ Image::~Image()
 
 void Image::fill(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {    
-    unsigned short data[5] = { 0, 0, 0, 0, 0 };
+    unsigned short data[5] = { 0, 0, 0, 0 };
     data[ri] = r;
     data[gi] = g;
     data[bi] = b;

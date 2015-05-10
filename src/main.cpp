@@ -5,6 +5,7 @@
 #include "Image.hpp"
 #include "Point.hpp"
 #include "Transform2D.hpp"
+#include "BilinearCopy.hpp"
 
 using namespace std;
 using namespace r64fx;
@@ -44,60 +45,6 @@ template<typename T> inline std::ostream &operator<<(std::ostream &ost, const Po
 }
 
 
-void bilinear(
-    Image &src, Image &dst,
-    Transform2D<float> &transform,
-    unsigned char fillr,
-    unsigned char fillg,
-    unsigned char fillb,
-    unsigned char filla
-)
-{
-    auto r = src.r();
-    auto g = src.g();
-    auto b = src.b();
-    auto a = src.a();
-    int C = min(src.channelCount(), dst.channelCount());
-
-    for(int y=0; y<dst.height(); y++)
-    {
-        for(int x=0; x<dst.width(); x++)
-        {
-            auto pdst = dst(x, y);
-
-            Point<float> p(x, y);
-            transform(p);
-
-            if(p.x < 0 || p.x >= src.width()-1 || p.y < 0 || p.y >= src.height()-1)
-            {
-                pdst[r] = fillr;
-                pdst[g] = fillg;
-                pdst[b] = fillb;
-                pdst[a] = filla;
-            }
-            else
-            {
-                float x1 = floor(p.x);
-                float y1 = floor(p.y);
-                float x2 = x1 + 1;
-                float y2 = y1 + 1;
-
-                float fracx = x2 - p.x;
-                float fracy = y2 - p.y;
-                for(int c=0; c<C; c++)
-                {
-                    float val =
-                        float(src(x2, y2)[c]) * (1-fracx) * (1-fracy) +
-                        float(src(x1, y2)[c]) * fracx     * (1-fracy) +
-                        float(src(x2, y1)[c]) * (1-fracx) * fracy     +
-                        float(src(x1, y1)[c]) * fracx     * fracy;
-                    dst(x, y)[c] = val;
-                }
-            }
-        }
-    }
-}
-
 
 int main(int argc, char* argv[])
 {
@@ -112,9 +59,9 @@ int main(int argc, char* argv[])
     auto b = src.b();
 //     auto a = src.a();
     
-    for(int y=10; y<110; y++)
+    for(int y=300; y<400-1; y++)
     {
-        for(int x=10; x<110; x++)
+        for(int x=0; x<100; x++)
         {
             auto p = src(x, y);
             p[r] = 0;
@@ -124,11 +71,16 @@ int main(int argc, char* argv[])
     }
     
     Transform2D<float> transform;
-    transform.translate(-200, -200);
+    transform.translate(-200, 200);
     transform.rotate(M_PI * 0.02);
     transform.translate(50, 50);
     
-    bilinear(src, dst, transform, 255, 255, 255, 255);
+    BilinearCopy copy;
+    copy.fillr = 255;
+    copy.fillg = 255;
+    copy.fillb = 255;
+    copy.filla = 255;
+    copy(src, dst, transform);
     
     auto winsrc = show_image(src);
     auto windst = show_image(dst);
