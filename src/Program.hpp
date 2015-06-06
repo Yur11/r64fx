@@ -1,72 +1,49 @@
-#ifndef R64FX_MAIN_PROGRAM_H
-#define R64FX_MAIN_PROGRAM_H
-
-#include <string>
-#include <vector>
-#include <jack/jack.h>
-
-#include "InformationScene.hpp"
-#include "gui/Action.hpp"
-#include "gui/gl.hpp"
+#ifndef R64FX_PROGRAM_HPP
+#define R64FX_PROGRAM_HPP
 
 namespace r64fx{
-    
-class Program{
-    std::string _data_prefix;
-    
-    int _status = 0;
-    
-    int _gc_counter = 256;
-    
-    Action* _hello_act;
-    Action* _doctor_act;
-    Action* _name_act;
-    Action* _continue_act;
-    Action* _yesterday_act;
-    Action* _tommorow_act;
-    
-    jack_client_t* _jack_client;
-    
-    /** @brief Parse command-line arguments and initialize data paths. */
-    bool initData(int argc, char* argv[]);
-    
-    /** @brief Initialize gui functionality including OpenGL context. */
-    bool initGui();
-    
-    /** */
-    void initTextures();
-    
-    void initCommonTexture2D(std::string name, GLenum internal_format = GL_RGBA8, int expected_chan_count = 4);
-            
-    void initActions();
-    
-    void initFonts();
-        
-    /** @brief Run garbage collector if needed. */
-    void gcSequence();
 
-    /**  */
-    bool initJackClient();
+class Window;
+class MouseEvent;
+class KeyEvent;
+
+class Program{
+    int m_argc = 0;
+    char** m_argv = nullptr;
     
-    /** */
-    void jackThread();
+    bool m_should_be_running = true;
     
 public:
     Program(int argc, char* argv[]);
     
     virtual ~Program();
     
-    void mainThread();
-
-    /** @brief Return status of the program. */
-    inline int status() const { return _status; }
+    virtual int exec();
     
-    inline std::string dataPrefix() const { return _data_prefix; }
+    virtual void quit();
     
-    /** @brief Tell the program to quit. */
-    void quit();
+    virtual Window* createWindow(int w=800, int h=600, const char* title = "");
+    
+    virtual void destroyWindow(Window* window);
+    
+    virtual void mousePressEvent(Window* window, MouseEvent* event);
+    
+    virtual void mouseReleaseEvent(Window* window, MouseEvent* event);
+    
+    virtual void mouseMoveEvent(Window* window, MouseEvent* event);
+    
+    virtual void keyPressEvent(Window* window, KeyEvent* event);
+    
+    virtual void keyReleaseEvent(Window* window, KeyEvent* event);
+    
+    virtual void closeEvent(Window* window);
+    
+protected:
+    virtual void setup();
+    
+    virtual void cleanup();
 };
     
 }//namespace r64fx
 
-#endif//R64FX_MAIN_PROGRAM_H
+#endif//R64FX_PROGRAM_HPP

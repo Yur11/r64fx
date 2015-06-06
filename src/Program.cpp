@@ -1,239 +1,32 @@
 #include "Program.hpp"
-#include "gui/Translation.hpp"
-#include "gui/WindowImplementation.hpp"
+#include "Window.hpp"
 
-#include "gui/LinearContainer.hpp"
-#include "gui/Dummy.hpp"
-#include "gui/Keyboard.hpp"
-#include "gui/Mouse.hpp"
-#include "gui/Font.hpp"
-#include "gui/Icon.hpp"
-#include "gui/View.hpp"
-#include "gui/TextEdit.hpp"
-
-#include "DenseWaveformPainter.hpp"
-#include "Slider.hpp"
-#include "Knob.hpp"
-#include "AudioClipWidget.hpp"
-#include "AudioData.hpp"
+#include "gui_implementation_iface.hpp"
 
 #include <iostream>
+#include <vector>
 #include <unistd.h>
 
 using namespace std;
 
 namespace r64fx{
     
-//REMOVE THIS!!!
-Program* r64fx_program = nullptr;
-
-    
-bool Program::initData(int argc, char* argv[])
-{
-    if(argc < 2)
-    {
-        cerr << "Give me a path to r64fx data directory!\n";
-        return false;
-    }
- 
-    r64fx_program = this;//REMOVE THIS!!!
- 
-    _data_prefix = argv[1];
-    
-    if(_data_prefix.back() != '/')
-        _data_prefix.push_back('/');
-    
-    if(argc > 2)
-        cerr << "Warning: ignoring extra " << (argc-2) << " command line arguments!\n";
-    
-    return true;
-}
-
-
-bool Program::initGui()
-{
-    tr.loadLanguage(_data_prefix + "translations/en/");
-    
-    if(!init_window_implementation())
-        return false;
-    
-    auto window = create_window(800, 600, "r64fx");
-    if(!window)
-    {
-        cerr << "Failed to create a window!\n";
-        return false;
-    }
-    
-    window->makeCurrent();
-    
-    if(!Window::initGlew())
-        return false;
-    
-//     SplitView::init();
-    
-    Mouse::init();
-    
-    Keyboard::init();
-    
-    if(!Painter::init())
-    {
-        cerr << "Failed to init Painter!\n";
-        return false;
-    }
-    
-    if(!DenseWaveformPainter::init())
-    {
-        cerr << "Failed to init DenseWaveformPainter!\n";
-        return false;
-    }
-
-    Font::init();
-        
-    initTextures();
-    initFonts();
-    
-    Icon::default_size = { 14, 14 };
-    Icon::init();
-    
-    initActions();
-    
-    LinearContainer* lc1 = new LinearContainer;
-    lc1->setPadding(10.0);
-
-    Dummy* dummy1 = new Dummy(100.0, 100.0);
-    Dummy* dummy2 = new Dummy(100.0, 100.0);
-    Dummy* dummy3 = new Dummy(100.0, 100.0);
-    Dummy* dummy4 = new Dummy(100.0, 100.0);
-    
-    
-    AudioData* ad1 = new AudioData((_data_prefix + "drum_loop_mono.wav").c_str());
-    ad1->calculateLinear();
-    
-    AudioClipWidget* acw1 = new AudioClipWidget(ad1);
-    acw1->updateWaveform();
-    acw1->setSize(800, 200);
-    
-    lc1->appendWidget(dummy1);
-    lc1->appendWidget(dummy2);
-    lc1->appendWidget(dummy3);
-    lc1->appendWidget(dummy4);
-    lc1->appendWidget(acw1);
-    lc1->alignHorizontally();
-    
-    
-    LinearContainer* lc2 = new LinearContainer;
-    lc2->setPadding(10.0);
-
-    Dummy* dummy5 = new Dummy(100.0, 100.0);
-    Dummy* dummy6 = new Dummy(100.0, 100.0);
-    Dummy* dummy7 = new Dummy(100.0, 100.0);
-    Dummy* dummy8 = new Dummy(100.0, 100.0);
-    
-    TextEdit* tl = new TextEdit("Thank you! Спасибо! Obrigado! Coração Âÿ ありがとう");
-    tl->update();
-    
-    lc2->appendWidget(dummy5);
-    lc2->appendWidget(dummy6);
-    lc2->appendWidget(dummy7);
-    lc2->appendWidget(dummy8);
-    lc2->appendWidget(tl);
-    lc2->alignHorizontally();
-    
-    Size<float> slider_size(50, 100);
-    LinearContainer* lc3 = new LinearContainer;
-    lc3->setPadding(10.0);
-    Slider* slider1 = new Slider("slider1/background", "slider1/handle");
-    slider1->setSize(slider_size);
-    Slider* slider2 = new Slider("slider1/background", "slider1/handle");
-    slider2->setSize(slider_size);
-    Slider* slider3 = new Slider("slider1/background", "slider1/handle");
-    slider3->setSize(slider_size);
-    Slider* slider4 = new Slider("slider1/background", "slider1/handle");
-    slider4->setSize(slider_size);
-    
-    Slider* slider5 = new Slider("slider1/background", "slider1/handle");
-    slider5->setSize(slider_size);
-    Slider* slider6 = new Slider("slider1/background", "slider1/handle");
-    slider6->setSize(slider_size);
-    Slider* slider7 = new Slider("slider1/background", "slider1/handle");
-    slider7->setSize(slider_size);
-    Slider* slider8 = new Slider("slider1/background", "slider1/handle");
-    slider8->setSize(slider_size);
-    
-    lc3->appendWidget(slider1);
-    lc3->appendWidget(slider2);
-    lc3->appendWidget(slider3);
-    lc3->appendWidget(slider4);
-    lc3->appendWidget(slider5);
-    lc3->appendWidget(slider6);
-    lc3->appendWidget(slider7);
-    lc3->appendWidget(slider8);
-    lc3->alignHorizontally();
-    
-    Size<float> knob_size(64, 64);
-    LinearContainer* lc4 = new LinearContainer;
-    lc4->setPadding(10.0);
-    Knob* knob1 = new Knob("knob1/background", "knob1/rotating", "knob1/shine");
-    knob1->setSize(knob_size);
-    Knob* knob2 = new Knob("knob1/background", "knob1/rotating", "knob1/shine");
-    knob2->setSize(knob_size);
-    Knob* knob3 = new Knob("knob1/background", "knob1/rotating", "knob1/shine");
-    knob3->setSize(knob_size);
-    Knob* knob4 = new Knob("knob1/background", "knob1/rotating", "knob1/shine");
-    knob4->setSize(knob_size);
-    lc4->appendWidget(knob1);
-    lc4->appendWidget(knob2);
-    lc4->appendWidget(knob3);
-    lc4->appendWidget(knob4);
-    lc4->alignVertically();
-    
-    
-    LinearContainer* lc = new LinearContainer;
-    lc->appendWidget(lc1);
-    lc->appendWidget(lc2);
-    lc->appendWidget(lc3);
-    lc->appendWidget(lc4);
-    lc->alignVertically();
-    
-    View* view = new View;
-    view->appendWidget(lc);
-    view->setOffset(10, 10);
-    
-    window->turnIntoMenu();
-    window->setRootWidget(view);
-    
-    cout << "view:    " << view << "\n";
-    cout << "lc:      " << lc << "\n";
-    cout << "lc1:     " << lc1 << "\n";
-    cout << "lc2:     " << lc2 << "\n";
-    cout << "dummy1:  " << dummy1 << "\n";
-    cout << "dummy2:  " << dummy2 << "\n";
-    cout << "dummy3:  " << dummy3 << "\n";
-    cout << "dummy4:  " << dummy4 << "\n";
-    cout << "dummy5:  " << dummy5 << "\n";
-    cout << "dummy6:  " << dummy6 << "\n";
-    cout << "dummy7:  " << dummy7 << "\n";
-    cout << "dummy8:  " << dummy8 << "\n";
-    
-    window->show();
-    
-    return true;
+namespace{
+    Program* program_singleton_instance = nullptr;
+    std::vector<Window*> all_windows;
 }
     
-
 Program::Program(int argc, char* argv[])
+: m_argc(argc)
+, m_argv(argv)
 {
-    if(!initData(argc, argv))
+    if(program_singleton_instance != nullptr)
     {
-        _status = 1; 
-        return;
+        cerr << "Refusing to create a second program instance!\n";
+        abort();
     }
     
-    if(!initGui())
-    {
-        _status = 2; 
-        return;
-    }    
+    program_singleton_instance = this;
 }
 
 
@@ -242,211 +35,103 @@ Program::~Program()
     
 }
 
-    
-void Program::mainThread()
-{
-    if(_status != 0)
-        return;
-    
-    gl::Enable(GL_MULTISAMPLE);
 
-    gl::Enable(GL_BLEND);
-    gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+int Program::exec()
+{
+    setup();
     
-    gl::ClearColor(0.84, 0.82, 0.81, 1.0);
-    
-    Painter::enable();
-    Painter::setTexturingMode(Painter::RGBA);
-    
-    while(Window::count() > 0)
-    {               
-        Window::mainSequence();
-        Program::gcSequence();
-        
-        usleep(300);
+    while(m_should_be_running)
+    {
+        process_some_events(this);
+        usleep(100);
     }
+    
+    cleanup();
+    
+    return 0;
 }
 
 
 void Program::quit()
 {
-    cerr << "We should really tell the program to quit now!\n";
+    m_should_be_running = false;
 }
 
 
-void Program::initTextures()
+Window* Program::createWindow(int w, int h, const char* title)
 {
-    initCommonTexture2D("close_view");
-    initCommonTexture2D("split_horizontally");
-    initCommonTexture2D("split_vertically");
+    Window* window = Window::createNew();
+    if(window)
+    {
+        all_windows.push_back(window);
+    }
     
-    initCommonTexture2D("knob1/background");
-    initCommonTexture2D("knob1/rotating");
-    initCommonTexture2D("knob1/shine");
-    
-    initCommonTexture2D("slider1/background");
-    initCommonTexture2D("slider1/handle");
+    return window;
 }
 
 
-void Program::initCommonTexture2D(std::string name, GLenum internal_format, int expected_chan_count)
+void Program::destroyWindow(Window* window)
 {
-    GLenum format;
-    if(expected_chan_count == 4)
-        format = GL_RGBA;
-    else if(expected_chan_count == 3)
-        format = GL_RGB;
-    else if(expected_chan_count == 1)
-        format = GL_RED;
-    else
+    cleanup_window(window);
+    auto it = all_windows.begin();
+    while(it != all_windows.end())
     {
-        cerr << "Program::initCommonTexture2D(): Bad channel count !\n" << expected_chan_count << "\n";
-        return;
+        if(*it == window)
+        {
+            all_windows.erase(it);
+            delete window;
+            return;
+        }
+        it++;
     }
-        
-    auto tex = Texture2D::loadMipmaps(_data_prefix + "textures/" + name, internal_format, format);
-    if(!tex)
-    {
-        cerr << "Failed to load texture " << name << " !\n";
-        return;
-    }
-    
-    Texture::addCommonTexture(name, tex);
 }
 
 
-void Program::initActions()
+void Program::mousePressEvent(Window* window, MouseEvent* event)
 {
-    _hello_act = new Action(
-        "hello",
-        "Hello",
-        [](void*) -> void*
-        {
-            cout << "Hello\n";
-            return nullptr;
-        }
-    );
-    
-    _doctor_act = new Action(
-        "doctor",
-        "Doctor",
-        [](void*) -> void*
-        {
-            cout << "Doctor\n";
-            return nullptr;
-        }
-    );
-    
-    _name_act = new Action(
-        "name",
-        "Name",
-        [](void*) -> void*
-        {
-            cout << "Name\n";
-            return nullptr;
-        }
-    );
-    
-    _continue_act = new Action(
-        "continue",
-        "Continue",
-        [](void*) -> void*
-        {
-            cout << "Continue\n";
-            return nullptr;
-        }
-    );
-    
-    _yesterday_act = new Action(
-        "yesterday",
-        "Yesterday",
-        [](void*) -> void*
-        {
-            cout << "Yesterday\n";
-            return nullptr;
-        }
-    );
-    
-    _tommorow_act = new Action(
-        "tommorow",
-        "Tommorow",
-        [](void*) -> void*
-        {
-            cout << "Tommorow\n";
-            return nullptr;
-        }
-    );
+    window->mousePressEvent(event);
 }
 
 
-void Program::initFonts()
-{    
-    Font::init();
-    
-    auto font = new Font( _data_prefix + "fonts/FreeSans.ttf", 20);
-    if(!font->isOk())
-    {
-        delete font;
-        cerr << "Font is bad!\n";
-        abort();
-    }
-    
-    Font::setDefaultFont(font);
-}
-
-
-void Program::gcSequence()
+void Program::mouseReleaseEvent(Window* window, MouseEvent* event)
 {
-    if(!_gc_counter)
-    {
-        _gc_counter = 256;
-        gc::deleteGarbage();
-    }
-    else
-    {
-        _gc_counter--;
-    }
-}
-
-bool Program::initJackClient()
-{
-    _jack_client = jack_client_open("r64fx", JackNullOption, nullptr);
-    if(!_jack_client)
-    {
-        cerr << "Failed to init jack client!\n";
-        return false;
-    }
-    
-    int code = jack_set_process_thread(_jack_client, [](void* arg)->void*{ 
-        auto* program = (Program*) arg;
-        program->jackThread();
-        return nullptr;
-    }, this);
-    
-    if(code != 0)
-    {
-        cerr << "Failed to set jack thread callback!\n";
-        return false;
-    }
-        
-    return true;
+    window->mouseReleaseEvent(event);
 }
 
 
-void Program::jackThread()
+void Program::mouseMoveEvent(Window* window, MouseEvent* event)
 {
-    for(;;)
-    {
-        /*auto nframes = */jack_cycle_wait(_jack_client);
-        
-        //Do IO
-        
-        jack_cycle_signal(_jack_client, 0);
-        
-        //Do processing
-    }
+    window->mouseMoveEvent(event);
+}
+
+
+void Program::keyPressEvent(Window* window, KeyEvent* event)
+{
+    window->keyPressEvent(event);
+}
+
+
+void Program::keyReleaseEvent(Window* window, KeyEvent* event)
+{
+    window->keyReleaseEvent(event);
+}
+
+
+void Program::closeEvent(Window* window)
+{
+    window->closeEvent();
+}
+
+
+void Program::setup()
+{
     
-    //How do we exit this thing properly?
+}
+
+
+void Program::cleanup()
+{
+    
 }
     
 }//namespace r64fx
