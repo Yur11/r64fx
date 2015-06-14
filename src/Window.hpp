@@ -9,6 +9,8 @@ class KeyEvent;
 
 /** @brief Base class for window implementations. */
 class Window{
+    void* m_impl_data = nullptr;
+
     Widget* m_root_widget;
     
 public:
@@ -26,12 +28,18 @@ public:
     
     virtual ~Window();
     
+    inline void  setImplData(void* data) { m_impl_data = data; }
+
+    inline void* getImplData() const { return m_impl_data; }
+
     inline Widget* rootWidget() const { return m_root_widget; }
     
     void show();
     
     void hide();
     
+    void resize(int w, int h);
+
     void mousePressEvent(MouseEvent* event);
     
     void mouseReleaseEvent(MouseEvent* event);
@@ -43,7 +51,7 @@ public:
     void keyReleaseEvent(KeyEvent* event);
     
     void closeEvent();
-};    
+};
 
 }//namespace r64fx
 

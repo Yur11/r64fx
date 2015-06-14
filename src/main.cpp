@@ -58,6 +58,7 @@ private:
         cout << "My Program!\n";
         
         m_Widget = new Widget;
+        m_Widget->resize(200, 200);
         m_Widget->show();
     }
     
@@ -66,6 +67,14 @@ private:
         if(event->key() == Keyboard::Key::Escape) 
         {
             quit();
+        }
+        else if(event->key() == Keyboard::Key::J)
+        {
+            m_Widget->resize(400, 200);
+        }
+        else if(event->key() == Keyboard::Key::K)
+        {
+            m_Widget->resize(200, 400);
         }
     }
     

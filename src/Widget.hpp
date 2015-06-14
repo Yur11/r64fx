@@ -41,7 +41,11 @@ public:
     
     inline bool isWindow() const { return hostWindow() != nullptr; }
     
+    void resize(int w, int h);
     
+    inline int width()  const { return m_rect.width(); }
+
+    inline int height() const { return m_rect.height(); }
 };  
     
 }//r64fx

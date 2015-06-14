@@ -76,6 +76,7 @@ Window* Widget::show()
     }
     setParent(nullptr);
     m_host_window = Program::instance()->createWindow(this);
+    m_host_window->resize(width(), height());
     m_host_window->show();
     return m_host_window;
 }
@@ -93,6 +94,16 @@ void Widget::hide()
     m_host_window->hide();
     delete m_host_window;
     m_host_window = nullptr;
+}
+
+
+void Widget::resize(int w, int h)
+{
+    m_rect.setSize(w, h);
+    if(m_host_window)
+    {
+        m_host_window->resize(w, h);
+    }
 }
 
 }//namespace r64fx

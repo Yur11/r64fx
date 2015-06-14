@@ -1,6 +1,7 @@
 #include "gui_implementation_iface.hpp"
 
 #include "Program.hpp"
+#include "Window.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
 
@@ -15,16 +16,6 @@ namespace r64fx{
 
 namespace{
     unsigned int g_pressed_mouse_buttons = 0;
-    map<Window*, SDL_Window*> g_sdl_windows;
-
-    SDL_Window* find_sdl_window(Window* window)
-    {
-        auto it = g_sdl_windows.find(window);
-        if(it == g_sdl_windows.end())
-            return nullptr;
-        else
-            return it->second;
-    }
 };
     
 // bool tracking_mouse = false;
@@ -182,7 +173,7 @@ bool init_window(Window* window, int extra_flags)
     }
 
     SDL_SetWindowData(sdl_window, "window", window);
-    g_sdl_windows[window] = sdl_window;
+    window->setImplData(sdl_window);
     
     return true;
 }
@@ -202,40 +193,29 @@ bool init_window_normal(Window* window)
 
 void cleanup_window(Window* window)
 {
-    auto sdl_window = find_sdl_window(window);
-    if(!sdl_window)
-    {
-        cerr << "Failed to destroy SDL window!\n";
-        return;
-    }
-    
+    auto sdl_window = (SDL_Window*)window->getImplData();
     SDL_DestroyWindow(sdl_window);
 }
 
 
 void show_window(Window* window)
 {
-    auto sdl_window = find_sdl_window(window);
-    if(!sdl_window)
-    {
-        cerr << "Failed to show SDL window!\n";
-        return;
-    }
-    
+    auto sdl_window = (SDL_Window*)window->getImplData();
     SDL_ShowWindow(sdl_window);
 }
 
 
 void hide_window(Window* window)
 {
-    auto sdl_window = find_sdl_window(window);
-    if(!sdl_window)
-    {
-        cerr << "Failed to hide SDL window!\n";
-        return;
-    }
-    
+    auto sdl_window = (SDL_Window*)window->getImplData();
     SDL_HideWindow(sdl_window);
+}
+
+
+void resize_window(Window* window, int w, int h)
+{
+    auto sdl_window = (SDL_Window*)window->getImplData();
+    SDL_SetWindowSize(sdl_window, w, h);
 }
 
 
@@ -342,13 +322,13 @@ void process_some_events(Program* program)
 
 unsigned int pressed_mouse_buttons()
 {
-    
+    return 0;
 }
 
 
 unsigned int keyboard_modifiers()
 {
-    
+    return 0;
 }
 
 }//namespace r64fx

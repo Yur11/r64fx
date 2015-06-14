@@ -75,6 +75,10 @@ void Window::hide()
     hide_window(this);
 }
 
+void Window::resize(int w, int h)
+{
+    resize_window(this, w, h);
+}
 
 void Window::mousePressEvent(MouseEvent* event)
 {
