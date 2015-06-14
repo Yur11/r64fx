@@ -1,28 +1,28 @@
-#ifndef R64FX_LINKED_ITEM_H
-#define R64FX_LINKED_ITEM_H
+#ifndef R64FX_LINKED_LIST_H
+#define R64FX_LINKED_LIST_H
 
-#ifdef DEBUG
+#ifdef R64FX_DEBUG
 #include <assert.h>
 #endif//DEBUG
 
 namespace r64fx{
     
-/** @brief Base class mixin for items that can form a linked list / chain. 
+/** @brief Base class mixin for items that can form a linked list. 
  
     Simply inherit from LinkedItems and pass the name of your child class as T.
     I.e. class MyClass : public LinkedItem< MyClass > {};
         
     One disadvantage is that instances of LinkedItem may belong only to a single list at a time.
     Thus one must make sure that a LinkedItem instance does not allready belong to a list before inserting.
-    Define the DEBUG_LINKED_ITEM_CHAIN macro to enable checks.
+    Define the R64FX_DEBUG macro to enable checks.
     
     On a plus side, no extra memory alocation is needed to form lists out of LinkedItem instances.
     
     Some helper classes are also available.
     
-        - LinkedItemPointer - works as an iterator.
+        - LinkedItemPointer - Works as an iterator.
         
-        - LinkedItemChain - pointer to a segment of the chain. One item, a range of several items ore the whole chain.
+        - LinkedList - Pointer to a segment of a list. One item, a range of several items or the whole chain.
                             Can give you the first and the last item.
 */
 template<typename T> class LinkedItem{
@@ -33,10 +33,10 @@ public:
     /** @brief Insert another LinkedItem after this one. */
     void insert(T* item)
     {
-#ifdef DEBUG_LINKED_ITEM_CHAIN
+#ifdef R64FX_DEBUG
         assert(item != nullptr);
         assert(item->prev_item == nullptr);
-#endif//DEBUG_LINKED_ITEM_CHAIN
+#endif//R64FX_DEBUG
         item->prev_item = this;
         if(next_item)
         {
@@ -63,11 +63,11 @@ public:
      */
     void replace(T* item)
     {
-#ifdef DEBUG_LINKED_ITEM_CHAIN
+#ifdef R64FX_DEBUG
         assert(item != nullptr);
         assert(item->prev == nullptr);
         assert(item->next == nullptr);
-#endif//DEBUG_LINKED_ITEM_CHAIN
+#endif//R64FX_DEBUG
         if(prev_item)
             prev_item->next_item = item;
         if(next_item)
@@ -146,25 +146,25 @@ public:
  */
 template<typename T> T* append_to_list(T* &first_ptr, T* &last_ptr, T* item)
 {
-#ifdef DEBUG_LINKED_ITEM_CHAIN
+#ifdef R64FX_DEBUG
     assert(item != nullptr);
     assert(item->prev() == nullptr);
     assert(item != first_ptr);
     assert(item != last_ptr);
-#endif//DEBUG_LINKED_ITEM_CHAIN
+#endif//R64FX_DEBUG
     
     if(last_ptr == nullptr)
     {
-#ifdef DEBUG_LINKED_ITEM_CHAIN
+#ifdef R64FX_DEBUG
         assert(first_ptr == nullptr);
-#endif//DEBUG_LINKED_ITEM_CHAIN
+#endif//R64FX_DEBUG
         first_ptr = last_ptr = item;
     }
     else
     {
-#ifdef DEBUG_LINKED_ITEM_CHAIN
+#ifdef R64FX_DEBUG
         assert(first_ptr != nullptr);
-#endif//DEBUG_LINKED_ITEM_CHAIN
+#endif//R64FX_DEBUG
         last_ptr->insert(item);
         last_ptr = item;
     }
@@ -194,28 +194,28 @@ template<typename T> T* append_to_list(T* &first_ptr, T* &last_ptr, T* item)
  */
 template<typename T> T* insert_into_list(T* &first_ptr, T* &last_ptr, T* existing_item, T* new_item)
 {
-#ifdef DEBUG_LINKED_ITEM_CHAIN
+#ifdef R64FX_DEBUG
     assert(new_item != nullptr);
     assert(new_item->next() == nullptr);
     assert(new_item->prev() == nullptr);
     assert(new_item != first_ptr);
     assert(new_item != last_ptr);
-#endif//DEBUG_LINKED_ITEM_CHAIN
+#endif//R64FX_DEBUG
     
     if(last_ptr == nullptr)
     {
-#ifdef DEBUG_LINKED_ITEM_CHAIN
+#ifdef R64FX_DEBUG
         assert(first_ptr == nullptr);
         assert(existing_item == nullptr);
-#endif//DEBUG_LINKED_ITEM_CHAIN
+#endif//R64FX_DEBUG
         first_ptr = last_ptr = new_item;
     }
     else
     {
-#ifdef DEBUG_LINKED_ITEM_CHAIN
+#ifdef R64FX_DEBUG
         assert(first_ptr != nullptr);
         assert(existing_item != nullptr);
-#endif//DEBUG_LINKED_ITEM_CHAIN
+#endif//R64FX_DEBUG
         existing_item->insert(new_item);
     }
     
@@ -235,11 +235,11 @@ template<typename T> T* insert_into_list(T* &first_ptr, T* &last_ptr, T* existin
  */
 template<typename T> T* remove_from_list(T* &first_ptr, T* &last_ptr, T* item)
 {
-#ifdef DEBUG_LINKED_ITEM_CHAIN
+#ifdef R64FX_DEBUG
     assert(item != nullptr);
     assert(first_ptr != nullptr);
     assert(last_ptr != nullptr);
-#endif//DEBUG_LINKED_ITEM_CHAIN
+#endif//R64FX_DEBUG
     
     if(first_ptr == item)
     {
@@ -282,7 +282,7 @@ template<typename T> bool list_is_empty(T* first_ptr, T* last_ptr)
     This should work with c++11 range based for loop.
     Haven't tried this with std algorithms yet.
  */
-template<typename T> class LinkedItemChain{
+template<typename T> class LinkedList{
     T* first_item = nullptr; 
     T* last_item = nullptr;
     
@@ -307,11 +307,11 @@ public:
     
     T* append(T* item) { return append_to_list(first_item, last_item, item); }
     
-    void append(LinkedItemChain<T> other) 
+    void append(LinkedList<T> other) 
     {
-#ifdef DEBUG_LINKED_ITEM_CHAIN
+#ifdef R64FX_DEBUG
         assert(&other != this);
-#endif//DEBUG_LINKED_ITEM_CHAIN
+#endif//R64FX_DEBUG
         append_to_list(first_item, last_item, other.first());
         
     }
@@ -334,4 +334,4 @@ public:
     
 }//namespace r64fx
 
-#endif//R64FX_LINKED_ITEM_H
+#endif//R64FX_LINKED_LIST_H
