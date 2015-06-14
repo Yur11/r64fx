@@ -8,9 +8,6 @@ class MouseEvent;
 class KeyEvent;
 
 class Program{
-    int m_argc = 0;
-    char** m_argv = nullptr;
-    
     bool m_should_be_running = true;
     
 public:

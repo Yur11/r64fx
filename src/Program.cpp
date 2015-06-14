@@ -17,8 +17,6 @@ namespace{
 }
     
 Program::Program(int argc, char* argv[])
-: m_argc(argc)
-, m_argv(argv)
 {
     if(program_singleton_instance != nullptr)
     {
