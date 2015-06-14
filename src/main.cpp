@@ -1,14 +1,8 @@
 #include <iostream>
-// #include <memory>
-// #include <unistd.h>
-// #include "Window_SDL2.hpp"
-// #include "Image.hpp"
-// #include "Point.hpp"
-// #include "Transform2D.hpp"
-// #include "BilinearCopy.hpp"
 
 #include "Program.hpp"
 #include "Window.hpp"
+#include "Widget.hpp"
 #include "KeyEvent.hpp"
 #include "Keyboard.hpp"
 
@@ -53,6 +47,8 @@ using namespace r64fx;
 class MyProgram : public Program{
     Window* m_Window = nullptr;
     
+    Widget* m_Widget = nullptr;
+    
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
     
@@ -60,8 +56,9 @@ private:
     virtual void setup()
     {
         cout << "My Program!\n";
-        m_Window = createWindow();
-        m_Window->show();
+        
+        m_Widget = new Widget;
+        m_Widget->show();
     }
     
     virtual void keyPressEvent(Window* window, KeyEvent* event)
@@ -74,13 +71,17 @@ private:
     
     virtual void closeEvent(Window* window)
     {
-        quit();
+        if(window == m_Widget->hostWindow())
+        {
+            quit();
+        }
     }
     
     virtual void cleanup()
     {
         cout << "Cleanup!\n";
-        destroyWindow(m_Window);
+        
+        delete m_Widget;
     }
 };
 

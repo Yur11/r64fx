@@ -3,11 +3,14 @@
 
 namespace r64fx{
 
+class Widget;
 class MouseEvent;
 class KeyEvent;
 
 /** @brief Base class for window implementations. */
 class Window{
+    Widget* m_root_widget;
+    
 public:
     enum class Type{
         Normal,
@@ -16,12 +19,14 @@ public:
     } m_Type;
     
 private:
-    Window();
+    Window(Widget* root);
     
 public:
-    static Window* createNew(Type type = Type::BestSupported);
+    static Window* createNew(Widget* root, Type type = Type::BestSupported);
     
     virtual ~Window();
+    
+    inline Widget* rootWidget() const { return m_root_widget; }
     
     void show();
     

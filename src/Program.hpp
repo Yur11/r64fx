@@ -3,6 +3,7 @@
 
 namespace r64fx{
 
+class Widget;
 class Window;
 class MouseEvent;
 class KeyEvent;
@@ -15,11 +16,12 @@ public:
     
     virtual ~Program();
     
+    /** @brief Program main loop. */
     virtual int exec();
     
     virtual void quit();
     
-    virtual Window* createWindow(int w=800, int h=600, const char* title = "");
+    virtual Window* createWindow(Widget* widget);
     
     virtual void destroyWindow(Window* window);
     
@@ -34,6 +36,8 @@ public:
     virtual void keyReleaseEvent(Window* window, KeyEvent* event);
     
     virtual void closeEvent(Window* window);
+    
+    static Program* instance();
     
 protected:
     virtual void setup();

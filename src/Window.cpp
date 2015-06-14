@@ -10,14 +10,16 @@ using namespace std;
 
 namespace r64fx{
             
-Window::Window()
+Window::Window(Widget* root)
+: m_root_widget(root)
 {
     
 }
 
-Window* Window::createNew(Type type)
+
+Window* Window::createNew(Widget* root,Type type)
 {
-    Window* window = new Window;
+    Window* window = new Window(root);
     
     if(type == Window::Type::GL3)
     {

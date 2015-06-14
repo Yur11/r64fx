@@ -56,9 +56,9 @@ void Program::quit()
 }
 
 
-Window* Program::createWindow(int w, int h, const char* title)
+Window* Program::createWindow(Widget* widget)
 {
-    Window* window = Window::createNew();
+    Window* window = Window::createNew(widget);
     if(window)
     {
         all_windows.push_back(window);
@@ -118,6 +118,12 @@ void Program::keyReleaseEvent(Window* window, KeyEvent* event)
 void Program::closeEvent(Window* window)
 {
     window->closeEvent();
+}
+
+
+Program* Program::instance()
+{
+    return program_singleton_instance;
 }
 
 

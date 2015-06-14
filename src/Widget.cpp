@@ -1,224 +1,98 @@
 #include "Widget.hpp"
+#include "Window.hpp"
+#include "Program.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
 
 #include <algorithm>
 
-#ifdef DEBUG
+#ifdef R64FX_DEBUG
 #include <iostream>
 #include <assert.h>
 
-using namespace std;
-#endif//DEBUG
+using std::cerr;
+#endif//R64FX_DEBUG
 
 namespace r64fx{
 
-Widget* Widget::mouse_grabber = nullptr;
-Widget* Widget::keyboard_grabber = nullptr;
-
-void Widget::projectToRootAndClipVisible(Point<float> parent_position, Rect<float> parent_visible_rect)
+Widget::Widget(Widget* parent)
 {
-    projected_rect = rect + parent_position;
-    
-    visible_rect = intersection_of(parent_visible_rect, projected_rect);
-    
-    if(visible_rect.isGood())
-    {
-        Widget::is_visible = true;
-        
-        if(hasChildren())
-        {
-            LinkedItemChain<Widget> non_visible_list;
-            LinkedItemChain<Widget> visible_list;
-            
-            while(!children.isEmpty())
-            {
-                auto ch = children.last();
-                
-                if(ch == nullptr)
-                {
-                    abort();
-                }
-                ch->projectToRootAndClipVisible(projected_rect.position(), visible_rect);
-                
-                children.remove(ch);
-#ifdef DEBUG
-                assert(ch->prev() == nullptr);
-                assert(ch->next() == nullptr);
-#endif//DEBUG
-                
-                if(ch->isVisible())
-                {
-                    visible_list.append(ch);
-                }
-                else
-                {
-                    non_visible_list.append(ch);
-                }
-            }
+    setParent(parent);
+}
 
-            visible_children = { visible_list.begin(), visible_list.end() };
-            
-            children = non_visible_list;
-            if(!visible_list.isEmpty())
-                children.append(visible_list);
+
+Widget::~Widget()
+{
+    
+}
+
+    
+void Widget::setParent(Widget* parent)
+{
+    if(isWindow())
+    {
+#ifdef R64FX_DEBUG
+        cerr << "WARNING: Widget::setParent()\nTrying to set parent on a window!\n";
+#endif//R64FX_DEBUG
+        return;
+    }
+    
+    if(!parent)
+    {
+        if(m_parent)
+        {
+            m_parent->m_children.remove(this);
         }
-        
-        appearanceChangeEvent();
     }
     else
     {
-        Widget::is_visible = false;
+        parent->m_children.append(this);
     }
+    m_parent = parent;
 }
 
 
-void Widget::setParent(Widget* new_parent_widget)
-{    
-    if(Widget::hasParent())
-        Widget::removeFromParent();
-    
-    if(new_parent_widget)
-        new_parent_widget->appendWidget(this);
-}
-
-
-void Widget::appendWidget(Widget* widget)
+void Widget::add(Widget* child)
 {
-    widget->parent_widget = this;
-    children.append(widget);
-}
-
-
-void Widget::insertWidget(Widget* existing_widget, Widget* widget)
-{
-    widget->parent_widget = this;
-    children.insert(existing_widget, widget);
-}
-
-
-void Widget::removeFromParent()
-{
-    parent_widget->children.remove(this);
-    parent_widget = nullptr;
-}
-
-
-void Widget::clear()
-{
-    for(auto &ch : children)
-        ch.parent_widget = nullptr;
-    children.clear();
-}
-
-
-Widget* Widget::visibleChildAt(Point<float> p)
-{
-    for(auto &ch : visibleChildren())
-        if(ch.visibleRect().overlaps(p))
-            return &ch;
-    return nullptr;
-}
-
-
-void Widget::appearanceChangeEvent()
-{
-    
-}
-
-    
-void Widget::render()
-{
-    for(auto &ch : visibleChildren())
+    if(!child)
     {
-        ch.render();
-    }    
-}
-
-void Widget::mousePressEvent(MouseEvent* event)
-{        
-    auto child = visibleChildAt(event->position());
-    if(child)
-    {
-        child->mousePressEvent(event);
+#ifdef R64FX_DEBUG
+        cerr << "WARNING: Widget::add(nullptr)\n";
+#endif//R64FX_DEBUG
+        return;
     }
+    child->setParent(this);
 }
 
-    
-void Widget::mouseReleaseEvent(MouseEvent* event)
+
+Window* Widget::show()
 {
-    auto child = visibleChildAt(event->position());
-    if(child)
+    if(m_host_window)
     {
-        child->mouseReleaseEvent(event);
+#ifdef R64FX_DEBUG
+        cerr << "WARNING: Widget::show()\nTrying to show twice!\n";
+#endif//R64FX_DEBUG
+        return m_host_window;
     }
+    setParent(nullptr);
+    m_host_window = Program::instance()->createWindow(this);
+    m_host_window->show();
+    return m_host_window;
 }
-    
-    
-void Widget::mouseMoveEvent(MouseEvent* event)
+
+
+void Widget::hide()
 {
-    auto child = visibleChildAt(event->position());
-    if(child)
+    if(!m_host_window)
     {
-        child->mouseMoveEvent(event);
+#ifdef R64FX_DEBUG
+        cerr << "WARNING: Widget::hide()\nTrying to hide twice!\n";
+#endif//R64FX_DEBUG
+        return;
     }
-}
-
-
-void Widget::mouseWheelEvent(MouseEvent* event)
-{
-}
-
-
-void Widget::keyPressEvent(KeyEvent* event)
-{
-}
-    
-    
-void Widget::keyReleaseEvent(KeyEvent* event)
-{
-}
-
-
-void Widget::textInputEvent(TextInputEvent* event)
-{
-    
-}
-
-
-void Widget::setMouseGrabber(Widget* widget)
-{
-    mouse_grabber = widget;
-}
-
-    
-void Widget::setKeyboardGrabber(Widget* widget)
-{
-    keyboard_grabber = widget;
-}
-
-
-Widget* Widget::mouseInputGrabber()
-{
-    return mouse_grabber;
-}
-    
-    
-Widget* Widget::keyboardInputGrabber()
-{
-    return keyboard_grabber;
-}
-
-
-bool Widget::isMouseInputGrabber()
-{
-    return mouse_grabber == this;
-}
-
-    
-bool Widget::isKeyboardInputGrabber()
-{
-    return keyboard_grabber == this;
+    m_host_window->hide();
+    delete m_host_window;
+    m_host_window = nullptr;
 }
 
 }//namespace r64fx
