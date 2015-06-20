@@ -18,6 +18,12 @@ Window::Window(Widget* root)
 }
 
 
+Window::~Window()
+{
+
+}
+
+
 Window* Window::createNew(Widget* root,Type type)
 {
     Window* window = new Window(root);
@@ -60,10 +66,12 @@ Window* Window::createNew(Widget* root,Type type)
     return nullptr;
 }
 
-
-Window::~Window()
+void Window::destroy(Window* window)
 {
+    cleanup_window(window);
+    delete window;
 }
+
 
 void Window::show()
 {

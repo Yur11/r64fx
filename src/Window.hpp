@@ -26,10 +26,12 @@ public:
 private:
     Window(Widget* root);
     
+    virtual ~Window();
+    
 public:
     static Window* createNew(Widget* root, Type type = Type::BestSupported);
     
-    virtual ~Window();
+    static void destroy(Window* window);
     
     inline void  setImplData(void* data) { m_impl_data = data; }
 

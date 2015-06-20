@@ -92,7 +92,7 @@ void Widget::hide()
         return;
     }
     m_host_window->hide();
-    delete m_host_window;
+    Program::instance()->destroyWindow(m_host_window);
     m_host_window = nullptr;
 }
 

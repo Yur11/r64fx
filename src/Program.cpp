@@ -70,14 +70,13 @@ Window* Program::createWindow(Widget* widget)
 
 void Program::destroyWindow(Window* window)
 {
-    cleanup_window(window);
     auto it = all_windows.begin();
     while(it != all_windows.end())
     {
         if(*it == window)
         {
             all_windows.erase(it);
-            delete window;
+            Window::destroy(window);
             return;
         }
         it++;
