@@ -4,6 +4,7 @@
 #include "Window.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
+#include "ResizeEvent.hpp"
 
 #include <SDL2/SDL.h>
 
@@ -232,7 +233,13 @@ void process_window_event(Program* program, Window* window, SDL_WindowEvent* win
         case SDL_WINDOWEVENT_MOVED:
             break;
         case SDL_WINDOWEVENT_RESIZED:
+        {
+            Size<int> old_size = window->size();
+            Size<int> new_size = { windowevent->data1, windowevent->data2 };
+            ResizeEvent re(old_size, new_size);
+            program->resizeEvent(window, &re);
             break;
+        }
         case SDL_WINDOWEVENT_MINIMIZED:
             break;
         case SDL_WINDOWEVENT_MAXIMIZED:
@@ -248,8 +255,10 @@ void process_window_event(Program* program, Window* window, SDL_WindowEvent* win
         case SDL_WINDOWEVENT_FOCUS_LOST:
             break;
         case SDL_WINDOWEVENT_CLOSE:
+        {
             program->closeEvent(window);
             break;
+        }
         default:
             break;
     }

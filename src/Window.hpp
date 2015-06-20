@@ -1,11 +1,14 @@
 #ifndef R64FX_GUI_WINDOW_H
 #define R64FX_GUI_WINDOW_H
 
+#include "Size.hpp"
+
 namespace r64fx{
 
 class Widget;
 class MouseEvent;
 class KeyEvent;
+class ResizeEvent;
 
 /** @brief Base class for window implementations. */
 class Window{
@@ -39,6 +42,8 @@ public:
     void hide();
     
     void resize(int w, int h);
+    
+    Size<int> size();
 
     void mousePressEvent(MouseEvent* event);
     
@@ -50,7 +55,11 @@ public:
     
     void keyReleaseEvent(KeyEvent* event);
     
+    void resizeEvent(ResizeEvent* event);
+    
     void closeEvent();
+    
+    void resizeEvent();
 };
 
 }//namespace r64fx

@@ -11,13 +11,19 @@ template<typename T> struct Size{
     , h(h)
     {}
     
-    /** @brief Convert point into size. */
-    Size<T>(Point<T> p) : Size<T>(p.x, p.y) {}
+    inline T width()  const { return w; }
     
-    inline Point<T> toPoint() const { return Point<T>(w, h); }
+    inline T height() const { return h; }
     
     inline bool operator==(const Size<T> &other) { return this->w == other.w && this->h == other.h; }
 };
+
+
+template<typename Ost, typename T> inline Ost &operator<<(Ost &ost, Size<T> size)
+{
+    ost << "Size{" << size.w << ", " << size.h << "}";
+    return ost;
+}
     
 }//namespace r64fx
 

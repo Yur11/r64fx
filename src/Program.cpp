@@ -121,6 +121,12 @@ void Program::closeEvent(Window* window)
 }
 
 
+void Program::resizeEvent(Window* window, ResizeEvent* event)
+{
+    window->resizeEvent(event);
+}
+
+
 Program* Program::instance()
 {
     return program_singleton_instance;

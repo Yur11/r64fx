@@ -5,6 +5,7 @@
 #include "Widget.hpp"
 #include "KeyEvent.hpp"
 #include "Keyboard.hpp"
+#include "ResizeEvent.hpp"
 
 using namespace std;
 using namespace r64fx;
@@ -84,6 +85,11 @@ private:
         {
             quit();
         }
+    }
+    
+    virtual void resizeEvent(Window* window, ResizeEvent* event)
+    {
+        cout << "Resize!\n";
     }
     
     virtual void cleanup()

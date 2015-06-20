@@ -1,4 +1,5 @@
 #include "Window.hpp"
+#include "Widget.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
 
@@ -80,6 +81,11 @@ void Window::resize(int w, int h)
     resize_window(this, w, h);
 }
 
+Size<int> Window::size()
+{
+    return m_root_widget->size();
+}
+
 void Window::mousePressEvent(MouseEvent* event)
 {
 }
@@ -106,6 +112,11 @@ void Window::keyReleaseEvent(KeyEvent* event)
 
 
 void Window::closeEvent()
+{
+    
+}
+
+void Window::resizeEvent(ResizeEvent* event)
 {
     
 }

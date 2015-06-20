@@ -46,6 +46,8 @@ public:
     inline int width()  const { return m_rect.width(); }
 
     inline int height() const { return m_rect.height(); }
+    
+    inline Size<int> size() const { return m_rect.size(); }
 };  
     
 }//r64fx
