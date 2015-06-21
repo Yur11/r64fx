@@ -1,10 +1,8 @@
 #include "gui_implementation_iface.hpp"
+#include "ProgramImplEventIface.hpp"
 
-#include "Program.hpp"
-#include "Window.hpp"
-#include "MouseEvent.hpp"
-#include "KeyEvent.hpp"
-#include "ResizeEvent.hpp"
+#include "WindowImplIface.hpp"
+#include "Mouse.hpp"
 
 #include <SDL2/SDL.h>
 
@@ -14,10 +12,6 @@
 using namespace std;
 
 namespace r64fx{
-
-namespace{
-    unsigned int g_pressed_mouse_buttons = 0;
-};
     
 // bool tracking_mouse = false;
 // bool should_quit = false;
@@ -140,9 +134,9 @@ namespace{
 // }
 
 
-Window* get_event_window(SDL_Event* event)
+WindowImplIface* get_event_window(SDL_Event* event)
 {
-    return (Window*) SDL_GetWindowData(SDL_GetWindowFromID(event->key.windowID), "window");
+    return (WindowImplIface*) SDL_GetWindowData(SDL_GetWindowFromID(event->key.windowID), "window");
 }
 
 unsigned int get_event_button(const SDL_MouseButtonEvent &event)
@@ -158,7 +152,7 @@ unsigned int get_event_button(const SDL_MouseButtonEvent &event)
 }
 
 
-bool init_window(Window* window, int extra_flags)
+bool init_window(WindowImplIface* window, int extra_flags)
 {
    auto sdl_window = SDL_CreateWindow(
         "", 
@@ -180,47 +174,47 @@ bool init_window(Window* window, int extra_flags)
 }
 
 
-bool init_window_gl3(Window* window)
+bool init_window_gl3(WindowImplIface* window)
 {
     return init_window(window, SDL_WINDOW_OPENGL);
 }
 
 
-bool init_window_normal(Window* window)
+bool init_window_normal(WindowImplIface* window)
 {
     return init_window(window, 0);
 }
 
 
-void cleanup_window(Window* window)
+void cleanup_window(WindowImplIface* window)
 {
     auto sdl_window = (SDL_Window*)window->getImplData();
     SDL_DestroyWindow(sdl_window);
 }
 
 
-void show_window(Window* window)
+void show_window(WindowImplIface* window)
 {
     auto sdl_window = (SDL_Window*)window->getImplData();
     SDL_ShowWindow(sdl_window);
 }
 
 
-void hide_window(Window* window)
+void hide_window(WindowImplIface* window)
 {
     auto sdl_window = (SDL_Window*)window->getImplData();
     SDL_HideWindow(sdl_window);
 }
 
 
-void resize_window(Window* window, int w, int h)
+void resize_window(WindowImplIface* window, int w, int h)
 {
     auto sdl_window = (SDL_Window*)window->getImplData();
     SDL_SetWindowSize(sdl_window, w, h);
 }
 
 
-void process_window_event(Program* program, Window* window, SDL_WindowEvent* windowevent)
+void process_window_event(ProgramImplEventIface* program, WindowImplIface* window, SDL_WindowEvent* windowevent)
 {
     switch(windowevent->event)
     {
@@ -234,10 +228,7 @@ void process_window_event(Program* program, Window* window, SDL_WindowEvent* win
             break;
         case SDL_WINDOWEVENT_RESIZED:
         {
-            Size<int> old_size = window->size();
-            Size<int> new_size = { windowevent->data1, windowevent->data2 };
-            ResizeEvent re(old_size, new_size);
-            program->resizeEvent(window, &re);
+            program->initResizeEvent(window, windowevent->data1, windowevent->data2 );
             break;
         }
         case SDL_WINDOWEVENT_MINIMIZED:
@@ -256,7 +247,7 @@ void process_window_event(Program* program, Window* window, SDL_WindowEvent* win
             break;
         case SDL_WINDOWEVENT_CLOSE:
         {
-            program->closeEvent(window);
+            program->initCloseEvent(window);
             break;
         }
         default:
@@ -265,7 +256,7 @@ void process_window_event(Program* program, Window* window, SDL_WindowEvent* win
 }
 
 
-void process_some_events(Program* program)
+void process_some_events(ProgramImplEventIface* program)
 {
     static SDL_Event event;
     while(SDL_PollEvent(&event))
@@ -274,54 +265,57 @@ void process_some_events(Program* program)
         {            
             case SDL_MOUSEBUTTONDOWN:
             {
-                Window* window = get_event_window(&event);
-                unsigned int mouse_button = get_event_button(event.button);
-                g_pressed_mouse_buttons &= mouse_button;
-                
-                MouseEvent me(event.button.x, event.button.y, mouse_button);
-                program->mousePressEvent(window, &me);
+                program->initMousePressEvent(
+                    get_event_window(&event),
+                    event.button.x, event.button.y,
+                    get_event_button(event.button)
+                );
                 break;
             }
             
             case SDL_MOUSEBUTTONUP:
             {
-                Window* window = get_event_window(&event);
-                unsigned int mouse_button = get_event_button(event.button);
-                g_pressed_mouse_buttons &= ~mouse_button;
-                
-                MouseEvent me(event.button.x, event.button.y, mouse_button);
-                program->mouseReleaseEvent(window, &me);
+                program->initMouseReleaseEvent(
+                    get_event_window(&event),
+                    event.button.x, event.button.y,
+                    get_event_button(event.button)
+                );
                 break;
             }
             
             case SDL_MOUSEMOTION:
             {
-                Window* window = get_event_window(&event);
-                MouseEvent me(event.motion.x, event.motion.y, g_pressed_mouse_buttons);
-                program->mouseMoveEvent(window, &me);
+                program->initMouseMoveEvent(
+                    get_event_window(&event),
+                    event.button.x, event.button.y,
+                    get_event_button(event.button)
+                );
                 break;
             }
             
             case SDL_KEYDOWN:
             {
-                Window* window = get_event_window(&event);
-                KeyEvent ke(event.key.keysym.scancode);
-                program->keyPressEvent(window, &ke);
+                program->initKeyPressEvent(
+                    get_event_window(&event), event.key.keysym.scancode
+                );
                 break;
             }
             
             case SDL_KEYUP:
             {
-                Window* window = get_event_window(&event);
-                KeyEvent ke(event.key.keysym.scancode);
-                program->keyReleaseEvent(window, &ke);
+                program->initKeyReleaseEvent(
+                    get_event_window(&event), event.key.keysym.scancode
+                );
                 break;
             }
             
             case SDL_WINDOWEVENT:
             {
-                Window* window = get_event_window(&event);
-                process_window_event(program, window, &event.window);
+                process_window_event(
+                    program,
+                    get_event_window(&event),
+                    &event.window
+                );
                 break;
             }
         }

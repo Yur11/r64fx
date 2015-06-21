@@ -10,6 +10,9 @@ class KeyEvent;
 class ResizeEvent;
 
 class Program{
+    friend class ProgramImplEventIface;
+    friend class Widget;
+
     bool m_should_be_running = true;
     
 public:
@@ -22,27 +25,23 @@ public:
     
     virtual void quit();
     
-    virtual Window* createWindow(Widget* widget);
-    
-    virtual void destroyWindow(Window* window);
-    
-    virtual void mousePressEvent(Window* window, MouseEvent* event);
-    
-    virtual void mouseReleaseEvent(Window* window, MouseEvent* event);
-    
-    virtual void mouseMoveEvent(Window* window, MouseEvent* event);
-    
-    virtual void keyPressEvent(Window* window, KeyEvent* event);
-    
-    virtual void keyReleaseEvent(Window* window, KeyEvent* event);
-    
-    virtual void closeEvent(Window* window);
-    
-    virtual void resizeEvent(Window* window, ResizeEvent* event);
-    
     static Program* instance();
     
 protected:
+    virtual void mousePressEvent(Widget* widget, MouseEvent* event);
+
+    virtual void mouseReleaseEvent(Widget* widget, MouseEvent* event);
+
+    virtual void mouseMoveEvent(Widget* widget, MouseEvent* event);
+
+    virtual void keyPressEvent(Widget* widget, KeyEvent* event);
+
+    virtual void keyReleaseEvent(Widget* widget, KeyEvent* event);
+
+    virtual void resizeEvent(Widget* widget, ResizeEvent* event);
+
+    virtual void closeEvent(Widget* widget);
+
     virtual void setup();
     
     virtual void cleanup();

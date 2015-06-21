@@ -1,5 +1,5 @@
-#ifndef R64FX_BINARY_CONSTANTS_H
-#define R64FX_BINARY_CONSTANTS_H
+#ifndef R64FX_BINARY_CONSTANTS_HPP
+#define R64FX_BINARY_CONSTANTS_HPP
 
 namespace r64fx{
     
@@ -515,4 +515,4 @@ const unsigned int b11111111 = 255;
     
 }//namespace r64fx
 
-#endif//R64FX_BINARY_CONSTANTS_H
+#endif//R64FX_BINARY_CONSTANTS_HPP

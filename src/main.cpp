@@ -24,7 +24,7 @@ using namespace r64fx;
 // }
 // 
 // 
-// std::shared_ptr<Image> get_window_image(Window* window)
+// std::shared_ptr<Image> get_window_image(Widget* widget)
 // {
 // #ifdef USE_SDL2
 //     auto sdl2window = dynamic_cast<Window_SDL2*>(window);
@@ -46,7 +46,6 @@ using namespace r64fx;
 
 
 class MyProgram : public Program{
-    Window* m_Window = nullptr;
     
     Widget* m_Widget = nullptr;
     
@@ -63,7 +62,7 @@ private:
         m_Widget->show();
     }
     
-    virtual void keyPressEvent(Window* window, KeyEvent* event)
+    virtual void keyPressEvent(Widget* widget, KeyEvent* event)
     {
         if(event->key() == Keyboard::Key::Escape) 
         {
@@ -79,15 +78,15 @@ private:
         }
     }
     
-    virtual void closeEvent(Window* window)
+    virtual void closeEvent(Widget* widget)
     {
-        if(window == m_Widget->hostWindow())
+        if(widget == m_Widget)
         {
             quit();
         }
     }
     
-    virtual void resizeEvent(Window* window, ResizeEvent* event)
+    virtual void resizeEvent(Widget* widget, ResizeEvent* event)
     {
         cout << "Resize!\n";
     }

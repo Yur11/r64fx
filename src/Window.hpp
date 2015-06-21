@@ -1,67 +1,47 @@
 #ifndef R64FX_GUI_WINDOW_H
 #define R64FX_GUI_WINDOW_H
 
-#include "Size.hpp"
+#include "WindowImplIface.hpp"
 
 namespace r64fx{
 
-class Widget;
-class MouseEvent;
-class KeyEvent;
-class ResizeEvent;
+/** @brief Public window interface. */
+class Window : public WindowImplIface{
 
-/** @brief Base class for window implementations. */
-class Window{
-    void* m_impl_data = nullptr;
-
-    Widget* m_root_widget;
-    
 public:
     enum class Type{
         Normal,
         GL3,
         BestSupported
-    } m_Type;
-    
-private:
-    Window(Widget* root);
-    
-    virtual ~Window();
-    
-public:
-    static Window* createNew(Widget* root, Type type = Type::BestSupported);
-    
-    static void destroy(Window* window);
-    
-    inline void  setImplData(void* data) { m_impl_data = data; }
+    };
 
-    inline void* getImplData() const { return m_impl_data; }
+private:
+    Widget* m_root_widget;
+
+    Window::Type m_Type;
+
+    Window(Widget* root);
+
+    virtual ~Window();
+
+public:
+    static Window* createNew(Widget* root, Window::Type type = Window::Type::BestSupported);
+
+    static void destroy(Window* window);
+
+    void show();
+
+    void hide();
+
+    void resize(int w, int h);
+
+    void setTitle(const char* title);
+
+    const char* title() const;
+
+    inline Window::Type type() const { return m_Type; }
 
     inline Widget* rootWidget() const { return m_root_widget; }
-    
-    void show();
-    
-    void hide();
-    
-    void resize(int w, int h);
-    
-    Size<int> size();
-
-    void mousePressEvent(MouseEvent* event);
-    
-    void mouseReleaseEvent(MouseEvent* event);
-    
-    void mouseMoveEvent(MouseEvent* event);
-    
-    void keyPressEvent(KeyEvent* event);
-    
-    void keyReleaseEvent(KeyEvent* event);
-    
-    void resizeEvent(ResizeEvent* event);
-    
-    void closeEvent();
-    
-    void resizeEvent();
 };
 
 }//namespace r64fx

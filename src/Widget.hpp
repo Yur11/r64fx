@@ -6,18 +6,32 @@
 
 namespace r64fx{
 
-class Widget;    
 class Window;
+class MouseEvent;
+class KeyEvent;
+class ResizeEvent;
 
-class Widget : public LinkedItem<Widget>{    
-    Widget* m_parent = nullptr;
-    LinkedList<Widget> m_children;
+class Widget : public LinkedItem<Widget>{
+    friend class Program; //To call event methods.
+
+    /* A widget may either have another widget as a parent
+     * or it can be shown in a window, but not both at the same time.
+     */
+    union {
+        Widget* widget = nullptr;
+        Window* window;
+    } m_parent;
+
+    /* Storage for widget flags.
+     * These are bit-packed and used internally.
+     */
+    unsigned long m_flags = 0;
     
+    /* Widgets geometry. */
     Rect<int> m_rect = { 0, 0, 0, 0  };
-    
-    Window* m_host_window = nullptr;
-    
-    Widget(const Widget &other) {}
+
+    /* A linked list of widgets children. */
+    LinkedList<Widget> m_children;
     
 public:
     Widget(Widget* parent = nullptr);
@@ -26,29 +40,42 @@ public:
     
     void setParent(Widget* parent);
     
-    inline Widget* parent() const { return m_parent; }
-    
-    inline void removeFromParent() { setParent(nullptr); }
+    Widget* parent() const;
     
     void add(Widget* child);
     
-    /** @brief Show this widget in a window. */
-    Window* show();
-    
-    void hide();
-    
-    inline Window* hostWindow() const { return m_host_window; }
-    
-    inline bool isWindow() const { return hostWindow() != nullptr; }
-    
+    void resize(Size<int> size);
+
     void resize(int w, int h);
     
-    inline int width()  const { return m_rect.width(); }
+    Size<int> size() const;
 
-    inline int height() const { return m_rect.height(); }
+    int width() const;
+
+    int height() const;
     
-    inline Size<int> size() const { return m_rect.size(); }
-};  
+    /** @brief Show this widget in a window. */
+    void show();
+
+    /** @brief Hide this widget if it is shown in a window.*/
+    void hide();
+
+    bool isWindow() const;
+
+    
+protected:
+    virtual void mousePressEvent(MouseEvent* event);
+    
+    virtual void mouseReleaseEvent(MouseEvent* event);
+    
+    virtual void mouseMoveEvent(MouseEvent* event);
+    
+    virtual void keyPressEvent(KeyEvent* event);
+    
+    virtual void keyReleaseEvent(KeyEvent* event);
+
+    virtual void resizeEvent(ResizeEvent* event);
+};
     
 }//r64fx
 

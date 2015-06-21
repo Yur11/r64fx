@@ -1,24 +1,25 @@
 #ifndef R64FX_GUI_IMPLEMENTATION_IFACE_HPP
 #define R64FX_GUI_IMPLEMENTATION_IFACE_HPP
 
+
 namespace r64fx{
 
-class Program;
-class Window;
+class ProgramImplEventIface;
+class WindowImplIface;
     
-bool init_window_gl3(Window* window);
+bool init_window_gl3(WindowImplIface* window);
 
-bool init_window_normal(Window* window);
+bool init_window_normal(WindowImplIface* window);
 
-void cleanup_window(Window* window);
+void cleanup_window(WindowImplIface* window);
 
-void show_window(Window* window);
+void show_window(WindowImplIface* window);
 
-void hide_window(Window* window);
+void hide_window(WindowImplIface* window);
 
-void resize_window(Window* window, int w, int h);
+void resize_window(WindowImplIface* window, int w, int h);
 
-void process_some_events(Program* program);
+void process_some_events(ProgramImplEventIface* program);
 
 /** @brief Get pressed mouse buttons. */
 unsigned int pressed_mouse_buttons();
