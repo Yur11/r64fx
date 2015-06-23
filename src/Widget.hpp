@@ -3,6 +3,7 @@
 
 #include "LinkedList.hpp"
 #include "Rect.hpp"
+#include "WindowDefs.hpp"
 
 namespace r64fx{
 
@@ -10,12 +11,15 @@ class Window;
 class MouseEvent;
 class KeyEvent;
 class ResizeEvent;
+class WidgetPainter;
+
 
 class Widget : public LinkedItem<Widget>{
     friend class Program; //To call event methods.
 
     /* A widget may either have another widget as a parent
      * or it can be shown in a window, but not both at the same time.
+     * Call isWindow() to figure out which on is it.
      */
     union {
         Widget* widget = nullptr;
@@ -32,6 +36,9 @@ class Widget : public LinkedItem<Widget>{
 
     /* A linked list of widgets children. */
     LinkedList<Widget> m_children;
+
+    /* Data used by the WidgetPainter. */
+    void* painter_data = nullptr;
     
 public:
     Widget(Widget* parent = nullptr);
@@ -55,14 +62,15 @@ public:
     int height() const;
     
     /** @brief Show this widget in a window. */
-    void show();
+    void show(PainterType mode = PainterType::BestSupported, WindowType type = WindowType::Normal);
 
     /** @brief Hide this widget if it is shown in a window.*/
     void hide();
 
     bool isWindow() const;
 
-    
+    void repaint();
+
 protected:
     virtual void mousePressEvent(MouseEvent* event);
     
@@ -75,6 +83,8 @@ protected:
     virtual void keyReleaseEvent(KeyEvent* event);
 
     virtual void resizeEvent(ResizeEvent* event);
+
+    virtual void setupPaint(WidgetPainter* wp);
 };
     
 }//r64fx

@@ -2,30 +2,22 @@
 #define R64FX_GUI_WINDOW_H
 
 #include "WindowImplIface.hpp"
+#include "WindowDefs.hpp"
+#include "WidgetPainter.hpp"
 
 namespace r64fx{
 
 /** @brief Public window interface. */
 class Window : public WindowImplIface{
-
-public:
-    enum class Type{
-        Normal,
-        GL3,
-        BestSupported
-    };
-
-private:
-    Widget* m_root_widget;
-
-    Window::Type m_Type;
+    Widget* m_root_widget = nullptr;
+    WidgetPainter* m_painter = nullptr;
 
     Window(Widget* root);
 
     virtual ~Window();
 
 public:
-    static Window* createNew(Widget* root, Window::Type type = Window::Type::BestSupported);
+    static Window* createNew(Widget* root, PainterType pt, WindowType wt);
 
     static void destroy(Window* window);
 
@@ -39,7 +31,7 @@ public:
 
     const char* title() const;
 
-    inline Window::Type type() const { return m_Type; }
+    inline WidgetPainter* painter() const { return m_painter; }
 
     inline Widget* rootWidget() const { return m_root_widget; }
 };

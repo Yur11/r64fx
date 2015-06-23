@@ -30,6 +30,11 @@ Program::Program(int argc, char* argv[])
         cerr << "Refusing to create a second program instance!\n";
         abort();
     }
+
+    if(!init())
+    {
+        abort();
+    }
     
     program_singleton_instance = this;
     impl_iface = new ProgramImplEventIface;
@@ -141,49 +146,56 @@ Window::~Window()
 }
 
 
-Window* Window::createNew(Widget* root, Window::Type type)
+Window* Window::createNew(Widget* root, PainterType pt, WindowType wt)
 {
     Window* window = new Window(root);
 
-    if(type == Window::Type::GL3)
+    if(pt == PainterType::GL3)
     {
         if(init_window_gl3(window))
         {
             all_windows.push_back(window);
-            return window;
         }
         else
         {
             cerr << "Failed to create GL3 window!\n";
+            delete window;
+            return nullptr;
         }
     }
-    else if(type == Window::Type::Normal)
+    else if(pt == PainterType::Normal)
     {
         if(init_window_normal(window))
         {
             all_windows.push_back(window);
-            return window;
         }
         else
         {
             cerr << "Failed to create a simple window!\n";
+            delete window;
+            return nullptr;
         }
     }
-    else if(type == Window::Type::BestSupported)
+    else if(pt == PainterType::BestSupported)
     {
         if(init_window_gl3(window) || init_window_normal(window))
         {
             all_windows.push_back(window);
-            return window;
         }
         else
         {
-            cerr << "Failed to create a simple window!\n";
+            cerr << "Failed to create a window!\n";
+            delete window;
+            return nullptr;
         }
     }
 
-    delete window;
-    return nullptr;
+    if(wt == WindowType::Menu)
+    {
+        turn_into_menu(window);
+    }
+
+    return window;
 }
 
 void Window::destroy(Window* window)
@@ -222,9 +234,9 @@ void Window::resize(int w, int h)
 
 
 
-/* ================================
+/* ======================================
  * Program Implementation Event Interface
- * ================================*/
+ * ======================================*/
 
 void ProgramImplEventIface::initMousePressEvent(WindowImplIface* window_iface, float x, float y, unsigned int button)
 {

@@ -5,6 +5,7 @@
 #include "Mouse.hpp"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
 
 #include <iostream>
 #include <map>
@@ -98,40 +99,6 @@ namespace r64fx{
 // }
 // 
 // 
-// void Window_SDL2::turnIntoMenu()
-// {
-//     SDL_SysWMinfo info;
-//     SDL_VERSION(&info.version);
-//     
-//     if(!SDL_GetWindowWMInfo(m_SDL_Window, &info))
-//     {
-//         cerr << "Failed to get window manager info!\n";
-//         return;
-//     }
-//     
-//     if(info.subsystem != SDL_SYSWM_X11)
-//     {
-//         cerr << "WM is not X11!\n";
-//         return;
-//     }
-// 
-//     auto x11_display = info.info.x11.display;
-//     auto x11_window = info.info.x11.window;
-//     
-//     auto atom_net_wm_window_type = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE", True);
-//     auto atom_net_wm_window_type_menu = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE_MENU", True);
-//     XChangeProperty(
-//         x11_display, 
-//         x11_window, 
-//         atom_net_wm_window_type, 
-//         XA_ATOM, 
-//         32, 
-//         PropModeReplace, 
-//         (unsigned char*)&atom_net_wm_window_type_menu, 
-//         1
-//     );
-//     XFlush(x11_display);
-// }
 
 
 WindowImplIface* get_event_window(SDL_Event* event)
@@ -149,6 +116,26 @@ unsigned int get_event_button(const SDL_MouseButtonEvent &event)
     else if(event.button == SDL_BUTTON_RIGHT)
         button = Mouse::Button::Right;
     return button;
+}
+
+
+bool init()
+{
+    if(SDL_Init(SDL_INIT_VIDEO) == 0)
+    {
+        return true;
+    }
+    else
+    {
+        cerr << SDL_GetError() << "\n";
+        return false;
+    }
+}
+
+
+void cleanup()
+{
+    SDL_Quit();
 }
 
 
@@ -211,6 +198,46 @@ void resize_window(WindowImplIface* window, int w, int h)
 {
     auto sdl_window = (SDL_Window*)window->getImplData();
     SDL_SetWindowSize(sdl_window, w, h);
+}
+
+
+void turn_into_menu(WindowImplIface* window)
+{
+    cout << "Turn Into Menu!\n";
+
+    auto sdl_window = (SDL_Window*)window->getImplData();
+
+    SDL_SysWMinfo info;
+    SDL_VERSION(&info.version);
+
+    if(!SDL_GetWindowWMInfo(sdl_window, &info))
+    {
+        cerr << "Failed to get window manager info!\n";
+        return;
+    }
+
+    if(info.subsystem != SDL_SYSWM_X11)
+    {
+        cerr << "WM is not X11!\n";
+        return;
+    }
+
+    auto x11_display = info.info.x11.display;
+    auto x11_window = info.info.x11.window;
+
+    auto atom_net_wm_window_type = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE", True);
+    auto atom_net_wm_window_type_menu = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE_MENU", True);
+    XChangeProperty(
+        x11_display,
+        x11_window,
+        atom_net_wm_window_type,
+        XA_ATOM,
+        32,
+        PropModeReplace,
+        (unsigned char*)&atom_net_wm_window_type_menu,
+        1
+    );
+    XFlush(x11_display);
 }
 
 

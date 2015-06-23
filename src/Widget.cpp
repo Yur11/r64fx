@@ -106,7 +106,7 @@ int Widget::height() const
 }
 
 
-void Widget::show()
+void Widget::show(PainterType pt, WindowType wt)
 {
     if(isWindow())
     {
@@ -116,15 +116,16 @@ void Widget::show()
         return;
     }
     setParent(nullptr);
-    m_parent.window = Window::createNew(this);
+    m_parent.window = Window::createNew(this, pt, wt);
     m_parent.window->resize(width(), height());
     m_parent.window->show();
+    m_flags |= WIDGET_IS_WINDOW;
 }
 
 
 void Widget::hide()
 {
-    if(!m_parent.window)
+    if(!isWindow())
     {
 #ifdef R64FX_DEBUG
         cerr << "WARNING: Widget::hide()\nTrying to hide twice!\n";
@@ -134,12 +135,19 @@ void Widget::hide()
     m_parent.window->hide();
     Window::destroy(m_parent.window);
     m_parent.window = nullptr;
+    m_flags ^= WIDGET_IS_WINDOW;
 }
 
 
 bool Widget::isWindow() const
 {
     return m_flags & WIDGET_IS_WINDOW;
+}
+
+
+void Widget::repaint()
+{
+
 }
 
 
@@ -174,6 +182,12 @@ void Widget::keyReleaseEvent(KeyEvent* event)
 
 
 void Widget::resizeEvent(ResizeEvent* event)
+{
+
+}
+
+
+void Widget::setupPaint(WidgetPainter* wp)
 {
 
 }
