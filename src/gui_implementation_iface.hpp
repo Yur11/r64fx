@@ -1,11 +1,12 @@
 #ifndef R64FX_GUI_IMPLEMENTATION_IFACE_HPP
 #define R64FX_GUI_IMPLEMENTATION_IFACE_HPP
 
-
 namespace r64fx{
 
 class ProgramImplEventIface;
 class WindowImplIface;
+
+namespace Impl{
 
 bool init();
 
@@ -23,6 +24,8 @@ void hide_window(WindowImplIface* window);
 
 void resize_window(WindowImplIface* window, int w, int h);
 
+void update_window_surface(WindowImplIface* window);
+
 void turn_into_menu(WindowImplIface* window);
 
 void process_some_events(ProgramImplEventIface* program);
@@ -33,7 +36,9 @@ unsigned int pressed_mouse_buttons();
 /** @brief Get pressed keyboard modifiers. */
 unsigned int keyboard_modifiers();
 
-};
+}//namespace Impl
+
+}//namespace r64x
 
 
 #endif//R64FX_GUI_IMPLEMENTATION_IFACE_HPP

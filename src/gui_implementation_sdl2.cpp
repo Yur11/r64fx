@@ -1,4 +1,5 @@
 #include "gui_implementation_iface.hpp"
+#include "paint_surface_implementation_iface.hpp"
 #include "ProgramImplEventIface.hpp"
 
 #include "WindowImplIface.hpp"
@@ -13,6 +14,8 @@
 using namespace std;
 
 namespace r64fx{
+
+namespace Impl{
     
 // bool tracking_mouse = false;
 // bool should_quit = false;
@@ -201,10 +204,15 @@ void resize_window(WindowImplIface* window, int w, int h)
 }
 
 
+void update_window_surface(WindowImplIface* window)
+{
+    auto sdl_window = (SDL_Window*)window->getImplData();
+    SDL_UpdateWindowSurface(sdl_window);
+}
+
+
 void turn_into_menu(WindowImplIface* window)
 {
-    cout << "Turn Into Menu!\n";
-
     auto sdl_window = (SDL_Window*)window->getImplData();
 
     SDL_SysWMinfo info;
@@ -360,5 +368,72 @@ unsigned int keyboard_modifiers()
 {
     return 0;
 }
+
+
+Surface get_window_surface(WindowImplIface* window)
+{
+    auto sdl_window = (SDL_Window*)window->getImplData();
+    SDL_GetWindowSurface(sdl_window);
+}
+
+
+void* pixels(Surface surface)
+{
+    auto sdl_surface = (SDL_Surface*) surface;
+    return sdl_surface->pixels;
+}
+
+
+void get_surface_size(int &w, int &h, Surface surface)
+{
+    auto sdl_surface = (SDL_Surface*) surface;
+    w = sdl_surface->w;
+    h = sdl_surface->h;
+}
+
+
+int bytes_per_pixel(Surface surface)
+{
+    auto sdl_surface = (SDL_Surface*) surface;
+    return sdl_surface->format->BytesPerPixel;
+}
+
+
+void get_channel_indices(Surface surface, int &r, int &g, int &b, int &a)
+{
+    static const unsigned int masks[5] = {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+        0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff,
+#else
+        0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000,
+#endif
+        0x0
+    };
+
+    auto sdl_surface = (SDL_Surface*) surface;
+    auto format = sdl_surface->format;
+
+    if(format->BytesPerPixel == 4 || format->BytesPerPixel == 3)
+    {
+        for(int i=0; i<5; i++)
+        {
+            if(format->Rmask == masks[i])
+                r = i;
+            else if(format->Gmask == masks[i])
+                g = i;
+            else if(format->Bmask == masks[i])
+                b = i;
+            else if(format->Amask == masks[i])
+                a = i;
+        }
+    }
+    else
+    {
+        cerr << "Unsupported byte per pixel count " << format->BytesPerPixel << " !\n";
+        abort();
+    }
+}
+
+}//namespace Impl
 
 }//namespace r64fx

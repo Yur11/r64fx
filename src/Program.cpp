@@ -31,7 +31,7 @@ Program::Program(int argc, char* argv[])
         abort();
     }
 
-    if(!init())
+    if(!Impl::init())
     {
         abort();
     }
@@ -53,7 +53,7 @@ int Program::exec()
     
     while(m_should_be_running)
     {
-        process_some_events(impl_iface);
+        Impl::process_some_events(impl_iface);
         usleep(100);
     }
     
@@ -152,7 +152,7 @@ Window* Window::createNew(Widget* root, PainterType pt, WindowType wt)
 
     if(pt == PainterType::GL3)
     {
-        if(init_window_gl3(window))
+        if(Impl::init_window_gl3(window))
         {
             all_windows.push_back(window);
         }
@@ -165,7 +165,7 @@ Window* Window::createNew(Widget* root, PainterType pt, WindowType wt)
     }
     else if(pt == PainterType::Normal)
     {
-        if(init_window_normal(window))
+        if(Impl::init_window_normal(window))
         {
             all_windows.push_back(window);
         }
@@ -178,7 +178,7 @@ Window* Window::createNew(Widget* root, PainterType pt, WindowType wt)
     }
     else if(pt == PainterType::BestSupported)
     {
-        if(init_window_gl3(window) || init_window_normal(window))
+        if(Impl::init_window_gl3(window) || Impl::init_window_normal(window))
         {
             all_windows.push_back(window);
         }
@@ -192,7 +192,7 @@ Window* Window::createNew(Widget* root, PainterType pt, WindowType wt)
 
     if(wt == WindowType::Menu)
     {
-        turn_into_menu(window);
+        Impl::turn_into_menu(window);
     }
 
     return window;
@@ -200,7 +200,7 @@ Window* Window::createNew(Widget* root, PainterType pt, WindowType wt)
 
 void Window::destroy(Window* window)
 {
-    cleanup_window(window);
+    Impl::cleanup_window(window);
     auto it = all_windows.begin();
     while(it != all_windows.end())
     {
@@ -217,19 +217,19 @@ void Window::destroy(Window* window)
 
 void Window::show()
 {
-    show_window(this);
+    Impl::show_window(this);
 }
 
 
 void Window::hide()
 {
-    hide_window(this);
+    Impl::hide_window(this);
 }
 
 
 void Window::resize(int w, int h)
 {
-    resize_window(this, w, h);
+    Impl::resize_window(this, w, h);
 }
 
 
@@ -291,5 +291,5 @@ void ProgramImplEventIface::initCloseEvent(WindowImplIface* window_iface)
     auto window = (Window*) window_iface;
     program_singleton_instance->closeEvent(window->rootWidget());
 }
-    
+
 }//namespace r64fx
