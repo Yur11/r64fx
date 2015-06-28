@@ -62,12 +62,22 @@ public:
     int height() const;
     
     /** @brief Show this widget in a window. */
-    void show(PainterType mode = PainterType::BestSupported, WindowType type = WindowType::Normal);
+    void show(
+        PainterType  pt     = PainterType::BestSupported,
+        WindowType   wt     = WindowType::Normal,
+        const char*  title  = nullptr
+    );
+
+    inline void show(const char* title) { show(PainterType::BestSupported, WindowType::Normal, title); }
 
     /** @brief Hide this widget if it is shown in a window.*/
     void hide();
 
     bool isWindow() const;
+
+    void setWindowTitle(const char* title);
+
+    const char* windowTitle() const;
 
     void repaint();
 

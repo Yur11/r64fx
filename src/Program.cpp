@@ -147,7 +147,7 @@ Window::~Window()
 }
 
 
-Window* Window::createNew(Widget* root, PainterType pt, WindowType wt)
+Window* Window::createNew(Widget* root, PainterType pt, WindowType wt, const char* title)
 {
     Window* window = new Window(root);
 
@@ -196,6 +196,11 @@ Window* Window::createNew(Widget* root, PainterType pt, WindowType wt)
         Impl::turn_into_menu(window);
     }
 
+    if(title)
+    {
+        window->setTitle(title);
+    }
+
     return window;
 }
 
@@ -233,6 +238,17 @@ void Window::resize(int w, int h)
     Impl::resize_window(this, w, h);
 }
 
+
+void Window::setTitle(const char* title)
+{
+    Impl::set_window_title(this, title);
+}
+
+
+const char* Window::title()
+{
+    return Impl::window_title(this);
+}
 
 
 /* ======================================

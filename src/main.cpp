@@ -59,7 +59,7 @@ private:
         
         m_Widget = new Widget;
         m_Widget->resize(200, 200);
-        m_Widget->show();
+        m_Widget->show("This is my window!");
     }
     
     virtual void keyPressEvent(Widget* widget, KeyEvent* event)

@@ -17,7 +17,7 @@ class Window : public WindowImplIface{
     virtual ~Window();
 
 public:
-    static Window* createNew(Widget* root, PainterType pt, WindowType wt);
+    static Window* createNew(Widget* root, PainterType pt, WindowType wt, const char* title = nullptr);
 
     static void destroy(Window* window);
 
@@ -29,7 +29,7 @@ public:
 
     void setTitle(const char* title);
 
-    const char* title() const;
+    const char* title();
 
     inline WidgetPainter* painter() const { return m_painter; }
 

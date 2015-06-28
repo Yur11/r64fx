@@ -26,6 +26,10 @@ void resize_window(WindowImplIface* window, int w, int h);
 
 void update_window_surface(WindowImplIface* window);
 
+void set_window_title(WindowImplIface* window, const char* title);
+
+const char* window_title(WindowImplIface* window);
+
 void turn_into_menu(WindowImplIface* window);
 
 void process_some_events(ProgramImplEventIface* program);

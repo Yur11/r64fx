@@ -211,6 +211,20 @@ void update_window_surface(WindowImplIface* window)
 }
 
 
+void set_window_title(WindowImplIface* window, const char* title)
+{
+    auto sdl_window = (SDL_Window*)window->getImplData();
+    SDL_SetWindowTitle(sdl_window, title);
+}
+
+
+const char* window_title(WindowImplIface* window)
+{
+    auto sdl_window = (SDL_Window*)window->getImplData();
+    return SDL_GetWindowTitle(sdl_window);
+}
+
+
 void turn_into_menu(WindowImplIface* window)
 {
     auto sdl_window = (SDL_Window*)window->getImplData();

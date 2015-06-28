@@ -106,7 +106,7 @@ int Widget::height() const
 }
 
 
-void Widget::show(PainterType pt, WindowType wt)
+void Widget::show(PainterType pt, WindowType wt, const char* title)
 {
     if(isWindow())
     {
@@ -116,7 +116,7 @@ void Widget::show(PainterType pt, WindowType wt)
         return;
     }
     setParent(nullptr);
-    m_parent.window = Window::createNew(this, pt, wt);
+    m_parent.window = Window::createNew(this, pt, wt, title);
     m_parent.window->resize(width(), height());
     m_parent.window->show();
     m_flags |= WIDGET_IS_WINDOW;
@@ -142,6 +142,28 @@ void Widget::hide()
 bool Widget::isWindow() const
 {
     return m_flags & WIDGET_IS_WINDOW;
+}
+
+
+void Widget::setWindowTitle(const char* title)
+{
+    if(isWindow())
+    {
+        m_parent.window->setTitle(title);
+    }
+}
+
+
+const char* Widget::windowTitle() const
+{
+    if(isWindow())
+    {
+        return m_parent.window->title();
+    }
+    else
+    {
+        return "";
+    }
 }
 
 
