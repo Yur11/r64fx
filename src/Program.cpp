@@ -43,6 +43,7 @@ Program::Program(int argc, char* argv[])
 
 Program::~Program()
 {
+    Impl::cleanup();
     delete impl_iface;
 }
 
