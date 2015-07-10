@@ -5,8 +5,8 @@
 SRC = 
 #    Image.cpp
     Program.cpp
+    Painter.cpp
     Widget.cpp
-    WidgetPainter.cpp
     gui_implementation_sdl2.cpp
     main.cpp
 

@@ -167,12 +167,6 @@ const char* Widget::windowTitle() const
 }
 
 
-void Widget::repaint()
-{
-
-}
-
-
 void Widget::mousePressEvent(MouseEvent* event)
 {
 
@@ -209,9 +203,26 @@ void Widget::resizeEvent(ResizeEvent* event)
 }
 
 
-void Widget::setupPaint(WidgetPainter* wp)
+void Widget::paintSetup(Canvas* wp)
 {
 
+}
+
+
+Window* Widget::findParentWindow()
+{
+    if(isWindow())
+    {
+        return m_parent.window;
+    }
+    else if(m_parent.widget)
+    {
+        return m_parent.widget->findParentWindow();
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 }//namespace r64fx

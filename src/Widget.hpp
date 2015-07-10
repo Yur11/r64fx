@@ -11,7 +11,7 @@ class Window;
 class MouseEvent;
 class KeyEvent;
 class ResizeEvent;
-class WidgetPainter;
+class Canvas;
 
 
 class Widget : public LinkedItem<Widget>{
@@ -79,8 +79,6 @@ public:
 
     const char* windowTitle() const;
 
-    void repaint();
-
 protected:
     virtual void mousePressEvent(MouseEvent* event);
     
@@ -94,7 +92,10 @@ protected:
 
     virtual void resizeEvent(ResizeEvent* event);
 
-    virtual void setupPaint(WidgetPainter* wp);
+    virtual void paintSetup(Canvas* wp);
+
+private:
+    Window* findParentWindow();
 };
     
 }//r64fx

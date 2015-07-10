@@ -155,10 +155,6 @@ Window* Window::createNew(Widget* root, PainterType pt, WindowType wt, const cha
     {
         if(Impl::init_window_gl3(window))
         {
-            all_windows.push_back(window);
-        }
-        else
-        {
             cerr << "Failed to create GL3 window!\n";
             delete window;
             return nullptr;
@@ -168,10 +164,6 @@ Window* Window::createNew(Widget* root, PainterType pt, WindowType wt, const cha
     {
         if(Impl::init_window_normal(window))
         {
-            all_windows.push_back(window);
-        }
-        else
-        {
             cerr << "Failed to create a simple window!\n";
             delete window;
             return nullptr;
@@ -179,11 +171,7 @@ Window* Window::createNew(Widget* root, PainterType pt, WindowType wt, const cha
     }
     else if(pt == PainterType::BestSupported)
     {
-        if(Impl::init_window_gl3(window) || Impl::init_window_normal(window))
-        {
-            all_windows.push_back(window);
-        }
-        else
+        if(!Impl::init_window_gl3(window) && !Impl::init_window_normal(window))
         {
             cerr << "Failed to create a window!\n";
             delete window;
@@ -200,6 +188,8 @@ Window* Window::createNew(Widget* root, PainterType pt, WindowType wt, const cha
     {
         window->setTitle(title);
     }
+
+    all_windows.push_back(window);
 
     return window;
 }

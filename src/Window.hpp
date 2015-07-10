@@ -3,14 +3,14 @@
 
 #include "WindowImplIface.hpp"
 #include "WindowDefs.hpp"
-#include "WidgetPainter.hpp"
+#include "Painter.hpp"
 
 namespace r64fx{
 
 /** @brief Public window interface. */
 class Window : public WindowImplIface{
     Widget* m_root_widget = nullptr;
-    WidgetPainter* m_painter = nullptr;
+    Painter* m_painter = nullptr;
 
     Window(Widget* root);
 
@@ -31,9 +31,9 @@ public:
 
     const char* title();
 
-    inline WidgetPainter* painter() const { return m_painter; }
-
     inline Widget* rootWidget() const { return m_root_widget; }
+
+    inline Painter* painter() const { return m_painter; }
 };
 
 }//namespace r64fx

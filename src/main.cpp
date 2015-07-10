@@ -45,9 +45,20 @@ using namespace r64fx;
 // }
 
 
+class ImageWidget : public Widget{
+
+public:
+    ImageWidget(Widget* parent = nullptr)
+    : Widget(parent)
+    {}
+
+
+};
+
+
 class MyProgram : public Program{
     
-    Widget* m_Widget = nullptr;
+    ImageWidget* m_Widget = nullptr;
     
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -57,7 +68,7 @@ private:
     {
         cout << "My Program!\n";
         
-        m_Widget = new Widget;
+        m_Widget = new ImageWidget;
         m_Widget->resize(200, 200);
         m_Widget->show("This is my window!");
     }
@@ -71,10 +82,12 @@ private:
         else if(event->key() == Keyboard::Key::J)
         {
             m_Widget->resize(400, 200);
+            m_Widget->setWindowTitle("A");
         }
         else if(event->key() == Keyboard::Key::K)
         {
             m_Widget->resize(200, 400);
+            m_Widget->setWindowTitle("B");
         }
     }
     
