@@ -75,6 +75,8 @@ private:
     
     virtual void keyPressEvent(Widget* widget, KeyEvent* event)
     {
+        cout << Keyboard::Key::toString(event->key()) << "\n";
+
         if(event->key() == Keyboard::Key::Escape) 
         {
             quit();

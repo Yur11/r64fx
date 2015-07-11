@@ -4,9 +4,11 @@
 
 SRC = 
 #    Image.cpp
+    Keyboard.cpp
     Program.cpp
     Painter.cpp
     Widget.cpp
+    Window.cpp
     gui_implementation_sdl2.cpp
     main.cpp
 
