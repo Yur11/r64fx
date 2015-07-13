@@ -8,17 +8,24 @@ namespace r64fx{
 
 
 class MouseEvent{
-   Point<float> m_position;
+   Point<int> m_position;
    unsigned int m_buttons;
     
 public:
-    MouseEvent(Point<float> position, unsigned int buttons)
+    MouseEvent(Point<int> position, unsigned int buttons)
     : m_position(position)
     {}
     
-    MouseEvent(float x, float y, unsigned int buttons)
+    MouseEvent(int x, int y, unsigned int buttons)
     : MouseEvent({x, y}, buttons)
     {}
+
+    inline Point<int> position() const { return m_position; }
+
+    inline int x() const { return m_position.x; }
+    inline int y() const { return m_position.y; }
+
+    inline unsigned int buttons() const { return m_buttons; }
 };
 
 }//namespace r64fx

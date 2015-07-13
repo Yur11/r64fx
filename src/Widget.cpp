@@ -1,9 +1,8 @@
 #include "Widget.hpp"
-#include "Window.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
 
-#include <algorithm>
+#include <map>
 
 #ifdef R64FX_DEBUG
 #include <iostream>
@@ -12,9 +11,17 @@
 using std::cerr;
 #endif//R64FX_DEBUG
 
+#include "gui_implementation_iface.hpp"
 #include "Impl_WidgetFlags.hpp"
 
 namespace r64fx{
+
+namespace{
+
+std::map<Widget*, Impl::WindowHandle_t> widget_windows;
+
+}
+
 
 Widget::Widget(Widget* parent)
 {
@@ -40,22 +47,22 @@ void Widget::setParent(Widget* parent)
 
     if(!parent)
     {
-        if(m_parent.widget)
+        if(m_parent)
         {
-            m_parent.widget->m_children.remove(this);
+            m_parent->m_children.remove(this);
         }
     }
     else
     {
         parent->m_children.append(this);
     }
-    m_parent.widget = parent;
+    m_parent = parent;
 }
 
 
 Widget* Widget::parent() const
 {
-    return (Widget*)(isWindow() ? nullptr : m_parent.widget);
+    return (Widget*)(isWindow() ? nullptr : m_parent);
 }
 
 
@@ -83,7 +90,7 @@ void Widget::resize(int w, int h)
     m_rect.setSize(w, h);
     if(isWindow())
     {
-        m_parent.window->resize(w, h);
+        Impl::resize_window(widget_windows[this], w, h);
     }
 }
 
@@ -110,32 +117,36 @@ void Widget::show(PainterType pt, WindowType wt, const char* title)
 {
     if(isWindow())
     {
-#ifdef R64FX_DEBUG
-        cerr << "WARNING: Widget::show()\nTrying to show twice!\n";
-#endif//R64FX_DEBUG
-        return;
+        Impl::show_window(widget_windows[this]);
     }
-    setParent(nullptr);
-    m_parent.window = Window::createNew(this, pt, wt, title);
-    m_parent.window->resize(width(), height());
-    m_parent.window->show();
-    m_flags |= WIDGET_IS_WINDOW;
+    else
+    {
+        auto window = Impl::init_window_normal(this);
+        Impl::resize_window(window, width(), height());
+        Impl::show_window(window);
+        widget_windows[this] = window;
+        m_flags |= WIDGET_IS_WINDOW;
+    }
 }
 
 
 void Widget::hide()
 {
-    if(!isWindow())
+    if(isWindow())
     {
-#ifdef R64FX_DEBUG
-        cerr << "WARNING: Widget::hide()\nTrying to hide twice!\n";
-#endif//R64FX_DEBUG
-        return;
+        Impl::hide_window(widget_windows[this]);
     }
-    m_parent.window->hide();
-    Window::destroy(m_parent.window);
-    m_parent.window = nullptr;
-    m_flags ^= WIDGET_IS_WINDOW;
+}
+
+
+void Widget::close()
+{
+    if(isWindow())
+    {
+        Impl::free_window(widget_windows[this]);
+        widget_windows.erase(this);
+        m_flags ^= WIDGET_IS_WINDOW;
+    }
 }
 
 
@@ -149,20 +160,7 @@ void Widget::setWindowTitle(const char* title)
 {
     if(isWindow())
     {
-        m_parent.window->setTitle(title);
-    }
-}
-
-
-const char* Widget::windowTitle() const
-{
-    if(isWindow())
-    {
-        return m_parent.window->title();
-    }
-    else
-    {
-        return "";
+        Impl::set_window_title(widget_windows[this], title);
     }
 }
 
@@ -203,26 +201,9 @@ void Widget::resizeEvent(ResizeEvent* event)
 }
 
 
-void Widget::paintSetup(Canvas* wp)
+void Widget::paintSetup(Painter* painter)
 {
 
-}
-
-
-Window* Widget::findParentWindow()
-{
-    if(isWindow())
-    {
-        return m_parent.window;
-    }
-    else if(m_parent.widget)
-    {
-        return m_parent.widget->findParentWindow();
-    }
-    else
-    {
-        return nullptr;
-    }
 }
 
 }//namespace r64fx

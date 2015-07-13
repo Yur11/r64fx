@@ -1,10 +1,10 @@
 #include <iostream>
 
 #include "Program.hpp"
-#include "Window.hpp"
 #include "Widget.hpp"
 #include "KeyEvent.hpp"
 #include "Keyboard.hpp"
+#include "MouseEvent.hpp"
 #include "ResizeEvent.hpp"
 
 using namespace std;
@@ -71,6 +71,16 @@ private:
         m_Widget = new ImageWidget;
         m_Widget->resize(200, 200);
         m_Widget->show("This is my window!");
+    }
+
+    virtual void mousePressEvent(Widget* widget, MouseEvent* event)
+    {
+        cout << "press:   " << event->x() << ", " << event->y() << "\n";
+    }
+
+    virtual void mouseReleaseEvent(Widget* widget, MouseEvent* event)
+    {
+        cout << "release: " << event->x() << ", " << event->y() << "\n";
     }
     
     virtual void keyPressEvent(Widget* widget, KeyEvent* event)

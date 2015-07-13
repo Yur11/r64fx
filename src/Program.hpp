@@ -10,9 +10,6 @@ class KeyEvent;
 class ResizeEvent;
 
 class Program{
-    friend class ProgramImplEventIface;
-    friend class Widget;
-
     bool m_should_be_running = true;
     
 public:

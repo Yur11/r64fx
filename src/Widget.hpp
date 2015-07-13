@@ -7,24 +7,16 @@
 
 namespace r64fx{
 
-class Window;
 class MouseEvent;
 class KeyEvent;
 class ResizeEvent;
-class Canvas;
+class Painter;
 
 
 class Widget : public LinkedItem<Widget>{
     friend class Program; //To call event methods.
 
-    /* A widget may either have another widget as a parent
-     * or it can be shown in a window, but not both at the same time.
-     * Call isWindow() to figure out which on is it.
-     */
-    union {
-        Widget* widget = nullptr;
-        Window* window;
-    } m_parent;
+    Widget* m_parent;
 
     /* Storage for widget flags.
      * These are bit-packed and used internally.
@@ -73,11 +65,11 @@ public:
     /** @brief Hide this widget if it is shown in a window.*/
     void hide();
 
+    void close();
+
     bool isWindow() const;
 
     void setWindowTitle(const char* title);
-
-    const char* windowTitle() const;
 
 protected:
     virtual void mousePressEvent(MouseEvent* event);
@@ -92,10 +84,7 @@ protected:
 
     virtual void resizeEvent(ResizeEvent* event);
 
-    virtual void paintSetup(Canvas* wp);
-
-private:
-    Window* findParentWindow();
+    virtual void paintSetup(Painter* painter);
 };
     
 }//r64fx

@@ -1,6 +1,4 @@
 #include "Program.hpp"
-#include "ProgramImplEventIface.hpp"
-#include "Window.hpp"
 
 #include "gui_implementation_iface.hpp"
 
@@ -19,8 +17,7 @@ namespace r64fx{
     
 namespace{
     Program* program_singleton_instance = nullptr;
-    ProgramImplEventIface* impl_iface = nullptr;
-    std::vector<Window*> all_windows;
+    Impl::Events events;
 }
     
 Program::Program(int argc, char* argv[])
@@ -37,14 +34,53 @@ Program::Program(int argc, char* argv[])
     }
     
     program_singleton_instance = this;
-    impl_iface = new ProgramImplEventIface;
+
+    events.mouse_press = [](Impl::WindowData_t* wd, float x, float y, unsigned int buttons)
+    {
+        MouseEvent me(x, y, buttons);
+        program_singleton_instance->mousePressEvent((Widget*)wd, &me);
+    };
+
+    events.mouse_release = [](Impl::WindowData_t* wd, float x, float y, unsigned int buttons)
+    {
+        MouseEvent me(x, y, buttons);
+        program_singleton_instance->mouseReleaseEvent((Widget*)wd, &me);
+    };
+
+    events.mouse_move = [](Impl::WindowData_t* wd, float x, float y, unsigned int buttons)
+    {
+        MouseEvent me(x, y, buttons);
+        program_singleton_instance->mouseMoveEvent((Widget*)wd, &me);
+    };
+
+    events.key_press = [](Impl::WindowData_t* wd, int key)
+    {
+        KeyEvent ke(key);
+        program_singleton_instance->keyPressEvent((Widget*)wd, &ke);
+    };
+
+    events.key_release = [](Impl::WindowData_t* wd, int key)
+    {
+        KeyEvent ke(key);
+        program_singleton_instance->keyReleaseEvent((Widget*)wd, &ke);
+    };
+
+    events.resize = [](Impl::WindowData_t* wd, int w, int h)
+    {
+        ResizeEvent re(w, h);
+        program_singleton_instance->resizeEvent((Widget*)wd, &re);
+    };
+
+    events.close = [](Impl::WindowData_t* wd)
+    {
+        program_singleton_instance->closeEvent((Widget*)wd);
+    };
 }
 
 
 Program::~Program()
 {
     Impl::cleanup();
-    delete impl_iface;
 }
 
 
@@ -54,7 +90,7 @@ int Program::exec()
     
     while(m_should_be_running)
     {
-        Impl::process_some_events(impl_iface);
+        Impl::process_some_events(&events);
         usleep(100);
     }
     
@@ -120,183 +156,13 @@ void Program::closeEvent(Widget* widget)
 
 void Program::setup()
 {
-    
+
 }
 
 
 void Program::cleanup()
 {
-    
-}
 
-
-
-/* ======================
- * Window implementation
- * ====================== */
-
-Window::Window(Widget* root)
-: m_root_widget(root)
-{
-
-}
-
-
-Window::~Window()
-{
-}
-
-
-Window* Window::createNew(Widget* root, PainterType pt, WindowType wt, const char* title)
-{
-    Window* window = new Window(root);
-
-    if(pt == PainterType::GL3)
-    {
-        if(Impl::init_window_gl3(window))
-        {
-            cerr << "Failed to create GL3 window!\n";
-            delete window;
-            return nullptr;
-        }
-    }
-    else if(pt == PainterType::Normal)
-    {
-        if(Impl::init_window_normal(window))
-        {
-            cerr << "Failed to create a simple window!\n";
-            delete window;
-            return nullptr;
-        }
-    }
-    else if(pt == PainterType::BestSupported)
-    {
-        if(!Impl::init_window_gl3(window) && !Impl::init_window_normal(window))
-        {
-            cerr << "Failed to create a window!\n";
-            delete window;
-            return nullptr;
-        }
-    }
-
-    if(wt == WindowType::Menu)
-    {
-        Impl::turn_into_menu(window);
-    }
-
-    if(title)
-    {
-        window->setTitle(title);
-    }
-
-    all_windows.push_back(window);
-
-    return window;
-}
-
-void Window::destroy(Window* window)
-{
-    Impl::cleanup_window(window);
-    auto it = all_windows.begin();
-    while(it != all_windows.end())
-    {
-        if(*it == window)
-        {
-            all_windows.erase(it);
-            delete window;
-            return;
-        }
-        it++;
-    }
-}
-
-
-void Window::show()
-{
-    Impl::show_window(this);
-}
-
-
-void Window::hide()
-{
-    Impl::hide_window(this);
-}
-
-
-void Window::resize(int w, int h)
-{
-    Impl::resize_window(this, w, h);
-}
-
-
-void Window::setTitle(const char* title)
-{
-    Impl::set_window_title(this, title);
-}
-
-
-const char* Window::title()
-{
-    return Impl::window_title(this);
-}
-
-
-/* ======================================
- * Program Implementation Event Interface
- * ======================================*/
-
-void ProgramImplEventIface::initMousePressEvent(WindowImplIface* window_iface, float x, float y, unsigned int button)
-{
-    auto window = (Window*) window_iface;
-    MouseEvent event(x, y, button);
-    program_singleton_instance->mousePressEvent(window->rootWidget(), &event);
-}
-
-
-void ProgramImplEventIface::initMouseReleaseEvent(WindowImplIface* window_iface, float x, float y, unsigned int button)
-{
-    auto window = (Window*) window_iface;
-    MouseEvent event(x, y, button);
-    program_singleton_instance->mouseReleaseEvent(window->rootWidget(), &event);
-}
-
-
-void ProgramImplEventIface::initMouseMoveEvent(WindowImplIface* window_iface, float x, float y, unsigned int buttons)
-{
-    auto window = (Window*) window_iface;
-    MouseEvent event(x, y, buttons);
-    program_singleton_instance->mouseMoveEvent(window->rootWidget(), &event);
-}
-
-
-void ProgramImplEventIface::initKeyPressEvent(WindowImplIface* window_iface, unsigned int key)
-{
-    auto window = (Window*) window_iface;
-    KeyEvent event(key);
-    program_singleton_instance->keyPressEvent(window->rootWidget(), &event);
-}
-
-
-void ProgramImplEventIface::initKeyReleaseEvent(WindowImplIface* window_iface, unsigned int key)
-{
-    auto window = (Window*) window_iface;
-    KeyEvent event(key);
-    program_singleton_instance->keyReleaseEvent(window->rootWidget(), &event);
-}
-
-
-void ProgramImplEventIface::initResizeEvent(WindowImplIface* window_iface, int w, int h)
-{
-    auto window = (Window*) window_iface;
-    ResizeEvent event(window->rootWidget()->size(), {w, h});
-    program_singleton_instance->resizeEvent(window->rootWidget(), &event);
-}
-
-
-void ProgramImplEventIface::initCloseEvent(WindowImplIface* window_iface)
-{
-    auto window = (Window*) window_iface;
-    program_singleton_instance->closeEvent(window->rootWidget());
 }
 
 }//namespace r64fx

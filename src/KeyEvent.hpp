@@ -5,14 +5,14 @@
 namespace r64fx{
     
 class KeyEvent{
-    unsigned int m_key;
+    int m_key;
 
 public:
-    KeyEvent(unsigned int key) 
+    KeyEvent(int key)
     : m_key(key)
     {}
         
-    inline unsigned int key() const { return m_key; }
+    inline int key() const { return m_key; }
 };
     
 }//namespace r64fx

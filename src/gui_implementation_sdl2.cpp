@@ -1,8 +1,5 @@
 #include "gui_implementation_iface.hpp"
-#include "paint_surface_implementation_iface.hpp"
-#include "ProgramImplEventIface.hpp"
 
-#include "WindowImplIface.hpp"
 #include "Mouse.hpp"
 
 #include <SDL2/SDL.h>
@@ -151,99 +148,14 @@ int KP_Period     = SDL_SCANCODE_KP_PERIOD;
 }//namespace Key
 }//namespace Keyboard
 
+
 namespace Impl{
-    
-// bool tracking_mouse = false;
-// bool should_quit = false;
-// unsigned int pressed_mouse_buttons = 0;
-// 
-//     
-// Window_SDL2::Window_SDL2(int width, int height, const char* title)
-// {
-//     setEventCallback(Window_SDL2::processEvents);
-//         
-//     m_SDL_Window = SDL_CreateWindow(
-//         title, 
-//         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
-//         width, height, 
-//         SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE
-//     );
-//     
-//     if(!m_SDL_Window)
-//     {
-//         cerr << "Failed to create SDL Window!\n";
-//         abort();
-//     }
-// 
-//     SDL_SetWindowData(m_SDL_Window, "window", this);    
-// }
-// 
-// 
-// Window_SDL2::~Window_SDL2()
-// {
-//     cout << "Window: " << this << " destroyed!\n";
-//     
-//     SDL_DestroyWindow(m_SDL_Window);
-// }
-// 
-// 
-// void Window_SDL2::swapBuffers()
-// {
-// }
-// 
-// 
-// void Window_SDL2::flush()
-// {
-//     SDL_UpdateWindowSurface(m_SDL_Window);
-// }
-// 
-// 
-// Size<int> Window_SDL2::size()
-// {
-//     Size<int> s;
-//     SDL_GetWindowSize(m_SDL_Window, &s.w, &s.h);
-//     return s;
-// }
-// 
-// 
-// void Window_SDL2::resize(int w, int h)
-// {
-//     SDL_SetWindowSize(m_SDL_Window, w, h);
-// }
-// 
-// 
 
-// 
-// void Window_SDL2::warpMouse(int x, int y)
-// {
-//     SDL_WarpMouseInWindow(m_SDL_Window, x, height() - y);
-// }
-// 
-// 
-// bool Window_SDL2::isShown()
-// {
-//     return SDL_GetWindowFlags(m_SDL_Window) & SDL_WINDOW_SHOWN;
-// }
-// 
-// 
-// bool Window_SDL2::isMaximized()
-// {
-//     return SDL_GetWindowFlags(m_SDL_Window) & SDL_WINDOW_MAXIMIZED;
-// }
-// 
-// 
-// bool Window_SDL2::isMinimized()
-// {
-//     return SDL_GetWindowFlags(m_SDL_Window) & SDL_WINDOW_MINIMIZED;
-// }
-// 
-// 
-
-
-WindowImplIface* get_event_window(SDL_Event* event)
+void* get_event_window(SDL_Event* event)
 {
-    return (WindowImplIface*) SDL_GetWindowData(SDL_GetWindowFromID(event->key.windowID), "window");
+    return (void*) SDL_GetWindowData(SDL_GetWindowFromID(event->key.windowID), "window");
 }
+
 
 unsigned int get_event_button(const SDL_MouseButtonEvent &event)
 {
@@ -278,7 +190,7 @@ void cleanup()
 }
 
 
-bool init_window(WindowImplIface* window, int extra_flags)
+WindowHandle_t init_window(WindowData_t* wd, int extra_flags)
 {
    auto sdl_window = SDL_CreateWindow(
         "", 
@@ -290,80 +202,72 @@ bool init_window(WindowImplIface* window, int extra_flags)
     if(!sdl_window)
     {
         cerr << "Failed to create SDL Window!\n";
-        return false;
+        return nullptr;
     }
 
-    SDL_SetWindowData(sdl_window, "window", window);
-    window->setImplData(sdl_window);
+    SDL_SetWindowData(sdl_window, "window", wd);
     
-    return true;
+    return sdl_window;
 }
 
 
-bool init_window_gl3(WindowImplIface* window)
+WindowHandle_t init_window_gl3(WindowData_t* wd)
 {
-    return init_window(window, SDL_WINDOW_OPENGL);
+    return init_window(wd, SDL_WINDOW_OPENGL);
 }
 
 
-bool init_window_normal(WindowImplIface* window)
+WindowHandle_t init_window_normal(WindowData_t* wd)
 {
-    return init_window(window, 0);
+    return init_window(wd, 0);
 }
 
 
-void cleanup_window(WindowImplIface* window)
+void free_window(WindowHandle_t wh)
 {
-    auto sdl_window = (SDL_Window*)window->getImplData();
-    SDL_DestroyWindow(sdl_window);
+    SDL_DestroyWindow((SDL_Window*)wh);
 }
 
 
-void show_window(WindowImplIface* window)
+void show_window(WindowHandle_t wh)
 {
-    auto sdl_window = (SDL_Window*)window->getImplData();
-    SDL_ShowWindow(sdl_window);
+    SDL_ShowWindow((SDL_Window*)wh);
 }
 
 
-void hide_window(WindowImplIface* window)
+void hide_window(WindowHandle_t wh)
 {
-    auto sdl_window = (SDL_Window*)window->getImplData();
-    SDL_HideWindow(sdl_window);
+    SDL_HideWindow((SDL_Window*)wh);
 }
 
 
-void resize_window(WindowImplIface* window, int w, int h)
+void resize_window(WindowHandle_t wh, int w, int h)
 {
-    auto sdl_window = (SDL_Window*)window->getImplData();
-    SDL_SetWindowSize(sdl_window, w, h);
+    SDL_SetWindowSize((SDL_Window*)wh, w, h);
 }
 
 
-void update_window_surface(WindowImplIface* window)
+void update_window_surface(WindowHandle_t wh)
 {
-    auto sdl_window = (SDL_Window*)window->getImplData();
-    SDL_UpdateWindowSurface(sdl_window);
+    SDL_UpdateWindowSurface((SDL_Window*)wh);
 }
 
 
-void set_window_title(WindowImplIface* window, const char* title)
+void set_window_title(WindowHandle_t wh, const char* title)
 {
-    auto sdl_window = (SDL_Window*)window->getImplData();
-    SDL_SetWindowTitle(sdl_window, title);
+    SDL_SetWindowTitle((SDL_Window*)wh, title);
 }
 
 
-const char* window_title(WindowImplIface* window)
+const char* window_title(WindowHandle_t wh)
 {
-    auto sdl_window = (SDL_Window*)window->getImplData();
-    return SDL_GetWindowTitle(sdl_window);
+    return SDL_GetWindowTitle((SDL_Window*)wh);
 }
 
 
-void turn_into_menu(WindowImplIface* window)
+void turn_into_menu(WindowHandle_t wh)
 {
-    auto sdl_window = (SDL_Window*)window->getImplData();
+    auto sdl_window = (SDL_Window*)wh;
 
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
@@ -399,7 +303,7 @@ void turn_into_menu(WindowImplIface* window)
 }
 
 
-void process_window_event(ProgramImplEventIface* program, WindowImplIface* window, SDL_WindowEvent* windowevent)
+void process_window_event(Events* events, WindowData_t* wd, SDL_WindowEvent* windowevent)
 {
     switch(windowevent->event)
     {
@@ -413,7 +317,7 @@ void process_window_event(ProgramImplEventIface* program, WindowImplIface* windo
             break;
         case SDL_WINDOWEVENT_RESIZED:
         {
-            program->initResizeEvent(window, windowevent->data1, windowevent->data2 );
+            events->resize(wd, windowevent->data1, windowevent->data2);
             break;
         }
         case SDL_WINDOWEVENT_MINIMIZED:
@@ -432,7 +336,7 @@ void process_window_event(ProgramImplEventIface* program, WindowImplIface* windo
             break;
         case SDL_WINDOWEVENT_CLOSE:
         {
-            program->initCloseEvent(window);
+            events->close(wd);
             break;
         }
         default:
@@ -441,7 +345,7 @@ void process_window_event(ProgramImplEventIface* program, WindowImplIface* windo
 }
 
 
-void process_some_events(ProgramImplEventIface* program)
+void process_some_events(Events* events)
 {
     static SDL_Event event;
     while(SDL_PollEvent(&event))
@@ -450,7 +354,7 @@ void process_some_events(ProgramImplEventIface* program)
         {            
             case SDL_MOUSEBUTTONDOWN:
             {
-                program->initMousePressEvent(
+                events->mouse_press(
                     get_event_window(&event),
                     event.button.x, event.button.y,
                     get_event_button(event.button)
@@ -460,7 +364,7 @@ void process_some_events(ProgramImplEventIface* program)
             
             case SDL_MOUSEBUTTONUP:
             {
-                program->initMouseReleaseEvent(
+                events->mouse_release(
                     get_event_window(&event),
                     event.button.x, event.button.y,
                     get_event_button(event.button)
@@ -470,7 +374,7 @@ void process_some_events(ProgramImplEventIface* program)
             
             case SDL_MOUSEMOTION:
             {
-                program->initMouseMoveEvent(
+                events->mouse_move(
                     get_event_window(&event),
                     event.button.x, event.button.y,
                     get_event_button(event.button)
@@ -480,7 +384,7 @@ void process_some_events(ProgramImplEventIface* program)
             
             case SDL_KEYDOWN:
             {
-                program->initKeyPressEvent(
+                events->key_press(
                     get_event_window(&event), event.key.keysym.scancode
                 );
                 break;
@@ -488,7 +392,7 @@ void process_some_events(ProgramImplEventIface* program)
             
             case SDL_KEYUP:
             {
-                program->initKeyReleaseEvent(
+                events->key_release(
                     get_event_window(&event), event.key.keysym.scancode
                 );
                 break;
@@ -497,7 +401,7 @@ void process_some_events(ProgramImplEventIface* program)
             case SDL_WINDOWEVENT:
             {
                 process_window_event(
-                    program,
+                    events,
                     get_event_window(&event),
                     &event.window
                 );
@@ -520,10 +424,9 @@ unsigned int keyboard_modifiers()
 }
 
 
-Surface get_window_surface(WindowImplIface* window)
+Surface get_window_surface(WindowHandle_t wh)
 {
-    auto sdl_window = (SDL_Window*)window->getImplData();
-    SDL_GetWindowSurface(sdl_window);
+    SDL_GetWindowSurface((SDL_Window*)wh);
 }
 
 
