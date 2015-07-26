@@ -113,7 +113,7 @@ int Widget::height() const
 }
 
 
-void Widget::show(PainterType pt, WindowType wt, const char* title)
+void Widget::show()
 {
     if(isWindow())
     {
@@ -201,9 +201,12 @@ void Widget::resizeEvent(ResizeEvent* event)
 }
 
 
-void Widget::paintSetup(Painter* painter)
+void Widget::showEvent(ShowEvent* event)
 {
-
+    for(auto w : m_children)
+    {
+        w->showEvent(event);
+    }
 }
 
 }//namespace r64fx

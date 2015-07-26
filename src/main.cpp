@@ -70,7 +70,7 @@ private:
         
         m_Widget = new ImageWidget;
         m_Widget->resize(200, 200);
-        m_Widget->show("This is my window!");
+        m_Widget->show();
     }
 
     virtual void mousePressEvent(Widget* widget, MouseEvent* event)

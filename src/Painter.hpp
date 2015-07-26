@@ -33,6 +33,21 @@ public:
     virtual void fillRect(float r, float g, float b) = 0;
 };
 
+
+class ShowEvent{
+    Painter* m_Painter = nullptr;
+
+public:
+    ShowEvent(Painter* painter)
+    : m_Painter(painter)
+    {}
+
+    inline Painter* painter() const
+    {
+        return m_Painter;
+    }
+};
+
 }//namespace r64fx
 
 #endif//R64FX_PAINTER_HPP

@@ -10,10 +10,10 @@ namespace r64fx{
 class MouseEvent;
 class KeyEvent;
 class ResizeEvent;
-class Painter;
+class ShowEvent;
 
 
-class Widget : public LinkedItem<Widget>{
+class Widget : public LinkedList<Widget>::Node{
     friend class Program; //To call event methods.
 
     Widget* m_parent;
@@ -54,13 +54,7 @@ public:
     int height() const;
     
     /** @brief Show this widget in a window. */
-    void show(
-        PainterType  pt     = PainterType::BestSupported,
-        WindowType   wt     = WindowType::Normal,
-        const char*  title  = nullptr
-    );
-
-    inline void show(const char* title) { show(PainterType::BestSupported, WindowType::Normal, title); }
+    void show();
 
     /** @brief Hide this widget if it is shown in a window.*/
     void hide();
@@ -84,7 +78,7 @@ protected:
 
     virtual void resizeEvent(ResizeEvent* event);
 
-    virtual void paintSetup(Painter* painter);
+    virtual void showEvent(ShowEvent* event);
 };
     
 }//r64fx
