@@ -2,7 +2,6 @@
 #define R64FX_PAINTER_HPP
 
 #include "Rect.hpp"
-#include "WindowDefs.hpp"
 
 namespace r64fx{
 
@@ -14,11 +13,11 @@ protected:
     virtual ~Painter() {}
 
 public:
-    static Painter* createNew(PainterType pt);
+    static Painter* createNew();
 
     static void destroy(Painter* wp);
 
-    virtual PainterType mode() = 0;
+//     virtual PainterType mode() = 0;
 
     virtual void begin(Widget* widget) = 0;
 

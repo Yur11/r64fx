@@ -25,19 +25,19 @@ public:
     static Program* instance();
     
 protected:
-    virtual void mousePressEvent(Widget* widget, MouseEvent* event);
+    virtual void mousePressEvent(Window* window, MouseEvent* event);
 
-    virtual void mouseReleaseEvent(Widget* widget, MouseEvent* event);
+    virtual void mouseReleaseEvent(Window* window, MouseEvent* event);
 
-    virtual void mouseMoveEvent(Widget* widget, MouseEvent* event);
+    virtual void mouseMoveEvent(Window* window, MouseEvent* event);
 
-    virtual void keyPressEvent(Widget* widget, KeyEvent* event);
+    virtual void keyPressEvent(Window* window, KeyEvent* event);
 
-    virtual void keyReleaseEvent(Widget* widget, KeyEvent* event);
+    virtual void keyReleaseEvent(Window* window, KeyEvent* event);
 
-    virtual void resizeEvent(Widget* widget, ResizeEvent* event);
+    virtual void resizeEvent(Window* window, ResizeEvent* event);
 
-    virtual void closeEvent(Widget* widget);
+    virtual void closeEvent(Window* window);
 
     virtual void setup();
     

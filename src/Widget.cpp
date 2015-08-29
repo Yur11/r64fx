@@ -1,6 +1,8 @@
 #include "Widget.hpp"
+#include "Window.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
+#include "Image.hpp"
 
 #include <map>
 
@@ -11,17 +13,9 @@
 using std::cerr;
 #endif//R64FX_DEBUG
 
-#include "gui_implementation_iface.hpp"
 #include "Impl_WidgetFlags.hpp"
 
 namespace r64fx{
-
-namespace{
-
-std::map<Widget*, Impl::WindowHandle_t> widget_windows;
-
-}
-
 
 Widget::Widget(Widget* parent)
 {
@@ -47,22 +41,22 @@ void Widget::setParent(Widget* parent)
 
     if(!parent)
     {
-        if(m_parent)
+        if(m_parent.widget)
         {
-            m_parent->m_children.remove(this);
+            m_parent.widget->m_children.remove(this);
         }
     }
     else
     {
         parent->m_children.append(this);
     }
-    m_parent = parent;
+    m_parent.widget = parent;
 }
 
 
 Widget* Widget::parent() const
 {
-    return (Widget*)(isWindow() ? nullptr : m_parent);
+    return (Widget*)(isWindow() ? nullptr : m_parent.widget);
 }
 
 
@@ -90,7 +84,7 @@ void Widget::resize(int w, int h)
     m_rect.setSize(w, h);
     if(isWindow())
     {
-        Impl::resize_window(widget_windows[this], w, h);
+        m_parent.window->resize(w, h);
     }
 }
 
@@ -115,18 +109,15 @@ int Widget::height() const
 
 void Widget::show()
 {
-    if(isWindow())
+    if(!isWindow())
     {
-        Impl::show_window(widget_windows[this]);
-    }
-    else
-    {
-        auto window = Impl::init_window_normal(this);
-        Impl::resize_window(window, width(), height());
-        Impl::show_window(window);
-        widget_windows[this] = window;
+        m_parent.window = Window::newWindow(
+            width(), height(), ""
+        );
+        m_parent.window->setWidget(this);
         m_flags |= WIDGET_IS_WINDOW;
     }
+    m_parent.window->show();
 }
 
 
@@ -134,7 +125,7 @@ void Widget::hide()
 {
     if(isWindow())
     {
-        Impl::hide_window(widget_windows[this]);
+        m_parent.window->hide();
     }
 }
 
@@ -143,8 +134,8 @@ void Widget::close()
 {
     if(isWindow())
     {
-        Impl::free_window(widget_windows[this]);
-        widget_windows.erase(this);
+        delete m_parent.window;
+        m_parent.window = nullptr;
         m_flags ^= WIDGET_IS_WINDOW;
     }
 }
@@ -156,11 +147,17 @@ bool Widget::isWindow() const
 }
 
 
+Image* Widget::windowSurface() const
+{
+    return nullptr;
+}
+
+
 void Widget::setWindowTitle(const char* title)
 {
     if(isWindow())
     {
-        Impl::set_window_title(widget_windows[this], title);
+        m_parent.window->setTitle(title);
     }
 }
 

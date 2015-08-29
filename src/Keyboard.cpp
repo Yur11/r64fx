@@ -89,7 +89,6 @@ map<int, const char*> key2str = {
     { LeftGui,  "Left GUI" },
     { RightGui, "Right GUI" },
 
-    { Menu,        "Menu" },
     { ContextMenu, "Context Menu" },
 
     { F1,  "F1" },

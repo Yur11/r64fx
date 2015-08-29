@@ -1,0 +1,101 @@
+#include "Window.hpp"
+
+#ifdef R64FX_USE_SDL2
+#include "WindowSDL2.hpp"
+#define WindowImpl WindowSDL2
+#endif //R64FX_USE_SDL2
+
+#include <vector>
+
+using namespace std;
+
+
+namespace r64fx{
+
+namespace{
+    vector<Window*> g_all_windows;
+};
+
+Window::Window(Window::Type type)
+: m_type(type)
+{
+
+}
+
+
+Window::Window(const Window&)
+{
+
+}
+
+
+Window::~Window()
+{
+    auto it = g_all_windows.begin();
+    while(it != g_all_windows.end() && *it != this) it++;
+    g_all_windows.erase(it);
+
+    if(g_all_windows.empty())
+    {
+        WindowImpl::cleanup();
+    }
+}
+
+
+Window* Window::newWindow(int width, int height, std::string title, Window::Type type)
+{
+    auto window =  WindowImpl::newWindow(width, height, title, type);
+
+    g_all_windows.push_back(window);
+    return window;
+}
+
+
+void Window::show()
+{
+    auto impl = (WindowImpl*) this;
+    impl->show();
+}
+
+
+void Window::hide()
+{
+    auto impl = (WindowImpl*) this;
+    impl->hide();
+}
+
+
+void Window::resize(int width, int height)
+{
+    auto impl = (WindowImpl*) this;
+    impl->resize(width, height);
+}
+
+
+void Window::updateSurface()
+{
+    auto impl = (WindowImpl*) this;
+    impl->updateSurface();
+}
+
+
+void Window::setTitle(std::string title)
+{
+    auto impl = (WindowImpl*) this;
+    impl->setTitle(title);
+}
+
+
+std::string Window::title() const
+{
+    auto impl = (WindowImpl*) this;
+    return impl->title();
+}
+
+
+void Window::processSomeEvents(Window::Events* events)
+{
+    WindowImpl::processSomeEvents(events);
+}
+
+};

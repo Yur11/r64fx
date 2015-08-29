@@ -151,9 +151,11 @@ int KP_Period     = SDL_SCANCODE_KP_PERIOD;
 
 namespace Impl{
 
-void* get_event_window(SDL_Event* event)
+void* get_window_data_by_id(unsigned int window_id)
 {
-    return (void*) SDL_GetWindowData(SDL_GetWindowFromID(event->key.windowID), "window");
+    if(!window_id)
+        return nullptr;
+    return (void*) SDL_GetWindowData(SDL_GetWindowFromID(window_id), "window");
 }
 
 
@@ -232,6 +234,8 @@ void free_window(WindowHandle_t wh)
 void show_window(WindowHandle_t wh)
 {
     SDL_ShowWindow((SDL_Window*)wh);
+//     SDL_MinimizeWindow((SDL_Window*)wh);
+//     SDL_RestoreWindow((SDL_Window*)wh);
 }
 
 
@@ -303,7 +307,7 @@ void turn_into_menu(WindowHandle_t wh)
 }
 
 
-void process_window_event(Events* events, WindowData_t* wd, SDL_WindowEvent* windowevent)
+void process_window_event(Events* events, Window* wd, SDL_WindowEvent* windowevent)
 {
     switch(windowevent->event)
     {
@@ -355,17 +359,19 @@ void process_some_events(Events* events)
             case SDL_MOUSEBUTTONDOWN:
             {
                 events->mouse_press(
-                    get_event_window(&event),
+                    get_window_data_by_id(event.button.windowID),
                     event.button.x, event.button.y,
                     get_event_button(event.button)
                 );
+                auto window = SDL_GetKeyboardFocus();
+                cout << "focus: " << window << "\n";
                 break;
             }
             
             case SDL_MOUSEBUTTONUP:
             {
                 events->mouse_release(
-                    get_event_window(&event),
+                    get_window_data_by_id(event.button.windowID),
                     event.button.x, event.button.y,
                     get_event_button(event.button)
                 );
@@ -375,7 +381,7 @@ void process_some_events(Events* events)
             case SDL_MOUSEMOTION:
             {
                 events->mouse_move(
-                    get_event_window(&event),
+                    get_window_data_by_id(event.motion.windowID),
                     event.button.x, event.button.y,
                     get_event_button(event.button)
                 );
@@ -384,17 +390,24 @@ void process_some_events(Events* events)
             
             case SDL_KEYDOWN:
             {
-                events->key_press(
-                    get_event_window(&event), event.key.keysym.scancode
-                );
+                if(!event.key.repeat)
+                {
+                    events->key_press(
+                        get_window_data_by_id(event.key.windowID), event.key.keysym.scancode
+                    );
+                }
+                auto window = SDL_GetKeyboardFocus();
+                cout << "focus: " << window << "\n";
                 break;
             }
             
             case SDL_KEYUP:
             {
                 events->key_release(
-                    get_event_window(&event), event.key.keysym.scancode
+                    get_window_data_by_id(event.key.windowID), event.key.keysym.scancode
                 );
+                auto window = SDL_GetKeyboardFocus();
+                cout << "focus: " << window << "\n";
                 break;
             }
             
@@ -402,7 +415,7 @@ void process_some_events(Events* events)
             {
                 process_window_event(
                     events,
-                    get_event_window(&event),
+                    get_window_data_by_id(event.window.windowID),
                     &event.window
                 );
                 break;
@@ -424,35 +437,35 @@ unsigned int keyboard_modifiers()
 }
 
 
-Surface get_window_surface(WindowHandle_t wh)
+WindowSurface get_window_surface(WindowHandle_t wh)
 {
-    SDL_GetWindowSurface((SDL_Window*)wh);
+    return WindowSurface(SDL_GetWindowSurface((SDL_Window*)wh));
 }
 
 
-void* pixels(Surface surface)
+void* pixels(WindowSurface surface)
 {
-    auto sdl_surface = (SDL_Surface*) surface;
+    auto sdl_surface = (SDL_Surface*) surface.ptr;
     return sdl_surface->pixels;
 }
 
 
-void get_surface_size(int &w, int &h, Surface surface)
+void get_surface_size(int &w, int &h, WindowSurface surface)
 {
-    auto sdl_surface = (SDL_Surface*) surface;
+    auto sdl_surface = (SDL_Surface*) surface.ptr;
     w = sdl_surface->w;
     h = sdl_surface->h;
 }
 
 
-int bytes_per_pixel(Surface surface)
+int bytes_per_pixel(WindowSurface surface)
 {
-    auto sdl_surface = (SDL_Surface*) surface;
+    auto sdl_surface = (SDL_Surface*) surface.ptr;
     return sdl_surface->format->BytesPerPixel;
 }
 
 
-void get_channel_indices(Surface surface, int &r, int &g, int &b, int &a)
+void get_channel_indices(WindowSurface surface, int &r, int &g, int &b, int &a)
 {
     static const unsigned int masks[5] = {
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -463,7 +476,7 @@ void get_channel_indices(Surface surface, int &r, int &g, int &b, int &a)
         0x0
     };
 
-    auto sdl_surface = (SDL_Surface*) surface;
+    auto sdl_surface = (SDL_Surface*) surface.ptr;
     auto format = sdl_surface->format;
 
     if(format->BytesPerPixel == 4 || format->BytesPerPixel == 3)

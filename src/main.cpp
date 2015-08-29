@@ -2,10 +2,12 @@
 
 #include "Program.hpp"
 #include "Widget.hpp"
+#include "Window.hpp"
 #include "KeyEvent.hpp"
 #include "Keyboard.hpp"
 #include "MouseEvent.hpp"
 #include "ResizeEvent.hpp"
+#include "Image.hpp"
 
 using namespace std;
 using namespace r64fx;
@@ -58,7 +60,7 @@ public:
 
 class MyProgram : public Program{
     
-    ImageWidget* m_Widget = nullptr;
+    Widget* m_Widget = nullptr;
     
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -68,23 +70,30 @@ private:
     {
         cout << "My Program!\n";
         
-        m_Widget = new ImageWidget;
+        m_Widget = new Widget;
         m_Widget->resize(200, 200);
         m_Widget->show();
+
+//         auto ws = m_Widget->windowSurface();
+//         cout << ws->width() << "x" << ws->height() << "\n";
+//         cout << ws->channelCount() << "\n";
     }
 
-    virtual void mousePressEvent(Widget* widget, MouseEvent* event)
+    virtual void mousePressEvent(Window* window, MouseEvent* event)
     {
         cout << "press:   " << event->x() << ", " << event->y() << "\n";
     }
 
-    virtual void mouseReleaseEvent(Widget* widget, MouseEvent* event)
+    virtual void mouseReleaseEvent(Window* window, MouseEvent* event)
     {
         cout << "release: " << event->x() << ", " << event->y() << "\n";
     }
     
-    virtual void keyPressEvent(Widget* widget, KeyEvent* event)
+    virtual void keyPressEvent(Window* window, KeyEvent* event)
     {
+        Program::keyPressEvent( window, event );
+        cout << "widget: " << window << "\n";
+
         cout << Keyboard::Key::toString(event->key()) << "\n";
 
         if(event->key() == Keyboard::Key::Escape) 
@@ -103,15 +112,15 @@ private:
         }
     }
     
-    virtual void closeEvent(Widget* widget)
+    virtual void closeEvent(Window* window)
     {
-        if(widget == m_Widget)
+        if(window->widget() == m_Widget)
         {
             quit();
         }
     }
     
-    virtual void resizeEvent(Widget* widget, ResizeEvent* event)
+    virtual void resizeEvent(Window* window, ResizeEvent* event)
     {
         cout << "Resize!\n";
     }

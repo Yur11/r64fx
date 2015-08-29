@@ -1,8 +1,6 @@
 #include "Program.hpp"
-
-#include "gui_implementation_iface.hpp"
-
 #include "Widget.hpp"
+#include "Window.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
 #include "ResizeEvent.hpp"
@@ -17,7 +15,7 @@ namespace r64fx{
     
 namespace{
     Program* program_singleton_instance = nullptr;
-    Impl::Events events;
+    Window::Events events;
 }
     
 Program::Program(int argc, char* argv[])
@@ -28,59 +26,53 @@ Program::Program(int argc, char* argv[])
         abort();
     }
 
-    if(!Impl::init())
-    {
-        abort();
-    }
-    
     program_singleton_instance = this;
 
-    events.mouse_press = [](Impl::WindowData_t* wd, float x, float y, unsigned int buttons)
+    events.mouse_press = [](Window* window, float x, float y, unsigned int buttons)
     {
         MouseEvent me(x, y, buttons);
-        program_singleton_instance->mousePressEvent((Widget*)wd, &me);
+        program_singleton_instance->mousePressEvent(window, &me);
     };
 
-    events.mouse_release = [](Impl::WindowData_t* wd, float x, float y, unsigned int buttons)
+    events.mouse_release = [](Window* window, float x, float y, unsigned int buttons)
     {
         MouseEvent me(x, y, buttons);
-        program_singleton_instance->mouseReleaseEvent((Widget*)wd, &me);
+        program_singleton_instance->mouseReleaseEvent(window, &me);
     };
 
-    events.mouse_move = [](Impl::WindowData_t* wd, float x, float y, unsigned int buttons)
+    events.mouse_move = [](Window* window, float x, float y, unsigned int buttons)
     {
         MouseEvent me(x, y, buttons);
-        program_singleton_instance->mouseMoveEvent((Widget*)wd, &me);
+        program_singleton_instance->mouseMoveEvent(window, &me);
     };
 
-    events.key_press = [](Impl::WindowData_t* wd, int key)
+    events.key_press = [](Window* window, int key)
     {
         KeyEvent ke(key);
-        program_singleton_instance->keyPressEvent((Widget*)wd, &ke);
+        program_singleton_instance->keyPressEvent(window, &ke);
     };
 
-    events.key_release = [](Impl::WindowData_t* wd, int key)
+    events.key_release = [](Window* window, int key)
     {
         KeyEvent ke(key);
-        program_singleton_instance->keyReleaseEvent((Widget*)wd, &ke);
+        program_singleton_instance->keyReleaseEvent(window, &ke);
     };
 
-    events.resize = [](Impl::WindowData_t* wd, int w, int h)
+    events.resize = [](Window* window, int w, int h)
     {
         ResizeEvent re(w, h);
-        program_singleton_instance->resizeEvent((Widget*)wd, &re);
+        program_singleton_instance->resizeEvent(window, &re);
     };
 
-    events.close = [](Impl::WindowData_t* wd)
+    events.close = [](Window* window)
     {
-        program_singleton_instance->closeEvent((Widget*)wd);
+        program_singleton_instance->closeEvent(window);
     };
 }
 
 
 Program::~Program()
 {
-    Impl::cleanup();
 }
 
 
@@ -90,7 +82,7 @@ int Program::exec()
     
     while(m_should_be_running)
     {
-        Impl::process_some_events(&events);
+        Window::processSomeEvents(&events);
         usleep(100);
     }
     
@@ -112,43 +104,60 @@ Program* Program::instance()
 }
 
 
-void Program::mousePressEvent(Widget* widget, MouseEvent* event)
+void Program::mousePressEvent(Window* window, MouseEvent* event)
 {
-    widget->mousePressEvent(event);
+    if(window)
+    {
+        window->widget()->mousePressEvent(event);
+    }
 }
 
 
-void Program::mouseReleaseEvent(Widget* widget, MouseEvent* event)
+void Program::mouseReleaseEvent(Window* window, MouseEvent* event)
 {
-    widget->mouseReleaseEvent(event);
+    if(window)
+    {
+        window->widget()->mouseReleaseEvent(event);
+    }
 }
 
 
-void Program::mouseMoveEvent(Widget* widget, MouseEvent* event)
+void Program::mouseMoveEvent(Window* window, MouseEvent* event)
 {
-    widget->mouseMoveEvent(event);
+    if(window)
+    {
+        window->widget()->mouseMoveEvent(event);
+    }
 }
 
 
-void Program::keyPressEvent(Widget* widget, KeyEvent* event)
+void Program::keyPressEvent(Window* window, KeyEvent* event)
 {
-    widget->keyPressEvent(event);
+    cout << "key press: " << window << "\n";
+    if(window)
+    {
+        window->widget()->keyPressEvent(event);
+    }
 }
 
 
-void Program::keyReleaseEvent(Widget* widget, KeyEvent* event)
+void Program::keyReleaseEvent(Window* window, KeyEvent* event)
 {
-    widget->keyReleaseEvent(event);
+    cout << "key release: " << window << "\n";
+    if(window)
+    {
+        window->widget()->keyReleaseEvent(event);
+    }
 }
 
 
-void Program::resizeEvent(Widget* widget, ResizeEvent* event)
+void Program::resizeEvent(Window* window, ResizeEvent* event)
 {
-    widget->resizeEvent(event);
+    window->widget()->resizeEvent(event);
 }
 
 
-void Program::closeEvent(Widget* widget)
+void Program::closeEvent(Window* window)
 {
 
 }

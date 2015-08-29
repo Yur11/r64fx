@@ -8,12 +8,13 @@ SRC =
     Program.cpp
     Painter.cpp
     Widget.cpp
-    gui_implementation_sdl2.cpp
+    Window.cpp
+    WindowSDL2.cpp
     main.cpp
 
 configure: 
     ./conftool '@[PROJECT_COMPILER] @[INCLUDE_FLAGS] @[DEFS]' '@[SRC_DIR]' 'src' '@{SRC}'
-    
+
 @[src.rules]
 
 hello : @[src.objects]

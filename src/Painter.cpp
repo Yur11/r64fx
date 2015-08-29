@@ -10,7 +10,7 @@ class PainterCPU : public Painter{
 public:
     virtual ~PainterCPU() {}
 
-    virtual PainterType mode() { return PainterType::Normal; }
+//     virtual PainterType mode() { return PainterType::Normal; }
 
     virtual void begin(Widget* widget) {}
 
@@ -31,7 +31,7 @@ class PainterGL3 : public Painter{
 public:
     virtual ~PainterGL3() {}
 
-    virtual PainterType mode() { return PainterType::GL3; }
+//     virtual PainterType mode() { return PainterType::GL3; }
 
     virtual void begin(Widget* widget) {}
 
@@ -47,19 +47,19 @@ public:
 };
 
 
-Painter* Painter::createNew(PainterType pt)
+Painter* Painter::createNew()
 {
-    switch(pt)
-    {
-        case PainterType::Normal:
+//     switch(pt)
+//     {
+//         case PainterType::Normal:
             return new PainterCPU;
-
+/*
         case PainterType::GL3:
             return new PainterGL3;
 
         default:
             return nullptr;
-    }
+    }*/
 }
 
 
