@@ -415,6 +415,11 @@ void parse(const string &text)
                 
         if(ch == '\n')
         {
+            while(!str.empty() && (str.back() == ' ' || str.back() == '\t'))//Strip extra chars.
+            {
+                str.pop_back();
+            }
+
             if(str.empty())
                 continue;
             
@@ -423,9 +428,6 @@ void parse(const string &text)
                 str.clear();
                 continue;
             }
-            
-            while(str.back() == ' ' || str.back() == '\t')//Strip extra chars.
-                str.pop_back();
             
             if(str.back() == '\\')
             {
@@ -719,7 +721,7 @@ void touch_path(string path)
 string find_common_prefix(const string &a, const string &b)
 {
     string str;
-    for(int i=0; i<a.size() && i<b.size(); i++)
+    for(unsigned int i=0; i<a.size() && i<b.size(); i++)
     {
         if(a[i] == b[i])
             str.push_back(a[i]);
