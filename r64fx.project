@@ -10,6 +10,7 @@ SRC =
     Widget.cpp
     Window.cpp
     WindowSDL2.cpp
+    WindowX11.cpp
     main.cpp
 
 configure: 

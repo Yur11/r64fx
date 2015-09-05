@@ -133,7 +133,6 @@ void Program::mouseMoveEvent(Window* window, MouseEvent* event)
 
 void Program::keyPressEvent(Window* window, KeyEvent* event)
 {
-    cout << "key press: " << window << "\n";
     if(window)
     {
         window->widget()->keyPressEvent(event);
@@ -143,7 +142,6 @@ void Program::keyPressEvent(Window* window, KeyEvent* event)
 
 void Program::keyReleaseEvent(Window* window, KeyEvent* event)
 {
-    cout << "key release: " << window << "\n";
     if(window)
     {
         window->widget()->keyReleaseEvent(event);

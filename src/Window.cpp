@@ -1,8 +1,11 @@
-#include "Window.hpp"
-
-#ifdef R64FX_USE_SDL2
+#if defined R64FX_USE_SDL2
 #include "WindowSDL2.hpp"
 #define WindowImpl WindowSDL2
+
+#elif defined R64FX_USE_X11
+#include "WindowX11.hpp"
+#define WindowImpl WindowX11
+
 #endif //R64FX_USE_SDL2
 
 #include <vector>
@@ -12,9 +15,7 @@ using namespace std;
 
 namespace r64fx{
 
-namespace{
-    vector<Window*> g_all_windows;
-};
+vector<Window*> g_all_windows;
 
 Window::Window(Window::Type type)
 : m_type(type)

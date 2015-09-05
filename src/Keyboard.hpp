@@ -1,8 +1,12 @@
 #ifndef R64FX_KEYBOARD_HPP
 #define R64FX_KEYBOARD_HPP
 
-#ifdef R64FX_USE_SDL2
+#if defined R64FX_USE_SDL2
 #include "KeyboardSDL2.hpp"
+
+#elif defined R64FX_USE_X11
+#include "KeyboardX11.hpp"
+
 #endif //R64FX_USE_SDL2
 
 namespace r64fx{
