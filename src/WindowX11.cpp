@@ -98,7 +98,7 @@ void WindowX11::hide()
 
 void WindowX11::resize(int width, int height)
 {
-
+    XResizeWindow(g_display, m_xwindow, width, height);
 }
 
 
