@@ -1,6 +1,7 @@
 #ifndef R64FX_WIDGET_H
 #define R64FX_WIDGET_H
 
+#include <string>
 #include "LinkedList.hpp"
 #include "Rect.hpp"
 
@@ -68,7 +69,9 @@ public:
 
     Image* windowSurface() const;
 
-    void setWindowTitle(const char* title);
+    void setWindowTitle(std::string title);
+
+    std::string windowTitle() const;
 
 protected:
     virtual void mousePressEvent(MouseEvent* event);

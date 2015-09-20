@@ -12,6 +12,7 @@ class WindowX11 : public Window{
     XImage* m_image = nullptr;
     XGCValues m_xgc_values;
     GC m_gc;
+    std::string m_title = "";
 
     WindowX11(Window::Type type);
 

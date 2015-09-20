@@ -1,4 +1,6 @@
 #include "WindowX11.hpp"
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
 #include <vector>
 #include <iostream>
 
@@ -14,6 +16,8 @@ Display*   g_display = nullptr;
 int        g_screen;
 Atom       g_WM_PROTOCOLS;
 Atom       g_WM_DELETE_WINDOW;
+Atom       g_NET_WM_NAME;
+Atom       g_UTF8_STRING;
 
 WindowX11* get_window_from_xwindow(::Window xwindow)
 {
@@ -45,9 +49,8 @@ WindowX11::WindowX11(Window::Type type)
     XSelectInput(g_display, m_xwindow, KeyPressMask);
     XGetWindowAttributes(g_display, m_xwindow, &m_attrs);
 
-//     m_gc = XCreateGC(g_display, m_xwindow, GCGraphicsExposures, &(m_xgc_values));
-
-    XFlush(g_display);
+    m_xgc_values.graphics_exposures = True;
+    m_gc = XCreateGC(g_display, m_xwindow, GCGraphicsExposures, &(m_xgc_values));
 }
 
 
@@ -68,8 +71,10 @@ Window* WindowX11::newWindow(int width, int height, std::string title, Window::T
             return nullptr;
         }
 
-        g_WM_PROTOCOLS       = XInternAtom(g_display, "WM_PROTOCOLS", true);
-        g_WM_DELETE_WINDOW   = XInternAtom(g_display, "WM_DELETE_WINDOW", true);
+        g_WM_PROTOCOLS       = XInternAtom(g_display, "WM_PROTOCOLS",       False);
+        g_WM_DELETE_WINDOW   = XInternAtom(g_display, "WM_DELETE_WINDOW",   False);
+        g_NET_WM_NAME        = XInternAtom(g_display, "_NET_WM_NAME",       False);
+        g_UTF8_STRING        = XInternAtom(g_display, "UTF8_STRING",        False);
     }
 
     return new WindowX11(type);
@@ -110,13 +115,20 @@ void WindowX11::updateSurface()
 
 void WindowX11::setTitle(std::string title)
 {
-
+    XTextProperty xtp;
+    char* strlst[] = { (char*)title.c_str() };
+    Status status = XStringListToTextProperty(strlst, 1, &xtp);
+    if(status)
+    {
+        XSetTextProperty(g_display, m_xwindow, &xtp, XA_WM_NAME);
+        m_title = title;
+    }
 }
 
 
 std::string WindowX11::title() const
 {
-
+    return m_title;
 }
 
 

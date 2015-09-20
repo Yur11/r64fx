@@ -153,11 +153,24 @@ Image* Widget::windowSurface() const
 }
 
 
-void Widget::setWindowTitle(const char* title)
+void Widget::setWindowTitle(std::string title)
 {
     if(isWindow())
     {
         m_parent.window->setTitle(title);
+    }
+}
+
+
+std::string Widget::windowTitle() const
+{
+    if(isWindow())
+    {
+        return m_parent.window->title();
+    }
+    else
+    {
+        return "";
     }
 }
 

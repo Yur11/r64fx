@@ -74,6 +74,7 @@ private:
         m_Widget = new Widget;
         m_Widget->resize(200, 200);
         m_Widget->show();
+        m_Widget->setWindowTitle( "hello!" );
 
 //         auto ws = m_Widget->windowSurface();
 //         cout << ws->width() << "x" << ws->height() << "\n";
@@ -111,6 +112,11 @@ private:
             m_Widget->resize(200, 400);
             m_Widget->setWindowTitle("B");
         }
+        else if(event->key() == Keyboard::Key::T)
+        {
+            cout << "Title: " << m_Widget->windowTitle() << "\n";
+        }
+
     }
     
     virtual void closeEvent(Window* window)
