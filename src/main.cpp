@@ -67,6 +67,16 @@ public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
     
 private:
+    void repaint()
+    {
+        auto ws = m_Widget->windowSurface();
+        cout << ws->width() << "x" << ws->height() << "\n";
+        cout << ws->channelCount() << "\n";
+        unsigned char px[4] = { 255, 0, 0, 0 };
+        ws->fill(px);
+        m_Widget->parentWindow()->repaint();
+    }
+
     virtual void setup()
     {
         cout << "My Program!\n";
@@ -76,9 +86,7 @@ private:
         m_Widget->show();
         m_Widget->setWindowTitle( "hello!" );
 
-//         auto ws = m_Widget->windowSurface();
-//         cout << ws->width() << "x" << ws->height() << "\n";
-//         cout << ws->channelCount() << "\n";
+        repaint();
     }
 
     virtual void mousePressEvent(Window* window, MouseEvent* event)
@@ -130,6 +138,7 @@ private:
     virtual void resizeEvent(Window* window, ResizeEvent* event)
     {
         cout << "Resize!\n";
+        repaint();
     }
     
     virtual void cleanup()
@@ -145,4 +154,6 @@ int main(int argc, char* argv[])
 {
     MyProgram prog(argc, argv);
     return prog.exec();
+
+    return 0;
 }

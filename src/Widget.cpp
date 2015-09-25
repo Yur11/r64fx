@@ -59,6 +59,11 @@ Widget* Widget::parent() const
     return (Widget*)(isWindow() ? nullptr : m_parent.widget);
 }
 
+Window* Widget::parentWindow() const
+{
+    return (Window*)(isWindow() ? m_parent.window : nullptr);
+}
+
 
 void Widget::add(Widget* child)
 {
@@ -149,7 +154,14 @@ bool Widget::isWindow() const
 
 Image* Widget::windowSurface() const
 {
-    return nullptr;
+    if(isWindow())
+    {
+        return m_parent.window->image();
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 

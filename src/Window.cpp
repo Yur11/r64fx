@@ -73,10 +73,17 @@ void Window::resize(int width, int height)
 }
 
 
-void Window::updateSurface()
+void Window::repaint()
 {
     auto impl = (WindowImpl*) this;
-    impl->updateSurface();
+    impl->repaint();
+}
+
+
+Image* Window::image() const
+{
+    auto impl = (WindowImpl*) this;
+    return impl->image();
 }
 
 

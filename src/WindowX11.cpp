@@ -3,6 +3,7 @@
 #include <X11/Xutil.h>
 #include <vector>
 #include <iostream>
+#include "Image.hpp"
 
 using namespace std;
 
@@ -51,6 +52,34 @@ WindowX11::WindowX11(Window::Type type)
 
     m_xgc_values.graphics_exposures = True;
     m_gc = XCreateGC(g_display, m_xwindow, GCGraphicsExposures, &(m_xgc_values));
+
+    XVisualInfo vinfo;
+    vinfo.visualid = XVisualIDFromVisual(m_attrs.visual);
+    {
+        int nitems = 0;
+        XVisualInfo* vinfos = XGetVisualInfo(g_display, VisualIDMask, &vinfo, &nitems);
+        if(vinfos)
+        {
+            vinfo = vinfos[0];
+            XFree(vinfos);
+        }
+    }
+
+    char* buff = new char[m_attrs.width * m_attrs.height * 4];
+    m_ximage = XCreateImage(
+        g_display,
+        m_attrs.visual,
+        vinfo.depth,  //Bits per pixel.
+        ZPixmap,
+        0,            //Offset
+        buff,
+        m_attrs.width,
+        m_attrs.height,
+        32,
+        0              //Bytes Per Line. Xlib will calculate.
+    );
+
+    m_image = new Image(m_ximage->width, m_ximage->height, 4, (unsigned char*)m_ximage->data);
 }
 
 
@@ -107,9 +136,26 @@ void WindowX11::resize(int width, int height)
 }
 
 
-void WindowX11::updateSurface()
+void WindowX11::repaint()
 {
+    XPutImage(
+        g_display,
+        m_xwindow,
+        m_gc,
+        m_ximage,
+        0, 0,
+        0, 0,
+        m_attrs.width,
+        m_attrs.height
+    );
 
+    XSync(g_display, false);
+}
+
+
+Image* WindowX11::image() const
+{
+    return m_image;
 }
 
 

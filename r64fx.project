@@ -3,7 +3,7 @@
 ##
 
 SRC = 
-#    Image.cpp
+    Image.cpp
     Keyboard.cpp
     Program.cpp
     Painter.cpp

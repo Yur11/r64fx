@@ -14,14 +14,14 @@ class Image{
     int m_channel_count = 0;
     unsigned int m_flags = 0;
 
-public:
-    Image(int w, int h, int c);
+    Image(const Image&){}
 
-    Image(Impl::WindowSurface surface);
+public:
+    Image(int w, int h, int c, unsigned char* data = nullptr);
 
     ~Image();
 
-    bool isWindowSurface() const;
+    bool ownsData() const;
 
     inline unsigned char* data() const { return m_data; }
 
@@ -30,6 +30,12 @@ public:
     inline int height() const { return m_height; }
 
     inline int channelCount() const { return m_channel_count; }
+
+    unsigned char* pixel(int x, int y) const;
+
+    inline unsigned char* operator()(int x, int y) const { return pixel(x, y); }
+
+    void fill(unsigned char* pixel);
 };
     
 }//namespace r64fx

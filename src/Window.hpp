@@ -6,6 +6,7 @@
 namespace r64fx{
 
 class Widget;
+class Image;
 
 class Window{
     Widget* m_Widget = nullptr;
@@ -54,7 +55,9 @@ public:
 
     void resize(int width, int height);
 
-    void updateSurface();
+    void repaint();
+
+    Image* image() const;
 
     void setTitle(std::string title);
 

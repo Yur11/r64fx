@@ -9,7 +9,8 @@ namespace r64fx{
 class WindowX11 : public Window{
     ::Window m_xwindow;
     XWindowAttributes m_attrs;
-    XImage* m_image = nullptr;
+    XImage* m_ximage = nullptr;
+    Image* m_image = nullptr;
     XGCValues m_xgc_values;
     GC m_gc;
     std::string m_title = "";
@@ -29,7 +30,9 @@ public:
 
     void resize(int width, int height);
 
-    void updateSurface();
+    void repaint();
+
+    Image* image() const;
 
     void setTitle(std::string title);
 

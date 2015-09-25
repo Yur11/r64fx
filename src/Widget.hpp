@@ -44,6 +44,8 @@ public:
     void setParent(Widget* parent);
     
     Widget* parent() const;
+
+    Window* parentWindow() const;
     
     void add(Widget* child);
     
