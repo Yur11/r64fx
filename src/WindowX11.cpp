@@ -43,43 +43,25 @@ WindowX11::WindowX11(Window::Type type)
         g_display,
         RootWindow(g_display, g_screen),
         0, 0, 640, 480, 0,
-        BlackPixel(g_display, g_screen), WhitePixel(g_display, g_screen)
+//         BlackPixel(g_display, g_screen), WhitePixel(g_display, g_screen)ss
+        None, None
     );
 
     XSetWMProtocols(g_display, m_xwindow, &g_WM_DELETE_WINDOW, 1);
-    XSelectInput(g_display, m_xwindow, KeyPressMask);
-    XGetWindowAttributes(g_display, m_xwindow, &m_attrs);
+    XSelectInput(
+        g_display, m_xwindow,
+        KeyPressMask | KeyReleaseMask |
+        ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
+        ExposureMask
+    );
+
+    updateAttrs();
+    XGetWindowAttributes(g_display, m_xwindow, attrs());
 
     m_xgc_values.graphics_exposures = True;
     m_gc = XCreateGC(g_display, m_xwindow, GCGraphicsExposures, &(m_xgc_values));
 
-    XVisualInfo vinfo;
-    vinfo.visualid = XVisualIDFromVisual(m_attrs.visual);
-    {
-        int nitems = 0;
-        XVisualInfo* vinfos = XGetVisualInfo(g_display, VisualIDMask, &vinfo, &nitems);
-        if(vinfos)
-        {
-            vinfo = vinfos[0];
-            XFree(vinfos);
-        }
-    }
-
-    char* buff = new char[m_attrs.width * m_attrs.height * 4];
-    m_ximage = XCreateImage(
-        g_display,
-        m_attrs.visual,
-        vinfo.depth,  //Bits per pixel.
-        ZPixmap,
-        0,            //Offset
-        buff,
-        m_attrs.width,
-        m_attrs.height,
-        32,
-        0              //Bytes Per Line. Xlib will calculate.
-    );
-
-    m_image = new Image(m_ximage->width, m_ximage->height, 4, (unsigned char*)m_ximage->data);
+    resizeImage();
 }
 
 
@@ -145,11 +127,11 @@ void WindowX11::repaint()
         m_ximage,
         0, 0,
         0, 0,
-        m_attrs.width,
-        m_attrs.height
+        m_ximage->width,
+        m_ximage->height
     );
 
-    XSync(g_display, false);
+    XFlush(g_display);
 }
 
 
@@ -175,6 +157,18 @@ void WindowX11::setTitle(std::string title)
 std::string WindowX11::title() const
 {
     return m_title;
+}
+
+
+int WindowX11::width() const
+{
+    return m_attrs.width;
+}
+
+
+int WindowX11::height() const
+{
+    return m_attrs.width;
 }
 
 
@@ -204,6 +198,29 @@ void WindowX11::processSomeEvents(Window::Events* events)
                 break;
             }
 
+            case ButtonPress:
+            {
+                break;
+            }
+
+            case ButtonRelease:
+            {
+                break;
+            }
+
+            case MotionNotify:
+            {
+                break;
+            }
+
+            case Expose:
+            {
+                window->updateAttrs();
+                window->resizeImage();
+                events->resize(window, window->width(), window->height());
+                break;
+            }
+
             case ClientMessage:
             {
                 if(xevent.xclient.message_type == g_WM_PROTOCOLS)
@@ -214,9 +231,70 @@ void WindowX11::processSomeEvents(Window::Events* events)
             }
 
             default:
+            {
+                cout << "Unknown Event!\n";
                 break;
+            }
         }
     }
+}
+
+
+void WindowX11::updateAttrs()
+{
+    XGetWindowAttributes(g_display, m_xwindow, &m_attrs);
+}
+
+
+XWindowAttributes* WindowX11::attrs()
+{
+    return &m_attrs;
+}
+
+
+void WindowX11::resizeImage()
+{
+    destroyImage();
+
+    XVisualInfo vinfo;
+    vinfo.visualid = XVisualIDFromVisual(m_attrs.visual);
+    {
+        int nitems = 0;
+        XVisualInfo* vinfos = XGetVisualInfo(g_display, VisualIDMask, &vinfo, &nitems);
+        if(vinfos)
+        {
+            vinfo = vinfos[0];
+            XFree(vinfos);
+        }
+    }
+
+    char* buff = new char[m_attrs.width * m_attrs.height * 4];
+    m_ximage = XCreateImage(
+        g_display,
+        m_attrs.visual,
+        vinfo.depth,  //Bits per pixel.
+        ZPixmap,
+        0,            //Offset
+        buff,
+        m_attrs.width,
+        m_attrs.height,
+        32,
+        0              //Bytes Per Line. Xlib will calculate.
+    );
+
+    m_image = new Image(m_ximage->width, m_ximage->height, 4, (unsigned char*)m_ximage->data);
+}
+
+
+void WindowX11::destroyImage()
+{
+    if(!m_ximage)
+        return;
+
+    XDestroyImage(m_ximage);
+    m_ximage = nullptr;
+    delete m_image;
+    m_image = nullptr;
 }
 
 }//namespace r64fx

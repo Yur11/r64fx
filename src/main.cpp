@@ -67,20 +67,8 @@ public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
     
 private:
-    void repaint()
-    {
-        auto ws = m_Widget->windowSurface();
-        cout << ws->width() << "x" << ws->height() << "\n";
-        cout << ws->channelCount() << "\n";
-        unsigned char px[4] = { 255, 0, 0, 0 };
-        ws->fill(px);
-        m_Widget->parentWindow()->repaint();
-    }
-
     virtual void setup()
     {
-        cout << "My Program!\n";
-        
         m_Widget = new Widget;
         m_Widget->resize(200, 200);
         m_Widget->show();
@@ -89,20 +77,39 @@ private:
         repaint();
     }
 
+
+    void repaint()
+    {
+        auto img = m_Widget->windowImage();
+        unsigned char px[4] = { 255, 0, 0, 0 };
+        img->fill(px);
+        for(int y = img->height() - 20; y < img->height() - 10; y++)
+        {
+            for(int x = img->width() - 20; x < img->width() - 10; x++)
+            {
+                unsigned char px[4] = { 0, 0, 0, 0 };
+                img->setPixel(x, y, px);
+            }
+        }
+        m_Widget->parentWindow()->repaint();
+    }
+
+
     virtual void mousePressEvent(Window* window, MouseEvent* event)
     {
         cout << "press:   " << event->x() << ", " << event->y() << "\n";
     }
+
 
     virtual void mouseReleaseEvent(Window* window, MouseEvent* event)
     {
         cout << "release: " << event->x() << ", " << event->y() << "\n";
     }
     
+
     virtual void keyPressEvent(Window* window, KeyEvent* event)
     {
         Program::keyPressEvent( window, event );
-        cout << "widget: " << window << "\n";
 
         cout << Keyboard::Key::toString(event->key()) << "\n";
 
@@ -127,6 +134,7 @@ private:
 
     }
     
+
     virtual void closeEvent(Window* window)
     {
         if(window->widget() == m_Widget)
@@ -135,16 +143,16 @@ private:
         }
     }
     
+
     virtual void resizeEvent(Window* window, ResizeEvent* event)
     {
-        cout << "Resize!\n";
         repaint();
     }
     
+
     virtual void cleanup()
     {
         cout << "Cleanup!\n";
-        
         delete m_Widget;
     }
 };
@@ -154,6 +162,4 @@ int main(int argc, char* argv[])
 {
     MyProgram prog(argc, argv);
     return prog.exec();
-
-    return 0;
 }

@@ -41,6 +41,19 @@ public:
     static void processSomeEvents(Window::Events* events);
 
     inline ::Window xWindow() const { return m_xwindow; }
+
+    int width() const;
+
+    int height() const;
+
+private:
+    void updateAttrs();
+
+    XWindowAttributes* attrs();
+
+    void resizeImage();
+
+    void destroyImage();
 };
 
 }//namespace r64fx

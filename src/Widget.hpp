@@ -69,7 +69,7 @@ public:
 
     bool isWindow() const;
 
-    Image* windowSurface() const;
+    Image* windowImage() const;
 
     void setWindowTitle(std::string title);
 

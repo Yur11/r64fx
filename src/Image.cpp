@@ -50,6 +50,15 @@ unsigned char* Image::pixel(int x, int y) const
 }
 
 
+void Image::setPixel(int x, int y, unsigned char* px)
+{
+    for(int c=0; c<channelCount(); c++)
+    {
+        pixel(x, y)[c] = px[c];
+    }
+}
+
+
 void Image::fill(unsigned char* pixel)
 {
     for(int y=0; y<height(); y++)

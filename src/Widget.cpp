@@ -152,7 +152,7 @@ bool Widget::isWindow() const
 }
 
 
-Image* Widget::windowSurface() const
+Image* Widget::windowImage() const
 {
     if(isWindow())
     {
