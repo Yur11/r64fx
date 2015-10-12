@@ -3,6 +3,9 @@
 
 #include "Window.hpp"
 #include <X11/Xlib.h>
+#ifdef R64FX_USE_GL
+#include <GL/glx.h>
+#endif//R64FX_USE_GL
 
 namespace r64fx{
 
@@ -14,6 +17,10 @@ class WindowX11 : public Window{
     XGCValues m_xgc_values;
     GC m_gc;
     std::string m_title = "";
+
+#ifdef R64FX_USE_GL
+    GLXContext m_gl_context = 0;
+#endif//R64FX_USE_GL
 
     WindowX11(Window::Type type);
 
@@ -29,6 +36,8 @@ public:
     void hide();
 
     void resize(int width, int height);
+
+    void makeCurrent();
 
     void repaint();
 
@@ -54,6 +63,8 @@ private:
     void resizeImage();
 
     void destroyImage();
+
+    void processExposeEvent();
 };
 
 }//namespace r64fx

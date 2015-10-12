@@ -13,8 +13,10 @@ class Window{
 
 public:
     enum class Type{
-        Normal,
-        GL3
+        Normal
+#ifdef R64FX_USE_GL
+        ,GL
+#endif//R64FX_USE_GL
     };
 
     struct Events{

@@ -10,6 +10,8 @@
 #include "ResizeEvent.hpp"
 #include "Image.hpp"
 
+#include <GL/gl.h>
+
 using namespace std;
 using namespace r64fx;
 
@@ -91,6 +93,10 @@ private:
                 img->setPixel(x, y, px);
             }
         }
+
+//         glClearColor(0.0, 0.0, 1.0, 1.0);
+//         glClear(GL_COLOR_BUFFER_BIT);
+
         m_Widget->parentWindow()->repaint();
     }
 
