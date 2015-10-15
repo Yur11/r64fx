@@ -65,6 +65,12 @@ private:
     void destroyImage();
 
     void processExposeEvent();
+
+#ifdef R64FX_USE_GL
+    void createGLContext();
+
+    void destroyGLContext();
+#endif//R64FX_USE_GL
 };
 
 }//namespace r64fx

@@ -14,11 +14,29 @@ extern vector<Window*> g_all_windows;
 namespace{
 
 Display*   g_display = nullptr;
+bool       g_got_x_error = false;
 int        g_screen;
 Atom       g_WM_PROTOCOLS;
 Atom       g_WM_DELETE_WINDOW;
 Atom       g_NET_WM_NAME;
 Atom       g_UTF8_STRING;
+
+
+int x_error_handler(Display* display, XErrorEvent* event)
+{
+    g_got_x_error = true;
+
+    cerr << "Got X Error!\nmajor: " << int(event->request_code) << ", minor: " << int(event->minor_code) << "\n";
+    const int buff_length = 1024;
+    static char buff[buff_length];
+    XGetErrorText(display, event->error_code, buff, buff_length);
+    cout << buff << "\n";
+
+    abort();
+
+    return 0;
+}
+
 
 WindowX11* get_window_from_xwindow(::Window xwindow)
 {
@@ -85,22 +103,6 @@ struct FBConfig{
 
         return *this;
     }
-
-#ifdef R64FX_DEBUG
-    void dump()
-    {
-        cout << samples << ", "
-                << sample_buffers << ", "
-                << red << ", "
-                << green << ", "
-                << blue << ", "
-                << alpha << ", "
-                << depth << ", "
-                << double_buffer << ", "
-                << render_type << ", "
-                << visual_type << "\n";
-    }
-#endif//R64FX_DEBUG
 };
 
 bool operator>(const FBConfig &a, const FBConfig &b)
@@ -147,14 +149,6 @@ WindowX11::WindowX11(Window::Type type)
             RootWindow(g_display, g_screen),
             0, 0, 640, 480, 0,
             None, None
-        );
-
-        XSetWMProtocols(g_display, m_xwindow, &g_WM_DELETE_WINDOW, 1);
-        XSelectInput(
-            g_display, m_xwindow,
-            KeyPressMask | KeyReleaseMask |
-            ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
-            ExposureMask
         );
 
         updateAttrs();
@@ -266,6 +260,14 @@ WindowX11::WindowX11(Window::Type type)
         cerr << "Window::Window: Window type not implemented!\n";
         abort();
     }
+
+    XSetWMProtocols(g_display, m_xwindow, &g_WM_DELETE_WINDOW, 1);
+    XSelectInput(
+        g_display, m_xwindow,
+        KeyPressMask | KeyReleaseMask |
+        ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
+        ExposureMask
+    );
 }
 
 
@@ -279,6 +281,8 @@ Window* WindowX11::newWindow(int width, int height, std::string title, Window::T
 {
     if(!g_display)
     {
+        XSetErrorHandler(x_error_handler);
+
         g_display = XOpenDisplay(nullptr);
         if(!g_display)
         {
@@ -524,6 +528,18 @@ void WindowX11::processExposeEvent()
     {
         resizeImage();
     }
+}
+
+
+void WindowX11::createGLContext()
+{
+
+}
+
+
+void WindowX11::destroyGLContext()
+{
+
 }
 
 }//namespace r64fx
