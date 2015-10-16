@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.3)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -DR64FX_DEBUG -DR64FX_USE_X11 -DR64FX_USE_GL")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -DR64FX_DEBUG -DR64FX_USE_X11")
 
 set(SRC
     Image.cpp

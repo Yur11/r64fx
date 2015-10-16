@@ -14,8 +14,10 @@ extern vector<Window*> g_all_windows;
 namespace{
 
 Display*   g_display = nullptr;
-bool       g_got_x_error = false;
 int        g_screen;
+
+bool       g_got_x_error = false;
+
 Atom       g_WM_PROTOCOLS;
 Atom       g_WM_DELETE_WINDOW;
 Atom       g_NET_WM_NAME;
@@ -52,90 +54,8 @@ WindowX11* get_window_from_xwindow(::Window xwindow)
 }
 
 #ifdef R64FX_USE_GL
-struct FBConfig{
-    GLXFBConfig* config = nullptr;
-    int samples  = 0;
-    int sample_buffers = 0;
-    int red = 0;
-    int green = 0;
-    int blue = 0;
-    int alpha = 0;
-    int depth = 0;
-    int double_buffer = 0;
-    int render_type = 0;
-    int visual_type = 0;
 
-    FBConfig(){}
-
-    FBConfig(Display* display, GLXFBConfig* cfg)
-    {
-        config = cfg;
-        glXGetFBConfigAttrib(display, *cfg, GLX_SAMPLES,        &samples);
-        glXGetFBConfigAttrib(display, *cfg, GLX_SAMPLE_BUFFERS, &sample_buffers);
-        glXGetFBConfigAttrib(display, *cfg, GLX_RED_SIZE,       &red);
-        glXGetFBConfigAttrib(display, *cfg, GLX_GREEN_SIZE,     &green);
-        glXGetFBConfigAttrib(display, *cfg, GLX_BLUE_SIZE,      &blue);
-        glXGetFBConfigAttrib(display, *cfg, GLX_ALPHA_SIZE,     &alpha);
-        glXGetFBConfigAttrib(display, *cfg, GLX_DEPTH_SIZE,     &depth);
-        glXGetFBConfigAttrib(display, *cfg, GLX_DOUBLEBUFFER,   &double_buffer);
-        glXGetFBConfigAttrib(display, *cfg, GLX_RENDER_TYPE,    &render_type);
-        glXGetFBConfigAttrib(display, *cfg, GLX_X_VISUAL_TYPE,  &visual_type);
-    }
-
-    FBConfig(const FBConfig &other)
-    {
-        operator=(other);
-    }
-
-    FBConfig &operator=(const FBConfig &other)
-    {
-        config         = other.config;
-        samples        = other.samples;
-        sample_buffers = other.sample_buffers;
-        red            = other.red;
-        green          = other.green;
-        blue           = other.blue;
-        alpha          = other.alpha;
-        depth          = other.depth;
-        double_buffer  = other.double_buffer;
-        render_type    = other.render_type;
-        visual_type    = other.visual_type;
-
-        return *this;
-    }
-};
-
-bool operator>(const FBConfig &a, const FBConfig &b)
-{
-    return
-        a.samples        > b.samples        &&
-        a.sample_buffers > b.sample_buffers &&
-        a.red            > b.red            &&
-        a.green          > b.green          &&
-        a.blue           > b.blue           &&
-        a.alpha          > b.alpha          &&
-        a.depth          > b.depth          &&
-        a.double_buffer  > b.double_buffer
-    ;
-}
-
-bool operator==(const FBConfig &a, const FBConfig &b)
-{
-    return
-        a.samples        == b.samples        &&
-        a.sample_buffers == b.sample_buffers &&
-        a.red            == b.red            &&
-        a.green          == b.green          &&
-        a.blue           == b.blue           &&
-        a.alpha          == b.alpha          &&
-        a.depth          == b.depth          &&
-        a.double_buffer  == b.double_buffer
-    ;
-}
-
-FBConfig g_fbconfig;
 #endif//R64FX_USE_GL
-
 }//namespace
 
 
@@ -144,115 +64,12 @@ WindowX11::WindowX11(Window::Type type)
 {
     if(type == Window::Type::Normal)
     {
-        m_xwindow = XCreateSimpleWindow(
-            g_display,
-            RootWindow(g_display, g_screen),
-            0, 0, 640, 480, 0,
-            None, None
-        );
-
-        updateAttrs();
-        XGetWindowAttributes(g_display, m_xwindow, attrs());
-
-        m_xgc_values.graphics_exposures = True;
-        m_gc = XCreateGC(g_display, m_xwindow, GCGraphicsExposures, &(m_xgc_values));
-
-        resizeImage();
+        initNormalWindow();
     }
 #ifdef R64FX_USE_GL
     else if(type == Window::Type::GL)
     {
-        cerr << "Blaaa!\n";
-
-        int major = 0;
-        int minor = 0;
-        if(!glXQueryVersion(g_display, &major, &minor))
-        {
-            cerr << "Failed to get glx version!\n";
-            abort();
-        }
-
-        cout << "GLX: " << major << "." << minor << "\n";
-
-        int nglxfbconfigs = 0;
-        GLXFBConfig* glxfbconfigs = glXGetFBConfigs(g_display, g_screen, &nglxfbconfigs);
-        if(!glxfbconfigs || nglxfbconfigs < 1)
-        {
-            cerr << "Failed to get GLX FB configs!\n";
-            abort();
-        }
-
-        vector<FBConfig> best_cfgs;
-        FBConfig best_cfg;
-        for(int i=0; i<nglxfbconfigs; i++)
-        {
-            FBConfig cfg(g_display, glxfbconfigs + i);
-            if(cfg > best_cfg)
-            {
-                best_cfg = cfg;
-                best_cfgs.clear();
-                best_cfgs.push_back(cfg);
-            }
-            else if(cfg == best_cfg)
-            {
-                best_cfgs.push_back(cfg);
-            }
-        }
-
-        if(best_cfgs.empty())
-        {
-            cerr << "Failed to get good GLX FB configs!\n";
-            abort();
-        }
-
-        XVisualInfo* vinfo = glXGetVisualFromFBConfig(g_display, best_cfg.config[0]);
-
-        XSetWindowAttributes swa;
-        swa.colormap = XCreateColormap(
-            g_display,
-            RootWindow(g_display, vinfo->screen),
-            vinfo->visual,
-            AllocNone
-        );
-        swa.background_pixmap = None;
-        swa.border_pixel      = 0;
-        swa.event_mask        = StructureNotifyMask;
-
-        m_xwindow = XCreateWindow(
-            g_display,
-            RootWindow(g_display, g_screen),
-            0, 0, 640, 480, 0,
-            vinfo->depth, InputOutput, vinfo->visual,
-            CWBorderPixel | CWColormap | CWEventMask,
-            &swa
-        );
-
-        XFree(vinfo);
-
-        show();
-
-        typedef GLXContext (*glXCreateContextAttribsARBFun)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
-        auto glXCreateContextAttribsARB = (glXCreateContextAttribsARBFun) glXGetProcAddressARB(
-            (const GLubyte*)"glXCreateContextAttribsARB"
-        );
-
-        int context_attribs[] = {
-            GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-            GLX_CONTEXT_MINOR_VERSION_ARB, 0,
-            None
-        };
-
-        m_gl_context = glXCreateContextAttribsARB(
-            g_display,
-            best_cfg.config[0],
-            0, //Exising Context
-            True,
-            context_attribs
-        );
-
-        cout << m_gl_context << "\n";
-
-        makeCurrent();
+        initGLWindow();
     }
 #endif//R64FX_USE_GL
     else
@@ -328,10 +145,12 @@ void WindowX11::resize(int width, int height)
 
 void WindowX11::makeCurrent()
 {
+#ifdef R64FX_USE_GL
     if(type() == Window::Type::GL)
     {
         glXMakeCurrent(g_display, m_xwindow, m_gl_context);
     }
+#endif//R64FX_USE_GL
 }
 
 
@@ -352,10 +171,12 @@ void WindowX11::repaint()
 
         XFlush(g_display);
     }
+#ifdef R64FX_USE_GL
     else if(type() == Window::Type::GL)
     {
         glXSwapBuffers(g_display, m_xwindow);
     }
+#endif//R64FX_USE_GL
 }
 
 
@@ -400,7 +221,6 @@ void WindowX11::processSomeEvents(Window::Events* events)
 {
     while(XPending(g_display))
     {
-
         XEvent xevent;
         XNextEvent(g_display, &xevent);
 
@@ -475,6 +295,25 @@ XWindowAttributes* WindowX11::attrs()
 }
 
 
+void WindowX11::initNormalWindow()
+{
+    m_xwindow = XCreateSimpleWindow(
+        g_display,
+        RootWindow(g_display, g_screen),
+        0, 0, 640, 480, 0,
+        None, None
+    );
+
+    updateAttrs();
+    XGetWindowAttributes(g_display, m_xwindow, attrs());
+
+    m_xgc_values.graphics_exposures = True;
+    m_gc = XCreateGC(g_display, m_xwindow, GCGraphicsExposures, &(m_xgc_values));
+
+    resizeImage();
+}
+
+
 void WindowX11::resizeImage()
 {
     destroyImage();
@@ -531,15 +370,190 @@ void WindowX11::processExposeEvent()
 }
 
 
-void WindowX11::createGLContext()
-{
+/*
+ === GLX Related Stuff
+ */
+#ifdef R64FX_USE_GL
+int g_glx_major = 0;
+int g_glx_minor = 0;
 
+
+void WindowX11::initGLWindow()
+{
+    if(g_glx_major == 0)
+    {
+        if(!glXQueryVersion(g_display, &g_glx_major, &g_glx_minor))
+        {
+            cerr << "Failed to get glx version!\n";
+            abort();
+        }
+    }
+    cout << "GLX " << g_glx_major << "." << g_glx_minor << "\n";
+
+
+    struct FrameBufferConfig{
+        GLXFBConfig* config = nullptr;
+        int samples  = 0;
+        int sample_buffers = 0;
+        int red = 0;
+        int green = 0;
+        int blue = 0;
+        int alpha = 0;
+        int depth = 0;
+        int double_buffer = 0;
+        int render_type = 0;
+        int visual_type = 0;
+
+        FrameBufferConfig(){}
+
+        FrameBufferConfig(Display* display, GLXFBConfig* cfg)
+        {
+            config = cfg;
+            glXGetFBConfigAttrib(display, *cfg, GLX_SAMPLES,        &samples);
+            glXGetFBConfigAttrib(display, *cfg, GLX_SAMPLE_BUFFERS, &sample_buffers);
+            glXGetFBConfigAttrib(display, *cfg, GLX_RED_SIZE,       &red);
+            glXGetFBConfigAttrib(display, *cfg, GLX_GREEN_SIZE,     &green);
+            glXGetFBConfigAttrib(display, *cfg, GLX_BLUE_SIZE,      &blue);
+            glXGetFBConfigAttrib(display, *cfg, GLX_ALPHA_SIZE,     &alpha);
+            glXGetFBConfigAttrib(display, *cfg, GLX_DEPTH_SIZE,     &depth);
+            glXGetFBConfigAttrib(display, *cfg, GLX_DOUBLEBUFFER,   &double_buffer);
+            glXGetFBConfigAttrib(display, *cfg, GLX_RENDER_TYPE,    &render_type);
+            glXGetFBConfigAttrib(display, *cfg, GLX_X_VISUAL_TYPE,  &visual_type);
+        }
+
+        FrameBufferConfig(const FrameBufferConfig &other)
+        {
+            operator=(other);
+        }
+
+        FrameBufferConfig &operator=(const FrameBufferConfig &other)
+        {
+            config         = other.config;
+            samples        = other.samples;
+            sample_buffers = other.sample_buffers;
+            red            = other.red;
+            green          = other.green;
+            blue           = other.blue;
+            alpha          = other.alpha;
+            depth          = other.depth;
+            double_buffer  = other.double_buffer;
+            render_type    = other.render_type;
+            visual_type    = other.visual_type;
+
+            return *this;
+        }
+
+
+        bool isBetterThan(const FrameBufferConfig &other)
+        {
+            return
+                samples        > other.samples        &&
+                sample_buffers > other.sample_buffers &&
+                red            > other.red            &&
+                green          > other.green          &&
+                blue           > other.blue           &&
+                alpha          > other.alpha          &&
+                depth          > other.depth          &&
+                double_buffer  > other.double_buffer
+            ;
+        }
+
+        bool isAtLeastAsGoodAs(const FrameBufferConfig &other)
+        {
+            return
+                samples        == other.samples        &&
+                sample_buffers == other.sample_buffers &&
+                red            == other.red            &&
+                green          == other.green          &&
+                blue           == other.blue           &&
+                alpha          == other.alpha          &&
+                depth          == other.depth          &&
+                double_buffer  == other.double_buffer
+            ;
+        }
+    };
+
+    int nglxfbconfigs = 0;
+    GLXFBConfig* glxfbconfigs = glXGetFBConfigs(g_display, g_screen, &nglxfbconfigs);
+    if(!glxfbconfigs || nglxfbconfigs < 1)
+    {
+        cerr << "Failed to get GLX FB configs!\n";
+        abort();
+    }
+
+    vector<FrameBufferConfig> best_cfgs;
+    FrameBufferConfig best_cfg;
+    for(int i=0; i<nglxfbconfigs; i++)
+    {
+        FrameBufferConfig cfg(g_display, glxfbconfigs + i);
+        if(cfg.isBetterThan(best_cfg))
+        {
+            best_cfg = cfg;
+            best_cfgs.clear();
+            best_cfgs.push_back(cfg);
+        }
+        else if(cfg.isAtLeastAsGoodAs(best_cfg))
+        {
+            best_cfgs.push_back(cfg);
+        }
+    }
+
+    if(best_cfgs.empty())
+    {
+        cerr << "Failed to get good GLX FB configs!\n";
+        abort();
+    }
+
+    XVisualInfo* vinfo = glXGetVisualFromFBConfig(g_display, best_cfg.config[0]);
+
+    XSetWindowAttributes swa;
+    swa.colormap = XCreateColormap(
+        g_display,
+        RootWindow(g_display, vinfo->screen),
+        vinfo->visual,
+        AllocNone
+    );
+    swa.background_pixmap = None;
+    swa.border_pixel      = 0;
+    swa.event_mask        = StructureNotifyMask;
+
+    m_xwindow = XCreateWindow(
+        g_display,
+        RootWindow(g_display, g_screen),
+        0, 0, 640, 480, 0,
+        vinfo->depth, InputOutput, vinfo->visual,
+        CWBorderPixel | CWColormap | CWEventMask,
+        &swa
+    );
+
+    XFree(vinfo);
+
+    show();
+
+    typedef GLXContext (*glXCreateContextAttribsARBFun)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
+    auto glXCreateContextAttribsARB = (glXCreateContextAttribsARBFun) glXGetProcAddressARB(
+        (const GLubyte*)"glXCreateContextAttribsARB"
+    );
+
+    int context_attribs[] = {
+        GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+        GLX_CONTEXT_MINOR_VERSION_ARB, 0,
+        None
+    };
+
+    m_gl_context = glXCreateContextAttribsARB(
+        g_display,
+        best_cfg.config[0],
+        0, //Exising Context
+        True,
+        context_attribs
+    );
+
+    makeCurrent();
+
+    XFree(glxfbconfigs);
 }
 
-
-void WindowX11::destroyGLContext()
-{
-
-}
+#endif//R64FX_USE_GL
 
 }//namespace r64fx

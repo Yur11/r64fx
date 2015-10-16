@@ -60,6 +60,8 @@ private:
 
     XWindowAttributes* attrs();
 
+    void initNormalWindow();
+
     void resizeImage();
 
     void destroyImage();
@@ -67,9 +69,8 @@ private:
     void processExposeEvent();
 
 #ifdef R64FX_USE_GL
-    void createGLContext();
+    void initGLWindow();
 
-    void destroyGLContext();
 #endif//R64FX_USE_GL
 };
 

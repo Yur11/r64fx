@@ -82,20 +82,20 @@ private:
 
     void repaint()
     {
-//         auto img = m_Widget->windowImage();
-//         unsigned char px[4] = { 255, 0, 0, 0 };
-//         img->fill(px);
-//         for(int y = img->height() - 20; y < img->height() - 10; y++)
-//         {
-//             for(int x = img->width() - 20; x < img->width() - 10; x++)
-//             {
-//                 unsigned char px[4] = { 0, 0, 0, 0 };
-//                 img->setPixel(x, y, px);
-//             }
-//         }
+        auto img = m_Widget->windowImage();
+        unsigned char px[4] = { 255, 0, 0, 0 };
+        img->fill(px);
+        for(int y = img->height() - 20; y < img->height() - 10; y++)
+        {
+            for(int x = img->width() - 20; x < img->width() - 10; x++)
+            {
+                unsigned char px[4] = { 0, 0, 0, 0 };
+                img->setPixel(x, y, px);
+            }
+        }
 
-        glClearColor(0.0, 1.0, 0.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
+//         glClearColor(0.0, 1.0, 0.0, 1.0);
+//         glClear(GL_COLOR_BUFFER_BIT);
 
         m_Widget->parentWindow()->repaint();
     }

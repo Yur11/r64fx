@@ -117,7 +117,7 @@ void Widget::show()
     if(!isWindow())
     {
         m_parent.window = Window::newWindow(
-            width(), height(), "", Window::Type::GL
+            width(), height(), "", Window::Type::Normal
         );
         m_parent.window->setWidget(this);
         m_flags |= WIDGET_IS_WINDOW;
