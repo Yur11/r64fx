@@ -82,8 +82,6 @@ private:
 
     void repaint()
     {
-        cout << "repaint\n";
-
         auto img = m_Widget->windowImage();
         unsigned char px[4] = { 255, 255, 0, 0 };
         img->fill(px);

@@ -1,13 +1,19 @@
 #include "WindowX11.hpp"
 #include "Image.hpp"
+
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
+
+#ifdef R64FX_USE_MITSHM
 #include <X11/extensions/XShm.h>
 #include <sys/shm.h>
+#endif//R64FX_USE_MITSHM
+
 #ifdef R64FX_USE_GL
 #include <GL/glx.h>
 #endif//R64FX_USE_GL
+
 #include <vector>
 #include <iostream>
 
@@ -26,9 +32,11 @@ namespace{
     Atom g_NET_WM_NAME;
     Atom g_UTF8_STRING;
 
+#ifdef R64FX_USE_MITSHM
     int g_mitshm_major = 0;
     int g_mitshm_minor = 0;
     int g_mitshm_has_pixmaps = 0;
+#endif//R64FX_USE_MITSHM
 
     void init_x_if_needed()
     {
@@ -48,14 +56,17 @@ namespace{
             g_NET_WM_NAME        = XInternAtom(g_display, "_NET_WM_NAME",       False);
             g_UTF8_STRING        = XInternAtom(g_display, "UTF8_STRING",        False);
 
+#ifdef R64FX_USE_MITSHM
             XShmQueryVersion(g_display, &g_mitshm_major, &g_mitshm_minor, &g_mitshm_has_pixmaps);
-            cout << "--- " << g_mitshm_major << "." << g_mitshm_minor << "\n";
+#endif//R64FX_USE_MITSHM
         }
     }
 
+#ifdef R64FX_USE_MITSHM
     inline bool got_mitshm() { return g_mitshm_major < 0; }
 
     inline bool got_mitshm_pixmaps() { return g_mitshm_has_pixmaps; }
+#endif//R64FX_USE_MITSHM
 
 
     /* === Error Handler === */
@@ -154,7 +165,9 @@ namespace{
     struct WindowX11PrivateNormal : public WindowX11Private{
         Image*           image   = nullptr;
         XImage*          ximage  = nullptr;
+#ifdef R64FX_USE_MITSHM
         XShmSegmentInfo* shminfo = nullptr;
+#endif//R64FX_USE_MITSHM
         XGCValues        xgc_values;
         GC               gc;
 
@@ -192,6 +205,7 @@ namespace{
                 }
             }
 
+#ifdef R64FX_USE_MITSHM
             if(got_mitshm())
             {
                 shminfo = new XShmSegmentInfo;
@@ -209,6 +223,7 @@ namespace{
                 shminfo->shmaddr = ximage->data = (char*) shmat(shminfo->shmid, 0, 0);
             }
             else
+#endif//R64FX_USE_MITSHM
             {
                 char* buff = new char[attrs.width * attrs.height * 4];
                 ximage = XCreateImage(
@@ -233,15 +248,14 @@ namespace{
             if(!ximage)
                 return;
 
-            cout << "destroyImage\n";
-
-
+#ifdef R64FX_USE_MITSHM
             if(got_mitshm())
             {
                 XShmDetach(g_display, shminfo);
                 shmdt(shminfo->shmaddr);
                 shmctl(shminfo->shmid, IPC_RMID, 0);
             }
+#endif//R64FX_USE_MITSHM
             XDestroyImage(ximage);
             ximage = nullptr;
             delete image;
@@ -250,6 +264,7 @@ namespace{
 
         void repaint()
         {
+#ifdef R64FX_USE_MITSHM
             if(got_mitshm())
             {
                 XShmPutImage(
@@ -265,6 +280,7 @@ namespace{
                 );
             }
             else
+#endif//R64FX_USE_MITSHM
             {
                 XPutImage(
                     g_display,
