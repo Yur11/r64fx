@@ -82,14 +82,16 @@ private:
 
     void repaint()
     {
+        cout << "repaint\n";
+
         auto img = m_Widget->windowImage();
-        unsigned char px[4] = { 255, 0, 0, 0 };
+        unsigned char px[4] = { 255, 255, 0, 0 };
         img->fill(px);
         for(int y = img->height() - 20; y < img->height() - 10; y++)
         {
             for(int x = img->width() - 20; x < img->width() - 10; x++)
             {
-                unsigned char px[4] = { 0, 0, 0, 0 };
+                unsigned char px[4] = { 0, 0, 255, 0 };
                 img->setPixel(x, y, px);
             }
         }
