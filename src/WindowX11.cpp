@@ -96,9 +96,14 @@ namespace{
         WindowX11*         window;
         ::Window           xwindow;
         XWindowAttributes  attrs;
-        string             title = "";
+        string             title;
+        int                window_width;
+        int                window_height;
 
-        WindowX11Private(WindowX11* window) : window(window)
+        WindowX11Private(WindowX11* window, int width, int height)
+        : window(window)
+        , window_width(width)
+        , window_height(height)
         {
             g_privates.push_back(this);
         }
@@ -139,7 +144,7 @@ namespace{
                 g_display, xwindow,
                 KeyPressMask | KeyReleaseMask |
                 ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
-                ExposureMask
+                StructureNotifyMask
             );
         }
 
@@ -171,13 +176,13 @@ namespace{
         XGCValues        xgc_values;
         GC               gc;
 
-        WindowX11PrivateNormal(WindowX11* window)
-        : WindowX11Private(window)
+        WindowX11PrivateNormal(WindowX11* window, int width, int height)
+        : WindowX11Private(window, width, height)
         {
             xwindow = XCreateSimpleWindow(
                 g_display,
                 RootWindow(g_display, g_screen),
-                0, 0, 640, 480, 0,
+                0, 0, window_width, window_height, 0,
                 None, None
             );
 
@@ -240,6 +245,7 @@ namespace{
                 );
             }
 
+            cout << "resizeImage: " << ximage->width << "x" << ximage->height << "\n";
             image = new Image(ximage->width, ximage->height, 4, (unsigned char*)ximage->data);
         }
 
@@ -312,8 +318,8 @@ namespace{
     struct WindowX11PrivateGLX : public WindowX11Private{
         GLXContext gl_context = 0;
 
-        WindowX11PrivateGLX(WindowX11* window)
-        : WindowX11Private(window)
+        WindowX11PrivateGLX(WindowX11* window, int width, int height)
+        : WindowX11Private(window, width, height)
         {
             if(g_glx_major == 0)
             {
@@ -454,7 +460,7 @@ namespace{
             xwindow = XCreateWindow(
                 g_display,
                 RootWindow(g_display, g_screen),
-                0, 0, 640, 480, 0,
+                0, 0, window_width, window_height, 0,
                 vinfo->depth, InputOutput, vinfo->visual,
                 CWBorderPixel | CWColormap | CWEventMask,
                 &swa
@@ -517,17 +523,17 @@ namespace{
 
 
 /* === Public Interface === */
-WindowX11::WindowX11(Window::Type type)
+WindowX11::WindowX11(int width, int height, string title, Window::Type type)
 : Window(type)
 {
     if(type == Window::Type::Normal)
     {
-        m_private = new WindowX11PrivateNormal(this);
+        m_private = new WindowX11PrivateNormal(this, width, height);
     }
 #ifdef R64FX_USE_GL
     else if(type == Window::Type::GL)
     {
-        m_private = new WindowX11PrivateGLX(this);
+        m_private = new WindowX11PrivateGLX(this, width, height);
     }
 #endif//R64FX_USE_GL
     else
@@ -538,6 +544,7 @@ WindowX11::WindowX11(Window::Type type)
 
     auto p = (WindowX11Private*) m_private;
     p->setupEvents();
+    p->setTitle(title);
 }
 
 
@@ -564,7 +571,7 @@ WindowX11::~WindowX11()
 Window* WindowX11::newWindow(int width, int height, std::string title, Window::Type type)
 {
     init_x_if_needed();
-    return new WindowX11(type);
+    return new WindowX11(width, height, title, type);
 }
 
 
@@ -666,10 +673,10 @@ void WindowX11::processSomeEvents(Window::Events* events)
         XEvent xevent;
         XNextEvent(g_display, &xevent);
 
-        WindowX11Private* wp = get_window_from_xwindow(xevent.xany.window);
-        if(!wp)
+        WindowX11Private* p = get_window_from_xwindow(xevent.xany.window);
+        if(!p)
             continue;
-        auto window = wp->window;
+        auto window = p->window;
 
         switch(xevent.type)
         {
@@ -687,27 +694,42 @@ void WindowX11::processSomeEvents(Window::Events* events)
 
             case ButtonPress:
             {
+                events->mouse_press(window, xevent.xbutton.x, xevent.xbutton.y, 0);
                 break;
             }
 
             case ButtonRelease:
             {
+                events->mouse_release(window, xevent.xbutton.x, xevent.xbutton.y, 0);
                 break;
             }
 
             case MotionNotify:
             {
+                events->mouse_move(window, xevent.xmotion.x, xevent.xmotion.y, 0);
                 break;
             }
 
-            case Expose:
+            case ConfigureNotify:
             {
-                if(window->type() == Window::Type::Normal)
+                int old_w = p->window_width;
+                int old_h = p->window_height;
+
+                int new_w = xevent.xconfigure.width;
+                int new_h = xevent.xconfigure.height;
+
+                if(old_w != new_w || old_h != new_h)
                 {
-                    auto p = (WindowX11PrivateNormal*) wp;
-                    p->processExposeEvent();
+                    if(window->type() == Window::Type::Normal)
+                    {
+                        auto pp = (WindowX11PrivateNormal*) p;
+                        pp->processExposeEvent();
+                    }
+
+                    p->window_width = new_w;
+                    p->window_height = new_h;
+                    events->resize(window, old_w, old_h, new_w, new_h);
                 }
-                events->resize(window, window->width(), window->height());
                 break;
             }
 

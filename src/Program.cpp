@@ -58,9 +58,12 @@ Program::Program(int argc, char* argv[])
         program_singleton_instance->keyReleaseEvent(window, &ke);
     };
 
-    events.resize = [](Window* window, int w, int h)
+    events.resize = [](Window* window, int old_w, int old_h, int new_w, int new_h)
     {
-        ResizeEvent re(w, h);
+        ResizeEvent re{
+            {old_w, old_h},
+            {new_w, new_h}
+        };
         program_singleton_instance->resizeEvent(window, &re);
     };
 
@@ -106,46 +109,31 @@ Program* Program::instance()
 
 void Program::mousePressEvent(Window* window, MouseEvent* event)
 {
-    if(window)
-    {
-        window->widget()->mousePressEvent(event);
-    }
+    window->widget()->mousePressEvent(event);
 }
 
 
 void Program::mouseReleaseEvent(Window* window, MouseEvent* event)
 {
-    if(window)
-    {
-        window->widget()->mouseReleaseEvent(event);
-    }
+    window->widget()->mouseReleaseEvent(event);
 }
 
 
 void Program::mouseMoveEvent(Window* window, MouseEvent* event)
 {
-    if(window)
-    {
-        window->widget()->mouseMoveEvent(event);
-    }
+    window->widget()->mouseMoveEvent(event);
 }
 
 
 void Program::keyPressEvent(Window* window, KeyEvent* event)
 {
-    if(window)
-    {
-        window->widget()->keyPressEvent(event);
-    }
+    window->widget()->keyPressEvent(event);
 }
 
 
 void Program::keyReleaseEvent(Window* window, KeyEvent* event)
 {
-    if(window)
-    {
-        window->widget()->keyReleaseEvent(event);
-    }
+    window->widget()->keyReleaseEvent(event);
 }
 
 

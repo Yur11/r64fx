@@ -8,12 +8,12 @@ namespace r64fx{
 class WindowX11 : public Window{
     void* m_private = nullptr;
 
-    WindowX11(Window::Type type);
+    WindowX11(int width, int height, std::string title, Window::Type type);
 
 public:
     virtual ~WindowX11();
 
-    static Window* newWindow(int width, int height, std::string title, Window::Type type = Window::Type::Normal);
+    static Window* newWindow(int width, int height, std::string title, Window::Type type);
 
     static void cleanup();
 
