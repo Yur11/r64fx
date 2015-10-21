@@ -1,71 +1,63 @@
 #include "Painter.hpp"
 #include "Widget.hpp"
+#include "Window.hpp"
+#include "Image.hpp"
 
+#include <iostream>
+
+using namespace std;
 
 namespace r64fx{
 
 
-class PainterCPU : public Painter{
+class PainterNormal : public Painter{
+    Window* m_window;
+    Rect<int> m_rect;
 
 public:
-    virtual ~PainterCPU() {}
+    PainterNormal(Window* window)
+    : m_window(window)
+    {}
 
-//     virtual PainterType mode() { return PainterType::Normal; }
+    virtual void setRect(Rect<int> rect)
+    {
+        auto img = m_window->image();
+        m_rect = intersection(Rect<int>(
+            0, 0, img->width(), img->height()
+        ), rect);
+    }
 
-    virtual void begin(Widget* widget) {}
+    virtual void fillRect(float r, float g, float b)
+    {
+        auto img = m_window->image();
+        for(int y=0; y<m_rect.height(); y++)
+        {
+            for(int x=0; x<m_rect.width(); x++)
+            {
+                unsigned char px[4];
+                px[0] = r * 255;
+                px[1] = g * 255;
+                px[2] = b * 255;
+                px[3] = 0;
+                img->setPixel(x + m_rect.x(), y + m_rect.y(), px);
+            }
+        }
+    }
 
-    virtual void end() {}
-
-    virtual void clear() {}
-
-    virtual void setRect(Rect<int> rect) {}
-
-    virtual void strokeRect(float r, float g, float b) {}
-
-    virtual void fillRect(float r, float g, float b) {}
+    virtual void repaint()
+    {
+        m_window->repaint();
+    }
 };
 
 
-class PainterGL3 : public Painter{
-
-public:
-    virtual ~PainterGL3() {}
-
-//     virtual PainterType mode() { return PainterType::GL3; }
-
-    virtual void begin(Widget* widget) {}
-
-    virtual void end() {}
-
-    virtual void clear() {}
-
-    virtual void setRect(Rect<int> rect) {}
-
-    virtual void strokeRect(float r, float g, float b) {}
-
-    virtual void fillRect(float r, float g, float b) {}
-};
-
-
-Painter* Painter::createNew()
+Painter* Painter::createNew(Window* window)
 {
-//     switch(pt)
-//     {
-//         case PainterType::Normal:
-            return new PainterCPU;
-/*
-        case PainterType::GL3:
-            return new PainterGL3;
-
-        default:
-            return nullptr;
-    }*/
-}
-
-
-void Painter::destroy(Painter* wp)
-{
-    delete wp;
+    if(window->type() == Window::Type::Normal)
+    {
+        return new PainterNormal(window);
+    }
+    return nullptr;
 }
 
 }//namespace r64fx

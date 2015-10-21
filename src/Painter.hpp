@@ -6,6 +6,7 @@
 namespace r64fx{
 
 class Widget;
+class Window;
 
 class Painter{
 
@@ -13,38 +14,18 @@ protected:
     virtual ~Painter() {}
 
 public:
-    static Painter* createNew();
-
-    static void destroy(Painter* wp);
-
-//     virtual PainterType mode() = 0;
-
-    virtual void begin(Widget* widget) = 0;
-
-    virtual void end() = 0;
-
-    virtual void clear() = 0;
+    static Painter* createNew(Window* window);
 
     virtual void setRect(Rect<int> rect) = 0;
 
-    virtual void strokeRect(float r, float g, float b) = 0;
+    inline void setRect(int x, int y, int w, int h)
+    {
+        setRect(Rect<int>(x, y, w, h));
+    }
 
     virtual void fillRect(float r, float g, float b) = 0;
-};
 
-
-class ShowEvent{
-    Painter* m_Painter = nullptr;
-
-public:
-    ShowEvent(Painter* painter)
-    : m_Painter(painter)
-    {}
-
-    inline Painter* painter() const
-    {
-        return m_Painter;
-    }
+    virtual void repaint() = 0;
 };
 
 }//namespace r64fx

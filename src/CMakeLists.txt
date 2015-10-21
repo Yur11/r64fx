@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_GL")
 set(SRC
     Image.cpp
     Keyboard.cpp
+    Painter.cpp
     Program.cpp
     Window.cpp
     WindowX11.cpp
