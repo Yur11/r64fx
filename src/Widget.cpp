@@ -2,6 +2,7 @@
 #include "Window.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
+#include "ResizeEvent.hpp"
 #include "Image.hpp"
 
 #include <map>
@@ -219,16 +220,7 @@ void Widget::keyReleaseEvent(KeyEvent* event)
 
 void Widget::resizeEvent(ResizeEvent* event)
 {
-
-}
-
-
-void Widget::showEvent(ShowEvent* event)
-{
-    for(auto w : m_children)
-    {
-        w->showEvent(event);
-    }
+    m_rect.setSize(event->newSize());
 }
 
 }//namespace r64fx

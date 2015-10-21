@@ -25,7 +25,7 @@ public:
         void (*mouse_move)    (Window* window, float x, float y, unsigned int buttons);
         void (*key_press)     (Window* window, int key);
         void (*key_release)   (Window* window, int key);
-        void (*resize)        (Window* window, int w, int h);
+        void (*resize)        (Window* window, int old_w, int old_h, int new_w, int new_h);
         void (*close)         (Window* window);
     };
 

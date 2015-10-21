@@ -13,9 +13,10 @@ class ResizeEvent;
 class ShowEvent;
 class Window;
 class Image;
+class Painter;
 
 class Widget : public LinkedList<Widget>::Node{
-    friend class Program; //To call event methods.
+    friend class Program; //To set size and call event methods.
 
     union{
         Widget* widget = nullptr;
@@ -87,8 +88,6 @@ protected:
     virtual void keyReleaseEvent(KeyEvent* event);
 
     virtual void resizeEvent(ResizeEvent* event);
-
-    virtual void showEvent(ShowEvent* event);
 };
     
 }//r64fx

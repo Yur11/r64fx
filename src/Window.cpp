@@ -6,7 +6,7 @@
 #include "WindowX11.hpp"
 #define WindowImpl WindowX11
 
-#endif //R64FX_USE_SDL2
+#endif
 
 #include <vector>
 
