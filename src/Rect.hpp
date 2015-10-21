@@ -5,134 +5,93 @@
 #include "Size.hpp"
 
 namespace r64fx{
+
+template<typename T> T min(const T &a, const T &b) { return a < b ? a : b; }
+template<typename T> T max(const T &a, const T &b) { return a > b ? a : b; }
+
     
-template<typename T> struct Rect{
-    T left, top, right, bottom;
-    
-    Rect<T>(T left = T(), T top = T(), T right = T(), T bottom = T()) 
-    : left(left)
-    , top(top)
-    , right(right)
-    , bottom(bottom)
+template<typename T> class Rect{
+    T mx;
+    T my;
+    T mw;
+    T mh;
+
+public:
+    Rect(T x = T(), T y = T(), T w = T(), T h = T())
+    : mx(x)
+    , my(y)
+    , mw(w)
+    , mh(h)
     {}
-    
-    Rect<T>(Point<T> p, Size<T> s) : Rect<T>(p.x, p.y, p.x + s.w, p.y + s.h) {}
-    
-    bool isBad() const { return left > right || top > bottom; }
-    
-    bool isGood() const { return left < right && top < bottom; }
-        
-    inline T x() const { return left; }
-    
-    inline T y() const { return top; }
-    
-    /** @brief Set rect position along the x axis. 
-        
-        Both left and right values are altered.
-     */
-    void set_x(T x) { auto w = width(); left = x; right = x + w; }
-    
-    /** @brief Set rect position along the y axis. 
-     
-        Both top and bottom values are altered.
-     */
-    void set_y(T y) { auto h = height(); top = y; bottom = y + h; }
-    
-    inline Point<T> position() const { return Point<T>(x(), y()); }
-    
-    inline void setPosition(T x, T y) 
+
+    inline T x() const { return mx; }
+    inline T y() const { return my; }
+    inline T width()  const  { return mw; }
+    inline T height() const  { return mh; }
+
+    inline void setX(T val) { mx = val; }
+    inline void setY(T val) { my = val; }
+    inline void setWidth(T val)  { mw = val; }
+    inline void setHeight(T val) { mh = val; }
+
+    inline T left()   const { return mx; }
+    inline T top()    const { return my; }
+    inline T right()  const { return mx + mw; }
+    inline T bottom() const { return my + mh; }
+
+    inline void setLeft(T val)
     {
-        set_x(x);
-        set_y(y);
+        T d = mx - val;
+        mx -= d;
+        mw += d;
     }
-    
-    inline void setPosition(Point<T> p)
+
+    inline void setTop(T val)
     {
-        setPosition(p.x, p.y);
+        T d = my - val;
+        my -= d;
+        mw += d;
     }
-    
-    inline T width() const { return right - left; }
-    
-    inline T height() const { return bottom - top; }
-    
-    void setWidth(T width) { right = left + width; }
-    
-    void setHeight(T height) { bottom = top + height; }
-    
-    inline Size<T> size() const { return Size<T>(width(), height()); }
-    
-    inline void setSize(T w, T h)
-    {
-        setWidth(w);
-        setHeight(h);
-    }
-    
-    inline void setSize(Size<T> size)
-    {
-        setSize(size.w, size.h);
-    }
-    
-    inline bool overlaps(Point<T> point) 
-    {
-        return point.x > left && point.x < right && point.y > top && point.y < bottom;
-    }
-    
-    inline bool overlaps(T x, T y) 
-    {
-        return overlaps(Point<T>(x, y));
-    }
-    
-    Point<T> center() const
-    {
-        return Point<T>( left + width() * 0.5, top + height() * 0.5 );
-    }
-    
-    /** @brief  Make sure a point fits inside this rect.*/
-    void fit(Point<T> &p)
-    {
-        if(p.x < left)
-            p.x = left;
-        else if(p.x > right)
-            p.x = right;
-        
-        if(p.y < top)
-            p.y = top;
-        else if(p.y > right)
-            p.y = right;
-    }
-    
-    template<typename OtherT> Rect<OtherT> to() { return Rect<OtherT>(left, top, right, bottom); }
-    
-    /** @brief Move the rect. */
-    inline Rect<T> operator+(Point<T> point) { return Rect<T>(position() + point, size()); }
-    inline Rect<T> operator-(Point<T> point) { return Rect<T>(position() - point, size()); }
-    
-    /** @brief Outset/Inset */
-    inline Rect<T> operator+(T val) { return Rect<T>(left + val, top + val, right + val, bottom + val); }
-    inline Rect<T> operator-(T val) { return this->operator+(-val); }
-    
-    inline bool operator==(const Rect<T> &other) 
-    { 
-        return 
-            this->left = other.left && 
-            this->top = other.top &&
-            this->right = other.right &&
-            this->bottom = other.bottom
-        ;
-    }    
+
+    inline void setRight(T val) { mw = val - mx; }
+
+    inline void setBottom(T val) { mh = val - my; }
+
+    inline Size<T> size() const { return { mw, mh }; }
+
+    inline void setSize(Size<T> size) { mw = size.width(); mh = size.height(); }
+
+    inline void setSize(T w, T h) { mw = w; mh = h; }
+
+    inline Point<T> topLeft()     { return { mx,    my    }; }
+    inline Point<T> bottomLeft()  { return { mx,    my+mh }; }
+    inline Point<T> topRight()    { return { mx+mw, my    }; }
+    inline Point<T> bottomRight() { return { mx+mw, my+mh }; }
+
+    inline T halfWidth()  { return mw/2; }
+    inline T halfHeight() { return mh/2; }
+
+    inline Point<T> center() { return { mx + halfWidth(), my + halfHeight() }; }
 };
 
 
-template<typename T> Rect<T> intersection_of(Rect<T> a, Rect<T> b)
+template<typename T> Rect<T> intersection(Rect<T> a, Rect<T> b)
 {
-    return {
-        a.left   > b.left   ? a.left   : b.left,
-        a.top    > b.top    ? a.top    : b.top,
-        a.right  < b.right  ? a.right  : b.right,
-        a.bottom < b.bottom ? a.bottom : b.bottom
-    };
-}
+    T max_left  = max(a.left(),  b.left());
+    T min_right = min(a.right(), b.right());
+    T intersec_width = min_right - max_left;
 
+    T max_top    = max(a.top(),    b.top());
+    T min_bottom = min(a.bottom(), b.bottom());
+    T intersec_height = min_bottom - max_top;
+
+    T x = (intersec_width  < a.width()  + b.width()  ? max_left        : T());
+    T y = (intersec_height < a.height() + b.height() ? max_top         : T());
+    T w = (intersec_width  < a.width()  + b.width()  ? intersec_width  : T());
+    T h = (intersec_height < a.height() + b.height() ? intersec_height : T());
+
+    return { x, y, w, h };
+}
     
 }//namespace r64fx
 
