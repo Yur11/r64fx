@@ -36,6 +36,7 @@ namespace{
     int g_mitshm_major = 0;
     int g_mitshm_minor = 0;
     int g_mitshm_has_pixmaps = 0;
+    int g_mitsm_completion_event = 0;
 #endif//R64FX_USE_MITSHM
 
     void init_x_if_needed()
@@ -58,12 +59,13 @@ namespace{
 
 #ifdef R64FX_USE_MITSHM
             XShmQueryVersion(g_display, &g_mitshm_major, &g_mitshm_minor, &g_mitshm_has_pixmaps);
+            g_mitsm_completion_event = XShmGetEventBase(g_display) + ShmCompletion;
 #endif//R64FX_USE_MITSHM
         }
     }
 
 #ifdef R64FX_USE_MITSHM
-    inline bool got_mitshm() { return g_mitshm_major < 0; }
+    inline bool got_mitshm() { return g_mitshm_major > 0; }
 
     inline bool got_mitshm_pixmaps() { return g_mitshm_has_pixmaps; }
 #endif//R64FX_USE_MITSHM
@@ -226,6 +228,7 @@ namespace{
                 );
                 shminfo->shmid = shmget(IPC_PRIVATE, ximage->bytes_per_line * ximage->height, IPC_CREAT|0777);
                 shminfo->shmaddr = ximage->data = (char*) shmat(shminfo->shmid, 0, 0);
+                XShmAttach(g_display, shminfo);
             }
             else
 #endif//R64FX_USE_MITSHM
@@ -744,7 +747,16 @@ void WindowX11::processSomeEvents(Window::Events* events)
 
             default:
             {
-                cout << "Unknown Event!\n";
+#ifdef R64FX_USE_MITSHM
+                if(xevent.type == g_mitsm_completion_event)
+                {
+                    cout << "MitShm Completion Event!\n";
+                }
+                else
+#endif//R64FX_USE_MITSHM
+                {
+                    cout << "Unknown Event!\n";
+                }
                 break;
             }
         }
