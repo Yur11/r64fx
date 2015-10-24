@@ -52,9 +52,8 @@ private:
 //         glClearColor(0.0, 1.0, 0.0, 1.0);
 //         glClear(GL_COLOR_BUFFER_BIT);
 
-        cout << m_Widget->width() << "x" << m_Widget->height() << "\n";
-        m_painter->setRect(0, 0, m_Widget->width(), m_Widget->height());
-        m_painter->fillRect(1.0f, 0.0f, 0.0f);
+//         m_painter->setRect(0, 0, m_Widget->width(), m_Widget->height());
+//         m_painter->fillRect(1.0f, 0.0f, 0.0f);
         m_painter->setRect(m_point.x, m_point.y, 10, 10);
         m_painter->fillRect(0.0f, 0.0f, 1.0f);
         m_painter->repaint();

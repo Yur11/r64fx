@@ -248,7 +248,6 @@ namespace{
                 );
             }
 
-            cout << "resizeImage: " << ximage->width << "x" << ximage->height << "\n";
             image = new Image(ximage->width, ximage->height, 4, (unsigned char*)ximage->data);
         }
 
