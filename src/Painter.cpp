@@ -19,6 +19,17 @@ public:
     : m_window(window)
     {}
 
+    virtual void clear(float r, float g, float b)
+    {
+        auto img = m_window->image();
+        unsigned char px[4];
+        px[0] = r * 255;
+        px[1] = g * 255;
+        px[2] = b * 255;
+        px[3] = 0;
+        img->fill(px);
+    }
+
     virtual void setRect(Rect<int> rect)
     {
         auto img = m_window->image();

@@ -38,7 +38,7 @@ private:
     virtual void setup()
     {
         m_Widget = new Widget;
-        m_Widget->resize(200, 200);
+        m_Widget->resize(800, 600);
         m_Widget->show();
         m_Widget->setWindowTitle( "hello!" );
         m_painter = Painter::createNew(m_Widget->parentWindow());
@@ -54,6 +54,7 @@ private:
 
 //         m_painter->setRect(0, 0, m_Widget->width(), m_Widget->height());
 //         m_painter->fillRect(1.0f, 0.0f, 0.0f);
+        m_painter->clear(1.0, 0.0, 0.0);
         m_painter->setRect(m_point.x, m_point.y, 10, 10);
         m_painter->fillRect(0.0f, 0.0f, 1.0f);
         m_painter->repaint();

@@ -16,6 +16,8 @@ protected:
 public:
     static Painter* createNew(Window* window);
 
+    virtual void clear(float r, float g, float b) = 0;
+
     virtual void setRect(Rect<int> rect) = 0;
 
     inline void setRect(int x, int y, int w, int h)
