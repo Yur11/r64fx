@@ -54,9 +54,9 @@ private:
 
 //         m_painter->setRect(0, 0, m_Widget->width(), m_Widget->height());
 //         m_painter->fillRect(1.0f, 0.0f, 0.0f);
-        m_painter->clear(1.0, 0.0, 0.0);
-        m_painter->setRect(m_point.x, m_point.y, 10, 10);
-        m_painter->fillRect(0.0f, 0.0f, 1.0f);
+        m_painter->clear(0.96, 0.965, 0.969);
+        m_painter->setRect(m_point.x, m_point.y, 100, 100);
+        m_painter->fillRect(0.0f, 0.0f, 0.0f);
         m_painter->repaint();
     }
 

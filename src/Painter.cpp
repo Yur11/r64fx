@@ -13,20 +13,23 @@ namespace r64fx{
 class PainterNormal : public Painter{
     Window* m_window;
     Rect<int> m_rect;
+    int ri, gi, bi, ai;
 
 public:
     PainterNormal(Window* window)
     : m_window(window)
-    {}
+    {
+        window->getComponentIndices(&ri, &gi, &bi, &ai);
+    }
 
     virtual void clear(float r, float g, float b)
     {
         auto img = m_window->image();
         unsigned char px[4];
-        px[0] = r * 255;
-        px[1] = g * 255;
-        px[2] = b * 255;
-        px[3] = 0;
+        px[ri] = r * 255;
+        px[gi] = g * 255;
+        px[bi] = b * 255;
+        px[ai] = 0;
         img->fill(px);
     }
 
@@ -46,10 +49,10 @@ public:
             for(int x=0; x<m_rect.width(); x++)
             {
                 unsigned char px[4];
-                px[0] = r * 255;
-                px[1] = g * 255;
-                px[2] = b * 255;
-                px[3] = 0;
+                px[ri] = r * 255;
+                px[gi] = g * 255;
+                px[bi] = b * 255;
+                px[ai] = 0;
                 img->setPixel(x + m_rect.x(), y + m_rect.y(), px);
             }
         }

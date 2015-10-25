@@ -640,6 +640,45 @@ Image* WindowX11::image() const
 }
 
 
+void WindowX11::getComponentIndices(int* r, int* g, int* b, int* a)
+{
+    if(type() == Window::Type::Normal)
+    {
+        auto p = (WindowX11PrivateNormal*) m_private;
+        static unsigned long int masks[4] = {
+            0xFF,
+            0xFF00,
+            0xFF0000,
+            0xFF000000
+        };
+
+        cout << p->ximage->red_mask << "\n";
+        cout << p->ximage->green_mask << "\n";
+        cout << p->ximage->blue_mask << "\n";
+
+        for(int i=0; i<4; i++)
+        {
+            if(masks[i] == p->ximage->red_mask)
+            {
+                *r = i;
+            }
+            else if(masks[i] == p->ximage->green_mask)
+            {
+                *g = i;
+            }
+            else if(masks[i] == p->ximage->blue_mask)
+            {
+                *b = i;
+            }
+            else
+            {
+                *a = i;
+            }
+        }
+    }
+}
+
+
 void WindowX11::setTitle(std::string title)
 {
     auto p = (WindowX11Private*) m_private;
@@ -749,7 +788,7 @@ void WindowX11::processSomeEvents(Window::Events* events)
 #ifdef R64FX_USE_MITSHM
                 if(xevent.type == g_mitsm_completion_event)
                 {
-                    cout << "MitShm Completion Event!\n";
+//                     cout << "MitShm Completion Event!\n";
                 }
                 else
 #endif//R64FX_USE_MITSHM
