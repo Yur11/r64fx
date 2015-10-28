@@ -6,10 +6,12 @@
 namespace r64fx{
 
 class Widget;
+class Painter;
 class Image;
 
 class Window{
     Widget* m_Widget = nullptr;
+    Painter* m_Painter = nullptr;
 
 public:
     enum class Type{
@@ -25,7 +27,7 @@ public:
         void (*mouse_move)    (Window* window, float x, float y, unsigned int buttons);
         void (*key_press)     (Window* window, int key);
         void (*key_release)   (Window* window, int key);
-        void (*resize)        (Window* window, int old_w, int old_h, int new_w, int new_h);
+        void (*reconfigure)   (Window* window, int old_w, int old_h, int new_w, int new_h);
         void (*close)         (Window* window);
     };
 
@@ -48,6 +50,10 @@ public:
     inline void setWidget(Widget* widget) { m_Widget = widget; }
 
     inline Widget* widget() const { return m_Widget; }
+
+    inline void setPainter(Painter* painter) { m_Painter = painter; }
+
+    inline Painter* painter() const { return m_Painter; }
 
     inline Window::Type type() const { return m_type; }
 

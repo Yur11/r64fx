@@ -16,6 +16,7 @@ template<typename T> struct Size{
     inline T height() const { return h; }
     
     inline bool operator==(const Size<T> &other) { return this->w == other.w && this->h == other.h; }
+    inline bool operator!=(const Size<T> &other) { return this->w != other.w || this->h != other.h; }
 };
 
 

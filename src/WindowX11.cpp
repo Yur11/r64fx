@@ -769,7 +769,7 @@ void WindowX11::processSomeEvents(Window::Events* events)
 
                     p->window_width = new_w;
                     p->window_height = new_h;
-                    events->resize(window, old_w, old_h, new_w, new_h);
+                    events->reconfigure(window, old_w, old_h, new_w, new_h);
                 }
                 break;
             }

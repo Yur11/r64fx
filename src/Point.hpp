@@ -57,6 +57,7 @@ template<typename T> struct Point{
     }
     
     inline bool operator==(const Point<T> &other) { return this->x == other.x && this->y == other.y; }
+    inline bool operator!=(const Point<T> &other) { return this->x != other.x || this->y != other.y; }
 };
     
 }//namespace r64fx

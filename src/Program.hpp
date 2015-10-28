@@ -7,7 +7,7 @@ class Widget;
 class Window;
 class MouseEvent;
 class KeyEvent;
-class ResizeEvent;
+class ReconfigureEvent;
 
 class Program{
     bool m_should_be_running = true;
@@ -35,7 +35,7 @@ protected:
 
     virtual void keyReleaseEvent(Window* window, KeyEvent* event);
 
-    virtual void resizeEvent(Window* window, ResizeEvent* event);
+    virtual void reconfigureEvent(Window* window, ReconfigureEvent* event);
 
     virtual void closeEvent(Window* window);
 

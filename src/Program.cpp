@@ -3,7 +3,7 @@
 #include "Window.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
-#include "ResizeEvent.hpp"
+#include "ReconfigureEvent.hpp"
 
 #include <iostream>
 #include <vector>
@@ -58,13 +58,16 @@ Program::Program(int argc, char* argv[])
         program_singleton_instance->keyReleaseEvent(window, &ke);
     };
 
-    events.resize = [](Window* window, int old_w, int old_h, int new_w, int new_h)
+    events.reconfigure = [](Window* window, int old_w, int old_h, int new_w, int new_h)
     {
-        ResizeEvent re{
+        ReconfigureEvent re{
+            {0, 0},
+            {0, 0},
             {old_w, old_h},
-            {new_w, new_h}
+            {new_w, new_h},
+            window->painter()
         };
-        program_singleton_instance->resizeEvent(window, &re);
+        program_singleton_instance->reconfigureEvent(window, &re);
     };
 
     events.close = [](Window* window)
@@ -137,9 +140,9 @@ void Program::keyReleaseEvent(Window* window, KeyEvent* event)
 }
 
 
-void Program::resizeEvent(Window* window, ResizeEvent* event)
+void Program::reconfigureEvent(Window* window, ReconfigureEvent* event)
 {
-    window->widget()->resizeEvent(event);
+    window->widget()->reconfigureEvent(event);
 }
 
 

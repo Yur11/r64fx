@@ -7,7 +7,7 @@
 #include "KeyEvent.hpp"
 #include "Keyboard.hpp"
 #include "MouseEvent.hpp"
-#include "ResizeEvent.hpp"
+#include "ReconfigureEvent.hpp"
 #include "Image.hpp"
 #include "Painter.hpp"
 
@@ -17,17 +17,37 @@ using namespace std;
 using namespace r64fx;
 
 
-class ImageWidget : public Widget{
-
+class MyWidget : public Widget{
 public:
-    ImageWidget(Widget* parent = nullptr)
-    : Widget(parent)
-    {}
+    MyWidget(Widget* parent = nullptr) : Widget(parent)
+    {
+
+    }
+
+protected:
+    virtual void reconfigureEvent(ReconfigureEvent* event)
+    {
+        if(event->sizeChanged())
+        {
+            auto size = event->newSize();
+            cout << "MyWidget::reconfigureEvent(" << size.width() << "x" << size.height() << ")\n";
+        }
+
+        auto p = event->painter();
+        p->clear();
+        p->setRect(10, 10, 100, 100);
+        p->fillRect(1.0f, 0.0f, 0.0f);
+        p->setRect(210, 210, 100, 100);
+        p->fillRect(0.0f, 1.0f, 0.0f);
+        p->setRect(410, 410, 100, 100);
+        p->fillRect(0.0f, 0.0f, 1.0f);
+        p->repaint();
+    }
 };
 
 
 class MyProgram : public Program{
-    Widget* m_Widget = nullptr;
+    MyWidget* m_Widget = nullptr;
     Painter* m_painter = nullptr;
     Point<int> m_point = {10, 10};
     
@@ -37,48 +57,22 @@ public:
 private:
     virtual void setup()
     {
-        m_Widget = new Widget;
+        m_Widget = new MyWidget;
         m_Widget->resize(800, 600);
         m_Widget->show();
-        m_Widget->setWindowTitle( "hello!" );
-        m_painter = Painter::createNew(m_Widget->parentWindow());
-
-        repaint();
     }
 
-
-    void repaint()
-    {
-//         glClearColor(0.0, 1.0, 0.0, 1.0);
-//         glClear(GL_COLOR_BUFFER_BIT);
-
-//         m_painter->setRect(0, 0, m_Widget->width(), m_Widget->height());
-//         m_painter->fillRect(1.0f, 0.0f, 0.0f);
-        m_painter->clear(0.96, 0.965, 0.969);
-        m_painter->setRect(m_point.x, m_point.y, 100, 100);
-        m_painter->fillRect(0.0f, 0.0f, 0.0f);
-        m_painter->repaint();
-    }
-
-
-    virtual void mousePressEvent(Window* window, MouseEvent* event)
-    {
-        cout << "press:   " << event->x() << ", " << event->y() << "\n";
-        m_point = event->position();
-        repaint();
-    }
-
-
-    virtual void mouseReleaseEvent(Window* window, MouseEvent* event)
-    {
-        cout << "release: " << event->x() << ", " << event->y() << "\n";
-    }
-
-    virtual void mouseMoveEvent(Window* window, MouseEvent* event)
-    {
-        m_point = event->position();
-        repaint();
-    }
+//     virtual void mousePressEvent(Window* window, MouseEvent* event)
+//     {
+//     }
+//
+//     virtual void mouseReleaseEvent(Window* window, MouseEvent* event)
+//     {
+//     }
+//
+//     virtual void mouseMoveEvent(Window* window, MouseEvent* event)
+//     {
+//     }
     
 
     virtual void keyPressEvent(Window* window, KeyEvent* event)
@@ -116,14 +110,7 @@ private:
             quit();
         }
     }
-    
 
-    virtual void resizeEvent(Window* window, ResizeEvent* event)
-    {
-        Program::resizeEvent(window, event);
-        repaint();
-    }
-    
 
     virtual void cleanup()
     {

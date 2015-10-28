@@ -9,7 +9,7 @@ namespace r64fx{
 
 class MouseEvent;
 class KeyEvent;
-class ResizeEvent;
+class ReconfigureEvent;
 class ShowEvent;
 class Window;
 class Image;
@@ -17,6 +17,7 @@ class Painter;
 
 class Widget : public LinkedList<Widget>::Node{
     friend class Program; //To set size and call event methods.
+    friend class Painter; //For Painter to access its private data.
 
     union{
         Widget* widget = nullptr;
@@ -33,9 +34,6 @@ class Widget : public LinkedList<Widget>::Node{
 
     /* A linked list of widgets children. */
     LinkedList<Widget> m_children;
-
-    /* Data used by the Painter. */
-    void* painter_data = nullptr;
     
 public:
     Widget(Widget* parent = nullptr);
@@ -49,6 +47,8 @@ public:
     Window* parentWindow() const;
     
     void add(Widget* child);
+
+    Widget* root();
     
     void resize(Size<int> size);
 
@@ -87,7 +87,7 @@ protected:
     
     virtual void keyReleaseEvent(KeyEvent* event);
 
-    virtual void resizeEvent(ResizeEvent* event);
+    virtual void reconfigureEvent(ReconfigureEvent* event);
 };
     
 }//r64fx

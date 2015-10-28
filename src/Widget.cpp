@@ -2,8 +2,9 @@
 #include "Window.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
-#include "ResizeEvent.hpp"
+#include "ReconfigureEvent.hpp"
 #include "Image.hpp"
+#include "Painter.hpp"
 
 #include <map>
 
@@ -79,6 +80,23 @@ void Widget::add(Widget* child)
 }
 
 
+Widget* Widget::root()
+{
+    if(isWindow())
+    {
+        return this;
+    }
+    else if(m_parent.widget)
+    {
+        return m_parent.widget->root();
+    }
+    else
+    {
+        return this;
+    }
+}
+
+
 void Widget::resize(Size<int> size)
 {
     resize(size.w, size.h);
@@ -121,9 +139,11 @@ void Widget::show()
             width(), height(), "", Window::Type::Normal
         );
         m_parent.window->setWidget(this);
+        m_parent.window->setPainter(Painter::newInstance(m_parent.window));
         m_flags |= WIDGET_IS_WINDOW;
     }
     m_parent.window->show();
+    m_parent.window->resize(width(), height());
 }
 
 
@@ -218,7 +238,7 @@ void Widget::keyReleaseEvent(KeyEvent* event)
 }
 
 
-void Widget::resizeEvent(ResizeEvent* event)
+void Widget::reconfigureEvent(ReconfigureEvent* event)
 {
     m_rect.setSize(event->newSize());
 }
