@@ -1,10 +1,13 @@
 #ifndef R64FX_PAINTER_HPP
 #define R64FX_PAINTER_HPP
 
+#include "Color.hpp"
 #include "Rect.hpp"
+#include "Orientation.hpp"
 
 namespace r64fx{
 
+class Image;
 class Window;
 
 class Painter{
@@ -22,19 +25,11 @@ public:
 
     virtual void setClipRect(Rect<int> rect) = 0;
 
-    inline void setClipRect(int x, int y, int w, int h)
-    {
-        setClipRect(Rect<int>(x, y, w, h));
-    }
+    virtual void fillRect(Rect<int> rect, Color<float> color) = 0;
 
-    virtual void setRect(Rect<int> rect) = 0;
+    virtual void putImage(int x, int y, Image* img) = 0;
 
-    inline void setRect(int x, int y, int w, int h)
-    {
-        setRect(Rect<int>(x, y, w, h));
-    }
-
-    virtual void fillRect(float r, float g, float b) = 0;
+    virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal) = 0;
 
     virtual void repaint() = 0;
 

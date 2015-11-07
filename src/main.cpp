@@ -18,10 +18,56 @@ using namespace r64fx;
 
 
 class MyWidget : public Widget{
+    Image* m_Image = nullptr;
+    float* data = nullptr;
+    int data_size = 256;
+
 public:
     MyWidget(Widget* parent = nullptr) : Widget(parent)
     {
+        m_Image = new Image(20, 20, 4);
+        {
+            unsigned char px[4] = { 255, 255, 255, 255 };
+            m_Image->fill(px);
+        }
+        {
+            unsigned char px[4] = { 255, 0, 0, 0 };
+            m_Image->setPixel(9,  9,  px);
+            m_Image->setPixel(10, 9,  px);
+            m_Image->setPixel(9,  10, px);
+            m_Image->setPixel(10, 10, px);
+        }
 
+        {
+            data = new float[data_size];
+            for(int i=0; i<data_size; i+=2)
+            {
+                if(i % 8)
+                {
+                    data[i] = -0.3;
+                    data[i+1] = 0.5;
+                }
+                else
+                {
+                    data[i] = -0.5;
+                    data[i+1] = 0.3;
+                }
+            }
+        }
+
+    }
+
+    ~MyWidget()
+    {
+        if(m_Image)
+        {
+            delete m_Image;
+        }
+
+        if(data)
+        {
+            delete[] data;
+        }
     }
 
 protected:
@@ -35,12 +81,14 @@ protected:
 
         auto p = event->painter();
         p->clear();
-        p->setRect(10, 10, 100, 100);
-        p->fillRect(1.0f, 0.0f, 0.0f);
-        p->setRect(210, 210, 100, 100);
-        p->fillRect(0.0f, 1.0f, 0.0f);
-        p->setRect(410, 410, 100, 100);
-        p->fillRect(0.0f, 0.0f, 1.0f);
+        p->fillRect({10, 10, 100, 100},   {1.0f, 0.0f, 0.0f});
+        p->fillRect({210, 210, 100, 100}, {0.0f, 1.0f, 0.0f});
+        p->fillRect({410, 410, 100, 100}, {0.0f, 0.0f, 1.0f});
+        p->putImage(130, 200, m_Image);
+        p->putImage(250, 50, m_Image);
+        p->putImage(180, 250, m_Image);
+        p->putPlot(Rect<int>(100, 100, 100, data_size/2), data, data_size, Orientation::Vertical);
+        p->putPlot(Rect<int>(100, 300, data_size/2, 100), data, data_size, Orientation::Horizontal);
         p->repaint();
     }
 };
@@ -50,6 +98,7 @@ class MyProgram : public Program{
     MyWidget* m_Widget = nullptr;
     Painter* m_painter = nullptr;
     Point<int> m_point = {10, 10};
+
     
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}

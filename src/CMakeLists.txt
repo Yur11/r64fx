@@ -22,7 +22,7 @@ add_executable(r64x ${SRC})
 set(LIBS
     X11
     Xext
-    GL
+#     GL
 )
 
 target_link_libraries(r64x ${LIBS})
