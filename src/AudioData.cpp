@@ -14,16 +14,16 @@ AudioData::AudioData(long unsigned int size, float* data, float nchannels, float
     if(size == 0)
         return;
     
-    _size = size;
+    m_size = size;
     
     if(data == nullptr)
-        _d = new float[size];
+        m_d = new float[size];
     else
-        _d = data;
+        m_d = data;
     
-    _channels = nchannels;
-    _samplerate = samplerate;
-    _samplerate_rcp = 1.0 / float(_samplerate);
+    m_channels = nchannels;
+    m_samplerate = samplerate;
+    m_samplerate_rcp = 1.0 / float(m_samplerate);
 }
 
 
@@ -39,23 +39,16 @@ AudioData::AudioData(const char* path)
         return;
     }
 
-//     cout << info.channels << " channels\n";
-//     cout << info.samplerate << " HZ\n";
-//     cout << info.frames << " frames\n";
-//
-//     assert(info.samplerate == 48000);
-//     assert(info.channels == 1);
-    
-    _channels = info.channels;
-    _samplerate = info.samplerate;
-    _samplerate_rcp = 1.0 / float(_samplerate);
+    m_channels = info.channels;
+    m_samplerate = info.samplerate;
+    m_samplerate_rcp = 1.0 / float(m_samplerate);
 
-    cout << _samplerate << "\n";
+    cout << m_samplerate << "\n";
     
-    _size = info.frames * _channels;
+    m_size = info.frames * m_channels;
     
-    _d = new float[_size];
-    assert(sf_readf_float(sndfile, _d, info.frames) == (int)_size);
+    m_d = new float[m_size];
+    assert(sf_readf_float(sndfile, m_d, info.frames) == (int)m_size);
     
     sf_close(sndfile);
 }
@@ -63,54 +56,51 @@ AudioData::AudioData(const char* path)
 
 AudioData::~AudioData()
 {
-    if(_a)
-        delete[] _a;
+    if(m_a)
+        delete[] m_a;
     
-    if(_b)
-        delete[] _b;
+    if(m_b)
+        delete[] m_b;
     
-    if(_c)
-        delete[] _c;
+    if(m_c)
+        delete[] m_c;
     
-    if(_d)
-        delete[] _d;
+    if(m_d)
+        delete[] m_d;
 }
 
 
 void AudioData::calculateLinear()
 {
-    _c = new float[size()];
+    m_c = new float[size()];
     
     cout << fixed;
-    float dx = _samplerate_rcp;
+    float dx = m_samplerate_rcp;
     for(int i=0; i<(int)size()-1; i++)
     {
-        float dy = _d[i+1] - _d[i];
-        _c[i] = dy / dx;
-//         cout << "dy: " << dy << "\n";
-//         cout << "dx: " << dx << "\n";
-//         cout << _c[i] << "\n";
+        float dy = m_d[i+1] - m_d[i];
+        m_c[i] = dy / dx;
     }
-    _c[size()-1] = float(_d[0] - _d[size()-1]) / dx;
+    m_c[size()-1] = float(m_d[0] - m_d[size()-1]) / dx;
 }
 
 
 float AudioData::readNearest(float t)
 {
-    t *= float(_samplerate);
+    t *= float(m_samplerate);
     int n = int(t);
-    return _d[n];
+    return m_d[n];
 }
 
 
 float AudioData::readLinear(float t)
 {
-    t *= float(_samplerate);
+    t *= float(m_samplerate);
     int n = int(t);
     float x = t - float(n);
-    float d = _d[n];
-    float c = _c[n];
-    return c*x*_samplerate_rcp + d;
+    float d = m_d[n];
+    float c = m_c[n];
+    return c*x*m_samplerate_rcp + d;
 }
 
 
@@ -144,8 +134,8 @@ void calculate_peak_summary(float* input, int input_size, float* output, int out
             if(val < min)
                 min = val;
         }
-        output[i*2    ] = min/* * 0.5f + 0.5*/;
-        output[i*2 + 1] = max/* * 0.5f + 0.5*/;
+        output[i*2    ] = min * 0.5f + 0.5;
+        output[i*2 + 1] = max * 0.5f + 0.5;
     }
 }
     
