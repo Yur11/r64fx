@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.3)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -O2")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -O0 -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_DEBUG")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_X11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_MITSHM")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_GL")
 
 set(SRC
+    AudioData.cpp
     Image.cpp
     Keyboard.cpp
     Painter.cpp
@@ -23,6 +24,7 @@ set(LIBS
     X11
     Xext
 #     GL
+    sndfile
 )
 
 target_link_libraries(r64x ${LIBS})

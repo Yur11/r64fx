@@ -1,8 +1,8 @@
 #include "AudioData.hpp"
-#include <iostream>
 #include <sndfile.h>
 #include <cmath>
 
+#include <iostream>
 #include <assert.h>
 
 using namespace std;
@@ -42,13 +42,15 @@ AudioData::AudioData(const char* path)
 //     cout << info.channels << " channels\n";
 //     cout << info.samplerate << " HZ\n";
 //     cout << info.frames << " frames\n";
-    
-    assert(info.samplerate == 48000);
-    assert(info.channels == 1);
+//
+//     assert(info.samplerate == 48000);
+//     assert(info.channels == 1);
     
     _channels = info.channels;
     _samplerate = info.samplerate;
     _samplerate_rcp = 1.0 / float(_samplerate);
+
+    cout << _samplerate << "\n";
     
     _size = info.frames * _channels;
     
@@ -108,60 +110,42 @@ float AudioData::readLinear(float t)
     float x = t - float(n);
     float d = _d[n];
     float c = _c[n];
-    return c*x*_samplerate_rcp + d; 
+    return c*x*_samplerate_rcp + d;
 }
 
 
-void AudioData::calculateSummary(float* buffer, int nsamples)
+void calculate_peak_summary(float* input, int input_size, float* output, int output_size)
 {
-#ifdef DEBUG
-    assert(linearData() != nullptr);
-#endif//DEBUG
-    
-    int chunk_size = size() / nsamples;
-    float chunk_size_rcp = 1.0 / float(chunk_size);
-    
-    int n = 0;
-    for(int i=0; i<nsamples; i++)
+    int chunk_size = (input_size / output_size);
+    output_size /= 2;
+
+    for(int i=0; i<output_size; i++)
     {
-        float val = 0.0;
+        float min = +1.0f;
+        float max = -1.0f;
         for(int j=0; j<chunk_size; j++)
         {
-            val += fabs(_d[n]);
-            n++;
-        }
-        val *= chunk_size_rcp;
-        buffer[i] = val;
-    }
-}
+            int n = i*chunk_size + j;
+            float val = input[n];
 
+            if(val >= 1.0f)
+            {
+                val = 1.0f;
+                break;
+            }
+            else if(val <= -1.0f)
+            {
+                val = -1.0f;
+                break;
+            }
 
-void AudioData::calculateSummaryStereo(float* buffer, int nsamples)
-{
-#ifdef DEBUG
-    assert(linearData() != nullptr);
-    assert(nsamples % 2 == 0);
-#endif//DEBUG
-    
-    int chunk_size = size() / nsamples;
-    
-    int n = 0;
-    for(int i=0; i<nsamples; i+=2)
-    {
-        float pos_val = 0.0;
-        float neg_val = 0.0;
-        for(int j=0; j<chunk_size; j++)
-        {
-            if(_d[n] > pos_val)
-                pos_val = _d[n];
-            
-            if(_d[n] < neg_val)
-                neg_val = _d[n];
-            n++;
+            if(val > max)
+                max = val;
+            if(val < min)
+                min = val;
         }
-        
-        buffer[i] = pos_val;
-        buffer[i+1] = neg_val;
+        output[i*2    ] = min/* * 0.5f + 0.5*/;
+        output[i*2 + 1] = max/* * 0.5f + 0.5*/;
     }
 }
     

@@ -10,6 +10,7 @@
 #include "ReconfigureEvent.hpp"
 #include "Image.hpp"
 #include "Painter.hpp"
+#include "AudioData.hpp"
 
 #include <GL/gl.h>
 
@@ -39,19 +40,16 @@ public:
         }
 
         {
+            AudioData ad("./data/drum_loop_mono.wav");
+
+            data_size = ad.size() / 128;
             data = new float[data_size];
-            for(int i=0; i<data_size; i+=2)
+            ad.calculateLinear();
+            calculate_peak_summary(ad.constantData(), ad.size(), data, data_size);
+
+            for(int i=0; i<data_size; i++)
             {
-                if(i % 8)
-                {
-                    data[i] = -0.3;
-                    data[i+1] = 0.5;
-                }
-                else
-                {
-                    data[i] = -0.5;
-                    data[i+1] = 0.3;
-                }
+                cout << data[i] << "\n";
             }
         }
 
@@ -88,7 +86,7 @@ protected:
         p->putImage(250, 50, m_Image);
         p->putImage(180, 250, m_Image);
         p->putPlot(Rect<int>(100, 100, 100, data_size/2), data, data_size, Orientation::Vertical);
-        p->putPlot(Rect<int>(100, 300, data_size/2, 100), data, data_size, Orientation::Horizontal);
+        p->putPlot(Rect<int>(200, 200, data_size/2, 100), data, data_size, Orientation::Horizontal);
         p->repaint();
     }
 };
