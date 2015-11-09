@@ -211,8 +211,7 @@ struct PaintCommand_PutDensePlotHorizontal : public PaintCommand_PutDensePlot{
     {
         auto img = p->window->image();
 
-        int offset = orig_rect.height() / 2;
-        float scale = 2.0f / orig_rect.height();
+        float scale = 1.0f / orig_rect.height();
 
         for(int x=0; x<rect.width(); x++)
         {
@@ -220,7 +219,7 @@ struct PaintCommand_PutDensePlotHorizontal : public PaintCommand_PutDensePlot{
             float max = data[x*2 + 1];
             for(int y=0; y<rect.height(); y++)
             {
-                float val = (y - offset)*scale;
+                float val = y*scale;
                 unsigned char px[4];
                 if(val > min && val < max)
                 {
@@ -252,8 +251,7 @@ struct PaintCommand_PutDensePlotVertical : public PaintCommand_PutDensePlot{
     {
         auto img = p->window->image();
 
-        int offset = orig_rect.width() / 2;
-        float scale = 2.0f / orig_rect.width();
+        float scale = 1.0f / orig_rect.width();
 
         for(int y=0; y<rect.height(); y++)
         {
@@ -261,7 +259,7 @@ struct PaintCommand_PutDensePlotVertical : public PaintCommand_PutDensePlot{
             float max = data[y*2 + 1];
             for(int x=0; x<rect.width(); x++)
             {
-                float val = (x - offset)*scale;
+                float val = x*scale;
                 unsigned char px[4];
                 if(val > min && val < max)
                 {
