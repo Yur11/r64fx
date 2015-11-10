@@ -7,21 +7,21 @@ namespace r64fx{
     
 Shader::Shader(const char* text, GLenum shader_type)
 {
-    _shader = gl::CreateShader(shader_type);
-    if(!_shader)
+    m_shader = gl::CreateShader(shader_type);
+    if(!m_shader)
         return;
     
-    gl::ShaderSource(_shader, 1, &text, nullptr);
-    gl::CompileShader(_shader);
+    gl::ShaderSource(m_shader, 1, &text, nullptr);
+    gl::CompileShader(m_shader);
 }
 
 bool Shader::isOk()
 {
-    if(!_shader)
+    if(!m_shader)
         return false;
     
     int param;
-    gl::GetShaderiv(_shader, GL_COMPILE_STATUS, &param);
+    gl::GetShaderiv(m_shader, GL_COMPILE_STATUS, &param);
     return param == GL_TRUE;
 }
 
@@ -30,36 +30,36 @@ const char* Shader::infoLog()
 {
     static char buffer[1024];
     int length;
-    gl::GetShaderInfoLog(_shader, 1024, &length, buffer);
+    gl::GetShaderInfoLog(m_shader, 1024, &length, buffer);
     return buffer;
 }
 
 
 void Shader::free()
 { 
-    gl::DeleteShader(_shader); 
+    gl::DeleteShader(m_shader);
 }
 
 
-ShadingProgram::ShadingProgram(VertexShader vs, FragmentShader fs) : _vs(vs), _fs(fs) 
+ShadingProgram::ShadingProgram(VertexShader vs, FragmentShader fs) : m_vs(vs), m_fs(fs)
 {
-    _program = gl::CreateProgram();
-    if(!_program)
+    m_program = gl::CreateProgram();
+    if(!m_program)
         return;
     
-    gl::AttachShader(_program, vs.id());
-    gl::AttachShader(_program, fs.id());
-    gl::LinkProgram(_program);
+    gl::AttachShader(m_program, vs.id());
+    gl::AttachShader(m_program, fs.id());
+    gl::LinkProgram(m_program);
 }
 
 
 bool ShadingProgram::isOk()
 {
-    if(!_program)
+    if(!m_program)
         return false;
     
     int param;
-    gl::GetProgramiv(_program, GL_LINK_STATUS, &param);
+    gl::GetProgramiv(m_program, GL_LINK_STATUS, &param);
     return param == GL_TRUE;
 }
 
@@ -68,20 +68,20 @@ const char* ShadingProgram::infoLog()
 {
     static char buffer[1024];
     int length;
-    gl::GetProgramInfoLog(_program, 1024, &length, buffer);
+    gl::GetProgramInfoLog(m_program, 1024, &length, buffer);
     return buffer;
 }
 
 
 void ShadingProgram::use()
 {
-    gl::UseProgram(_program);
+    gl::UseProgram(m_program);
 }
 
 
 void ShadingProgram::free() 
 { 
-    gl::DeleteProgram(_program); 
+    gl::DeleteProgram(m_program);
 }
 
 

@@ -1,21 +1,29 @@
 #ifndef R64FX_GUI_GL_H
 #define R64FX_GUI_GL_H
 
-#include <GL/glew.h>
+#include <GL/gl.h>
 
 namespace r64fx{
     
-class BasicTexture;
-    
 namespace gl{
       
-#ifdef DEBUG_GL_ERRORS
+void InitIfNeeded();
+
+#ifdef R64FX_DEBUG_GL_ERRORS
 #define CHECK_FOR_GL_ERRORS(fun_name) CheckForErrors(fun_name)
 void CheckForErrors(const char* fun_name);
 #else
 #define CHECK_FOR_GL_ERRORS(fun_name)
-#endif//DEBUG_GL_ERRORS
-     
+#endif//R64FX_DEBUG_GL_ERRORS
+
+
+#ifdef R64FX_IMPL
+#define R64FX_MAYBE_EXTERN
+#else
+#define R64FX_MAYBE_EXTERN extern
+#endif//R64FX_IMPL
+
+
 inline void ClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
     glClearColor(red, green, blue, alpha);
@@ -26,6 +34,12 @@ inline void Clear(GLbitfield mask)
 {
     glClear(mask);
     CHECK_FOR_GL_ERRORS("glClear");
+}
+
+inline void Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    glViewport(x, y, width, height);
+    CHECK_FOR_GL_ERRORS("glViewport");
 }
 
 inline void Scissor(GLint x, GLint y, GLsizei width, GLsizei height)
@@ -52,181 +66,292 @@ inline void BlendFunc(GLenum sfactor, GLenum dfactor)
     CHECK_FOR_GL_ERRORS("glBlendFunc");
 }
 
-inline void GenBuffers(GLsizei n, GLuint* buffers)
-{
-    glGenBuffers(n, buffers);
-    CHECK_FOR_GL_ERRORS("glGenBuffers");
-}
-
-inline void DeleteBuffers(GLsizei n, const GLuint* buffers)
-{
-    glDeleteBuffers(n, buffers);
-    CHECK_FOR_GL_ERRORS("glDeleteBuffers");
-}
-
-inline void BindBuffer(GLenum target, GLuint buffer)
-{
-    glBindBuffer(target, buffer);
-    CHECK_FOR_GL_ERRORS("glBindBuffer");
-}
-
-inline void BufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data)
-{
-    glBufferSubData(target, offset, size, data);
-    CHECK_FOR_GL_ERRORS("glBufferSubData");
-}
-
-inline void GenVertexArrays(GLsizei n, GLuint* arrays)
-{
-    glGenVertexArrays(n, arrays);
-    CHECK_FOR_GL_ERRORS("glGenVertexArrays");
-}
-
-inline void DeleteVertexArrays(GLsizei n, const GLuint *arrays)
-{
-    glDeleteVertexArrays(n, arrays);
-    CHECK_FOR_GL_ERRORS("glDeleteVertexArrays");
-}
-
-inline void BindVertexArray(GLuint array)
-{
-    glBindVertexArray(array);
-    CHECK_FOR_GL_ERRORS("glBindVertexArray");
-}
-
-inline void BufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
-{
-    glBufferData(target, size, data, usage);
-    CHECK_FOR_GL_ERRORS("glBufferData");
-}
-
-inline void EnableVertexAttribArray(GLuint index)
-{
-    glEnableVertexAttribArray(index);
-    CHECK_FOR_GL_ERRORS("glEnableVertexAttribArray");
-}
-
-inline void DisableVertexAttribArray(GLuint index)
-{
-    glDisableVertexAttribArray(index);
-    CHECK_FOR_GL_ERRORS("glDisableVertexAttribArray");
-}
-
-inline void VertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
-{
-    glVertexAttribPointer(index, size, type, normalized, stride, (void*)long(pointer));
-    CHECK_FOR_GL_ERRORS("glVertexAttribPointer");
-}
-
 inline void DrawArrays(GLenum mode, GLint first, GLsizei count)
 {
     glDrawArrays(mode, first, count);
     CHECK_FOR_GL_ERRORS("glDrawArrays");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glGenBuffers)
+    (GLsizei n, GLuint* buffers);
+
+inline void GenBuffers(GLsizei n, GLuint* buffers)
+{
+    r64fx_impl_glGenBuffers(n, buffers);
+    CHECK_FOR_GL_ERRORS("glGenBuffers");
+}
+
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glDeleteBuffers)
+    (GLsizei n, const GLuint* buffers);
+
+inline void DeleteBuffers(GLsizei n, const GLuint* buffers)
+{
+    r64fx_impl_glDeleteBuffers(n, buffers);
+    CHECK_FOR_GL_ERRORS("glDeleteBuffers");
+}
+
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glBindBuffer)
+    (GLenum target, GLuint buffer);
+
+inline void BindBuffer(GLenum target, GLuint buffer)
+{
+    r64fx_impl_glBindBuffer(target, buffer);
+    CHECK_FOR_GL_ERRORS("glBindBuffer");
+}
+
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glBufferData)
+    (GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage);
+
+inline void BufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
+{
+    r64fx_impl_glBufferData(target, size, data, usage);
+    CHECK_FOR_GL_ERRORS("glBufferData");
+}
+
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glBufferSubData)
+    (GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data);
+
+inline void BufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data)
+{
+    r64fx_impl_glBufferSubData(target, offset, size, data);
+    CHECK_FOR_GL_ERRORS("glBufferSubData");
+}
+
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glGenVertexArrays)
+    (GLsizei n, GLuint* arrays);
+
+inline void GenVertexArrays(GLsizei n, GLuint* arrays)
+{
+    r64fx_impl_glGenVertexArrays(n, arrays);
+    CHECK_FOR_GL_ERRORS("glGenVertexArrays");
+}
+
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glDeleteVertexArrays)
+    (GLsizei n, const GLuint* arrays);
+
+inline void DeleteVertexArrays(GLsizei n, const GLuint *arrays)
+{
+    r64fx_impl_glDeleteVertexArrays(n, arrays);
+    CHECK_FOR_GL_ERRORS("glDeleteVertexArrays");
+}
+
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glBindVertexArray)
+    (GLuint array);
+
+inline void BindVertexArray(GLuint array)
+{
+    r64fx_impl_glBindVertexArray(array);
+    CHECK_FOR_GL_ERRORS("glBindVertexArray");
+}
+
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glEnableVertexAttribArray)
+    (GLuint index);
+
+inline void EnableVertexAttribArray(GLuint index)
+{
+    r64fx_impl_glEnableVertexAttribArray(index);
+    CHECK_FOR_GL_ERRORS("glEnableVertexAttribArray");
+}
+
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glDisableVertexAttribArray)
+    (GLuint index);
+
+inline void DisableVertexAttribArray(GLuint index)
+{
+    r64fx_impl_glDisableVertexAttribArray(index);
+    CHECK_FOR_GL_ERRORS("glDisableVertexAttribArray");
+}
+
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glVertexAttribPointer)
+    (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, void* pointer);
+
+inline void VertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
+{
+    r64fx_impl_glVertexAttribPointer(index, size, type, normalized, stride, (void*)long(pointer));
+    CHECK_FOR_GL_ERRORS("glVertexAttribPointer");
+}
+
+
+R64FX_MAYBE_EXTERN GLuint (*r64fx_impl_glCreateShader)
+    (GLenum shaderType);
+
 inline GLuint CreateShader(GLenum shaderType)
 {
-    auto shader = glCreateShader(shaderType);
+    auto shader = r64fx_impl_glCreateShader(shaderType);
     CHECK_FOR_GL_ERRORS("glCreateShader");
     return shader;
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glDeleteShader)
+    (GLuint shader);
+
 inline void DeleteShader(GLuint shader)
 {
-    glDeleteShader(shader);
+    r64fx_impl_glDeleteShader(shader);
     CHECK_FOR_GL_ERRORS("glDeleteShader");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glShaderSource)
+    (GLuint shader, GLsizei count, const GLchar** string, const GLint* length);
+
 inline void ShaderSource(GLuint shader, GLsizei count, const GLchar** string, const GLint* length)
 {
-    glShaderSource(shader, count, string, length);
+    r64fx_impl_glShaderSource(shader, count, string, length);
     CHECK_FOR_GL_ERRORS("glShaderSource");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glCompileShader)
+    (GLuint shader);
+
 inline void CompileShader(GLuint shader)
 {
-    glCompileShader(shader);
+    r64fx_impl_glCompileShader(shader);
     CHECK_FOR_GL_ERRORS("glCompileShader");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glGetShaderiv)
+    (GLuint shader, GLenum pname, GLint* params);
+
 inline void GetShaderiv(GLuint shader, GLenum pname, GLint* params)
 {
-    glGetShaderiv(shader, pname, params);
+    r64fx_impl_glGetShaderiv(shader, pname, params);
     CHECK_FOR_GL_ERRORS("glGetShaderiv");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glGetShaderInfoLog)
+    (GLuint shader, GLsizei maxLength, GLsizei* length, GLchar* infoLog);
+
 inline void GetShaderInfoLog(GLuint shader, GLsizei maxLength, GLsizei* length, GLchar* infoLog)
 {
-    glGetShaderInfoLog(shader, maxLength, length, infoLog);
+    r64fx_impl_glGetShaderInfoLog(shader, maxLength, length, infoLog);
     CHECK_FOR_GL_ERRORS("glGetShaderInfoLog");
 }
 
+
+R64FX_MAYBE_EXTERN GLuint (*r64fx_impl_glCreateProgram)();
+
 inline GLuint CreateProgram()
 {
-    auto program = glCreateProgram();
+    auto program = r64fx_impl_glCreateProgram();
     CHECK_FOR_GL_ERRORS("glCreateProgram");
     return program;
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glDeleteProgram)
+    (GLuint program);
+
 inline void DeleteProgram(GLuint program)
 {
-    glDeleteProgram(program);
+    r64fx_impl_glDeleteProgram(program);
     CHECK_FOR_GL_ERRORS("glDeleteProgram");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glAttachShader)
+    (GLuint program, GLuint shader);
+
 inline void AttachShader(GLuint program, GLuint shader)
 {
-    glAttachShader(program, shader);
+    r64fx_impl_glAttachShader(program, shader);
     CHECK_FOR_GL_ERRORS("glAttachShader");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glLinkProgram)
+    (GLuint program);
+
 inline void LinkProgram(GLuint program)
 {
-    glLinkProgram(program);
+    r64fx_impl_glLinkProgram(program);
     CHECK_FOR_GL_ERRORS("glLinkProgram");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glGetProgramiv)
+    (GLuint program, GLenum pname, GLint* params);
+
 inline void GetProgramiv(GLuint program, GLenum pname, GLint* params)
 {
-    glGetProgramiv(program, pname, params);
+    r64fx_impl_glGetProgramiv(program, pname, params);
     CHECK_FOR_GL_ERRORS("glGetProgramiv");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glGetProgramInfoLog)
+    (GLuint program, GLsizei maxLength, GLsizei* length, GLchar* infoLog);
+
 inline void GetProgramInfoLog(GLuint program, GLsizei maxLength, GLsizei* length, GLchar* infoLog)
 {
-    glGetProgramInfoLog(program, maxLength, length, infoLog);
+    r64fx_impl_glGetProgramInfoLog(program, maxLength, length, infoLog);
     CHECK_FOR_GL_ERRORS("glGetProgramInfoLog");
 }
 
+
+R64FX_MAYBE_EXTERN GLint (*r64fx_impl_glGetAttribLocation)
+    (GLuint program, const GLchar* name);
+
 inline GLint GetAttribLocation(GLuint program, const GLchar* name)
 {
-    auto loc = glGetAttribLocation(program, name);
+    auto loc = r64fx_impl_glGetAttribLocation(program, name);
     CHECK_FOR_GL_ERRORS("glGetAttribLocation");
     return loc;
 }
 
+
+R64FX_MAYBE_EXTERN GLint (*r64fx_impl_glGetUniformLocation)
+    (GLuint program, const GLchar* name);
+
 inline GLint GetUniformLocation(GLuint program, const GLchar* name)
 {
-    auto loc = glGetUniformLocation(program, name);
+    auto loc = r64fx_impl_glGetUniformLocation(program, name);
     CHECK_FOR_GL_ERRORS("glGetUniformLocation");
     return loc;
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glUseProgram)
+    (GLuint program);
+
 inline void UseProgram(GLuint program)
 {
-    glUseProgram(program);
+    r64fx_impl_glUseProgram(program);
     CHECK_FOR_GL_ERRORS("glUseProgram");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glUniform1i)
+    (GLint location, GLint v0);
+
 inline void Uniform1i(GLint location, GLint v0)
 {
-    glUniform1i(location, v0);
+    r64fx_impl_glUniform1i(location, v0);
     CHECK_FOR_GL_ERRORS("glUniform1i");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glUniform4fv)
+    (GLint location, GLsizei count, const GLfloat *value);
+
 inline void Uniform4fv(GLint location, GLsizei count, const GLfloat *value)
 {
-    glUniform4fv(location, count, value);
+    r64fx_impl_glUniform4fv(location, count, value);
     CHECK_FOR_GL_ERRORS("glUniform4fv");
 }
 
@@ -269,6 +394,10 @@ inline void TexImage1D(
     CHECK_FOR_GL_ERRORS("glTexImage1D");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glTexStorage1D)
+    (GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width);
+
 inline void TexStorage1D(
     GLenum target,
     GLsizei levels,
@@ -276,7 +405,7 @@ inline void TexStorage1D(
     GLsizei width
 )
 {
-    glTexStorage1D(target, levels, internalFormat, width);
+    r64fx_impl_glTexStorage1D(target, levels, internalFormat, width);
     CHECK_FOR_GL_ERRORS("glTexStorage1D");
 }
 
@@ -309,6 +438,10 @@ inline void TexImage2D(
     CHECK_FOR_GL_ERRORS("glTexImage2D");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glTexStorage2D)
+    (GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height);
+
 inline void TexStorage2D(
     GLenum target,
     GLsizei levels,
@@ -317,7 +450,7 @@ inline void TexStorage2D(
     GLsizei height
 )
 {
-    glTexStorage2D(target, levels, internalFormat, width, height);
+    r64fx_impl_glTexStorage2D(target, levels, internalFormat, width, height);
     CHECK_FOR_GL_ERRORS("glTexStorage2D");
 }
 
@@ -349,15 +482,19 @@ inline void TexParameterf(GLenum target, GLenum pname, GLfloat param)
     CHECK_FOR_GL_ERRORS("glTexParameteri");
 }
 
+
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glGenerateMipmap)
+    (GLenum target);
+
 inline void GenerateMipmap(GLenum target)
 {
-    glGenerateMipmap(target);
+    r64fx_impl_glGenerateMipmap(target);
     CHECK_FOR_GL_ERRORS("glGenerateMipmap");
 }
     
-#ifdef DEBUG_GL_ERRORS
+#ifdef R64FX_DEBUG_GL_ERRORS
 #undef CHECK_FOR_GL_ERRORS
-#endif//DEBUG_GL_ERRORS
+#endif//R64FX_DEBUG_GL_ERRORS
 
 }//namespace gl
     

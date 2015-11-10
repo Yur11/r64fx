@@ -73,6 +73,29 @@ void Window::resize(int width, int height)
 }
 
 
+int Window::width() const
+{
+    auto impl = (WindowImpl*) this;
+    return impl->width();
+}
+
+
+int Window::height() const
+{
+    auto impl = (WindowImpl*) this;
+    return impl->height();
+}
+
+
+#ifdef R64FX_USE_GL
+void Window::makeCurrent()
+{
+    auto impl = (WindowImpl*) this;
+    impl->makeCurrent();
+}
+#endif//R64FX_USE_GL
+
+
 void Window::repaint()
 {
     auto impl = (WindowImpl*) this;

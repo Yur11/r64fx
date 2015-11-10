@@ -166,6 +166,16 @@ namespace{
         {
             XResizeWindow(g_display, xwindow, width, height);
         }
+
+        int width() const
+        {
+            return window_width;
+        }
+
+        int height() const
+        {
+            return window_height;
+        }
     };
 
 
@@ -604,16 +614,37 @@ void WindowX11::resize(int width, int height)
 }
 
 
+int WindowX11::width() const
+{
+    auto p = (WindowX11Private*) m_private;
+    return p->width();
+}
+
+
+int WindowX11::height() const
+{
+    auto p = (WindowX11Private*) m_private;
+    return p->height();
+}
+
+
+#ifdef R64FX_USE_GL
+void* getGLProcAddr(const char* name)
+{
+
+}
+
+
 void WindowX11::makeCurrent()
 {
-#ifdef R64FX_USE_GL
+
     if(type() == Window::Type::GL)
     {
         auto p = (WindowX11PrivateGLX*) m_private;
         p->makeCurrent();
     }
-#endif//R64FX_USE_GL
 }
+#endif//R64FX_USE_GL
 
 
 void WindowX11::repaint()
@@ -690,20 +721,6 @@ std::string WindowX11::title() const
 {
     auto p = (WindowX11Private*) m_private;
     return p->title;
-}
-
-
-int WindowX11::width() const
-{
-    auto p = (WindowX11Private*) m_private;
-    return p->attrs.width;
-}
-
-
-int WindowX11::height() const
-{
-    auto p = (WindowX11Private*) m_private;
-    return p->attrs.width;
 }
 
 

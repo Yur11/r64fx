@@ -136,7 +136,7 @@ void Widget::show()
     if(!isWindow())
     {
         m_parent.window = Window::newWindow(
-            width(), height(), "", Window::Type::Normal
+            width(), height(), "", Window::Type::GL
         );
         m_parent.window->setWidget(this);
         m_parent.window->setPainter(Painter::newInstance(m_parent.window));

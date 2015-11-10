@@ -23,7 +23,13 @@ public:
 
     void resize(int width, int height);
 
+    int width() const;
+
+    int height() const;
+
+#ifdef R64FX_USE_GL
     void makeCurrent();
+#endif//R64FX_USE_GL
 
     void repaint();
 
@@ -36,10 +42,6 @@ public:
     std::string title() const;
 
     static void processSomeEvents(Window::Events* events);
-
-    int width() const;
-
-    int height() const;
 };
 
 }//namespace r64fx

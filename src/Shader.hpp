@@ -6,7 +6,7 @@
 namespace r64fx{
     
 class Shader{
-    GLuint _shader = 0;
+    GLuint m_shader = 0;
     
 protected:
     Shader(const char* text, GLenum shader_type);
@@ -18,7 +18,7 @@ public:
     
     const char* infoLog();
     
-    inline GLuint id() const { return _shader; }
+    inline GLuint id() const { return m_shader; }
     
     void free();
 };
@@ -41,9 +41,9 @@ public:
 
 
 class ShadingProgram{
-    VertexShader _vs;
-    FragmentShader _fs;
-    GLuint _program = 0;
+    VertexShader m_vs;
+    FragmentShader m_fs;
+    GLuint m_program = 0;
     
 public:
     ShadingProgram(VertexShader vs, FragmentShader fs);
@@ -56,11 +56,11 @@ public:
     
     void use();
     
-    inline GLuint id() const { return _program; }
+    inline GLuint id() const { return m_program; }
     
-    inline VertexShader vertexShader() const { return _vs; }    
+    inline VertexShader vertexShader() const { return m_vs; }
     
-    inline FragmentShader fragmentShader() const { return _fs; }
+    inline FragmentShader fragmentShader() const { return m_fs; }
     
     void free();
     
@@ -68,7 +68,6 @@ public:
     static ShadingProgram create(const char* vs_text, const char* fs_text);
 };
 
-    
 }//namespace r64fx
 
 #endif//R64FX_GUI_SHADER_H
