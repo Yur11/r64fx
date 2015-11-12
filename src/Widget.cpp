@@ -135,11 +135,10 @@ void Widget::show()
 {
     if(!isWindow())
     {
-        m_parent.window = Window::newWindow(
+        m_parent.window = Window::newInstance(
             width(), height(), "", Window::Type::GL
         );
         m_parent.window->setWidget(this);
-        m_parent.window->setPainter(Painter::newInstance(m_parent.window));
         m_flags |= WIDGET_IS_WINDOW;
     }
     m_parent.window->show();
@@ -160,7 +159,7 @@ void Widget::close()
 {
     if(isWindow())
     {
-        delete m_parent.window;
+        Window::destroyInstance(m_parent.window);
         m_parent.window = nullptr;
         m_flags ^= WIDGET_IS_WINDOW;
     }

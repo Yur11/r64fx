@@ -47,10 +47,10 @@ public:
             ad.calculateLinear();
             calculate_peak_summary(ad.constantData(), ad.size(), data, data_size);
 
-            for(int i=0; i<data_size; i++)
-            {
-                cout << data[i] << "\n";
-            }
+//             for(int i=0; i<data_size; i++)
+//             {
+//                 cout << data[i] << "\n";
+//             }
         }
 
     }
@@ -71,11 +71,11 @@ public:
 protected:
     virtual void reconfigureEvent(ReconfigureEvent* event)
     {
-        if(event->sizeChanged())
-        {
-            auto size = event->newSize();
-            cout << "MyWidget::reconfigureEvent(" << size.width() << "x" << size.height() << ")\n";
-        }
+//         if(event->sizeChanged())
+//         {
+//             auto size = event->newSize();
+// //             cout << "MyWidget::reconfigureEvent(" << size.width() << "x" << size.height() << ")\n";
+//         }
 
         auto p = event->painter();
         p->clear();

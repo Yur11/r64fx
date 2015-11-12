@@ -6,7 +6,6 @@ namespace {
 struct PaintCommand;
 
 struct PainterNormal : public PainterBase{
-    Window* window =  nullptr;
 
     int ri = 4;
     int gi = 4;
@@ -17,9 +16,8 @@ struct PainterNormal : public PainterBase{
 
     void insertPaintCommand(PaintCommand* pc);
 
-    PainterNormal(Window* window)
+    PainterNormal(Window* window) : PainterBase(window)
     {
-        this->window = window;
         window->getComponentIndices(&ri, &gi, &bi, &ai);
         clear();
     }

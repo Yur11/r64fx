@@ -18,8 +18,15 @@ namespace r64fx{
 namespace{
 
 struct PainterBase : public Painter{
+    Window* window =  nullptr;
+
     int       current_depth = 0;
     Rect<int> current_clip_rect;
+
+    PainterBase(Window* window)
+    : window(window)
+    {
+    }
 
     virtual ~PainterBase() {}
 
@@ -56,6 +63,7 @@ struct PainterBase : public Painter{
 #include "PainterGL.cxx"
 #endif//R64FX_USE_GL
 
+
 namespace r64fx{
 
 Painter* Painter::newInstance(Window* window)
@@ -72,6 +80,12 @@ Painter* Painter::newInstance(Window* window)
 #endif//R64FX_USE_GL
 
     return nullptr;
+}
+
+
+void Painter::destroyInstance(Painter* painter)
+{
+    delete painter;
 }
 
 }//namespace r64fx

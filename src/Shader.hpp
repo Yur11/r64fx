@@ -48,8 +48,6 @@ class ShadingProgram{
 public:
     ShadingProgram(VertexShader vs, FragmentShader fs);
     
-    ShadingProgram() {}
-    
     bool isOk();
     
     const char* infoLog();
@@ -62,10 +60,11 @@ public:
     
     inline FragmentShader fragmentShader() const { return m_fs; }
     
+    void getAttribLocation(GLint &out, const char* name);
+
+    void getUniformLocation(GLint &out, const char* name);
+
     void free();
-    
-    /** @brief Create a shading program using the vertex shader and fragment shader texts. */     
-    static ShadingProgram create(const char* vs_text, const char* fs_text);
 };
 
 }//namespace r64fx

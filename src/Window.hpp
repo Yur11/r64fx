@@ -41,11 +41,13 @@ protected:
 public:
     virtual ~Window();
 
-    static Window* newWindow(
+    static Window* newInstance(
         int width = 800, int height = 600,
         std::string title = "",
         Window::Type type = Window::Type::Normal
     );
+
+    static void destroyInstance(Window* window);
 
     inline void setWidget(Widget* widget) { m_Widget = widget; }
 

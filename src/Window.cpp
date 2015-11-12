@@ -8,6 +8,8 @@
 
 #endif
 
+#include "Painter.hpp"
+
 #include <vector>
 
 using namespace std;
@@ -20,7 +22,6 @@ vector<Window*> g_all_windows;
 Window::Window(Window::Type type)
 : m_type(type)
 {
-
 }
 
 
@@ -32,23 +33,32 @@ Window::Window(const Window&)
 
 Window::~Window()
 {
+
+}
+
+
+Window* Window::newInstance(int width, int height, std::string title, Window::Type type)
+{
+    auto window =  WindowImpl::newInstance(width, height, title, type);
+    window->setPainter(Painter::newInstance(window));
+    g_all_windows.push_back(window);
+    return window;
+}
+
+
+void Window::destroyInstance(Window* window)
+{
     auto it = g_all_windows.begin();
-    while(it != g_all_windows.end() && *it != this) it++;
+    while(it != g_all_windows.end() && *it != window) it++;
     g_all_windows.erase(it);
+
+    Painter::destroyInstance(window->painter());
+    delete window;
 
     if(g_all_windows.empty())
     {
         WindowImpl::cleanup();
     }
-}
-
-
-Window* Window::newWindow(int width, int height, std::string title, Window::Type type)
-{
-    auto window =  WindowImpl::newWindow(width, height, title, type);
-
-    g_all_windows.push_back(window);
-    return window;
 }
 
 

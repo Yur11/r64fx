@@ -13,7 +13,7 @@ class WindowX11 : public Window{
 public:
     virtual ~WindowX11();
 
-    static Window* newWindow(int width, int height, std::string title, Window::Type type);
+    static Window* newInstance(int width, int height, std::string title, Window::Type type);
 
     static void cleanup();
 

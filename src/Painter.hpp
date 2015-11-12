@@ -19,6 +19,8 @@ protected:
 public:
     static Painter* newInstance(Window* window);
 
+    static void destroyInstance(Painter* painter);
+
     virtual void begin() = 0;
 
     virtual void end() = 0;

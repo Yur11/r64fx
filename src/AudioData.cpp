@@ -43,8 +43,6 @@ AudioData::AudioData(const char* path)
     m_samplerate = info.samplerate;
     m_samplerate_rcp = 1.0 / float(m_samplerate);
 
-    cout << m_samplerate << "\n";
-    
     m_size = info.frames * m_channels;
     
     m_d = new float[m_size];

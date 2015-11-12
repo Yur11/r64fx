@@ -580,7 +580,7 @@ WindowX11::~WindowX11()
 }
 
 
-Window* WindowX11::newWindow(int width, int height, std::string title, Window::Type type)
+Window* WindowX11::newInstance(int width, int height, std::string title, Window::Type type)
 {
     init_x_if_needed();
     return new WindowX11(width, height, title, type);
@@ -629,12 +629,6 @@ int WindowX11::height() const
 
 
 #ifdef R64FX_USE_GL
-void* getGLProcAddr(const char* name)
-{
-
-}
-
-
 void WindowX11::makeCurrent()
 {
 

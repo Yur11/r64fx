@@ -13,7 +13,27 @@ Shader::Shader(const char* text, GLenum shader_type)
     
     gl::ShaderSource(m_shader, 1, &text, nullptr);
     gl::CompileShader(m_shader);
+
+    if(!isOk())
+    {
+        cerr << "Problems in ";
+        if(shader_type == GL_VERTEX_SHADER)
+        {
+            cerr << "vertex";
+        }
+        else if(shader_type == GL_FRAGMENT_SHADER)
+        {
+            cerr << "fragment";
+        }
+        else
+        {
+            cerr << "unknown";
+        }
+        cerr << " shader!\n";
+        cerr << infoLog() << "\n";
+    }
 }
+
 
 bool Shader::isOk()
 {
@@ -50,6 +70,11 @@ ShadingProgram::ShadingProgram(VertexShader vs, FragmentShader fs) : m_vs(vs), m
     gl::AttachShader(m_program, vs.id());
     gl::AttachShader(m_program, fs.id());
     gl::LinkProgram(m_program);
+
+    if(!isOk())
+    {
+        cerr << infoLog() << "\n";
+    }
 }
 
 
@@ -79,31 +104,35 @@ void ShadingProgram::use()
 }
 
 
-void ShadingProgram::free() 
-{ 
-    gl::DeleteProgram(m_program);
+void ShadingProgram::getAttribLocation(GLint &out, const char* name)
+{
+    out = gl::GetAttribLocation(m_program, name);
+#ifdef R64FX_DEBUG
+    if(out == -1)
+    {
+        cerr << "Failed to get attribute location for \"" << name << "\"!\n";
+        abort();
+    }
+#endif//R64FX_DEBUG
 }
 
 
-ShadingProgram ShadingProgram::create(const char* vs_text, const char* fs_text)
+void ShadingProgram::getUniformLocation(GLint &out, const char* name)
 {
-    VertexShader vs(vs_text);
-    if(!vs.isOk())
+    out = gl::GetUniformLocation(m_program, name);
+#ifdef R64FX_DEBUG
+    if(out == -1)
     {
-        cerr << "Problems in vertex shader!\n";
-        cerr << vs.infoLog() << "\n";
-        return ShadingProgram();
+        cerr << "Failed to get uniform location for \"" << name << "\"!\n";
+        abort();
     }
-    
-    FragmentShader fs(fs_text);
-    if(!fs.isOk())
-    {
-        cerr << "Problems in fragment shader!\n";
-        cerr << fs.infoLog() << "\n";
-        return ShadingProgram();
-    }
-    
-    return ShadingProgram(vs, fs);    
+#endif//R64FX_DEBUG
+}
+
+
+void ShadingProgram::free() 
+{ 
+    gl::DeleteProgram(m_program);
 }
     
 }//namespace r64x
