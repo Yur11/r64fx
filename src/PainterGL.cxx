@@ -211,6 +211,11 @@ void init_gl_stuff_needed()
     if(gl_stuff_is_good)
         return;
 
+    int major, minor;
+    gl::GetIntegerv(GL_MAJOR_VERSION, &major);
+    gl::GetIntegerv(GL_MINOR_VERSION, &minor);
+    cout << "gl: " << major << "." << minor << "\n";
+
     gl::InitIfNeeded();
     gl::ClearColor(1.0, 1.0, 1.0, 0.0);
 
