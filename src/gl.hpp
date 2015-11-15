@@ -346,6 +346,16 @@ inline void Uniform1i(GLint location, GLint v0)
 }
 
 
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glUniform4f)
+    (GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+
+inline void Uniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3)
+{
+    r64fx_impl_glUniform4f(location, v0, v1, v2, v3);
+    CHECK_FOR_GL_ERRORS("glUniform4f");
+}
+
+
 R64FX_MAYBE_EXTERN void (*r64fx_impl_glUniform4fv)
     (GLint location, GLsizei count, const GLfloat *value);
 

@@ -27,6 +27,8 @@ public:
 
     virtual void setClipRect(Rect<int> rect) = 0;
 
+    virtual void debugDraw() = 0;
+
     virtual void fillRect(Rect<int> rect, Color<float> color) = 0;
 
     virtual void putImage(int x, int y, Image* img) = 0;

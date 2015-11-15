@@ -24,6 +24,8 @@ struct PainterNormal : public PainterBase{
 
     virtual ~PainterNormal() {}
 
+    virtual void debugDraw() {}
+
     virtual void fillRect(Rect<int> rect, Color<float> color);
 
     virtual void putImage(int x, int y, Image* img);

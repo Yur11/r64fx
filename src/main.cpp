@@ -78,16 +78,18 @@ protected:
 //         }
 
         auto p = event->painter();
-        p->clear();
-        p->fillRect({10, 10, 100, 100},   {1.0f, 0.0f, 0.0f});
-        p->fillRect({210, 210, 100, 100}, {0.0f, 1.0f, 0.0f});
-        p->fillRect({410, 410, 100, 100}, {0.0f, 0.0f, 1.0f});
-        p->putImage(130, 200, m_Image);
-        p->putImage(250, 50, m_Image);
-        p->putImage(180, 250, m_Image);
-        p->putPlot(Rect<int>(100, 100, 100, data_size/2), data, data_size, Orientation::Vertical);
-        p->putPlot(Rect<int>(250, 200, data_size/2, 100), data, data_size, Orientation::Horizontal);
-        p->repaint();
+//         p->clear();
+//         p->fillRect({10, 10, 100, 100},   {1.0f, 0.0f, 0.0f});
+//         p->fillRect({210, 210, 100, 100}, {0.0f, 1.0f, 0.0f});
+//         p->fillRect({410, 410, 100, 100}, {0.0f, 0.0f, 1.0f});
+//         p->putImage(130, 200, m_Image);
+//         p->putImage(250, 50, m_Image);
+//         p->putImage(180, 250, m_Image);
+//         p->putPlot(Rect<int>(100, 100, 100, data_size/2), data, data_size, Orientation::Vertical);
+//         p->putPlot(Rect<int>(250, 200, data_size/2, 100), data, data_size, Orientation::Horizontal);
+//         p->repaint();
+
+        p->debugDraw();
     }
 };
 
