@@ -1,0 +1,9 @@
+#ifndef R64FX_MAYBE_EXTERN
+
+#ifdef R64FX_IMPL
+#define R64FX_MAYBE_EXTERN
+#else
+#define R64FX_MAYBE_EXTERN extern
+#endif//R64FX_IMPL
+
+#endif//R64FX_MAYBE_EXTERN

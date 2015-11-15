@@ -2,6 +2,7 @@
 #define R64FX_GUI_GL_H
 
 #include <GL/gl.h>
+#include "MaybeExtern.hpp"
 
 namespace r64fx{
     
@@ -15,14 +16,6 @@ void CheckForErrors(const char* fun_name);
 #else
 #define CHECK_FOR_GL_ERRORS(fun_name)
 #endif//R64FX_DEBUG_GL_ERRORS
-
-
-#ifdef R64FX_IMPL
-#define R64FX_MAYBE_EXTERN
-#else
-#define R64FX_MAYBE_EXTERN extern
-#endif//R64FX_IMPL
-
 
 inline void ClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
