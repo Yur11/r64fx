@@ -17,6 +17,12 @@ void CheckForErrors(const char* fun_name);
 #define CHECK_FOR_GL_ERRORS(fun_name)
 #endif//R64FX_DEBUG_GL_ERRORS
 
+inline void GetIntegerv(GLenum pname, GLint* data)
+{
+    glGetIntegerv(pname, data);
+    CHECK_FOR_GL_ERRORS("glGetIntegerv");
+}
+
 inline void ClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
     glClearColor(red, green, blue, alpha);
