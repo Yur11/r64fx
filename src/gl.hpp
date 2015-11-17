@@ -1,5 +1,5 @@
-#ifndef R64FX_GUI_GL_H
-#define R64FX_GUI_GL_H
+#ifndef R64FX_GL_HPP
+#define R64FX_GL_HPP
 
 #include <GL/gl.h>
 #include "MaybeExtern.hpp"
@@ -508,4 +508,4 @@ inline void PrimitiveRestartIndex(GLuint index)
     
 }//namespace r64fx
 
-#endif//R64FX_GUI_GL_H
+#endif//R64FX_GL_HPP

@@ -12,8 +12,6 @@
 #include "Painter.hpp"
 #include "AudioData.hpp"
 
-#include <GL/gl.h>
-
 using namespace std;
 using namespace r64fx;
 
