@@ -2,6 +2,9 @@
 #include "Window.hpp"
 #include "Image.hpp"
 
+#ifdef R64FX_USE_GL
+#include "Shader.hpp"
+#endif//R64FX_USE_GL
 
 #include <vector>
 
@@ -14,68 +17,168 @@ using namespace std;
 
 namespace r64fx{
 
+class PaintCommand;
 
-namespace{
-
-struct PainterBase : public Painter{
+struct PainterImpl : public Painter{
     Window* window =  nullptr;
-
-    int       current_depth = 0;
     Rect<int> current_clip_rect;
+    vector<PaintCommand*> commands;
 
-    PainterBase(Window* window)
-    : window(window)
-    {
-    }
+    PainterImpl(Window* window);
 
-    virtual ~PainterBase() {}
+    virtual ~PainterImpl();
 
-    virtual void begin()
-    {
-        current_depth++;
-    }
+    virtual void setClipRect(Rect<int> rect);
 
-    virtual void end()
-    {
-#ifdef R64FX_DEBUG
-        if(current_depth <= 0)
-        {
-            cerr << "Painter::end() depth is already " << current_depth << " !\n";
-        }
-        else
-#endif//R64FX_DEBUG
-        {
-            current_depth--;
-        }
-    }
+    virtual void debugDraw();
 
-    virtual void setClipRect(Rect<int> rect)
-    {
-        current_clip_rect = rect;
-    }
-};//PainterBase
+    virtual void fillRect(Rect<int> rect, Color<float> color);
 
-}//namespace
-}//namespace r64fx
+    virtual void putImage(int x, int y, Image* img);
 
-#include "PainterNormal.cxx"
+    virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal);
+
+    virtual void clear();
+
+    void insertPaintCommand(PaintCommand* pc);
+
+};//PainterImpl
+
+
+struct PainterImplNormal : public PainterImpl{
+    int ri = 4;
+    int gi = 4;
+    int bi = 4;
+    int ai = 4;
+
+    PainterImplNormal(Window* window);
+
+    virtual ~PainterImplNormal();
+
+    virtual void repaint();
+
+    virtual void clear();
+
+};//PainterImplNormal
+
+
 #ifdef R64FX_USE_GL
-#include "PainterGL.cxx"
+struct PainterImplGL : public PainterImpl{
+
+    PainterImplGL(Window* window);
+
+    virtual ~PainterImplGL();
+
+    virtual void debugDraw();
+
+    virtual void repaint();
+
+    virtual void clear();
+
+    static void initGLStuffIfNeeded();
+
+    static void cleanupGLStuff();
+
+};//PainterImplGL
 #endif//R64FX_USE_GL
 
 
-namespace r64fx{
+struct PaintCommand{
+    int depth = 0;
+    Rect<int> rect;
+
+    virtual ~PaintCommand() {}
+
+    virtual void paint(PainterImplNormal* impl) = 0;
+
+#ifdef R64FX_USE_GL
+    virtual void paintGL(PainterImplGL* impl) = 0;
+
+    virtual void configGL(PainterImplGL* impl) = 0;
+#endif//R64FX_USE_GL
+
+};//PaintCommand
+
+
+struct PaintCommand_FillRect : public PaintCommand{
+    Color<float> color;
+
+    virtual ~PaintCommand_FillRect() {}
+
+    virtual void paint(PainterImplNormal* p);
+
+#ifdef R64FX_USE_GL
+    virtual void paintGL(PainterImplGL* impl);
+
+    virtual void configGL(PainterImplGL* impl);
+#endif//R64FX_USE_GL
+
+};//PaintCommand_FillRect
+
+
+struct PaintCommand_PutImage : public PaintCommand{
+    Image* img;
+
+    virtual ~PaintCommand_PutImage() {}
+
+    virtual void paint(PainterImplNormal* p);
+
+#ifdef R64FX_USE_GL
+    virtual void paintGL(PainterImplGL* impl);
+
+    virtual void configGL(PainterImplGL* impl);
+#endif//R64FX_USE_GL
+
+};//PaintCommand_PutImage
+
+
+struct PaintCommand_PutDensePlot : public PaintCommand{
+    float* data = nullptr;
+    Rect<int> orig_rect;
+
+};//PaintCommand_PutDensePlot
+
+
+struct PaintCommand_PutDensePlotHorizontal : public PaintCommand_PutDensePlot{
+
+    virtual ~PaintCommand_PutDensePlotHorizontal() {}
+
+    virtual void paint(PainterImplNormal* p);
+
+#ifdef R64FX_USE_GL
+    virtual void paintGL(PainterImplGL* impl);
+
+    virtual void configGL(PainterImplGL* impl);
+#endif//R64FX_USE_GL
+
+};//PaintCommand_PutDensePlotHorizontal
+
+
+struct PaintCommand_PutDensePlotVertical : public PaintCommand_PutDensePlot{
+
+    virtual ~PaintCommand_PutDensePlotVertical() {}
+
+    virtual void paint(PainterImplNormal* p);
+
+#ifdef R64FX_USE_GL
+    virtual void paintGL(PainterImplGL* impl);
+
+    virtual void configGL(PainterImplGL* impl);
+#endif//R64FX_USE_GL
+
+};//PaintCommand_PutDensePlotVertical
+
 
 Painter* Painter::newInstance(Window* window)
 {
     if(window->type() == Window::Type::Normal)
     {
-        return new PainterNormal(window);
+        return new PainterImplNormal(window);
     }
 #ifdef R64FX_USE_GL
     else if(window->type() == Window::Type::GL)
     {
-        return new PainterGL(window);
+        return new PainterImplGL(window);
     }
 #endif//R64FX_USE_GL
 
@@ -87,5 +190,126 @@ void Painter::destroyInstance(Painter* painter)
 {
     delete painter;
 }
+
+
+PainterImpl::PainterImpl(Window* window) : window(window)
+{
+
+}
+
+
+PainterImpl::~PainterImpl()
+{
+
+}
+
+
+void PainterImpl::setClipRect(Rect<int> rect)
+{
+    current_clip_rect = rect;
+}
+
+
+void PainterImpl::debugDraw()
+{
+
+}
+
+
+void PainterImpl::insertPaintCommand(PaintCommand* pc)
+{
+    if(commands.empty())
+    {
+        commands.push_back(pc);
+    }
+    else
+    {
+        auto it=commands.begin();
+        while(it!=commands.end())
+        {
+            auto ppc = *it;
+            if(ppc->depth > pc->depth)
+            {
+                it--;
+                commands.insert(it, pc);
+                break;
+            };
+            it++;
+        }
+
+        if(it == commands.end())
+        {
+            commands.push_back(pc);
+        }
+    }
+}
+
+
+void PainterImpl::fillRect(Rect<int> rect, Color<float> color)
+{
+    auto pc = new PaintCommand_FillRect;
+    pc->rect = intersection(
+        current_clip_rect,
+        rect
+    );
+    pc->color = color;
+    insertPaintCommand(pc);
+}
+
+
+void PainterImpl::putImage(int x, int y, Image* img)
+{
+    auto pc = new PaintCommand_PutImage;
+    pc->rect = intersection(
+        current_clip_rect,
+        Rect<int>(x, y, img->width(), img->height())
+    );
+    pc->img = img;
+    insertPaintCommand(pc);
+}
+
+
+void PainterImpl::putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation)
+{
+    PaintCommand_PutDensePlot* pc = nullptr;
+    if(orientation == Orientation::Vertical)
+    {
+#ifdef R64FX_DEBUG
+        assert(data_size >= rect.height()*2);
+#endif//R64FX_DEBUG
+        pc = new PaintCommand_PutDensePlotVertical;
+    }
+    else
+    {
+#ifdef R64FX_DEBUG
+        assert(data_size >= rect.width()*2);
+#endif//R64FX_DEBUG
+        pc = new PaintCommand_PutDensePlotHorizontal;
+    }
+    pc->rect = intersection(
+        current_clip_rect,
+        rect
+    );
+    pc->orig_rect = rect;
+    pc->data = data;
+    insertPaintCommand(pc);
+}
+
+
+void PainterImpl::clear()
+{
+    current_clip_rect = Rect<int>(0, 0, window->image()->width(), window->image()->height());
+    for(auto c : commands)
+    {
+        delete c;
+    }
+    commands.clear();
+}
+
+
+#include "PainterImplNormal.cxx"
+#ifdef R64FX_USE_GL
+#include "PainterImplGL.cxx"
+#endif//R64FX_USE_GL
 
 }//namespace r64fx

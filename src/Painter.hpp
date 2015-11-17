@@ -21,10 +21,6 @@ public:
 
     static void destroyInstance(Painter* painter);
 
-    virtual void begin() = 0;
-
-    virtual void end() = 0;
-
     virtual void setClipRect(Rect<int> rect) = 0;
 
     virtual void debugDraw() = 0;

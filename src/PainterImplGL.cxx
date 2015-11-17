@@ -1,21 +1,17 @@
-/* To be included in Painter.cpp */
+/* To be included in Panter.cpp */
 
-#include "Shader.hpp"
+class Shader_rgba;
 
-namespace r64fx{
-namespace {
+namespace{
+    bool gl_stuff_is_good = false;
+    int PainterImplGL_count = 0;
 
-
-bool gl_stuff_is_good = false;
-
-void init_gl_stuff_needed();
-
-void cleanup_gl_stuff();
+    Shader_rgba* g_Shader_rgba = nullptr;
+}
 
 
 #define R64FX_GET_ATTRIB_LOCATION(name) getAttribLocation(m_##name, #name)
 #define R64FX_GET_UNIFORM_LOCATION(name) getUniformLocation(m_##name, #name)
-
 
 const char* rgba_vert_text =
 #include "rgba.vert.h"
@@ -109,53 +105,34 @@ public:
     }
 };
 
-Shader_rgba* g_Shader_rgba = nullptr;
+
+PainterImplGL::PainterImplGL(Window* window) : PainterImpl(window)
+{
+    initGLStuffIfNeeded();
+    PainterImplGL_count++;
+}
 
 
-int PainterGL_count = 0;
+PainterImplGL::~PainterImplGL()
+{
+    cout << "~PainterImplGL\n";
 
-struct PainterGL : public PainterBase{
-
-    PainterGL(Window* window) : PainterBase(window)
+    PainterImplGL_count--;
+    if(PainterImplGL_count == 0)
     {
-        init_gl_stuff_needed();
-        PainterGL_count++;
+        cleanupGLStuff();
     }
-
-    virtual ~PainterGL()
-    {
-        cout << "~PainterGL\n";
-
-        PainterGL_count--;
-        if(PainterGL_count == 0)
-        {
-            cleanup_gl_stuff();
-        }
 #ifdef R64FX_DEBUG
-        else if(PainterGL_count <= 0)
-        {
-            cerr << "Warning PainterGL_count is " << PainterGL_count << "!\n";
-            cerr << "Something is really wrong!\n";
-        }
-#endif//R64FX_DEBUG
+    else if(PainterImplGL_count <= 0)
+    {
+        cerr << "Warning PainterImplGL_count is " << PainterImplGL_count << "!\n";
+        cerr << "Something is really wrong!\n";
     }
-
-    virtual void debugDraw();
-
-    virtual void fillRect(Rect<int> rect, Color<float> color);
-
-    virtual void putImage(int x, int y, Image* img);
-
-    virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation);
-
-    virtual void repaint();
-
-    virtual void clear();
-
-};//PainterGL
+#endif//R64FX_DEBUG
+}
 
 
-void PainterGL::debugDraw()
+void PainterImplGL::debugDraw()
 {
     window->makeCurrent();
     gl::Viewport(0, 0, window->width(), window->height());
@@ -173,25 +150,7 @@ void PainterGL::debugDraw()
 }
 
 
-void PainterGL::fillRect(Rect<int> rect, Color<float> color)
-{
-
-}
-
-
-void PainterGL::putImage(int x, int y, Image* img)
-{
-
-}
-
-
-void PainterGL::putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation)
-{
-
-}
-
-
-void PainterGL::repaint()
+void PainterImplGL::repaint()
 {
     window->makeCurrent();
     gl::Viewport(0, 0, window->width(), window->height());
@@ -200,13 +159,13 @@ void PainterGL::repaint()
 }
 
 
-void PainterGL::clear()
+void PainterImplGL::clear()
 {
-
+    PainterImpl::clear();
 }
 
 
-void init_gl_stuff_needed()
+void PainterImplGL::initGLStuffIfNeeded()
 {
     if(gl_stuff_is_good)
         return;
@@ -227,9 +186,9 @@ void init_gl_stuff_needed()
 }
 
 
-void cleanup_gl_stuff()
+void PainterImplGL::cleanupGLStuff()
 {
-    cout << "cleanup_gl_stuff\n";
+    cout << "CleanupGLStuff\n";
 
     if(!gl_stuff_is_good)
         return;
@@ -238,5 +197,50 @@ void cleanup_gl_stuff()
         delete g_Shader_rgba;
 }
 
-}//namespace
-}//namespace r64fx
+
+void PaintCommand_FillRect::paintGL(PainterImplGL* impl)
+{
+
+}
+
+
+void PaintCommand_FillRect::configGL(PainterImplGL* impl)
+{
+
+}
+
+
+void PaintCommand_PutImage::paintGL(PainterImplGL* impl)
+{
+
+}
+
+
+void PaintCommand_PutImage::configGL(PainterImplGL* impl)
+{
+
+}
+
+
+void PaintCommand_PutDensePlotHorizontal::paintGL(PainterImplGL* impl)
+{
+
+}
+
+
+void PaintCommand_PutDensePlotHorizontal::configGL(PainterImplGL* impl)
+{
+
+}
+
+
+void PaintCommand_PutDensePlotVertical::paintGL(PainterImplGL* impl)
+{
+
+}
+
+
+void PaintCommand_PutDensePlotVertical::configGL(PainterImplGL* impl)
+{
+
+}
