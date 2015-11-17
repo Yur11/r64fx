@@ -64,7 +64,7 @@ void InitIfNeeded()
         FETCH_GL_FUN(glUniform4fv)
         FETCH_GL_FUN(glTexStorage1D)
         FETCH_GL_FUN(glTexStorage2D)
-        FETCH_GL_FUN(glGenerateMipmap)
+        FETCH_GL_FUN(glPrimitiveRestartIndex)
         gl_is_setup = true;
     }
 }

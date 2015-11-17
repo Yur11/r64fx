@@ -491,14 +491,13 @@ inline void TexParameterf(GLenum target, GLenum pname, GLfloat param)
     CHECK_FOR_GL_ERRORS("glTexParameteri");
 }
 
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glPrimitiveRestartIndex)
+    (GLuint index);
 
-R64FX_MAYBE_EXTERN void (*r64fx_impl_glGenerateMipmap)
-    (GLenum target);
-
-inline void GenerateMipmap(GLenum target)
+inline void PrimitiveRestartIndex(GLuint index)
 {
-    r64fx_impl_glGenerateMipmap(target);
-    CHECK_FOR_GL_ERRORS("glGenerateMipmap");
+    r64fx_impl_glPrimitiveRestartIndex(index);
+    CHECK_FOR_GL_ERRORS("glPrimitiveRestartIndex");
 }
     
 #ifdef R64FX_DEBUG_GL_ERRORS
