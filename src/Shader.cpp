@@ -78,6 +78,12 @@ ShadingProgram::ShadingProgram(VertexShader vs, FragmentShader fs) : m_vs(vs), m
 }
 
 
+ShadingProgram::~ShadingProgram()
+{
+    gl::DeleteProgram(m_program);
+}
+
+
 bool ShadingProgram::isOk()
 {
     if(!m_program)
@@ -130,9 +136,16 @@ void ShadingProgram::getUniformLocation(GLint &out, const char* name)
 }
 
 
-void ShadingProgram::free() 
-{ 
-    gl::DeleteProgram(m_program);
+VertexArray::VertexArray(int vertex_count)
+: m_vertex_count(vertex_count)
+{
+    gl::GenVertexArrays(1, &m_vao);
+}
+
+
+VertexArray::~VertexArray()
+{
+    gl::DeleteVertexArrays(1, &m_vao);
 }
     
 }//namespace r64x

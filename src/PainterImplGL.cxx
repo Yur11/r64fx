@@ -1,110 +1,12 @@
 /* To be included in Panter.cpp */
 
-class Shader_rgba;
-
 namespace{
-    bool gl_stuff_is_good = false;
     int PainterImplGL_count = 0;
+
+    bool gl_stuff_is_good = false;
 
     Shader_rgba* g_Shader_rgba = nullptr;
 }
-
-
-#define R64FX_GET_ATTRIB_LOCATION(name) getAttribLocation(m_##name, #name)
-#define R64FX_GET_UNIFORM_LOCATION(name) getUniformLocation(m_##name, #name)
-
-const char* rgba_vert_text =
-#include "rgba.vert.h"
-;
-
-const char* rgba_frag_text =
-#include "rgba.frag.h"
-;
-
-class Shader_rgba : public ShadingProgram{
-    GLint m_position;
-    GLint m_color;
-    GLint m_sxsytxty;
-
-    GLuint m_vao;
-    GLuint m_position_vbo;
-    GLuint m_color_vbo;
-
-public:
-    Shader_rgba() : ShadingProgram(rgba_vert_text, rgba_frag_text)
-    {
-        if(!isOk())
-            return;
-
-        R64FX_GET_ATTRIB_LOCATION(position);
-        R64FX_GET_ATTRIB_LOCATION(color);
-        R64FX_GET_UNIFORM_LOCATION(sxsytxty);
-
-        gl::GenVertexArrays(1, &m_vao);
-        gl::GenBuffers(1, &m_position_vbo);
-        gl::GenBuffers(1, &m_color_vbo);
-
-        gl::BindVertexArray(m_vao);
-        gl::EnableVertexAttribArray(m_position);
-        gl::EnableVertexAttribArray(m_color);
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, m_position_vbo);
-        gl::BufferData(GL_ARRAY_BUFFER, 4*2*sizeof(float), nullptr, GL_STREAM_DRAW);
-        gl::VertexAttribPointer(m_position, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, m_color_vbo);
-        gl::BufferData(GL_ARRAY_BUFFER, 4*4*sizeof(float), nullptr, GL_STREAM_DRAW);
-        gl::VertexAttribPointer(m_color, 4, GL_FLOAT, GL_FALSE, 0, 0);
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-
-
-    ~Shader_rgba()
-    {
-        if(!isOk())
-            return;
-
-        gl::DeleteBuffers(1, &m_position_vbo);
-        gl::DeleteBuffers(1, &m_color_vbo);
-        gl::DeleteVertexArrays(1, &m_vao);
-    }
-
-    void setScaleAndShift(float sx, float sy, float tx, float ty)
-    {
-        gl::Uniform4f(m_sxsytxty, sx, sy, tx, ty);
-    }
-
-    void debugDraw()
-    {
-        float pos[] = {
-            100.0f, 100.0f,
-            200.0f, 100.0f,
-            200.0f, 200.0f,
-            100.0f, 200.0f
-        };
-
-        float color[] = {
-            1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f
-        };
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, m_position_vbo);
-        gl::BufferSubData(GL_ARRAY_BUFFER, 0, 4*2*sizeof(float), pos);
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, m_color_vbo);
-        gl::BufferSubData(GL_ARRAY_BUFFER, 0, 4*4*sizeof(float), color);
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, 0);
-
-        gl::BindVertexArray(m_vao);
-
-        gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    }
-};
-
 
 PainterImplGL::PainterImplGL(Window* window) : PainterImpl(window)
 {
@@ -145,7 +47,7 @@ void PainterImplGL::debugDraw()
        -1.0f,
         1.0f
     );
-    g_Shader_rgba->debugDraw();
+//     g_Shader_rgba->debugDraw();
     window->repaint();
 }
 
@@ -156,6 +58,24 @@ void PainterImplGL::repaint()
     gl::Viewport(0, 0, window->width(), window->height());
     gl::Clear(GL_COLOR_BUFFER_BIT);
     window->repaint();
+}
+
+
+void PainterImplGL::prepare()
+{
+//     if(m_VertexArray_rgba)
+//     {
+//         if(m_VertexArray_rgba->vertexCount() < (int)paint_commands.size() * 4)
+//         {
+//             delete m_VertexArray_rgba;
+//             m_VertexArray_rgba = nullptr;
+//         }
+//     }
+//
+//     if(!m_VertexArray_rgba)
+//     {
+//         m_VertexArray_rgba = new VertexArray_rgba(g_Shader_rgba, m_PaintCommands_FillRect.size() * 4);
+//     }
 }
 
 
@@ -198,49 +118,25 @@ void PainterImplGL::cleanupGLStuff()
 }
 
 
-void PaintCommand_FillRect::paintGL(PainterImplGL* impl)
+void PaintCommandImpl_FillRect::prepareGL(PainterImplGL* impl)
 {
 
 }
 
 
-void PaintCommand_FillRect::configGL(PainterImplGL* impl)
+void PaintCommandImpl_PutImage::prepareGL(PainterImplGL* impl)
 {
 
 }
 
 
-void PaintCommand_PutImage::paintGL(PainterImplGL* impl)
+void PaintCommandImpl_PutDensePlotHorizontal::prepareGL(PainterImplGL* impl)
 {
 
 }
 
 
-void PaintCommand_PutImage::configGL(PainterImplGL* impl)
-{
-
-}
-
-
-void PaintCommand_PutDensePlotHorizontal::paintGL(PainterImplGL* impl)
-{
-
-}
-
-
-void PaintCommand_PutDensePlotHorizontal::configGL(PainterImplGL* impl)
-{
-
-}
-
-
-void PaintCommand_PutDensePlotVertical::paintGL(PainterImplGL* impl)
-{
-
-}
-
-
-void PaintCommand_PutDensePlotVertical::configGL(PainterImplGL* impl)
+void PaintCommandImpl_PutDensePlotVertical::prepareGL(PainterImplGL* impl)
 {
 
 }

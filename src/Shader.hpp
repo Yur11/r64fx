@@ -48,6 +48,8 @@ class ShadingProgram{
 public:
     ShadingProgram(VertexShader vs, FragmentShader fs);
     
+    virtual ~ShadingProgram();
+
     bool isOk();
     
     const char* infoLog();
@@ -63,8 +65,21 @@ public:
     void getAttribLocation(GLint &out, const char* name);
 
     void getUniformLocation(GLint &out, const char* name);
+};
 
-    void free();
+
+class VertexArray{
+    int m_vertex_count = 0;
+    GLuint m_vao;
+
+public:
+    VertexArray(int vertex_count);
+
+    virtual ~VertexArray();
+
+    inline int vertexCount() const { return m_vertex_count; }
+
+    inline GLuint vao() const { return m_vao; }
 };
 
 }//namespace r64fx

@@ -21,6 +21,10 @@ public:
 
     static void destroyInstance(Painter* painter);
 
+    virtual void begin() = 0;
+
+    virtual void end() = 0;
+
     virtual void setClipRect(Rect<int> rect) = 0;
 
     virtual void debugDraw() = 0;
@@ -32,6 +36,8 @@ public:
     virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal) = 0;
 
     virtual void repaint() = 0;
+
+    virtual void prepare() = 0;
 
     virtual void clear() = 0;
 };

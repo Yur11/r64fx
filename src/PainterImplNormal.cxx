@@ -17,11 +17,17 @@ void PainterImplNormal::repaint()
 {
     cout << "PainterImplNormal::repaint()\n";
 
-    for(auto c : commands)
+    for(auto c : paint_commands)
     {
         c->paint(this);
     }
     window->repaint();
+}
+
+
+void PainterImplNormal::prepare()
+{
+    
 }
 
 
@@ -31,9 +37,9 @@ void PainterImplNormal::clear()
 }
 
 
-void PaintCommand_FillRect::paint(PainterImplNormal* p)
+void PaintCommandImpl_FillRect::paint(PainterImplNormal* p)
 {
-    cout << "PaintCommand_FillRect::paint()\n";
+    cout << "PaintCommandImpl_FillRect::paint()\n";
 
     unsigned char px[5];
     px[p->ri] = color.red() * 255;
@@ -52,7 +58,7 @@ void PaintCommand_FillRect::paint(PainterImplNormal* p)
 }
 
 
-void PaintCommand_PutImage::paint(PainterImplNormal* p)
+void PaintCommandImpl_PutImage::paint(PainterImplNormal* p)
 {
     auto dst = p->window->image();
     auto src = img;
@@ -70,7 +76,7 @@ void PaintCommand_PutImage::paint(PainterImplNormal* p)
 }
 
 
-void PaintCommand_PutDensePlotHorizontal::paint(PainterImplNormal* p)
+void PaintCommandImpl_PutDensePlotHorizontal::paint(PainterImplNormal* p)
 {
     auto img = p->window->image();
 
@@ -105,7 +111,7 @@ void PaintCommand_PutDensePlotHorizontal::paint(PainterImplNormal* p)
 }
 
 
-void PaintCommand_PutDensePlotVertical::paint(PainterImplNormal* p)
+void PaintCommandImpl_PutDensePlotVertical::paint(PainterImplNormal* p)
 {
     auto img = p->window->image();
 
