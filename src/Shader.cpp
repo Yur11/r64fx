@@ -147,5 +147,11 @@ VertexArray::~VertexArray()
 {
     gl::DeleteVertexArrays(1, &m_vao);
 }
+
+
+void VertexArray::bind()
+{
+    gl::BindVertexArray(m_vao);
+}
     
 }//namespace r64x

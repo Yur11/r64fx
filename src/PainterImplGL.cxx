@@ -9,6 +9,8 @@ namespace{
 }
 
 
+class PaintLayer;
+
 struct PainterImplGL : public PainterImpl{
     VertexArray_rgba* m_VertexArray_rgba = nullptr;
 
@@ -35,6 +37,23 @@ PainterImpl* create_gl_painter(Window* window)
 {
     return new PainterImplGL(window);
 }
+
+
+/** @brief A bunch of PaintCommand instances of the same type that can be executed together.
+
+    Commands grouped in a layer must be of the same type. i.e they must use the same shader
+    and the same uniform values.
+    This type of grouping allows us to reduce the number of gl calls.
+ */
+struct PaintLayer{
+    vector<PaintCommand*> commands;
+
+    /** @brief Prepare for gl drawing. Upload vertex or texture data etc.  */
+    virtual void configure() = 0;
+
+    /** @brief Issue gl draw commands. */
+    virtual void draw() = 0;
+};
 
 
 PainterImplGL::PainterImplGL(Window* window) : PainterImpl(window)
@@ -146,26 +165,3 @@ void PainterImplGL::cleanupGLStuff()
         delete g_Shader_rgba;
 }
 
-
-void PaintCommandImpl_FillRect::prepareGL(PainterImplGL* impl)
-{
-
-}
-
-
-void PaintCommandImpl_PutImage::prepareGL(PainterImplGL* impl)
-{
-
-}
-
-
-void PaintCommandImpl_PutDensePlotHorizontal::prepareGL(PainterImplGL* impl)
-{
-
-}
-
-
-void PaintCommandImpl_PutDensePlotVertical::prepareGL(PainterImplGL* impl)
-{
-
-}

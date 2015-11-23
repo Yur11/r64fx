@@ -33,8 +33,6 @@ Shader_rgba::Shader_rgba()
 
 Shader_rgba::~Shader_rgba()
 {
-    if(!isOk())
-        return;
 }
 
 

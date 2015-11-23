@@ -2,6 +2,7 @@
 #include "Window.hpp"
 #include "Image.hpp"
 #include "LinkedList.hpp"
+#include <vector>
 
 #ifdef R64FX_USE_GL
 #include "Shader_rgba.hpp"

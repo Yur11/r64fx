@@ -80,6 +80,8 @@ public:
     inline int vertexCount() const { return m_vertex_count; }
 
     inline GLuint vao() const { return m_vao; }
+
+    void bind();
 };
 
 }//namespace r64fx
