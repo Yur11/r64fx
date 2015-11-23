@@ -37,9 +37,7 @@ struct PainterImpl : public Painter{
 
     virtual void setClipRect(Rect<int> rect);
 
-    virtual void debugDraw();
-
-    virtual void fillRect(Rect<int> rect, Color<float> color);
+    virtual void fillRect(Rect<int> rect, Color<unsigned char> color);
 
     virtual void putImage(int x, int y, Image* img);
 
@@ -74,7 +72,7 @@ struct PaintCommandGroup : public PaintCommand{
 
 
 struct PaintCommand_FillRect : public PaintCommand{
-    Color<float> color;
+    Color<unsigned char> color;
 
     virtual ~PaintCommand_FillRect() {}
 
@@ -182,13 +180,7 @@ void PainterImpl::setClipRect(Rect<int> rect)
 }
 
 
-void PainterImpl::debugDraw()
-{
-
-}
-
-
-void PainterImpl::fillRect(Rect<int> rect, Color<float> color)
+void PainterImpl::fillRect(Rect<int> rect, Color<unsigned char> color)
 {
     auto pc = new PaintCommand_FillRect;
     pc->rect = intersection(

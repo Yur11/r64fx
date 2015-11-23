@@ -77,9 +77,9 @@ protected:
 
         auto p = event->painter();
         p->clear();
-        p->fillRect({10, 10, 100, 100},   {1.0f, 0.0f, 0.0f});
-        p->fillRect({210, 210, 100, 100}, {0.0f, 1.0f, 0.0f});
-        p->fillRect({410, 410, 100, 100}, {0.0f, 0.0f, 1.0f});
+        p->fillRect({10,   10, 100, 100}, {255,  0,   0});
+        p->fillRect({210, 210, 100, 100}, {0,  255,   0});
+        p->fillRect({410, 410, 100, 100}, {0,    0, 255});
 //         p->putImage(130, 200, m_Image);
 //         p->putImage(250, 50, m_Image);
 //         p->putImage(180, 250, m_Image);

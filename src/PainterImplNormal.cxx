@@ -10,9 +10,9 @@ struct PainterImplNormal : public PainterImpl{
 
     virtual ~PainterImplNormal();
 
-    virtual void repaint();
-
     virtual void prepare();
+
+    virtual void repaint();
 
     virtual void clear();
 
@@ -38,16 +38,16 @@ PainterImplNormal::~PainterImplNormal()
 }
 
 
+void PainterImplNormal::prepare()
+{
+
+}
+
+
 void PainterImplNormal::repaint()
 {
     root_group->paint(this);
     window->repaint();
-}
-
-
-void PainterImplNormal::prepare()
-{
-    
 }
 
 
@@ -63,9 +63,9 @@ void PaintCommand_FillRect::paint(PainterImpl* impl)
     auto img = p->window->image();
 
     unsigned char px[5];
-    px[p->ri] = color.red() * 255;
-    px[p->gi] = color.green() * 255;
-    px[p->bi] = color.blue() * 255;
+    px[p->ri] = color.red();
+    px[p->gi] = color.green();
+    px[p->bi] = color.blue();
     px[p->ai] = color.alpha();
 
     for(int y=0; y<rect.height(); y++)

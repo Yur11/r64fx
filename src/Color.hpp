@@ -9,7 +9,7 @@ union Color{
     T vec[4];
     struct{ T r, g, b, a; } component;
     
-    Color(T r = 1.0, T g = 1.0, T b = 1.0, T a = 1.0) : vec{ r, g, b, a } {}
+    Color(T r = T(), T g = T(), T b = T(), T a = T()) : vec{ r, g, b, a } {}
     
     inline void setRed(T val)   { vec[0] = val; }
     inline void setGreen(T val) { vec[1] = val; }
@@ -20,32 +20,9 @@ union Color{
     inline T green() const  { return vec[1]; }
     inline T blue()  const  { return vec[2]; }
     inline T alpha() const  { return vec[3]; }
+
+    inline T operator[](int i) const { return vec[i]; }
 };
-
-
-// class ColorMixin{
-// protected:
-//     Color _color;
-//
-// public:
-//     inline void setColor(Color color) { _color = color; }
-//     inline void setColor(T r, T g, T b, T a = 1.0) { _color = Color(r, g, b, a); }
-//
-//     inline Color color() const { return _color; }
-// };
-//
-//
-// class BackgroundColorMixin{
-// protected:
-//     Color _bg_color;
-//
-// public:
-//     inline void setBackgroundColor(Color color) { _bg_color = color; }
-//     inline void setBackgroundColor(T r, T g, T b, T a) { _bg_color = Color(r, g, b, a); }
-//
-//     inline Color backgroundColor() const { return _bg_color; }
-// };
-
 
 }//namespace r64fx
 

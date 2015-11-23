@@ -27,17 +27,15 @@ public:
 
     virtual void setClipRect(Rect<int> rect) = 0;
 
-    virtual void debugDraw() = 0;
-
-    virtual void fillRect(Rect<int> rect, Color<float> color) = 0;
+    virtual void fillRect(Rect<int> rect, Color<unsigned char> color) = 0;
 
     virtual void putImage(int x, int y, Image* img) = 0;
 
     virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal) = 0;
 
-    virtual void repaint() = 0;
-
     virtual void prepare() = 0;
+
+    virtual void repaint() = 0;
 
     virtual void clear() = 0;
 };

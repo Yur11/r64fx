@@ -12,17 +12,15 @@ namespace{
 class PaintLayer;
 
 struct PainterImplGL : public PainterImpl{
-    VertexArray_rgba* m_VertexArray_rgba = nullptr;
+    vector<PaintLayer*> layers;
 
     PainterImplGL(Window* window);
 
     virtual ~PainterImplGL();
 
-    virtual void debugDraw();
+    virtual void prepare();
 
     virtual void repaint();
-
-    virtual void prepare();
 
     virtual void clear();
 
@@ -46,13 +44,65 @@ PainterImpl* create_gl_painter(Window* window)
     This type of grouping allows us to reduce the number of gl calls.
  */
 struct PaintLayer{
-    vector<PaintCommand*> commands;
-
     /** @brief Prepare for gl drawing. Upload vertex or texture data etc.  */
     virtual void configure() = 0;
 
-    /** @brief Issue gl draw commands. */
+    /** @brief Use shader, bind array and issue gl draw commands. */
     virtual void draw() = 0;
+};
+
+
+struct PaintLayer_FillRect{
+    VertexArray_rgba* va = nullptr;
+
+    vector<PaintCommand*> commands;
+    inline void add(PaintCommand_FillRect* cmd) { commands.push_back(cmd); }
+
+    virtual void configure()
+    {
+        float* positions = new float[commands.size()*8];
+        unsigned char* colors = new unsigned char[commands.size()*16];
+
+        for(int i=0; i<(int)commands.size(); i++)
+        {
+            auto c = (PaintCommand_FillRect*) commands[i];
+            const Rect<int>             &rect  = c->rect;
+            const Color<unsigned char>  &color = c->color;
+
+            positions[i*8 + 0] = rect.x();
+            positions[i*8 + 1] = rect.y();
+            positions[i*8 + 2] = rect.x() + rect.width();
+            positions[i*8 + 3] = rect.y();
+            positions[i*8 + 4] = rect.x() + rect.width();
+            positions[i*8 + 5] = rect.y() + rect.height();
+            positions[i*8 + 6] = rect.x();
+            positions[i*8 + 7] = rect.y() + rect.height();
+
+            for(int c=0; c<16; c++)
+            {
+                colors[i*8 + c] = color[i & 3];
+            }
+        }
+
+        va = new VertexArray_rgba(g_Shader_rgba, commands.size()*4);
+        va->loadPositions(positions, 0, commands.size()*4);
+        va->loadColors(colors, 0, commands.size()*4);
+
+        delete positions;
+        delete colors;
+    }
+
+    virtual void draw()
+    {
+        g_Shader_rgba->use();
+        //Must load uniforms here!
+        va->bind();
+        //Bad and slow fixme!
+        for(int i=0; i<(int)commands.size(); i++)
+        {
+            gl::DrawArrays(GL_TRIANGLE_FAN, i*4, 4);
+        }
+    }
 };
 
 
@@ -82,21 +132,9 @@ PainterImplGL::~PainterImplGL()
 }
 
 
-void PainterImplGL::debugDraw()
+void PainterImplGL::prepare()
 {
-    window->makeCurrent();
-    gl::Viewport(0, 0, window->width(), window->height());
-    gl::ClearColor(1.0, 1.0, 1.0, 0.0);
-    gl::Clear(GL_COLOR_BUFFER_BIT);
-    g_Shader_rgba->use();
-    g_Shader_rgba->setScaleAndShift(
-        1.0f/float(window->width()),
-       -1.0f/float(window->height()),
-       -1.0f,
-        1.0f
-    );
-//     g_Shader_rgba->debugDraw();
-    window->repaint();
+    /* Group commands into layers. */
 }
 
 
@@ -105,25 +143,11 @@ void PainterImplGL::repaint()
     window->makeCurrent();
     gl::Viewport(0, 0, window->width(), window->height());
     gl::Clear(GL_COLOR_BUFFER_BIT);
+    for(auto layer : layers)
+    {
+        layer->draw();
+    }
     window->repaint();
-}
-
-
-void PainterImplGL::prepare()
-{
-//     if(m_VertexArray_rgba)
-//     {
-//         if(m_VertexArray_rgba->vertexCount() < (int)paint_commands.size() * 4)
-//         {
-//             delete m_VertexArray_rgba;
-//             m_VertexArray_rgba = nullptr;
-//         }
-//     }
-//
-//     if(!m_VertexArray_rgba)
-//     {
-//         m_VertexArray_rgba = new VertexArray_rgba(g_Shader_rgba, m_PaintCommands_FillRect.size() * 4);
-//     }
 }
 
 
