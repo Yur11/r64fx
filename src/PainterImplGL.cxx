@@ -20,6 +20,8 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void prepare();
 
+    void traverseCommands(LinkedList<PaintCommand>::Iterator begin, LinkedList<PaintCommand>::Iterator end);
+
     virtual void repaint();
 
     virtual void clear();
@@ -132,9 +134,23 @@ PainterImplGL::~PainterImplGL()
 }
 
 
+void PainterImplGL::traverseCommands(LinkedList<PaintCommand>::Iterator begin, LinkedList<PaintCommand>::Iterator end)
+{
+    for(auto it=begin; it!=end; ++it)
+    {
+        cout << "traverse: \n";
+    }
+    cout << "\n";
+}
+
+
 void PainterImplGL::prepare()
 {
     /* Group commands into layers. */
+    if(root_group)
+    {
+        traverseCommands(root_group->commands.begin(), root_group->commands.end());
+    }
 }
 
 
