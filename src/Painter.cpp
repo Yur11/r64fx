@@ -1,12 +1,11 @@
 #include "Painter.hpp"
 #include "Window.hpp"
 #include "Image.hpp"
+#include "LinkedList.hpp"
 
 #ifdef R64FX_USE_GL
 #include "Shader_rgba.hpp"
 #endif//R64FX_USE_GL
-
-#include <vector>
 
 #ifdef R64FX_DEBUG
 #include <iostream>
@@ -17,21 +16,23 @@ using namespace std;
 
 namespace r64fx{
 
-class PaintCommandImpl;
+class PaintCommand;
+class PaintCommandGroup;
 
 struct PainterImpl : public Painter{
-    Window* window =  nullptr;
+    Window* window = nullptr;
     Rect<int> current_clip_rect;
 
-    vector<PaintCommandImpl*> paint_commands;
+    PaintCommandGroup* root_group = nullptr;
+    PaintCommandGroup* curr_group = nullptr;
 
     PainterImpl(Window* window);
 
     virtual ~PainterImpl();
 
-    virtual void begin() {}
+    virtual void begin();
 
-    virtual void end() {}
+    virtual void end();
 
     virtual void setClipRect(Rect<int> rect);
 
@@ -48,135 +49,89 @@ struct PainterImpl : public Painter{
 };//PainterImpl
 
 
-struct PainterImplNormal : public PainterImpl{
-    int ri = 4;
-    int gi = 4;
-    int bi = 4;
-    int ai = 4;
-
-    PainterImplNormal(Window* window);
-
-    virtual ~PainterImplNormal();
-
-    virtual void repaint();
-
-    virtual void prepare();
-
-    virtual void clear();
-
-};//PainterImplNormal
-
-
-#ifdef R64FX_USE_GL
-struct PainterImplGL : public PainterImpl{
-    VertexArray_rgba* m_VertexArray_rgba = nullptr;
-
-    PainterImplGL(Window* window);
-
-    virtual ~PainterImplGL();
-
-    virtual void debugDraw();
-
-    virtual void repaint();
-
-    virtual void prepare();
-
-    virtual void clear();
-
-    static void initGLStuffIfNeeded();
-
-    static void cleanupGLStuff();
-
-};//PainterImplGL
-#endif//R64FX_USE_GL
-
-
-struct PaintCommandImpl{
+struct PaintCommand : public LinkedList<PaintCommand>::Node{
     int index = -1;
     Rect<int> rect;
 
-    virtual ~PaintCommandImpl() {}
+    virtual ~PaintCommand() {}
 
-    virtual void paint(PainterImplNormal* impl) = 0;
-
-#ifdef R64FX_USE_GL
-    virtual void prepareGL(PainterImplGL* impl) = 0;
-#endif//R64FX_USE_GL
-
-};//PaintCommandImpl
+    virtual void paint(PainterImpl* impl) = 0;
+};//PaintCommand
 
 
-struct PaintCommandImpl_FillRect : public PaintCommandImpl{
+struct PaintCommandGroup : public PaintCommand{
+    PaintCommandGroup*         parent = nullptr;
+    LinkedList<PaintCommand>   commands;
+
+    virtual ~PaintCommandGroup() {}
+
+    virtual void paint(PainterImpl* impl);
+
+    void clear();
+
+};//PaintCommandGroup
+
+
+struct PaintCommand_FillRect : public PaintCommand{
     Color<float> color;
 
-    virtual ~PaintCommandImpl_FillRect() {}
+    virtual ~PaintCommand_FillRect() {}
 
-    virtual void paint(PainterImplNormal* p);
+    virtual void paint(PainterImpl* p);
 
-#ifdef R64FX_USE_GL
-    virtual void prepareGL(PainterImplGL* impl);
-#endif//R64FX_USE_GL
-
-};//PaintCommandImpl_FillRect
+};//PaintCommand_FillRect
 
 
-struct PaintCommandImpl_PutImage : public PaintCommandImpl{
+struct PaintCommand_PutImage : public PaintCommand{
     Image* img;
 
-    virtual ~PaintCommandImpl_PutImage() {}
+    virtual ~PaintCommand_PutImage() {}
 
-    virtual void paint(PainterImplNormal* p);
+    virtual void paint(PainterImpl* p);
 
-#ifdef R64FX_USE_GL
-    virtual void prepareGL(PainterImplGL* impl);
-#endif//R64FX_USE_GL
-
-};//PaintCommandImpl_PutImage
+};//PaintCommand_PutImage
 
 
-struct PaintCommandImpl_PutDensePlot : public PaintCommandImpl{
+struct PaintCommand_PutDensePlot : public PaintCommand{
     float* data = nullptr;
     Rect<int> orig_rect;
 
-};//PaintCommandImpl_PutDensePlot
+};//PaintCommand_PutDensePlot
 
 
-struct PaintCommandImpl_PutDensePlotHorizontal : public PaintCommandImpl_PutDensePlot{
+struct PaintCommand_PutDensePlotHorizontal : public PaintCommand_PutDensePlot{
 
-    virtual ~PaintCommandImpl_PutDensePlotHorizontal() {}
+    virtual ~PaintCommand_PutDensePlotHorizontal() {}
 
-    virtual void paint(PainterImplNormal* p);
+    virtual void paint(PainterImpl* p);
 
+};//PaintCommand_PutDensePlotHorizontal
+
+
+struct PaintCommand_PutDensePlotVertical : public PaintCommand_PutDensePlot{
+
+    virtual ~PaintCommand_PutDensePlotVertical() {}
+
+    virtual void paint(PainterImpl* p);
+
+};//PaintCommand_PutDensePlotVertical
+
+
+PainterImpl* create_normal_painter(Window* window);
 #ifdef R64FX_USE_GL
-    virtual void prepareGL(PainterImplGL* impl);
+PainterImpl* create_gl_painter(Window* window);
 #endif//R64FX_USE_GL
-
-};//PaintCommandImpl_PutDensePlotHorizontal
-
-
-struct PaintCommandImpl_PutDensePlotVertical : public PaintCommandImpl_PutDensePlot{
-
-    virtual ~PaintCommandImpl_PutDensePlotVertical() {}
-
-    virtual void paint(PainterImplNormal* p);
-
-#ifdef R64FX_USE_GL
-    virtual void prepareGL(PainterImplGL* impl);
-#endif//R64FX_USE_GL
-
-};//PaintCommandImpl_PutDensePlotVertical
-
 
 Painter* Painter::newInstance(Window* window)
 {
     if(window->type() == Window::Type::Normal)
     {
-        return new PainterImplNormal(window);
+        return create_normal_painter(window);
     }
 #ifdef R64FX_USE_GL
     else if(window->type() == Window::Type::GL)
     {
-        return new PainterImplGL(window);
+        return create_gl_painter(window);
     }
 #endif//R64FX_USE_GL
 
@@ -192,13 +147,31 @@ void Painter::destroyInstance(Painter* painter)
 
 PainterImpl::PainterImpl(Window* window) : window(window)
 {
-
+    curr_group = root_group = new PaintCommandGroup;
 }
 
 
 PainterImpl::~PainterImpl()
 {
 
+}
+
+
+void PainterImpl::begin()
+{
+    auto group = new PaintCommandGroup;
+    group->parent = curr_group;
+    curr_group->commands.append(group);
+    curr_group = group;
+}
+
+
+void PainterImpl::end()
+{
+    if(curr_group != root_group)
+    {
+        curr_group = curr_group->parent;
+    }
 }
 
 
@@ -216,13 +189,13 @@ void PainterImpl::debugDraw()
 
 void PainterImpl::fillRect(Rect<int> rect, Color<float> color)
 {
-    auto pc = new PaintCommandImpl_FillRect;
+    auto pc = new PaintCommand_FillRect;
     pc->rect = intersection(
         current_clip_rect,
         rect
     );
     pc->color = color;
-    paint_commands.push_back(pc);
+    curr_group->commands.append(pc);
 }
 
 
@@ -267,12 +240,40 @@ void PainterImpl::putPlot(Rect<int> rect, float* data, int data_size, Orientatio
 
 void PainterImpl::clear()
 {
-    current_clip_rect = Rect<int>(0, 0, window->image()->width(), window->image()->height());
-    for(auto pc : paint_commands)
+    root_group->clear();
+    setClipRect({0, 0, window->width(), window->height()});
+}
+
+
+void PaintCommandGroup::paint(PainterImpl* impl)
+{
+    for(auto c : commands)
     {
-        delete pc;
+        c->paint(impl);
     }
-    paint_commands.clear();
+}
+
+
+void PaintCommandGroup::clear()
+{
+    for(;;)
+    {
+        auto c = commands.first();
+        if(c)
+        {
+            commands.remove(c);
+            auto cg = dynamic_cast<PaintCommandGroup*>(c);
+            if(cg)
+            {
+                cg->clear();
+            }
+            delete c;
+        }
+        else
+        {
+            break;
+        }
+    }
 }
 
 

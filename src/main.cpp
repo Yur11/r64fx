@@ -85,7 +85,7 @@ protected:
 //         p->putImage(180, 250, m_Image);
 //         p->putPlot(Rect<int>(100, 100, 100, data_size/2), data, data_size, Orientation::Vertical);
 //         p->putPlot(Rect<int>(250, 200, data_size/2, 100), data, data_size, Orientation::Horizontal);
-        p->prepare();
+//         p->prepare();
         p->repaint();
 
 //         p->debugDraw();

@@ -8,6 +8,35 @@ namespace{
     Shader_rgba* g_Shader_rgba = nullptr;
 }
 
+
+struct PainterImplGL : public PainterImpl{
+    VertexArray_rgba* m_VertexArray_rgba = nullptr;
+
+    PainterImplGL(Window* window);
+
+    virtual ~PainterImplGL();
+
+    virtual void debugDraw();
+
+    virtual void repaint();
+
+    virtual void prepare();
+
+    virtual void clear();
+
+    static void initGLStuffIfNeeded();
+
+    static void cleanupGLStuff();
+
+};//PainterImplGL
+
+
+PainterImpl* create_gl_painter(Window* window)
+{
+    return new PainterImplGL(window);
+}
+
+
 PainterImplGL::PainterImplGL(Window* window) : PainterImpl(window)
 {
     initGLStuffIfNeeded();
