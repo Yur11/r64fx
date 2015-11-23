@@ -49,8 +49,16 @@ struct PainterImpl : public Painter{
 
 
 struct PaintCommand : public LinkedList<PaintCommand>::Node{
+    enum class Type{
+        Group,
+        FillRect,
+        PutImage
+    };
+
     int index = -1;
     Rect<int> rect;
+
+    virtual PaintCommand::Type type() = 0;
 
     virtual ~PaintCommand() {}
 
@@ -61,6 +69,8 @@ struct PaintCommand : public LinkedList<PaintCommand>::Node{
 struct PaintCommandGroup : public PaintCommand{
     PaintCommandGroup*         parent = nullptr;
     LinkedList<PaintCommand>   commands;
+
+    virtual PaintCommand::Type type() { return PaintCommand::Type::Group; }
 
     virtual ~PaintCommandGroup() {}
 
@@ -74,6 +84,8 @@ struct PaintCommandGroup : public PaintCommand{
 struct PaintCommand_FillRect : public PaintCommand{
     Color<unsigned char> color;
 
+    virtual PaintCommand::Type type() { return PaintCommand::Type::FillRect; }
+
     virtual ~PaintCommand_FillRect() {}
 
     virtual void paint(PainterImpl* p);
@@ -83,6 +95,8 @@ struct PaintCommand_FillRect : public PaintCommand{
 
 struct PaintCommand_PutImage : public PaintCommand{
     Image* img;
+
+    virtual PaintCommand::Type type() { return PaintCommand::Type::PutImage; }
 
     virtual ~PaintCommand_PutImage() {}
 
@@ -94,6 +108,8 @@ struct PaintCommand_PutImage : public PaintCommand{
 struct PaintCommand_PutDensePlot : public PaintCommand{
     float* data = nullptr;
     Rect<int> orig_rect;
+
+//     virtual PaintCommand::Type type() {}
 
 };//PaintCommand_PutDensePlot
 
