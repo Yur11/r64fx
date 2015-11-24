@@ -5,6 +5,8 @@
 
 namespace r64fx{
 
+class VertexArray_rgba;
+
 /** @brief ShadingProgram with single color per vertex. */
 class Shader_rgba : public ShadingProgram{
     friend class VertexArray_rgba;

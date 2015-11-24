@@ -22,6 +22,10 @@ struct PainterImplGL : public PainterImpl{
 
     void traverseCommands(LinkedList<PaintCommand>::Iterator begin, LinkedList<PaintCommand>::Iterator end);
 
+    void dispatchCommand(PaintCommand_FillRect* pc);
+
+    void dispatchCommand(PaintCommand_PutImage* pc);
+
     virtual void repaint();
 
     virtual void clear();
@@ -46,19 +50,28 @@ PainterImpl* create_gl_painter(Window* window)
     This type of grouping allows us to reduce the number of gl calls.
  */
 struct PaintLayer{
+    virtual PaintCommand::Type type() = 0;
+
+    virtual ~PaintLayer() {}
+
     /** @brief Prepare for gl drawing. Upload vertex or texture data etc.  */
     virtual void configure() = 0;
 
     /** @brief Use shader, bind array and issue gl draw commands. */
-    virtual void draw() = 0;
+    virtual void draw(PainterImplGL* painter) = 0;
 };
 
 
-struct PaintLayer_FillRect{
+struct PaintLayer_FillRect : public PaintLayer{
     VertexArray_rgba* va = nullptr;
 
     vector<PaintCommand*> commands;
+
     inline void add(PaintCommand_FillRect* cmd) { commands.push_back(cmd); }
+
+    virtual PaintCommand::Type type() { return PaintCommand::Type::FillRect; }
+
+    virtual ~PaintLayer_FillRect() {}
 
     virtual void configure()
     {
@@ -82,7 +95,7 @@ struct PaintLayer_FillRect{
 
             for(int c=0; c<16; c++)
             {
-                colors[i*8 + c] = color[i & 3];
+                colors[i*16 + c] = color[c & 3];
             }
         }
 
@@ -94,12 +107,19 @@ struct PaintLayer_FillRect{
         delete colors;
     }
 
-    virtual void draw()
+    virtual void draw(PainterImplGL* painter)
     {
+        auto window = painter->window;
+
         g_Shader_rgba->use();
-        //Must load uniforms here!
+        g_Shader_rgba->setScaleAndShift(
+             2.0f/float(window->width()),
+            -2.0f/float(window->height()),
+            -1.0f,
+             1.0f
+        );
         va->bind();
-        //Bad and slow fixme!
+
         for(int i=0; i<(int)commands.size(); i++)
         {
             gl::DrawArrays(GL_TRIANGLE_FAN, i*4, 4);
@@ -134,16 +154,6 @@ PainterImplGL::~PainterImplGL()
 }
 
 
-void PainterImplGL::traverseCommands(LinkedList<PaintCommand>::Iterator begin, LinkedList<PaintCommand>::Iterator end)
-{
-    for(auto it=begin; it!=end; ++it)
-    {
-        cout << "traverse: \n";
-    }
-    cout << "\n";
-}
-
-
 void PainterImplGL::prepare()
 {
     /* Group commands into layers. */
@@ -151,6 +161,65 @@ void PainterImplGL::prepare()
     {
         traverseCommands(root_group->commands.begin(), root_group->commands.end());
     }
+
+    for(auto layer : layers)
+    {
+        layer->configure();
+    }
+}
+
+
+void PainterImplGL::traverseCommands(LinkedList<PaintCommand>::Iterator begin, LinkedList<PaintCommand>::Iterator end)
+{
+    for(auto it=begin; it!=end; ++it)
+    {
+        auto pc = *it;
+        switch(pc->type())
+        {
+            case PaintCommand::Type::Group:
+            {
+                break;
+            }
+
+            case PaintCommand::Type::FillRect:
+            {
+                dispatchCommand((PaintCommand_FillRect*)pc);
+                break;
+            }
+
+            case PaintCommand::Type::PutImage:
+            {
+                dispatchCommand((PaintCommand_PutImage*)pc);
+                break;
+            }
+        }
+    }
+    cout << "\n";
+}
+
+
+void PainterImplGL::dispatchCommand(PaintCommand_FillRect* pc)
+{
+    cout << "dc: FillRect\n";
+    PaintLayer_FillRect* layer = nullptr;
+    if(layers.empty() || layers.back()->type() != PaintCommand::Type::FillRect)
+    {
+        cout << "new FillRect layer\n";
+        layer = new PaintLayer_FillRect;
+        layers.push_back(layer);
+    }
+    else
+    {
+        layer = (PaintLayer_FillRect*)layers.back();
+    }
+
+    layer->add(pc);
+}
+
+
+void PainterImplGL::dispatchCommand(PaintCommand_PutImage* pc)
+{
+    cout << "dc: PutImage\n";
 }
 
 
@@ -161,7 +230,7 @@ void PainterImplGL::repaint()
     gl::Clear(GL_COLOR_BUFFER_BIT);
     for(auto layer : layers)
     {
-        layer->draw();
+        layer->draw(this);
     }
     window->repaint();
 }
@@ -169,6 +238,11 @@ void PainterImplGL::repaint()
 
 void PainterImplGL::clear()
 {
+    for(auto layer : layers)
+    {
+        delete layer;
+    }
+    layers.clear();
     PainterImpl::clear();
 }
 

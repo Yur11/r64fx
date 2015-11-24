@@ -1,11 +1,10 @@
 #include "Shader_rgba.hpp"
 
-namespace r64fx{
+#include <iostream>
 
-namespace{
-    bool gl_stuff_is_good = false;
-    int PainterImplGL_count = 0;
-}
+using namespace std;
+
+namespace r64fx{
 
 #define R64FX_GET_ATTRIB_LOCATION(name) getAttribLocation(attr_##name, #name)
 #define R64FX_GET_UNIFORM_LOCATION(name) getUniformLocation(unif_##name, #name)
@@ -33,6 +32,7 @@ Shader_rgba::Shader_rgba()
 
 Shader_rgba::~Shader_rgba()
 {
+
 }
 
 
@@ -48,14 +48,16 @@ VertexArray_rgba::VertexArray_rgba(Shader_rgba* shader, int size) : VertexArray(
     gl::GenBuffers(1, &m_color_vbo);
 
     gl::BindVertexArray(vao());
+    gl::EnableVertexAttribArray(shader->attr_position);
+    gl::EnableVertexAttribArray(shader->attr_color);
 
     gl::BindBuffer(GL_ARRAY_BUFFER, m_position_vbo);
     gl::BufferData(GL_ARRAY_BUFFER, size*2*sizeof(float), nullptr, GL_STREAM_DRAW);
     gl::VertexAttribPointer(shader->attr_position, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
     gl::BindBuffer(GL_ARRAY_BUFFER, m_color_vbo);
-    gl::BufferData(GL_ARRAY_BUFFER, size*4*sizeof(float), nullptr, GL_STREAM_DRAW);
-    gl::VertexAttribPointer(shader->attr_color, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    gl::BufferData(GL_ARRAY_BUFFER, size*4*sizeof(unsigned char), nullptr, GL_STREAM_DRAW);
+    gl::VertexAttribPointer(shader->attr_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, 0);
 }
 
 

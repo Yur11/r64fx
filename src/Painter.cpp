@@ -210,13 +210,13 @@ void PainterImpl::fillRect(Rect<int> rect, Color<unsigned char> color)
 
 void PainterImpl::putImage(int x, int y, Image* img)
 {
-//     auto pc = new PaintCommandImpl_PutImage;
-//     pc->rect = intersection(
-//         current_clip_rect,
-//         Rect<int>(x, y, img->width(), img->height())
-//     );
-//     pc->img = img;
-//     insertPaintCommandImpl(pc);
+    auto pc = new PaintCommand_PutImage;
+    pc->rect = intersection(
+        current_clip_rect,
+        Rect<int>(x, y, img->width(), img->height())
+    );
+    pc->img = img;
+    curr_group->commands.append(pc);
 }
 
 
