@@ -15,6 +15,8 @@ namespace{
 class PaintLayer;
 
 struct PainterImplGL : public PainterImpl{
+    GLuint base_texture = 0;
+
     vector<PaintLayer*> layers;
 
     PainterImplGL(Window* window);
@@ -28,6 +30,10 @@ struct PainterImplGL : public PainterImpl{
     void dispatchCommand(PaintCommand_FillRect* pc);
 
     void dispatchCommand(PaintCommand_PutImage* pc);
+
+    void resizeBaseTexture(int w, int h);
+
+    void deleteBaseTextureIfNeeded();
 
     virtual void repaint();
 
@@ -150,13 +156,15 @@ struct PaintLayer_FillRect : public PaintLayer{
 PainterImplGL::PainterImplGL(Window* window) : PainterImpl(window)
 {
     initGLStuffIfNeeded();
+    resizeBaseTexture(window->width(), window->height());
+
     PainterImplGL_count++;
 }
 
 
 PainterImplGL::~PainterImplGL()
 {
-    cout << "~PainterImplGL\n";
+    deleteBaseTextureIfNeeded();
 
     PainterImplGL_count--;
     if(PainterImplGL_count == 0)
@@ -235,6 +243,32 @@ void PainterImplGL::dispatchCommand(PaintCommand_FillRect* pc)
 
 void PainterImplGL::dispatchCommand(PaintCommand_PutImage* pc)
 {
+}
+
+
+void PainterImplGL::resizeBaseTexture(int w, int h)
+{
+    cout << "resize tex: " << w << "x" << h << "\n";
+
+    deleteBaseTextureIfNeeded();
+
+    gl::GenTextures(1, &base_texture);
+    gl::BindTexture(GL_TEXTURE_2D, base_texture);
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    gl::TexStorage2D(
+        GL_TEXTURE_2D,
+        1,
+        GL_RGBA8,
+        w, h
+    );
+}
+
+
+void PainterImplGL::deleteBaseTextureIfNeeded()
+{
+    if(base_texture != 0)
+        gl::DeleteTextures(1, &base_texture);
 }
 
 
