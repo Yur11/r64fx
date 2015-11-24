@@ -18,7 +18,7 @@ struct PainterImplGL : public PainterImpl{
 
     virtual ~PainterImplGL();
 
-    virtual void prepare();
+    virtual void configure();
 
     void traverseCommands(LinkedList<PaintCommand>::Iterator begin, LinkedList<PaintCommand>::Iterator end);
 
@@ -154,7 +154,7 @@ PainterImplGL::~PainterImplGL()
 }
 
 
-void PainterImplGL::prepare()
+void PainterImplGL::configure()
 {
     /* Group commands into layers. */
     if(root_group)

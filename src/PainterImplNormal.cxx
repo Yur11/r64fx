@@ -10,7 +10,7 @@ struct PainterImplNormal : public PainterImpl{
 
     virtual ~PainterImplNormal();
 
-    virtual void prepare();
+    virtual void configure();
 
     virtual void repaint();
 
@@ -38,7 +38,7 @@ PainterImplNormal::~PainterImplNormal()
 }
 
 
-void PainterImplNormal::prepare()
+void PainterImplNormal::configure()
 {
 
 }

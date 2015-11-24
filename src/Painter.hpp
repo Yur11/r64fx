@@ -33,7 +33,7 @@ public:
 
     virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal) = 0;
 
-    virtual void prepare() = 0;
+    virtual void configure() = 0;
 
     virtual void repaint() = 0;
 
