@@ -1,25 +1,21 @@
 #include "Shader_rgba.hpp"
-
-#include <iostream>
-
-using namespace std;
+#include "ShaderImplUtils.hpp"
 
 namespace r64fx{
 
-#define R64FX_GET_ATTRIB_LOCATION(name) getAttribLocation(attr_##name, #name)
-#define R64FX_GET_UNIFORM_LOCATION(name) getUniformLocation(unif_##name, #name)
-
-const char* rgba_vert_text =
+namespace{
+const char* vert_text =
 #include "rgba.vert.h"
 ;
 
-const char* rgba_frag_text =
+const char* frag_text =
 #include "rgba.frag.h"
 ;
+}
 
 
 Shader_rgba::Shader_rgba()
-:ShadingProgram(rgba_vert_text, rgba_frag_text)
+:ShadingProgram(vert_text, frag_text)
 {
     if(!isOk())
         return;

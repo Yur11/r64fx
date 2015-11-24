@@ -6,6 +6,7 @@
 
 #ifdef R64FX_USE_GL
 #include "Shader_rgba.hpp"
+#include "Shader_rgba_tex.hpp"
 #endif//R64FX_USE_GL
 
 #ifdef R64FX_DEBUG

@@ -5,7 +5,8 @@ namespace{
 
     bool gl_stuff_is_good = false;
 
-    Shader_rgba* g_Shader_rgba = nullptr;
+    Shader_rgba*      g_Shader_rgba      = nullptr;
+    Shader_rgba_tex*  g_Shader_rgba_tex  = nullptr;
 
     const GLuint primitive_restart = 0xFFFF;
 }
@@ -276,6 +277,10 @@ void PainterImplGL::initGLStuffIfNeeded()
 
     g_Shader_rgba = new Shader_rgba;
     if(!g_Shader_rgba->isOk())
+        abort();
+
+    g_Shader_rgba_tex = new Shader_rgba_tex;
+    if(!g_Shader_rgba_tex->isOk())
         abort();
 
     gl::Enable(GL_PRIMITIVE_RESTART);

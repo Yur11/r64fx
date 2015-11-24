@@ -14,6 +14,7 @@ set(SRC
     Keyboard.cpp
     Shader.cpp
     Shader_rgba.cpp
+    Shader_rgba_tex.cpp
     Painter.cpp
     Program.cpp
     Widget.cpp
