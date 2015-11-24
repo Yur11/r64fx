@@ -71,6 +71,12 @@ inline void DrawArrays(GLenum mode, GLint first, GLsizei count)
     CHECK_FOR_GL_ERRORS("glDrawArrays");
 }
 
+inline void DrawElements(GLenum mode, GLsizei count, GLenum type, long int indices)
+{
+    glDrawElements(mode, count, type, (void*)indices);
+    CHECK_FOR_GL_ERRORS("glDrawElements");
+}
+
 
 R64FX_MAYBE_EXTERN void (*r64fx_impl_glGenBuffers)
     (GLsizei n, GLuint* buffers);

@@ -6,6 +6,8 @@ namespace{
     bool gl_stuff_is_good = false;
 
     Shader_rgba* g_Shader_rgba = nullptr;
+
+    const GLuint primitive_restart = 0xFFFF;
 }
 
 
@@ -52,13 +54,13 @@ PainterImpl* create_gl_painter(Window* window)
 struct PaintLayer{
     virtual PaintCommand::Type type() = 0;
 
-    virtual ~PaintLayer() {}
-
     /** @brief Prepare for gl drawing. Upload vertex or texture data etc.  */
     virtual void configure() = 0;
 
     /** @brief Use shader, bind array and issue gl draw commands. */
     virtual void draw(PainterImplGL* painter) = 0;
+
+    virtual ~PaintLayer() {};
 };
 
 
@@ -69,14 +71,15 @@ struct PaintLayer_FillRect : public PaintLayer{
 
     inline void add(PaintCommand_FillRect* cmd) { commands.push_back(cmd); }
 
-    virtual PaintCommand::Type type() { return PaintCommand::Type::FillRect; }
+    GLuint index_vbo;
 
-    virtual ~PaintLayer_FillRect() {}
+    virtual PaintCommand::Type type() { return PaintCommand::Type::FillRect; }
 
     virtual void configure()
     {
-        float* positions = new float[commands.size()*8];
-        unsigned char* colors = new unsigned char[commands.size()*16];
+        float*          positions  = new float[commands.size()*8];          //4 vertices * xy
+        unsigned char*  colors     = new unsigned char[commands.size()*16]; //4 vertices * rgba
+        unsigned short* index      = new unsigned short[commands.size()*5]; //4 vertices + primitive_restart
 
         for(int i=0; i<(int)commands.size(); i++)
         {
@@ -97,14 +100,26 @@ struct PaintLayer_FillRect : public PaintLayer{
             {
                 colors[i*16 + c] = color[c & 3];
             }
+
+            index[i*5 + 0] = i*4 + 0;
+            index[i*5 + 1] = i*4 + 1;
+            index[i*5 + 2] = i*4 + 2;
+            index[i*5 + 3] = i*4 + 3;
+            index[i*5 + 4] = primitive_restart;
         }
 
         va = new VertexArray_rgba(g_Shader_rgba, commands.size()*4);
         va->loadPositions(positions, 0, commands.size()*4);
         va->loadColors(colors, 0, commands.size()*4);
 
+        va->bind();
+        gl::GenBuffers(1, &index_vbo);
+        gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_vbo);
+        gl::BufferData(GL_ELEMENT_ARRAY_BUFFER, commands.size()*5*2, index, GL_STATIC_DRAW);
+
         delete positions;
         delete colors;
+        delete index;
     }
 
     virtual void draw(PainterImplGL* painter)
@@ -118,12 +133,15 @@ struct PaintLayer_FillRect : public PaintLayer{
             -1.0f,
              1.0f
         );
-        va->bind();
 
-        for(int i=0; i<(int)commands.size(); i++)
-        {
-            gl::DrawArrays(GL_TRIANGLE_FAN, i*4, 4);
-        }
+        va->bind();
+        gl::DrawElements(GL_TRIANGLE_FAN, commands.size()*5, GL_UNSIGNED_SHORT, 0);
+    }
+
+    virtual ~PaintLayer_FillRect()
+    {
+        delete va;
+        gl::DeleteBuffers(1, &index_vbo);
     }
 };
 
@@ -194,17 +212,14 @@ void PainterImplGL::traverseCommands(LinkedList<PaintCommand>::Iterator begin, L
             }
         }
     }
-    cout << "\n";
 }
 
 
 void PainterImplGL::dispatchCommand(PaintCommand_FillRect* pc)
 {
-    cout << "dc: FillRect\n";
     PaintLayer_FillRect* layer = nullptr;
     if(layers.empty() || layers.back()->type() != PaintCommand::Type::FillRect)
     {
-        cout << "new FillRect layer\n";
         layer = new PaintLayer_FillRect;
         layers.push_back(layer);
     }
@@ -219,7 +234,6 @@ void PainterImplGL::dispatchCommand(PaintCommand_FillRect* pc)
 
 void PainterImplGL::dispatchCommand(PaintCommand_PutImage* pc)
 {
-    cout << "dc: PutImage\n";
 }
 
 
@@ -263,6 +277,9 @@ void PainterImplGL::initGLStuffIfNeeded()
     g_Shader_rgba = new Shader_rgba;
     if(!g_Shader_rgba->isOk())
         abort();
+
+    gl::Enable(GL_PRIMITIVE_RESTART);
+    gl::PrimitiveRestartIndex(primitive_restart);
 
     gl_stuff_is_good = true;
 }
