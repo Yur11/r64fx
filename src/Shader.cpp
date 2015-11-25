@@ -134,24 +134,5 @@ void ShadingProgram::getUniformLocation(GLint &out, const char* name)
     }
 #endif//R64FX_DEBUG
 }
-
-
-VertexArray::VertexArray(int vertex_count)
-: m_vertex_count(vertex_count)
-{
-    gl::GenVertexArrays(1, &m_vao);
-}
-
-
-VertexArray::~VertexArray()
-{
-    gl::DeleteVertexArrays(1, &m_vao);
-}
-
-
-void VertexArray::bind()
-{
-    gl::BindVertexArray(m_vao);
-}
     
 }//namespace r64x

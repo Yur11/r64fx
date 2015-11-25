@@ -67,23 +67,6 @@ public:
     void getUniformLocation(GLint &out, const char* name);
 };
 
-
-class VertexArray{
-    int m_vertex_count = 0;
-    GLuint m_vao;
-
-public:
-    VertexArray(int vertex_count);
-
-    virtual ~VertexArray();
-
-    inline int vertexCount() const { return m_vertex_count; }
-
-    inline GLuint vao() const { return m_vao; }
-
-    void bind();
-};
-
 }//namespace r64fx
 
 #endif//R64FX_GUI_SHADER_H
