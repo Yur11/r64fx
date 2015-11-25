@@ -46,6 +46,7 @@ void PainterImplNormal::configure()
 
 void PainterImplNormal::repaint()
 {
+    target_image = window->image();
     root_group->paint(this);
     window->repaint();
 }
@@ -57,32 +58,23 @@ void PainterImplNormal::clear()
 }
 
 
-void PaintCommand_FillRect::paint(PainterImpl* impl)
+void PaintCommand_FillRect::paint(PainterImpl* p)
 {
-    auto p = (PainterImplNormal*)impl;
-    auto img = p->window->image();
-
-    unsigned char px[5];
-    px[p->ri] = color.red();
-    px[p->gi] = color.green();
-    px[p->bi] = color.blue();
-    px[p->ai] = color.alpha();
+    auto img = p->target_image;
 
     for(int y=0; y<rect.height(); y++)
     {
         for(int x=0; x<rect.width(); x++)
         {
-            img->setPixel(x + rect.x(), y + rect.y(), px);
+            img->setPixel(x + rect.x(), y + rect.y(), color.vec);
         }
     }
 }
 
 
-void PaintCommand_PutImage::paint(PainterImpl* impl)
+void PaintCommand_PutImage::paint(PainterImpl* p)
 {
-    auto p = (PainterImplNormal*)impl;
-
-    auto dst = p->window->image();
+    auto dst = p->target_image;
     auto src = img;
 
     for(int y=0; y<rect.height(); y++)
@@ -98,11 +90,9 @@ void PaintCommand_PutImage::paint(PainterImpl* impl)
 }
 
 
-void PaintCommand_PutDensePlotHorizontal::paint(PainterImpl* impl)
+void PaintCommand_PutDensePlotHorizontal::paint(PainterImpl* p)
 {
-    auto p = (PainterImplNormal*)impl;
-
-    auto img = p->window->image();
+    auto img = p->target_image;
 
     float scale = 1.0f / orig_rect.height();
 
@@ -135,11 +125,9 @@ void PaintCommand_PutDensePlotHorizontal::paint(PainterImpl* impl)
 }
 
 
-void PaintCommand_PutDensePlotVertical::paint(PainterImpl* impl)
+void PaintCommand_PutDensePlotVertical::paint(PainterImpl* p)
 {
-    auto p = (PainterImplNormal*)impl;
-
-    auto img = p->window->image();
+    auto img = p->target_image;
 
     float scale = 1.0f / orig_rect.width();
 

@@ -23,6 +23,7 @@ class PaintCommandGroup;
 
 struct PainterImpl : public Painter{
     Window* window = nullptr;
+    Image* target_image = nullptr;
     Rect<int> current_clip_rect;
 
     PaintCommandGroup* root_group = nullptr;
@@ -56,14 +57,13 @@ struct PaintCommand : public LinkedList<PaintCommand>::Node{
         PutImage
     };
 
-    int index = -1;
     Rect<int> rect;
 
     virtual PaintCommand::Type type() = 0;
 
     virtual ~PaintCommand() {}
 
-    virtual void paint(PainterImpl* impl) = 0;
+    virtual void paint(PainterImpl* p) = 0;
 };//PaintCommand
 
 
@@ -75,7 +75,7 @@ struct PaintCommandGroup : public PaintCommand{
 
     virtual ~PaintCommandGroup() {}
 
-    virtual void paint(PainterImpl* impl);
+    virtual void paint(PainterImpl* p);
 
     void clear();
 
