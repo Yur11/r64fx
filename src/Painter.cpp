@@ -47,11 +47,9 @@ struct PaintContext{
 
 void fill_rect_routine(PaintContext* ctx)
 {
-    auto img = ctx->target_image;
-    auto rect = ctx->rect;
-    auto color = ctx->color;
-
-    cout << "fill_rect_routine: " << rect.width() << "x" << rect.height() << "\n";
+    auto img    = ctx->target_image;
+    auto rect   = ctx->rect;
+    auto color  = ctx->color;
 
     for(int y=0; y<rect.height(); y++)
     {
@@ -65,9 +63,9 @@ void fill_rect_routine(PaintContext* ctx)
 
 void put_image_routine(PaintContext* ctx)
 {
-    auto dst = ctx->target_image;
-    auto src = ctx->source_image;
-    auto rect = ctx->rect;
+    auto dst   = ctx->target_image;
+    auto src   = ctx->source_image;
+    auto rect  = ctx->rect;
 
     for(int y=0; y<rect.height(); y++)
     {
@@ -84,9 +82,9 @@ void put_image_routine(PaintContext* ctx)
 
 void put_dense_plot_horizontal_routine(PaintContext* ctx)
 {
-    auto img = ctx->target_image;
-    auto rect = ctx->rect;
-    auto data = ctx->plot_data;
+    auto img   = ctx->target_image;
+    auto rect  = ctx->rect;
+    auto data  = ctx->plot_data;
 
     float scale = 1.0f / ctx->orig_rect.height();
 
@@ -121,9 +119,9 @@ void put_dense_plot_horizontal_routine(PaintContext* ctx)
 
 void put_dense_plot_vertical_routine(PaintContext* ctx)
 {
-    auto img = ctx->target_image;
-    auto rect = ctx->rect;
-    auto data = ctx->plot_data;
+    auto img   = ctx->target_image;
+    auto rect  = ctx->rect;
+    auto data  = ctx->plot_data;
 
     float scale = 1.0f / ctx->orig_rect.width();
 
@@ -217,7 +215,8 @@ struct PainterImplNormal : public PainterImpl{
     virtual void finish();
 
     virtual void reconfigure();
-};//PainterImpl
+
+};//PainterImplNormal
 
 
 PainterImplNormal::PainterImplNormal(Window* window)
@@ -289,6 +288,188 @@ void PainterImplNormal::reconfigure()
 }
 
 
+#ifdef R64FX_USE_GL
+namespace
+{
+    int PainterImplGL_count = 0;
+
+    bool gl_stuff_is_good = false;
+
+    Shader_rgba*      g_Shader_rgba      = nullptr;
+    Shader_rgba_tex*  g_Shader_rgba_tex  = nullptr;
+
+    const GLuint primitive_restart = 0xFFFF;
+}
+
+
+struct PainterImplGL : public PainterImpl{
+    GLuint base_texture = 0;
+    Size<int> base_texture_size;
+
+    PainterImplGL(Window* window);
+
+    virtual ~PainterImplGL();
+
+    virtual void fillRect(Rect<int> rect, Color<unsigned char> color);
+
+    virtual void putImage(int x, int y, Image* img);
+
+    virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal);
+
+    virtual void finish();
+
+    virtual void reconfigure();
+
+    static void initGLStuffIfNeeded();
+
+    static void cleanupGLStuff();
+
+    void resizeBaseTextureIfNeeded(int w, int h);
+
+    void deleteBaseTextureIfNeeded();
+
+};//PainterImplNormal
+
+
+PainterImplGL::PainterImplGL(Window* window)
+:PainterImpl(window)
+{
+    initGLStuffIfNeeded();
+    PainterImplGL_count++;
+}
+
+
+PainterImplGL::~PainterImplGL()
+{
+    PainterImplGL_count--;
+    if(PainterImplGL_count == 0)
+    {
+        cleanupGLStuff();
+    }
+#ifdef R64FX_DEBUG
+    else if(PainterImplGL_count <= 0)
+    {
+        cerr << "Warning PainterImplGL_count is " << PainterImplGL_count << "!\n";
+        cerr << "Something is really wrong!\n";
+    }
+#endif//R64FX_DEBUG
+}
+
+
+void PainterImplGL::fillRect(Rect<int> rect, Color<unsigned char> color)
+{
+
+}
+
+
+void PainterImplGL::putImage(int x, int y, Image* img)
+{
+
+}
+
+
+void PainterImplGL::putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation)
+{
+
+}
+
+
+void PainterImplGL::finish()
+{
+    //Draw base texture here!
+
+    window->repaint();
+}
+
+
+void PainterImplGL::reconfigure()
+{
+    window->makeCurrent();
+
+    resizeBaseTextureIfNeeded(window->width(), window->height());
+    
+    gl::Viewport(0, 0, window->width(), window->height());
+    gl::Clear(GL_COLOR_BUFFER_BIT);
+}
+
+
+void PainterImplGL::initGLStuffIfNeeded()
+{
+    if(gl_stuff_is_good)
+        return;
+
+    int major, minor;
+    gl::GetIntegerv(GL_MAJOR_VERSION, &major);
+    gl::GetIntegerv(GL_MINOR_VERSION, &minor);
+    cout << "gl: " << major << "." << minor << "\n";
+
+    gl::InitIfNeeded();
+    gl::ClearColor(1.0, 1.0, 1.0, 0.0);
+
+    g_Shader_rgba = new Shader_rgba;
+    if(!g_Shader_rgba->isOk())
+        abort();
+
+    g_Shader_rgba_tex = new Shader_rgba_tex;
+    if(!g_Shader_rgba_tex->isOk())
+        abort();
+
+    gl::Enable(GL_PRIMITIVE_RESTART);
+    gl::PrimitiveRestartIndex(primitive_restart);
+
+    gl_stuff_is_good = true;
+}
+
+
+void PainterImplGL::cleanupGLStuff()
+{
+    if(!gl_stuff_is_good)
+        return;
+
+    if(g_Shader_rgba)
+        delete g_Shader_rgba;
+
+    if(g_Shader_rgba_tex)
+        delete g_Shader_rgba_tex;
+}
+
+
+void PainterImplGL::resizeBaseTextureIfNeeded(int w, int h)
+{
+    bool tex_resize_needed = ( base_texture == 0 || w > base_texture_size.w || h > base_texture_size.h );
+    if(tex_resize_needed)
+        return;
+
+    deleteBaseTextureIfNeeded();
+
+    /* Texture width must be divisible by 4 ? */
+    while(w & 3)
+        w++;
+
+    gl::GenTextures(1, &base_texture);
+    gl::BindTexture(GL_TEXTURE_2D, base_texture);
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    gl::TexStorage2D(
+        GL_TEXTURE_2D,
+        1,
+        GL_RGBA8,
+        w, h
+    );
+
+    base_texture_size = {w, h};
+}
+
+
+void PainterImplGL::deleteBaseTextureIfNeeded()
+{
+    if(base_texture)
+        gl::DeleteTextures(1, &base_texture);
+}
+#endif//R64FX_USE_GL
+
+
+
 Painter* Painter::newInstance(Window* window)
 {
     if(window->type() == Window::Type::Normal)
@@ -296,10 +477,10 @@ Painter* Painter::newInstance(Window* window)
         return new PainterImplNormal(window);
     }
 #ifdef R64FX_USE_GL
-//     else if(window->type() == Window::Type::GL)
-//     {
-//         return create_gl_painter(window);
-//     }
+    else if(window->type() == Window::Type::GL)
+    {
+        return new PainterImplGL(window);
+    }
 #endif//R64FX_USE_GL
 
     return nullptr;

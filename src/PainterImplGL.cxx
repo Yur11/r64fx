@@ -1,16 +1,5 @@
 /* To be included in Panter.cpp */
 
-namespace{
-    int PainterImplGL_count = 0;
-
-    bool gl_stuff_is_good = false;
-
-    Shader_rgba*      g_Shader_rgba      = nullptr;
-    Shader_rgba_tex*  g_Shader_rgba_tex  = nullptr;
-
-    const GLuint primitive_restart = 0xFFFF;
-}
-
 
 class PaintLayer;
 
@@ -35,9 +24,7 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void clear();
 
-    static void initGLStuffIfNeeded();
-
-    static void cleanupGLStuff();
+    
 
 };//PainterImplGL
 
@@ -115,16 +102,7 @@ void PainterImplGL::resizeBaseTexture(int w, int h)
 
     deleteBaseTextureIfNeeded();
 
-    gl::GenTextures(1, &base_texture);
-    gl::BindTexture(GL_TEXTURE_2D, base_texture);
-    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    gl::TexStorage2D(
-        GL_TEXTURE_2D,
-        1,
-        GL_RGBA8,
-        w, h
-    );
+
 }
 
 
@@ -153,42 +131,5 @@ void PainterImplGL::clear()
 }
 
 
-void PainterImplGL::initGLStuffIfNeeded()
-{
-    if(gl_stuff_is_good)
-        return;
 
-    int major, minor;
-    gl::GetIntegerv(GL_MAJOR_VERSION, &major);
-    gl::GetIntegerv(GL_MINOR_VERSION, &minor);
-    cout << "gl: " << major << "." << minor << "\n";
-
-    gl::InitIfNeeded();
-    gl::ClearColor(1.0, 1.0, 1.0, 0.0);
-
-    g_Shader_rgba = new Shader_rgba;
-    if(!g_Shader_rgba->isOk())
-        abort();
-
-    g_Shader_rgba_tex = new Shader_rgba_tex;
-    if(!g_Shader_rgba_tex->isOk())
-        abort();
-
-    gl::Enable(GL_PRIMITIVE_RESTART);
-    gl::PrimitiveRestartIndex(primitive_restart);
-
-    gl_stuff_is_good = true;
-}
-
-
-void PainterImplGL::cleanupGLStuff()
-{
-    cout << "CleanupGLStuff\n";
-
-    if(!gl_stuff_is_good)
-        return;
-
-    if(g_Shader_rgba)
-        delete g_Shader_rgba;
-}
 
