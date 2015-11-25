@@ -18,176 +18,173 @@ using namespace std;
 
 namespace r64fx{
 
-class PaintCommand;
-class PaintCommandGroup;
+
+class PaintContext;
+
+typedef void (*PaintRoutine)(PaintContext* ctx);
+
+/** @brief Collection of values to be passed to paint routines. */
+struct PaintContext{
+    /** @brief Rectangle given by the user. */
+    Rect<int>             orig_rect;
+
+    /** @brief Rectangle relative to the target image. */
+    Rect<int>             rect;
+
+    /** @brief Color to use. */
+    Color<unsigned char>  color;
+
+    /** @brief Image to put pixels in. */
+    Image*                target_image;
+
+    /** @brief Image to read pixels from. */
+    Image*                source_image;
+
+    /** @brief Data used to build plots. */
+    float*                plot_data;
+};
+
+
+void fill_rect_routine(PaintContext* ctx)
+{
+    auto img = ctx->target_image;
+    auto rect = ctx->rect;
+    auto color = ctx->color;
+
+    cout << "fill_rect_routine: " << rect.width() << "x" << rect.height() << "\n";
+
+    for(int y=0; y<rect.height(); y++)
+    {
+        for(int x=0; x<rect.width(); x++)
+        {
+            img->setPixel(x + rect.x(), y + rect.y(), color.vec);
+        }
+    }
+}
+
+
+void put_image_routine(PaintContext* ctx)
+{
+    auto dst = ctx->target_image;
+    auto src = ctx->source_image;
+    auto rect = ctx->rect;
+
+    for(int y=0; y<rect.height(); y++)
+    {
+        for(int x=0; x<rect.width(); x++)
+        {
+            for(int c=0; c<dst->channelCount(); c++)
+            {
+                dst->pixel(x + rect.x(), y + rect.y())[c] = src->pixel(x, y)[c];
+            }
+        }
+    }
+}
+
+
+void put_dense_plot_horizontal_routine(PaintContext* ctx)
+{
+    auto img = ctx->target_image;
+    auto rect = ctx->rect;
+    auto data = ctx->plot_data;
+
+    float scale = 1.0f / ctx->orig_rect.height();
+
+    for(int x=0; x<rect.width(); x++)
+    {
+        float min = data[x*2];
+        float max = data[x*2 + 1];
+        for(int y=0; y<rect.height(); y++)
+        {
+            float val = y*scale;
+            unsigned char px[4];
+            if(val > min && val < max)
+            {
+                px[0] = 0;
+                px[1] = 0;
+                px[2] = 0;
+                px[3] = 0;
+            }
+            else
+            {
+                px[0] = 255;
+                px[1] = 255;
+                px[2] = 255;
+                px[3] = 0;
+            }
+
+            img->setPixel(x + rect.x(), y + rect.y(), px);
+        }
+    }
+}
+
+
+void put_dense_plot_vertical_routine(PaintContext* ctx)
+{
+    auto img = ctx->target_image;
+    auto rect = ctx->rect;
+    auto data = ctx->plot_data;
+
+    float scale = 1.0f / ctx->orig_rect.width();
+
+    for(int y=0; y<rect.height(); y++)
+    {
+        float min = data[y*2];
+        float max = data[y*2 + 1];
+        for(int x=0; x<rect.width(); x++)
+        {
+            float val = x*scale;
+            unsigned char px[4];
+            if(val > min && val < max)
+            {
+                px[0] = 0;
+                px[1] = 0;
+                px[2] = 0;
+                px[3] = 0;
+            }
+            else
+            {
+                px[0] = 255;
+                px[1] = 255;
+                px[2] = 255;
+                px[3] = 0;
+            }
+
+            img->setPixel(x + rect.x(), y + rect.y(), px);
+        }
+    }
+}
+
 
 struct PainterImpl : public Painter{
     Window* window = nullptr;
-    Image* target_image = nullptr;
-    Rect<int> current_clip_rect;
 
-    PaintCommandGroup* root_group = nullptr;
-    PaintCommandGroup* curr_group = nullptr;
+    /** @brief Reusable PaintContext instance; */
+    PaintContext* paint_context = nullptr;
+
+    Rect<int> current_clip_rect;
 
     PainterImpl(Window* window);
 
     virtual ~PainterImpl();
 
-    virtual void begin();
-
-    virtual void end();
-
     virtual void setClipRect(Rect<int> rect);
 
-    virtual void fillRect(Rect<int> rect, Color<unsigned char> color);
-
-    virtual void putImage(int x, int y, Image* img);
-
-    virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal);
-
-    virtual void clear();
+    /** @brief Clip a rectangle with the current_clip_rect. */
+    Rect<int> clip(Rect<int> rect);
 
 };//PainterImpl
 
 
-struct PaintCommand : public LinkedList<PaintCommand>::Node{
-    enum class Type{
-        Group,
-        FillRect,
-        PutImage
-    };
-
-    Rect<int> rect;
-
-    virtual PaintCommand::Type type() = 0;
-
-    virtual ~PaintCommand() {}
-
-    virtual void paint(PainterImpl* p) = 0;
-};//PaintCommand
-
-
-struct PaintCommandGroup : public PaintCommand{
-    PaintCommandGroup*         parent = nullptr;
-    LinkedList<PaintCommand>   commands;
-
-    virtual PaintCommand::Type type() { return PaintCommand::Type::Group; }
-
-    virtual ~PaintCommandGroup() {}
-
-    virtual void paint(PainterImpl* p);
-
-    void clear();
-
-};//PaintCommandGroup
-
-
-struct PaintCommand_FillRect : public PaintCommand{
-    Color<unsigned char> color;
-
-    virtual PaintCommand::Type type() { return PaintCommand::Type::FillRect; }
-
-    virtual ~PaintCommand_FillRect() {}
-
-    virtual void paint(PainterImpl* p);
-
-};//PaintCommand_FillRect
-
-
-struct PaintCommand_PutImage : public PaintCommand{
-    Image* img;
-
-    virtual PaintCommand::Type type() { return PaintCommand::Type::PutImage; }
-
-    virtual ~PaintCommand_PutImage() {}
-
-    virtual void paint(PainterImpl* p);
-
-};//PaintCommand_PutImage
-
-
-struct PaintCommand_PutDensePlot : public PaintCommand{
-    float* data = nullptr;
-    Rect<int> orig_rect;
-
-//     virtual PaintCommand::Type type() {}
-
-};//PaintCommand_PutDensePlot
-
-
-struct PaintCommand_PutDensePlotHorizontal : public PaintCommand_PutDensePlot{
-
-    virtual ~PaintCommand_PutDensePlotHorizontal() {}
-
-    virtual void paint(PainterImpl* p);
-
-};//PaintCommand_PutDensePlotHorizontal
-
-
-struct PaintCommand_PutDensePlotVertical : public PaintCommand_PutDensePlot{
-
-    virtual ~PaintCommand_PutDensePlotVertical() {}
-
-    virtual void paint(PainterImpl* p);
-
-};//PaintCommand_PutDensePlotVertical
-
-
-PainterImpl* create_normal_painter(Window* window);
-#ifdef R64FX_USE_GL
-PainterImpl* create_gl_painter(Window* window);
-#endif//R64FX_USE_GL
-
-Painter* Painter::newInstance(Window* window)
-{
-    if(window->type() == Window::Type::Normal)
-    {
-        return create_normal_painter(window);
-    }
-#ifdef R64FX_USE_GL
-    else if(window->type() == Window::Type::GL)
-    {
-        return create_gl_painter(window);
-    }
-#endif//R64FX_USE_GL
-
-    return nullptr;
-}
-
-
-void Painter::destroyInstance(Painter* painter)
-{
-    delete painter;
-}
-
-
 PainterImpl::PainterImpl(Window* window) : window(window)
 {
-    curr_group = root_group = new PaintCommandGroup;
+    paint_context = new PaintContext;
 }
 
 
 PainterImpl::~PainterImpl()
 {
-
-}
-
-
-void PainterImpl::begin()
-{
-    auto group = new PaintCommandGroup;
-    group->parent = curr_group;
-    curr_group->commands.append(group);
-    curr_group = group;
-}
-
-
-void PainterImpl::end()
-{
-    if(curr_group != root_group)
-    {
-        curr_group = curr_group->parent;
-    }
+    delete paint_context;
 }
 
 
@@ -197,31 +194,62 @@ void PainterImpl::setClipRect(Rect<int> rect)
 }
 
 
-void PainterImpl::fillRect(Rect<int> rect, Color<unsigned char> color)
+Rect<int> PainterImpl::clip(Rect<int> rect)
 {
-    auto pc = new PaintCommand_FillRect;
-    pc->rect = intersection(
+    return intersection(
         current_clip_rect,
         rect
     );
-    pc->color = color;
-    curr_group->commands.append(pc);
 }
 
 
-void PainterImpl::putImage(int x, int y, Image* img)
+struct PainterImplNormal : public PainterImpl{
+    PainterImplNormal(Window* window);
+
+    virtual ~PainterImplNormal();
+
+    virtual void fillRect(Rect<int> rect, Color<unsigned char> color);
+
+    virtual void putImage(int x, int y, Image* img);
+
+    virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal);
+
+    virtual void finish();
+
+    virtual void reconfigure();
+};//PainterImpl
+
+
+PainterImplNormal::PainterImplNormal(Window* window)
+: PainterImpl(window)
 {
-    auto pc = new PaintCommand_PutImage;
-    pc->rect = intersection(
-        current_clip_rect,
-        Rect<int>(x, y, img->width(), img->height())
-    );
-    pc->img = img;
-    curr_group->commands.append(pc);
+
 }
 
 
-void PainterImpl::putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation)
+PainterImplNormal::~PainterImplNormal()
+{
+
+}
+
+
+void PainterImplNormal::fillRect(Rect<int> rect, Color<unsigned char> color)
+{
+    paint_context->rect          = clip(rect);
+    paint_context->color         = color;
+    fill_rect_routine(paint_context);
+}
+
+
+void PainterImplNormal::putImage(int x, int y, Image* img)
+{
+    paint_context->source_image  = img;
+    paint_context->rect          = clip(Rect<int>(x, y, img->width(), img->height()));
+    put_image_routine(paint_context);
+}
+
+
+void PainterImplNormal::putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation)
 {
 //     PaintCommandImpl_PutDensePlot* pc = nullptr;
 //     if(orientation == Orientation::Vertical)
@@ -248,48 +276,40 @@ void PainterImpl::putPlot(Rect<int> rect, float* data, int data_size, Orientatio
 }
 
 
-void PainterImpl::clear()
+void PainterImplNormal::finish()
 {
-    root_group->clear();
-    setClipRect({0, 0, window->width(), window->height()});
+    window->repaint();
 }
 
 
-void PaintCommandGroup::paint(PainterImpl* impl)
+void PainterImplNormal::reconfigure()
 {
-    for(auto c : commands)
+    paint_context->target_image = window->image();
+    setClipRect({0, 0, window->image()->width(), window->image()->height()});
+}
+
+
+Painter* Painter::newInstance(Window* window)
+{
+    if(window->type() == Window::Type::Normal)
     {
-        c->paint(impl);
+        return new PainterImplNormal(window);
     }
-}
-
-
-void PaintCommandGroup::clear()
-{
-    for(;;)
-    {
-        auto c = commands.first();
-        if(c)
-        {
-            commands.remove(c);
-            auto cg = dynamic_cast<PaintCommandGroup*>(c);
-            if(cg)
-            {
-                cg->clear();
-            }
-            delete c;
-        }
-        else
-        {
-            break;
-        }
-    }
-}
-
-
-#include "PainterImplNormal.cxx"
 #ifdef R64FX_USE_GL
-#include "PainterImplGL.cxx"
+//     else if(window->type() == Window::Type::GL)
+//     {
+//         return create_gl_painter(window);
+//     }
 #endif//R64FX_USE_GL
+
+    return nullptr;
+}
+
+
+void Painter::destroyInstance(Painter* painter)
+{
+    delete painter;
+}
+
 
 }//namespace r64fx

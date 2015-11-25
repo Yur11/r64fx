@@ -76,7 +76,7 @@ protected:
 //         }
 
         auto p = event->painter();
-        p->clear();
+        p->reconfigure();
         p->fillRect({10,   10, 100, 100}, {255,    0,   0});
         p->fillRect({210, 210, 100, 100}, {0,    255,   0});
         p->fillRect({410, 410, 100, 100}, {0,      0, 255});
@@ -87,8 +87,7 @@ protected:
 //         p->putImage(180, 250, m_Image);
 //         p->putPlot(Rect<int>(100, 100, 100, data_size/2), data, data_size, Orientation::Vertical);
 //         p->putPlot(Rect<int>(250, 200, data_size/2, 100), data, data_size, Orientation::Horizontal);
-        p->configure();
-        p->repaint();
+        p->finish();
     }
 };
 
