@@ -305,6 +305,8 @@ namespace
 struct PainterImplGL : public PainterImpl{
     GLuint base_texture = 0;
     Size<int> base_texture_size;
+    GLuint base_vao;
+    GLuint base_vbo;
 
     PainterImplGL(Window* window);
 
@@ -320,9 +322,13 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void reconfigure();
 
-    static void initGLStuffIfNeeded();
+    static void initSharedGLStuffIfNeeded();
 
-    static void cleanupGLStuff();
+    static void cleanupSharedGLStuffIfNeeded();
+
+    void initGLStuff();
+
+    void cleanupGLStuff();
 
     void resizeBaseTextureIfNeeded(int w, int h);
 
@@ -334,17 +340,19 @@ struct PainterImplGL : public PainterImpl{
 PainterImplGL::PainterImplGL(Window* window)
 :PainterImpl(window)
 {
-    initGLStuffIfNeeded();
+    initSharedGLStuffIfNeeded();
+    initGLStuff();
     PainterImplGL_count++;
 }
 
 
 PainterImplGL::~PainterImplGL()
 {
+    cleanupGLStuff();
     PainterImplGL_count--;
     if(PainterImplGL_count == 0)
     {
-        cleanupGLStuff();
+        cleanupSharedGLStuffIfNeeded();
     }
 #ifdef R64FX_DEBUG
     else if(PainterImplGL_count <= 0)
@@ -377,6 +385,17 @@ void PainterImplGL::putPlot(Rect<int> rect, float* data, int data_size, Orientat
 void PainterImplGL::finish()
 {
     //Draw base texture here!
+    gl::BindTexture(GL_TEXTURE_2D, base_texture);
+    g_Shader_rgba_tex->use();
+    g_Shader_rgba_tex->setScaleAndShift(
+        2.0f/float(window->width()),
+       -2.0f/float(window->height()),
+       -1.0f,
+        1.0f
+    );
+    g_Shader_rgba_tex->setSampler(0);
+    gl::BindVertexArray(base_vao);
+    gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     window->repaint();
 }
@@ -390,10 +409,35 @@ void PainterImplGL::reconfigure()
     
     gl::Viewport(0, 0, window->width(), window->height());
     gl::Clear(GL_COLOR_BUFFER_BIT);
+
+    float buff[16];
+
+    /* Position. */
+    buff[0] = 0.0f;
+    buff[1] = 0.0f;
+    buff[2] = float(window->width());
+    buff[3] = 0.0f;
+    buff[4] = float(window->width());
+    buff[5] = float(window->height());
+    buff[6] = 0.0f;
+    buff[7] = float(window->height());
+
+    /* Tex. Coords. */
+    buff[8]  = 0.0f;
+    buff[9]  = 0.0f;
+    buff[10] = float(window->width()) / float(base_texture_size.width());
+    buff[11] = 0.0f;
+    buff[12] = float(window->width())  / float(base_texture_size.width());
+    buff[13] = float(window->height()) / float(base_texture_size.height());
+    buff[14] = 0.0f;
+    buff[15] = float(window->height()) / float(base_texture_size.height());
+
+    gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
+    gl::BufferSubData(GL_ARRAY_BUFFER, 0, 64, buff);
 }
 
 
-void PainterImplGL::initGLStuffIfNeeded()
+void PainterImplGL::initSharedGLStuffIfNeeded()
 {
     if(gl_stuff_is_good)
         return;
@@ -421,7 +465,7 @@ void PainterImplGL::initGLStuffIfNeeded()
 }
 
 
-void PainterImplGL::cleanupGLStuff()
+void PainterImplGL::cleanupSharedGLStuffIfNeeded()
 {
     if(!gl_stuff_is_good)
         return;
@@ -434,10 +478,39 @@ void PainterImplGL::cleanupGLStuff()
 }
 
 
+void PainterImplGL::initGLStuff()
+{
+    gl::GenVertexArrays(1, &base_vao);
+    gl::BindVertexArray(base_vao);
+    gl::GenBuffers(1, &base_vbo);
+    gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
+    gl::BufferData(GL_ARRAY_BUFFER, 64, nullptr, GL_STATIC_DRAW);
+    gl::EnableVertexAttribArray(g_Shader_rgba_tex->attr_position);
+    gl::VertexAttribPointer(
+        g_Shader_rgba_tex->attr_position,
+        2, GL_FLOAT, GL_FALSE,
+        0, 0
+    );
+    gl::EnableVertexAttribArray(g_Shader_rgba_tex->attr_tex_coord);
+    gl::VertexAttribPointer(
+        g_Shader_rgba_tex->attr_tex_coord,
+        2, GL_FLOAT, GL_FALSE,
+        0, 32
+    );
+}
+
+
+void PainterImplGL::cleanupGLStuff()
+{
+    gl::DeleteVertexArrays(1, &base_vao);
+    gl::DeleteBuffers(1, &base_vbo);
+}
+
+
 void PainterImplGL::resizeBaseTextureIfNeeded(int w, int h)
 {
     bool tex_resize_needed = ( base_texture == 0 || w > base_texture_size.w || h > base_texture_size.h );
-    if(tex_resize_needed)
+    if(!tex_resize_needed)
         return;
 
     deleteBaseTextureIfNeeded();
@@ -458,6 +531,26 @@ void PainterImplGL::resizeBaseTextureIfNeeded(int w, int h)
     );
 
     base_texture_size = {w, h};
+
+    unsigned char* buff = new unsigned char[w*h*4];
+    for(auto i=0; i<(w*h); i++)
+    {
+        unsigned char color;
+        if(i & 3)
+        {
+            color = 255;
+        }
+        else
+        {
+            color = 0;
+        }
+        buff[i*4 + 0] = color;
+        buff[i*4 + 1] = 0;
+        buff[i*4 + 2] = 0;
+        buff[i*4 + 3] = 0;
+    }
+    gl::TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, buff);
+    delete[] buff;
 }
 
 
