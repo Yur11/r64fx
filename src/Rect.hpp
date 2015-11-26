@@ -34,6 +34,9 @@ public:
     inline void setWidth(T val)  { mw = val; }
     inline void setHeight(T val) { mh = val; }
 
+    inline Point<T> position() const { return {x, y}; }
+    inline void setPosition(Point<T> pos) { mx = pos.x; my = pos.y; }
+
     inline T left()   const { return mx; }
     inline T top()    const { return my; }
     inline T right()  const { return mx + mw; }
