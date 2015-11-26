@@ -210,9 +210,7 @@ struct PainterImplNormal : public PainterImpl{
 
     virtual void putImage(int x, int y, Image* img);
 
-    virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal);
-
-    virtual void finish();
+    virtual void repaint();
 
     virtual void reconfigure();
 
@@ -248,34 +246,7 @@ void PainterImplNormal::putImage(int x, int y, Image* img)
 }
 
 
-void PainterImplNormal::putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation)
-{
-//     PaintCommandImpl_PutDensePlot* pc = nullptr;
-//     if(orientation == Orientation::Vertical)
-//     {
-// #ifdef R64FX_DEBUG
-//         assert(data_size >= rect.height()*2);
-// #endif//R64FX_DEBUG
-//         pc = new PaintCommandImpl_PutDensePlotVertical;
-//     }
-//     else
-//     {
-// #ifdef R64FX_DEBUG
-//         assert(data_size >= rect.width()*2);
-// #endif//R64FX_DEBUG
-//         pc = new PaintCommandImpl_PutDensePlotHorizontal;
-//     }
-//     pc->rect = intersection(
-//         current_clip_rect,
-//         rect
-//     );
-//     pc->orig_rect = rect;
-//     pc->data = data;
-//     insertPaintCommandImpl(pc);
-}
-
-
-void PainterImplNormal::finish()
+void PainterImplNormal::repaint()
 {
     window->repaint();
 }
@@ -284,7 +255,7 @@ void PainterImplNormal::finish()
 void PainterImplNormal::reconfigure()
 {
     paint_context->target_image = window->image();
-    setClipRect({0, 0, window->image()->width(), window->image()->height()});
+    setClipRect({0, 0, window->width(), window->height()});
 }
 
 
@@ -316,9 +287,7 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void putImage(int x, int y, Image* img);
 
-    virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal);
-
-    virtual void finish();
+    virtual void repaint();
 
     virtual void reconfigure();
 
@@ -366,25 +335,51 @@ PainterImplGL::~PainterImplGL()
 
 void PainterImplGL::fillRect(Rect<int> rect, Color<unsigned char> color)
 {
+    Rect<int> r = clip(rect);
+    if(r.width() > 0 && r.height() > 0)
+    {
+        Image img(r.width(), r.height(), 4);
 
+        paint_context->rect = { 0, 0, r.width(), r.height() };
+        paint_context->target_image = &img;
+        paint_context->color = color;
+        fill_rect_routine(paint_context);
+
+        gl::BindTexture(GL_TEXTURE_2D, base_texture);
+        gl::TexSubImage2D(
+            GL_TEXTURE_2D, 0,
+            r.x(), r.y(), r.width(), r.height(),
+            GL_RGBA, GL_UNSIGNED_BYTE, img.data()
+        );
+    }
 }
 
 
-void PainterImplGL::putImage(int x, int y, Image* img)
+void PainterImplGL::putImage(int x, int y, Image* image)
 {
+    Rect<int> rect(x, y, image->width(), image->height());
+    Rect<int> r = clip(rect);
+    if(r.width() > 0 && r.height() > 0)
+    {
+        Image img(r.width(), r.height(), 4);
 
+        paint_context->rect = { 0, 0, r.width(), r.height() };
+        paint_context->target_image = &img;
+        paint_context->source_image = image;
+        put_image_routine(paint_context);
+
+        gl::BindTexture(GL_TEXTURE_2D, base_texture);
+        gl::TexSubImage2D(
+            GL_TEXTURE_2D, 0,
+            r.x(), r.y(), r.width(), r.height(),
+            GL_RGBA, GL_UNSIGNED_BYTE, img.data()
+        );
+    }
 }
 
 
-void PainterImplGL::putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation)
+void PainterImplGL::repaint()
 {
-
-}
-
-
-void PainterImplGL::finish()
-{
-    //Draw base texture here!
     gl::BindTexture(GL_TEXTURE_2D, base_texture);
     g_Shader_rgba_tex->use();
     g_Shader_rgba_tex->setScaleAndShift(
@@ -434,6 +429,8 @@ void PainterImplGL::reconfigure()
 
     gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
     gl::BufferSubData(GL_ARRAY_BUFFER, 0, 64, buff);
+
+    setClipRect({0, 0, window->width(), window->height()});
 }
 
 
@@ -531,26 +528,6 @@ void PainterImplGL::resizeBaseTextureIfNeeded(int w, int h)
     );
 
     base_texture_size = {w, h};
-
-    unsigned char* buff = new unsigned char[w*h*4];
-    for(auto i=0; i<(w*h); i++)
-    {
-        unsigned char color;
-        if(i & 3)
-        {
-            color = 255;
-        }
-        else
-        {
-            color = 0;
-        }
-        buff[i*4 + 0] = color;
-        buff[i*4 + 1] = 0;
-        buff[i*4 + 2] = 0;
-        buff[i*4 + 3] = 0;
-    }
-    gl::TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, buff);
-    delete[] buff;
 }
 
 

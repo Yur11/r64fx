@@ -26,7 +26,7 @@ public:
     {
         m_Image = new Image(20, 20, 4);
         {
-            unsigned char px[4] = { 255, 255, 255, 255 };
+            unsigned char px[4] = { 0, 0, 0, 0 };
             m_Image->fill(px);
         }
         {
@@ -75,19 +75,22 @@ protected:
 // //             cout << "MyWidget::reconfigureEvent(" << size.width() << "x" << size.height() << ")\n";
 //         }
 
+        auto size = event->newSize();
+
         auto p = event->painter();
         p->reconfigure();
+        p->fillRect({0, 0, size.width(), size.height()}, {255, 255, 255});
         p->fillRect({10,   10, 100, 100}, {255,    0,   0});
         p->fillRect({210, 210, 100, 100}, {0,    255,   0});
         p->fillRect({410, 410, 100, 100}, {0,      0, 255});
         p->fillRect({550, 310, 100, 100}, {0,    255, 255});
         p->fillRect({150, 330, 100, 100}, {255,  255,   0});
-//         p->putImage(130, 200, m_Image);
+        p->putImage(130, 200, m_Image);
 //         p->putImage(250, 50, m_Image);
 //         p->putImage(180, 250, m_Image);
 //         p->putPlot(Rect<int>(100, 100, 100, data_size/2), data, data_size, Orientation::Vertical);
 //         p->putPlot(Rect<int>(250, 200, data_size/2, 100), data, data_size, Orientation::Horizontal);
-        p->finish();
+        p->repaint();
     }
 };
 

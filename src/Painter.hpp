@@ -27,10 +27,7 @@ public:
 
     virtual void putImage(int x, int y, Image* img) = 0;
 
-    virtual void putPlot(Rect<int> rect, float* data, int data_size, Orientation orientation = Orientation::Horizontal) = 0;
-
-    /** @brief Finish painting. */
-    virtual void finish() = 0;
+    virtual void repaint() = 0;
 
     /** @brief Adjust for the new window configuration.
 
