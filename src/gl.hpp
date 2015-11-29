@@ -505,6 +505,13 @@ inline void PrimitiveRestartIndex(GLuint index)
     r64fx_impl_glPrimitiveRestartIndex(index);
     CHECK_FOR_GL_ERRORS("glPrimitiveRestartIndex");
 }
+
+
+inline void Finish()
+{
+    glFinish();
+    CHECK_FOR_GL_ERRORS("glFinish");
+}
     
 #ifdef R64FX_DEBUG_GL_ERRORS
 #undef CHECK_FOR_GL_ERRORS

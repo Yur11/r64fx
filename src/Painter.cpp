@@ -393,6 +393,7 @@ void PainterImplGL::repaint()
     gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     window->repaint();
+    gl::Finish();
 }
 
 

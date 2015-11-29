@@ -312,7 +312,8 @@ namespace{
                 );
             }
 
-            XFlush(g_display);
+//             XFlush(g_display);
+            XSync(g_display, true);
         }
 
         void processExposeEvent()
@@ -799,7 +800,7 @@ void WindowX11::processSomeEvents(Window::Events* events)
 #ifdef R64FX_USE_MITSHM
                 if(xevent.type == g_mitsm_completion_event)
                 {
-//                     cout << "MitShm Completion Event!\n";
+                    cout << "MitShm Completion Event!\n";
                 }
                 else
 #endif//R64FX_USE_MITSHM
