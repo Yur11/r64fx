@@ -7,7 +7,25 @@ namespace r64fx{
     
 Image::Image(int w, int h, int c, unsigned char* data)
 {
-    m_flags = 0;
+    load(w, h, c, data);
+}
+
+
+Image::~Image()
+{
+    free();
+}
+
+
+bool Image::ownsData() const
+{
+    return m_flags & IMAGE_OWNS_DATA;
+}
+
+
+void Image::load(int w, int h, int c, unsigned char* data)
+{
+    free();
 
     if(w>0 && h>0 && c>0)
     {
@@ -29,18 +47,18 @@ Image::Image(int w, int h, int c, unsigned char* data)
 }
 
 
-Image::~Image()
+void Image::free()
 {
-    if(Image::ownsData())
+    if(m_data && Image::ownsData())
     {
         delete[] m_data;
     }
-}
-
-
-bool Image::ownsData() const
-{
-    return m_flags & IMAGE_OWNS_DATA;
+    
+    m_data = nullptr;
+    m_width = 0;
+    m_height = 0;
+    m_channel_count = 0;
+    m_flags = 0;
 }
 
 

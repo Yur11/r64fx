@@ -17,11 +17,17 @@ class Image{
     Image(const Image&){}
 
 public:
-    Image(int w, int h, int c, unsigned char* data = nullptr);
+    Image(int w = 0, int h = 0, int c = 1, unsigned char* data = nullptr);
 
     ~Image();
 
     bool ownsData() const;
+    
+    void load(int w, int h, int c, unsigned char* data);
+    
+    void free();
+    
+    inline bool isGood() const { return m_data != nullptr; }
 
     inline unsigned char* data() const { return m_data; }
 
