@@ -10,7 +10,8 @@
 #include "ReconfigureEvent.hpp"
 #include "Image.hpp"
 #include "Painter.hpp"
-#include "AudioData.hpp"
+#include "Font.hpp"
+
 
 using namespace std;
 using namespace r64fx;
@@ -37,20 +38,10 @@ public:
             m_Image->setPixel(10, 10, px);
         }
 
-        {
-            AudioData ad("./data/drum_loop_mono.wav");
-
-            data_size = ad.size() / 128;
-            data = new float[data_size];
-            ad.calculateLinear();
-            calculate_peak_summary(ad.constantData(), ad.size(), data, data_size);
-
-//             for(int i=0; i<data_size; i++)
-//             {
-//                 cout << data[i] << "\n";
-//             }
-        }
-
+        Font* font = Font::newInstance();
+        cout << "font: " << font->isGood() << "\n";
+        cout << font->glyphCount() << "\n";
+        font->setSize(16, 16, 96, 96);
     }
 
     ~MyWidget()
