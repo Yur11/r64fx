@@ -21,6 +21,7 @@ set(SRC
     Shader.cpp
     Shader_rgba.cpp
     Shader_rgba_tex.cpp
+    StringUtils.cpp
     Painter.cpp
     Program.cpp
     Widget.cpp

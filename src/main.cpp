@@ -21,6 +21,8 @@ class MyWidget : public Widget{
     Image* m_Image = nullptr;
     float* data = nullptr;
     int data_size = 256;
+    Font* m_Font = nullptr;
+    
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget(parent)
@@ -38,10 +40,11 @@ public:
             m_Image->setPixel(10, 10, px);
         }
 
-        Font* font = Font::newInstance();
-        cout << "font: " << font->isGood() << "\n";
-        cout << font->glyphCount() << "\n";
-        font->setSize(16, 16, 96, 96);
+        m_Font = Font::newInstance();
+        cout << "font: " << m_Font->isGood() << "\n";
+        cout << m_Font->glyphCount() << "\n";
+        m_Font->setSize(16, 16, 96, 96);
+        
     }
 
     ~MyWidget()
@@ -54,6 +57,11 @@ public:
         if(data)
         {
             delete[] data;
+        }
+        
+        if(m_Font)
+        {
+            Font::deleteInstance(m_Font);
         }
     }
 
@@ -77,6 +85,14 @@ protected:
         p->fillRect({550, 310, 100, 100}, {0,    255, 255});
         p->fillRect({150, 330, 100, 100}, {255,  255,   0});
         p->putImage(130, 200, m_Image);
+        
+        
+        if(m_Font && m_Font->findGlyph("a"))
+        {
+            Image* img = m_Font->image();
+            cout << img->width() << "x" << img->height() << "\n";
+        }
+        
 //         p->putImage(250, 50, m_Image);
 //         p->putImage(180, 250, m_Image);
 //         p->putPlot(Rect<int>(100, 100, 100, data_size/2), data, data_size, Orientation::Vertical);

@@ -1,4 +1,6 @@
 #include "Font.hpp"
+#include "StringUtils.hpp"
+#include "Image.hpp"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <iostream>
@@ -36,7 +38,8 @@ namespace{
 
 class FontImpl : public Font{
     FT_Face m_FT_Face = nullptr;
-    bool is_good = false;
+    unsigned char m_Index = 0;
+    Image m_Image;
 
 public:
     FontImpl(string name)
@@ -73,11 +76,9 @@ public:
 
         if(status != 0)
         {
-            cerr << "Failed to load built-in init font!\n";
+            cerr << "Font: Failed to load built-in font!\n";
             abort();
         }
-
-        is_good = true;
     }
 #endif//R64FX_USE_BUILTIN_FONTS
 
@@ -88,28 +89,67 @@ public:
             cleanup_freetype();
     }
 
-    virtual bool isGood() { return is_good; };
+    virtual bool isGood() { return m_FT_Face != nullptr; };
 
     virtual int glyphCount() { return isGood() ? m_FT_Face->num_glyphs : 0; }
 
     virtual void setSize(int char_width, int char_height, int horz_res, int vert_res)
     {
-        int status = FT_Set_Char_Size(
+        int code = FT_Set_Char_Size(
             m_FT_Face,
             char_width*64, char_height*64,
             horz_res, vert_res
         );
 
-        if(status != 0)
+        if(code != 0)
         {
-            cerr << "Failed to set char size!\n";
+            cerr << "Font: Failed to set char size!\n";
             abort();
         }
     }
 
-    virtual void setText(string text)
+    virtual bool findGlyph(string text)
     {
-
+        m_Index = FT_Get_Char_Index(m_FT_Face, to_utf32(text, 0, text.size()));
+        if(m_Index == 0)
+        {
+            cerr << "Font: Failed to find glyph index!\n";
+            return false;
+        }
+        
+        int code = FT_Load_Glyph(
+            m_FT_Face, m_Index,
+            FT_LOAD_DEFAULT
+        );
+        
+        if(code != 0)
+        {
+            cerr << "Font: Failed to load glyph!\n";
+            return false;
+        }
+        
+        code = FT_Render_Glyph(
+            m_FT_Face->glyph,
+            FT_RENDER_MODE_NORMAL
+        );
+        
+        if(code != 0)
+        {
+            cerr << "Font: Failed to render glyph!\n";
+            return false;
+        }
+        
+        auto &bitmap = m_FT_Face->glyph->bitmap;
+        m_Image.load(
+            bitmap.width, bitmap.rows, 1, bitmap.buffer
+        );
+        
+        return true;
+    }
+    
+    virtual Image* image()
+    {
+        return &m_Image;
     }
 };
 

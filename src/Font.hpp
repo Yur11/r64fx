@@ -5,6 +5,8 @@
 
 namespace r64fx{
 
+class Image;
+    
 class Font{
 public:
     virtual ~Font(){};
@@ -15,8 +17,10 @@ public:
 
     virtual void setSize(int char_width, int char_height, int horz_res, int vert_res) = 0;
 
-    virtual void setText(std::string text) = 0;
+    virtual bool findGlyph(std::string text) = 0;
 
+    virtual Image* image() = 0;
+    
     static Font* newInstance(std::string name = "");
 
     static void deleteInstance(Font*);
