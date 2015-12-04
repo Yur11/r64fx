@@ -2,10 +2,6 @@
 #define R64FX_IMAGE_HPP
 
 namespace r64fx{
-    
-namespace Impl{
-    class WindowSurface;
-}
 
 class Image{
     unsigned char* m_data = nullptr;
@@ -45,7 +41,7 @@ public:
 
     void fill(unsigned char* pixel);
 };
-    
+
 }//namespace r64fx
 
 #endif//R64FX_IMAGE_HPP
