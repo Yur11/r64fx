@@ -17,6 +17,7 @@ set(SRC
     AudioData.cpp
     Font.cpp
     Image.cpp
+    ImageUtils.cpp
     Keyboard.cpp
     Shader.cpp
     Shader_rgba.cpp

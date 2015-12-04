@@ -8,10 +8,9 @@
 #include "Keyboard.hpp"
 #include "MouseEvent.hpp"
 #include "ReconfigureEvent.hpp"
-#include "Image.hpp"
+#include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
-
 
 using namespace std;
 using namespace r64fx;
@@ -22,28 +21,30 @@ class MyWidget : public Widget{
     float* data = nullptr;
     int data_size = 256;
     Font* m_Font = nullptr;
-    
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget(parent)
     {
-        m_Image = new Image(20, 20, 4);
+        m_Image = new Image(200, 100, 4);
         {
-            unsigned char px[4] = { 0, 0, 0, 0 };
+            unsigned char px[4] = { 255, 255, 255, 255 };
             m_Image->fill(px);
         }
         {
             unsigned char px[4] = { 255, 0, 0, 0 };
-            m_Image->setPixel(9,  9,  px);
-            m_Image->setPixel(10, 9,  px);
-            m_Image->setPixel(9,  10, px);
-            m_Image->setPixel(10, 10, px);
+            m_Image->setPixel(49, 49, px);
+            m_Image->setPixel(50, 49, px);
+            m_Image->setPixel(49, 50, px);
+            m_Image->setPixel(50, 50, px);
         }
+        draw_border(m_Image, {0, 0, 0, 0});
 
         m_Font = new Font;
         cout << m_Font->glyphCount() << "\n";
-        m_Font->setSize(16, 16, 96, 96);
+        m_Font->setSize(72, 72, 96, 96);
         cout << m_Font->ascender() << ", " << m_Font->descender() << "\n";
+        auto glyph = m_Font->fetchGlyph("g");
+        alpha_blend(m_Image, {10, 10}, {0, 0, 0, 0}, glyph->image());
     }
 
     ~MyWidget()
@@ -83,27 +84,7 @@ protected:
         p->fillRect({410, 410, 100, 100}, {0,      0, 255});
         p->fillRect({550, 310, 100, 100}, {0,    255, 255});
         p->fillRect({150, 330, 100, 100}, {255,  255,   0});
-        p->putImage(130, 200, m_Image);
-        
-        if(m_Font)
-        {
-            auto glyph = m_Font->fetchGlyph("g");
-            if(glyph)
-            {
-                cout << "avance:    " << glyph->advance() << "\n"
-                     << "bearing_x: " << glyph->bearing_x() << "\n"
-                     << "w:         " << glyph->width() << "\n"
-                     << "h:         " << glyph->height() << "\n"
-                     << "imgw:      " << glyph->image()->width() << "\n"
-                     << "imgh:      " << glyph->image()->height() << "\n"
-                     << "ascent:    " << glyph->ascent() << "\n"
-                     << "descent:   " << glyph->descent() << "\n\n";
-            }
-            else
-            {
-                cout << "No glyph!\n";
-            }
-        }
+        p->putImage(130, 150, m_Image);
         
 //         p->putImage(250, 50, m_Image);
 //         p->putImage(180, 250, m_Image);
