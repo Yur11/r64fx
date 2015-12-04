@@ -40,11 +40,10 @@ public:
             m_Image->setPixel(10, 10, px);
         }
 
-        m_Font = Font::newInstance();
-        cout << "font: " << m_Font->isGood() << "\n";
+        m_Font = new Font;
         cout << m_Font->glyphCount() << "\n";
         m_Font->setSize(16, 16, 96, 96);
-        
+        cout << m_Font->ascender() << ", " << m_Font->descender() << "\n";
     }
 
     ~MyWidget()
@@ -61,7 +60,7 @@ public:
         
         if(m_Font)
         {
-            Font::deleteInstance(m_Font);
+            delete m_Font;
         }
     }
 
@@ -86,11 +85,24 @@ protected:
         p->fillRect({150, 330, 100, 100}, {255,  255,   0});
         p->putImage(130, 200, m_Image);
         
-        
-        if(m_Font && m_Font->findGlyph("a"))
+        if(m_Font)
         {
-            Image* img = m_Font->image();
-            cout << img->width() << "x" << img->height() << "\n";
+            auto glyph = m_Font->fetchGlyph("g");
+            if(glyph)
+            {
+                cout << "avance:    " << glyph->advance() << "\n"
+                     << "bearing_x: " << glyph->bearing_x() << "\n"
+                     << "w:         " << glyph->width() << "\n"
+                     << "h:         " << glyph->height() << "\n"
+                     << "imgw:      " << glyph->image()->width() << "\n"
+                     << "imgh:      " << glyph->image()->height() << "\n"
+                     << "ascent:    " << glyph->ascent() << "\n"
+                     << "descent:   " << glyph->descent() << "\n\n";
+            }
+            else
+            {
+                cout << "No glyph!\n";
+            }
         }
         
 //         p->putImage(250, 50, m_Image);
