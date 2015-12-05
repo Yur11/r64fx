@@ -120,13 +120,6 @@ Image* Window::image() const
 }
 
 
-void Window::getComponentIndices(int* r, int* g, int* b, int* a)
-{
-    auto impl = (WindowImpl*) this;
-    impl->getComponentIndices(r, g, b, a);
-}
-
-
 void Window::setTitle(std::string title)
 {
     auto impl = (WindowImpl*) this;

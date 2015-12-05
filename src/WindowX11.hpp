@@ -35,8 +35,6 @@ public:
 
     Image* image() const;
 
-    void getComponentIndices(int* r, int* g, int* b, int* a);
-
     void setTitle(std::string title);
 
     std::string title() const;

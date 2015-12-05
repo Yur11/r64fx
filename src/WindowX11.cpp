@@ -280,8 +280,54 @@ namespace{
             image = nullptr;
         }
 
+        void getComponentIndices(int* r, int* g, int* b)
+        {
+            static unsigned long int masks[4] = {
+                0xFF,
+                0xFF00,
+                0xFF0000,
+                0xFF000000
+            };
+
+            cout << ximage->red_mask << "\n";
+            cout << ximage->green_mask << "\n";
+            cout << ximage->blue_mask << "\n";
+
+            for(int i=0; i<4; i++)
+            {
+                if(masks[i] == ximage->red_mask)
+                {
+                    *r = i;
+                }
+                else if(masks[i] == ximage->green_mask)
+                {
+                    *g = i;
+                }
+                else if(masks[i] == ximage->blue_mask)
+                {
+                    *b = i;
+                }
+            }
+        }
+
         void repaint()
         {
+            int ri=0, gi=0, bi=0;
+            getComponentIndices(&ri, &gi, &bi);
+            for(int y=0; y<image->height(); y++)
+            {
+                for(int x=0; x<image->width(); x++)
+                {
+                    auto px = image->pixel(x, y);
+                    unsigned char r = px[0];
+                    unsigned char g = px[1];
+                    unsigned char b = px[2];
+                    px[ri] = r;
+                    px[gi] = g;
+                    px[bi] = b;
+                }
+            }
+
 #ifdef R64FX_USE_MITSHM
             if(got_mitshm())
             {
@@ -312,8 +358,7 @@ namespace{
                 );
             }
 
-//             XFlush(g_display);
-            XSync(g_display, true);
+            XFlush(g_display);
         }
 
         void processExposeEvent()
@@ -663,45 +708,6 @@ Image* WindowX11::image() const
 {
     auto p = (WindowX11PrivateNormal*) m_private;
     return p->image;
-}
-
-
-void WindowX11::getComponentIndices(int* r, int* g, int* b, int* a)
-{
-    if(type() == Window::Type::Normal)
-    {
-        auto p = (WindowX11PrivateNormal*) m_private;
-        static unsigned long int masks[4] = {
-            0xFF,
-            0xFF00,
-            0xFF0000,
-            0xFF000000
-        };
-
-        cout << p->ximage->red_mask << "\n";
-        cout << p->ximage->green_mask << "\n";
-        cout << p->ximage->blue_mask << "\n";
-
-        for(int i=0; i<4; i++)
-        {
-            if(masks[i] == p->ximage->red_mask)
-            {
-                *r = i;
-            }
-            else if(masks[i] == p->ximage->green_mask)
-            {
-                *g = i;
-            }
-            else if(masks[i] == p->ximage->blue_mask)
-            {
-                *b = i;
-            }
-            else
-            {
-                *a = i;
-            }
-        }
-    }
 }
 
 
