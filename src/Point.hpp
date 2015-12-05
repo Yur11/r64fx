@@ -4,26 +4,28 @@
 namespace r64fx{
     
 template<typename T> struct Point{
-    T x, y;
+    T vec[2];
     
-    Point<T>(T x = T(), T y = T()) 
-    : x(x)
-    , y(y)
+    Point<T>(T x = T(), T y = T())
+    : vec{x, y}
     {}
+
+    inline T x() const { return vec[0]; }
+    inline T y() const { return vec[1]; }
     
     inline Point<T> operator-()
     {
-        return Point<T>(-x, -y);
+        return Point<T>(-x(), -y());
     }
     
     inline Point<T> operator+(Point<T> other)
     {
-        return Point<T>(x + other.x, y + other.y);
+        return Point<T>(x() + other.x(), y() + other.y());
     }
     
     inline Point<T> operator-(Point<T> other)
     {
-        return Point<T>(x - other.x, y - other.y);
+        return Point<T>(x() - other.x(), y() - other.y());
     }
     
     inline Point<T> operator+=(Point<T> p)
@@ -38,12 +40,12 @@ template<typename T> struct Point{
     
     inline Point<T> operator*(T coeff)
     {
-        return Point<T>(x*coeff, y*coeff);
+        return Point<T>(x()*coeff, y()*coeff);
     }
     
     inline Point<T> operator*(Point<T> p)
     {
-        return Point<T>(x*p.x, y*p.y);
+        return Point<T>(x()*p.x(), y()*p.y());
     }
     
     inline Point<T> operator*=(T coeff)
@@ -56,8 +58,8 @@ template<typename T> struct Point{
         return (*this) = (*this) * p;
     }
     
-    inline bool operator==(const Point<T> &other) { return this->x == other.x && this->y == other.y; }
-    inline bool operator!=(const Point<T> &other) { return this->x != other.x || this->y != other.y; }
+    inline bool operator==(const Point<T> &other) { return this->x() == other.x() && this->y() == other.y(); }
+    inline bool operator!=(const Point<T> &other) { return this->x() != other.x() || this->y() != other.y(); }
 };
     
 }//namespace r64fx

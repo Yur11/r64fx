@@ -22,8 +22,8 @@ public:
 
     inline Point<int> position() const { return m_position; }
 
-    inline int x() const { return m_position.x; }
-    inline int y() const { return m_position.y; }
+    inline int x() const { return m_position.x(); }
+    inline int y() const { return m_position.y(); }
 
     inline unsigned int buttons() const { return m_buttons; }
 };

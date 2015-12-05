@@ -40,10 +40,10 @@ void alpha_blend(Image* dst, Point<int> pos, Color<unsigned char> color, Image* 
 {
 #ifdef R64FX_DEBUG
     assert(alpha->channelCount() == 1);
-    assert(pos.x >= 0);
-    assert(pos.y >= 0);
-    assert((pos.x + alpha->width())  < dst->width());
-    assert((pos.y + alpha->height()) < dst->height());
+    assert(pos.x() >= 0);
+    assert(pos.y() >= 0);
+    assert((pos.x() + alpha->width())  < dst->width());
+    assert((pos.y() + alpha->height()) < dst->height());
 #endif//R64FX_DEBUG
 
     static const float rcp = 1.0f / float(255);
@@ -59,7 +59,7 @@ void alpha_blend(Image* dst, Point<int> pos, Color<unsigned char> color, Image* 
         {
             float src_alpha            = float(      alpha->pixel(x, y)[0]) * rcp;
             float one_minus_src_alpha  = float(255 - alpha->pixel(x, y)[0]) * rcp;
-            auto px = dst->pixel(x + pos.x, y + pos.y);
+            auto px = dst->pixel(x + pos.x(), y + pos.y());
             for(int i=0; i<3; i++)
             {
                 float result = float(px[i]) * rcp * one_minus_src_alpha;
