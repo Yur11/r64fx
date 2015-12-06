@@ -97,7 +97,6 @@ namespace{
     struct WindowX11Private{
         WindowX11*         window;
         ::Window           xwindow;
-        XWindowAttributes  attrs;
         string             title;
         int                window_width;
         int                window_height;
@@ -120,11 +119,6 @@ namespace{
                     return;
                 }
             }
-        }
-
-        void updateAttrs()
-        {
-            XGetWindowAttributes(g_display, xwindow, &attrs);
         }
 
         void setTitle(string title)
@@ -181,12 +175,10 @@ namespace{
 
     struct WindowX11PrivateNormal : public WindowX11Private{
         Image*           image   = nullptr;
-        XImage*          ximage  = nullptr;
-#ifdef R64FX_USE_MITSHM
-        XShmSegmentInfo* shminfo = nullptr;
-#endif//R64FX_USE_MITSHM
         XGCValues        xgc_values;
         GC               gc;
+        Visual*          visual = nullptr;
+        unsigned int     depth;
 
         WindowX11PrivateNormal(WindowX11* window, int width, int height)
         : WindowX11Private(window, width, height)
@@ -198,20 +190,17 @@ namespace{
                 None, None
             );
 
-            updateAttrs();
-
             xgc_values.graphics_exposures = True;
             gc = XCreateGC(g_display, xwindow, GCGraphicsExposures, &xgc_values);
 
-            resizeImage();
-        }
-
-        void resizeImage()
-        {
-            destroyImage();
+            XWindowAttributes attrs;
+            XGetWindowAttributes(g_display, xwindow, &attrs);
+            window_width   = attrs.width;
+            window_height  = attrs.height;
+            visual         = attrs.visual;
 
             XVisualInfo vinfo;
-            vinfo.visualid = XVisualIDFromVisual(attrs.visual);
+            vinfo.visualid = XVisualIDFromVisual(visual);
             {
                 int nitems = 0;
                 XVisualInfo* vinfos = XGetVisualInfo(g_display, VisualIDMask, &vinfo, &nitems);
@@ -221,67 +210,34 @@ namespace{
                     XFree(vinfos);
                 }
             }
+            depth = vinfo.depth;
 
-#ifdef R64FX_USE_MITSHM
-            if(got_mitshm())
-            {
-                shminfo = new XShmSegmentInfo;
-                ximage = XShmCreateImage(
-                    g_display,
-                    attrs.visual,
-                    vinfo.depth,
-                    ZPixmap,
-                    nullptr,
-                    shminfo,
-                    attrs.width,
-                    attrs.height
-                );
-                shminfo->shmid = shmget(IPC_PRIVATE, ximage->bytes_per_line * ximage->height, IPC_CREAT|0777);
-                shminfo->shmaddr = ximage->data = (char*) shmat(shminfo->shmid, 0, 0);
-                XShmAttach(g_display, shminfo);
-            }
-            else
-#endif//R64FX_USE_MITSHM
-            {
-                char* buff = new char[attrs.width * attrs.height * 4];
-                ximage = XCreateImage(
-                    g_display,
-                    attrs.visual,
-                    vinfo.depth,  //Bits per pixel.
-                    ZPixmap,
-                    0,            //Offset
-                    buff,
-                    attrs.width,
-                    attrs.height,
-                    32,
-                    0              //Bytes Per Line. Xlib will calculate.
-                );
-            }
+            resizeImage();
+        }
 
-            image = new Image(ximage->width, ximage->height, 4, (unsigned char*)ximage->data);
+        void resizeImage()
+        {
+            destroyImage();
+            image = new Image(window_width, window_height, 4);
         }
 
         void destroyImage()
         {
-            if(!ximage)
-                return;
-
-#ifdef R64FX_USE_MITSHM
-            if(got_mitshm())
+            if(image)
             {
-                XShmDetach(g_display, shminfo);
-                shmdt(shminfo->shmaddr);
-                shmctl(shminfo->shmid, IPC_RMID, 0);
+                delete image;
+                image = nullptr;
             }
-#endif//R64FX_USE_MITSHM
-            XDestroyImage(ximage);
-            ximage = nullptr;
-            delete image;
-            image = nullptr;
         }
 
-        void getComponentIndices(int* r, int* g, int* b)
+        void repaint()
         {
+            XImage* ximage = XCreateImage(
+                g_display, visual, depth, ZPixmap, 0,
+                (char*)image->data(), image->width(), image->height(),
+                32, image->width() * 4
+            );
+
             static unsigned long int masks[4] = {
                 0xFF,
                 0xFF00,
@@ -289,31 +245,30 @@ namespace{
                 0xFF000000
             };
 
-            cout << ximage->red_mask << "\n";
-            cout << ximage->green_mask << "\n";
-            cout << ximage->blue_mask << "\n";
+            struct {
+                unsigned char r = 0, g = 0, b = 0, a = 0;
+            } component_index;
 
             for(int i=0; i<4; i++)
             {
                 if(masks[i] == ximage->red_mask)
                 {
-                    *r = i;
+                    component_index.r = i;
                 }
                 else if(masks[i] == ximage->green_mask)
                 {
-                    *g = i;
+                    component_index.g = i;
                 }
                 else if(masks[i] == ximage->blue_mask)
                 {
-                    *b = i;
+                    component_index.b = i;
+                }
+                else
+                {
+                    component_index.a = i;
                 }
             }
-        }
 
-        void repaint()
-        {
-            int ri=0, gi=0, bi=0;
-            getComponentIndices(&ri, &gi, &bi);
             for(int y=0; y<image->height(); y++)
             {
                 for(int x=0; x<image->width(); x++)
@@ -322,48 +277,26 @@ namespace{
                     unsigned char r = px[0];
                     unsigned char g = px[1];
                     unsigned char b = px[2];
-                    px[ri] = r;
-                    px[gi] = g;
-                    px[bi] = b;
+                    px[component_index.r] = r;
+                    px[component_index.g] = g;
+                    px[component_index.b] = b;
                 }
             }
 
-#ifdef R64FX_USE_MITSHM
-            if(got_mitshm())
-            {
-                XShmPutImage(
-                    g_display,
-                    xwindow,
-                    gc,
-                    ximage,
-                    0, 0,
-                    0, 0,
-                    ximage->width,
-                    ximage->height,
-                    True
-                );
-            }
-            else
-#endif//R64FX_USE_MITSHM
-            {
-                XPutImage(
-                    g_display,
-                    xwindow,
-                    gc,
-                    ximage,
-                    0, 0,
-                    0, 0,
-                    ximage->width,
-                    ximage->height
-                );
-            }
+            XPutImage(
+                g_display, xwindow, gc, ximage,
+                0, 0, 0, 0, ximage->width, ximage->height
+            );
 
-            XFlush(g_display);
+            ximage->data = 0; //Lifted this from Qt4 code.
+                              //Apparently you can do this to avoid buffer deallocation.
+            XDestroyImage(ximage);
+
+            XSync(g_display, False);
         }
 
-        void processExposeEvent()
+        void processResizeEvent(int w, int h)
         {
-            updateAttrs();
             resizeImage();
         }
     };
@@ -782,10 +715,9 @@ void WindowX11::processSomeEvents(Window::Events* events)
                     if(window->type() == Window::Type::Normal)
                     {
                         auto pp = (WindowX11PrivateNormal*) p;
-                        pp->processExposeEvent();
+                        pp->processResizeEvent(new_w, new_h);
                     }
-
-                    p->window_width = new_w;
+                    p->window_width  = new_w;
                     p->window_height = new_h;
                     events->reconfigure(window, old_w, old_h, new_w, new_h);
                 }

@@ -1,6 +1,10 @@
 #include "Image.hpp"
 #include <new>
 
+#ifdef R64FX_DEBUG
+#include <assert.h>
+#endif//R64FX_DEBUG
+
 #define IMAGE_OWNS_DATA 1
 
 namespace r64fx{
@@ -64,12 +68,22 @@ void Image::free()
 
 unsigned char* Image::pixel(int x, int y) const
 {
+#ifdef R64FX_DEBUG
+    assert(x < width());
+    assert(y < height());
+#endif//R64FX_DEBUG
+
     return data() + y * width() * channelCount() + x * channelCount();
 }
 
 
 void Image::setPixel(int x, int y, unsigned char* px)
 {
+#ifdef R64FX_DEBUG
+    assert(x < width());
+    assert(y < height());
+#endif//R64FX_DEBUG
+
     for(int c=0; c<channelCount(); c++)
     {
         pixel(x, y)[c] = px[c];
