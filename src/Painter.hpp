@@ -11,7 +11,8 @@ class Image;
 class Window;
 
 class Painter{
-    void* m_private = nullptr;
+//     void* m_private = nullptr;
+    Point<int> m_offset  = {0, 0};
 
 protected:
     virtual ~Painter() {};
@@ -21,11 +22,15 @@ public:
 
     static void destroyInstance(Painter* painter);
 
+    inline void setOffset(Point<int> offset) { m_offset = offset; }
+
+    inline Point<int> offset() const { return m_offset; }
+
     virtual void setClipRect(Rect<int> rect) = 0;
 
-    virtual void fillRect(Rect<int> rect, Color<unsigned char> color) = 0;
+    virtual void fillRect(Color<unsigned char> color, Rect<int> rect) = 0;
 
-    virtual void putImage(int x, int y, Image* img) = 0;
+    virtual void putImage(Image* img, Point<int> pos = {0, 0}) = 0;
 
     virtual void repaint() = 0;
 

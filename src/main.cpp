@@ -11,16 +11,18 @@
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
+#include "Widget_Dummy.hpp"
+#include "Widget_Text.hpp"
 
 using namespace std;
 using namespace r64fx;
 
 
 class MyWidget : public Widget{
-    Image* m_Image = nullptr;
-    float* data = nullptr;
-    int data_size = 256;
-    Font* m_Font = nullptr;
+    Image*  m_Image = nullptr;
+    float*  data = nullptr;
+    int     data_size = 256;
+    Font*   m_Font = nullptr;
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget(parent)
@@ -41,10 +43,25 @@ public:
 
         m_Font = new Font;
         cout << m_Font->glyphCount() << "\n";
-        m_Font->setSize(72, 72, 96, 96);
+        m_Font->setSize(32, 32, 96, 96);
         cout << m_Font->ascender() << ", " << m_Font->descender() << "\n";
+
         auto glyph = m_Font->fetchGlyph("g");
         alpha_blend(m_Image, {10, 10}, {0, 0, 0, 0}, glyph->image());
+
+        glyph = m_Font->fetchGlyph("A");
+        alpha_blend(m_Image, {100, 10}, {0, 0, 0, 0}, glyph->image());
+
+        auto wd1 = new Widget_Dummy({255, 0, 0}, this);
+        auto wd2 = new Widget_Dummy({0, 255, 0}, this);
+        auto wd3 = new Widget_Dummy({0, 0, 255}, this);
+        wd1->setSize({100, 100});
+        wd2->setSize({100, 100});
+        wd3->setSize({100, 100});
+        wd1->setPosition({100, 100});
+        wd2->setPosition({200, 200});
+        wd3->setPosition({300, 300});
+
     }
 
     ~MyWidget()
@@ -68,25 +85,13 @@ public:
 protected:
     virtual void reconfigureEvent(ReconfigureEvent* event)
     {
-//         if(event->sizeChanged())
-//         {
-//             auto size = event->newSize();
-// //             cout << "MyWidget::reconfigureEvent(" << size.width() << "x" << size.height() << ")\n";
-//         }
-
-        auto size = event->newSize();
-
-        cout << "reconfigureEvent(" << size.width() << "x" << size.height() << ")\n";
-
         auto p = event->painter();
-        p->reconfigure();
-        p->fillRect({0, 0, size.width(), size.height()}, {255, 255, 255});
-        p->fillRect({10,   10, 100, 100}, {255,    0,   0});
-        p->fillRect({210, 210, 100, 100}, {0,    255,   0});
-        p->fillRect({410, 410, 100, 100}, {0,      0, 255});
-        p->fillRect({550, 310, 100, 100}, {0,    255, 255});
-        p->fillRect({150, 330, 100, 100}, {255,  255,   0});
-        p->putImage(130, 150, m_Image);
+        auto s = event->newSize();
+
+        p->fillRect({255, 255, 255}, {0, 0, s.width(), s.height()});
+
+        Widget::reconfigureEvent(event);
+
         p->repaint();
     }
 };
@@ -97,7 +102,6 @@ class MyProgram : public Program{
     Painter* m_painter = nullptr;
     Point<int> m_point = {10, 10};
 
-    
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
     
@@ -105,7 +109,7 @@ private:
     virtual void setup()
     {
         m_Widget = new MyWidget;
-        m_Widget->resize(800, 600);
+        m_Widget->setSize({800, 600});
         m_Widget->show();
     }
 
@@ -134,12 +138,12 @@ private:
         }
         else if(event->key() == Keyboard::Key::J)
         {
-            m_Widget->resize(400, 200);
+            m_Widget->setSize({400, 200});
             m_Widget->setWindowTitle("A");
         }
         else if(event->key() == Keyboard::Key::K)
         {
-            m_Widget->resize(200, 400);
+            m_Widget->setSize({200, 400});
             m_Widget->setWindowTitle("B");
         }
         else if(event->key() == Keyboard::Key::T)

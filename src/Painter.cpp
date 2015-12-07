@@ -81,7 +81,7 @@ void put_image_routine(PaintContext* ctx)
 
 
 struct PainterImpl : public Painter{
-    Window* window = nullptr;
+    Window*     window    = nullptr;
 
     /** @brief Reusable PaintContext instance; */
     PaintContext* paint_context = nullptr;
@@ -132,9 +132,9 @@ struct PainterImplNormal : public PainterImpl{
 
     virtual ~PainterImplNormal();
 
-    virtual void fillRect(Rect<int> rect, Color<unsigned char> color);
+    virtual void fillRect(Color<unsigned char> color, Rect<int> rect);
 
-    virtual void putImage(int x, int y, Image* img);
+    virtual void putImage(Image* img, Point<int> pos);
 
     virtual void repaint();
 
@@ -156,18 +156,18 @@ PainterImplNormal::~PainterImplNormal()
 }
 
 
-void PainterImplNormal::fillRect(Rect<int> rect, Color<unsigned char> color)
+void PainterImplNormal::fillRect(Color<unsigned char> color, Rect<int> rect)
 {
-    paint_context->rect          = clip(rect);
+    paint_context->rect          = clip(rect + offset());
     paint_context->color         = color;
     fill_rect_routine(paint_context);
 }
 
 
-void PainterImplNormal::putImage(int x, int y, Image* img)
+void PainterImplNormal::putImage(Image* img, Point<int> pos)
 {
     paint_context->source_image  = img;
-    paint_context->rect          = clip(Rect<int>(x, y, img->width(), img->height()));
+    paint_context->rect          = clip(Rect<int>(pos + offset(), {img->width(), img->height()}));
     put_image_routine(paint_context);
 }
 
@@ -182,6 +182,7 @@ void PainterImplNormal::reconfigure()
 {
     paint_context->target_image = window->image();
     setClipRect({0, 0, window->width(), window->height()});
+    setOffset({0, 0});
 }
 
 
@@ -209,9 +210,9 @@ struct PainterImplGL : public PainterImpl{
 
     virtual ~PainterImplGL();
 
-    virtual void fillRect(Rect<int> rect, Color<unsigned char> color);
+    virtual void fillRect(Color<unsigned char> color, Rect<int> rect);
 
-    virtual void putImage(int x, int y, Image* img);
+    virtual void putImage(Image* img, Point<int> pos);
 
     virtual void repaint();
 
@@ -259,9 +260,9 @@ PainterImplGL::~PainterImplGL()
 }
 
 
-void PainterImplGL::fillRect(Rect<int> rect, Color<unsigned char> color)
+void PainterImplGL::fillRect(Color<unsigned char> color, Rect<int> rect)
 {
-    Rect<int> r = clip(rect);
+    Rect<int> r = clip(rect + offset());
     if(r.width() > 0 && r.height() > 0)
     {
         Image img(r.width(), r.height(), 4);
@@ -281,9 +282,9 @@ void PainterImplGL::fillRect(Rect<int> rect, Color<unsigned char> color)
 }
 
 
-void PainterImplGL::putImage(int x, int y, Image* image)
+void PainterImplGL::putImage(Image* image, Point<int> pos)
 {
-    Rect<int> rect(x, y, image->width(), image->height());
+    Rect<int> rect(pos + offset(), {image->width(), image->height()});
     Rect<int> r = clip(rect);
     if(r.width() > 0 && r.height() > 0)
     {
@@ -358,6 +359,7 @@ void PainterImplGL::reconfigure()
     gl::BufferSubData(GL_ARRAY_BUFFER, 0, 64, buff);
 
     setClipRect({0, 0, window->width(), window->height()});
+    setOffset({0, 0});
 }
 
 

@@ -1,6 +1,7 @@
 #include "Program.hpp"
 #include "Widget.hpp"
 #include "Window.hpp"
+#include "Painter.hpp"
 #include "MouseEvent.hpp"
 #include "KeyEvent.hpp"
 #include "ReconfigureEvent.hpp"
@@ -67,6 +68,7 @@ Program::Program(int argc, char* argv[])
             {new_w, new_h},
             window->painter()
         };
+        window->painter()->reconfigure();
         program_singleton_instance->reconfigureEvent(window, &re);
     };
 
@@ -142,6 +144,7 @@ void Program::keyReleaseEvent(Window* window, KeyEvent* event)
 
 void Program::reconfigureEvent(Window* window, ReconfigureEvent* event)
 {
+    window->widget()->setSize(event->newSize());
     window->widget()->reconfigureEvent(event);
 }
 

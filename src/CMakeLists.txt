@@ -26,6 +26,8 @@ set(SRC
     Painter.cpp
     Program.cpp
     Widget.cpp
+    Widget_Dummy.cpp
+    Widget_Text.cpp
     Window.cpp
     WindowX11.cpp
     gl.cpp

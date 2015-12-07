@@ -1,36 +1,33 @@
-#ifndef R64FX_GUI_DUMMY_H
-#define R64FX_GUI_DUMMY_H
+#ifndef R64FX_WIDGET_DUMMY_HPP
+#define R64FX_WIDGET_DUMMY_HPP
 
 #include "Widget.hpp"
-#include "Painter.hpp"
+#include "Color.hpp"
 
 namespace r64fx{
-    
-class Menu;
-    
-/** @brief Just a dummy widget that draws a rectangle. */
-class Dummy : public Widget{
-    Point<float> _last_mouse_move;
-    Painter p;
-    
-    bool is_pressed = false;
-    
+
+class Widget_Dummy : public Widget{
+    Color<unsigned char> m_Color;
+
 public:
-    Dummy(float width, float height, Widget* parent = nullptr);
-    
-    virtual void render();
-    
+    Widget_Dummy(Color<unsigned char> color, Widget* parent = nullptr);
+
+    virtual ~Widget_Dummy();
+
+protected:
     virtual void mousePressEvent(MouseEvent* event);
-    
+
     virtual void mouseReleaseEvent(MouseEvent* event);
-    
+
     virtual void mouseMoveEvent(MouseEvent* event);
-    
+
     virtual void keyPressEvent(KeyEvent* event);
-    
-    static void initDebugMenu();
+
+    virtual void keyReleaseEvent(KeyEvent* event);
+
+    virtual void reconfigureEvent(ReconfigureEvent* event);
 };
-    
+
 }//namespace r64fx
 
-#endif//R64FX_GUI_DUMMY_H
+#endif//R64FX_WIDGET_DUMMY_HPP

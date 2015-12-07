@@ -60,7 +60,7 @@ public:
     inline int charHeight() const { return m_char_height; }
     
     /** @brief Find and retrieve glyph for the symbol encoded in utf-8. */
-    Font::Glyph* fetchGlyph(std::string text);    
+    Font::Glyph* fetchGlyph(std::string text);
 };
 
 }//namespace r64fx

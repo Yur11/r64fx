@@ -24,6 +24,13 @@ public:
     , mh(h)
     {}
 
+    Rect(Point<T> pos, Size<T> size)
+    : mx(pos.x())
+    , my(pos.y())
+    , mw(size.width())
+    , mh(size.height())
+    {}
+
     inline T x() const { return mx; }
     inline T y() const { return my; }
     inline T width()  const  { return mw; }
@@ -34,8 +41,8 @@ public:
     inline void setWidth(T val)  { mw = val; }
     inline void setHeight(T val) { mh = val; }
 
-    inline Point<T> position() const { return {x, y}; }
-    inline void setPosition(Point<T> pos) { mx = pos.x; my = pos.y; }
+    inline Point<T> position() const { return {x(), y()}; }
+    inline void setPosition(Point<T> pos) { mx = pos.x(); my = pos.y(); }
 
     inline T left()   const { return mx; }
     inline T top()    const { return my; }
@@ -76,6 +83,12 @@ public:
 
     inline Point<T> center() { return { mx + halfWidth(), my + halfHeight() }; }
 };
+
+
+template<typename T> Rect<T> operator+(Rect<T> rect, Point<T> offset)
+{
+    return { rect.position() + offset, rect.size() };
+}
 
 
 template<typename T> Rect<T> intersection(Rect<T> a, Rect<T> b)

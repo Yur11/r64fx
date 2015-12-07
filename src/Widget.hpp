@@ -16,25 +16,25 @@ class Image;
 class Painter;
 
 class Widget : public LinkedList<Widget>::Node{
-    friend class Program; //To set size and call event methods.
-    friend class Painter; //For Painter to access its private data.
+    friend class Program;
 
     union{
         Widget* widget = nullptr;
         Window* window;
     } m_parent;
-
-    /* Storage for widget flags.
-     * These are bit-packed and used internally.
-     */
-    unsigned long m_flags = 0;
     
     /* Widgets geometry. */
     Rect<int> m_rect = { 0, 0, 0, 0  };
 
     /* A linked list of widgets children. */
     LinkedList<Widget> m_children;
-    
+
+protected:
+    /* Storage for widget flags.
+     * These are bit-packed and used internally.
+     */
+    unsigned long m_flags = 0;
+
 public:
     Widget(Widget* parent = nullptr);
     
@@ -49,16 +49,20 @@ public:
     void add(Widget* child);
 
     Widget* root();
-    
-    void resize(Size<int> size);
 
-    void resize(int w, int h);
+    void setPosition(Point<int> pos);
+
+    Point<int> position() const;
     
+    void setSize(Size<int> size);
+
     Size<int> size() const;
 
     int width() const;
 
     int height() const;
+
+    Rect<int> rect() const;
     
     /** @brief Show this widget in a window. */
     void show();
@@ -71,6 +75,18 @@ public:
     bool isWindow() const;
 
     Image* windowImage() const;
+
+    bool isVisible() const;
+
+    bool isObscuredLeft() const;
+
+    bool isObscuredTop() const;
+
+    bool isObscuredRight() const;
+
+    bool isObscuredBottom() const;
+
+    bool isPartiallyObscured() const;
 
     void setWindowTitle(std::string title);
 
