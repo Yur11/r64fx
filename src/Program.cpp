@@ -61,15 +61,7 @@ Program::Program(int argc, char* argv[])
 
     events.reconfigure = [](Window* window, int old_w, int old_h, int new_w, int new_h)
     {
-        ReconfigureEvent re{
-            {0, 0},
-            {0, 0},
-            {old_w, old_h},
-            {new_w, new_h},
-            window->painter()
-        };
-        window->painter()->reconfigure();
-        program_singleton_instance->reconfigureEvent(window, &re);
+        program_singleton_instance->reconfigure(window);
     };
 
     events.close = [](Window* window)
@@ -112,6 +104,14 @@ Program* Program::instance()
 }
 
 
+void Program::reconfigure(Window* window)
+{
+    window->painter()->reconfigure();
+    window->widget()->setSize({window->width(), window->height()});
+    window->widget()->reconfigure(window->painter());
+}
+
+
 void Program::mousePressEvent(Window* window, MouseEvent* event)
 {
     window->widget()->mousePressEvent(event);
@@ -139,13 +139,6 @@ void Program::keyPressEvent(Window* window, KeyEvent* event)
 void Program::keyReleaseEvent(Window* window, KeyEvent* event)
 {
     window->widget()->keyReleaseEvent(event);
-}
-
-
-void Program::reconfigureEvent(Window* window, ReconfigureEvent* event)
-{
-    window->widget()->setSize(event->newSize());
-    window->widget()->reconfigureEvent(event);
 }
 
 

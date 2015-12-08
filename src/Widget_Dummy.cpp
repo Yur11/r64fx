@@ -20,6 +20,24 @@ Widget_Dummy::~Widget_Dummy()
 }
 
 
+void Widget_Dummy::reconfigure(Painter* painter)
+{
+    if(isObscuredLeft() || isObscuredRight())
+    {
+        painter->fillRect({0, 0, 0}, {{0, 0}, size()});
+    }
+    else if(isObscuredTop() || isObscuredBottom())
+    {
+        painter->fillRect({127, 127, 127}, {{0, 0}, size()});
+    }
+    else
+    {
+        painter->fillRect(m_Color, {{0, 0}, size()});
+    }
+    Widget::reconfigure(painter);
+}
+
+
 void Widget_Dummy::mousePressEvent(MouseEvent* event)
 {
     Widget::mousePressEvent(event);
@@ -47,21 +65,6 @@ void Widget_Dummy::keyPressEvent(KeyEvent* event)
 void Widget_Dummy::keyReleaseEvent(KeyEvent* event)
 {
     Widget::keyReleaseEvent(event);
-}
-
-
-void Widget_Dummy::reconfigureEvent(ReconfigureEvent* event)
-{
-    auto p = event->painter();
-    if(isPartiallyObscured())
-    {
-        p->fillRect({0, 0, 0}, {{0, 0}, size()});
-    }
-    else
-    {
-        p->fillRect(m_Color, {{0, 0}, size()});
-    }
-    Widget::reconfigureEvent(event);
 }
     
 }//namespace r64fx

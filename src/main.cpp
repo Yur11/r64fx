@@ -82,17 +82,11 @@ public:
         }
     }
 
-protected:
-    virtual void reconfigureEvent(ReconfigureEvent* event)
+    virtual void reconfigure(Painter* painter)
     {
-        auto p = event->painter();
-        auto s = event->newSize();
-
-        p->fillRect({255, 255, 255}, {0, 0, s.width(), s.height()});
-
-        Widget::reconfigureEvent(event);
-
-        p->repaint();
+        painter->fillRect({255, 255, 255}, rect());
+        Widget::reconfigure(painter);
+        painter->repaint();
     }
 };
 
@@ -112,18 +106,6 @@ private:
         m_Widget->setSize({800, 600});
         m_Widget->show();
     }
-
-//     virtual void mousePressEvent(Window* window, MouseEvent* event)
-//     {
-//     }
-//
-//     virtual void mouseReleaseEvent(Window* window, MouseEvent* event)
-//     {
-//     }
-//
-//     virtual void mouseMoveEvent(Window* window, MouseEvent* event)
-//     {
-//     }
     
 
     virtual void keyPressEvent(Window* window, KeyEvent* event)

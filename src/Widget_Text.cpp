@@ -78,6 +78,13 @@ void Widget_Text::setFont(Font* font)
 }
 
 
+void Widget_Text::reconfigure(Painter* painter)
+{
+    painter->fillRect({255, 0, 0}, rect());
+    Widget::reconfigure(painter);
+}
+
+
 void Widget_Text::mousePressEvent(MouseEvent* event)
 {
     Widget::mousePressEvent(event);
@@ -105,14 +112,6 @@ void Widget_Text::keyPressEvent(KeyEvent* event)
 void Widget_Text::keyReleaseEvent(KeyEvent* event)
 {
     Widget::keyReleaseEvent(event);
-}
-
-
-void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
-{
-    auto p = event->painter();
-    p->fillRect({255, 0, 0}, rect());
-    Widget::reconfigureEvent(event);
 }
 
 }//namespace r64fx

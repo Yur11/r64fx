@@ -25,6 +25,8 @@ public:
     static Program* instance();
     
 protected:
+    virtual void reconfigure(Window* window);
+
     virtual void mousePressEvent(Window* window, MouseEvent* event);
 
     virtual void mouseReleaseEvent(Window* window, MouseEvent* event);
@@ -34,8 +36,6 @@ protected:
     virtual void keyPressEvent(Window* window, KeyEvent* event);
 
     virtual void keyReleaseEvent(Window* window, KeyEvent* event);
-
-    virtual void reconfigureEvent(Window* window, ReconfigureEvent* event);
 
     virtual void closeEvent(Window* window);
 

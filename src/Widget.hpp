@@ -92,6 +92,8 @@ public:
 
     std::string windowTitle() const;
 
+    virtual void reconfigure(Painter* painter);
+
 protected:
     virtual void mousePressEvent(MouseEvent* event);
     
@@ -102,8 +104,6 @@ protected:
     virtual void keyPressEvent(KeyEvent* event);
     
     virtual void keyReleaseEvent(KeyEvent* event);
-
-    virtual void reconfigureEvent(ReconfigureEvent* event);
 };
     
 }//r64fx
