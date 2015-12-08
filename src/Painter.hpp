@@ -11,7 +11,6 @@ class Image;
 class Window;
 
 class Painter{
-//     void* m_private = nullptr;
     Point<int> m_offset  = {0, 0};
 
 protected:
@@ -20,7 +19,7 @@ protected:
 public:
     static Painter* newInstance(Window* window);
 
-    static void destroyInstance(Painter* painter);
+    static void deleteInstance(Painter* painter);
 
     inline void setOffset(Point<int> offset) { m_offset = offset; }
 

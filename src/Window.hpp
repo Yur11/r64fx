@@ -47,7 +47,7 @@ public:
         Window::Type type = Window::Type::Normal
     );
 
-    static void destroyInstance(Window* window);
+    static void deleteInstance(Window* window);
 
     inline void setWidget(Widget* widget) { m_Widget = widget; }
 

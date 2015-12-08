@@ -46,13 +46,13 @@ Window* Window::newInstance(int width, int height, std::string title, Window::Ty
 }
 
 
-void Window::destroyInstance(Window* window)
+void Window::deleteInstance(Window* window)
 {
     auto it = g_all_windows.begin();
     while(it != g_all_windows.end() && *it != window) it++;
     g_all_windows.erase(it);
 
-    Painter::destroyInstance(window->painter());
+    Painter::deleteInstance(window->painter());
     delete window;
 
     if(g_all_windows.empty())

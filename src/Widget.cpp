@@ -171,7 +171,7 @@ void Widget::close()
 {
     if(isWindow())
     {
-        Window::destroyInstance(m_parent.window);
+        Window::deleteInstance(m_parent.window);
         m_parent.window = nullptr;
         m_flags ^= R64FX_WIDGET_IS_WINDOW;
     }

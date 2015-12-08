@@ -486,7 +486,7 @@ Painter* Painter::newInstance(Window* window)
 }
 
 
-void Painter::destroyInstance(Painter* painter)
+void Painter::deleteInstance(Painter* painter)
 {
     delete painter;
 }
