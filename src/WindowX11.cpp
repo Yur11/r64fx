@@ -295,7 +295,7 @@ namespace{
             XSync(g_display, False);
         }
 
-        void processResizeEvent(int w, int h)
+        void processResizeEvent()
         {
             resizeImage();
         }
@@ -706,19 +706,18 @@ void WindowX11::processSomeEvents(Window::Events* events)
             {
                 int old_w = p->window_width;
                 int old_h = p->window_height;
-
                 int new_w = xevent.xconfigure.width;
                 int new_h = xevent.xconfigure.height;
 
                 if(old_w != new_w || old_h != new_h)
                 {
+                    p->window_width  = new_w;
+                    p->window_height = new_h;
                     if(window->type() == Window::Type::Normal)
                     {
                         auto pp = (WindowX11PrivateNormal*) p;
-                        pp->processResizeEvent(new_w, new_h);
+                        pp->processResizeEvent();
                     }
-                    p->window_width  = new_w;
-                    p->window_height = new_h;
                     events->reconfigure(window, old_w, old_h, new_w, new_h);
                 }
                 break;
