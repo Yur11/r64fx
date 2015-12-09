@@ -6,7 +6,7 @@
 #include "Window.hpp"
 #include "KeyEvent.hpp"
 #include "Keyboard.hpp"
-#include "MouseEvent.hpp"
+#include "Mouse.hpp"
 #include "ReconfigureEvent.hpp"
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
@@ -62,6 +62,17 @@ public:
         wd2->setPosition({200, 200});
         wd3->setPosition({300, 300});
 
+        auto wwd = new Widget_Dummy({230, 240, 230}, this);
+        wwd->setPosition({550, 100});
+        wwd->setSize({300, 300});
+
+        auto wwd1 = new Widget_Dummy({255, 0, 255}, wwd);
+        wwd1->setPosition({50, 50});
+        wwd1->setSize({100, 100});
+
+        auto wwd2 = new Widget_Dummy({0, 255, 255}, wwd);
+        wwd2->setPosition({150, 150});
+        wwd2->setSize({100, 100});
     }
 
     ~MyWidget()
@@ -103,7 +114,7 @@ private:
     virtual void setup()
     {
         m_Widget = new MyWidget;
-        m_Widget->setSize({800, 600});
+        m_Widget->setSize({1000, 600});
         m_Widget->show();
     }
     

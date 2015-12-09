@@ -1,21 +1,118 @@
-#ifndef R64FX_GUI_MOUSE_H
-#define R64FX_GUI_MOUSE_H
+#ifndef R64FX_MOUSE_HPP
+#define R64FX_MOUSE_HPP
+
+#include "Point.hpp"
 
 namespace r64fx{
-    
-class Mouse{
+
+class MouseButton{
+    unsigned int m_code;
 
 public:
-    struct Button{
-        static const unsigned int None   = 0;
-        static const unsigned int Left   = 1;
-        static const unsigned int Middle = 1<<1;
-        static const unsigned int Right  = 1<<2;
-        static const unsigned int WheelUp = 1<<3;
-        static const unsigned int WheelDown = 1<<4;
-    };
+    explicit MouseButton(unsigned int code)
+    : m_code(code)
+    {
+
+    }
+
+    MouseButton();
+
+    inline unsigned int code() const { return m_code; }
+
+    inline operator bool() const { return m_code; }
+
+    inline MouseButton &operator=(const MouseButton &other)
+    {
+        m_code = other.code();
+        return *this;
+    }
+
+    static MouseButton none();
+
+    static MouseButton left();
+
+    static MouseButton middle();
+
+    static MouseButton right();
+
+    static MouseButton wheelUp();
+
+    static MouseButton wheelDown();
 };
-    
+
+
+inline MouseButton operator|(MouseButton a, MouseButton b)
+{
+    return MouseButton(a.code() | b.code());
+}
+
+
+inline MouseButton operator&(MouseButton a, MouseButton b)
+{
+    return MouseButton(a.code() & b.code());
+}
+
+
+inline MouseButton operator~(MouseButton a)
+{
+    return MouseButton(~a.code());
+}
+
+
+inline MouseButton &operator|=(MouseButton &a, MouseButton b)
+{
+    a = a | b;
+    return a;
+}
+
+
+inline MouseButton &operator&=(MouseButton &a, MouseButton b)
+{
+    a = a & b;
+    return a;
+}
+
+
+class MouseEvent{
+    Point<int>  m_position;
+    MouseButton m_button;
+
+public:
+    MouseEvent(int x, int y, MouseButton button)
+    : m_position{x, y}
+    , m_button(button)
+    {
+
+    }
+
+    inline void setPosition(Point<int> position) { m_position = position; }
+
+    inline Point<int> position() const { return m_position; }
+
+    inline int x() const { return m_position.x(); }
+    inline int y() const { return m_position.y(); }
+
+    inline MouseButton button() const { return m_button; }
+};
+
+
+class MousePressEvent : public MouseEvent{
+public:
+    using MouseEvent::MouseEvent;
+};
+
+
+class MouseReleaseEvent : public MouseEvent{
+public:
+    using MouseEvent::MouseEvent;
+};
+
+
+class MouseMoveEvent : public MouseEvent{
+public:
+    using MouseEvent::MouseEvent;
+};
+
 }//namespace r64fx
 
-#endif//R64FX_GUI_MOUSE_H
+#endif//R64FX_MOUSE_HPP

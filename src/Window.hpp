@@ -22,9 +22,9 @@ public:
     };
 
     struct Events{
-        void (*mouse_press)   (Window* window, float x, float y, unsigned int buttons);
-        void (*mouse_release) (Window* window, float x, float y, unsigned int buttons);
-        void (*mouse_move)    (Window* window, float x, float y, unsigned int buttons);
+        void (*mouse_press)   (Window* window, float x, float y, unsigned int button);
+        void (*mouse_release) (Window* window, float x, float y, unsigned int button);
+        void (*mouse_move)    (Window* window, float x, float y);
         void (*key_press)     (Window* window, int key);
         void (*key_release)   (Window* window, int key);
         void (*reconfigure)   (Window* window, int old_w, int old_h, int new_w, int new_h);

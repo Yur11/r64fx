@@ -17,11 +17,11 @@ public:
     virtual void reconfigure(Painter* painter);
 
 protected:
-    virtual void mousePressEvent(MouseEvent* event);
+    virtual void mousePressEvent(MousePressEvent* event);
 
-    virtual void mouseReleaseEvent(MouseEvent* event);
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
-    virtual void mouseMoveEvent(MouseEvent* event);
+    virtual void mouseMoveEvent(MouseMoveEvent* event);
 
     virtual void keyPressEvent(KeyEvent* event);
 

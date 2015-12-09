@@ -19,6 +19,7 @@ set(SRC
     Image.cpp
     ImageUtils.cpp
     Keyboard.cpp
+    Mouse.cpp
     Shader.cpp
     Shader_rgba.cpp
     Shader_rgba_tex.cpp

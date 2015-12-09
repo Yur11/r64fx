@@ -7,10 +7,10 @@
 
 namespace r64fx{
 
-class MouseEvent;
+class MousePressEvent;
+class MouseReleaseEvent;
+class MouseMoveEvent;
 class KeyEvent;
-class ReconfigureEvent;
-class ShowEvent;
 class Window;
 class Image;
 class Painter;
@@ -88,6 +88,26 @@ public:
 
     bool isPartiallyObscured() const;
 
+    bool isTrackingMousePress() const;
+
+    bool isTrackingMouseRelease() const;
+
+    bool isTrackingMouseMovement() const;
+
+    bool isTrackingMouseButtons() const;
+
+    bool isTrackingMouse() const;
+
+    void trackMousePress(bool yes);
+
+    void trackMouseRelease(bool yes);
+
+    void trackMouseMovement(bool yes);
+
+    void trackMouseButtons(bool yes);
+
+    void trackMouse(bool yes);
+
     void setWindowTitle(std::string title);
 
     std::string windowTitle() const;
@@ -95,11 +115,11 @@ public:
     virtual void reconfigure(Painter* painter);
 
 protected:
-    virtual void mousePressEvent(MouseEvent* event);
+    virtual void mousePressEvent(MousePressEvent* event);
     
-    virtual void mouseReleaseEvent(MouseEvent* event);
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
     
-    virtual void mouseMoveEvent(MouseEvent* event);
+    virtual void mouseMoveEvent(MouseMoveEvent* event);
     
     virtual void keyPressEvent(KeyEvent* event);
     

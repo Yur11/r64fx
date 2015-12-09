@@ -1,85 +1,48 @@
 #include "Mouse.hpp"
-#include "shared/read_png.hpp"
-
-#ifdef DEBUG
-#include <assert.h>
-#endif//DEBUG
-
-#include <iostream>
-
-#ifdef USE_SDL2
-#include <SDL2/SDL_surface.h>
-#endif//USE_SDL2
-
-using namespace std;
+#include "MouseButtonCodes.hpp"
 
 namespace r64fx{
 
-extern string data_prefix;
-    
-#ifdef USE_SDL2
-
-SDL_Cursor* Mouse::smile_cursor;
-
-SDL_Cursor* create_cursor_from_png(string file_name)
-{
-    auto file = fopen(file_name.c_str(), "rb");
-    if(!file)
-    {
-        cerr << "Failed to read " << file_name << "\n";
-        return nullptr;
-    }
-    
-    unsigned char* pixels;
-    int nchannels, w, h;
-    if(!read_png(file, pixels, nchannels, w, h))
-    {
-        cerr << "Failed to read png file: " << file_name << "\n";
-        return nullptr;
-    }
-    
-#ifdef DEBUG
-    assert(nchannels == 4);
-#endif//DEBUG
-    
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(pixels, w, h, nchannels*8, w*nchannels, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
-#ifdef DEBUG
-    assert(surface != nullptr);
-#endif//DEBUG
-    
-    SDL_Cursor* cursor = SDL_CreateColorCursor(surface, w/2, h/2);
-    
-    fclose(file);
-
-    return cursor;
-}
-
-    
-void Mouse::init()
-{
-//     smile_cursor = create_cursor_from_png("textures/alpha_smile.png");
-// #ifdef DEBUG
-//     assert(smile_cursor != nullptr);
-// #endif//DEBUG
-}
-
-
-void Mouse::cleanup()
+MouseButton::MouseButton()
+: m_code(R64FX_MOUSE_BUTTON_NONE)
 {
 
 }
 
 
-void Mouse::useDefaultCursor()
+MouseButton MouseButton::none()
 {
-    auto cursor = SDL_GetDefaultCursor();
-#ifdef DEBUG
-    assert(cursor != nullptr);
-#endif//DEBUG
-    SDL_SetCursor(cursor);
+    return MouseButton(R64FX_MOUSE_BUTTON_NONE);
 }
 
-#endif//USE_SDL2
-    
+
+MouseButton MouseButton::left()
+{
+    return MouseButton(R64FX_MOUSE_BUTTON1);
+}
+
+
+MouseButton MouseButton::middle()
+{
+    return MouseButton(R64FX_MOUSE_BUTTON2);
+}
+
+
+MouseButton MouseButton::right()
+{
+    return MouseButton(R64FX_MOUSE_BUTTON3);
+}
+
+
+MouseButton MouseButton::wheelUp()
+{
+    return MouseButton(R64FX_MOUSE_BUTTON4);
+}
+
+
+MouseButton MouseButton::wheelDown()
+{
+    return MouseButton(R64FX_MOUSE_BUTTON5);
+}
+
 }//namespace r64fx
-

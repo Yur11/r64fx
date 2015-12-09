@@ -1,6 +1,6 @@
 #include "Widget.hpp"
 #include "Window.hpp"
-#include "MouseEvent.hpp"
+#include "Mouse.hpp"
 #include "KeyEvent.hpp"
 #include "ReconfigureEvent.hpp"
 #include "Image.hpp"
@@ -16,6 +16,18 @@ using std::cerr;
 #endif//R64FX_DEBUG
 
 #include "WidgetFlags.hpp"
+
+
+namespace{
+    void set_bits(unsigned long &flags, bool yes, unsigned long mask)
+    {
+        if(yes)
+            flags |= mask;
+        else
+            flags &= ~mask;
+    }
+}//namespace
+
 
 namespace r64fx{
 
@@ -148,7 +160,7 @@ void Widget::show()
     if(!isWindow())
     {
         m_parent.window = Window::newInstance(
-            width(), height(), "", Window::Type::Normal
+            width(), height(), "", Window::Type::GL
         );
         m_parent.window->setWidget(this);
         m_flags |= R64FX_WIDGET_IS_WINDOW;
@@ -230,6 +242,66 @@ bool Widget::isObscuredBottom() const
 bool Widget::isPartiallyObscured() const
 {
     return m_flags & R64FX_WIDGET_IS_OBSCURED;
+}
+
+
+bool Widget::isTrackingMousePress() const
+{
+    return m_flags & R64FX_WIDGET_TRACKS_MOUSE_PRESS;
+}
+
+
+bool Widget::isTrackingMouseRelease() const
+{
+    return m_flags & R64FX_WIDGET_TRACKS_MOUSE_RELEASE;
+}
+
+
+bool Widget::isTrackingMouseMovement() const
+{
+    return m_flags & R64FX_WIDGET_TRACKS_MOUSE_MOVE;
+}
+
+
+bool Widget::isTrackingMouseButtons() const
+{
+    return m_flags & R64FX_WIDGET_TRACKS_MOUSE_BUTTONS;
+}
+
+
+bool Widget::isTrackingMouse() const
+{
+    return m_flags & R64FX_WIDGET_TRACKS_MOUSE;
+}
+
+
+void Widget::trackMousePress(bool yes)
+{
+    set_bits(m_flags, yes, R64FX_WIDGET_TRACKS_MOUSE_PRESS);
+}
+
+
+void Widget::trackMouseRelease(bool yes)
+{
+    set_bits(m_flags, yes, R64FX_WIDGET_TRACKS_MOUSE_RELEASE);
+}
+
+
+void Widget::trackMouseMovement(bool yes)
+{
+    set_bits(m_flags, yes, R64FX_WIDGET_TRACKS_MOUSE_MOVE);
+}
+
+
+void Widget::trackMouseButtons(bool yes)
+{
+    set_bits(m_flags, yes, R64FX_WIDGET_TRACKS_MOUSE_BUTTONS);
+}
+
+
+void Widget::trackMouse(bool yes)
+{
+    set_bits(m_flags, yes, R64FX_WIDGET_TRACKS_MOUSE);
 }
 
 
@@ -321,26 +393,56 @@ void Widget::reconfigure(Painter* painter)
                 child->reconfigure(painter);
                 painter->setOffset(offset);
             }
-        }//for
+        }
     }
 }
 
 
-void Widget::mousePressEvent(MouseEvent* event)
+void Widget::mousePressEvent(MousePressEvent* event)
 {
-
+    for(auto child : m_children)
+    {
+        if(child->isTrackingMousePress() ||
+            (child->isVisible() && child->rect().overlaps(event->position())))
+        {
+            auto position = event->position();
+            event->setPosition(position - child->position());
+            child->mousePressEvent(event);
+            event->setPosition(position);
+        }
+    }
 }
 
 
-void Widget::mouseReleaseEvent(MouseEvent* event)
+void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-
+    for(auto child : m_children)
+    {
+        if(child->isTrackingMouseRelease() ||
+            (child->isVisible() && child->rect().overlaps(event->position())))
+        {
+            auto position = event->position();
+            event->setPosition(position - child->position());
+            child->mouseReleaseEvent(event);
+            event->setPosition(position);
+        }
+    }
 }
 
 
-void Widget::mouseMoveEvent(MouseEvent* event)
+void Widget::mouseMoveEvent(MouseMoveEvent* event)
 {
-
+    for(auto child : m_children)
+    {
+        if(child->isTrackingMouseMovement() ||
+            (child->isVisible() && child->rect().overlaps(event->position())))
+        {
+            auto position = event->position();
+            event->setPosition(position - child->position());
+            child->mouseMoveEvent(event);
+            event->setPosition(position);
+        }
+    }
 }
 
 

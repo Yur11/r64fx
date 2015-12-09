@@ -85,19 +85,19 @@ void Widget_Text::reconfigure(Painter* painter)
 }
 
 
-void Widget_Text::mousePressEvent(MouseEvent* event)
+void Widget_Text::mousePressEvent(MousePressEvent* event)
 {
     Widget::mousePressEvent(event);
 }
 
 
-void Widget_Text::mouseReleaseEvent(MouseEvent* event)
+void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
 {
     Widget::mouseReleaseEvent(event);
 }
 
 
-void Widget_Text::mouseMoveEvent(MouseEvent* event)
+void Widget_Text::mouseMoveEvent(MouseMoveEvent* event)
 {
     Widget::mouseMoveEvent(event);
 }

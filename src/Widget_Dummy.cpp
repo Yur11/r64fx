@@ -1,7 +1,8 @@
 #include "Widget_Dummy.hpp"
 #include "Painter.hpp"
-#include "ReconfigureEvent.hpp"
+#include "Mouse.hpp"
 
+#include <iostream>
 using namespace std;
 
 namespace r64fx{
@@ -38,19 +39,22 @@ void Widget_Dummy::reconfigure(Painter* painter)
 }
 
 
-void Widget_Dummy::mousePressEvent(MouseEvent* event)
+void Widget_Dummy::mousePressEvent(MousePressEvent* event)
 {
+    cout << "press:   " << event->x() << "x" << event->y() << "\n";
+    cout << event->button().code() << "\n";
     Widget::mousePressEvent(event);
 }
 
 
-void Widget_Dummy::mouseReleaseEvent(MouseEvent* event)
+void Widget_Dummy::mouseReleaseEvent(MouseReleaseEvent* event)
 {
+    cout << "release: " << event->x() << "x" << event->y() << "\n";
     Widget::mouseReleaseEvent(event);
 }
 
 
-void Widget_Dummy::mouseMoveEvent(MouseEvent* event)
+void Widget_Dummy::mouseMoveEvent(MouseMoveEvent* event)
 {
     Widget::mouseMoveEvent(event);
 }

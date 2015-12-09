@@ -2,7 +2,7 @@
 #include "Widget.hpp"
 #include "Window.hpp"
 #include "Painter.hpp"
-#include "MouseEvent.hpp"
+#include "Mouse.hpp"
 #include "KeyEvent.hpp"
 #include "ReconfigureEvent.hpp"
 
@@ -17,6 +17,7 @@ namespace r64fx{
 namespace{
     Program* program_singleton_instance = nullptr;
     Window::Events events;
+    MouseButton g_pressed_buttons;
 }
     
 Program::Program(int argc, char* argv[])
@@ -29,21 +30,23 @@ Program::Program(int argc, char* argv[])
 
     program_singleton_instance = this;
 
-    events.mouse_press = [](Window* window, float x, float y, unsigned int buttons)
+    events.mouse_press = [](Window* window, float x, float y, unsigned int button)
     {
-        MouseEvent me(x, y, buttons);
+        g_pressed_buttons |= MouseButton(button);
+        MousePressEvent me(x, y, MouseButton(button));
         program_singleton_instance->mousePressEvent(window, &me);
     };
 
-    events.mouse_release = [](Window* window, float x, float y, unsigned int buttons)
+    events.mouse_release = [](Window* window, float x, float y, unsigned int button)
     {
-        MouseEvent me(x, y, buttons);
+        g_pressed_buttons &= ~MouseButton(button);
+        MouseReleaseEvent me(x, y, MouseButton(button));
         program_singleton_instance->mouseReleaseEvent(window, &me);
     };
 
-    events.mouse_move = [](Window* window, float x, float y, unsigned int buttons)
+    events.mouse_move = [](Window* window, float x, float y)
     {
-        MouseEvent me(x, y, buttons);
+        MouseMoveEvent me(x, y, g_pressed_buttons);
         program_singleton_instance->mouseMoveEvent(window, &me);
     };
 
@@ -112,19 +115,19 @@ void Program::reconfigure(Window* window)
 }
 
 
-void Program::mousePressEvent(Window* window, MouseEvent* event)
+void Program::mousePressEvent(Window* window, MousePressEvent* event)
 {
     window->widget()->mousePressEvent(event);
 }
 
 
-void Program::mouseReleaseEvent(Window* window, MouseEvent* event)
+void Program::mouseReleaseEvent(Window* window, MouseReleaseEvent* event)
 {
     window->widget()->mouseReleaseEvent(event);
 }
 
 
-void Program::mouseMoveEvent(Window* window, MouseEvent* event)
+void Program::mouseMoveEvent(Window* window, MouseMoveEvent* event)
 {
     window->widget()->mouseMoveEvent(event);
 }

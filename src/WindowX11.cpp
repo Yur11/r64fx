@@ -1,5 +1,6 @@
 #include "WindowX11.hpp"
 #include "Image.hpp"
+#include "MouseButtonCodes.hpp"
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -510,6 +511,31 @@ namespace{
         }
         return nullptr;
     }
+
+
+    unsigned int get_event_button(XButtonEvent* event)
+    {
+        switch(event->button)
+        {
+            case Button1:
+                return R64FX_MOUSE_BUTTON1;
+
+            case Button2:
+                return R64FX_MOUSE_BUTTON2;
+
+            case Button3:
+                return R64FX_MOUSE_BUTTON3;
+
+            case Button4:
+                return R64FX_MOUSE_BUTTON4;
+
+            case Button5:
+                return R64FX_MOUSE_BUTTON5;
+
+            default:
+                return R64FX_MOUSE_BUTTON_NONE;
+        }
+    }
 }//namespace
 
 
@@ -686,19 +712,27 @@ void WindowX11::processSomeEvents(Window::Events* events)
 
             case ButtonPress:
             {
-                events->mouse_press(window, xevent.xbutton.x, xevent.xbutton.y, 0);
+                unsigned int button = get_event_button(&xevent.xbutton);
+                if(button != R64FX_MOUSE_BUTTON_NONE)
+                {
+                    events->mouse_press(window, xevent.xbutton.x, xevent.xbutton.y, button);
+                }
                 break;
             }
 
             case ButtonRelease:
             {
-                events->mouse_release(window, xevent.xbutton.x, xevent.xbutton.y, 0);
+                unsigned int button = get_event_button(&xevent.xbutton);
+                if(button != R64FX_MOUSE_BUTTON_NONE)
+                {
+                    events->mouse_release(window, xevent.xbutton.x, xevent.xbutton.y, button);
+                }
                 break;
             }
 
             case MotionNotify:
             {
-                events->mouse_move(window, xevent.xmotion.x, xevent.xmotion.y, 0);
+                events->mouse_move(window, xevent.xmotion.x, xevent.xmotion.y);
                 break;
             }
 

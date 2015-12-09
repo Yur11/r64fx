@@ -82,6 +82,11 @@ public:
     inline T halfHeight() { return mh/2; }
 
     inline Point<T> center() { return { mx + halfWidth(), my + halfHeight() }; }
+
+    inline bool overlaps(Point<int> p) const
+    {
+        return p.x() >= left() && p.x() < right() && p.y() >= top() && p.y() < bottom();
+    }
 };
 
 

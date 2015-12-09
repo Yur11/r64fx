@@ -5,9 +5,10 @@ namespace r64fx{
 
 class Widget;
 class Window;
-class MouseEvent;
+class MousePressEvent;
+class MouseReleaseEvent;
+class MouseMoveEvent;
 class KeyEvent;
-class ReconfigureEvent;
 
 class Program{
     bool m_should_be_running = true;
@@ -27,11 +28,11 @@ public:
 protected:
     virtual void reconfigure(Window* window);
 
-    virtual void mousePressEvent(Window* window, MouseEvent* event);
+    virtual void mousePressEvent(Window* window, MousePressEvent* event);
 
-    virtual void mouseReleaseEvent(Window* window, MouseEvent* event);
+    virtual void mouseReleaseEvent(Window* window, MouseReleaseEvent* event);
 
-    virtual void mouseMoveEvent(Window* window, MouseEvent* event);
+    virtual void mouseMoveEvent(Window* window, MouseMoveEvent* event);
 
     virtual void keyPressEvent(Window* window, KeyEvent* event);
 
