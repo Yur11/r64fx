@@ -23,6 +23,9 @@ Widget_Dummy::~Widget_Dummy()
 
 void Widget_Dummy::reconfigure(Painter* painter)
 {
+    static int i = 0;
+    cout << "Widget_Dummy::reconfigure " << (i++) << "\n";
+
     if(isObscuredLeft() || isObscuredRight())
     {
         painter->fillRect({0, 0, 0}, {{0, 0}, size()});
@@ -41,9 +44,16 @@ void Widget_Dummy::reconfigure(Painter* painter)
 
 void Widget_Dummy::mousePressEvent(MousePressEvent* event)
 {
+    m_Color = {
+        m_Color.green(),
+        m_Color.blue(),
+        m_Color.red()
+    };
+
     cout << "press:   " << event->x() << "x" << event->y() << "\n";
     cout << event->button().code() << "\n";
     Widget::mousePressEvent(event);
+    update();
 }
 
 

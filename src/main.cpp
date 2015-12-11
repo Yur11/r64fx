@@ -62,7 +62,7 @@ public:
         wd2->setPosition({200, 200});
         wd3->setPosition({300, 300});
 
-        auto wwd = new Widget_Dummy({230, 240, 230}, this);
+        auto wwd = new Widget_Dummy({230, 240, 210}, this);
         wwd->setPosition({550, 100});
         wwd->setSize({300, 300});
 
@@ -97,7 +97,6 @@ public:
     {
         painter->fillRect({255, 255, 255}, rect());
         Widget::reconfigure(painter);
-        painter->repaint();
     }
 };
 

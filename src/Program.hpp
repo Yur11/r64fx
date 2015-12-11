@@ -43,6 +43,9 @@ protected:
     virtual void setup();
     
     virtual void cleanup();
+
+private:
+    void performUpdates(Window* window);
 };
     
 }//namespace r64fx

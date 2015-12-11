@@ -4,7 +4,7 @@
 #include "Painter.hpp"
 #include "Mouse.hpp"
 #include "KeyEvent.hpp"
-#include "ReconfigureEvent.hpp"
+#include "WidgetFlags.hpp"
 
 #include <iostream>
 #include <vector>
@@ -86,6 +86,10 @@ int Program::exec()
     while(m_should_be_running)
     {
         Window::processSomeEvents(&events);
+        Window::forEachWindow([](Window* window, void* data){
+            auto p = (Program*) data;
+            p->performUpdates(window);
+        }, this);
         usleep(100);
     }
     
@@ -111,7 +115,7 @@ void Program::reconfigure(Window* window)
 {
     window->painter()->reconfigure();
     window->widget()->setSize({window->width(), window->height()});
-    window->widget()->reconfigure(window->painter());
+    window->widget()->update();
 }
 
 
@@ -160,6 +164,27 @@ void Program::setup()
 void Program::cleanup()
 {
 
+}
+
+
+void Program::performUpdates(Window* window)
+{
+    auto widget = window->widget();
+    if(widget)
+    {
+        if(widget->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+        {
+            if(widget->m_flags & R64FX_WIDGET_WANTS_UPDATE)
+            {
+                widget->reconfigure(window->painter());
+            }
+            else
+            {
+                widget->reconfigureChildren(window->painter());
+            }
+            window->painter()->repaint();
+        }
+    }
 }
 
 }//namespace r64fx

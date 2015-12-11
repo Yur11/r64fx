@@ -74,8 +74,6 @@ public:
 
     bool isWindow() const;
 
-    Image* windowImage() const;
-
     bool isVisible() const;
 
     bool isObscuredLeft() const;
@@ -112,9 +110,9 @@ public:
 
     std::string windowTitle() const;
 
+protected:
     virtual void reconfigure(Painter* painter);
 
-protected:
     virtual void mousePressEvent(MousePressEvent* event);
     
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
@@ -124,6 +122,11 @@ protected:
     virtual void keyPressEvent(KeyEvent* event);
     
     virtual void keyReleaseEvent(KeyEvent* event);
+
+    void update();
+
+private:
+    void reconfigureChildren(Painter* painter);
 };
     
 }//r64fx

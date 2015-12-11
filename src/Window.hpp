@@ -82,6 +82,8 @@ public:
     std::string title() const;
 
     static void processSomeEvents(Window::Events* events);
+
+    static void forEachWindow(void (*fun)(Window* window, void* data), void* data);
 };
 
 };

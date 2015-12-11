@@ -139,4 +139,13 @@ void Window::processSomeEvents(Window::Events* events)
     WindowImpl::processSomeEvents(events);
 }
 
+
+void Window::forEachWindow(void (*fun)(Window* window, void* data), void* data)
+{
+    for(auto window : g_all_windows)
+    {
+        fun(window, data);
+    }
+}
+
 };

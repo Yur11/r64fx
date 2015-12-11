@@ -19,7 +19,7 @@ using std::cerr;
 
 
 namespace{
-    void set_bits(unsigned long &flags, bool yes, unsigned long mask)
+    void set_bits(unsigned long &flags, const bool yes, unsigned long mask)
     {
         if(yes)
             flags |= mask;
@@ -167,6 +167,7 @@ void Widget::show()
     }
     m_parent.window->show();
     m_parent.window->resize(width(), height());
+    update();
 }
 
 
@@ -193,19 +194,6 @@ void Widget::close()
 bool Widget::isWindow() const
 {
     return m_flags & R64FX_WIDGET_IS_WINDOW;
-}
-
-
-Image* Widget::windowImage() const
-{
-    if(isWindow())
-    {
-        return m_parent.window->image();
-    }
-    else
-    {
-        return nullptr;
-    }
 }
 
 
@@ -329,77 +317,13 @@ std::string Widget::windowTitle() const
 
 void Widget::reconfigure(Painter* painter)
 {
-    if(!m_children.isEmpty())
-    {
-        for(auto child : m_children)
-        {
-            unsigned long flags = 0;
-
-            if(child->rect().right()  < 0              ||
-               child->rect().bottom() < 0              ||
-               child->rect().left()   > rect().width() ||
-               child->rect().top()    > rect().height() )
-            {
-                flags &= ~R64FX_WIDGET_IS_VISIBLE;
-            }
-            else
-            {
-                flags |= R64FX_WIDGET_IS_VISIBLE;
-
-                if(child->rect().left() < 0)
-                {
-                    flags |= R64FX_WIDGET_IS_OBSCURED_LEFT;
-                }
-                else
-                {
-                    flags &= ~R64FX_WIDGET_IS_OBSCURED_LEFT;
-                }
-
-                if(child->rect().top() < 0)
-                {
-                    flags |= R64FX_WIDGET_IS_OBSCURED_TOP;
-                }
-                else
-                {
-                    flags &= ~R64FX_WIDGET_IS_OBSCURED_TOP;
-                }
-
-                if(child->rect().right() > rect().width())
-                {
-                    flags |= R64FX_WIDGET_IS_OBSCURED_RIGHT;
-                }
-                else
-                {
-                    flags &= ~R64FX_WIDGET_IS_OBSCURED_RIGHT;
-                }
-
-                if(child->rect().bottom() > rect().height())
-                {
-                    flags |= R64FX_WIDGET_IS_OBSCURED_BOTTOM;
-                }
-                else
-                {
-                    flags &= ~R64FX_WIDGET_IS_OBSCURED_BOTTOM;
-                }
-            }
-
-            child->m_flags =
-                (child->m_flags & ~R64FX_WIDGET_VISIBILITY_MASK) | flags;
-
-            if(child->isVisible())
-            {
-                auto offset = painter->offset();
-                painter->setOffset(offset + child->position());
-                child->reconfigure(painter);
-                painter->setOffset(offset);
-            }
-        }
-    }
+    reconfigureChildren(painter);
 }
 
 
 void Widget::mousePressEvent(MousePressEvent* event)
 {
+    m_flags &= ~R64FX_CHILD_WANTS_UPDATE;
     for(auto child : m_children)
     {
         if(child->isTrackingMousePress() ||
@@ -407,7 +331,12 @@ void Widget::mousePressEvent(MousePressEvent* event)
         {
             auto position = event->position();
             event->setPosition(position - child->position());
+            child->m_flags &= ~R64FX_WIDGET_UPDATE_FLAGS;
             child->mousePressEvent(event);
+            if(child->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+            {
+                m_flags |= R64FX_CHILD_WANTS_UPDATE;
+            }
             event->setPosition(position);
         }
     }
@@ -432,6 +361,7 @@ void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget::mouseMoveEvent(MouseMoveEvent* event)
 {
+
     for(auto child : m_children)
     {
         if(child->isTrackingMouseMovement() ||
@@ -455,6 +385,101 @@ void Widget::keyPressEvent(KeyEvent* event)
 void Widget::keyReleaseEvent(KeyEvent* event)
 {
 
+}
+
+
+void Widget::update()
+{
+    m_flags |= R64FX_WIDGET_WANTS_UPDATE;
+}
+
+
+void Widget::reconfigureChildren(Painter* painter)
+{
+    if(!m_children.isEmpty())
+    {
+        if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
+        {
+            for(auto child : m_children)
+            {
+                unsigned long flags = 0;
+
+                if(child->rect().right()  < 0              ||
+                child->rect().bottom()    < 0              ||
+                child->rect().left()      > rect().width() ||
+                child->rect().top()       > rect().height() )
+                {
+                    flags &= ~R64FX_WIDGET_IS_VISIBLE;
+                }
+                else
+                {
+                    flags |= R64FX_WIDGET_IS_VISIBLE;
+
+                    if(child->rect().left() < 0)
+                    {
+                        flags |= R64FX_WIDGET_IS_OBSCURED_LEFT;
+                    }
+                    else
+                    {
+                        flags &= ~R64FX_WIDGET_IS_OBSCURED_LEFT;
+                    }
+
+                    if(child->rect().top() < 0)
+                    {
+                        flags |= R64FX_WIDGET_IS_OBSCURED_TOP;
+                    }
+                    else
+                    {
+                        flags &= ~R64FX_WIDGET_IS_OBSCURED_TOP;
+                    }
+
+                    if(child->rect().right() > rect().width())
+                    {
+                        flags |= R64FX_WIDGET_IS_OBSCURED_RIGHT;
+                    }
+                    else
+                    {
+                        flags &= ~R64FX_WIDGET_IS_OBSCURED_RIGHT;
+                    }
+
+                    if(child->rect().bottom() > rect().height())
+                    {
+                        flags |= R64FX_WIDGET_IS_OBSCURED_BOTTOM;
+                    }
+                    else
+                    {
+                        flags &= ~R64FX_WIDGET_IS_OBSCURED_BOTTOM;
+                    }
+                }
+
+                child->m_flags =
+                    (child->m_flags & ~R64FX_WIDGET_VISIBILITY_FLAGS) | flags;
+
+                child->update();
+            }//for
+        }//if
+
+        /* Fixme: Should iterate over visible children only! */
+        for(auto child : m_children)
+        {
+            if(child->isVisible() && (child->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
+            {
+                auto offset = painter->offset();
+                painter->setOffset(offset + child->position());
+                if(child->m_flags & R64FX_WIDGET_WANTS_UPDATE)
+                {
+                    child->reconfigure(painter);
+                }
+                else
+                {
+                    child->reconfigureChildren(painter);
+                }
+                painter->setOffset(offset);
+            }
+        }
+    }
+
+    set_bits(m_flags, false, R64FX_WIDGET_UPDATE_FLAGS);
 }
 
 }//namespace r64fx
