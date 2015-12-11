@@ -24,10 +24,10 @@ Widget_Dummy::~Widget_Dummy()
 
 void Widget_Dummy::reconfigure(ReconfContext* ctx)
 {
-    auto painter = ctx->painter();
+    static int i=0;
+    cout << "reconf: " << (i++) << "\n";
 
-    static int i = 0;
-    cout << "Widget_Dummy::reconfigure " << (i++) << "\n";
+    auto painter = ctx->painter();
 
     if(isObscuredLeft() || isObscuredRight())
     {
@@ -51,15 +51,14 @@ void Widget_Dummy::mousePressEvent(MousePressEvent* event)
 
     if(!event->handled)
     {
-        auto p = toRootCoords(event->position());
-        cout << p.x() << ", " << p.y() << "\n";
+        cout << "press:   " << event->position().x() << ", " << event->position().y() << "\n";
 
         event->handled = true;
         m_Color = {
             255, 0, 0
         };
 
-        trackMouseRelease(true);
+        grabMouse();
         update();
     }
 }
@@ -71,15 +70,14 @@ void Widget_Dummy::mouseReleaseEvent(MouseReleaseEvent* event)
 
     if(!event->handled)
     {
-        auto p = toRootCoords(event->position());
-        cout << p.x() << ", " << p.y() << "\n";
+        cout << "release: " << event->position().x() << ", " << event->position().y() << "\n";
 
         event->handled = true;
         m_Color = {
             0, 255, 0
         };
 
-        trackMouseRelease(false);
+        ungrabMouse();
         update();
     }
 }

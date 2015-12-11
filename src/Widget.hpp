@@ -86,25 +86,13 @@ public:
 
     bool isPartiallyObscured() const;
 
-    bool isTrackingMousePress() const;
+    void grabMouse();
 
-    bool isTrackingMouseRelease() const;
+    static void ungrabMouse();
 
-    bool isTrackingMouseMovement() const;
+    static Widget* mouseGrabber();
 
-    bool isTrackingMouseButtons() const;
-
-    bool isTrackingMouse() const;
-
-    void trackMousePress(bool yes = true);
-
-    void trackMouseRelease(bool yes = true);
-
-    void trackMouseMovement(bool yes = true);
-
-    void trackMouseButtons(bool yes = true);
-
-    void trackMouse(bool yes = true);
+    bool isMouseGrabber() const;
 
     void setWindowTitle(std::string title);
 

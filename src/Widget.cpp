@@ -18,6 +18,7 @@ using namespace std;
 
 #include "WidgetFlags.hpp"
 
+namespace r64fx{
 
 namespace{
     void set_bits(unsigned long &flags, const bool yes, unsigned long mask)
@@ -27,10 +28,10 @@ namespace{
         else
             flags &= ~mask;
     }
+
+    Widget* g_mouse_grabber = nullptr;
 }//namespace
 
-
-namespace r64fx{
 
 Widget::Widget(Widget* parent)
 {
@@ -234,63 +235,27 @@ bool Widget::isPartiallyObscured() const
 }
 
 
-bool Widget::isTrackingMousePress() const
+void Widget::grabMouse()
 {
-    return m_flags & R64FX_WIDGET_TRACKS_MOUSE_PRESS;
+    g_mouse_grabber = this;
 }
 
 
-bool Widget::isTrackingMouseRelease() const
+void Widget::ungrabMouse()
 {
-    return m_flags & R64FX_WIDGET_TRACKS_MOUSE_RELEASE;
+    g_mouse_grabber = nullptr;
 }
 
 
-bool Widget::isTrackingMouseMovement() const
+Widget* Widget::mouseGrabber()
 {
-    return m_flags & R64FX_WIDGET_TRACKS_MOUSE_MOVE;
+    return g_mouse_grabber;
 }
 
 
-bool Widget::isTrackingMouseButtons() const
+bool Widget::isMouseGrabber() const
 {
-    return m_flags & R64FX_WIDGET_TRACKS_MOUSE_BUTTONS;
-}
-
-
-bool Widget::isTrackingMouse() const
-{
-    return m_flags & R64FX_WIDGET_TRACKS_MOUSE;
-}
-
-
-void Widget::trackMousePress(bool yes)
-{
-    set_bits(m_flags, yes, R64FX_WIDGET_TRACKS_MOUSE_PRESS);
-}
-
-
-void Widget::trackMouseRelease(bool yes)
-{
-    set_bits(m_flags, yes, R64FX_WIDGET_TRACKS_MOUSE_RELEASE);
-}
-
-
-void Widget::trackMouseMovement(bool yes)
-{
-    set_bits(m_flags, yes, R64FX_WIDGET_TRACKS_MOUSE_MOVE);
-}
-
-
-void Widget::trackMouseButtons(bool yes)
-{
-    set_bits(m_flags, yes, R64FX_WIDGET_TRACKS_MOUSE_BUTTONS);
-}
-
-
-void Widget::trackMouse(bool yes)
-{
-    set_bits(m_flags, yes, R64FX_WIDGET_TRACKS_MOUSE);
+    return this == g_mouse_grabber;
 }
 
 
@@ -372,8 +337,7 @@ void Widget::mousePressEvent(MousePressEvent* event)
     m_flags &= ~R64FX_CHILD_WANTS_UPDATE;
     for(auto child : m_children)
     {
-        if(child->isTrackingMousePress() ||
-            (child->isVisible() && child->rect().overlaps(event->position())))
+        if((child->isVisible() && child->rect().overlaps(event->position())))
         {
             auto position = event->position();
             event->setPosition(position - child->position());
@@ -394,8 +358,7 @@ void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
     m_flags &= ~R64FX_CHILD_WANTS_UPDATE;
     for(auto child : m_children)
     {
-        if(child->isTrackingMouseRelease() ||
-            (child->isVisible() && child->rect().overlaps(event->position())))
+        if((child->isVisible() && child->rect().overlaps(event->position())))
         {
             auto position = event->position();
             event->setPosition(position - child->position());
@@ -416,8 +379,7 @@ void Widget::mouseMoveEvent(MouseMoveEvent* event)
 
     for(auto child : m_children)
     {
-        if(child->isTrackingMouseMovement() ||
-            (child->isVisible() && child->rect().overlaps(event->position())))
+        if((child->isVisible() && child->rect().overlaps(event->position())))
         {
             auto position = event->position();
             event->setPosition(position - child->position());

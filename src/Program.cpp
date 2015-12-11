@@ -122,19 +122,82 @@ void Program::reconfigure(Window* window)
 
 void Program::mousePressEvent(Window* window, MousePressEvent* event)
 {
-    window->widget()->mousePressEvent(event);
+    auto grabber = Widget::mouseGrabber();
+    if(grabber)
+    {
+        event->setPosition(
+            event->position() - grabber->toRootCoords(Point<int>(0, 0))
+        );
+        grabber->mousePressEvent(event);
+
+        if(grabber->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+        {
+            auto widget = grabber->parent();
+            while(widget)
+            {
+                widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
+                widget = widget->parent();
+            }
+        }
+    }
+    else
+    {
+        window->widget()->mousePressEvent(event);
+    }
 }
 
 
 void Program::mouseReleaseEvent(Window* window, MouseReleaseEvent* event)
 {
-    window->widget()->mouseReleaseEvent(event);
+    auto grabber = Widget::mouseGrabber();
+    if(grabber)
+    {
+        event->setPosition(
+            event->position() - grabber->toRootCoords(Point<int>(0, 0))
+        );
+        grabber->mouseReleaseEvent(event);
+
+        if(grabber->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+        {
+            auto widget = grabber->parent();
+            while(widget)
+            {
+                widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
+                widget = widget->parent();
+            }
+        }
+    }
+    else
+    {
+        window->widget()->mouseReleaseEvent(event);
+    }
 }
 
 
 void Program::mouseMoveEvent(Window* window, MouseMoveEvent* event)
 {
-    window->widget()->mouseMoveEvent(event);
+    auto grabber = Widget::mouseGrabber();
+    if(grabber)
+    {
+        event->setPosition(
+            event->position() - grabber->toRootCoords(Point<int>(0, 0))
+        );
+        grabber->mouseMoveEvent(event);
+
+        if(grabber->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+        {
+            auto widget = grabber->parent();
+            while(widget)
+            {
+                widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
+                widget = widget->parent();
+            }
+        }
+    }
+    else
+    {
+        window->widget()->mouseMoveEvent(event);
+    }
 }
 
 
