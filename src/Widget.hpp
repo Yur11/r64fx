@@ -7,13 +7,13 @@
 
 namespace r64fx{
 
+class ReconfContext;
 class MousePressEvent;
 class MouseReleaseEvent;
 class MouseMoveEvent;
 class KeyEvent;
 class Window;
 class Image;
-class Painter;
 
 class Widget : public LinkedList<Widget>::Node{
     friend class Program;
@@ -24,7 +24,7 @@ class Widget : public LinkedList<Widget>::Node{
     } m_parent;
     
     /* Widgets geometry. */
-    Rect<int> m_rect = { 0, 0, 0, 0  };
+    Rect<int> m_rect = { 0, 0, 0, 0 };
 
     /* A linked list of widgets children. */
     LinkedList<Widget> m_children;
@@ -96,22 +96,28 @@ public:
 
     bool isTrackingMouse() const;
 
-    void trackMousePress(bool yes);
+    void trackMousePress(bool yes = true);
 
-    void trackMouseRelease(bool yes);
+    void trackMouseRelease(bool yes = true);
 
-    void trackMouseMovement(bool yes);
+    void trackMouseMovement(bool yes = true);
 
-    void trackMouseButtons(bool yes);
+    void trackMouseButtons(bool yes = true);
 
-    void trackMouse(bool yes);
+    void trackMouse(bool yes = true);
 
     void setWindowTitle(std::string title);
 
     std::string windowTitle() const;
 
+    Window* rootWindow() const;
+
+    Point<int> toRootCoords(Point<int> point) const;
+
+    Rect<int> toRootCoords(Rect<int> rect) const;
+
 protected:
-    virtual void reconfigure(Painter* painter);
+    virtual void reconfigure(ReconfContext* ctx);
 
     virtual void mousePressEvent(MousePressEvent* event);
     
@@ -126,7 +132,8 @@ protected:
     void update();
 
 private:
-    void reconfigureChildren(Painter* painter);
+    void reconfigureChildren(ReconfContext* ctx);
+
 };
     
 }//r64fx

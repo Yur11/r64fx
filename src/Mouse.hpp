@@ -78,6 +78,8 @@ class MouseEvent{
     MouseButton m_button;
 
 public:
+    bool handled = false;
+
     MouseEvent(int x, int y, MouseButton button)
     : m_position{x, y}
     , m_button(button)

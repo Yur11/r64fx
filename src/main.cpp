@@ -7,7 +7,7 @@
 #include "KeyEvent.hpp"
 #include "Keyboard.hpp"
 #include "Mouse.hpp"
-#include "ReconfigureEvent.hpp"
+#include "ReconfContext.hpp"
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
@@ -73,6 +73,10 @@ public:
         auto wwd2 = new Widget_Dummy({0, 255, 255}, wwd);
         wwd2->setPosition({150, 150});
         wwd2->setSize({100, 100});
+
+        auto wwwd = new Widget_Dummy({0, 120, 0}, wwd1);
+        wwwd->setPosition({10, 10});
+        wwwd->setSize({20, 20});
     }
 
     ~MyWidget()
@@ -93,10 +97,11 @@ public:
         }
     }
 
-    virtual void reconfigure(Painter* painter)
+    virtual void reconfigure(ReconfContext* ctx)
     {
+        auto painter = ctx->painter();
         painter->fillRect({255, 255, 255}, rect());
-        Widget::reconfigure(painter);
+        Widget::reconfigure(ctx);
     }
 };
 

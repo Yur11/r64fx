@@ -14,7 +14,7 @@ public:
 
     virtual ~Widget_Dummy();
 
-    virtual void reconfigure(Painter* painter);
+    virtual void reconfigure(ReconfContext* ctx);
 
 protected:
     virtual void mousePressEvent(MousePressEvent* event);

@@ -63,7 +63,7 @@ public:
         Update window surface. Swap buffers. etc.
         Depending on the window type.
      */
-    virtual void repaint() = 0;
+    virtual void repaint(Rect<int>* rects = nullptr, int numrects = 0) = 0;
 
     /** @brief Adjust for the new window configuration.
 

@@ -231,13 +231,17 @@ namespace{
             }
         }
 
-        void repaint()
+        void repaint(Rect<int>* rects, int numrects)
         {
-            XImage* ximage = XCreateImage(
-                g_display, visual, depth, ZPixmap, 0,
-                (char*)image->data(), image->width(), image->height(),
-                32, image->width() * 4
-            );
+            Rect<int> extra_rect = {
+                0, 0, image->width(), image->height()
+            };
+
+            if(!rects)
+            {
+                rects = &extra_rect;
+                numrects = 1;
+            }
 
             static unsigned long int masks[4] = {
                 0xFF,
@@ -246,54 +250,65 @@ namespace{
                 0xFF000000
             };
 
-            struct {
-                unsigned char r = 0, g = 0, b = 0, a = 0;
-            } component_index;
-
-            for(int i=0; i<4; i++)
+            for(int i=0; i<numrects; i++)
             {
-                if(masks[i] == ximage->red_mask)
+                auto rect = rects[i];
+
+                XImage* ximage = XCreateImage(
+                    g_display, visual, depth, ZPixmap, 0,
+                    (char*)image->data(), image->width(), image->height(),
+                    32, image->width() * 4
+                );
+
+                struct {
+                    unsigned char r = 0, g = 0, b = 0, a = 0;
+                } component_index;
+
+                for(int i=0; i<4; i++)
                 {
-                    component_index.r = i;
+                    if(masks[i] == ximage->red_mask)
+                    {
+                        component_index.r = i;
+                    }
+                    else if(masks[i] == ximage->green_mask)
+                    {
+                        component_index.g = i;
+                    }
+                    else if(masks[i] == ximage->blue_mask)
+                    {
+                        component_index.b = i;
+                    }
+                    else
+                    {
+                        component_index.a = i;
+                    }
                 }
-                else if(masks[i] == ximage->green_mask)
+
+                for(int y=0; y<rect.height(); y++)
                 {
-                    component_index.g = i;
+                    for(int x=0; x<rect.width(); x++)
+                    {
+                        auto px = image->pixel(x + rect.x(), y + rect.y());
+                        unsigned char r = px[0];
+                        unsigned char g = px[1];
+                        unsigned char b = px[2];
+                        px[component_index.r] = r;
+                        px[component_index.g] = g;
+                        px[component_index.b] = b;
+                    }
                 }
-                else if(masks[i] == ximage->blue_mask)
-                {
-                    component_index.b = i;
-                }
-                else
-                {
-                    component_index.a = i;
-                }
+
+                XPutImage(
+                    g_display, xwindow, gc, ximage,
+                    0, 0, 0, 0, ximage->width, ximage->height
+                );
+
+                ximage->data = 0; //Lifted this from Qt4 code.
+                                  //Apparently you can do this to avoid buffer deallocation.
+                XDestroyImage(ximage);
+
+                XSync(g_display, False);
             }
-
-            for(int y=0; y<image->height(); y++)
-            {
-                for(int x=0; x<image->width(); x++)
-                {
-                    auto px = image->pixel(x, y);
-                    unsigned char r = px[0];
-                    unsigned char g = px[1];
-                    unsigned char b = px[2];
-                    px[component_index.r] = r;
-                    px[component_index.g] = g;
-                    px[component_index.b] = b;
-                }
-            }
-
-            XPutImage(
-                g_display, xwindow, gc, ximage,
-                0, 0, 0, 0, ximage->width, ximage->height
-            );
-
-            ximage->data = 0; //Lifted this from Qt4 code.
-                              //Apparently you can do this to avoid buffer deallocation.
-            XDestroyImage(ximage);
-
-            XSync(g_display, False);
         }
 
         void processResizeEvent()
@@ -646,12 +661,12 @@ void WindowX11::makeCurrent()
 #endif//R64FX_USE_GL
 
 
-void WindowX11::repaint()
+void WindowX11::repaint(Rect<int>* rects, int numrects)
 {
     if(type() == Window::Type::Normal)
     {
         auto p = (WindowX11PrivateNormal*) m_private;
-        p->repaint();
+        p->repaint(rects, numrects);
     }
 #ifdef R64FX_USE_GL
     else if(type() == Window::Type::GL)

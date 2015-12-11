@@ -2,6 +2,7 @@
 #define R64FX_WINDOW_HPP
 
 #include <string>
+#include "Rect.hpp"
 
 namespace r64fx{
 
@@ -73,7 +74,7 @@ public:
     void makeCurrent();
 #endif//R64FX_USE_GL
 
-    void repaint();
+    void repaint(Rect<int>* rects = nullptr, int numrects = 0);
 
     Image* image() const;
 

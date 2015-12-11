@@ -2,7 +2,8 @@
 #include "Window.hpp"
 #include "Mouse.hpp"
 #include "KeyEvent.hpp"
-#include "ReconfigureEvent.hpp"
+#include "ReconfContext.hpp"
+#include "Painter.hpp"
 #include "Image.hpp"
 #include "Painter.hpp"
 
@@ -12,7 +13,7 @@
 #include <iostream>
 #include <assert.h>
 
-using std::cerr;
+using namespace std;
 #endif//R64FX_DEBUG
 
 #include "WidgetFlags.hpp"
@@ -104,7 +105,7 @@ Widget* Widget::root()
     }
     else
     {
-        return this;
+        return nullptr;
     }
 }
 
@@ -315,9 +316,54 @@ std::string Widget::windowTitle() const
 }
 
 
-void Widget::reconfigure(Painter* painter)
+Window* Widget::rootWindow() const
 {
-    reconfigureChildren(painter);
+    if(isWindow())
+    {
+        return m_parent.window;
+    }
+    else if(m_parent.widget != nullptr)
+    {
+        return m_parent.widget->parentWindow();
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+
+Point<int> Widget::toRootCoords(Point<int> point) const
+{
+    point += position();
+    if(isWindow() || m_parent.widget == nullptr)
+    {
+        return point;
+    }
+    else
+    {
+        return m_parent.widget->toRootCoords(point);
+    }
+}
+
+
+Rect<int> Widget::toRootCoords(Rect<int> rect) const
+{
+    rect += position();
+    if(isWindow() || m_parent.widget == nullptr)
+    {
+        return rect;
+    }
+    else
+    {
+        return m_parent.widget->toRootCoords(rect);
+    }
+}
+
+
+void Widget::reconfigure(ReconfContext* ctx)
+{
+    reconfigureChildren(ctx);
 }
 
 
@@ -345,6 +391,7 @@ void Widget::mousePressEvent(MousePressEvent* event)
 
 void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 {
+    m_flags &= ~R64FX_CHILD_WANTS_UPDATE;
     for(auto child : m_children)
     {
         if(child->isTrackingMouseRelease() ||
@@ -352,7 +399,12 @@ void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
         {
             auto position = event->position();
             event->setPosition(position - child->position());
+            child->m_flags &= ~R64FX_WIDGET_UPDATE_FLAGS;
             child->mouseReleaseEvent(event);
+            if(child->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+            {
+                m_flags |= R64FX_CHILD_WANTS_UPDATE;
+            }
             event->setPosition(position);
         }
     }
@@ -394,20 +446,23 @@ void Widget::update()
 }
 
 
-void Widget::reconfigureChildren(Painter* painter)
+void Widget::reconfigureChildren(ReconfContext* ctx)
 {
+    auto painter = ctx->painter();
+
     if(!m_children.isEmpty())
     {
+        /* Recalculate children visibility. */
         if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
         {
             for(auto child : m_children)
             {
                 unsigned long flags = 0;
 
-                if(child->rect().right()  < 0              ||
-                child->rect().bottom()    < 0              ||
-                child->rect().left()      > rect().width() ||
-                child->rect().top()       > rect().height() )
+                if(child->rect().right()    < 0              ||
+                    child->rect().bottom()  < 0              ||
+                    child->rect().left()    > rect().width() ||
+                    child->rect().top()     > rect().height() )
                 {
                     flags &= ~R64FX_WIDGET_IS_VISIBLE;
                 }
@@ -450,16 +505,19 @@ void Widget::reconfigureChildren(Painter* painter)
                     {
                         flags &= ~R64FX_WIDGET_IS_OBSCURED_BOTTOM;
                     }
-                }
+                }//if
 
                 child->m_flags =
                     (child->m_flags & ~R64FX_WIDGET_VISIBILITY_FLAGS) | flags;
 
-                child->update();
+                /* Set the update flag on the widget.*/
+                if(child->isVisible())
+                {
+                    child->update();
+                }
             }//for
         }//if
 
-        /* Fixme: Should iterate over visible children only! */
         for(auto child : m_children)
         {
             if(child->isVisible() && (child->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
@@ -468,16 +526,22 @@ void Widget::reconfigureChildren(Painter* painter)
                 painter->setOffset(offset + child->position());
                 if(child->m_flags & R64FX_WIDGET_WANTS_UPDATE)
                 {
-                    child->reconfigure(painter);
+                    if(!ctx->obtained_rect)
+                    {
+                        ctx->obtained_rect = true;
+                        ctx->addRect(toRootCoords(child->rect()));
+                    }
+                    child->reconfigure(ctx);
+                    ctx->obtained_rect = false;
                 }
                 else
                 {
-                    child->reconfigureChildren(painter);
+                    child->reconfigureChildren(ctx);
                 }
                 painter->setOffset(offset);
-            }
-        }
-    }
+            }//if
+        }//for
+    }//if
 
     set_bits(m_flags, false, R64FX_WIDGET_UPDATE_FLAGS);
 }

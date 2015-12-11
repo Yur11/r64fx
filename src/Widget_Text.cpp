@@ -1,7 +1,7 @@
 #include "Widget_Text.hpp"
 #include "WidgetFlags.hpp"
+#include "ReconfContext.hpp"
 #include "Painter.hpp"
-#include "ReconfigureEvent.hpp"
 #include <new>
 
 namespace r64fx{
@@ -78,10 +78,11 @@ void Widget_Text::setFont(Font* font)
 }
 
 
-void Widget_Text::reconfigure(Painter* painter)
+void Widget_Text::reconfigure(ReconfContext* ctx)
 {
+    auto painter = ctx->painter();
     painter->fillRect({255, 0, 0}, rect());
-    Widget::reconfigure(painter);
+    Widget::reconfigure(ctx);
 }
 
 

@@ -136,7 +136,7 @@ struct PainterImplNormal : public PainterImpl{
 
     virtual void putImage(Image* img, Point<int> pos);
 
-    virtual void repaint();
+    virtual void repaint(Rect<int>* rects, int numrects);
 
     virtual void reconfigure();
 
@@ -172,9 +172,9 @@ void PainterImplNormal::putImage(Image* img, Point<int> pos)
 }
 
 
-void PainterImplNormal::repaint()
+void PainterImplNormal::repaint(Rect<int>* rects, int numrects)
 {
-    window->repaint();
+    window->repaint(rects, numrects);
 }
 
 
@@ -214,7 +214,7 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void putImage(Image* img, Point<int> pos);
 
-    virtual void repaint();
+    virtual void repaint(Rect<int>* rects, int numrects);
 
     virtual void reconfigure();
 
@@ -305,7 +305,7 @@ void PainterImplGL::putImage(Image* image, Point<int> pos)
 }
 
 
-void PainterImplGL::repaint()
+void PainterImplGL::repaint(Rect<int>* rects, int numrects)
 {
     gl::BindTexture(GL_TEXTURE_2D, base_texture);
     g_Shader_rgba_tex->use();
@@ -319,7 +319,7 @@ void PainterImplGL::repaint()
     gl::BindVertexArray(base_vao);
     gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-    window->repaint();
+    window->repaint(rects, numrects);
     gl::Finish();
 }
 

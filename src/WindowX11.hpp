@@ -31,7 +31,7 @@ public:
     void makeCurrent();
 #endif//R64FX_USE_GL
 
-    void repaint();
+    void repaint(Rect<int>* rects, int numrects);
 
     Image* image() const;
 

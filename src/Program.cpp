@@ -1,6 +1,7 @@
 #include "Program.hpp"
 #include "Widget.hpp"
 #include "Window.hpp"
+#include "ReconfContext.hpp"
 #include "Painter.hpp"
 #include "Mouse.hpp"
 #include "KeyEvent.hpp"
@@ -169,6 +170,8 @@ void Program::cleanup()
 
 void Program::performUpdates(Window* window)
 {
+    ReconfContext ctx(window->painter());
+
     auto widget = window->widget();
     if(widget)
     {
@@ -176,13 +179,24 @@ void Program::performUpdates(Window* window)
         {
             if(widget->m_flags & R64FX_WIDGET_WANTS_UPDATE)
             {
-                widget->reconfigure(window->painter());
+                widget->reconfigure(&ctx);
+                window->painter()->repaint();
             }
             else
             {
-                widget->reconfigureChildren(window->painter());
+                widget->reconfigureChildren(&ctx);
+                if(!ctx.rects.empty())
+                {
+                    for(auto &rect : ctx.rects)
+                    {
+                        rect = intersection(rect, {0, 0, window->width(), window->height()});
+                    }
+
+                    window->painter()->repaint(
+                        ctx.rects.data(), ctx.rects.size()
+                    );
+                }
             }
-            window->painter()->repaint();
         }
     }
 }

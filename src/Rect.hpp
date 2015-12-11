@@ -87,12 +87,19 @@ public:
     {
         return p.x() >= left() && p.x() < right() && p.y() >= top() && p.y() < bottom();
     }
+
+    inline Rect<T> &operator+=(const Point<T> &other)
+    {
+        mx += other.x();
+        my += other.y();
+        return *this;
+    }
 };
 
 
 template<typename T> Rect<T> operator+(Rect<T> rect, Point<T> offset)
 {
-    return { rect.position() + offset, rect.size() };
+    return rect += offset;
 }
 
 

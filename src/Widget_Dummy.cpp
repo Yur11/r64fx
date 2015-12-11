@@ -1,4 +1,5 @@
 #include "Widget_Dummy.hpp"
+#include "ReconfContext.hpp"
 #include "Painter.hpp"
 #include "Mouse.hpp"
 
@@ -21,8 +22,10 @@ Widget_Dummy::~Widget_Dummy()
 }
 
 
-void Widget_Dummy::reconfigure(Painter* painter)
+void Widget_Dummy::reconfigure(ReconfContext* ctx)
 {
+    auto painter = ctx->painter();
+
     static int i = 0;
     cout << "Widget_Dummy::reconfigure " << (i++) << "\n";
 
@@ -38,29 +41,47 @@ void Widget_Dummy::reconfigure(Painter* painter)
     {
         painter->fillRect(m_Color, {{0, 0}, size()});
     }
-    Widget::reconfigure(painter);
+    Widget::reconfigure(ctx);
 }
 
 
 void Widget_Dummy::mousePressEvent(MousePressEvent* event)
 {
-    m_Color = {
-        m_Color.green(),
-        m_Color.blue(),
-        m_Color.red()
-    };
-
-    cout << "press:   " << event->x() << "x" << event->y() << "\n";
-    cout << event->button().code() << "\n";
     Widget::mousePressEvent(event);
-    update();
+
+    if(!event->handled)
+    {
+        auto p = toRootCoords(event->position());
+        cout << p.x() << ", " << p.y() << "\n";
+
+        event->handled = true;
+        m_Color = {
+            255, 0, 0
+        };
+
+        trackMouseRelease(true);
+        update();
+    }
 }
 
 
 void Widget_Dummy::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    cout << "release: " << event->x() << "x" << event->y() << "\n";
     Widget::mouseReleaseEvent(event);
+
+    if(!event->handled)
+    {
+        auto p = toRootCoords(event->position());
+        cout << p.x() << ", " << p.y() << "\n";
+
+        event->handled = true;
+        m_Color = {
+            0, 255, 0
+        };
+
+        trackMouseRelease(false);
+        update();
+    }
 }
 
 

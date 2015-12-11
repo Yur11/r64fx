@@ -106,10 +106,10 @@ void Window::makeCurrent()
 #endif//R64FX_USE_GL
 
 
-void Window::repaint()
+void Window::repaint(Rect<int>* rects, int numrects)
 {
     auto impl = (WindowImpl*) this;
-    impl->repaint();
+    impl->repaint(rects, numrects);
 }
 
 
