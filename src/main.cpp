@@ -74,9 +74,21 @@ public:
         wwd2->setPosition({150, 150});
         wwd2->setSize({100, 100});
 
-        auto wwwd = new Widget_Dummy({0, 120, 0}, wwd1);
-        wwwd->setPosition({10, 10});
-        wwwd->setSize({20, 20});
+        auto wwd3 = new Widget_Dummy({255, 0, 0}, wwd);
+        wwd3->setPosition({170, 30});
+        wwd3->setSize({80, 80});
+
+        auto wwwd1 = new Widget_Dummy({0, 120, 0}, wwd1);
+        wwwd1->setPosition({10, 10});
+        wwwd1->setSize({20, 20});
+
+        auto wwwd2 = new Widget_Dummy({0, 120, 0}, wwd1);
+        wwwd2->setPosition({30, 30});
+        wwwd2->setSize({20, 20});
+
+        auto wwwd3 = new Widget_Dummy({0, 120, 0}, wwd2);
+        wwwd3->setPosition({10, 10});
+        wwwd3->setSize({20, 20});
     }
 
     ~MyWidget()

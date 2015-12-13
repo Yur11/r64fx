@@ -24,24 +24,22 @@ Widget_Dummy::~Widget_Dummy()
 
 void Widget_Dummy::reconfigure(ReconfContext* ctx)
 {
-    static int i=0;
-    cout << "reconf: " << (i++) << "\n";
+    cout << "reconfigure: " << this << "\n";
 
     auto painter = ctx->painter();
 
-    if(isObscuredLeft() || isObscuredRight())
+    if(on)
     {
         painter->fillRect({0, 0, 0}, {{0, 0}, size()});
-    }
-    else if(isObscuredTop() || isObscuredBottom())
-    {
-        painter->fillRect({127, 127, 127}, {{0, 0}, size()});
     }
     else
     {
         painter->fillRect(m_Color, {{0, 0}, size()});
     }
+
     Widget::reconfigure(ctx);
+
+    painter->fillRect({0, 0, 0}, {m_Point, {10, 10}});
 }
 
 
@@ -51,13 +49,9 @@ void Widget_Dummy::mousePressEvent(MousePressEvent* event)
 
     if(!event->handled)
     {
-        cout << "press:   " << event->position().x() << ", " << event->position().y() << "\n";
-
+        on = true;
         event->handled = true;
-        m_Color = {
-            255, 0, 0
-        };
-
+        m_Point = event->position();
         grabMouse();
         update();
     }
@@ -70,13 +64,8 @@ void Widget_Dummy::mouseReleaseEvent(MouseReleaseEvent* event)
 
     if(!event->handled)
     {
-        cout << "release: " << event->position().x() << ", " << event->position().y() << "\n";
-
+        on = false;
         event->handled = true;
-        m_Color = {
-            0, 255, 0
-        };
-
         ungrabMouse();
         update();
     }
@@ -86,6 +75,13 @@ void Widget_Dummy::mouseReleaseEvent(MouseReleaseEvent* event)
 void Widget_Dummy::mouseMoveEvent(MouseMoveEvent* event)
 {
     Widget::mouseMoveEvent(event);
+/*
+    if(!event->handled)
+    {
+        event->handled = true;
+        m_Point = event->position();
+        update();
+    }*/
 }
 
 

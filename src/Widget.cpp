@@ -162,7 +162,7 @@ void Widget::show()
     if(!isWindow())
     {
         m_parent.window = Window::newInstance(
-            width(), height(), "", Window::Type::GL
+            width(), height(), "", Window::Type::Normal
         );
         m_parent.window->setWidget(this);
         m_flags |= R64FX_WIDGET_IS_WINDOW;
@@ -376,14 +376,19 @@ void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget::mouseMoveEvent(MouseMoveEvent* event)
 {
-
+    m_flags &= ~R64FX_CHILD_WANTS_UPDATE;
     for(auto child : m_children)
     {
         if((child->isVisible() && child->rect().overlaps(event->position())))
         {
             auto position = event->position();
             event->setPosition(position - child->position());
+            child->m_flags &= ~R64FX_WIDGET_UPDATE_FLAGS;
             child->mouseMoveEvent(event);
+            if(child->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+            {
+                m_flags |= R64FX_CHILD_WANTS_UPDATE;
+            }
             event->setPosition(position);
         }
     }
@@ -411,6 +416,13 @@ void Widget::update()
 void Widget::reconfigureChildren(ReconfContext* ctx)
 {
     auto painter = ctx->painter();
+
+    bool got_rect = ctx->got_rect;
+    if((m_flags & R64FX_WIDGET_WANTS_UPDATE) && !ctx->got_rect)
+    {
+        ctx->addRect(toRootCoords({0, 0, width(), height()}));
+        ctx->got_rect = true;
+    }
 
     if(!m_children.isEmpty())
     {
@@ -477,8 +489,8 @@ void Widget::reconfigureChildren(ReconfContext* ctx)
                 {
                     child->update();
                 }
-            }//for
-        }//if
+            }//for every child
+        }//if wants update
 
         for(auto child : m_children)
         {
@@ -488,23 +500,18 @@ void Widget::reconfigureChildren(ReconfContext* ctx)
                 painter->setOffset(offset + child->position());
                 if(child->m_flags & R64FX_WIDGET_WANTS_UPDATE)
                 {
-                    if(!ctx->obtained_rect)
-                    {
-                        ctx->obtained_rect = true;
-                        ctx->addRect(toRootCoords(child->rect()));
-                    }
                     child->reconfigure(ctx);
-                    ctx->obtained_rect = false;
                 }
-                else
+                else//Child wants update
                 {
                     child->reconfigureChildren(ctx);
                 }
                 painter->setOffset(offset);
             }//if
-        }//for
-    }//if
+        }//for every child
+    }//if has children
 
+    ctx->got_rect = got_rect;
     set_bits(m_flags, false, R64FX_WIDGET_UPDATE_FLAGS);
 }
 

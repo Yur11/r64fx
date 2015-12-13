@@ -13,11 +13,13 @@ class ReconfContext{
     friend class Widget;
     Painter*                m_painter = nullptr;
     std::vector<Rect<int>>  rects;
-    bool                    obtained_rect = false;
+    bool                    got_rect = false;
 
     ReconfContext(Painter* painter) : m_painter(painter) {}
 
     inline void addRect(Rect<int> rect) { rects.push_back(rect); };
+
+    inline void clearRects() { rects.clear(); }
 
 public:
     inline Painter* painter() const { return m_painter; }

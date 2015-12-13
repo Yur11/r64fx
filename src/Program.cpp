@@ -250,6 +250,7 @@ void Program::performUpdates(Window* window)
                 widget->reconfigureChildren(&ctx);
                 if(!ctx.rects.empty())
                 {
+                    cout << "rects " << ctx.rects.size() << "\n";
                     for(auto &rect : ctx.rects)
                     {
                         rect = intersection(rect, {0, 0, window->width(), window->height()});
@@ -260,6 +261,7 @@ void Program::performUpdates(Window* window)
                     );
                 }
             }
+            cout << "\n";
         }
     }
 }

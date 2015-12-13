@@ -8,6 +8,8 @@ namespace r64fx{
 
 class Widget_Dummy : public Widget{
     Color<unsigned char> m_Color;
+    Point<int> m_Point = {0, 0};
+    bool on = false;
 
 public:
     Widget_Dummy(Color<unsigned char> color, Widget* parent = nullptr);
