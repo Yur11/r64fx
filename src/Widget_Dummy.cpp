@@ -28,7 +28,11 @@ void Widget_Dummy::reconfigure(ReconfContext* ctx)
 
     auto painter = ctx->painter();
 
-    if(on)
+    if(isPartiallyObscured())
+    {
+        painter->fillRect({128, 128, 128}, {{0, 0}, size()});
+    }
+    else if(on)
     {
         painter->fillRect({0, 0, 0}, {{0, 0}, size()});
     }
@@ -49,11 +53,14 @@ void Widget_Dummy::mousePressEvent(MousePressEvent* event)
 
     if(!event->handled)
     {
-        on = true;
-        event->handled = true;
-        m_Point = event->position();
-        grabMouse();
-        update();
+        if(event->button() == MouseButton::Left())
+        {
+            on = true;
+            event->handled = true;
+            m_Point = event->position();
+            grabMouse();
+            update();
+        }
     }
 }
 
@@ -64,10 +71,13 @@ void Widget_Dummy::mouseReleaseEvent(MouseReleaseEvent* event)
 
     if(!event->handled)
     {
-        on = false;
-        event->handled = true;
-        ungrabMouse();
-        update();
+        if(event->button() == MouseButton::Left())
+        {
+            on = false;
+            event->handled = true;
+            ungrabMouse();
+            update();
+        }
     }
 }
 

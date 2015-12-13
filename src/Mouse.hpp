@@ -27,18 +27,30 @@ public:
         return *this;
     }
 
-    static MouseButton none();
+    static const MouseButton None();
 
-    static MouseButton left();
+    static const MouseButton Left();
 
-    static MouseButton middle();
+    static const MouseButton Middle();
 
-    static MouseButton right();
+    static const MouseButton Right();
 
-    static MouseButton wheelUp();
+    static const MouseButton WheelUp();
 
-    static MouseButton wheelDown();
+    static const MouseButton WheelDown();
 };
+
+
+inline bool operator==(MouseButton a, MouseButton b)
+{
+    return a.code() == b.code();
+}
+
+
+inline bool operator!=(MouseButton a, MouseButton b)
+{
+    return !operator==(a, b);
+}
 
 
 inline MouseButton operator|(MouseButton a, MouseButton b)

@@ -10,37 +10,37 @@ MouseButton::MouseButton()
 }
 
 
-MouseButton MouseButton::none()
+MouseButton const MouseButton::None()
 {
     return MouseButton(R64FX_MOUSE_BUTTON_NONE);
 }
 
 
-MouseButton MouseButton::left()
+MouseButton const MouseButton::Left()
 {
     return MouseButton(R64FX_MOUSE_BUTTON1);
 }
 
 
-MouseButton MouseButton::middle()
+MouseButton const MouseButton::Middle()
 {
     return MouseButton(R64FX_MOUSE_BUTTON2);
 }
 
 
-MouseButton MouseButton::right()
+MouseButton const MouseButton::Right()
 {
     return MouseButton(R64FX_MOUSE_BUTTON3);
 }
 
 
-MouseButton MouseButton::wheelUp()
+MouseButton const MouseButton::WheelUp()
 {
     return MouseButton(R64FX_MOUSE_BUTTON4);
 }
 
 
-MouseButton MouseButton::wheelDown()
+MouseButton const MouseButton::WheelDown()
 {
     return MouseButton(R64FX_MOUSE_BUTTON5);
 }
