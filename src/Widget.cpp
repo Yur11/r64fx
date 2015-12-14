@@ -6,6 +6,7 @@
 #include "Painter.hpp"
 #include "Image.hpp"
 #include "Painter.hpp"
+#include "Program.hpp"
 
 #include <map>
 
@@ -304,19 +305,13 @@ void Widget::reconfigure(ReconfContext* ctx)
 
 void Widget::mousePressEvent(MousePressEvent* event)
 {
-    m_flags &= ~R64FX_CHILD_WANTS_UPDATE;
     for(auto child : m_children)
     {
         if((child->isVisible() && child->rect().overlaps(event->position())))
         {
             auto position = event->position();
             event->setPosition(position - child->position());
-            child->m_flags &= ~R64FX_WIDGET_UPDATE_FLAGS;
             child->mousePressEvent(event);
-            if(child->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
-            {
-                m_flags |= R64FX_CHILD_WANTS_UPDATE;
-            }
             event->setPosition(position);
         }
     }
@@ -325,19 +320,13 @@ void Widget::mousePressEvent(MousePressEvent* event)
 
 void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    m_flags &= ~R64FX_CHILD_WANTS_UPDATE;
     for(auto child : m_children)
     {
         if((child->isVisible() && child->rect().overlaps(event->position())))
         {
             auto position = event->position();
             event->setPosition(position - child->position());
-            child->m_flags &= ~R64FX_WIDGET_UPDATE_FLAGS;
             child->mouseReleaseEvent(event);
-            if(child->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
-            {
-                m_flags |= R64FX_CHILD_WANTS_UPDATE;
-            }
             event->setPosition(position);
         }
     }
@@ -346,19 +335,13 @@ void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget::mouseMoveEvent(MouseMoveEvent* event)
 {
-    m_flags &= ~R64FX_CHILD_WANTS_UPDATE;
     for(auto child : m_children)
     {
         if((child->isVisible() && child->rect().overlaps(event->position())))
         {
             auto position = event->position();
             event->setPosition(position - child->position());
-            child->m_flags &= ~R64FX_WIDGET_UPDATE_FLAGS;
             child->mouseMoveEvent(event);
-            if(child->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
-            {
-                m_flags |= R64FX_CHILD_WANTS_UPDATE;
-            }
             event->setPosition(position);
         }
     }
@@ -380,6 +363,7 @@ void Widget::keyReleaseEvent(KeyEvent* event)
 void Widget::update()
 {
     m_flags |= R64FX_WIDGET_WANTS_UPDATE;
+    Program::instance()->addWidgetToBeUpdated(this);
 }
 
 
@@ -401,7 +385,7 @@ void Widget::reconfigureChildren(ReconfContext* ctx)
         {
             if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
             {
-                auto visible_rect = intersection(child->rect(), ctx->m_visible_rect);
+                auto visible_rect = intersection(child->rect(), ctx->visibleRect());
                 if(visible_rect.width() > 0 && visible_rect.height() > 0)
                 {
                     child->m_flags |= R64FX_WIDGET_IS_VISIBLE;

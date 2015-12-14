@@ -111,7 +111,6 @@ protected:
 
 private:
     void reconfigureChildren(ReconfContext* ctx);
-
 };
     
 }//r64fx

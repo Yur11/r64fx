@@ -8,19 +8,26 @@ namespace r64fx{
     
 class Painter;
 
+/** @brief Structure passed down the Widget::reconfigure() recursive invocation. */
 class ReconfContext{
     friend class Program;
     friend class Widget;
-    Painter*                m_painter = nullptr;
+    Painter*                m_painter       = nullptr;
     Rect<int>               m_visible_rect;
-    std::vector<Rect<int>>  rects;
-    bool                    got_rect = false;
+    Rect<int>*              rects           = nullptr;
+    int                     max_rects       = 0;
+    int                     num_rects       = 0;
+    bool                    got_rect        = false;
 
-    ReconfContext(Painter* painter) : m_painter(painter) {}
+    ReconfContext(int max_rects);
 
-    inline void addRect(Rect<int> rect) { rects.push_back(rect); };
+    inline void setPainter(Painter* painter) { m_painter = painter; }
 
-    inline void clearRects() { rects.clear(); }
+    inline void setVisibleRect(const Rect<int> &rect) { m_visible_rect = rect; }
+
+    void addRect(const Rect<int> &rect);
+
+    void clearRects();
 
 public:
     inline Painter* painter() const { return m_painter; }
