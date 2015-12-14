@@ -240,6 +240,8 @@ void Program::performUpdates(Window* window)
     {
         if(widget->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
         {
+            ctx.m_visible_rect = {0, 0, widget->width(), widget->height()};
+
             if(widget->m_flags & R64FX_WIDGET_WANTS_UPDATE)
             {
                 widget->reconfigure(&ctx);
@@ -250,7 +252,6 @@ void Program::performUpdates(Window* window)
                 widget->reconfigureChildren(&ctx);
                 if(!ctx.rects.empty())
                 {
-                    cout << "rects " << ctx.rects.size() << "\n";
                     for(auto &rect : ctx.rects)
                     {
                         rect = intersection(rect, {0, 0, window->width(), window->height()});
@@ -261,7 +262,6 @@ void Program::performUpdates(Window* window)
                     );
                 }
             }
-            cout << "\n";
         }
     }
 }

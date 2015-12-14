@@ -205,36 +205,6 @@ bool Widget::isVisible() const
 }
 
 
-bool Widget::isObscuredLeft() const
-{
-    return m_flags & R64FX_WIDGET_IS_OBSCURED_LEFT;
-}
-
-
-bool Widget::isObscuredTop() const
-{
-    return m_flags & R64FX_WIDGET_IS_OBSCURED_TOP;
-}
-
-
-bool Widget::isObscuredRight() const
-{
-    return m_flags & R64FX_WIDGET_IS_OBSCURED_RIGHT;
-}
-
-
-bool Widget::isObscuredBottom() const
-{
-    return m_flags & R64FX_WIDGET_IS_OBSCURED_BOTTOM;
-}
-
-
-bool Widget::isPartiallyObscured() const
-{
-    return m_flags & R64FX_WIDGET_IS_OBSCURED;
-}
-
-
 void Widget::grabMouse()
 {
     g_mouse_grabber = this;
@@ -416,102 +386,55 @@ void Widget::update()
 void Widget::reconfigureChildren(ReconfContext* ctx)
 {
     auto painter = ctx->painter();
-
+    auto parent_visible_rect = ctx->m_visible_rect;
     bool got_rect = ctx->got_rect;
-    if((m_flags & R64FX_WIDGET_WANTS_UPDATE) && !ctx->got_rect)
-    {
-        ctx->addRect(toRootCoords({0, 0, width(), height()}));
-        ctx->got_rect = true;
-    }
 
-    if(!m_children.isEmpty())
+    if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
     {
-        /* Recalculate children visibility. */
-        if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
+        if(!ctx->got_rect)
         {
-            for(auto child : m_children)
-            {
-                unsigned long flags = 0;
-
-                if(child->rect().right()    < 0              ||
-                    child->rect().bottom()  < 0              ||
-                    child->rect().left()    > rect().width() ||
-                    child->rect().top()     > rect().height() )
-                {
-                    flags &= ~R64FX_WIDGET_IS_VISIBLE;
-                }
-                else
-                {
-                    flags |= R64FX_WIDGET_IS_VISIBLE;
-
-                    if(child->rect().left() < 0)
-                    {
-                        flags |= R64FX_WIDGET_IS_OBSCURED_LEFT;
-                    }
-                    else
-                    {
-                        flags &= ~R64FX_WIDGET_IS_OBSCURED_LEFT;
-                    }
-
-                    if(child->rect().top() < 0)
-                    {
-                        flags |= R64FX_WIDGET_IS_OBSCURED_TOP;
-                    }
-                    else
-                    {
-                        flags &= ~R64FX_WIDGET_IS_OBSCURED_TOP;
-                    }
-
-                    if(child->rect().right() > rect().width())
-                    {
-                        flags |= R64FX_WIDGET_IS_OBSCURED_RIGHT;
-                    }
-                    else
-                    {
-                        flags &= ~R64FX_WIDGET_IS_OBSCURED_RIGHT;
-                    }
-
-                    if(child->rect().bottom() > rect().height())
-                    {
-                        flags |= R64FX_WIDGET_IS_OBSCURED_BOTTOM;
-                    }
-                    else
-                    {
-                        flags &= ~R64FX_WIDGET_IS_OBSCURED_BOTTOM;
-                    }
-                }//if
-
-                child->m_flags =
-                    (child->m_flags & ~R64FX_WIDGET_VISIBILITY_FLAGS) | flags;
-
-                /* Set the update flag on the widget.*/
-                if(child->isVisible())
-                {
-                    child->update();
-                }
-            }//for every child
-        }//if wants update
+            ctx->addRect(toRootCoords({0, 0, width(), height()}));
+            ctx->got_rect = true;
+        }
 
         for(auto child : m_children)
         {
-            if(child->isVisible() && (child->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
+            if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
             {
-                auto offset = painter->offset();
-                painter->setOffset(offset + child->position());
-                if(child->m_flags & R64FX_WIDGET_WANTS_UPDATE)
+                auto visible_rect = intersection(child->rect(), ctx->m_visible_rect);
+                if(visible_rect.width() > 0 && visible_rect.height() > 0)
                 {
-                    child->reconfigure(ctx);
+                    child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
+                    child->m_flags |= R64FX_WIDGET_WANTS_UPDATE;
                 }
-                else//Child wants update
+                else
                 {
-                    child->reconfigureChildren(ctx);
+                    child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
                 }
-                painter->setOffset(offset);
-            }//if
-        }//for every child
-    }//if has children
+            }
+        }
+    }
+
+    for(auto child : m_children)
+    {
+        if(child->isVisible() && (child->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
+        {
+            auto offset = painter->offset();
+            painter->setOffset(offset + child->position());
+            if(child->m_flags & R64FX_WIDGET_WANTS_UPDATE)
+            {
+                child->reconfigure(ctx);
+            }
+            else
+            {
+                child->reconfigureChildren(ctx);
+            }
+            painter->setOffset(offset);
+        }
+    }
 
     ctx->got_rect = got_rect;
+    ctx->m_visible_rect = parent_visible_rect;
     set_bits(m_flags, false, R64FX_WIDGET_UPDATE_FLAGS);
 }
 

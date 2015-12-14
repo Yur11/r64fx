@@ -24,15 +24,9 @@ Widget_Dummy::~Widget_Dummy()
 
 void Widget_Dummy::reconfigure(ReconfContext* ctx)
 {
-    cout << "reconfigure: " << this << "\n";
-
     auto painter = ctx->painter();
 
-    if(isPartiallyObscured())
-    {
-        painter->fillRect({128, 128, 128}, {{0, 0}, size()});
-    }
-    else if(on)
+    if(on)
     {
         painter->fillRect({0, 0, 0}, {{0, 0}, size()});
     }

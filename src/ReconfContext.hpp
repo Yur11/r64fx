@@ -12,6 +12,7 @@ class ReconfContext{
     friend class Program;
     friend class Widget;
     Painter*                m_painter = nullptr;
+    Rect<int>               m_visible_rect;
     std::vector<Rect<int>>  rects;
     bool                    got_rect = false;
 
@@ -23,6 +24,8 @@ class ReconfContext{
 
 public:
     inline Painter* painter() const { return m_painter; }
+
+    inline Rect<int> visibleRect() const { return m_visible_rect; }
 };
 
 }//namespace r64fx

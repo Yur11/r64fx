@@ -76,16 +76,6 @@ public:
 
     bool isVisible() const;
 
-    bool isObscuredLeft() const;
-
-    bool isObscuredTop() const;
-
-    bool isObscuredRight() const;
-
-    bool isObscuredBottom() const;
-
-    bool isPartiallyObscured() const;
-
     void grabMouse();
 
     static void ungrabMouse();
