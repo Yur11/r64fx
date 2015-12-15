@@ -140,7 +140,7 @@ template<typename T> Rect<T> intersection(Rect<T> a, Rect<T> b)
 
 template<typename StreamT, typename T> StreamT &operator<<(StreamT &stream, Rect<T> rect)
 {
-    stream << rect.x() << ", " << rect.y() << ", " << ", " << rect.width() << ", " << rect.height();
+    stream << rect.x() << ", " << rect.y() << ", " << rect.width() << ", " << rect.height();
     return stream;
 }
     
