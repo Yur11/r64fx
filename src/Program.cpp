@@ -255,6 +255,7 @@ void Program::performUpdates(Window* window)
                     );
                 }
             }
+            cout << "\n";
         }
     }
 }

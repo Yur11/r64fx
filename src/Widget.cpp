@@ -370,7 +370,7 @@ void Widget::update()
 void Widget::reconfigureChildren(ReconfContext* ctx)
 {
     auto painter = ctx->painter();
-    auto parent_visible_rect = ctx->m_visible_rect;
+    auto parent_visible_rect = ctx->visibleRect();
     bool got_rect = ctx->got_rect;
 
     if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
@@ -385,7 +385,7 @@ void Widget::reconfigureChildren(ReconfContext* ctx)
         {
             if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
             {
-                auto visible_rect = intersection(child->rect(), ctx->visibleRect());
+                auto visible_rect = intersection(child->rect(), parent_visible_rect);
                 if(visible_rect.width() > 0 && visible_rect.height() > 0)
                 {
                     child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
@@ -405,6 +405,8 @@ void Widget::reconfigureChildren(ReconfContext* ctx)
         {
             auto offset = painter->offset();
             painter->setOffset(offset + child->position());
+            auto visible_rect = intersection(child->rect(), parent_visible_rect);
+            ctx->setVisibleRect({0, 0, visible_rect.width(), visible_rect.height()});
             if(child->m_flags & R64FX_WIDGET_WANTS_UPDATE)
             {
                 child->reconfigure(ctx);

@@ -25,10 +25,16 @@ Widget_Dummy::~Widget_Dummy()
 void Widget_Dummy::reconfigure(ReconfContext* ctx)
 {
     auto painter = ctx->painter();
+    Rect<int> rect = {0, 0, width(), height()};
+    cout << "reconf: " << rect << " => " << ctx->visibleRect() << "\n";
 
-    if(on)
+    if(rect != ctx->visibleRect())
     {
-        painter->fillRect({0, 0, 0}, {{0, 0}, size()});
+        painter->fillRect({63, 63, 63}, {{0, 0}, size()});
+    }
+    else if(on)
+    {
+        painter->fillRect({127, 127, 127}, {{0, 0}, size()});
     }
     else
     {
