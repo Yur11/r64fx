@@ -174,6 +174,10 @@ void PainterImplNormal::putImage(Image* img, Point<int> pos)
 
 void PainterImplNormal::repaint(Rect<int>* rects, int numrects)
 {
+    for(int i=0; i<numrects; i++)
+    {
+        rects[i] = clip(rects[i]);
+    }
     window->repaint(rects, numrects);
 }
 

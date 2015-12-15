@@ -26,7 +26,6 @@ void Widget_Dummy::reconfigure(ReconfContext* ctx)
 {
     auto painter = ctx->painter();
     Rect<int> rect = {0, 0, width(), height()};
-    cout << "reconf: " << rect << " => " << ctx->visibleRect() << "\n";
 
     if(rect != ctx->visibleRect())
     {
