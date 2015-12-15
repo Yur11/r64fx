@@ -47,10 +47,7 @@ protected:
 
 private:
     void performUpdates(Window* window);
-
-    void distributeUpdateFlags();
-
-    void addWidgetToBeUpdated(Widget* widget);
+    
 };
     
 }//namespace r64fx

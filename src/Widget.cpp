@@ -4,11 +4,7 @@
 #include "KeyEvent.hpp"
 #include "ReconfContext.hpp"
 #include "Painter.hpp"
-#include "Image.hpp"
-#include "Painter.hpp"
 #include "Program.hpp"
-
-#include <map>
 
 #ifdef R64FX_DEBUG
 #include <iostream>
@@ -194,6 +190,18 @@ void Widget::close()
 }
 
 
+void Widget::update()
+{
+    m_flags |= R64FX_WIDGET_WANTS_UPDATE;
+    auto widget = this;
+    while(widget && !(widget->m_flags & R64FX_CHILD_WANTS_UPDATE))
+    {
+        widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
+        widget = widget->parent();
+    }
+}
+
+
 bool Widget::isWindow() const
 {
     return m_flags & R64FX_WIDGET_IS_WINDOW;
@@ -357,13 +365,6 @@ void Widget::keyPressEvent(KeyEvent* event)
 void Widget::keyReleaseEvent(KeyEvent* event)
 {
 
-}
-
-
-void Widget::update()
-{
-    m_flags |= R64FX_WIDGET_WANTS_UPDATE;
-    Program::instance()->addWidgetToBeUpdated(this);
 }
 
 

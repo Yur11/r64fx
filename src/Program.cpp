@@ -18,13 +18,11 @@ namespace r64fx{
 namespace{
     Program*         program_singleton_instance = nullptr;
     Window::Events   events;
-    MouseButton      g_pressed_buttons;
-    ReconfContext*   g_reconf_ctx;
-    Widget**         g_widgets_to_be_updated;
-    int              g_max_widgets_to_be_updated = 16;
-    int              g_num_widgets_to_be_updated = 0;
+    MouseButton      pressed_buttons;
+    ReconfContext*   reconf_ctx;
 }
-    
+
+
 Program::Program(int argc, char* argv[])
 {
     if(program_singleton_instance != nullptr)
@@ -37,21 +35,21 @@ Program::Program(int argc, char* argv[])
 
     events.mouse_press = [](Window* window, float x, float y, unsigned int button)
     {
-        g_pressed_buttons |= MouseButton(button);
+        pressed_buttons |= MouseButton(button);
         MousePressEvent me(x, y, MouseButton(button));
         program_singleton_instance->mousePressEvent(window, &me);
     };
 
     events.mouse_release = [](Window* window, float x, float y, unsigned int button)
     {
-        g_pressed_buttons &= ~MouseButton(button);
+        pressed_buttons &= ~MouseButton(button);
         MouseReleaseEvent me(x, y, MouseButton(button));
         program_singleton_instance->mouseReleaseEvent(window, &me);
     };
 
     events.mouse_move = [](Window* window, float x, float y)
     {
-        MouseMoveEvent me(x, y, g_pressed_buttons);
+        MouseMoveEvent me(x, y, pressed_buttons);
         program_singleton_instance->mouseMoveEvent(window, &me);
     };
 
@@ -77,15 +75,13 @@ Program::Program(int argc, char* argv[])
         program_singleton_instance->closeEvent(window);
     };
 
-    g_reconf_ctx             = new ReconfContext(16);
-    g_widgets_to_be_updated  = new Widget*[g_max_widgets_to_be_updated];
+    reconf_ctx = new ReconfContext(16);
 }
 
 
 Program::~Program()
 {
-    delete[] g_reconf_ctx;
-    delete[] g_widgets_to_be_updated;
+    delete[] reconf_ctx;
 }
 
 
@@ -96,7 +92,6 @@ int Program::exec()
     while(m_should_be_running)
     {
         Window::processSomeEvents(&events);
-        distributeUpdateFlags();
         Window::forEachWindow([](Window* window, void* data){
             auto p = (Program*) data;
             p->performUpdates(window);
@@ -228,63 +223,34 @@ void Program::performUpdates(Window* window)
     {
         if(widget->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
         {
-            g_reconf_ctx->clearRects();
-            g_reconf_ctx->setPainter(window->painter());
-            g_reconf_ctx->setVisibleRect({0, 0, widget->width(), widget->height()});
-            g_reconf_ctx->got_rect = false;
+            reconf_ctx->clearRects();
+            reconf_ctx->setPainter(window->painter());
+            reconf_ctx->setVisibleRect({0, 0, widget->width(), widget->height()});
+            reconf_ctx->got_rect = false;
 
             if(widget->m_flags & R64FX_WIDGET_WANTS_UPDATE)
             {
-                widget->reconfigure(g_reconf_ctx);
+                widget->reconfigure(reconf_ctx);
                 window->painter()->repaint();
             }
             else
             {
-                widget->reconfigureChildren(g_reconf_ctx);
-                if(g_reconf_ctx->num_rects > 0)
+                widget->reconfigureChildren(reconf_ctx);
+                if(reconf_ctx->num_rects > 0)
                 {
-                    for(int i=0; i<g_reconf_ctx->num_rects; i++)
+                    for(int i=0; i<reconf_ctx->num_rects; i++)
                     {
-                        auto rect = g_reconf_ctx->rects[i];
+                        auto rect = reconf_ctx->rects[i];
                         rect = intersection(rect, {0, 0, window->width(), window->height()});
                     }
 
                     window->painter()->repaint(
-                        g_reconf_ctx->rects,
-                        g_reconf_ctx->num_rects
+                        reconf_ctx->rects,
+                        reconf_ctx->num_rects
                     );
                 }
             }
         }
-    }
-}
-
-
-void Program::distributeUpdateFlags()
-{
-    for(int i=0; i<g_num_widgets_to_be_updated; i++)
-    {
-        Widget* widget = g_widgets_to_be_updated[i]->parent();
-        while(widget)
-        {
-            widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
-            widget = widget->parent();
-        }
-    }
-    g_num_widgets_to_be_updated = 0;
-}
-
-
-void Program::addWidgetToBeUpdated(Widget* widget)
-{
-    if(g_num_widgets_to_be_updated < g_max_widgets_to_be_updated)
-    {
-        g_widgets_to_be_updated[g_num_widgets_to_be_updated] = widget;
-        g_num_widgets_to_be_updated++;
-    }
-    else
-    {
-        cerr << "Too many widgets to be updated!\n";
     }
 }
 

@@ -72,6 +72,8 @@ public:
 
     void close();
 
+    void update();
+
     bool isWindow() const;
 
     bool isVisible() const;
@@ -107,7 +109,6 @@ protected:
     
     virtual void keyReleaseEvent(KeyEvent* event);
 
-    void update();
 
 private:
     void reconfigureChildren(ReconfContext* ctx);
