@@ -97,6 +97,22 @@ public:
 };
 
 
+template<typename T> bool operator==(const Rect<T> &a, const Rect<T> &b)
+{
+    return
+        a.width() == b.width() &&
+        a.height() == b.height() &&
+        a.x() == b.x() && a.y() == b.y()
+    ;
+}
+
+
+template<typename T> bool inline operator!=(const Rect<T> &a, const Rect<T> &b)
+{
+    return !operator==(a, b);
+}
+
+
 template<typename T> Rect<T> operator+(Rect<T> rect, Point<T> offset)
 {
     return rect += offset;
