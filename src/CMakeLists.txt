@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.3)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -O2")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -O0 -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_DEBUG")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_X11")
@@ -31,7 +31,6 @@ set(SRC
     Widget_Dummy.cpp
     Widget_Text.cpp
     Window.cpp
-    WindowX11.cpp
     gl.cpp
     main.cpp
 )

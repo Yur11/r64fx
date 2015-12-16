@@ -16,7 +16,7 @@ class Window{
 
 public:
     enum class Type{
-        Normal
+        Image
 #ifdef R64FX_USE_GL
         ,GL
 #endif//R64FX_USE_GL
@@ -28,27 +28,9 @@ public:
         void (*mouse_move)    (Window* window, float x, float y);
         void (*key_press)     (Window* window, int key);
         void (*key_release)   (Window* window, int key);
-        void (*reconfigure)   (Window* window, int old_w, int old_h, int new_w, int new_h);
+        void (*resize)        (Window* window, int old_w, int old_h, int new_w, int new_h);
         void (*close)         (Window* window);
     };
-
-private:
-    Window::Type m_type;
-
-protected:
-    Window(Window::Type type);
-    Window(const Window&);
-
-public:
-    virtual ~Window();
-
-    static Window* newInstance(
-        int width = 800, int height = 600,
-        std::string title = "",
-        Window::Type type = Window::Type::Normal
-    );
-
-    static void deleteInstance(Window* window);
 
     inline void setWidget(Widget* widget) { m_Widget = widget; }
 
@@ -58,29 +40,40 @@ public:
 
     inline Painter* painter() const { return m_Painter; }
 
-    inline Window::Type type() const { return m_type; }
+private:
+    Window::Type m_type;
 
-    void show();
+public:
+    virtual Window::Type type() = 0;
 
-    void hide();
+    virtual void show() = 0;
 
-    void resize(int width, int height);
+    virtual void hide() = 0;
 
-    int width() const;
+    virtual void resize(int width, int height) = 0;
 
-    int height() const;
+    virtual int width() = 0;
 
-#ifdef R64FX_USE_GL
-    void makeCurrent();
-#endif//R64FX_USE_GL
+    virtual int height() = 0;
 
-    void repaint(Rect<int>* rects = nullptr, int numrects = 0);
+    virtual void makeCurrent() = 0;
 
-    Image* image() const;
+    virtual void repaint(Rect<int>* rects = nullptr, int numrects = 0) = 0;
 
-    void setTitle(std::string title);
+    virtual Image* image() = 0;
 
-    std::string title() const;
+    virtual void setTitle(std::string title) = 0;
+
+    virtual std::string title() = 0;
+
+
+    static Window* newInstance(
+        int width = 800, int height = 600,
+        std::string title = "",
+        Window::Type type = Window::Type::Image
+    );
+
+    static void deleteInstance(Window* window);
 
     static void processSomeEvents(Window::Events* events);
 

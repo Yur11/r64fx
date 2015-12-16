@@ -27,7 +27,7 @@ public:
     static Program* instance();
     
 protected:
-    virtual void reconfigure(Window* window);
+    virtual void resizeEvent(Window* window);
 
     virtual void mousePressEvent(Window* window, MousePressEvent* event);
 

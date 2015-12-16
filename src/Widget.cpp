@@ -159,8 +159,9 @@ void Widget::show()
     if(!isWindow())
     {
         m_parent.window = Window::newInstance(
-            width(), height(), "", Window::Type::Normal
+            width(), height(), "", Window::Type::Image
         );
+        m_parent.window->setPainter(Painter::newInstance(m_parent.window));
         m_parent.window->setWidget(this);
         m_flags |= R64FX_WIDGET_IS_WINDOW;
     }
@@ -183,6 +184,7 @@ void Widget::close()
 {
     if(isWindow())
     {
+        Painter::deleteInstance(m_parent.window->painter());
         Window::deleteInstance(m_parent.window);
         m_parent.window = nullptr;
         m_flags ^= R64FX_WIDGET_IS_WINDOW;

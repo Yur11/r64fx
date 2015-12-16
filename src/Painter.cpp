@@ -475,7 +475,7 @@ void PainterImplGL::deleteBaseTextureIfNeeded()
 
 Painter* Painter::newInstance(Window* window)
 {
-    if(window->type() == Window::Type::Normal)
+    if(window->type() == Window::Type::Image)
     {
         return new PainterImplNormal(window);
     }

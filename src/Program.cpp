@@ -65,9 +65,9 @@ Program::Program(int argc, char* argv[])
         program_singleton_instance->keyReleaseEvent(window, &ke);
     };
 
-    events.reconfigure = [](Window* window, int old_w, int old_h, int new_w, int new_h)
+    events.resize = [](Window* window, int old_w, int old_h, int new_w, int new_h)
     {
-        program_singleton_instance->reconfigure(window);
+        program_singleton_instance->resizeEvent(window);
     };
 
     events.close = [](Window* window)
@@ -117,7 +117,7 @@ Program* Program::instance()
 }
 
 
-void Program::reconfigure(Window* window)
+void Program::resizeEvent(Window* window)
 {
     window->painter()->reconfigure();
     window->widget()->setSize({window->width(), window->height()});
