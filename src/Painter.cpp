@@ -127,10 +127,10 @@ Rect<int> PainterImpl::clip(Rect<int> rect)
 }
 
 
-struct PainterImplNormal : public PainterImpl{
-    PainterImplNormal(Window* window);
+struct PainterImplImage : public PainterImpl{
+    PainterImplImage(Window* window);
 
-    virtual ~PainterImplNormal();
+    virtual ~PainterImplImage();
 
     virtual void fillRect(Color<unsigned char> color, Rect<int> rect);
 
@@ -140,23 +140,23 @@ struct PainterImplNormal : public PainterImpl{
 
     virtual void reconfigure();
 
-};//PainterImplNormal
+};//PainterImplImage
 
 
-PainterImplNormal::PainterImplNormal(Window* window)
+PainterImplImage::PainterImplImage(Window* window)
 : PainterImpl(window)
 {
 
 }
 
 
-PainterImplNormal::~PainterImplNormal()
+PainterImplImage::~PainterImplImage()
 {
 
 }
 
 
-void PainterImplNormal::fillRect(Color<unsigned char> color, Rect<int> rect)
+void PainterImplImage::fillRect(Color<unsigned char> color, Rect<int> rect)
 {
     paint_context->rect          = clip(rect + offset());
     paint_context->color         = color;
@@ -164,7 +164,7 @@ void PainterImplNormal::fillRect(Color<unsigned char> color, Rect<int> rect)
 }
 
 
-void PainterImplNormal::putImage(Image* img, Point<int> pos)
+void PainterImplImage::putImage(Image* img, Point<int> pos)
 {
     paint_context->source_image  = img;
     paint_context->rect          = clip(Rect<int>(pos + offset(), {img->width(), img->height()}));
@@ -172,7 +172,7 @@ void PainterImplNormal::putImage(Image* img, Point<int> pos)
 }
 
 
-void PainterImplNormal::repaint(Rect<int>* rects, int numrects)
+void PainterImplImage::repaint(Rect<int>* rects, int numrects)
 {
     for(int i=0; i<numrects; i++)
     {
@@ -182,7 +182,7 @@ void PainterImplNormal::repaint(Rect<int>* rects, int numrects)
 }
 
 
-void PainterImplNormal::reconfigure()
+void PainterImplImage::reconfigure()
 {
     paint_context->target_image = window->image();
     setClipRect({0, 0, window->width(), window->height()});
@@ -234,7 +234,7 @@ struct PainterImplGL : public PainterImpl{
 
     void deleteBaseTextureIfNeeded();
 
-};//PainterImplNormal
+};//PainterImplImage
 
 
 PainterImplGL::PainterImplGL(Window* window)
@@ -477,7 +477,7 @@ Painter* Painter::newInstance(Window* window)
 {
     if(window->type() == Window::Type::Image)
     {
-        return new PainterImplNormal(window);
+        return new PainterImplImage(window);
     }
 #ifdef R64FX_USE_GL
     else if(window->type() == Window::Type::GL)
