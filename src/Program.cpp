@@ -1,8 +1,6 @@
 #include "Program.hpp"
 #include "Widget.hpp"
 #include "Window.hpp"
-#include "ReconfContext.hpp"
-#include "Painter.hpp"
 #include "Mouse.hpp"
 #include "KeyEvent.hpp"
 #include "WidgetFlags.hpp"
@@ -19,7 +17,6 @@ namespace{
     Program*         program_singleton_instance = nullptr;
     Window::Events   events;
     MouseButton      pressed_buttons;
-    ReconfContext*   reconf_ctx;
 }
 
 
@@ -74,14 +71,11 @@ Program::Program(int argc, char* argv[])
     {
         program_singleton_instance->closeEvent(window);
     };
-
-    reconf_ctx = new ReconfContext(16);
 }
 
 
 Program::~Program()
 {
-    delete[] reconf_ctx;
 }
 
 
@@ -127,74 +121,31 @@ void Program::resizeEvent(Window* window)
 
 void Program::mousePressEvent(Window* window, MousePressEvent* event)
 {
-    auto grabber = Widget::mouseGrabber();
-    if(grabber)
-    {
-        event->setPosition(
-            event->position() - grabber->toRootCoords(Point<int>(0, 0))
-        );
-        grabber->mousePressEvent(event);
-
-        if(grabber->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
-        {
-            auto widget = grabber->parent();
-            while(widget)
-            {
-                widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
-                widget = widget->parent();
-            }
-        }
-    }
-    else
-    {
-        window->widget()->mousePressEvent(event);
-    }
+    Widget::initMousePressEvent(window, event);
 }
 
 
 void Program::mouseReleaseEvent(Window* window, MouseReleaseEvent* event)
 {
-    auto grabber = Widget::mouseGrabber();
-    if(grabber)
-    {
-        event->setPosition(
-            event->position() - grabber->toRootCoords(Point<int>(0, 0))
-        );
-        grabber->mouseReleaseEvent(event);
-    }
-    else
-    {
-        window->widget()->mouseReleaseEvent(event);
-    }
+    Widget::initMouseReleaseEvent(window, event);
 }
 
 
 void Program::mouseMoveEvent(Window* window, MouseMoveEvent* event)
 {
-    auto grabber = Widget::mouseGrabber();
-    if(grabber)
-    {
-        event->setPosition(
-            event->position() - grabber->toRootCoords(Point<int>(0, 0))
-        );
-        grabber->mouseMoveEvent(event);
-    }
-    else
-    {
-        window->widget()->mouseMoveEvent(event);
-    }
+    Widget::initMouseMoveEvent(window, event);
 }
 
 
 void Program::keyPressEvent(Window* window, KeyEvent* event)
 {
-    window->widget()->keyPressEvent(event);
+    Widget::initKeyPressEvent(window, event);
 }
 
 
 void Program::keyReleaseEvent(Window* window, KeyEvent* event)
 {
-    window->widget()->keyReleaseEvent(event);
+    Widget::initKeyReleaseEvent(window, event);
 }
 
 
@@ -218,40 +169,7 @@ void Program::cleanup()
 
 void Program::performUpdates(Window* window)
 {
-    auto widget = window->widget();
-    if(widget)
-    {
-        if(widget->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
-        {
-            reconf_ctx->clearRects();
-            reconf_ctx->setPainter(window->painter());
-            reconf_ctx->setVisibleRect({0, 0, widget->width(), widget->height()});
-            reconf_ctx->got_rect = false;
-
-            if(widget->m_flags & R64FX_WIDGET_WANTS_UPDATE)
-            {
-                widget->reconfigure(reconf_ctx);
-                window->painter()->repaint();
-            }
-            else
-            {
-                widget->reconfigureChildren(reconf_ctx);
-                if(reconf_ctx->num_rects > 0)
-                {
-                    for(int i=0; i<reconf_ctx->num_rects; i++)
-                    {
-                        auto rect = reconf_ctx->rects[i];
-                        rect = intersection(rect, {0, 0, window->width(), window->height()});
-                    }
-
-                    window->painter()->repaint(
-                        reconf_ctx->rects,
-                        reconf_ctx->num_rects
-                    );
-                }
-            }
-        }
-    }
+    Widget::initReconf(window);
 }
 
 }//namespace r64fx

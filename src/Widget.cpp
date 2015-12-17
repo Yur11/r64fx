@@ -26,7 +26,8 @@ namespace{
             flags &= ~mask;
     }
 
-    Widget* g_mouse_grabber = nullptr;
+    Widget*          g_mouse_grabber   = nullptr;
+    ReconfContext    g_reconf_ctx;
 }//namespace
 
 
@@ -304,6 +305,118 @@ Rect<int> Widget::toRootCoords(Rect<int> rect) const
     {
         return m_parent.widget->toRootCoords(rect);
     }
+}
+
+
+void Widget::initReconf(Window* window)
+{
+    auto widget = window->widget();
+    if(widget)
+    {
+        if(widget->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+        {
+            g_reconf_ctx.clearRects();
+            g_reconf_ctx.setPainter(window->painter());
+            g_reconf_ctx.setVisibleRect({0, 0, widget->width(), widget->height()});
+            g_reconf_ctx.got_rect = false;
+
+            if(widget->m_flags & R64FX_WIDGET_WANTS_UPDATE)
+            {
+                widget->reconfigure(&g_reconf_ctx);
+                window->painter()->repaint();
+            }
+            else
+            {
+                widget->reconfigureChildren(&g_reconf_ctx);
+                if(g_reconf_ctx.num_rects > 0)
+                {
+                    for(int i=0; i<g_reconf_ctx.num_rects; i++)
+                    {
+                        auto rect = g_reconf_ctx.rects[i];
+                        rect = intersection(rect, {0, 0, window->width(), window->height()});
+                    }
+
+                    window->painter()->repaint(
+                        g_reconf_ctx.rects,
+                        g_reconf_ctx.num_rects
+                    );
+                }
+            }
+        }
+    }
+}
+
+
+void Widget::initMousePressEvent(Window* window, MousePressEvent* event)
+{
+    auto grabber = Widget::mouseGrabber();
+    if(grabber)
+    {
+        event->setPosition(
+            event->position() - grabber->toRootCoords(Point<int>(0, 0))
+        );
+        grabber->mousePressEvent(event);
+
+        if(grabber->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+        {
+            auto widget = grabber->parent();
+            while(widget)
+            {
+                widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
+                widget = widget->parent();
+            }
+        }
+    }
+    else
+    {
+        window->widget()->mousePressEvent(event);
+    }
+}
+
+
+void Widget::initMouseReleaseEvent(Window* window, MouseReleaseEvent* event)
+{
+    auto grabber = Widget::mouseGrabber();
+    if(grabber)
+    {
+        event->setPosition(
+            event->position() - grabber->toRootCoords(Point<int>(0, 0))
+        );
+        grabber->mouseReleaseEvent(event);
+    }
+    else
+    {
+        window->widget()->mouseReleaseEvent(event);
+    }
+}
+
+
+void Widget::initMouseMoveEvent(Window* window, MouseMoveEvent* event)
+{
+    auto grabber = Widget::mouseGrabber();
+    if(grabber)
+    {
+        event->setPosition(
+            event->position() - grabber->toRootCoords(Point<int>(0, 0))
+        );
+        grabber->mouseMoveEvent(event);
+    }
+    else
+    {
+        window->widget()->mouseMoveEvent(event);
+    }
+}
+
+
+void Widget::initKeyPressEvent(Window* window, KeyEvent* event)
+{
+    window->widget()->keyPressEvent(event);
+}
+
+
+void Widget::initKeyReleaseEvent(Window* window, KeyEvent* event)
+{
+    window->widget()->keyReleaseEvent(event);
 }
 
 

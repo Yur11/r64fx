@@ -96,6 +96,18 @@ public:
 
     Rect<int> toRootCoords(Rect<int> rect) const;
 
+    static void initReconf(Window* window);
+
+    static void initMousePressEvent(Window* window, MousePressEvent* event);
+
+    static void initMouseReleaseEvent(Window* window, MouseReleaseEvent* event);
+
+    static void initMouseMoveEvent(Window* window, MouseMoveEvent* event);
+
+    static void initKeyPressEvent(Window* window, KeyEvent* event);
+
+    static void initKeyReleaseEvent(Window* window, KeyEvent* event);
+
 protected:
     virtual void reconfigure(ReconfContext* ctx);
 

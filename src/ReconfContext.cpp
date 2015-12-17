@@ -5,8 +5,11 @@ using namespace std;
 
 namespace r64fx{
 
-ReconfContext::ReconfContext(int max_rects)
-: max_rects(max_rects)
+namespace{
+    constexpr int max_rects = 16;
+}
+
+ReconfContext::ReconfContext()
 {
     rects = new Rect<int>[max_rects];
 }

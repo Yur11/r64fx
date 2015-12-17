@@ -10,16 +10,12 @@ class Painter;
 
 /** @brief Structure passed down the Widget::reconfigure() recursive invocation. */
 class ReconfContext{
-    friend class Program;
     friend class Widget;
     Painter*                m_painter       = nullptr;
     Rect<int>               m_visible_rect;
     Rect<int>*              rects           = nullptr;
-    int                     max_rects       = 0;
     int                     num_rects       = 0;
     bool                    got_rect        = false;
-
-    ReconfContext(int max_rects);
 
     inline void setPainter(Painter* painter) { m_painter = painter; }
 
@@ -30,6 +26,8 @@ class ReconfContext{
     void clearRects();
 
 public:
+    ReconfContext();
+
     inline Painter* painter() const { return m_painter; }
 
     inline Rect<int> visibleRect() const { return m_visible_rect; }
