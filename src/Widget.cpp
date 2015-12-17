@@ -310,6 +310,7 @@ Rect<int> Widget::toRootCoords(Rect<int> rect) const
 
 void Widget::initReconf(Window* window)
 {
+    window->painter()->reconfigure();
     auto widget = window->widget();
     if(widget)
     {
