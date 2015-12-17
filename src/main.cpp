@@ -165,7 +165,7 @@ private:
 
     virtual void closeEvent(Window* window)
     {
-        if(window->widget() == m_Widget)
+        if(window == m_Widget->parentWindow())
         {
             quit();
         }

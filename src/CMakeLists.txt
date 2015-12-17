@@ -26,7 +26,6 @@ set(SRC
     StringUtils.cpp
     Painter.cpp
     Program.cpp
-    ReconfContext.cpp
     Widget.cpp
     Widget_Dummy.cpp
     Widget_Text.cpp

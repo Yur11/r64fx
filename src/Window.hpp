@@ -11,8 +11,7 @@ class Painter;
 class Image;
 
 class Window{
-    Widget* m_Widget = nullptr;
-    Painter* m_Painter = nullptr;
+    void* m_data = nullptr;
 
 public:
     enum class Type{
@@ -32,13 +31,8 @@ public:
         void (*close)         (Window* window);
     };
 
-    inline void setWidget(Widget* widget) { m_Widget = widget; }
-
-    inline Widget* widget() const { return m_Widget; }
-
-    inline void setPainter(Painter* painter) { m_Painter = painter; }
-
-    inline Painter* painter() const { return m_Painter; }
+    inline void setData(void* data) { m_data = data; }
+    inline void* data() const { return m_data; }
 
 private:
     Window::Type m_type;

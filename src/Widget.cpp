@@ -26,8 +26,38 @@ namespace{
             flags &= ~mask;
     }
 
-    Widget*          g_mouse_grabber   = nullptr;
-    ReconfContext    g_reconf_ctx;
+    /* Widget that currently grabs mouse input. */
+    Widget* g_mouse_grabber   = nullptr;
+
+    /* Maximum number of individual rectangles
+     * that can be repainted after reconf. cycle. */
+    constexpr int max_rects = 16;
+
+    /* Collection of data attached to the window.
+     * We should be able to cast back and forth
+     * between WindowWidgetContext and ReconfContext. */
+    struct WindowWidgetContext : Widget::ReconfContext{
+
+        /* Root widget shown in the window that
+         * this context is attached to. */
+        Widget*  widget = nullptr;
+
+        /* Painter serving the window. */
+        Painter* painter = nullptr;
+
+        /* Current visible rect. passed to widget reconf. method. */
+        Rect<int> visible_rect;
+
+        /* List of rectangles to be repainted after reconf. cycle. */
+        Rect<int> rects[max_rects];
+
+        /* Number of rectangles that must be repainted. */
+        int num_rects = 0;
+
+        /* Used in reconf. logic. */
+        bool got_rect = false;
+    };
+
 }//namespace
 
 
@@ -159,11 +189,41 @@ void Widget::show()
 {
     if(!isWindow())
     {
-        m_parent.window = Window::newInstance(
+        auto window = Window::newInstance(
             width(), height(), "", Window::Type::Image
         );
-        m_parent.window->setPainter(Painter::newInstance(m_parent.window));
-        m_parent.window->setWidget(this);
+#ifdef R64FX_DEBUG
+        if(!window)
+        {
+            cerr << "Widget: Failed to create window!\n";
+            abort();
+        }
+#endif//R64FX_DEBUG
+
+        auto painter = Painter::newInstance(window);
+#ifdef R64FX_DEBUG
+        if(!painter)
+        {
+            cerr << "Widget: Failed to create painter!\n";
+            abort();
+        }
+#endif//R64FX_DEBUG
+
+        auto ctx = new(nothrow) WindowWidgetContext;
+#ifdef R64FX_DEBUG
+        if(!ctx)
+        {
+            cerr << "Widget: Failed to create reconf_ctx!\n";
+            abort();
+        }
+#endif//R64FX_DEBUG
+
+        ctx->widget = this;
+        ctx->painter = painter;
+
+        window->setData(ctx);
+
+        m_parent.window = window;
         m_flags |= R64FX_WIDGET_IS_WINDOW;
     }
     m_parent.window->show();
@@ -185,10 +245,13 @@ void Widget::close()
 {
     if(isWindow())
     {
-        Painter::deleteInstance(m_parent.window->painter());
+        auto reconf_ctx = (ReconfContext*) m_parent.window->data();
+
+        Painter::deleteInstance(reconf_ctx->painter());
         Window::deleteInstance(m_parent.window);
+        delete reconf_ctx;
         m_parent.window = nullptr;
-        m_flags ^= R64FX_WIDGET_IS_WINDOW;
+        m_flags &= ~R64FX_WIDGET_IS_WINDOW;
     }
 }
 
@@ -263,23 +326,6 @@ std::string Widget::windowTitle() const
 }
 
 
-Window* Widget::rootWindow() const
-{
-    if(isWindow())
-    {
-        return m_parent.window;
-    }
-    else if(m_parent.widget != nullptr)
-    {
-        return m_parent.widget->parentWindow();
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
-
 Point<int> Widget::toRootCoords(Point<int> point) const
 {
     point += position();
@@ -308,116 +354,65 @@ Rect<int> Widget::toRootCoords(Rect<int> rect) const
 }
 
 
+Painter* Widget::ReconfContext::painter()
+{
+    auto ctx = (WindowWidgetContext*) this;
+    return ctx->painter;
+}
+
+
+Rect<int> Widget::ReconfContext::visibleRect()
+{
+    auto ctx = (WindowWidgetContext*) this;
+    return ctx->visible_rect;
+}
+
+
+void Widget::processWindowResize(Window* window)
+{
+    auto ctx = (WindowWidgetContext*) window->data();
+    ctx->painter->reconfigure();
+    ctx->widget->setSize({window->width(), window->height()});
+    ctx->widget->update();
+}
+
+
 void Widget::initReconf(Window* window)
 {
-    window->painter()->reconfigure();
-    auto widget = window->widget();
+    auto ctx = (WindowWidgetContext*) window->data();
+    auto widget = ctx->widget;
     if(widget)
     {
         if(widget->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
         {
-            g_reconf_ctx.clearRects();
-            g_reconf_ctx.setPainter(window->painter());
-            g_reconf_ctx.setVisibleRect({0, 0, widget->width(), widget->height()});
-            g_reconf_ctx.got_rect = false;
+            ctx->num_rects = 0;
+            ctx->visible_rect = {0, 0, widget->width(), widget->height()};
+            ctx->got_rect = false;
 
             if(widget->m_flags & R64FX_WIDGET_WANTS_UPDATE)
             {
-                widget->reconfigure(&g_reconf_ctx);
-                window->painter()->repaint();
+                widget->reconfigure((ReconfContext*)ctx);
+                ctx->painter->repaint();
             }
             else
             {
-                widget->reconfigureChildren(&g_reconf_ctx);
-                if(g_reconf_ctx.num_rects > 0)
+                widget->reconfigureChildren(ctx);
+                if(ctx->num_rects > 0)
                 {
-                    for(int i=0; i<g_reconf_ctx.num_rects; i++)
+                    for(int i=0; i<ctx->num_rects; i++)
                     {
-                        auto rect = g_reconf_ctx.rects[i];
+                        auto rect = ctx->rects[i];
                         rect = intersection(rect, {0, 0, window->width(), window->height()});
                     }
 
-                    window->painter()->repaint(
-                        g_reconf_ctx.rects,
-                        g_reconf_ctx.num_rects
+                    ctx->painter->repaint(
+                        ctx->rects,
+                        ctx->num_rects
                     );
                 }
             }
         }
     }
-}
-
-
-void Widget::initMousePressEvent(Window* window, MousePressEvent* event)
-{
-    auto grabber = Widget::mouseGrabber();
-    if(grabber)
-    {
-        event->setPosition(
-            event->position() - grabber->toRootCoords(Point<int>(0, 0))
-        );
-        grabber->mousePressEvent(event);
-
-        if(grabber->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
-        {
-            auto widget = grabber->parent();
-            while(widget)
-            {
-                widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
-                widget = widget->parent();
-            }
-        }
-    }
-    else
-    {
-        window->widget()->mousePressEvent(event);
-    }
-}
-
-
-void Widget::initMouseReleaseEvent(Window* window, MouseReleaseEvent* event)
-{
-    auto grabber = Widget::mouseGrabber();
-    if(grabber)
-    {
-        event->setPosition(
-            event->position() - grabber->toRootCoords(Point<int>(0, 0))
-        );
-        grabber->mouseReleaseEvent(event);
-    }
-    else
-    {
-        window->widget()->mouseReleaseEvent(event);
-    }
-}
-
-
-void Widget::initMouseMoveEvent(Window* window, MouseMoveEvent* event)
-{
-    auto grabber = Widget::mouseGrabber();
-    if(grabber)
-    {
-        event->setPosition(
-            event->position() - grabber->toRootCoords(Point<int>(0, 0))
-        );
-        grabber->mouseMoveEvent(event);
-    }
-    else
-    {
-        window->widget()->mouseMoveEvent(event);
-    }
-}
-
-
-void Widget::initKeyPressEvent(Window* window, KeyEvent* event)
-{
-    window->widget()->keyPressEvent(event);
-}
-
-
-void Widget::initKeyReleaseEvent(Window* window, KeyEvent* event)
-{
-    window->widget()->keyReleaseEvent(event);
 }
 
 
@@ -427,66 +422,9 @@ void Widget::reconfigure(ReconfContext* ctx)
 }
 
 
-void Widget::mousePressEvent(MousePressEvent* event)
+void Widget::reconfigureChildren(ReconfContext* reconf_ctx)
 {
-    for(auto child : m_children)
-    {
-        if((child->isVisible() && child->rect().overlaps(event->position())))
-        {
-            auto position = event->position();
-            event->setPosition(position - child->position());
-            child->mousePressEvent(event);
-            event->setPosition(position);
-        }
-    }
-}
-
-
-void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
-{
-    for(auto child : m_children)
-    {
-        if((child->isVisible() && child->rect().overlaps(event->position())))
-        {
-            auto position = event->position();
-            event->setPosition(position - child->position());
-            child->mouseReleaseEvent(event);
-            event->setPosition(position);
-        }
-    }
-}
-
-
-void Widget::mouseMoveEvent(MouseMoveEvent* event)
-{
-    for(auto child : m_children)
-    {
-        if((child->isVisible() && child->rect().overlaps(event->position())))
-        {
-            auto position = event->position();
-            event->setPosition(position - child->position());
-            child->mouseMoveEvent(event);
-            event->setPosition(position);
-        }
-    }
-}
-
-
-void Widget::keyPressEvent(KeyEvent* event)
-{
-
-}
-
-
-void Widget::keyReleaseEvent(KeyEvent* event)
-{
-
-}
-
-
-void Widget::reconfigureChildren(ReconfContext* ctx)
-{
-    auto painter = ctx->painter();
+    auto ctx = (WindowWidgetContext*) reconf_ctx;
     auto parent_visible_rect = ctx->visibleRect();
     bool got_rect = ctx->got_rect;
 
@@ -494,8 +432,12 @@ void Widget::reconfigureChildren(ReconfContext* ctx)
     {
         if(!ctx->got_rect)
         {
-            ctx->addRect(toRootCoords({0, 0, width(), height()}));
-            ctx->got_rect = true;
+            if(ctx->num_rects < max_rects)
+            {
+                ctx->rects[ctx->num_rects] = toRootCoords({0, 0, width(), height()});
+                ctx->num_rects++;
+                ctx->got_rect = true;
+            }
         }
 
         for(auto child : m_children)
@@ -520,25 +462,163 @@ void Widget::reconfigureChildren(ReconfContext* ctx)
     {
         if(child->isVisible() && (child->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
         {
-            auto offset = painter->offset();
-            painter->setOffset(offset + child->position());
+            auto offset = ctx->painter->offset();
+            ctx->painter->setOffset(offset + child->position());
             auto visible_rect = intersection(child->rect(), parent_visible_rect);
-            ctx->setVisibleRect({0, 0, visible_rect.width(), visible_rect.height()});
+            ctx->visible_rect = {0, 0, visible_rect.width(), visible_rect.height()};
             if(child->m_flags & R64FX_WIDGET_WANTS_UPDATE)
             {
-                child->reconfigure(ctx);
+                child->reconfigure((ReconfContext*)ctx);
             }
             else
             {
                 child->reconfigureChildren(ctx);
             }
-            painter->setOffset(offset);
+            ctx->painter->setOffset(offset);
         }
     }
 
     ctx->got_rect = got_rect;
-    ctx->m_visible_rect = parent_visible_rect;
+    ctx->visible_rect = parent_visible_rect;
     set_bits(m_flags, false, R64FX_WIDGET_UPDATE_FLAGS);
+}
+
+
+void Widget::initMousePressEvent(Window* window, MousePressEvent* event)
+{
+    auto ctx = (WindowWidgetContext*) window->data();
+
+    auto grabber = Widget::mouseGrabber();
+    if(grabber)
+    {
+        event->setPosition(
+            event->position() - grabber->toRootCoords(Point<int>(0, 0))
+        );
+        grabber->mousePressEvent(event);
+
+        if(grabber->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+        {
+            auto widget = grabber->parent();
+            while(widget)
+            {
+                widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
+                widget = widget->parent();
+            }
+        }
+    }
+    else
+    {
+        ctx->widget->mousePressEvent(event);
+    }
+}
+
+
+void Widget::mousePressEvent(MousePressEvent* event)
+{
+    for(auto child : m_children)
+    {
+        if((child->isVisible() && child->rect().overlaps(event->position())))
+        {
+            auto position = event->position();
+            event->setPosition(position - child->position());
+            child->mousePressEvent(event);
+            event->setPosition(position);
+        }
+    }
+}
+
+
+void Widget::initMouseReleaseEvent(Window* window, MouseReleaseEvent* event)
+{
+    auto ctx = (WindowWidgetContext*) window->data();
+
+    auto grabber = Widget::mouseGrabber();
+    if(grabber)
+    {
+        event->setPosition(
+            event->position() - grabber->toRootCoords(Point<int>(0, 0))
+        );
+        grabber->mouseReleaseEvent(event);
+    }
+    else
+    {
+        ctx->widget->mouseReleaseEvent(event);
+    }
+}
+
+
+void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
+{
+    for(auto child : m_children)
+    {
+        if((child->isVisible() && child->rect().overlaps(event->position())))
+        {
+            auto position = event->position();
+            event->setPosition(position - child->position());
+            child->mouseReleaseEvent(event);
+            event->setPosition(position);
+        }
+    }
+}
+
+
+void Widget::initMouseMoveEvent(Window* window, MouseMoveEvent* event)
+{
+    auto ctx = (WindowWidgetContext*) window->data();
+
+    auto grabber = Widget::mouseGrabber();
+    if(grabber)
+    {
+        event->setPosition(
+            event->position() - grabber->toRootCoords(Point<int>(0, 0))
+        );
+        grabber->mouseMoveEvent(event);
+    }
+    else
+    {
+         ctx->widget->mouseMoveEvent(event);
+    }
+}
+
+
+void Widget::mouseMoveEvent(MouseMoveEvent* event)
+{
+    for(auto child : m_children)
+    {
+        if((child->isVisible() && child->rect().overlaps(event->position())))
+        {
+            auto position = event->position();
+            event->setPosition(position - child->position());
+            child->mouseMoveEvent(event);
+            event->setPosition(position);
+        }
+    }
+}
+
+
+void Widget::initKeyPressEvent(Window* window, KeyEvent* event)
+{
+    auto ctx = (WindowWidgetContext*) window->data();
+    ctx->widget->keyPressEvent(event);
+}
+
+
+void Widget::keyPressEvent(KeyEvent* event)
+{
+
+}
+
+
+void Widget::initKeyReleaseEvent(Window* window, KeyEvent* event)
+{
+    auto ctx = (WindowWidgetContext*) window->data();
+    ctx->widget->keyReleaseEvent(event);
+}
+
+
+void Widget::keyReleaseEvent(KeyEvent* event)
+{
+
 }
 
 }//namespace r64fx

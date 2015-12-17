@@ -113,8 +113,7 @@ Program* Program::instance()
 
 void Program::resizeEvent(Window* window)
 {
-    window->widget()->setSize({window->width(), window->height()});
-    window->widget()->update();
+    Widget::processWindowResize(window);
 }
 
 

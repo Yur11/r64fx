@@ -7,39 +7,42 @@
 
 namespace r64fx{
 
-class ReconfContext;
+class Window;
+class Image;
+class Painter;
 class MousePressEvent;
 class MouseReleaseEvent;
 class MouseMoveEvent;
 class KeyEvent;
-class Window;
-class Image;
+
 
 class Widget : public LinkedList<Widget>::Node{
-    friend class Program;
 
+    /* Widgets parent can be either a widget or a window.
+     * Never both at same time. */
     union{
         Widget* widget = nullptr;
         Window* window;
     } m_parent;
     
-    /* Widgets geometry. */
+    /* Widgets geometry.
+     * Position in parents coordinate space + widget size. */
     Rect<int> m_rect = { 0, 0, 0, 0 };
 
     /* A linked list of widgets children. */
     LinkedList<Widget> m_children;
 
 protected:
+
     /* Storage for widget flags.
-     * These are bit-packed and used internally.
-     */
+     * These are bit-packed and used internally. */
     unsigned long m_flags = 0;
 
 public:
     Widget(Widget* parent = nullptr);
     
     virtual ~Widget();
-    
+
     void setParent(Widget* parent);
     
     Widget* parent() const;
@@ -64,10 +67,10 @@ public:
 
     Rect<int> rect() const;
     
-    /** @brief Show this widget in a window. */
+    /* Show this widget in a window. */
     void show();
 
-    /** @brief Hide this widget if it is shown in a window.*/
+    /* Hide this widget if it is shown in a window.*/
     void hide();
 
     void close();
@@ -90,42 +93,67 @@ public:
 
     std::string windowTitle() const;
 
-    Window* rootWindow() const;
-
     Point<int> toRootCoords(Point<int> point) const;
 
     Rect<int> toRootCoords(Rect<int> rect) const;
 
+    /* Iface. passed down the reconfigure call tree. */
+    class ReconfContext{
+    public:
+        /* Painter to be used by reconfigure implementation. */
+        Painter* painter();
+
+        /* Widgets visible rect. as clipped by the parent structures. */
+        Rect<int> visibleRect();
+    };
+
+    static void processWindowResize(Window* window);
+
     static void initReconf(Window* window);
 
-    static void initMousePressEvent(Window* window, MousePressEvent* event);
-
-    static void initMouseReleaseEvent(Window* window, MouseReleaseEvent* event);
-
-    static void initMouseMoveEvent(Window* window, MouseMoveEvent* event);
-
-    static void initKeyPressEvent(Window* window, KeyEvent* event);
-
-    static void initKeyReleaseEvent(Window* window, KeyEvent* event);
-
 protected:
-    virtual void reconfigure(ReconfContext* ctx);
-
-    virtual void mousePressEvent(MousePressEvent* event);
-    
-    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
-    
-    virtual void mouseMoveEvent(MouseMoveEvent* event);
-    
-    virtual void keyPressEvent(KeyEvent* event);
-    
-    virtual void keyReleaseEvent(KeyEvent* event);
-
+    virtual void reconfigure(Widget::ReconfContext* ctx);
 
 private:
     void reconfigureChildren(ReconfContext* ctx);
+
+
+public:
+    static void initMousePressEvent(Window* window, MousePressEvent* event);
+
+protected:
+    virtual void mousePressEvent(MousePressEvent* event);
+
+
+public:
+    static void initMouseReleaseEvent(Window* window, MouseReleaseEvent* event);
+
+protected:
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
+
+
+public:
+    static void initMouseMoveEvent(Window* window, MouseMoveEvent* event);
+
+protected:
+    virtual void mouseMoveEvent(MouseMoveEvent* event);
+
+
+public:
+    static void initKeyPressEvent(Window* window, KeyEvent* event);
+
+protected:
+    virtual void keyPressEvent(KeyEvent* event);
+
+
+public:
+    static void initKeyReleaseEvent(Window* window, KeyEvent* event);
+
+protected:
+    virtual void keyReleaseEvent(KeyEvent* event);
+
 };
     
-}//r64fx
+}//namespace r64fx
 
 #endif//R64FX_GUI_WIDGET_H
