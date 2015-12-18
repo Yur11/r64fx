@@ -4,9 +4,8 @@
 #include "Program.hpp"
 #include "Widget.hpp"
 #include "Window.hpp"
-#include "KeyEvent.hpp"
-#include "Keyboard.hpp"
 #include "Mouse.hpp"
+#include "Keyboard.hpp"
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
@@ -115,6 +114,17 @@ public:
         Widget::reconfigureEvent(event);
     }
 
+    virtual void keyPressEvent(KeyEvent* event)
+    {
+        cout << "key:  " << Keyboard::Key::toString(event->key()) << "\n";
+    }
+
+    virtual void textInputEvent(TextInputEvent* event)
+    {
+        string str(event->utf8(), event->size());
+        cout << Keyboard::Key::toString(event->key()) << " => " << str << "\n";
+    }
+
     virtual void closeEvent()
     {
         Program::quit();
@@ -136,6 +146,7 @@ private:
         m_Widget = new MyWidget;
         m_Widget->setSize({1000, 600});
         m_Widget->show();
+        m_Widget->parentWindow()->startTextInput();
     }
     
     virtual void cleanup()

@@ -48,6 +48,8 @@ namespace{
 
     XIM  g_input_method = 0;
 
+    WindowX11* g_text_input_grabber = nullptr;
+
     Atom g_WM_PROTOCOLS;
     Atom g_WM_DELETE_WINDOW;
     Atom g_NET_WM_NAME;
@@ -150,6 +152,12 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual std::string title();
 
+    virtual void startTextInput();
+
+    virtual void stopTextInput();
+
+    virtual bool doingTextInput();
+
     inline ::Window xWindow() const { return m_xwindow; }
 
     inline XIC inputContext() const { return m_input_context; }
@@ -223,6 +231,29 @@ std::string WindowX11::title()
 }
 
 
+void WindowX11::startTextInput()
+{
+    XSetICFocus(m_input_context);
+    g_text_input_grabber = this;
+}
+
+
+void WindowX11::stopTextInput()
+{
+    if(doingTextInput())
+    {
+        XUnsetICFocus(m_input_context);
+        g_text_input_grabber = nullptr;
+    }
+}
+
+
+bool WindowX11::doingTextInput()
+{
+    return g_text_input_grabber == this;
+}
+
+
 void WindowX11::processSomeEvents(Window::Events* events)
 {
     while(XPending(g_display))
@@ -230,13 +261,13 @@ void WindowX11::processSomeEvents(Window::Events* events)
         XEvent xevent;
         XNextEvent(g_display, &xevent);
 
-        if(XFilterEvent(&xevent, xevent.xany.window))
+        WindowX11* window = getWindowFromXWindow(xevent.xany.window);
+        if(!window)
         {
             continue;
         }
 
-        WindowX11* window = getWindowFromXWindow(xevent.xany.window);
-        if(!window)
+        if(window->doingTextInput() && XFilterEvent(&xevent, xevent.xany.window))
         {
             continue;
         }
@@ -245,16 +276,21 @@ void WindowX11::processSomeEvents(Window::Events* events)
         {
             case KeyPress:
             {
-                Status status;
-                char buff[8];
-                KeySym key;
-                int nbytes = Xutf8LookupString(
-                    window->inputContext(), &xevent.xkey,
-                    buff, 8, &key, &status
-                );
-                string str(buff, nbytes);
-                cout << str << "\n";
-//                 events->key_press(window, key);
+                if(window->doingTextInput())
+                {
+                    Status status;
+                    char buff[8];
+                    KeySym keysym;
+                    int nbytes = Xutf8LookupString(
+                        window->inputContext(), &xevent.xkey,
+                        buff, 8, &keysym, &status
+                    );
+                    events->text_input(window, buff, nbytes, keysym);
+                }
+                else
+                {
+                    events->key_press(window, XLookupKeysym(&xevent.xkey, 0));
+                }
                 break;
             }
 
@@ -408,8 +444,6 @@ void WindowX11::setupInputContext()
         cerr << "Failed to create input context!\n";
         abort();
     }
-
-    XSetICFocus(m_input_context);
 }
 
 

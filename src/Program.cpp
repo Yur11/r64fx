@@ -1,12 +1,7 @@
 #include "Program.hpp"
 #include "Widget.hpp"
-#include "Window.hpp"
-#include "Mouse.hpp"
-#include "KeyEvent.hpp"
-#include "WidgetFlags.hpp"
 
 #include <iostream>
-#include <vector>
 #include <unistd.h>
 
 using namespace std;

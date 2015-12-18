@@ -1,6 +1,10 @@
 #include "Keyboard.hpp"
 #include <map>
 
+#ifdef R64FX_DEBUG
+#include <iostream>
+#endif//R64FX_DEBUG
+
 using namespace std;
 
 namespace r64fx{
@@ -152,5 +156,21 @@ const char* toString(int key)
 
 }//namespace Key
 }//namespace Keyboard
+
+
+TextInputEvent::TextInputEvent(char* utf8, unsigned int size, int key)
+: KeyEvent(key)
+, m_size(size)
+{
+#ifdef R64FX_DEBUG
+    if(size > 8)
+    {
+        cerr << "TextInputEvent: Bad size " << size << "\n";
+        abort();
+    }
+#endif//R64FX_DEBUG
+    for(unsigned int i=0; i<size; i++)
+        m_utf8[i] = utf8[i];
+}
 
 }//namespace r64fx

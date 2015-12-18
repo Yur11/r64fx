@@ -13,6 +13,7 @@ class MousePressEvent;
 class MouseReleaseEvent;
 class MouseMoveEvent;
 class KeyEvent;
+class TextInputEvent;
 
 class Widget : public LinkedList<Widget>::Node{
 
@@ -138,6 +139,8 @@ protected:
 
     virtual void keyReleaseEvent(KeyEvent* event);
 
+    virtual void textInputEvent(TextInputEvent* event);
+
     virtual void closeEvent();
 
 private:
@@ -150,6 +153,7 @@ private:
     friend void window_mouse_move      (Window* window, int x, int y);
     friend void window_key_press       (Window* window, int key);
     friend void window_key_release     (Window* window, int key);
+    friend void window_text_input      (Window* window, char* utf8, unsigned int size, int key);
     friend void window_close           (Window* window);
 };
     

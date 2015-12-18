@@ -28,6 +28,7 @@ public:
         void (*mouse_move)    (Window* window, int x, int y);
         void (*key_press)     (Window* window, int key);
         void (*key_release)   (Window* window, int key);
+        void (*text_input)    (Window* window, char* utf8, unsigned int size, int key);
         void (*close)         (Window* window);
     };
 
@@ -60,6 +61,11 @@ public:
 
     virtual std::string title() = 0;
 
+    virtual void startTextInput() = 0;
+
+    virtual void stopTextInput() = 0;
+
+    virtual bool doingTextInput() = 0;
 
     static Window* newInstance(
         int width = 800, int height = 600,

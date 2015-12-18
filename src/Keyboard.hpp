@@ -19,6 +19,35 @@ const char* toString(int key);
 }//namespace Key
 }//namespace Keyboard
 
+
+class KeyEvent{
+    int m_key;
+
+public:
+    KeyEvent(int key)
+    : m_key(key)
+    {}
+
+    inline int key() const { return m_key; }
+};
+
+
+class KeyPressEvent   : public KeyEvent{};
+class KeyReleaseEvent : public KeyEvent{};
+
+
+class TextInputEvent : public KeyEvent{
+    char m_utf8[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    unsigned int m_size;
+
+public:
+    TextInputEvent(char* utf8, unsigned int size, int key);
+
+    inline const char* utf8() { return m_utf8; }
+
+    inline unsigned int size() const { return m_size; }
+};
+
 }//namespace r64fx
 
 #endif//R64FX_GUI_KEYBOARD_HPP

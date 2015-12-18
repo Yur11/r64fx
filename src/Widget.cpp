@@ -1,7 +1,7 @@
 #include "Widget.hpp"
 #include "Window.hpp"
 #include "Mouse.hpp"
-#include "KeyEvent.hpp"
+#include "Keyboard.hpp"
 #include "Painter.hpp"
 #include "Program.hpp"
 
@@ -23,6 +23,7 @@ void window_mouse_release    (Window* window, int x, int y, unsigned int button)
 void window_mouse_move       (Window* window, int x, int y);
 void window_key_press        (Window* window, int key);
 void window_key_release      (Window* window, int key);
+void window_text_input       (Window* window, char* utf8, unsigned int size, int key);
 void window_close            (Window* window);
 
 namespace{
@@ -76,6 +77,7 @@ namespace{
         window_mouse_move,
         window_key_press,
         window_key_release,
+        window_text_input,
         window_close
     };
 
@@ -649,6 +651,21 @@ void window_key_release(Window* window, int key)
 
 
 void Widget::keyReleaseEvent(KeyEvent* event)
+{
+
+}
+
+
+void window_text_input(Window* window, char* utf8, unsigned int size, int key)
+{
+    auto d = (WindowWidgetData*) window->data();
+
+    TextInputEvent event(utf8, size, key);
+    d->widget->textInputEvent(&event);
+}
+
+
+void Widget::textInputEvent(TextInputEvent* event)
 {
 
 }
