@@ -117,7 +117,7 @@ public:
 
     virtual void closeEvent()
     {
-        cout << "MyWidget::closeEvent()\n";
+        Program::quit();
     }
 };
 

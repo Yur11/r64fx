@@ -12,22 +12,23 @@
 using namespace std;
 
 namespace r64fx{
-    
-namespace{
-    Program*         program_singleton_instance = nullptr;
-    MouseButton      pressed_buttons;
-}
 
+Program* g_program = nullptr;
+
+namespace{
+    bool program_should_be_running = true;
+
+}//namespace
 
 Program::Program(int argc, char* argv[])
 {
-    if(program_singleton_instance != nullptr)
+    if(g_program != nullptr)
     {
         cerr << "Refusing to create a second program instance!\n";
         abort();
     }
 
-    program_singleton_instance = this;
+    g_program = this;
 }
 
 
@@ -38,15 +39,15 @@ Program::~Program()
 
 int Program::exec()
 {
-    setup();
+    g_program->setup();
     
-    while(m_should_be_running)
+    while(program_should_be_running)
     {
         Widget::processEvents();
         usleep(100);
     }
     
-    cleanup();
+    g_program->cleanup();
     
     return 0;
 }
@@ -54,13 +55,13 @@ int Program::exec()
 
 void Program::quit()
 {
-    m_should_be_running = false;
+    program_should_be_running = false;
 }
 
 
 Program* Program::instance()
 {
-    return program_singleton_instance;
+    return g_program;
 }
 
 

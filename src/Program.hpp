@@ -4,7 +4,6 @@
 namespace r64fx{
 
 class Program{
-    bool m_should_be_running = true;
     
 public:
     Program(int argc, char* argv[]);
@@ -12,10 +11,10 @@ public:
     virtual ~Program();
     
     /* Program main loop. */
-    virtual int exec();
+    static int exec();
     
     /* Request program to quit. */
-    virtual void quit();
+    static void quit();
     
     static Program* instance();
     
