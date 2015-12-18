@@ -65,12 +65,9 @@ public:
      */
     virtual void repaint(Rect<int>* rects = nullptr, int numrects = 0) = 0;
 
-    /** @brief Adjust for the new window configuration.
-
-        Allways call this before any other paint commands
-        if the window has been resized.
-     */
-    virtual void reconfigure() = 0;
+    /* Allways call this before any other paint commands
+     * if the window has been resized. */
+    virtual void adjustForWindowSize() = 0;
 };
 
 }//namespace r64fx

@@ -7,7 +7,6 @@
 #include "KeyEvent.hpp"
 #include "Keyboard.hpp"
 #include "Mouse.hpp"
-#include "ReconfContext.hpp"
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
@@ -109,11 +108,16 @@ public:
         }
     }
 
-    virtual void reconfigure(ReconfContext* ctx)
+    virtual void reconfigureEvent(ReconfigureEvent* event)
     {
-        auto painter = ctx->painter();
+        auto painter = event->painter();
         painter->fillRect({255, 255, 255}, rect());
-        Widget::reconfigure(ctx);
+        Widget::reconfigureEvent(event);
+    }
+
+    virtual void closeEvent()
+    {
+        cout << "MyWidget::closeEvent()\n";
     }
 };
 
@@ -134,44 +138,6 @@ private:
         m_Widget->show();
     }
     
-
-    virtual void keyPressEvent(Window* window, KeyEvent* event)
-    {
-        Program::keyPressEvent( window, event );
-
-        cout << Keyboard::Key::toString(event->key()) << "\n";
-
-        if(event->key() == Keyboard::Key::Escape) 
-        {
-            quit();
-        }
-        else if(event->key() == Keyboard::Key::J)
-        {
-            m_Widget->setSize({400, 200});
-            m_Widget->setWindowTitle("A");
-        }
-        else if(event->key() == Keyboard::Key::K)
-        {
-            m_Widget->setSize({200, 400});
-            m_Widget->setWindowTitle("B");
-        }
-        else if(event->key() == Keyboard::Key::T)
-        {
-            cout << "Title: " << m_Widget->windowTitle() << "\n";
-        }
-
-    }
-    
-
-    virtual void closeEvent(Window* window)
-    {
-        if(window == m_Widget->parentWindow())
-        {
-            quit();
-        }
-    }
-
-
     virtual void cleanup()
     {
         cout << "Cleanup!\n";

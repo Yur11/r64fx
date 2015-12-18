@@ -138,7 +138,7 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void repaint(Rect<int>* rects, int numrects);
 
-    virtual void reconfigure();
+    virtual void adjustForWindowSize();
 
 };//PainterImplImage
 
@@ -182,7 +182,7 @@ void PainterImplImage::repaint(Rect<int>* rects, int numrects)
 }
 
 
-void PainterImplImage::reconfigure()
+void PainterImplImage::adjustForWindowSize()
 {
     paint_context->target_image = window->image();
     setClipRect({0, 0, window->width(), window->height()});
@@ -220,7 +220,7 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void repaint(Rect<int>* rects, int numrects);
 
-    virtual void reconfigure();
+    virtual void adjustForWindowSize();
 
     static void initSharedGLStuffIfNeeded();
 
@@ -328,10 +328,8 @@ void PainterImplGL::repaint(Rect<int>* rects, int numrects)
 }
 
 
-void PainterImplGL::reconfigure()
+void PainterImplGL::adjustForWindowSize()
 {
-    window->makeCurrent();
-
     resizeBaseTextureIfNeeded(window->width(), window->height());
     
     gl::Viewport(0, 0, window->width(), window->height());

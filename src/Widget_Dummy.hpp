@@ -16,7 +16,7 @@ public:
 
     virtual ~Widget_Dummy();
 
-    virtual void reconfigure(ReconfContext* ctx);
+    virtual void reconfigureEvent(ReconfigureEvent* event);
 
 protected:
     virtual void mousePressEvent(MousePressEvent* event);

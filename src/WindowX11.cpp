@@ -344,7 +344,7 @@ void WindowX11::processSomeEvents(Window::Events* events)
                         auto windowximage = (WindowXImage*) window;
                         windowximage->resizeImage();
                     }
-                    events->resize(window, old_w, old_h, new_w, new_h);
+                    events->resize(window, new_w, new_h);
                 }
                 break;
             }
@@ -743,6 +743,8 @@ void WindowGLX::setup(int width, int height)
         &swa
     );
 
+    updateAttrs();
+
     XFree(vinfo);
 
     show();
@@ -846,7 +848,7 @@ void Window::processSomeEvents(Window::Events* events)
 }
 
 
-void Window::forEachWindow(void (*fun)(Window* window, void* data), void* data)
+void Window::forEach(void (*fun)(Window* window, void* data), void* data)
 {
     for(auto window : g_all_windows)
         fun(window, data);

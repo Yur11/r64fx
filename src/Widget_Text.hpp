@@ -30,9 +30,9 @@ public:
 
     void setFont(Font* font);
 
-    virtual void reconfigure(ReconfContext* ctx);
-
 protected:
+    virtual void reconfigureEvent(ReconfigureEvent* event);
+
     virtual void mousePressEvent(MousePressEvent* event);
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);

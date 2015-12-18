@@ -1,6 +1,5 @@
 #include "Widget_Text.hpp"
 #include "WidgetFlags.hpp"
-#include "ReconfContext.hpp"
 #include "Painter.hpp"
 #include <new>
 
@@ -78,11 +77,11 @@ void Widget_Text::setFont(Font* font)
 }
 
 
-void Widget_Text::reconfigure(ReconfContext* ctx)
+void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
 {
-    auto painter = ctx->painter();
+    auto painter = event->painter();
     painter->fillRect({255, 0, 0}, rect());
-    Widget::reconfigure(ctx);
+    Widget::reconfigureEvent(event);
 }
 
 

@@ -1,5 +1,4 @@
 #include "Widget_Dummy.hpp"
-#include "ReconfContext.hpp"
 #include "Painter.hpp"
 #include "Mouse.hpp"
 
@@ -22,12 +21,12 @@ Widget_Dummy::~Widget_Dummy()
 }
 
 
-void Widget_Dummy::reconfigure(ReconfContext* ctx)
+void Widget_Dummy::reconfigureEvent(ReconfigureEvent* event)
 {
-    auto painter = ctx->painter();
+    auto painter = event->painter();
     Rect<int> rect = {0, 0, width(), height()};
 
-    if(rect != ctx->visibleRect())
+    if(rect != event->visibleRect())
     {
         painter->fillRect({63, 63, 63}, {{0, 0}, size()});
     }
@@ -40,7 +39,7 @@ void Widget_Dummy::reconfigure(ReconfContext* ctx)
         painter->fillRect(m_Color, {{0, 0}, size()});
     }
 
-    Widget::reconfigure(ctx);
+    Widget::reconfigureEvent(event);
 
     painter->fillRect({0, 0, 0}, {m_Point, {10, 10}});
 }

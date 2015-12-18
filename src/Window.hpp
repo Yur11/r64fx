@@ -22,12 +22,12 @@ public:
     };
 
     struct Events{
-        void (*mouse_press)   (Window* window, float x, float y, unsigned int button);
-        void (*mouse_release) (Window* window, float x, float y, unsigned int button);
-        void (*mouse_move)    (Window* window, float x, float y);
+        void (*resize)        (Window* window, int width, int height);
+        void (*mouse_press)   (Window* window, int x, int y, unsigned int button);
+        void (*mouse_release) (Window* window, int x, int y, unsigned int button);
+        void (*mouse_move)    (Window* window, int x, int y);
         void (*key_press)     (Window* window, int key);
         void (*key_release)   (Window* window, int key);
-        void (*resize)        (Window* window, int old_w, int old_h, int new_w, int new_h);
         void (*close)         (Window* window);
     };
 
@@ -71,7 +71,7 @@ public:
 
     static void processSomeEvents(Window::Events* events);
 
-    static void forEachWindow(void (*fun)(Window* window, void* data), void* data);
+    static void forEach(void (*fun)(Window* window, void* data), void* data);
 };
 
 };
