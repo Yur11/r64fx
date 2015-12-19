@@ -114,15 +114,23 @@ public:
         Widget::reconfigureEvent(event);
     }
 
-    virtual void keyPressEvent(KeyEvent* event)
+    virtual void keyPressEvent(KeyPressEvent* event)
     {
         cout << "key:  " << Keyboard::Key::toString(event->key()) << "\n";
+        if(event->key() == Keyboard::Key::Return)
+        {
+            startTextInput();
+        }
     }
 
     virtual void textInputEvent(TextInputEvent* event)
     {
         string str(event->utf8(), event->size());
-        cout << Keyboard::Key::toString(event->key()) << " => " << str << "\n";
+        cout << " => " << str << "\n";
+        if(event->key() == Keyboard::Key::Escape)
+        {
+            stopTextInput();
+        }
     }
 
     virtual void closeEvent()
@@ -146,7 +154,6 @@ private:
         m_Widget = new MyWidget;
         m_Widget->setSize({1000, 600});
         m_Widget->show();
-        m_Widget->parentWindow()->startTextInput();
     }
     
     virtual void cleanup()

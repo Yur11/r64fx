@@ -40,6 +40,9 @@ namespace{
     /* Widget that currently grabs mouse input. */
     Widget* g_mouse_grabber   = nullptr;
 
+    /* Widget that currently has keyboard focus. */
+    Widget* g_keyboard_grabber = nullptr;
+
     /* Maximum number of individual rectangles
      * that can be repainted after reconf. cycle. */
     constexpr int max_rects = 16;
@@ -126,11 +129,6 @@ Widget* Widget::parent() const
     return (Widget*)(isWindow() ? nullptr : m_parent.widget);
 }
 
-Window* Widget::parentWindow() const
-{
-    return (Window*)(isWindow() ? m_parent.window : nullptr);
-}
-
 
 void Widget::add(Widget* child)
 {
@@ -208,6 +206,40 @@ Rect<int> Widget::rect() const
 }
 
 
+Point<int> Widget::toRootCoords(Point<int> point) const
+{
+    point += position();
+    if(isWindow() || m_parent.widget == nullptr)
+    {
+        return point;
+    }
+    else
+    {
+        return m_parent.widget->toRootCoords(point);
+    }
+}
+
+
+Rect<int> Widget::toRootCoords(Rect<int> rect) const
+{
+    rect += position();
+    if(isWindow() || m_parent.widget == nullptr)
+    {
+        return rect;
+    }
+    else
+    {
+        return m_parent.widget->toRootCoords(rect);
+    }
+}
+
+
+bool Widget::isVisible() const
+{
+    return m_flags & R64FX_WIDGET_IS_VISIBLE;
+}
+
+
 void Widget::show()
 {
     if(!isWindow())
@@ -279,15 +311,9 @@ void Widget::close()
 }
 
 
-void Widget::update()
+Window* Widget::window() const
 {
-    m_flags |= R64FX_WIDGET_WANTS_UPDATE;
-    auto widget = parent();
-    while(widget && !(widget->m_flags & R64FX_CHILD_WANTS_UPDATE))
-    {
-        widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
-        widget = widget->parent();
-    }
+    return (Window*)(isWindow() ? m_parent.window : nullptr);
 }
 
 
@@ -297,9 +323,25 @@ bool Widget::isWindow() const
 }
 
 
-bool Widget::isVisible() const
+void Widget::setWindowTitle(std::string title)
 {
-    return m_flags & R64FX_WIDGET_IS_VISIBLE;
+    if(isWindow())
+    {
+        m_parent.window->setTitle(title);
+    }
+}
+
+
+std::string Widget::windowTitle() const
+{
+    if(isWindow())
+    {
+        return m_parent.window->title();
+    }
+    else
+    {
+        return "";
+    }
 }
 
 
@@ -327,52 +369,74 @@ bool Widget::isMouseGrabber() const
 }
 
 
-void Widget::setWindowTitle(std::string title)
+void Widget::grabKeyboard()
 {
-    if(isWindow())
+    g_keyboard_grabber = this;
+}
+
+
+void Widget::ungrabKeyboard()
+{
+    g_keyboard_grabber = nullptr;
+}
+
+
+Widget* Widget::keyboardGrabber()
+{
+    return g_keyboard_grabber;
+}
+
+
+bool Widget::isKeyboardGrabber() const
+{
+    return this == g_keyboard_grabber;
+}
+
+
+void Widget::startTextInput()
+{
+    auto widget = root();
+    if(widget->isWindow())
     {
-        m_parent.window->setTitle(title);
+        widget->window()->startTextInput();
+        grabKeyboard();
     }
 }
 
 
-std::string Widget::windowTitle() const
+void Widget::stopTextInput()
 {
-    if(isWindow())
+    auto widget = root();
+    if(widget->isWindow())
     {
-        return m_parent.window->title();
-    }
-    else
-    {
-        return "";
+        widget->window()->stopTextInput();
+        ungrabKeyboard();
     }
 }
 
 
-Point<int> Widget::toRootCoords(Point<int> point) const
+bool Widget::doingTextInput()
 {
-    point += position();
-    if(isWindow() || m_parent.widget == nullptr)
+    auto widget = root();
+    if(widget->isWindow())
     {
-        return point;
+        return widget->window()->doingTextInput();
     }
     else
     {
-        return m_parent.widget->toRootCoords(point);
+        return false;
     }
 }
 
 
-Rect<int> Widget::toRootCoords(Rect<int> rect) const
+void Widget::update()
 {
-    rect += position();
-    if(isWindow() || m_parent.widget == nullptr)
+    m_flags |= R64FX_WIDGET_WANTS_UPDATE;
+    auto widget = parent();
+    while(widget && !(widget->m_flags & R64FX_CHILD_WANTS_UPDATE))
     {
-        return rect;
-    }
-    else
-    {
-        return m_parent.widget->toRootCoords(rect);
+        widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
+        widget = widget->parent();
     }
 }
 
@@ -630,12 +694,19 @@ void window_key_press(Window* window, int key)
 {
     auto d = (WindowWidgetData*) window->data();
 
-    KeyEvent event(key);
-    d->widget->keyPressEvent(&event);
+    KeyPressEvent event(key);
+    if(g_keyboard_grabber)
+    {
+        g_keyboard_grabber->keyPressEvent(&event);
+    }
+    else
+    {
+        d->widget->keyPressEvent(&event);
+    }
 }
 
 
-void Widget::keyPressEvent(KeyEvent* event)
+void Widget::keyPressEvent(KeyPressEvent* event)
 {
 
 }
@@ -645,12 +716,19 @@ void window_key_release(Window* window, int key)
 {
     auto d = (WindowWidgetData*) window->data();
 
-    KeyEvent event(key);
-    d->widget->keyReleaseEvent(&event);
+    KeyReleaseEvent event(key);
+    if(g_keyboard_grabber)
+    {
+        g_keyboard_grabber->keyReleaseEvent(&event);
+    }
+    else
+    {
+        d->widget->keyReleaseEvent(&event);
+    }
 }
 
 
-void Widget::keyReleaseEvent(KeyEvent* event)
+void Widget::keyReleaseEvent(KeyReleaseEvent* event)
 {
 
 }
@@ -661,7 +739,14 @@ void window_text_input(Window* window, char* utf8, unsigned int size, int key)
     auto d = (WindowWidgetData*) window->data();
 
     TextInputEvent event(utf8, size, key);
-    d->widget->textInputEvent(&event);
+    if(g_keyboard_grabber)
+    {
+        g_keyboard_grabber->textInputEvent(&event);
+    }
+    else
+    {
+        d->widget->textInputEvent(&event);
+    }
 }
 
 
@@ -680,7 +765,7 @@ void window_close(Window* window)
 
 void Widget::closeEvent()
 {
-    cout << "Close!\n";
+
 }
 
 }//namespace r64fx

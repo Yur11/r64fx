@@ -103,13 +103,13 @@ void Widget_Text::mouseMoveEvent(MouseMoveEvent* event)
 }
 
 
-void Widget_Text::keyPressEvent(KeyEvent* event)
+void Widget_Text::keyPressEvent(KeyPressEvent* event)
 {
     Widget::keyPressEvent(event);
 }
 
 
-void Widget_Text::keyReleaseEvent(KeyEvent* event)
+void Widget_Text::keyReleaseEvent(KeyReleaseEvent* event)
 {
     Widget::keyReleaseEvent(event);
 }

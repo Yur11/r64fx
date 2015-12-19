@@ -24,7 +24,7 @@ class KeyEvent{
     int m_key;
 
 public:
-    KeyEvent(int key)
+    explicit KeyEvent(int key)
     : m_key(key)
     {}
 
@@ -32,8 +32,16 @@ public:
 };
 
 
-class KeyPressEvent   : public KeyEvent{};
-class KeyReleaseEvent : public KeyEvent{};
+class KeyPressEvent : public KeyEvent{
+public:
+    explicit KeyPressEvent(int key) : KeyEvent(key) {}
+};
+
+
+class KeyReleaseEvent : public KeyEvent{
+public:
+    explicit KeyReleaseEvent(int key) : KeyEvent(key) {}
+};
 
 
 class TextInputEvent : public KeyEvent{
@@ -41,7 +49,7 @@ class TextInputEvent : public KeyEvent{
     unsigned int m_size;
 
 public:
-    TextInputEvent(char* utf8, unsigned int size, int key);
+    explicit TextInputEvent(char* utf8, unsigned int size, int key);
 
     inline const char* utf8() { return m_utf8; }
 

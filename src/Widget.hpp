@@ -12,7 +12,8 @@ class Painter;
 class MousePressEvent;
 class MouseReleaseEvent;
 class MouseMoveEvent;
-class KeyEvent;
+class KeyPressEvent;
+class KeyReleaseEvent;
 class TextInputEvent;
 
 class Widget : public LinkedList<Widget>::Node{
@@ -49,15 +50,14 @@ public:
     void setParent(Widget* parent);
     
     Widget* parent() const;
-
-    /* Returns parent window that hosts this widget
-     * or nullptr if this widget has no parent window. */
-    Window* parentWindow() const;
     
     /* Effectivly calls setParent on the given widget. */
     void add(Widget* child);
 
     Widget* root();
+
+
+/* === Geometry. === */
 
     void setPosition(Point<int> pos);
 
@@ -72,7 +72,16 @@ public:
     int height() const;
 
     Rect<int> rect() const;
-    
+
+    Point<int> toRootCoords(Point<int> point) const;
+
+    Rect<int> toRootCoords(Rect<int> rect) const;
+
+    bool isVisible() const;
+
+
+/* === Window === */
+
     /* Show this widget in a window. */
     void show();
 
@@ -82,11 +91,16 @@ public:
     /* Close the window. */
     void close();
 
-
+    Window* window() const;
 
     bool isWindow() const;
 
-    bool isVisible() const;
+    void setWindowTitle(std::string title);
+
+    std::string windowTitle() const;
+
+
+/* === Mouse === */
 
     void grabMouse();
 
@@ -96,13 +110,25 @@ public:
 
     bool isMouseGrabber() const;
 
-    void setWindowTitle(std::string title);
 
-    std::string windowTitle() const;
+/* === Keyboard === */
 
-    Point<int> toRootCoords(Point<int> point) const;
+    void grabKeyboard();
 
-    Rect<int> toRootCoords(Rect<int> rect) const;
+    static void ungrabKeyboard();
+
+    static Widget* keyboardGrabber();
+
+    bool isKeyboardGrabber() const;
+
+    void startTextInput();
+
+    void stopTextInput();
+
+    bool doingTextInput();
+
+
+/* === Update/Reconfigure cycle === */
 
     /* Request an update for this widget.
      * This will result in reconfigure() being called for this widget
@@ -135,9 +161,9 @@ protected:
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 
-    virtual void keyPressEvent(KeyEvent* event);
+    virtual void keyPressEvent(KeyPressEvent* event);
 
-    virtual void keyReleaseEvent(KeyEvent* event);
+    virtual void keyReleaseEvent(KeyReleaseEvent* event);
 
     virtual void textInputEvent(TextInputEvent* event);
 

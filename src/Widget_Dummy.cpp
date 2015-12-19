@@ -93,13 +93,13 @@ void Widget_Dummy::mouseMoveEvent(MouseMoveEvent* event)
 }
 
 
-void Widget_Dummy::keyPressEvent(KeyEvent* event)
+void Widget_Dummy::keyPressEvent(KeyPressEvent* event)
 {
     Widget::keyPressEvent(event);
 }
 
 
-void Widget_Dummy::keyReleaseEvent(KeyEvent* event)
+void Widget_Dummy::keyReleaseEvent(KeyReleaseEvent* event)
 {
     Widget::keyReleaseEvent(event);
 }

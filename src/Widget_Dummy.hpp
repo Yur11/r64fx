@@ -25,9 +25,9 @@ protected:
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 
-    virtual void keyPressEvent(KeyEvent* event);
+    virtual void keyPressEvent(KeyPressEvent* event);
 
-    virtual void keyReleaseEvent(KeyEvent* event);
+    virtual void keyReleaseEvent(KeyReleaseEvent* event);
 };
 
 }//namespace r64fx
