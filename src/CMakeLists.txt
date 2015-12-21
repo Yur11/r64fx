@@ -20,12 +20,13 @@ set(SRC
     ImageUtils.cpp
     Keyboard.cpp
     Mouse.cpp
+    Painter.cpp
+    Program.cpp
     Shader.cpp
     Shader_rgba.cpp
     Shader_rgba_tex.cpp
     StringUtils.cpp
-    Painter.cpp
-    Program.cpp
+    TextPainter.cpp
     Widget.cpp
     Widget_Dummy.cpp
     Widget_Text.cpp

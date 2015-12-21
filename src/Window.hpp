@@ -28,7 +28,7 @@ public:
         void (*mouse_move)    (Window* window, int x, int y);
         void (*key_press)     (Window* window, int key);
         void (*key_release)   (Window* window, int key);
-        void (*text_input)    (Window* window, char* utf8, unsigned int size, int key);
+        void (*text_input)    (Window* window, const std::string &text, int key);
         void (*close)         (Window* window);
     };
 

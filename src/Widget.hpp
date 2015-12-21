@@ -112,14 +112,17 @@ public:
 
 
 /* === Keyboard === */
+    void setFocusOnClick(bool yes);
 
-    void grabKeyboard();
+    bool gainsFocusOnClick() const;
 
-    static void ungrabKeyboard();
+    void setFocus();
 
-    static Widget* keyboardGrabber();
+    static void removeFocus();
 
-    bool isKeyboardGrabber() const;
+    static Widget* focusOwner();
+
+    bool hasFocus() const;
 
     void startTextInput();
 
@@ -153,8 +156,14 @@ public:
     static void processEvents();
 
 protected:
+    /* Secondary Events */
     virtual void reconfigureEvent(ReconfigureEvent* event);
 
+    virtual void focusInEvent();
+
+    virtual void focusOutEvent();
+
+    /* Window Events */
     virtual void mousePressEvent(MousePressEvent* event);
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
@@ -179,7 +188,7 @@ private:
     friend void window_mouse_move      (Window* window, int x, int y);
     friend void window_key_press       (Window* window, int key);
     friend void window_key_release     (Window* window, int key);
-    friend void window_text_input      (Window* window, char* utf8, unsigned int size, int key);
+    friend void window_text_input      (Window* window, const std::string &text, int key);
     friend void window_close           (Window* window);
 };
     

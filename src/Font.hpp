@@ -41,9 +41,6 @@ public:
         inline int advance()   const { return m_advance; }
         inline int bearing_y() const { return m_bearing_y; }
         inline int height()    const { return m_height; }
-        
-        inline int ascent()    const { return bearing_y(); }
-        inline int descent()   const { return height() - ascent(); }
     };
     
     Font(std::string name = "");

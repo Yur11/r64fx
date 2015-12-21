@@ -23,7 +23,7 @@ void window_mouse_release    (Window* window, int x, int y, unsigned int button)
 void window_mouse_move       (Window* window, int x, int y);
 void window_key_press        (Window* window, int key);
 void window_key_release      (Window* window, int key);
-void window_text_input       (Window* window, char* utf8, unsigned int size, int key);
+void window_text_input       (Window* window, const std::string &text, int key);
 void window_close            (Window* window);
 
 namespace{
@@ -41,7 +41,7 @@ namespace{
     Widget* g_mouse_grabber   = nullptr;
 
     /* Widget that currently has keyboard focus. */
-    Widget* g_keyboard_grabber = nullptr;
+    Widget* g_focus_owner = nullptr;
 
     /* Maximum number of individual rectangles
      * that can be repainted after reconf. cycle. */
@@ -90,6 +90,7 @@ namespace{
 Widget::Widget(Widget* parent)
 {
     setParent(parent);
+    setFocusOnClick(true);
 }
 
 
@@ -369,27 +370,48 @@ bool Widget::isMouseGrabber() const
 }
 
 
-void Widget::grabKeyboard()
+void Widget::setFocusOnClick(bool yes)
 {
-    g_keyboard_grabber = this;
+    set_bits(m_flags, yes, R64FX_WIDGET_CLICK_FOCUS);
 }
 
 
-void Widget::ungrabKeyboard()
+bool Widget::gainsFocusOnClick() const
 {
-    g_keyboard_grabber = nullptr;
+    return m_flags & R64FX_WIDGET_CLICK_FOCUS;
 }
 
 
-Widget* Widget::keyboardGrabber()
+void Widget::setFocus()
 {
-    return g_keyboard_grabber;
+    if(g_focus_owner)
+    {
+        g_focus_owner->focusOutEvent();
+    }
+    g_focus_owner = this;
+    g_focus_owner->focusInEvent();
 }
 
 
-bool Widget::isKeyboardGrabber() const
+void Widget::removeFocus()
 {
-    return this == g_keyboard_grabber;
+    if(g_focus_owner)
+    {
+        g_focus_owner->focusOutEvent();
+    }
+    g_focus_owner = nullptr;
+}
+
+
+Widget* Widget::focusOwner()
+{
+    return g_focus_owner;
+}
+
+
+bool Widget::hasFocus() const
+{
+    return this == g_focus_owner;
 }
 
 
@@ -399,7 +421,6 @@ void Widget::startTextInput()
     if(widget->isWindow())
     {
         widget->window()->startTextInput();
-        grabKeyboard();
     }
 }
 
@@ -410,7 +431,6 @@ void Widget::stopTextInput()
     if(widget->isWindow())
     {
         widget->window()->stopTextInput();
-        ungrabKeyboard();
     }
 }
 
@@ -580,6 +600,18 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
 }
 
 
+void Widget::focusInEvent()
+{
+
+}
+
+
+void Widget::focusOutEvent()
+{
+
+}
+
+
 void window_mouse_press(Window* window, int x, int y, unsigned int button)
 {
     auto d = (WindowWidgetData*) window->data();
@@ -604,6 +636,11 @@ void window_mouse_press(Window* window, int x, int y, unsigned int button)
 
 void Widget::mousePressEvent(MousePressEvent* event)
 {
+    if(gainsFocusOnClick())
+    {
+        setFocus();
+    }
+
     for(auto child : m_children)
     {
         if((child->isVisible() && child->rect().overlaps(event->position())))
@@ -695,9 +732,9 @@ void window_key_press(Window* window, int key)
     auto d = (WindowWidgetData*) window->data();
 
     KeyPressEvent event(key);
-    if(g_keyboard_grabber)
+    if(g_focus_owner)
     {
-        g_keyboard_grabber->keyPressEvent(&event);
+        g_focus_owner->keyPressEvent(&event);
     }
     else
     {
@@ -717,9 +754,9 @@ void window_key_release(Window* window, int key)
     auto d = (WindowWidgetData*) window->data();
 
     KeyReleaseEvent event(key);
-    if(g_keyboard_grabber)
+    if(g_focus_owner)
     {
-        g_keyboard_grabber->keyReleaseEvent(&event);
+        g_focus_owner->keyReleaseEvent(&event);
     }
     else
     {
@@ -734,14 +771,16 @@ void Widget::keyReleaseEvent(KeyReleaseEvent* event)
 }
 
 
-void window_text_input(Window* window, char* utf8, unsigned int size, int key)
+void window_text_input(Window* window, const std::string &text, int key)
 {
+    cout << "window_text_input: " << text << "\n";
+
     auto d = (WindowWidgetData*) window->data();
 
-    TextInputEvent event(utf8, size, key);
-    if(g_keyboard_grabber)
+    TextInputEvent event(text, key);
+    if(g_focus_owner)
     {
-        g_keyboard_grabber->textInputEvent(&event);
+        g_focus_owner->textInputEvent(&event);
     }
     else
     {

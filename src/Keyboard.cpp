@@ -158,19 +158,10 @@ const char* toString(int key)
 }//namespace Keyboard
 
 
-TextInputEvent::TextInputEvent(char* utf8, unsigned int size, int key)
+TextInputEvent::TextInputEvent(const std::string &text, int key)
 : KeyEvent(key)
-, m_size(size)
+, m_text(text)
 {
-#ifdef R64FX_DEBUG
-    if(size > 8)
-    {
-        cerr << "TextInputEvent: Bad size " << size << "\n";
-        abort();
-    }
-#endif//R64FX_DEBUG
-    for(unsigned int i=0; i<size; i++)
-        m_utf8[i] = utf8[i];
 }
 
 }//namespace r64fx

@@ -87,6 +87,10 @@ public:
         auto wwwd3 = new Widget_Dummy({0, 120, 0}, wwd2);
         wwwd3->setPosition({10, 10});
         wwwd3->setSize({20, 20});
+
+        auto wt = new Widget_Text(this);
+        wt->setPosition({50, 350});
+        wt->setSize({200, 50});
     }
 
     ~MyWidget()
@@ -114,24 +118,18 @@ public:
         Widget::reconfigureEvent(event);
     }
 
-    virtual void keyPressEvent(KeyPressEvent* event)
+    virtual void mousePressEvent(MousePressEvent* event)
     {
-        cout << "key:  " << Keyboard::Key::toString(event->key()) << "\n";
-        if(event->key() == Keyboard::Key::Return)
-        {
-            startTextInput();
-        }
+        Widget::mousePressEvent(event);
     }
 
-    virtual void textInputEvent(TextInputEvent* event)
-    {
-        string str(event->utf8(), event->size());
-        cout << " => " << str << "\n";
-        if(event->key() == Keyboard::Key::Escape)
-        {
-            stopTextInput();
-        }
-    }
+//     virtual void keyPressEvent(KeyPressEvent* event)
+//     {
+//     }
+
+//     virtual void textInputEvent(TextInputEvent* event)
+//     {
+//     }
 
     virtual void closeEvent()
     {

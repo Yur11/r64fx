@@ -2,27 +2,21 @@
 #define R64FX_WIDGET_TEXT_HPP
 
 #include "Widget.hpp"
+#include "TextPainter.hpp"
 
 namespace r64fx{
 
-class Font;
-
 class Widget_Text : public Widget{
-    std::string*  m_text = nullptr;
-    Font*         m_font = nullptr;
+    TextPainter m_text_painter;
 
 public:
     Widget_Text(std::string* textptr, Font* font, Widget* parent = nullptr);
 
-    Widget_Text(const std::string &text, Font* font, Widget* parent = nullptr);
+    Widget_Text(const std::string &text, Font* font = nullptr, Widget* parent = nullptr);
 
     Widget_Text(Widget* parent = nullptr);
 
     virtual ~Widget_Text();
-
-    void free();
-
-    bool ownsData() const;
 
     void setText(std::string *text);
 
@@ -30,8 +24,18 @@ public:
 
     void setFont(Font* font);
 
+    void setFont(std::string font_name);
+
+    bool ownsText() const;
+
+    bool ownsFont() const;
+
 protected:
     virtual void reconfigureEvent(ReconfigureEvent* event);
+
+    virtual void focusInEvent();
+
+    virtual void focusOutEvent();
 
     virtual void mousePressEvent(MousePressEvent* event);
 
@@ -42,6 +46,8 @@ protected:
     virtual void keyPressEvent(KeyPressEvent* event);
 
     virtual void keyReleaseEvent(KeyReleaseEvent* event);
+
+    virtual void textInputEvent(TextInputEvent* event);
 };
 
 }//namespace r64fx

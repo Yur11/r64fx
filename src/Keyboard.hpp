@@ -1,13 +1,11 @@
 #ifndef R64FX_KEYBOARD_HPP
 #define R64FX_KEYBOARD_HPP
 
-#if defined R64FX_USE_SDL2
-#include "KeyboardSDL2.hpp"
-
-#elif defined R64FX_USE_X11
+#if defined R64FX_USE_X11
 #include "KeyboardX11.hpp"
+#endif
 
-#endif //R64FX_USE_SDL2
+#include <string>
 
 namespace r64fx{
 
@@ -45,15 +43,12 @@ public:
 
 
 class TextInputEvent : public KeyEvent{
-    char m_utf8[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-    unsigned int m_size;
+    std::string m_text;
 
 public:
-    explicit TextInputEvent(char* utf8, unsigned int size, int key);
+    explicit TextInputEvent(const std::string &text, int key);
 
-    inline const char* utf8() { return m_utf8; }
-
-    inline unsigned int size() const { return m_size; }
+    inline std::string text() const { return m_text; }
 };
 
 }//namespace r64fx

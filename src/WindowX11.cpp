@@ -285,7 +285,13 @@ void WindowX11::processSomeEvents(Window::Events* events)
                         window->inputContext(), &xevent.xkey,
                         buff, 8, &keysym, &status
                     );
-                    events->text_input(window, buff, nbytes, keysym);
+
+                    string str = "";
+                    if(nbytes)
+                    {
+                        str = string(buff, nbytes);
+                    }
+                    events->text_input(window, str, keysym);
                 }
                 else
                 {
