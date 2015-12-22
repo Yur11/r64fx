@@ -315,28 +315,32 @@ PainterImplGL::~PainterImplGL()
 }
 
 
+void gl_sub_tex_routine(PaintContext* ctx, Rect<int> r, void (*routine)(PaintContext*), GLuint texture)
+{
+    Image img(r.width(), r.height(), 4);
+
+    ctx->target_image = &img;
+    ctx->rect = { 0, 0, r.width(), r.height() };
+    routine(ctx);
+
+    gl::BindTexture(GL_TEXTURE_2D, texture);
+    gl::TexSubImage2D(
+        GL_TEXTURE_2D, 0,
+        r.x(), r.y(), r.width(), r.height(),
+        GL_RGBA, GL_UNSIGNED_BYTE, img.data()
+    );
+}
+
+
 void PainterImplGL::fillRect(Color<unsigned char> color, Rect<int> rect)
 {
     Rect<int> r = clip(rect + offset());
     if(r.width() > 0 && r.height() > 0)
     {
-        Image img(r.width(), r.height(), 4);
-
-        paint_context->rect = { 0, 0, r.width(), r.height() };
-        paint_context->target_image = &img;
         paint_context->color = color;
-        fill_rect_routine(paint_context);
-
-        gl::BindTexture(GL_TEXTURE_2D, base_texture);
-        gl::TexSubImage2D(
-            GL_TEXTURE_2D, 0,
-            r.x(), r.y(), r.width(), r.height(),
-            GL_RGBA, GL_UNSIGNED_BYTE, img.data()
-        );
+        gl_sub_tex_routine(paint_context, r, fill_rect_routine, base_texture);
     }
 }
-
-
 
 
 void PainterImplGL::putImage(Image* image, Point<int> pos)
@@ -345,19 +349,8 @@ void PainterImplGL::putImage(Image* image, Point<int> pos)
     Rect<int> r = clip(rect);
     if(r.width() > 0 && r.height() > 0)
     {
-        Image img(r.width(), r.height(), 4);
-
-        paint_context->rect = { 0, 0, r.width(), r.height() };
-        paint_context->target_image = &img;
         paint_context->source_image = image;
-        put_image_routine(paint_context);
-
-        gl::BindTexture(GL_TEXTURE_2D, base_texture);
-        gl::TexSubImage2D(
-            GL_TEXTURE_2D, 0,
-            r.x(), r.y(), r.width(), r.height(),
-            GL_RGBA, GL_UNSIGNED_BYTE, img.data()
-        );
+        gl_sub_tex_routine(paint_context, r, put_image_routine, base_texture);
     }
 }
 
@@ -368,21 +361,10 @@ void PainterImplGL::blendColors(Color<unsigned char> a, Color<unsigned char> b, 
     Rect<int> r = clip(rect);
     if(r.width() > 0 && r.height() > 0)
     {
-        Image img(r.width(), r.height(), 4);
-
-        paint_context->rect = { 0, 0, r.width(), r.height() };
-        paint_context->target_image = &img;
         paint_context->source_image = mask;
         paint_context->color        = a;
         paint_context->alt_color    = b;
-        blend_colors_routine(paint_context);
-
-        gl::BindTexture(GL_TEXTURE_2D, base_texture);
-        gl::TexSubImage2D(
-            GL_TEXTURE_2D, 0,
-            r.x(), r.y(), r.width(), r.height(),
-            GL_RGBA, GL_UNSIGNED_BYTE, img.data()
-        );
+        gl_sub_tex_routine(paint_context, r, blend_colors_routine, base_texture);
     }
 }
 
