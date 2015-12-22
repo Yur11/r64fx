@@ -23,24 +23,27 @@ class PaintContext;
 
 typedef void (*PaintRoutine)(PaintContext* ctx);
 
-/** @brief Collection of values to be passed to paint routines. */
+/* Collection of values to be passed to paint routines. */
 struct PaintContext{
-    /** @brief Rectangle given by the user. */
+    /* Rectangle given by the user. */
     Rect<int>             orig_rect;
 
-    /** @brief Rectangle relative to the target image. */
+    /* Rectangle relative to the target image. */
     Rect<int>             rect;
 
-    /** @brief Color to use. */
+    /* Color to use. */
     Color<unsigned char>  color;
 
-    /** @brief Image to put pixels in. */
+    /* Secondary color. */
+    Color<unsigned char>  alt_color;
+
+    /* Image to put pixels in. */
     Image*                target_image;
 
-    /** @brief Image to read pixels from. */
+    /* Image to read pixels from. */
     Image*                source_image;
 
-    /** @brief Data used to build plots. */
+    /* Data used to build plots. */
     float*                plot_data;
 };
 
@@ -75,6 +78,40 @@ void put_image_routine(PaintContext* ctx)
             {
                 dst->pixel(x + rect.x(), y + rect.y())[c] = src->pixel(x, y)[c];
             }
+        }
+    }
+}
+
+
+void blend_colors_routine(PaintContext* ctx)
+{
+    auto dst   = ctx->target_image;
+    auto mask  = ctx->source_image;
+    auto rect  = ctx->rect;
+
+    static const float rcp = 1.0f / 255.0f;
+
+    Color<float> a = {
+        rcp * ctx->color.red(),
+        rcp * ctx->color.green(),
+        rcp * ctx->color.blue(),
+        rcp * ctx->color.alpha()
+    };
+
+    Color<float> b = {
+        rcp * ctx->alt_color.red(),
+        rcp * ctx->alt_color.green(),
+        rcp * ctx->alt_color.blue(),
+        rcp * ctx->alt_color.alpha()
+    };
+
+    for(int y=0; y<rect.height(); y++)
+    {
+        for(int x=0; x<rect.width(); x++)
+        {
+            unsigned char px = mask->pixel(x, y)[0];
+            Color<float> c = a * float(px) + b * float(255 - px);
+            dst->setPixel(x + rect.x(), y + rect.y(), c.to<unsigned char>().vec);
         }
     }
 }
@@ -136,6 +173,8 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void putImage(Image* img, Point<int> pos);
 
+    virtual void blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos);
+
     virtual void repaint(Rect<int>* rects, int numrects);
 
     virtual void adjustForWindowSize();
@@ -169,6 +208,16 @@ void PainterImplImage::putImage(Image* img, Point<int> pos)
     paint_context->source_image  = img;
     paint_context->rect          = clip(Rect<int>(pos + offset(), {img->width(), img->height()}));
     put_image_routine(paint_context);
+}
+
+
+void PainterImplImage::blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos)
+{
+    paint_context->source_image  = mask;
+    paint_context->rect          = clip(Rect<int>(pos + offset(), {mask->width(), mask->height()}));
+    paint_context->color         = a;
+    paint_context->alt_color     = b;
+    blend_colors_routine(paint_context);
 }
 
 
@@ -217,6 +266,8 @@ struct PainterImplGL : public PainterImpl{
     virtual void fillRect(Color<unsigned char> color, Rect<int> rect);
 
     virtual void putImage(Image* img, Point<int> pos);
+
+    virtual void blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos);
 
     virtual void repaint(Rect<int>* rects, int numrects);
 
@@ -286,6 +337,8 @@ void PainterImplGL::fillRect(Color<unsigned char> color, Rect<int> rect)
 }
 
 
+
+
 void PainterImplGL::putImage(Image* image, Point<int> pos)
 {
     Rect<int> rect(pos + offset(), {image->width(), image->height()});
@@ -298,6 +351,31 @@ void PainterImplGL::putImage(Image* image, Point<int> pos)
         paint_context->target_image = &img;
         paint_context->source_image = image;
         put_image_routine(paint_context);
+
+        gl::BindTexture(GL_TEXTURE_2D, base_texture);
+        gl::TexSubImage2D(
+            GL_TEXTURE_2D, 0,
+            r.x(), r.y(), r.width(), r.height(),
+            GL_RGBA, GL_UNSIGNED_BYTE, img.data()
+        );
+    }
+}
+
+
+void PainterImplGL::blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos)
+{
+    Rect<int> rect(pos + offset(), {mask->width(), mask->height()});
+    Rect<int> r = clip(rect);
+    if(r.width() > 0 && r.height() > 0)
+    {
+        Image img(r.width(), r.height(), 4);
+
+        paint_context->rect = { 0, 0, r.width(), r.height() };
+        paint_context->target_image = &img;
+        paint_context->source_image = mask;
+        paint_context->color        = a;
+        paint_context->alt_color    = b;
+        blend_colors_routine(paint_context);
 
         gl::BindTexture(GL_TEXTURE_2D, base_texture);
         gl::TexSubImage2D(

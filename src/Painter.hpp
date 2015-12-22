@@ -58,6 +58,9 @@ public:
      */
     virtual void putImage(Image* img, Point<int> pos = {0, 0}) = 0;
 
+    /* Blend two colors using an alpha mask. */
+    virtual void blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos = {0, 0}) = 0;
+
     /** @brief Make the changes visible.
 
         Update window surface. Swap buffers. etc.
