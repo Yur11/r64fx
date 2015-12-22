@@ -22,7 +22,71 @@ union Color{
     inline T alpha() const  { return vec[3]; }
 
     inline T operator[](int i) const { return vec[i]; }
+
+    template<typename OtherT> Color<OtherT> to()
+    {
+        return Color<OtherT>(
+            OtherT(red()),
+            OtherT(green()),
+            OtherT(blue()),
+            OtherT(alpha())
+        );
+    }
 };
+
+
+template<typename T> Color<T> operator+(const Color<T> &a, const Color<T> &b)
+{
+    return Color<T>(
+        a.red()    +  b.red(),
+        a.green()  +  b.green(),
+        a.blue()   +  a.blue(),
+        a.alpha()  +  a.alpha()
+    );
+}
+
+
+template<typename T> Color<T> &operator+=(Color<T> &a, const Color<T> &b)
+{
+    a = a + b;
+    return a;
+}
+
+
+template<typename T> Color<T> operator*(const Color<T> &a, const Color<T> &b)
+{
+    return Color<T>(
+        a.red()    *  b.red(),
+        a.green()  *  b.green(),
+        a.blue()   *  a.blue(),
+        a.alpha()  *  a.alpha()
+    );
+}
+
+
+template<typename T> Color<T> &operator*=(Color<T> &a, const Color<T> &b)
+{
+    a = a * b;
+    return a;
+}
+
+
+template<typename T> Color<T> operator*(const Color<T> &color, T c)
+{
+    return Color<T>(
+        c * color.red(),
+        c * color.green(),
+        c * color.blue(),
+        c * color.alpha()
+    );
+}
+
+
+template<typename T> Color<T> &operator*=(Color<T> &color, T c)
+{
+    color = color * c;
+    return color;
+}
 
 }//namespace r64fx
 
