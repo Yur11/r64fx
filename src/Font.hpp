@@ -10,13 +10,10 @@ class Image;
     
 class Font{
     void* p[2];
-    int m_glyph_count  = 0;
-    int m_height       = 0;
-    int m_ascender     = 0;
-    int m_descender    = 0;
-    int m_char_width   = 0;
-    int m_char_height  = 0;
-    
+    int   m_ascender;
+    int   m_descender;
+    int   m_height;
+
 public:
     class Glyph{
         friend class Font;
@@ -35,7 +32,8 @@ public:
         inline std::string text() const { return m_text; }
         
         inline Image* image() { return &m_image; }
-        
+
+        /* Glyph metrics expressed in pixels. */
         inline int bearing_x() const { return m_bearing_x; }
         inline int width()     const { return m_width; }
         inline int advance()   const { return m_advance; }
@@ -43,20 +41,16 @@ public:
         inline int height()    const { return m_height; }
     };
     
-    Font(std::string name = "");
+    Font(std::string name = "", float size = 16.0f, int dpy = 72);
     
     ~Font();
 
-    inline int glyphCount() const { return m_glyph_count; }
-    inline int ascender()   const { return m_ascender; };
-    inline int descender()  const { return m_descender; };
+    /* Global font metrics expressed in pixels. */
+    inline int ascender()   const { return m_ascender; }
+    inline int descender()  const { return m_descender; }
+    inline int height()     const { return m_height; }
 
-    void setSize(int char_width, int char_height, int horz_res, int vert_res);
-
-    inline int charWidth()  const { return m_char_width; }
-    inline int charHeight() const { return m_char_height; }
-    
-    /** @brief Find and retrieve glyph for the symbol encoded in utf-8. */
+    /* Find and retrieve glyph for the symbol encoded in utf-8. */
     Font::Glyph* fetchGlyph(std::string text);
 };
 
