@@ -67,7 +67,11 @@ public:
 
     Size<int> size() const;
 
+    void setWidth(int width);
+
     int width() const;
+
+    void setHeight(int height);
 
     int height() const;
 
@@ -101,7 +105,6 @@ public:
 
 
 /* === Mouse === */
-
     void grabMouse();
 
     static void ungrabMouse();
@@ -153,6 +156,22 @@ public:
         Rect<int> visibleRect();
     };
 
+
+    class ResizeEvent{
+        Size<int> m_size;
+
+        ResizeEvent(const ResizeEvent&) {}
+
+    public:
+        ResizeEvent(Size<int> size) : m_size(size) {}
+
+        inline Size<int> size() const { return m_size; }
+
+        inline int width()  const { return m_size.width(); }
+
+        inline int height() const { return m_size.height(); }
+    };
+
     static void processEvents();
 
 protected:
@@ -164,6 +183,8 @@ protected:
     virtual void focusOutEvent();
 
     /* Window Events */
+    virtual void resizeEvent(ResizeEvent* event);
+
     virtual void mousePressEvent(MousePressEvent* event);
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);

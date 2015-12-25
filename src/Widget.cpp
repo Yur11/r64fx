@@ -176,10 +176,12 @@ Point<int> Widget::position() const
 void Widget::setSize(Size<int> size)
 {
     m_rect.setSize(size);
-    if(isWindow())
+    if(isWindow() && size == Size<int>(m_parent.window->width(), m_parent.window->height()))
     {
         m_parent.window->resize(size.w, size.h);
     }
+    ResizeEvent event(size);
+    resizeEvent(&event);
 }
 
 
@@ -189,9 +191,21 @@ Size<int> Widget::size() const
 }
 
 
+void Widget::setWidth(int width)
+{
+    m_rect.setWidth(width);
+}
+
+
 int Widget::width() const
 {
     return m_rect.width();
+}
+
+
+void Widget::setHeight(int height)
+{
+    m_rect.setHeight(height);
 }
 
 
@@ -524,14 +538,6 @@ void process_window_updates(Window* window, void*)
 }
 
 
-void window_resize(Window* window, int width, int height)
-{
-    auto d = (WindowWidgetData*) window->data();
-    d->widget->setSize({width, height});
-    d->widget->update();
-}
-
-
 void Widget::reconfigureEvent(Widget::ReconfigureEvent* event)
 {
     reconfigureChildren(event);
@@ -607,6 +613,20 @@ void Widget::focusInEvent()
 
 
 void Widget::focusOutEvent()
+{
+
+}
+
+
+void window_resize(Window* window, int width, int height)
+{
+    auto d = (WindowWidgetData*) window->data();
+    d->widget->setSize({width, height});
+    d->widget->update();
+}
+
+
+void Widget::resizeEvent(ResizeEvent* event)
 {
 
 }
@@ -773,8 +793,6 @@ void Widget::keyReleaseEvent(KeyReleaseEvent* event)
 
 void window_text_input(Window* window, const std::string &text, int key)
 {
-    cout << "window_text_input: " << text << "\n";
-
     auto d = (WindowWidgetData*) window->data();
 
     TextInputEvent event(text, key);
