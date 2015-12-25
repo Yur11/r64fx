@@ -40,8 +40,8 @@ template<typename T> Color<T> operator+(const Color<T> &a, const Color<T> &b)
     return Color<T>(
         a.red()    +  b.red(),
         a.green()  +  b.green(),
-        a.blue()   +  a.blue(),
-        a.alpha()  +  a.alpha()
+        a.blue()   +  b.blue(),
+        a.alpha()  +  b.alpha()
     );
 }
 
@@ -58,8 +58,8 @@ template<typename T> Color<T> operator*(const Color<T> &a, const Color<T> &b)
     return Color<T>(
         a.red()    *  b.red(),
         a.green()  *  b.green(),
-        a.blue()   *  a.blue(),
-        a.alpha()  *  a.alpha()
+        a.blue()   *  b.blue(),
+        a.alpha()  *  b.alpha()
     );
 }
 
