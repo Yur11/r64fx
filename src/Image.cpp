@@ -9,9 +9,9 @@
 
 namespace r64fx{
     
-Image::Image(int w, int h, int c, unsigned char* data)
+Image::Image(int w, int h, int c, unsigned char* data, bool copy_data)
 {
-    load(w, h, c, data);
+    load(w, h, c, data, copy_data);
 }
 
 
@@ -27,20 +27,32 @@ bool Image::ownsData() const
 }
 
 
-void Image::load(int w, int h, int c, unsigned char* data)
+void Image::load(int w, int h, int c, unsigned char* data, bool copy_data)
 {
     free();
 
     if(w>0 && h>0 && c>0)
     {
+        int size = w * h * c;
         if(data)
         {
-            m_data = data;
-            m_flags &= ~IMAGE_OWNS_DATA;
+            if(copy_data)
+            {
+                m_data = new (std::nothrow) unsigned char[size];
+                for(int i=0; i<size; i++)
+                {
+                    m_data[i] = data[i];
+                }
+                m_flags |= IMAGE_OWNS_DATA;
+            }
+            else
+            {
+                m_data = data;
+                m_flags &= ~IMAGE_OWNS_DATA;
+            }
         }
         else
         {
-            int size = w * h * c;
             m_data = new (std::nothrow) unsigned char[size];
             m_flags |= IMAGE_OWNS_DATA;
         }

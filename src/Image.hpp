@@ -13,13 +13,13 @@ class Image{
     Image(const Image&){}
 
 public:
-    Image(int w = 0, int h = 0, int c = 1, unsigned char* data = nullptr);
+    Image(int w = 0, int h = 0, int c = 1, unsigned char* data = nullptr, bool copy_data = false);
 
     ~Image();
 
     bool ownsData() const;
     
-    void load(int w, int h, int c, unsigned char* data);
+    void load(int w, int h, int c, unsigned char* data, bool copy_data);
     
     void free();
     
