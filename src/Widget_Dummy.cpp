@@ -27,24 +27,6 @@ void Widget_Dummy::reconfigureEvent(ReconfigureEvent* event)
     auto painter = event->painter();
     Rect<int> rect = {0, 0, width(), height()};
 
-    Image* mask = new Image(20, 20);
-    for(int y=0; y<mask->height(); y++)
-    {
-        for(int x=0; x<mask->width(); x++)
-        {
-            Color<unsigned char> c;
-            if((x < 10 && y< 10) || (x >= 10 && y >= 10))
-            {
-                c = {255, 255, 255, 0};
-            }
-            else
-            {
-                c = {0, 0, 0, 0};
-            }
-            mask->setPixel(x, y, c.vec);
-        }
-    }
-
     if(rect != event->visibleRect())
     {
         painter->fillRect({63, 63, 63}, {{0, 0}, size()});
@@ -58,13 +40,9 @@ void Widget_Dummy::reconfigureEvent(ReconfigureEvent* event)
         painter->fillRect(m_Color, {{0, 0}, size()});
     }
 
-    painter->blendColors({255, 0, 0}, {0, 255, 0}, mask, {width()/2, height()/2});
-
     Widget::reconfigureEvent(event);
 
     painter->fillRect({0, 0, 0}, {m_Point, {10, 10}});
-
-    delete mask;
 }
 
 

@@ -1,9 +1,11 @@
 #include "Widget_Text.hpp"
 #include "WidgetFlags.hpp"
 #include "Font.hpp"
+#include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "Keyboard.hpp"
 #include "Mouse.hpp"
+#include "Program.hpp"
 
 #include <iostream>
 
@@ -27,9 +29,19 @@ Widget_Text::Widget_Text(const std::string &text, Font* font, Widget* parent)
 }
 
 
+Widget_Text::Widget_Text(const std::string &text, Widget* parent)
+: Widget(parent)
+{
+    setText(text);
+    setFont(nullptr);
+}
+
+
 Widget_Text::Widget_Text(Widget* parent)
 : Widget(parent)
 {
+    setText(nullptr);
+    setFont(nullptr);
 }
 
 
@@ -117,26 +129,52 @@ bool Widget_Text::ownsFont() const
 }
 
 
+void Widget_Text::reflow(TextWrap wrap_mode)
+{
+    reflow(wrap_mode, width());
+}
+
+
+void Widget_Text::reflow(TextWrap wrap_mode, int width)
+{
+    m_text_painter.reflow(wrap_mode, width);
+}
+
+
+void Widget_Text::resizeToText()
+{
+    setSize(m_text_painter.textSize());
+}
+
+
 void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
 {
+    if(m_text_painter.image)
+    {
+        delete m_text_painter.image;
+    }
+    m_text_painter.image = new Image(width(), height(), 1);
+    unsigned char px = 0;
+    m_text_painter.image->fill(&px);
+
+    m_text_painter.paint(m_text_painter.image, {10, 10});
+    draw_rect(
+        m_text_painter.image,
+        {255, 255, 255},
+        intersection(
+            Rect<int>(10, 10, textSize().width(), textSize().height()),
+            Rect<int>(0, 0, width(), height())
+        )
+    );
+
     auto painter = event->painter();
-    Color<unsigned char> c;
-    if(hasFocus() && doingTextInput())
-    {
-        c = {200, 200, 200};
-    }
-    else
-    {
-        c = {100, 100, 100};
-    }
-    painter->fillRect(c, {0, 0, width(), height()});
+    painter->blendColors({0, 0, 0}, {255, 255, 255}, m_text_painter.image);
     Widget::reconfigureEvent(event);
 }
 
 
 void Widget_Text::focusInEvent()
 {
-    cout << "wt focus in\n";
     startTextInput();
     update();
 }
@@ -144,17 +182,23 @@ void Widget_Text::focusInEvent()
 
 void Widget_Text::focusOutEvent()
 {
-    cout << "wt focus out\n";
     stopTextInput();
     update();
 }
 
 
+void Widget_Text::resizeEvent(ResizeEvent* event)
+{
+    cout << "resizeEvent: " << width() << "x" << height() << " => " << event->width() << "x" << event->height() << "\n";
+    reflow(TextWrap::Anywhere, width() - 20);
+    cout << "textRect: " << textSize().width() << "x" << textSize().height() << "\n";
+}
+
+
 void Widget_Text::mousePressEvent(MousePressEvent* event)
 {
-    cout << "wt mouse press\n";
     Widget::mousePressEvent(event);
-    m_text_painter.putCursor(event->position());
+//     m_text_painter.putCursor(event->position());
 }
 
 
@@ -190,30 +234,32 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
     else if(event->key() == Keyboard::Key::Home)
     {
-        m_text_painter.homeCursor();
+//         m_text_painter.homeCursor();
     }
     else if(event->key() == Keyboard::Key::End)
     {
-        m_text_painter.endCursor();
+//         m_text_painter.endCursor();
     }
     else if(event->key() == Keyboard::Key::Delete)
     {
-        m_text_painter.deleteAfterCursor();
+//         m_text_painter.deleteAfterCursor();
     }
     else if(event->key() == Keyboard::Key::Backspace)
     {
-        m_text_painter.deleteBeforeCursor();
+//         m_text_painter.deleteBeforeCursor();
     }
     else
     {
-        const std::string &text = event->text();
-        if(!text.empty())
-        {
-            cout << "-- " << text << "\n";
-        }
+        m_text_painter.inputUtf8(event->text());
     }
 
     update();
+}
+
+
+void Widget_Text::closeEvent()
+{
+    Program::quit();
 }
 
 }//namespace r64fx

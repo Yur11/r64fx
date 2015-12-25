@@ -14,6 +14,8 @@ public:
 
     Widget_Text(const std::string &text, Font* font = nullptr, Widget* parent = nullptr);
 
+    Widget_Text(const std::string &text, Widget* parent = nullptr);
+
     Widget_Text(Widget* parent = nullptr);
 
     virtual ~Widget_Text();
@@ -30,12 +32,24 @@ public:
 
     bool ownsFont() const;
 
+    void reflow(TextWrap wrap_mode);
+
+    void reflow(TextWrap wrap_mode, int width);
+
+    void resizeToText();
+
+    inline int lineCount() const { return m_text_painter.lineCount(); };
+
+    inline Size<int> textSize() const { return m_text_painter.textSize(); }
+
 protected:
     virtual void reconfigureEvent(ReconfigureEvent* event);
 
     virtual void focusInEvent();
 
     virtual void focusOutEvent();
+
+    virtual void resizeEvent(ResizeEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 
@@ -48,6 +62,8 @@ protected:
     virtual void keyReleaseEvent(KeyReleaseEvent* event);
 
     virtual void textInputEvent(TextInputEvent* event);
+
+    virtual void closeEvent();
 };
 
 }//namespace r64fx

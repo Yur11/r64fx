@@ -9,6 +9,23 @@ namespace r64fx{
 class Image;
 class Font;
 
+
+enum class TextWrap{
+
+    /* No text wrapping. Single line mode. */
+    None,
+
+    /* Mulitiple lines. Wrap at the nearest glyph. */
+    Anywhere,
+
+    /* Mulitiple lines. Wrap at the nearest whitespace. */
+    Word,
+
+    /* Mulitiple lines. Wrap at the nearest token. */
+    Token
+};
+
+
 class TextPainter{
     void*        m        = nullptr;
 
@@ -23,35 +40,23 @@ public:
 
     bool isGood() const;
 
-    void putPen(Point<int> p);
+    /* Recalculate text flow with the given wrap_mode..
+     * The width parameter is used with multi-line modes
+     * to determine the wrap point. */
+    void reflow(TextWrap wrap_mode, int width);
 
-    Point<int> penPosition() const;
+    /* As calculated by the reflow method. */
+    int lineCount() const;
 
-    void inputUtf8(const char* bytes, int nbytes);
+    /* Size of the image that can fit the text.
+     * As calculated be the reflow method. */
+    Size<int> textSize() const;
 
-    void deleteBeforeCursor();
+    /* Paint text onto image.
+     * Use offset from that top-left corner. */
+    void paint(Image* image, Point<int> offset = {0, 0});
 
-    void deleteAfterCursor();
-
-    void clear();
-
-    void homeCursor();
-
-    void endCursor();
-
-    void putCursor(int index);
-
-    void putCursor(Point<int> p);
-
-    int cursorIndex() const;
-
-    void setCursorVisible(bool yes);
-
-    bool cursorVisible();
-
-    void resetRect();
-
-    Rect<int> rectToUpdate();
+    void inputUtf8(const std::string &text);
 };
 
 }//namespace

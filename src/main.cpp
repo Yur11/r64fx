@@ -16,11 +16,13 @@ using namespace std;
 using namespace r64fx;
 
 
+const char* lorem_ipsum = "Lorem ipsum dolor sit amet? Hello, World! 123456789 !@#$%^&*()_+-=";
+
+
 class MyWidget : public Widget{
     Image*  m_Image = nullptr;
     float*  data = nullptr;
     int     data_size = 256;
-    Font*   m_Font = nullptr;
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget(parent)
@@ -39,29 +41,8 @@ public:
         }
         draw_border(m_Image, {0, 0, 0, 0});
 
-        m_Font = new Font;
-        cout << m_Font->glyphCount() << "\n";
-        m_Font->setSize(32, 32, 96, 96);
-        cout << m_Font->ascender() << ", " << m_Font->descender() << "\n";
-
-        auto glyph = m_Font->fetchGlyph("g");
-        alpha_blend(m_Image, {10, 10}, {0, 0, 0, 0}, glyph->image());
-
-        glyph = m_Font->fetchGlyph("A");
-        alpha_blend(m_Image, {100, 10}, {0, 0, 0, 0}, glyph->image());
-
-        auto wd1 = new Widget_Dummy({255, 0, 0}, this);
-        auto wd2 = new Widget_Dummy({0, 255, 0}, this);
-        auto wd3 = new Widget_Dummy({0, 0, 255}, this);
-        wd1->setSize({100, 100});
-        wd2->setSize({100, 100});
-        wd3->setSize({100, 100});
-        wd1->setPosition({100, 100});
-        wd2->setPosition({200, 200});
-        wd3->setPosition({300, 300});
-
         auto wwd = new Widget_Dummy({230, 240, 210}, this);
-        wwd->setPosition({550, 100});
+        wwd->setPosition({600, 100});
         wwd->setSize({300, 300});
 
         auto wwd1 = new Widget_Dummy({255, 0, 255}, wwd);
@@ -87,10 +68,6 @@ public:
         auto wwwd3 = new Widget_Dummy({0, 120, 0}, wwd2);
         wwwd3->setPosition({10, 10});
         wwwd3->setSize({20, 20});
-
-        auto wt = new Widget_Text(this);
-        wt->setPosition({50, 350});
-        wt->setSize({200, 50});
     }
 
     ~MyWidget()
@@ -103,11 +80,6 @@ public:
         if(data)
         {
             delete[] data;
-        }
-        
-        if(m_Font)
-        {
-            delete m_Font;
         }
     }
 
@@ -139,9 +111,11 @@ public:
 
 
 class MyProgram : public Program{
-    MyWidget* m_Widget = nullptr;
-    Painter* m_painter = nullptr;
-    Point<int> m_point = {10, 10};
+//     MyWidget* m_Widget = nullptr;
+//     Painter* m_painter = nullptr;
+//     Point<int> m_point = {10, 10};
+    Font*   m_Font = nullptr;
+    Widget_Text* mwt = nullptr;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -149,15 +123,28 @@ public:
 private:
     virtual void setup()
     {
-        m_Widget = new MyWidget;
-        m_Widget->setSize({1000, 600});
-        m_Widget->show();
+//         m_Widget = new MyWidget;
+//         m_Widget->setSize({1000, 600});
+//         m_Widget->show();
+
+        m_Font = new Font("", 16, 72);
+
+        mwt = new Widget_Text(lorem_ipsum, m_Font);
+        mwt->setPosition({50, 50});
+        mwt->setWidth(500);
+        mwt->reflow(TextWrap::Anywhere);
+        mwt->resizeToText();
+        mwt->show();
     }
     
     virtual void cleanup()
     {
         cout << "Cleanup!\n";
-        delete m_Widget;
+        if(m_Font)
+            delete m_Font;
+
+        if(mwt)
+            delete mwt;
     }
 };
 
