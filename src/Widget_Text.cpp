@@ -189,9 +189,7 @@ void Widget_Text::focusOutEvent()
 
 void Widget_Text::resizeEvent(ResizeEvent* event)
 {
-    cout << "resizeEvent: " << width() << "x" << height() << " => " << event->width() << "x" << event->height() << "\n";
-    reflow(TextWrap::Anywhere, width() - 20);
-    cout << "textRect: " << textSize().width() << "x" << textSize().height() << "\n";
+    reflow(TextWrap::None, width() - 20);
 }
 
 

@@ -16,6 +16,7 @@ struct GlyphEntry{
     Font::Glyph* glyph;
     int x;     //Origin x coord.
     int index; //Index in text.
+    unsigned int flags = 0;
 
     GlyphEntry(Font::Glyph* glyph, int x, int index)
     : glyph(glyph)
@@ -103,35 +104,48 @@ void TextPainter::reflow(TextWrap wrap_mode, int width)
         }
 
         auto char_text = text->substr(index, nbytes);
-        Font::Glyph* glyph = nullptr;
-
-        glyph = font->fetchGlyph(char_text);
-        if(!glyph)
+        if(char_text == "\n")
         {
-            cerr << "TextPainter: Failed to fetch glyph!\n";
-            return;
-        }
-
-        if(wrap_mode == TextWrap::None || (running_x + glyph->advance()) < width)
-        {
-            glyphs.push_back(
-                GlyphEntry(glyph, running_x, index)
-            );
-            lines.back().num_glyphs++;
+            if(wrap_mode != TextWrap::None)
+            {
+                lines.push_back(
+                    Line(font->ascender() + lines.size() * font->height(), glyphs.size())
+                );
+                running_x = 0;
+            }
         }
         else
         {
-            lines.push_back(
-                Line(font->ascender() + lines.size() * font->height(), glyphs.size())
-            );
-            running_x = 0;
+            Font::Glyph* glyph = nullptr;
 
-            glyphs.push_back(
-                GlyphEntry(glyph, running_x, index)
-            );
-            lines.back().num_glyphs++;
+            glyph = font->fetchGlyph(char_text);
+            if(!glyph)
+            {
+                cerr << "TextPainter: Failed to fetch glyph!\n";
+                break;
+            }
+
+            if(wrap_mode == TextWrap::None || (running_x + glyph->advance()) < width)
+            {
+                glyphs.push_back(
+                    GlyphEntry(glyph, running_x, index)
+                );
+                lines.back().num_glyphs++;
+            }
+            else
+            {
+                lines.push_back(
+                    Line(font->ascender() + lines.size() * font->height(), glyphs.size())
+                );
+                running_x = 0;
+
+                glyphs.push_back(
+                    GlyphEntry(glyph, running_x, index)
+                );
+                lines.back().num_glyphs++;
+            }
+            running_x += glyph->advance();
         }
-        running_x += glyph->advance();
 
         index = next_index;
         if(index >= (int)text->size())
