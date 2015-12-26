@@ -105,6 +105,7 @@ public:
 
 
 /* === Mouse === */
+
     void grabMouse();
 
     static void ungrabMouse();
@@ -115,6 +116,7 @@ public:
 
 
 /* === Keyboard === */
+
     void setFocusOnClick(bool yes);
 
     bool gainsFocusOnClick() const;

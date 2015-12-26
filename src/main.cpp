@@ -16,7 +16,7 @@ using namespace std;
 using namespace r64fx;
 
 
-const char* lorem_ipsum = "Lorem ipsum dolor sit amet? Hello, World! 123456789 !@#$%^&*()_+-=";
+const char* lorem_ipsum = "Lorem ipsum dolor sit amet?\nHello, World! 123456789 !@#$%^&*()_+-=";
 
 
 class MyWidget : public Widget{
@@ -132,8 +132,7 @@ private:
         mwt = new Widget_Text(lorem_ipsum, m_Font);
         mwt->setPosition({50, 50});
         mwt->setWidth(500);
-        mwt->reflow(TextWrap::Anywhere);
-        mwt->resizeToText();
+        mwt->setHeight(10);
         mwt->show();
     }
     
