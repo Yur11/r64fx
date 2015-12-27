@@ -178,7 +178,7 @@ void Widget::setSize(Size<int> size)
     m_rect.setSize(size);
     if(isWindow() && size == Size<int>(m_parent.window->width(), m_parent.window->height()))
     {
-        m_parent.window->resize(size.w, size.h);
+        m_parent.window->resize(size.width(), size.height());
     }
     ResizeEvent event(size);
     resizeEvent(&event);

@@ -497,7 +497,7 @@ void PainterImplGL::cleanupGLStuff()
 
 void PainterImplGL::resizeBaseTextureIfNeeded(int w, int h)
 {
-    bool tex_resize_needed = ( base_texture == 0 || w > base_texture_size.w || h > base_texture_size.h );
+    bool tex_resize_needed = ( base_texture == 0 || w > base_texture_size.width() || h > base_texture_size.height() );
     if(!tex_resize_needed)
         return;
 

@@ -3,20 +3,25 @@
 
 namespace r64fx{
   
-template<typename T> struct Size{
-    T w, h;
+template<typename T> class Size{
+    T mw, mh;
     
+public:
     Size<T>(T w = T(), T h = T()) 
-    : w(w)
-    , h(h)
+    : mw(w)
+    , mh(h)
     {}
     
-    inline T width()  const { return w; }
+    inline void setWidth(T width) { mw = width; }
+
+    inline T width() const { return mw; }
     
-    inline T height() const { return h; }
+    inline void setHeight(T height) { mh = height; }
+
+    inline T height() const { return mh; }
     
-    inline bool operator==(const Size<T> &other) { return this->w == other.w && this->h == other.h; }
-    inline bool operator!=(const Size<T> &other) { return this->w != other.w || this->h != other.h; }
+    inline bool operator==(const Size<T> &other) { return mw == other.width() && mh == other.height(); }
+    inline bool operator!=(const Size<T> &other) { return mw != other.width() || mh != other.height(); }
 };
 
 
