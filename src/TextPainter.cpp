@@ -3,119 +3,73 @@
 #include "StringUtils.hpp"
 #include "ImageUtils.hpp"
 
-#include <vector>
 #include <iostream>
 
 using namespace std;
 
 namespace r64fx{
 
-namespace{
-
-struct GlyphEntry{
-    Font::Glyph* glyph;
-    int x;     //Origin x coord.
-    int index; //Index in text.
-    unsigned int flags = 0;
-
-    GlyphEntry(Font::Glyph* glyph, int x, int index)
-    : glyph(glyph)
-    , x(x)
-    , index(index)
-    {}
-};
-
-
-struct Line{
-    int y;
-    int first_glyph;
-    int num_glyphs;
-
-    Line(int y, int first_glyph)
-    : y(y)
-    , first_glyph(first_glyph)
-    , num_glyphs(0)
-    {}
-};
-
-
-struct LineIndex{
-    vector<Line> lines;
-    vector<GlyphEntry> glyphs;
-    int width;
-};
-
-}//namespace
-
-#define m_line_index ((LineIndex*)m)
-
 
 TextPainter::TextPainter()
 {
-    m = new LineIndex;
 }
 
 
 TextPainter::~TextPainter()
 {
-    delete m_line_index;
 }
 
 
-bool TextPainter::isGood() const
+void TextPainter::reflow(const std::string &text, Font* font, TextWrap wrap_mode, int width)
 {
-    return (image != nullptr) && (text != nullptr) && (font != nullptr);
-}
-
-
-void TextPainter::reflow(TextWrap wrap_mode, int width)
-{
-    auto &lines  = m_line_index->lines;
-    auto &glyphs = m_line_index->glyphs;
-
-    lines.clear();
-    glyphs.clear();
-
-    if(text->empty())
+    if(text.empty())
         return;
 
-    m_line_index->width = width;
+    m_text_size.setWidth(width);
 
-    lines.push_back(
-        Line(font->ascender() + lines.size() * font->height(), 0)
-    );
+    clear();
+    addLine(font);
 
-    int index = 0;
-    int running_x = 0;
+    int whitespace_count = 0;
+    bool got_whitespace = false;
     for(;;)
     {
-        int nbytes = next_utf8(*text, index);
+        int nbytes = next_utf8(text, m_index);
         if(nbytes < 0)
         {
             cerr << "TextPainter: Error reading utf8!\n";
             return;
         }
 
-        int next_index = index + nbytes;
-        if(next_index > (int)text->size())
+        int next_index = m_index + nbytes;
+        if(next_index > (int)text.size())
         {
             cerr << "TextPainter: String size mismatch!\n";
             return;
         }
 
-        auto char_text = text->substr(index, nbytes);
+        auto char_text = text.substr(m_index, nbytes);
         if(char_text == "\n")
         {
             if(wrap_mode != TextWrap::None)
             {
-                lines.push_back(
-                    Line(font->ascender() + lines.size() * font->height(), glyphs.size())
-                );
-                running_x = 0;
+                addLine(font);
+                whitespace_count = 0;
             }
         }
         else
         {
+            if(char_text == " ")
+            {
+                if(!got_whitespace)
+                    whitespace_count++;
+                got_whitespace = true;
+            }
+            else
+            {
+                got_whitespace = false;
+            }
+
             Font::Glyph* glyph = nullptr;
 
             glyph = font->fetchGlyph(char_text);
@@ -125,64 +79,90 @@ void TextPainter::reflow(TextWrap wrap_mode, int width)
                 break;
             }
 
-            if(wrap_mode == TextWrap::None || (running_x + glyph->advance()) < width)
+            if(wrap_mode == TextWrap::None || glyphFits(glyph))
             {
-                glyphs.push_back(
-                    GlyphEntry(glyph, running_x, index)
-                );
-                lines.back().num_glyphs++;
+                addGlyph(glyph);
             }
             else
             {
-                lines.push_back(
-                    Line(font->ascender() + lines.size() * font->height(), glyphs.size())
-                );
-                running_x = 0;
-
-                glyphs.push_back(
-                    GlyphEntry(glyph, running_x, index)
-                );
-                lines.back().num_glyphs++;
+                if(wrap_mode == TextWrap::Word)
+                {
+                    if(whitespace_count > 1)
+                    {
+                        auto &line = m_lines.back();
+                        int i = m_glyphs.size();
+                        retreatToWordStart(i);
+                        line.setEnd(i);
+                        addLine(font);
+                        whitespace_count = 0;
+                        m_lines.back().setBegin(i);
+                        while(i < (int)m_glyphs.size())
+                        {
+                            auto &ge = m_glyphs[i];
+                            m_running_x += ge.glyph()->advance();
+                            i++;
+                        }
+                    }
+                    addGlyph(glyph);
+                }
+                else if(wrap_mode == TextWrap::Anywhere)
+                {
+                    addLine(font);
+                    whitespace_count = 0;
+                    addGlyph(glyph);
+                }
+                else
+                {
+                    addGlyph(glyph);
+                }
             }
-            running_x += glyph->advance();
         }
 
-        index = next_index;
-        if(index >= (int)text->size())
+        m_index = next_index;
+        if(m_index >= (int)text.size())
             break;
+    }
+
+    m_text_size.setHeight(m_lines.size() * font->height());
+
+    /* Remove extra spaces. */
+    for(auto &line : m_lines)
+    {
+        for(int i=line.begin();  i != line.end()  && m_glyphs[i].text() == " ";  line.setBegin(++i));
+        for(int i=line.end()-1;  i > line.begin() && m_glyphs[i].text() == " ";  line.setEnd(--i));
     }
 }
 
 
 int TextPainter::lineCount() const
 {
-    return m_line_index->lines.size();
+    return m_lines.size();
 }
 
 
 Size<int> TextPainter::textSize() const
 {
-    return{
-        m_line_index->width, lineCount() * font->height()
-    };
+    return m_text_size;
 }
 
 
 void TextPainter::paint(Image* image, Point<int> offset)
 {
-    for(auto &line : m_line_index->lines)
+    for(auto &line : m_lines)
     {
-        for(int i=0; i<line.num_glyphs; i++)
+        int x = 0;
+        for(int i=line.begin(); i!=line.end(); i++)
         {
-            GlyphEntry &ge = m_line_index->glyphs[i+line.first_glyph];
-            Font::Glyph* glyph = ge.glyph;
+            GlyphEntry &ge = m_glyphs[i];
+            Font::Glyph* glyph = ge.glyph();
             if(glyph->image()->isGood())
             {
                 implant(image, {
-                    offset.x() + ge.x + glyph->bearing_x(),
-                    offset.y() + line.y - glyph->bearing_y()
+                    offset.x() + glyph->bearing_x() + x,
+                    offset.y() - glyph->bearing_y() + line.y()
                 }, glyph->image());
             }
+            x += glyph->advance();
         }
     }
 }
@@ -191,6 +171,48 @@ void TextPainter::paint(Image* image, Point<int> offset)
 void TextPainter::inputUtf8(const std::string &text)
 {
 
+}
+
+
+bool TextPainter::glyphFits(Font::Glyph* glyph)
+{
+    return (m_running_x + glyph->advance()) < m_text_size.width();
+}
+
+
+void TextPainter::addGlyph(Font::Glyph* glyph)
+{
+    m_glyphs.push_back(
+        GlyphEntry(glyph, m_index)
+    );
+    m_running_x += glyph->advance();
+    m_lines.back().setEnd(
+        m_lines.back().end() + 1
+    );
+}
+
+
+void TextPainter::addLine(Font* font)
+{
+    m_lines.push_back(
+        GlyphLine(font->ascender() + m_lines.size() * font->height(), m_glyphs.size(), m_glyphs.size())
+    );
+    m_running_x = 0;
+}
+
+
+void TextPainter::clear()
+{
+    m_glyphs.clear();
+    m_lines.clear();
+    m_index = 0;
+}
+
+
+void TextPainter::retreatToWordStart(int &i)
+{
+    while(i > m_lines.back().begin() && m_glyphs[i].text() != " ")
+        i--;
 }
 
 }//namespace r64fx

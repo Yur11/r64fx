@@ -6,8 +6,11 @@
 #include "Keyboard.hpp"
 #include "Mouse.hpp"
 #include "Program.hpp"
+#include "TextPainter.hpp"
 
 #include <iostream>
+
+#define m_text_painter ((TextPainter*)m)
 
 using namespace std;
 
@@ -16,6 +19,7 @@ namespace r64fx{
 Widget_Text::Widget_Text(std::string* textptr, Font* font, Widget* parent)
 : Widget(parent)
 {
+    m = new TextPainter;
     setText(textptr);
     setFont(font);
 }
@@ -24,6 +28,7 @@ Widget_Text::Widget_Text(std::string* textptr, Font* font, Widget* parent)
 Widget_Text::Widget_Text(const std::string &text, Font* font, Widget* parent)
 : Widget(parent)
 {
+    m = new TextPainter;
     setText(text);
     setFont(font);
 }
@@ -32,6 +37,7 @@ Widget_Text::Widget_Text(const std::string &text, Font* font, Widget* parent)
 Widget_Text::Widget_Text(const std::string &text, Widget* parent)
 : Widget(parent)
 {
+    m = new TextPainter;
     setText(text);
     setFont(nullptr);
 }
@@ -40,6 +46,7 @@ Widget_Text::Widget_Text(const std::string &text, Widget* parent)
 Widget_Text::Widget_Text(Widget* parent)
 : Widget(parent)
 {
+    m = new TextPainter;
     setText(nullptr);
     setFont(nullptr);
 }
@@ -47,7 +54,7 @@ Widget_Text::Widget_Text(Widget* parent)
 
 Widget_Text::~Widget_Text()
 {
-
+    delete m_text_painter;
 }
 
 
@@ -55,17 +62,17 @@ void Widget_Text::setText(std::string *textptr)
 {
     if(ownsText())
     {
-        delete m_text_painter.text;
+        delete m_text;
     }
 
     if(textptr)
     {
-        m_text_painter.text = textptr;
+        m_text = textptr;
         m_flags &= ~R64FX_WIDGET_OWNS_TEXT;
     }
     else
     {
-        m_text_painter.text = new std::string;
+        m_text = new std::string;
         m_flags |= R64FX_WIDGET_OWNS_TEXT;
     }
 }
@@ -73,14 +80,14 @@ void Widget_Text::setText(std::string *textptr)
 
 void Widget_Text::setText(const std::string &text)
 {
-    if(!m_text_painter.text)
+    if(!m_text)
     {
-        m_text_painter.text = new std::string(text);
+        m_text = new std::string(text);
         m_flags |= R64FX_WIDGET_OWNS_TEXT;
     }
     else
     {
-        m_text_painter.text->assign(text);
+        m_text->assign(text);
     }
 }
 
@@ -89,17 +96,17 @@ void Widget_Text::setFont(Font* font)
 {
     if(ownsFont())
     {
-        delete m_text_painter.font;
+        delete m_font;
     }
 
     if(font)
     {
-        m_text_painter.font = font;
+        m_font = font;
         m_flags &= ~R64FX_WIDGET_OWNS_FONT;
     }
     else
     {
-        m_text_painter.font = new Font;
+        m_font = new Font;
         m_flags |= R64FX_WIDGET_OWNS_FONT;
     }
 }
@@ -109,10 +116,10 @@ void Widget_Text::setFont(std::string font_name)
 {
     if(ownsFont())
     {
-        delete m_text_painter.font;
+        delete m_font;
     }
 
-    m_text_painter.font = new Font(font_name);
+    m_font = new Font(font_name);
     m_flags |= R64FX_WIDGET_OWNS_FONT;
 }
 
@@ -129,46 +136,34 @@ bool Widget_Text::ownsFont() const
 }
 
 
-void Widget_Text::reflow(TextWrap wrap_mode)
-{
-    reflow(wrap_mode, width());
-}
-
-
-void Widget_Text::reflow(TextWrap wrap_mode, int width)
-{
-    m_text_painter.reflow(wrap_mode, width);
-}
-
-
 void Widget_Text::resizeToText()
 {
-    setSize(m_text_painter.textSize());
+    setSize(m_text_painter->textSize());
 }
 
 
 void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
 {
-    if(m_text_painter.image)
+    if(m_image)
     {
-        delete m_text_painter.image;
+        delete m_image;
     }
-    m_text_painter.image = new Image(width(), height(), 1);
+    m_image = new Image(width(), height(), 1);
     unsigned char px = 0;
-    m_text_painter.image->fill(&px);
+    m_image->fill(&px);
 
-    m_text_painter.paint(m_text_painter.image, {10, 10});
+    m_text_painter->paint(m_image, {10, 10});
     draw_rect(
-        m_text_painter.image,
+        m_image,
         {255, 255, 255},
         intersection(
-            Rect<int>(10, 10, textSize().width(), textSize().height()),
+            Rect<int>(10, 10, m_text_painter->textSize().width(), m_text_painter->textSize().height()),
             Rect<int>(0, 0, width(), height())
         )
     );
 
     auto painter = event->painter();
-    painter->blendColors({0, 0, 0}, {255, 255, 255}, m_text_painter.image);
+    painter->blendColors({0, 0, 0}, {255, 255, 255}, m_image);
     Widget::reconfigureEvent(event);
 }
 
@@ -189,7 +184,7 @@ void Widget_Text::focusOutEvent()
 
 void Widget_Text::resizeEvent(ResizeEvent* event)
 {
-    reflow(TextWrap::None, width() - 20);
+    m_text_painter->reflow(*m_text, m_font, TextWrap::None, width() - 20);
 }
 
 
@@ -248,7 +243,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
     else
     {
-        m_text_painter.inputUtf8(event->text());
+//         m_text_painter.inputUtf8(event->text());
     }
 
     update();

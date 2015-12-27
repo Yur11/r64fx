@@ -2,12 +2,17 @@
 #define R64FX_WIDGET_TEXT_HPP
 
 #include "Widget.hpp"
-#include "TextPainter.hpp"
 
 namespace r64fx{
 
+class Font;
+class Image;
+
 class Widget_Text : public Widget{
-    TextPainter m_text_painter;
+    void*         m       = nullptr;
+    std::string*  m_text  = nullptr;
+    Font*         m_font  = nullptr;
+    Image*        m_image = nullptr;
 
 public:
     Widget_Text(std::string* textptr, Font* font, Widget* parent = nullptr);
@@ -32,15 +37,7 @@ public:
 
     bool ownsFont() const;
 
-    void reflow(TextWrap wrap_mode);
-
-    void reflow(TextWrap wrap_mode, int width);
-
     void resizeToText();
-
-    inline int lineCount() const { return m_text_painter.lineCount(); };
-
-    inline Size<int> textSize() const { return m_text_painter.textSize(); }
 
 protected:
     virtual void reconfigureEvent(ReconfigureEvent* event);
