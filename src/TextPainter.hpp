@@ -67,7 +67,7 @@ public:
     /* Recalculate text flow with the given wrap_mode..
      * The width parameter is used with multi-line modes
      * to determine the wrap point. */
-    void reflow(const std::string &text, Font* font, TextWrap wrap_mode, int width);
+    void reflow(const std::string &text, Font* font, TextWrap::Mode wrap_mode, int width);
 
     /* As calculated by the reflow method. */
     int lineCount() const;

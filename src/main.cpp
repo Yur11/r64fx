@@ -133,6 +133,7 @@ private:
         mwt->setPosition({50, 50});
         mwt->setWidth(500);
         mwt->setHeight(10);
+        mwt->setWrapMode(TextWrap::Word);
         mwt->show();
     }
     

@@ -20,7 +20,7 @@ TextPainter::~TextPainter()
 }
 
 
-void TextPainter::reflow(const std::string &text, Font* font, TextWrap wrap_mode, int width)
+void TextPainter::reflow(const std::string &text, Font* font, TextWrap::Mode wrap_mode, int width)
 {
     if(text.empty())
         return;

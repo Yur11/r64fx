@@ -4,23 +4,35 @@
 namespace r64fx{
 
 /* Text warp modes. */
-enum class TextWrap{
+namespace TextWrap{
+    class Mode{
+        unsigned int m_bits = 0;
+
+    public:
+        explicit Mode(unsigned int bits) : m_bits(bits) {}
+
+        inline unsigned int bits() const { return m_bits & 7; }
+    };
+
+    inline bool operator==(const Mode &a, const Mode &b) { return a.bits() == b.bits(); }
+
+    inline bool operator!=(const Mode &a, const Mode &b) { return !operator==(a, b); }
 
     /* No text wrapping. Single line mode. */
-    None,
+    const Mode None(0);
 
     /* Wrap at newline. */
-    Newline,
+    const Mode Newline(1);
 
     /* Mulitiple lines. Wrap at the nearest glyph or at newline. */
-    Anywhere,
+    const Mode Anywhere(3);
 
     /* Mulitiple lines. Wrap at the nearest whitespace or at newline. */
-    Word,
+    const Mode Word (4);
 
     /* Mulitiple lines. Wrap at the nearest token or at newline. */
-    Token
-};
+    const Mode Token(5);
+}//namespace TextWrap;
 
 }//namespace r64fx
 

@@ -38,6 +38,10 @@ public:
 
     bool ownsFont() const;
 
+    void setWrapMode(TextWrap::Mode wrap_mode);
+
+    TextWrap::Mode wrapMode() const;
+
     void resizeToText();
 
 protected:

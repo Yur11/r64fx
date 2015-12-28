@@ -136,6 +136,18 @@ bool Widget_Text::ownsFont() const
 }
 
 
+void Widget_Text::setWrapMode(TextWrap::Mode wrap_mode)
+{
+    m_flags |= (wrap_mode.bits() << R64FX_TEXT_WRAP_FLAG_OFFSET);
+}
+
+
+TextWrap::Mode Widget_Text::wrapMode() const
+{
+    return TextWrap::Mode((m_flags >> R64FX_TEXT_WRAP_FLAG_OFFSET) & 7);
+}
+
+
 void Widget_Text::resizeToText()
 {
     setSize(m_text_painter->textSize());
@@ -184,7 +196,7 @@ void Widget_Text::focusOutEvent()
 
 void Widget_Text::resizeEvent(ResizeEvent* event)
 {
-    m_text_painter->reflow(*m_text, m_font, TextWrap::Word, width() - 20);
+    m_text_painter->reflow(*m_text, m_font, wrapMode(), width() - 20);
 }
 
 
