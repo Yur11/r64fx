@@ -184,7 +184,7 @@ void Widget_Text::focusOutEvent()
 
 void Widget_Text::resizeEvent(ResizeEvent* event)
 {
-    m_text_painter->reflow(*m_text, m_font, TextWrap::None, width() - 20);
+    m_text_painter->reflow(*m_text, m_font, TextWrap::Word, width() - 20);
 }
 
 

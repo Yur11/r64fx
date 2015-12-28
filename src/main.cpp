@@ -16,7 +16,7 @@ using namespace std;
 using namespace r64fx;
 
 
-const char* lorem_ipsum = "Lorem ipsum dolor sit amet?\nHello, World! 123456789 !@#$%^&*()_+-=";
+const char* lorem_ipsum = "Lorem ipsum dolor sit amet?\nHello, World!\n\n123456789 !@#$%^&*()_+-=";
 
 
 class MyWidget : public Widget{

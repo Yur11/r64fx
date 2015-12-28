@@ -2,6 +2,7 @@
 #define R64FX_WIDGET_TEXT_HPP
 
 #include "Widget.hpp"
+#include "TextFlags.hpp"
 
 namespace r64fx{
 

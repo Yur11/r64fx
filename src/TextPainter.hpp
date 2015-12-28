@@ -3,28 +3,11 @@
 
 #include "Rect.hpp"
 #include "Font.hpp"
+#include "TextFlags.hpp"
 #include <string>
 #include <vector>
 
 namespace r64fx{
-
-
-/* Text warp modes. */
-enum class TextWrap{
-
-    /* No text wrapping. Single line mode. */
-    None,
-
-    /* Mulitiple lines. Wrap at the nearest glyph. */
-    Anywhere,
-
-    /* Mulitiple lines. Wrap at the nearest whitespace. */
-    Word,
-
-    /* Mulitiple lines. Wrap at the nearest token. */
-    Token
-};
-
 
 class GlyphEntry{
     Font::Glyph* m_glyph;

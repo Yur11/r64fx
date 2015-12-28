@@ -79,7 +79,7 @@ void TextPainter::reflow(const std::string &text, Font* font, TextWrap wrap_mode
                 break;
             }
 
-            if(wrap_mode == TextWrap::None || glyphFits(glyph))
+            if(wrap_mode == TextWrap::None || wrap_mode == TextWrap::Newline || glyphFits(glyph))
             {
                 addGlyph(glyph);
             }
@@ -87,7 +87,7 @@ void TextPainter::reflow(const std::string &text, Font* font, TextWrap wrap_mode
             {
                 if(wrap_mode == TextWrap::Word)
                 {
-                    if(whitespace_count > 1)
+                    if(whitespace_count > 0)
                     {
                         auto &line = m_lines.back();
                         int i = m_glyphs.size();
@@ -121,7 +121,7 @@ void TextPainter::reflow(const std::string &text, Font* font, TextWrap wrap_mode
         m_index = next_index;
         if(m_index >= (int)text.size())
             break;
-    }
+    }//for
 
     m_text_size.setHeight(m_lines.size() * font->height());
 
