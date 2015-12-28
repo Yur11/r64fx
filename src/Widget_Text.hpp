@@ -42,6 +42,10 @@ public:
 
     TextWrap::Mode wrapMode() const;
 
+    void setTextAlignment(TextAlign::Mode alignment);
+
+    TextAlign::Mode textAlignment() const;
+
     void resizeToText();
 
 protected:

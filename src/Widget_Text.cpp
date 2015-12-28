@@ -148,6 +148,18 @@ TextWrap::Mode Widget_Text::wrapMode() const
 }
 
 
+void Widget_Text::setTextAlignment(TextAlign::Mode alignment)
+{
+    m_flags |= (alignment.bits() << R64FX_TEXT_ALIGN_FLAG_OFFSET);
+}
+
+
+TextAlign::Mode Widget_Text::textAlignment() const
+{
+    return TextAlign::Mode((m_flags >> R64FX_TEXT_ALIGN_FLAG_OFFSET) & 3);
+}
+
+
 void Widget_Text::resizeToText()
 {
     setSize(m_text_painter->textSize());
@@ -197,6 +209,7 @@ void Widget_Text::focusOutEvent()
 void Widget_Text::resizeEvent(ResizeEvent* event)
 {
     m_text_painter->reflow(*m_text, m_font, wrapMode(), width() - 20);
+    m_text_painter->reallign(textAlignment());
 }
 
 

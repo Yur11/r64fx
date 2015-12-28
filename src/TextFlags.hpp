@@ -34,6 +34,28 @@ namespace TextWrap{
     const Mode Token(5);
 }//namespace TextWrap;
 
+
+namespace TextAlign{
+    class Mode{
+        unsigned int m_bits = 0;
+
+    public:
+        explicit Mode(unsigned int bits) : m_bits(bits) {}
+
+        inline unsigned int bits() const { return m_bits & 3; }
+    };
+
+    inline bool operator==(const Mode &a, const Mode &b) { return a.bits() == b.bits(); }
+
+    inline bool operator!=(const Mode &a, const Mode &b) { return !operator==(a, b); }
+
+    const Mode Left(0);
+
+    const Mode Right(1);
+
+    const Mode Center(2);
+}//namespace TextAlign
+
 }//namespace r64fx
 
 #endif//R64FX_TEXT_FLAGS_HPP

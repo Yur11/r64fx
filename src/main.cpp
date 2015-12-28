@@ -134,6 +134,7 @@ private:
         mwt->setWidth(500);
         mwt->setHeight(10);
         mwt->setWrapMode(TextWrap::Word);
+        mwt->setTextAlignment(TextAlign::Left);
         mwt->show();
     }
     

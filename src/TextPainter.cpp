@@ -134,6 +134,37 @@ void TextPainter::reflow(const std::string &text, Font* font, TextWrap::Mode wra
 }
 
 
+int line_width(const GlyphLine &line, const std::vector<GlyphEntry> &glyphs)
+{
+    int width = 0;
+    for(int i=line.begin(); i<line.end(); i++)
+    {
+        width += glyphs[i].glyph()->advance();
+    }
+    return width;
+}
+
+
+void TextPainter::reallign(TextAlign::Mode alignment)
+{
+    for(auto &line : m_lines)
+    {
+        if(alignment == TextAlign::Left)
+        {
+            line.setXOffset(0);
+        }
+        else if(alignment == TextAlign::Right)
+        {
+            line.setXOffset(m_text_size.width() - line_width(line, m_glyphs));
+        }
+        else
+        {
+            line.setXOffset((m_text_size.width() - line_width(line, m_glyphs)) / 2);
+        }
+    }
+}
+
+
 int TextPainter::lineCount() const
 {
     return m_lines.size();
@@ -150,7 +181,7 @@ void TextPainter::paint(Image* image, Point<int> offset)
 {
     for(auto &line : m_lines)
     {
-        int x = 0;
+        int x = line.xOffset();
         for(int i=line.begin(); i!=line.end(); i++)
         {
             GlyphEntry &ge = m_glyphs[i];

@@ -25,4 +25,7 @@
 /* An offset for text wrap flags. 3 bits. See TextFlags.hpp */
 #define R64FX_TEXT_WRAP_FLAG_OFFSET           8
 
+/* An offset for text align flags. 2 bits. See TextFlags.hpp */
+#define R64FX_TEXT_ALIGN_FLAG_OFFSET          11
+
 #endif//R64FX_WIDGET_FLAGS_HPP

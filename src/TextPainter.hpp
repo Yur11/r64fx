@@ -31,6 +31,7 @@ struct GlyphLine{
     int m_y;
     int m_begin;   //Index of the first glyph in line.
     int m_end;     //Index past the last glyph in line,
+    int m_x_offset = 0;
 
     GlyphLine(int y, int begin, int end)
     : m_y(y)
@@ -47,6 +48,10 @@ struct GlyphLine{
     inline void setEnd(int end) { m_end = end; }
 
     inline int end() const { return m_end; }
+
+    inline void setXOffset(int x_offset) { m_x_offset = x_offset; }
+
+    inline int xOffset() const { return m_x_offset; }
 };
 
 
@@ -68,6 +73,8 @@ public:
      * The width parameter is used with multi-line modes
      * to determine the wrap point. */
     void reflow(const std::string &text, Font* font, TextWrap::Mode wrap_mode, int width);
+
+    void reallign(TextAlign::Mode alignment);
 
     /* As calculated by the reflow method. */
     int lineCount() const;
