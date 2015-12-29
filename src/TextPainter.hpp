@@ -24,15 +24,18 @@ public:
     inline int index() const { return m_index; }
 
     inline std::string text() const { return m_glyph->text(); }
+
+    inline int advance() const { return m_glyph->advance(); }
 };
 
 
-struct GlyphLine{
+class GlyphLine{
     int m_y;
     int m_begin;   //Index of the first glyph in line.
     int m_end;     //Index past the last glyph in line,
     int m_x_offset = 0;
 
+public:
     GlyphLine(int y, int begin, int end)
     : m_y(y)
     , m_begin(begin)
@@ -52,6 +55,22 @@ struct GlyphLine{
     inline void setXOffset(int x_offset) { m_x_offset = x_offset; }
 
     inline int xOffset() const { return m_x_offset; }
+};
+
+
+class TextCursorPosition{
+    int m_line  = 0;
+    int m_column = 0;
+
+public:
+    TextCursorPosition(int line, int column)
+    : m_line(line)
+    , m_column(column)
+    {}
+
+    inline int line() const { return m_line; }
+
+    inline int column() const { return m_column; }
 };
 
 
@@ -88,6 +107,11 @@ public:
     void paint(Image* image, Point<int> offset = {0, 0});
 
     void inputUtf8(const std::string &text);
+
+    /* Find text cursor position based on a point within Rect{{0, 0}, textSize()}. */
+    TextCursorPosition findCursorPosition(Point<int> p, Font* font);
+
+    Point<int> findCursorPosition(TextCursorPosition tcp, Font* font);
 
 private:
     bool glyphFits(Font::Glyph* glyph);

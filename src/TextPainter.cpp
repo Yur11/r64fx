@@ -205,6 +205,74 @@ void TextPainter::inputUtf8(const std::string &text)
 }
 
 
+TextCursorPosition TextPainter::findCursorPosition(Point<int> p, Font* font)
+{
+    if(m_glyphs.empty())
+        return TextCursorPosition(0, 0);
+
+    int i=0;
+    if(p.y() > 0)
+    {
+        while(i < (int)m_lines.size())
+        {
+            int top     = font->height() * i;
+            int bottom  = font->height() * (i + 1);
+
+            if(p.y() > top && p.y() < bottom)
+            {
+                break;
+            }
+
+            i++;
+        }
+    }
+
+    if(i >= (int)m_lines.size())
+        i = m_lines.size() - 1;
+
+    auto &line = m_lines[i];
+    int x = line.xOffset();
+    int n=line.begin();
+    while(n<line.end())
+    {
+        auto &glyph = m_glyphs[n];
+        if(p.x() < x + glyph.advance() / 2)
+        {
+            break;
+        }
+        x += glyph.advance();
+        n++;
+    }
+
+    return TextCursorPosition(i, n - line.begin());
+}
+
+
+Point<int> TextPainter::findCursorPosition(TextCursorPosition tcp, Font* font)
+{
+    int y = -1;
+    int x = -1;
+    if(tcp.line() >= 0 && tcp.line() < (int)m_lines.size())
+    {
+        y = tcp.line() * font->height();
+        auto &line = m_lines[tcp.line()];
+        x = line.xOffset();
+        int i=line.begin();
+        while(i<line.end())
+        {
+            if(tcp.column() == (i - line.begin()))
+            {
+                break;
+            }
+            x += m_glyphs[i].advance();
+            i++;
+        }
+    }
+
+    return Point<int>(x, y);
+}
+
+
 bool TextPainter::glyphFits(Font::Glyph* glyph)
 {
     return (m_running_x + glyph->advance()) < m_text_size.width();

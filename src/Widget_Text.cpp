@@ -186,8 +186,24 @@ void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
         )
     );
 
+    for(int y=0; y<m_font->height(); y++)
+    {
+        int xx = m_cursor_pos.x() + 10;
+        int yy = m_cursor_pos.y() + 10 + y;
+
+        if(xx >= 0 &&
+           xx < m_image->width() &&
+           yy >=0 &&
+           yy < m_image->height())
+        {
+            unsigned char px = 255;
+            m_image->setPixel(xx, yy, &px);
+        }
+    }
+
     auto painter = event->painter();
     painter->blendColors({0, 0, 0}, {255, 255, 255}, m_image);
+
     Widget::reconfigureEvent(event);
 }
 
@@ -216,7 +232,10 @@ void Widget_Text::resizeEvent(ResizeEvent* event)
 void Widget_Text::mousePressEvent(MousePressEvent* event)
 {
     Widget::mousePressEvent(event);
-//     m_text_painter.putCursor(event->position());
+    auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10), m_font);
+    m_cursor_pos = m_text_painter->findCursorPosition(tcp, m_font);
+    cout << tcp.line() << ", " << tcp.column() << " => " << m_cursor_pos << "\n";
+    update();
 }
 
 
