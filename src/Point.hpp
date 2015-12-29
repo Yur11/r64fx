@@ -61,6 +61,13 @@ template<typename T> struct Point{
     inline bool operator==(const Point<T> &other) { return this->x() == other.x() && this->y() == other.y(); }
     inline bool operator!=(const Point<T> &other) { return this->x() != other.x() || this->y() != other.y(); }
 };
+
+
+template<typename StreamT, typename T> StreamT &operator<<(StreamT &stream, const Point<T> &point)
+{
+    stream << point.x() << ", " << point.y();
+    return stream;
+}
     
 }//namespace r64fx
 
