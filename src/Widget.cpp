@@ -384,6 +384,12 @@ bool Widget::isMouseGrabber() const
 }
 
 
+MouseButton Widget::pressedButtons()
+{
+    return pressed_buttons;
+}
+
+
 void Widget::setFocusOnClick(bool yes)
 {
     set_bits(m_flags, yes, R64FX_WIDGET_CLICK_FOCUS);

@@ -4,6 +4,7 @@
 #include <string>
 #include "LinkedList.hpp"
 #include "Rect.hpp"
+#include "Mouse.hpp"
 
 namespace r64fx{
 
@@ -113,6 +114,8 @@ public:
     static Widget* mouseGrabber();
 
     bool isMouseGrabber() const;
+
+    static MouseButton pressedButtons();
 
 
 /* === Keyboard === */
