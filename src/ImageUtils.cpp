@@ -36,14 +36,32 @@ void draw_border(Image* dst, Color<unsigned char> color)
 }
 
 
+void fill(Image* dst, Color<unsigned char> color, Rect<int> rect)
+{
+    for(int y=0; y<rect.height(); y++)
+    {
+        for(int x=0; x<rect.width(); x++)
+        {
+            for(int c=0; c<dst->channelCount(); c++)
+            {
+                dst->pixel(x + rect.x(), y + rect.y())[c] = color.vec[c];
+            }
+        }
+    }
+}
+
+
+void fill(Image* dst, Color<unsigned char> color)
+{
+    fill(dst, color, Rect<int>(0, 0, dst->width(), dst->height()));
+}
+
+
 void alpha_blend(Image* dst, Point<int> pos, Color<unsigned char> color, Image* alpha)
 {
 #ifdef R64FX_DEBUG
     assert(alpha->channelCount() == 1);
-    assert(pos.x() >= 0);
-    assert(pos.y() >= 0);
-    assert((pos.x() + alpha->width())  < dst->width());
-    assert((pos.y() + alpha->height()) < dst->height());
+    assert(dst->channelCount() == 3 || dst->channelCount() == 4);
 #endif//R64FX_DEBUG
 
     static const float rcp = 1.0f / float(255);
@@ -53,18 +71,32 @@ void alpha_blend(Image* dst, Point<int> pos, Color<unsigned char> color, Image* 
         float(color.blue())  * rcp
     };
 
-    for(int y=0; y<alpha->height(); y++)
+    Rect<int> dst_rect = {0, 0, dst->width(), dst->height()};
+    Rect<int> src_rect = {pos.x(), pos.y(), alpha->width(), alpha->height()};
+    Rect<int> rect = intersection(src_rect, dst_rect);
+
+    if(rect.width() == 0 || rect.height() == 0)
+        return;
+
+    int src_offset_x = (pos.x() < 0 ? -pos.x() : 0);
+    int src_offset_y = (pos.y() < 0 ? -pos.y() : 0);
+    int dst_offset_x = (pos.x() > 0 ?  pos.x() : 0);
+    int dst_offset_y = (pos.y() > 0 ?  pos.y() : 0);
+
+    for(int y=0; y<rect.height(); y++)
     {
-        for(int x=0; x<alpha->width(); x++)
+        for(int x=0; x<rect.width(); x++)
         {
-            float src_alpha            = float(      alpha->pixel(x, y)[0]) * rcp;
-            float one_minus_src_alpha  = float(255 - alpha->pixel(x, y)[0]) * rcp;
-            auto px = dst->pixel(x + pos.x(), y + pos.y());
+            auto dstpx = dst->pixel(x + dst_offset_x, y + dst_offset_y);
+            auto srcpx = alpha->pixel(x + src_offset_x, y + src_offset_y);
+
+            float src_alpha            = float(      srcpx[0]) * rcp;
+            float one_minus_src_alpha  = float(255 - srcpx[0]) * rcp;
             for(int i=0; i<3; i++)
             {
-                float result = float(px[i]) * rcp * one_minus_src_alpha;
+                float result = float(dstpx[i]) * rcp * one_minus_src_alpha;
                 result += c[i] * src_alpha;
-                px[i] = (unsigned char)(result * 255);
+                dstpx[i] = (unsigned char)(result * 255);
             }
         }
     }

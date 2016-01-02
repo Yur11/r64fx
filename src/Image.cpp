@@ -101,20 +101,5 @@ void Image::setPixel(int x, int y, unsigned char* px)
         pixel(x, y)[c] = px[c];
     }
 }
-
-
-void Image::fill(unsigned char* pixel)
-{
-    for(int y=0; y<height(); y++)
-    {
-        for(int x=0; x<width(); x++)
-        {
-            for(int c=0; c<channelCount(); c++)
-            {
-                Image::pixel(x, y)[c] = pixel[c];
-            }
-        }
-    }
-}
     
 }//namespace r64fx

@@ -38,8 +38,6 @@ public:
     inline unsigned char* operator()(int x, int y) const { return pixel(x, y); }
 
     void setPixel(int x, int y, unsigned char* px);
-
-    void fill(unsigned char* pixel);
 };
 
 }//namespace r64fx
