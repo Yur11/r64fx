@@ -16,7 +16,22 @@ using namespace std;
 using namespace r64fx;
 
 
-const char* lorem_ipsum = "Lorem ipsum dolor sit amet?\nHello, World!\n\n123456789 !@#$%^&*()_+-=";
+const char* lorem_ipsum =
+"Lorem a ipsum a dolor a sit b amet, consectetur adipiscing elit.\n"
+"Donec a diam lectus. Sed sit amet ipsum mauris.\n\n"
+"Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit.\n"
+"Donec et mollis dolor. Praesent et diam eget libero egestas mattis sit amet vitae augue.\n"
+"Nam tincidunt congue enim, ut porta lorem lacinia consectetur.\n"
+"Donec ut libero sed arcu vehicula ultricies a non tortor.\n"
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n"
+"Aenean ut gravida lorem. Ut turpis felis, pulvinar a semper sed, adipiscing id dolor.\n"
+"Pellentesque auctor nisi id magna consequat sagittis.\n\n\n"
+"Curabitur dapibus enim sit amet elit pharetra tincidunt feugiat nisl imperdiet.\n"
+"Ut convallis libero in urna ultrices accumsan.\n"
+"Donec sed odio eros. Donec viverra mi quis quam pulvinar at malesuada arcu rhoncus.\n"
+"Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. In rutrum accumsan ultricies.\n"
+"Mauris vitae nisi at sem facilisis semper ac in est.\n"
+;
 
 
 class MyWidget : public Widget{
@@ -29,8 +44,7 @@ public:
     {
         m_Image = new Image(200, 100, 4);
         {
-            unsigned char px[4] = { 255, 255, 255, 255 };
-            m_Image->fill(px);
+            fill(m_Image, { 255, 255, 255, 255 });
         }
         {
             unsigned char px[4] = { 255, 0, 0, 0 };
@@ -127,14 +141,14 @@ private:
 //         m_Widget->setSize({1000, 600});
 //         m_Widget->show();
 
-        m_Font = new Font("mono", 20, 72);
+        m_Font = new Font("", 20, 72);
 
         mwt = new Widget_Text(lorem_ipsum, m_Font);
         mwt->setPosition({50, 50});
         mwt->setWidth(500);
         mwt->setHeight(10);
         mwt->setWrapMode(TextWrap::Word);
-        mwt->setTextAlignment(TextAlign::Center);
+        mwt->setTextAlignment(TextAlign::Left);
         mwt->show();
     }
     

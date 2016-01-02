@@ -14,7 +14,6 @@ class Widget_Text : public Widget{
     std::string*  m_text  = nullptr;
     Font*         m_font  = nullptr;
     Image*        m_image = nullptr;
-    Point<int>    m_cursor_pos = {0, 0}; //removme
 
 public:
     Widget_Text(std::string* textptr, Font* font, Widget* parent = nullptr);

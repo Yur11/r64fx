@@ -3,12 +3,12 @@
 #include "StringUtils.hpp"
 #include "ImageUtils.hpp"
 
+#include <algorithm>
 #include <iostream>
 
 using namespace std;
 
 namespace r64fx{
-
 
 TextPainter::TextPainter()
 {
@@ -90,7 +90,7 @@ void TextPainter::reflow(const std::string &text, Font* font, TextWrap::Mode wra
                     if(whitespace_count > 0)
                     {
                         auto &line = m_lines.back();
-                        int i = m_glyphs.size();
+                        int i = m_glyphs.size() - 1;
                         retreatToWordStart(i);
                         line.setEnd(i);
                         addLine(font);
@@ -165,6 +165,105 @@ void TextPainter::reallign(TextAlign::Mode alignment)
 }
 
 
+void TextPainter::updateSelection(Font* font)
+{
+    m_selection_rects.clear();
+    m_selected_glyph_begin = m_selected_glyph_end = 0;
+
+    TextCursorPosition a = m_selection_start;
+    TextCursorPosition b = m_selection_end;
+
+    if(a > b)
+        swap(a, b);
+
+    if(a.line() == b.line())
+    {
+        auto &line = m_lines[a.line()];
+
+        if(a.column() == b.column())
+        {
+            /*No selection! Do nothing!*/
+        }
+        else
+        {
+            /*Selection on one line. Draw one rect.*/
+            int x = line.xOffset();
+            int i=0;
+            while(i < a.column())
+            {
+                x += m_glyphs[i + line.begin()].advance();
+                i++;
+            }
+
+            int width = 0;
+            while(i < b.column())
+            {
+                width += m_glyphs[i + line.begin()].advance();
+                i++;
+            }
+
+            Rect<int> rect(x, a.line()*font->height(), width, font->height());
+            m_selection_rects.push_back(rect);
+        }
+    }
+    else
+    {
+        /* First line selection. */
+        {
+            auto line = m_lines[a.line()];
+            int x = line.xOffset();
+            int w = 0;
+            int i = line.begin();
+            while((i - line.begin()) < a.column())
+            {
+                x += m_glyphs[i].advance();
+                i++;
+            }
+            while(i < line.end())
+            {
+                w += m_glyphs[i].advance();
+                i++;
+            }
+
+            Rect<int> rect(x, a.line()*font->height(), w, font->height());
+            m_selection_rects.push_back(rect);
+        }
+
+        if((b.line() - a.line()) > 1)
+        {
+            for(auto l=a.line()+1; l<=b.line()-1; l++)
+            {
+                auto line = m_lines[l];
+                if(line.isEmpty())
+                    continue;
+
+                int w = 0;
+                for(auto i=line.begin(); i<line.end(); i++)
+                {
+                    w += m_glyphs[i].advance();
+                }
+                Rect<int> rect(line.xOffset(), l*font->height(), w, font->height());
+                m_selection_rects.push_back(rect);
+            }
+        }
+
+        /* Last line selection. */
+        {
+            auto line = m_lines[b.line()];
+            int w = 0;
+            int i = line.begin();
+            while(i < (line.begin() + b.column()))
+            {
+                w += m_glyphs[i].advance();
+                i++;
+            }
+            Rect<int> rect(line.xOffset(), b.line()*font->height(), w, font->height());
+            m_selection_rects.push_back(rect);
+        }
+    }
+}
+
+
 int TextPainter::lineCount() const
 {
     return m_lines.size();
@@ -188,10 +287,12 @@ void TextPainter::paint(Image* image, Point<int> offset)
             Font::Glyph* glyph = ge.glyph();
             if(glyph->image()->isGood())
             {
-                implant(image, {
+                Point<int> p = {
                     offset.x() + glyph->bearing_x() + x,
                     offset.y() - glyph->bearing_y() + line.y()
-                }, glyph->image());
+                };
+
+                implant(image, p, glyph->image());
             }
             x += glyph->advance();
         }
@@ -199,9 +300,38 @@ void TextPainter::paint(Image* image, Point<int> offset)
 }
 
 
-void TextPainter::inputUtf8(const std::string &text)
+void TextPainter::paintText(Image* image, Color<unsigned char> fg, Color<unsigned char> bg, Point<int> offset)
 {
+    for(auto &line : m_lines)
+    {
+        int x = line.xOffset();
+        for(int i=line.begin(); i!=line.end(); i++)
+        {
+            GlyphEntry &ge = m_glyphs[i];
+            Font::Glyph* glyph = ge.glyph();
+            if(glyph->image()->isGood())
+            {
+                Point<int> p = {
+                    offset.x() + glyph->bearing_x() + x,
+                    offset.y() - glyph->bearing_y() + line.y()
+                };
 
+                alpha_blend(image, p, fg, glyph->image());
+            }
+            x += glyph->advance();
+        }
+    }
+}
+
+
+void TextPainter::paintSelectionBackground(Image* image, Color<unsigned char> color, Point<int> offset)
+{
+    for(auto rect : m_selection_rects)
+    {
+        rect += offset;
+        rect = intersection(rect, {0, 0, image->width(), image->height()});
+        fill(image, color, rect);
+    }
 }
 
 
@@ -310,7 +440,7 @@ void TextPainter::clear()
 
 void TextPainter::retreatToWordStart(int &i)
 {
-    while(i > m_lines.back().begin() && m_glyphs[i].text() != " ")
+    while( i > m_lines.back().begin() && m_glyphs[i].text() != " ")
         i--;
 }
 

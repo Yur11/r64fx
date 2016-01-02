@@ -172,14 +172,14 @@ void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
     {
         delete m_image;
     }
-    m_image = new Image(width(), height(), 1);
-    unsigned char px = 0;
-    m_image->fill(&px);
+    m_image = new Image(width(), height(), 4);
+    fill(m_image, {255, 255, 255, 0});
 
-    m_text_painter->paint(m_image, {10, 10});
+    m_text_painter->paintSelectionBackground(m_image, {148, 202, 239}, {10, 10});
+    m_text_painter->paintText(m_image, {0, 0, 0}, {0, 0, 0}, {10, 10});
     draw_rect(
         m_image,
-        {255, 255, 255},
+        {0, 0, 0},
         intersection(
             Rect<int>(10, 10, m_text_painter->textSize().width(), m_text_painter->textSize().height()),
             Rect<int>(0, 0, width(), height())
@@ -188,21 +188,22 @@ void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
 
     for(int y=0; y<m_font->height(); y++)
     {
-        int xx = m_cursor_pos.x() + 10;
-        int yy = m_cursor_pos.y() + 10 + y;
+        auto cursor_pos = m_text_painter->findCursorPosition(m_text_painter->selectionEnd(), m_font);
+        int xx = cursor_pos.x() + 10;
+        int yy = cursor_pos.y() + 10 + y;
 
         if(xx >= 0 &&
            xx < m_image->width() &&
            yy >=0 &&
            yy < m_image->height())
         {
-            unsigned char px = 255;
-            m_image->setPixel(xx, yy, &px);
+            unsigned char px[4] = {0, 0, 0, 0};
+            m_image->setPixel(xx, yy, px);
         }
     }
 
     auto painter = event->painter();
-    painter->blendColors({0, 0, 0}, {255, 255, 255}, m_image);
+    painter->putImage(m_image);
 
     Widget::reconfigureEvent(event);
 }
@@ -232,9 +233,13 @@ void Widget_Text::resizeEvent(ResizeEvent* event)
 void Widget_Text::mousePressEvent(MousePressEvent* event)
 {
     Widget::mousePressEvent(event);
-    auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10), m_font);
-    m_cursor_pos = m_text_painter->findCursorPosition(tcp, m_font);
-    cout << tcp.line() << ", " << tcp.column() << " => " << m_cursor_pos << "\n";
+    if(event->button() == MouseButton::Left())
+    {
+        auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10), m_font);
+        m_text_painter->setSelectionStart(tcp);
+        m_text_painter->setSelectionEnd(tcp);
+        m_text_painter->updateSelection(m_font);
+    }
     update();
 }
 
@@ -247,6 +252,13 @@ void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget_Text::mouseMoveEvent(MouseMoveEvent* event)
 {
+    if(pressedButtons() & MouseButton::Left())
+    {
+        auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10), m_font);
+        m_text_painter->setSelectionEnd(tcp);
+        m_text_painter->updateSelection(m_font);
+        update();
+    }
     Widget::mouseMoveEvent(event);
 }
 

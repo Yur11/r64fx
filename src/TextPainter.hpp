@@ -1,6 +1,7 @@
 #ifndef R64FX_TEXT_PAINTER_HPP
 #define R64FX_TEXT_PAINTER_HPP
 
+#include "Color.hpp"
 #include "Rect.hpp"
 #include "Font.hpp"
 #include "TextFlags.hpp"
@@ -34,6 +35,7 @@ class GlyphLine{
     int m_begin;   //Index of the first glyph in line.
     int m_end;     //Index past the last glyph in line,
     int m_x_offset = 0;
+    int m_width = 0;
 
 public:
     GlyphLine(int y, int begin, int end)
@@ -55,15 +57,21 @@ public:
     inline void setXOffset(int x_offset) { m_x_offset = x_offset; }
 
     inline int xOffset() const { return m_x_offset; }
+
+    inline void setWidth(int width) { m_width = width; }
+
+    inline int width() const { return m_width; }
+
+    inline bool isEmpty() const { return m_begin == m_end; }
 };
 
 
 class TextCursorPosition{
-    int m_line  = 0;
-    int m_column = 0;
+    int m_line;
+    int m_column;
 
 public:
-    TextCursorPosition(int line, int column)
+    TextCursorPosition(int line = 0, int column = 0)
     : m_line(line)
     , m_column(column)
     {}
@@ -74,12 +82,53 @@ public:
 };
 
 
+inline bool operator<(TextCursorPosition a, TextCursorPosition b)
+{
+    return a.line() < b.line() || (a.line() == b.line() && a.column() < b.column());
+}
+
+
+inline bool operator>(TextCursorPosition a, TextCursorPosition b)
+{
+    return a.line() > b.line() || (a.line() == b.line() && a.column() > b.column());
+}
+
+
+inline bool operator==(TextCursorPosition a, TextCursorPosition b)
+{
+    return a.line() == b.line() && a.column() == b.column();
+}
+
+
+inline bool operator!=(TextCursorPosition a, TextCursorPosition b)
+{
+    return !operator==(a, b);
+}
+
+
+inline bool operator<=(TextCursorPosition a, TextCursorPosition b)
+{
+    return a < b || a == b;
+}
+
+
+inline bool operator>=(TextCursorPosition a, TextCursorPosition b)
+{
+    return a > b || a == b;
+}
+
+
 class TextPainter{
     std::vector<GlyphEntry> m_glyphs;
     std::vector<GlyphLine>  m_lines;
     Size<int>               m_text_size  = {0, 0};
     int                     m_index      = 0;
     int                     m_running_x  = 0;
+    TextCursorPosition      m_selection_start;
+    TextCursorPosition      m_selection_end;
+    std::vector<Rect<int>>  m_selection_rects;      //A list of rectangles that comprise selection background.
+    int                     m_selected_glyph_begin; //Index of the first selected glyph
+    int                     m_selected_glyph_end;   //Index of the last selected glyph + 1
 
 public:
     TextPainter();
@@ -95,6 +144,9 @@ public:
 
     void reallign(TextAlign::Mode alignment);
 
+    /* Update selection geometry data based on selection start and end positions. */
+    void updateSelection(Font* font);
+
     /* As calculated by the reflow method. */
     int lineCount() const;
 
@@ -103,15 +155,42 @@ public:
     Size<int> textSize() const;
 
     /* Paint text onto image.
-     * Use offset from that top-left corner. */
+     * Use an offset from that top-left corner. */
     void paint(Image* image, Point<int> offset = {0, 0});
 
-    void inputUtf8(const std::string &text);
+    void paintText(Image* image, Color<unsigned char> fg, Color<unsigned char> bg, Point<int> offset = {0, 0});
+
+    void paintSelectionBackground(Image* image, Color<unsigned char> color, Point<int> offset);
 
     /* Find text cursor position based on a point within Rect{{0, 0}, textSize()}. */
     TextCursorPosition findCursorPosition(Point<int> p, Font* font);
 
     Point<int> findCursorPosition(TextCursorPosition tcp, Font* font);
+
+    inline void setSelectionStart(TextCursorPosition pos)
+    {
+        m_selection_start = pos;
+    }
+
+    inline TextCursorPosition selectionStart() const
+    {
+        return m_selection_start;
+    }
+
+    inline void setSelectionEnd(TextCursorPosition pos)
+    {
+        m_selection_end = pos;
+    }
+
+    inline TextCursorPosition selectionEnd() const
+    {
+        return m_selection_end;
+    }
+
+    inline bool hasSelection() const
+    {
+        return selectionStart() != selectionEnd();
+    }
 
 private:
     bool glyphFits(Font::Glyph* glyph);
