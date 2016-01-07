@@ -96,17 +96,17 @@ void Widget_Text::setFont(Font* font)
 {
     if(ownsFont())
     {
-        delete m_font;
+        delete m_text_painter->font;
     }
 
     if(font)
     {
-        m_font = font;
+        m_text_painter->font = font;
         m_flags &= ~R64FX_WIDGET_OWNS_FONT;
     }
     else
     {
-        m_font = new Font;
+        m_text_painter->font = new Font;
         m_flags |= R64FX_WIDGET_OWNS_FONT;
     }
 }
@@ -116,10 +116,10 @@ void Widget_Text::setFont(std::string font_name)
 {
     if(ownsFont())
     {
-        delete m_font;
+        delete m_text_painter->font;
     }
 
-    m_font = new Font(font_name);
+    m_text_painter->font = new Font(font_name);
     m_flags |= R64FX_WIDGET_OWNS_FONT;
 }
 
@@ -136,27 +136,27 @@ bool Widget_Text::ownsFont() const
 }
 
 
-void Widget_Text::setWrapMode(TextWrap::Mode wrap_mode)
+void Widget_Text::setTextWrap(TextWrap text_wrap)
 {
-    m_flags |= (wrap_mode.bits() << R64FX_TEXT_WRAP_FLAG_OFFSET);
+    m_text_painter->setTextWrap(text_wrap);
 }
 
 
-TextWrap::Mode Widget_Text::wrapMode() const
+TextWrap Widget_Text::textWrap() const
 {
-    return TextWrap::Mode((m_flags >> R64FX_TEXT_WRAP_FLAG_OFFSET) & 7);
+    return m_text_painter->textWrap();
 }
 
 
-void Widget_Text::setTextAlignment(TextAlign::Mode alignment)
+void Widget_Text::setTextAlignment(TextAlignment alignment)
 {
-    m_flags |= (alignment.bits() << R64FX_TEXT_ALIGN_FLAG_OFFSET);
+    m_text_painter->setTextAlignment(alignment);
 }
 
 
-TextAlign::Mode Widget_Text::textAlignment() const
+TextAlignment Widget_Text::textAlignment() const
 {
-    return TextAlign::Mode((m_flags >> R64FX_TEXT_ALIGN_FLAG_OFFSET) & 3);
+    return m_text_painter->textAlignment();
 }
 
 
@@ -177,18 +177,18 @@ void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
 
     m_text_painter->paintSelectionBackground(m_image, {148, 202, 239}, {10, 10});
     m_text_painter->paintText(m_image, {0, 0, 0}, {0, 0, 0}, {10, 10});
-    draw_rect(
-        m_image,
-        {0, 0, 0},
-        intersection(
-            Rect<int>(10, 10, m_text_painter->textSize().width(), m_text_painter->textSize().height()),
-            Rect<int>(0, 0, width(), height())
-        )
-    );
+//     draw_rect(
+//         m_image,
+//         {0, 0, 0},
+//         intersection(
+//             Rect<int>(10, 10, m_text_painter->textSize().width(), m_text_painter->textSize().height()),
+//             Rect<int>(0, 0, width(), height())
+//         )
+//     );
 
-    for(int y=0; y<m_font->height(); y++)
+    for(int y=0; y<m_text_painter->font->height(); y++)
     {
-        auto cursor_pos = m_text_painter->findCursorPosition(m_text_painter->selectionEnd(), m_font);
+        auto cursor_pos = m_text_painter->findCursorCoords(m_text_painter->cursorPosition());
         int xx = cursor_pos.x() + 10;
         int yy = cursor_pos.y() + 10 + y;
 
@@ -225,8 +225,9 @@ void Widget_Text::focusOutEvent()
 
 void Widget_Text::resizeEvent(ResizeEvent* event)
 {
-    m_text_painter->reflow(*m_text, m_font, wrapMode(), width() - 20);
-    m_text_painter->reallign(textAlignment());
+    m_text_painter->setReflowWidth(event->width() - 20);
+    m_text_painter->reflow(*m_text);
+    m_text_painter->reallign();
 }
 
 
@@ -235,10 +236,11 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
     Widget::mousePressEvent(event);
     if(event->button() == MouseButton::Left())
     {
-        auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10), m_font);
+        auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10));
+        m_text_painter->setCursorPosition(tcp);
         m_text_painter->setSelectionStart(tcp);
         m_text_painter->setSelectionEnd(tcp);
-        m_text_painter->updateSelection(m_font);
+        m_text_painter->updateSelection();
     }
     update();
 }
@@ -254,9 +256,10 @@ void Widget_Text::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(pressedButtons() & MouseButton::Left())
     {
-        auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10), m_font);
+        auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10));
+        m_text_painter->setCursorPosition(tcp);
         m_text_painter->setSelectionEnd(tcp);
-        m_text_painter->updateSelection(m_font);
+        m_text_painter->updateSelection();
         update();
     }
     Widget::mouseMoveEvent(event);
@@ -281,25 +284,41 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     {
         removeFocus();
     }
+    else if(event->key() == Keyboard::Key::Up)
+    {
+        m_text_painter->moveCursorUp();
+    }
+    else if(event->key() == Keyboard::Key::Down)
+    {
+        m_text_painter->moveCursorDown();
+    }
+    else if(event->key() == Keyboard::Key::Left)
+    {
+        m_text_painter->moveCursorLeft();
+    }
+    else if(event->key() == Keyboard::Key::Right)
+    {
+        m_text_painter->moveCursorRight();
+    }
     else if(event->key() == Keyboard::Key::Home)
     {
-//         m_text_painter.homeCursor();
+        m_text_painter->homeCursor();
     }
     else if(event->key() == Keyboard::Key::End)
     {
-//         m_text_painter.endCursor();
+        m_text_painter->endCursor();
     }
     else if(event->key() == Keyboard::Key::Delete)
     {
-//         m_text_painter.deleteAfterCursor();
+        m_text_painter->deleteAfterCursor(*m_text);
     }
     else if(event->key() == Keyboard::Key::Backspace)
     {
-//         m_text_painter.deleteBeforeCursor();
+        m_text_painter->deleteBeforeCursor(*m_text);
     }
     else
     {
-//         m_text_painter.inputUtf8(event->text());
+        m_text_painter->inputUtf8(event->text(), *m_text);
     }
 
     update();

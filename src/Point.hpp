@@ -10,6 +10,9 @@ template<typename T> struct Point{
     : vec{x, y}
     {}
 
+    inline void setX(T x) { vec[0] = x; }
+    inline void setY(T y) { vec[1] = y; }
+
     inline T x() const { return vec[0]; }
     inline T y() const { return vec[1]; }
     

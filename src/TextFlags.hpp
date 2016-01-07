@@ -4,57 +4,37 @@
 namespace r64fx{
 
 /* Text warp modes. */
-namespace TextWrap{
-    class Mode{
-        unsigned int m_bits = 0;
-
-    public:
-        explicit Mode(unsigned int bits) : m_bits(bits) {}
-
-        inline unsigned int bits() const { return m_bits & 7; }
-    };
-
-    inline bool operator==(const Mode &a, const Mode &b) { return a.bits() == b.bits(); }
-
-    inline bool operator!=(const Mode &a, const Mode &b) { return !operator==(a, b); }
+enum class TextWrap{
 
     /* No text wrapping. Single line mode. */
-    const Mode None(0);
+    None,
 
     /* Wrap at newline. */
-    const Mode Newline(1);
+    Newline,
 
     /* Mulitiple lines. Wrap at the nearest glyph or at newline. */
-    const Mode Anywhere(3);
+    Anywhere,
 
     /* Mulitiple lines. Wrap at the nearest whitespace or at newline. */
-    const Mode Word (4);
+    Word,
 
     /* Mulitiple lines. Wrap at the nearest token or at newline. */
-    const Mode Token(5);
-}//namespace TextWrap;
+    Token
+};
 
 
-namespace TextAlign{
-    class Mode{
-        unsigned int m_bits = 0;
+enum class TextAlignment{
+    Left, Right, Center
+};
 
-    public:
-        explicit Mode(unsigned int bits) : m_bits(bits) {}
 
-        inline unsigned int bits() const { return m_bits & 3; }
-    };
+enum class WhitespaceCleanup{
+    None,
+    Front,
+    Back,
+    FrontAndBack
+};
 
-    inline bool operator==(const Mode &a, const Mode &b) { return a.bits() == b.bits(); }
-
-    inline bool operator!=(const Mode &a, const Mode &b) { return !operator==(a, b); }
-
-    const Mode Left(0);
-
-    const Mode Right(1);
-
-    const Mode Center(2);
-}//namespace TextAlign
 
 }//namespace r64fx
 

@@ -12,7 +12,6 @@ class Image;
 class Widget_Text : public Widget{
     void*         m       = nullptr;
     std::string*  m_text  = nullptr;
-    Font*         m_font  = nullptr;
     Image*        m_image = nullptr;
 
 public:
@@ -38,13 +37,13 @@ public:
 
     bool ownsFont() const;
 
-    void setWrapMode(TextWrap::Mode wrap_mode);
+    void setTextWrap(TextWrap text_wrap);
 
-    TextWrap::Mode wrapMode() const;
+    TextWrap textWrap() const;
 
-    void setTextAlignment(TextAlign::Mode alignment);
+    void setTextAlignment(TextAlignment alignment);
 
-    TextAlign::Mode textAlignment() const;
+    TextAlignment textAlignment() const;
 
     void resizeToText();
 

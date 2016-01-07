@@ -24,7 +24,11 @@ public:
 
     inline int index() const { return m_index; }
 
+    inline int nextIndex() const { return index() + text().size(); }
+
     inline std::string text() const { return m_glyph->text(); }
+
+    inline int textSize() const { return m_glyph->text().size(); }
 
     inline int advance() const { return m_glyph->advance(); }
 };
@@ -35,7 +39,6 @@ class GlyphLine{
     int m_begin;   //Index of the first glyph in line.
     int m_end;     //Index past the last glyph in line,
     int m_x_offset = 0;
-    int m_width = 0;
 
 public:
     GlyphLine(int y, int begin, int end)
@@ -58,9 +61,7 @@ public:
 
     inline int xOffset() const { return m_x_offset; }
 
-    inline void setWidth(int width) { m_width = width; }
-
-    inline int width() const { return m_width; }
+    inline int glyphCount() const { return end() - begin(); }
 
     inline bool isEmpty() const { return m_begin == m_end; }
 };
@@ -76,7 +77,11 @@ public:
     , m_column(column)
     {}
 
+    inline void setLine(int line) { m_line = line; }
+
     inline int line() const { return m_line; }
+
+    inline void setColumn(int column) { m_column = column; }
 
     inline int column() const { return m_column; }
 };
@@ -119,33 +124,61 @@ inline bool operator>=(TextCursorPosition a, TextCursorPosition b)
 
 
 class TextPainter{
+    TextWrap                m_text_wrap           = TextWrap::None;
+    TextAlignment           m_text_alignment      = TextAlignment::Left;
+    int                     m_reflow_width        = 100;
+    WhitespaceCleanup       m_whitespace_cleanup  = WhitespaceCleanup::FrontAndBack;
+
     std::vector<GlyphEntry> m_glyphs;
     std::vector<GlyphLine>  m_lines;
     Size<int>               m_text_size  = {0, 0};
+
     int                     m_index      = 0;
     int                     m_running_x  = 0;
-    TextCursorPosition      m_selection_start;
-    TextCursorPosition      m_selection_end;
-    std::vector<Rect<int>>  m_selection_rects;      //A list of rectangles that comprise selection background.
-    int                     m_selected_glyph_begin; //Index of the first selected glyph
-    int                     m_selected_glyph_end;   //Index of the last selected glyph + 1
+
+    TextCursorPosition      m_cursor_position = {0, 0};
+    TextCursorPosition      m_selection_start = {0, 0};
+    TextCursorPosition      m_selection_end   = {0, 0};
+
+    std::vector<Rect<int>>  m_selection_rects;
+        //A list of rectangles that comprise selection background.
+
+    int                     m_preferred_cursor_column = 0;
+        //For moving cursor up and down.
 
 public:
     TextPainter();
 
-   ~TextPainter();
+    ~TextPainter();
 
-    bool isGood() const;
+    /* Must be set before doing anything else! */
+    Font* font = nullptr;
+
+    void setTextWrap(TextWrap text_wrap);
+
+    TextWrap textWrap() const;
+
+    void setTextAlignment(TextAlignment text_alignment);
+
+    TextAlignment textAlignment() const;
+
+    void setReflowWidth(int width);
+
+    int reflowWidth() const;
+
+    void setWhitespaceCleanupPolicy(WhitespaceCleanup policy);
+
+    WhitespaceCleanup whitespaceCleanupPolicy() const;
 
     /* Recalculate text flow with the given wrap_mode..
      * The width parameter is used with multi-line modes
      * to determine the wrap point. */
-    void reflow(const std::string &text, Font* font, TextWrap::Mode wrap_mode, int width);
+    void reflow(const std::string &text);
 
-    void reallign(TextAlign::Mode alignment);
+    void reallign();
 
     /* Update selection geometry data based on selection start and end positions. */
-    void updateSelection(Font* font);
+    void updateSelection();
 
     /* As calculated by the reflow method. */
     int lineCount() const;
@@ -163,41 +196,66 @@ public:
     void paintSelectionBackground(Image* image, Color<unsigned char> color, Point<int> offset);
 
     /* Find text cursor position based on a point within Rect{{0, 0}, textSize()}. */
-    TextCursorPosition findCursorPosition(Point<int> p, Font* font);
+    TextCursorPosition findCursorPosition(Point<int> p);
 
-    Point<int> findCursorPosition(TextCursorPosition tcp, Font* font);
+    Point<int> findCursorCoords(TextCursorPosition tcp);
 
-    inline void setSelectionStart(TextCursorPosition pos)
-    {
-        m_selection_start = pos;
-    }
+    /* Return cursor position moved some number glyphs forwards or backwards.
+     * Positive nglyphs values implies forward cursor movement. */
+    TextCursorPosition movedBy(TextCursorPosition tcp, int nglyphs);
 
-    inline TextCursorPosition selectionStart() const
-    {
-        return m_selection_start;
-    }
+    /* Find TextCursorPosition based on text index. */
+    TextCursorPosition textIndex2CursorPosition(int text_index);
 
-    inline void setSelectionEnd(TextCursorPosition pos)
-    {
-        m_selection_end = pos;
-    }
+    /* Find text index based on cursor position. */
+    int cursorPosition2TextIndex(TextCursorPosition tcp);
 
-    inline TextCursorPosition selectionEnd() const
-    {
-        return m_selection_end;
-    }
+    /* Find index of the glyph that is located after the cursor. */
+    int glyphIndex(TextCursorPosition tcp) const;
 
-    inline bool hasSelection() const
-    {
-        return selectionStart() != selectionEnd();
-    }
+    /* Find selection index range in text. */
+    void findRangeTextIndices(int &begin, int &end, TextCursorPosition begin_tcp, TextCursorPosition end_tcp);
+
+    void setCursorPosition(TextCursorPosition tcp);
+
+    TextCursorPosition cursorPosition() const;
+
+    void setSelectionStart(TextCursorPosition tcp);
+
+    TextCursorPosition selectionStart() const;
+
+    void setSelectionEnd(TextCursorPosition tcp);
+
+    TextCursorPosition selectionEnd() const;
+
+    bool hasSelection() const;
+
+    void moveCursorUp();
+
+    void moveCursorDown();
+
+    void moveCursorLeft();
+
+    void moveCursorRight();
+
+    void homeCursor();
+
+    void endCursor();
+
+    void deleteAfterCursor(std::string &text);
+
+    void deleteBeforeCursor(std::string &text);
+
+    void inputUtf8(const std::string &utf8, std::string &text);
+
+    void deleteSelection(std::string &text);
 
 private:
     bool glyphFits(Font::Glyph* glyph);
 
     void addGlyph(Font::Glyph* glyph);
 
-    void addLine(Font* font);
+    void addLine();
 
     void clear();
 

@@ -16,7 +16,7 @@ using namespace std;
 using namespace r64fx;
 
 
-const char* lorem_ipsum =
+std::string lorem_ipsum =
 "Lorem a ipsum a dolor a sit b amet, consectetur adipiscing elit.\n"
 "Donec a diam lectus. Sed sit amet ipsum mauris.\n\n"
 "Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit.\n"
@@ -30,7 +30,7 @@ const char* lorem_ipsum =
 "Ut convallis libero in urna ultrices accumsan.\n"
 "Donec sed odio eros. Donec viverra mi quis quam pulvinar at malesuada arcu rhoncus.\n"
 "Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. In rutrum accumsan ultricies.\n"
-"Mauris vitae nisi at sem facilisis semper ac in est.\n"
+"Mauris vitae nisi at sem facilisis semper ac in est."
 ;
 
 
@@ -141,14 +141,14 @@ private:
 //         m_Widget->setSize({1000, 600});
 //         m_Widget->show();
 
-        m_Font = new Font("", 20, 72);
+        m_Font = new Font("mono", 20, 72);
 
         mwt = new Widget_Text(lorem_ipsum, m_Font);
         mwt->setPosition({50, 50});
         mwt->setWidth(500);
         mwt->setHeight(10);
-        mwt->setWrapMode(TextWrap::Word);
-        mwt->setTextAlignment(TextAlign::Left);
+        mwt->setTextWrap(TextWrap::Word);
+        mwt->setTextAlignment(TextAlignment::Left);
         mwt->show();
     }
     
