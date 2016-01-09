@@ -702,7 +702,7 @@ int TextPainter::insertGlyphs(const std::string &text)
 
         m_glyphs.insert(
             m_glyphs.begin() + glyph_index,
-            GlyphEntry(glyph, text_index)
+            GlyphEntry(glyph)
         );
         num_glyphs++;
         glyph_index++;

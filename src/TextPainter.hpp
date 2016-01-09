@@ -11,20 +11,14 @@
 namespace r64fx{
 
 class GlyphEntry{
-    Font::Glyph* m_glyph;
-    int          m_index; //Index in text.
+    Font::Glyph*   m_glyph;
 
 public:
-    GlyphEntry(Font::Glyph* glyph, int index)
+    GlyphEntry(Font::Glyph* glyph)
     : m_glyph(glyph)
-    , m_index(index)
     {}
 
     inline Font::Glyph* glyph() const { return m_glyph; }
-
-    inline int index() const { return m_index; }
-
-    inline int nextIndex() const { return index() + text().size(); }
 
     inline std::string text() const { return m_glyph->text(); }
 
