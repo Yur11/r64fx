@@ -492,75 +492,10 @@ TextCursorPosition TextPainter::movedBy(TextCursorPosition tcp, int nglyphs)
 }
 
 
-TextCursorPosition TextPainter::textIndex2CursorPosition(int text_index)
-{
-    if(m_lines.empty())
-        return TextCursorPosition(0, 0);
-
-    for(int l=0; l<(int)m_lines.size(); l++)
-    {
-        auto &line = m_lines[l];
-        for(int c=0; c<line.glyphCount(); c++)
-        {
-            auto glyph = m_glyphs[line.begin() + c];
-            if(glyph.index() >= text_index)
-                return TextCursorPosition(l, c);
-        }
-    }
-
-    return TextCursorPosition(m_lines.size() - 1, m_lines.back().glyphCount());
-}
-
-
-int TextPainter::cursorPosition2TextIndex(TextCursorPosition tcp)
-{
-    if(tcp.line() < 0 || m_glyphs.empty())
-        return 0;
-
-    if(tcp.line() >= (int)m_lines.size())
-        return m_glyphs.back().nextIndex();
-
-    auto &line = m_lines[tcp.line()];
-    if(tcp.column() < line.glyphCount())
-    {
-        return m_glyphs[line.begin() + tcp.column()].index();
-    }
-
-    return m_glyphs[line.end() - 1].nextIndex();
-}
-
-
 int TextPainter::glyphIndex(TextCursorPosition tcp) const
 {
     auto &line = m_lines[tcp.line()];
     return line.begin() + tcp.column();
-}
-
-
-void TextPainter::findRangeTextIndices(int &begin, int &end, TextCursorPosition begin_tcp, TextCursorPosition end_tcp)
-{
-    begin = end = 0;
-    int begin_glyph_idx = glyphIndex(begin_tcp);
-    int end_glyph_idx   = glyphIndex(end_tcp);
-
-    if(begin_glyph_idx > end_glyph_idx)
-    {
-        swap(begin_glyph_idx, end_glyph_idx);
-    }
-
-    if(begin_glyph_idx < 0)
-    {
-        begin_glyph_idx = 0;
-    }
-
-    if(end_glyph_idx >= (int)m_glyphs.size())
-    {
-        end_glyph_idx = m_glyphs.size() - 1;
-        end += m_glyphs.back().textSize();
-    }
-
-    begin += m_glyphs[begin_glyph_idx].index();
-    end   += m_glyphs[end_glyph_idx].index();
 }
 
 
@@ -688,8 +623,6 @@ void TextPainter::deleteBeforeCursor()
     if(hasSelection())
     {
         deleteSelection();
-        reflow();
-        updateSelection();
     }
     else
     {
@@ -710,14 +643,20 @@ void TextPainter::deleteBeforeCursor()
 
 void TextPainter::deleteSelection()
 {
-//     int text_begin;
-//     int text_end;
-//     findRangeTextIndices(text_begin, text_end, m_selection_start, m_selection_end);
-//     text.erase(text.begin() + text_begin, text.begin() + text_end);
-//     m_selection_start =
-//     m_selection_end   =
-//     m_cursor_position =
-//     (m_selection_start < m_selection_end ? m_selection_start : m_selection_end);
+    if(m_selection_start > m_selection_end)
+        swap(m_selection_start, m_selection_end);
+
+    int begin_idx = glyphIndex(m_selection_start);
+    int end_idx   = glyphIndex(m_selection_end);
+
+    m_glyphs.erase(
+        m_glyphs.begin() + begin_idx,
+        m_glyphs.begin() + end_idx
+    );
+
+    m_selection_end = m_cursor_position = m_selection_start;
+    reflow();
+    updateSelection();
 }
 
 

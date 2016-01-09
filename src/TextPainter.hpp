@@ -204,17 +204,8 @@ public:
      * Positive nglyphs values implies forward cursor movement. */
     TextCursorPosition movedBy(TextCursorPosition tcp, int nglyphs);
 
-    /* Find TextCursorPosition based on text index. */
-    TextCursorPosition textIndex2CursorPosition(int text_index);
-
-    /* Find text index based on cursor position. */
-    int cursorPosition2TextIndex(TextCursorPosition tcp);
-
     /* Find index of the glyph that is located after the cursor. */
     int glyphIndex(TextCursorPosition tcp) const;
-
-    /* Find selection index range in text. */
-    void findRangeTextIndices(int &begin, int &end, TextCursorPosition begin_tcp, TextCursorPosition end_tcp);
 
     void setCursorPosition(TextCursorPosition tcp);
 
