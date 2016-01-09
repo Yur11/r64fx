@@ -84,10 +84,7 @@ void TextPainter::insertText(const std::string &text)
 void TextPainter::reflow()
 {
     m_text_size.setWidth(reflowWidth());
-    m_lines.clear();
-    m_lines.push_back(
-        GlyphLine(0, 0)
-    );
+    clearLines();
 
     auto running_x = 0;
     for(int g=0; g<(int)m_glyphs.size(); g++)
@@ -96,24 +93,41 @@ void TextPainter::reflow()
         int next_x = running_x + glyph.advance();
         if(textWrap() == TextWrap::None)
         {
-
+            //Do nothing!
         }
         else if(textWrap() == TextWrap::Newline)
         {
-
+            if(glyph.text() == "\n")
+            {
+                m_lines.push_back(GlyphLine(g, g));
+                next_x = 0;
+            }
         }
         else
         {
-            if(textWrap() == TextWrap::Word)
-            {
-
-            }
-            else if(textWrap() == TextWrap::Token)
-            {
-
-            }
-
             if(next_x > m_reflow_width)
+            {
+                if(textWrap() == TextWrap::Word)
+                {
+                    auto &line = m_lines.back();
+
+                    int new_g = g;
+                    retreatToWordStart(new_g);
+                    if(new_g > line.begin())
+                    {
+                        g = new_g;
+                        line.setEnd(new_g);
+                    }
+                }
+                else if(textWrap() == TextWrap::Token)
+                {
+
+                }
+
+                m_lines.push_back(GlyphLine(g, g));
+                next_x = 0;
+            }
+            else if(glyph.text() == "\n")
             {
                 m_lines.push_back(GlyphLine(g, g));
                 next_x = 0;
@@ -763,10 +777,20 @@ int TextPainter::insertGlyphs(const std::string &text)
 }
 
 
+void TextPainter::clearLines()
+{
+    m_lines.clear();
+    m_lines.push_back(
+        GlyphLine(0, 0)
+    );
+}
+
+
 void TextPainter::retreatToWordStart(int &i)
 {
     while( i > m_lines.back().begin() && m_glyphs[i].text() != " ")
         i--;
+    i++;
 }
 
 }//namespace r64fx

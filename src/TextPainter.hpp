@@ -249,8 +249,11 @@ public:
     void deleteSelection();
 
     void clear();
+
 private:
     int insertGlyphs(const std::string &text);
+
+    void clearLines();
 
     void retreatToWordStart(int &i);
 };

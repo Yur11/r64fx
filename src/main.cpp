@@ -17,7 +17,7 @@ using namespace r64fx;
 
 
 const char* lorem_ipsum =
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n"
+"Lorem ipsum dolor    sit amet, consectetur adipiscing elit.\n"
 "Donec a diam lectus. Sed sit amet ipsum mauris.\n"
 "Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit.\n"
 "Donec et mollis dolor. Praesent et diam eget libero egestas mattis sit amet vitae augue.\n"
@@ -142,7 +142,7 @@ private:
         mwt->setPosition({50, 50});
         mwt->setWidth(500);
         mwt->setHeight(10);
-        mwt->setTextWrap(TextWrap::Anywhere);
+        mwt->setTextWrap(TextWrap::Word);
         mwt->setTextAlignment(TextAlignment::Left);
         mwt->show();
     }
