@@ -25,6 +25,8 @@ public:
     inline int textSize() const { return m_glyph->text().size(); }
 
     inline int advance() const { return m_glyph->advance(); }
+
+    inline bool isNewline() const { return text() == "\n"; }
 };
 
 
@@ -200,6 +202,8 @@ public:
 
     /* Find index of the glyph that is located after the cursor. */
     int glyphIndex(TextCursorPosition tcp) const;
+
+    GlyphEntry glyphAt(TextCursorPosition tcp) const;
 
     void setCursorPosition(TextCursorPosition tcp);
 

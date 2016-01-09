@@ -499,6 +499,12 @@ int TextPainter::glyphIndex(TextCursorPosition tcp) const
 }
 
 
+GlyphEntry TextPainter::glyphAt(TextCursorPosition tcp) const
+{
+    return m_glyphs[glyphIndex(tcp)];
+}
+
+
 void TextPainter::setCursorPosition(TextCursorPosition tcp)
 {
     m_cursor_position = tcp;
@@ -570,7 +576,14 @@ void TextPainter::moveCursorDown()
 
 void TextPainter::moveCursorLeft()
 {
-    m_cursor_position = movedBy(m_cursor_position, -1);
+    int offset = -1;
+    if(m_cursor_position.column() == 1)
+    {
+        int idx = glyphIndex(m_cursor_position);
+        if(m_glyphs[idx - 1].isNewline())
+            offset = -2;
+    }
+    m_cursor_position = movedBy(m_cursor_position, offset);
     m_preferred_cursor_column = m_cursor_position.column();
 }
 
@@ -579,6 +592,16 @@ void TextPainter::moveCursorRight()
 {
     m_cursor_position = movedBy(m_cursor_position, +1);
     m_preferred_cursor_column = m_cursor_position.column();
+    if(m_cursor_position.column() == 0)
+    {
+        auto &line = m_lines[m_cursor_position.line()];
+        if(line.glyphCount() > 1 && m_glyphs[line.begin()].isNewline())
+        {
+            m_cursor_position.setColumn(
+                m_cursor_position.column() + 1
+            );
+        }
+    }
 }
 
 
