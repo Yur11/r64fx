@@ -16,21 +16,13 @@ using namespace std;
 
 namespace r64fx{
 
-Widget_Text::Widget_Text(std::string* textptr, Font* font, Widget* parent)
-: Widget(parent)
-{
-    m = new TextPainter;
-    setText(textptr);
-    setFont(font);
-}
-
 
 Widget_Text::Widget_Text(const std::string &text, Font* font, Widget* parent)
 : Widget(parent)
 {
     m = new TextPainter;
-    setText(text);
     setFont(font);
+    setText(text);
 }
 
 
@@ -38,8 +30,8 @@ Widget_Text::Widget_Text(const std::string &text, Widget* parent)
 : Widget(parent)
 {
     m = new TextPainter;
-    setText(text);
     setFont(nullptr);
+    setText(text);
 }
 
 
@@ -47,7 +39,6 @@ Widget_Text::Widget_Text(Widget* parent)
 : Widget(parent)
 {
     m = new TextPainter;
-    setText(nullptr);
     setFont(nullptr);
 }
 
@@ -58,37 +49,10 @@ Widget_Text::~Widget_Text()
 }
 
 
-void Widget_Text::setText(std::string *textptr)
-{
-    if(ownsText())
-    {
-        delete m_text;
-    }
-
-    if(textptr)
-    {
-        m_text = textptr;
-        m_flags &= ~R64FX_WIDGET_OWNS_TEXT;
-    }
-    else
-    {
-        m_text = new std::string;
-        m_flags |= R64FX_WIDGET_OWNS_TEXT;
-    }
-}
-
-
 void Widget_Text::setText(const std::string &text)
 {
-    if(!m_text)
-    {
-        m_text = new std::string(text);
-        m_flags |= R64FX_WIDGET_OWNS_TEXT;
-    }
-    else
-    {
-        m_text->assign(text);
-    }
+    m_text_painter->clear();
+    m_text_painter->insertText(text);
 }
 
 
@@ -226,7 +190,7 @@ void Widget_Text::focusOutEvent()
 void Widget_Text::resizeEvent(ResizeEvent* event)
 {
     m_text_painter->setReflowWidth(event->width() - 20);
-    m_text_painter->reflow(*m_text);
+    m_text_painter->reflow();
     m_text_painter->reallign();
 }
 
@@ -310,15 +274,22 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
     else if(event->key() == Keyboard::Key::Delete)
     {
-        m_text_painter->deleteAfterCursor(*m_text);
+        m_text_painter->deleteAfterCursor();
     }
     else if(event->key() == Keyboard::Key::Backspace)
     {
-        m_text_painter->deleteBeforeCursor(*m_text);
+        m_text_painter->deleteBeforeCursor();
     }
     else
     {
-        m_text_painter->inputUtf8(event->text(), *m_text);
+        if(event->key() == Keyboard::Key::Return)
+        {
+            m_text_painter->insertText("\n");
+        }
+        else if(!event->text().empty())
+        {
+            m_text_painter->insertText(event->text());
+        }
     }
 
     update();

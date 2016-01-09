@@ -128,51 +128,60 @@ Font::Glyph* Font::fetchGlyph(string text)
     auto it = m_glyph_cache->find(text);
     if(it == m_glyph_cache->end())
     {
-        int index = FT_Get_Char_Index(m_ft_face, to_utf32(text, 0, text.size()));
-        if(index == 0)
+        Font::Glyph* glyph = nullptr;
+
+        if(text == "\n")
         {
-            cerr << "Font: Failed to find glyph index!\n";
-            return nullptr;
+            glyph = new Font::Glyph;
+            glyph->m_text = "\n";
         }
-        
-        int code = FT_Load_Glyph(
-            m_ft_face, index,
-            FT_LOAD_DEFAULT
-        );
-        
-        if(code != 0)
+        else
         {
-            cerr << "Font: Failed to load glyph!\n";
-            return nullptr;
+            int index = FT_Get_Char_Index(m_ft_face, to_utf32(text, 0, text.size()));
+            if(index == 0)
+            {
+                cerr << "Font: Failed to find glyph index!\n";
+                return nullptr;
+            }
+
+            int code = FT_Load_Glyph(
+                m_ft_face, index,
+                FT_LOAD_DEFAULT
+            );
+
+            if(code != 0)
+            {
+                cerr << "Font: Failed to load glyph!\n";
+                return nullptr;
+            }
+
+            code = FT_Render_Glyph(
+                m_ft_face->glyph,
+                FT_RENDER_MODE_NORMAL
+            );
+
+            if(code != 0)
+            {
+                cerr << "Font: Failed to render glyph!\n";
+                return nullptr;
+            }
+
+            auto &bitmap = m_ft_face->glyph->bitmap;
+
+            glyph = new Font::Glyph;
+            glyph->m_text = text;
+            glyph->m_bearing_x  = m_ft_face->glyph->metrics.horiBearingX  >> 6;
+            glyph->m_width      = m_ft_face->glyph->metrics.width         >> 6;
+            glyph->m_advance    = m_ft_face->glyph->metrics.horiAdvance   >> 6;
+            glyph->m_bearing_y  = m_ft_face->glyph->metrics.horiBearingY  >> 6;
+            glyph->m_height     = m_ft_face->glyph->metrics.height        >> 6;
+            glyph->m_image.load(
+                bitmap.width, bitmap.rows, 1, bitmap.buffer,
+                true//copy data
+            );
         }
-        
-        code = FT_Render_Glyph(
-            m_ft_face->glyph,
-            FT_RENDER_MODE_NORMAL
-        );
-        
-        if(code != 0)
-        {
-            cerr << "Font: Failed to render glyph!\n";
-            return nullptr;
-        }
-        
-        auto &bitmap = m_ft_face->glyph->bitmap;
-        
-        auto glyph = new Font::Glyph;
-        glyph->m_text = text;
-        glyph->m_bearing_x  = m_ft_face->glyph->metrics.horiBearingX  >> 6;
-        glyph->m_width      = m_ft_face->glyph->metrics.width         >> 6;
-        glyph->m_advance    = m_ft_face->glyph->metrics.horiAdvance   >> 6;
-        glyph->m_bearing_y  = m_ft_face->glyph->metrics.horiBearingY  >> 6;
-        glyph->m_height     = m_ft_face->glyph->metrics.height        >> 6;
-        glyph->m_image.load(
-            bitmap.width, bitmap.rows, 1, bitmap.buffer,
-            true//copy data
-        );
-        
+
         m_glyph_cache->insert({text, glyph});
-        
         return glyph;
     }
     else

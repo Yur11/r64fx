@@ -16,21 +16,16 @@ using namespace std;
 using namespace r64fx;
 
 
-std::string lorem_ipsum =
-"Lorem a ipsum a dolor a sit b amet, consectetur adipiscing elit.\n"
-"Donec a diam lectus. Sed sit amet ipsum mauris.\n\n"
+const char* lorem_ipsum =
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n"
+"Donec a diam lectus. Sed sit amet ipsum mauris.\n"
 "Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit.\n"
 "Donec et mollis dolor. Praesent et diam eget libero egestas mattis sit amet vitae augue.\n"
 "Nam tincidunt congue enim, ut porta lorem lacinia consectetur.\n"
 "Donec ut libero sed arcu vehicula ultricies a non tortor.\n"
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n"
-"Aenean ut gravida lorem. Ut turpis felis, pulvinar a semper sed, adipiscing id dolor.\n"
-"Pellentesque auctor nisi id magna consequat sagittis.\n\n\n"
-"Curabitur dapibus enim sit amet elit pharetra tincidunt feugiat nisl imperdiet.\n"
-"Ut convallis libero in urna ultrices accumsan.\n"
-"Donec sed odio eros. Donec viverra mi quis quam pulvinar at malesuada arcu rhoncus.\n"
-"Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. In rutrum accumsan ultricies.\n"
-"Mauris vitae nisi at sem facilisis semper ac in est."
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean ut gravida lorem.\n"
+"Ut turpis felis, pulvinar a semper sed, adipiscing id dolor.\n"
+"Pellentesque auctor nisi id magna consequat sagittis.\n"
 ;
 
 
@@ -147,7 +142,7 @@ private:
         mwt->setPosition({50, 50});
         mwt->setWidth(500);
         mwt->setHeight(10);
-        mwt->setTextWrap(TextWrap::Word);
+        mwt->setTextWrap(TextWrap::Anywhere);
         mwt->setTextAlignment(TextAlignment::Left);
         mwt->show();
     }

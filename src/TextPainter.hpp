@@ -35,19 +35,15 @@ public:
 
 
 class GlyphLine{
-    int m_y;
     int m_begin;   //Index of the first glyph in line.
     int m_end;     //Index past the last glyph in line,
     int m_x_offset = 0;
 
 public:
-    GlyphLine(int y, int begin, int end)
-    : m_y(y)
-    , m_begin(begin)
+    GlyphLine(int begin, int end)
+    : m_begin(begin)
     , m_end(end)
     {}
-
-    inline int y() const { return m_y; }
 
     inline void setBegin(int begin) { m_begin = begin; }
 
@@ -123,6 +119,13 @@ inline bool operator>=(TextCursorPosition a, TextCursorPosition b)
 }
 
 
+template<typename StreamT> StreamT &operator<<(StreamT &stream, TextCursorPosition tcp)
+{
+    stream << tcp.line() << ", " << tcp.column();
+    return stream;
+}
+
+
 class TextPainter{
     TextWrap                m_text_wrap           = TextWrap::None;
     TextAlignment           m_text_alignment      = TextAlignment::Left;
@@ -132,9 +135,6 @@ class TextPainter{
     std::vector<GlyphEntry> m_glyphs;
     std::vector<GlyphLine>  m_lines;
     Size<int>               m_text_size  = {0, 0};
-
-    int                     m_index      = 0;
-    int                     m_running_x  = 0;
 
     TextCursorPosition      m_cursor_position = {0, 0};
     TextCursorPosition      m_selection_start = {0, 0};
@@ -158,22 +158,22 @@ public:
 
     TextWrap textWrap() const;
 
-    void setTextAlignment(TextAlignment text_alignment);
-
-    TextAlignment textAlignment() const;
-
     void setReflowWidth(int width);
 
     int reflowWidth() const;
+
+    void setTextAlignment(TextAlignment text_alignment);
+
+    TextAlignment textAlignment() const;
 
     void setWhitespaceCleanupPolicy(WhitespaceCleanup policy);
 
     WhitespaceCleanup whitespaceCleanupPolicy() const;
 
-    /* Recalculate text flow with the given wrap_mode..
-     * The width parameter is used with multi-line modes
-     * to determine the wrap point. */
-    void reflow(const std::string &text);
+    /* Insert some text at cursor position. */
+    void insertText(const std::string &text);
+
+    void reflow();
 
     void reallign();
 
@@ -242,22 +242,15 @@ public:
 
     void endCursor();
 
-    void deleteAfterCursor(std::string &text);
+    void deleteAfterCursor();
 
-    void deleteBeforeCursor(std::string &text);
+    void deleteBeforeCursor();
 
-    void inputUtf8(const std::string &utf8, std::string &text);
-
-    void deleteSelection(std::string &text);
-
-private:
-    bool glyphFits(Font::Glyph* glyph);
-
-    void addGlyph(Font::Glyph* glyph);
-
-    void addLine();
+    void deleteSelection();
 
     void clear();
+private:
+    int insertGlyphs(const std::string &text);
 
     void retreatToWordStart(int &i);
 };

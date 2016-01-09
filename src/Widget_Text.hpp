@@ -11,12 +11,9 @@ class Image;
 
 class Widget_Text : public Widget{
     void*         m       = nullptr;
-    std::string*  m_text  = nullptr;
     Image*        m_image = nullptr;
 
 public:
-    Widget_Text(std::string* textptr, Font* font, Widget* parent = nullptr);
-
     Widget_Text(const std::string &text, Font* font = nullptr, Widget* parent = nullptr);
 
     Widget_Text(const std::string &text, Widget* parent = nullptr);
