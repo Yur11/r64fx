@@ -20,10 +20,10 @@ const char* lorem_ipsum =
 "Lorem ipsum dolor    sit amet, consectetur adipiscing elit.\n"
 "Donec a diam lectus. Sed sit amet ipsum mauris.\n"
 "Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit.\n"
-"Donec et mollis dolor. Praesent et diam eget libero egestas mattis sit amet vitae augue.\n"
+"Donec et mollis dolor. Praesent et diam eget libero egestas mattis sit amet vitae augue.\n\n\n"
 "Nam tincidunt congue enim, ut porta lorem lacinia consectetur.\n"
 "Donec ut libero sed arcu vehicula ultricies a non tortor.\n"
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean ut gravida lorem.\n"
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean ut gravida lorem.\n\n"
 "Ut turpis felis, pulvinar a semper sed, adipiscing id dolor.\n"
 "Pellentesque auctor nisi id magna consequat sagittis.\n"
 ;

@@ -223,6 +223,10 @@ public:
 
     void moveCursorDown();
 
+private:
+    void moveCursorVertically(int direction);
+
+public:
     void moveCursorLeft();
 
     void moveCursorRight();
@@ -245,6 +249,8 @@ private:
     void clearLines();
 
     void retreatToWordStart(int &i);
+
+    bool lineStartsWithNewline(int l);
 };
 
 }//namespace

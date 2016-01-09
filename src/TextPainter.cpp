@@ -400,7 +400,13 @@ TextCursorPosition TextPainter::findCursorPosition(Point<int> p)
         n++;
     }
 
-    return TextCursorPosition(i, n - line.begin());
+    TextCursorPosition tcp(i, n - line.begin());
+    if(tcp.column() == 0 && lineStartsWithNewline(tcp.line()))
+    {
+        tcp.setColumn(1);
+    }
+
+    return tcp;
 }
 
 
@@ -552,11 +558,7 @@ void TextPainter::moveCursorUp()
 {
     if(m_cursor_position.line() > 0)
     {
-        int new_line = m_cursor_position.line() - 1;
-        m_cursor_position = TextCursorPosition(
-            new_line,
-            min(m_preferred_cursor_column, m_lines[new_line].glyphCount())
-        );
+        moveCursorVertically(-1);
     }
 }
 
@@ -565,23 +567,53 @@ void TextPainter::moveCursorDown()
 {
     if(m_cursor_position.line() < int(m_lines.size() - 1))
     {
-        int new_line = m_cursor_position.line() + 1;
-        m_cursor_position = TextCursorPosition(
-            new_line,
-            min(m_preferred_cursor_column, m_lines[new_line].glyphCount())
-        );
+        moveCursorVertically(+1);
     }
+}
+
+
+void TextPainter::moveCursorVertically(int direction)
+{
+    int curr_line = m_cursor_position.line();
+    int next_line = m_cursor_position.line() + direction;
+
+    cout << "pref: " << m_preferred_cursor_column << "\n";
+
+    bool curr_got_newline = lineStartsWithNewline(curr_line);
+    bool next_got_newline = lineStartsWithNewline(next_line);
+    if(curr_got_newline)
+    {
+        if(!next_got_newline)
+            m_preferred_cursor_column--;
+    }
+    else
+    {
+        if(next_got_newline)
+            m_preferred_cursor_column++;
+    }
+
+    int next_col;
+    if(m_preferred_cursor_column > m_lines[next_line].glyphCount())
+    {
+        next_col = m_lines[curr_line].glyphCount();
+    }
+    else
+    {
+        next_col = m_preferred_cursor_column;
+    }
+
+    m_cursor_position = TextCursorPosition(
+        next_line, next_col
+    );
 }
 
 
 void TextPainter::moveCursorLeft()
 {
     int offset = -1;
-    if(m_cursor_position.column() == 1)
+    if(m_cursor_position.column() == 1 && lineStartsWithNewline(m_cursor_position.line()))
     {
-        int idx = glyphIndex(m_cursor_position);
-        if(m_glyphs[idx - 1].isNewline())
-            offset = -2;
+        offset = -2;
     }
     m_cursor_position = movedBy(m_cursor_position, offset);
     m_preferred_cursor_column = m_cursor_position.column();
@@ -591,17 +623,13 @@ void TextPainter::moveCursorLeft()
 void TextPainter::moveCursorRight()
 {
     m_cursor_position = movedBy(m_cursor_position, +1);
-    m_preferred_cursor_column = m_cursor_position.column();
-    if(m_cursor_position.column() == 0)
+    if(m_cursor_position.column() == 0 && lineStartsWithNewline(m_cursor_position.line()))
     {
-        auto &line = m_lines[m_cursor_position.line()];
-        if(line.glyphCount() > 1 && m_glyphs[line.begin()].isNewline())
-        {
-            m_cursor_position.setColumn(
-                m_cursor_position.column() + 1
-            );
-        }
+        m_cursor_position.setColumn(
+            m_cursor_position.column() + 1
+        );
     }
+    m_preferred_cursor_column = m_cursor_position.column();
 }
 
 
@@ -753,6 +781,13 @@ void TextPainter::retreatToWordStart(int &i)
     while( i > m_lines.back().begin() && m_glyphs[i].text() != " ")
         i--;
     i++;
+}
+
+
+bool TextPainter::lineStartsWithNewline(int l)
+{
+    auto &line = m_lines[l];
+    return m_glyphs[line.begin()].isNewline();
 }
 
 }//namespace r64fx

@@ -206,6 +206,7 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
         m_text_painter->setSelectionEnd(tcp);
         m_text_painter->updateSelection();
     }
+    cout << "--- " << m_text_painter->cursorPosition() << "\n";
     update();
 }
 
@@ -292,6 +293,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         }
     }
 
+    cout << "+++ " << m_text_painter->cursorPosition() << "\n";
     update();
 }
 
