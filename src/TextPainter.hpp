@@ -142,6 +142,8 @@ class TextPainter{
     int                     m_preferred_cursor_column = 0;
         //For moving cursor up and down.
 
+    bool m_keyboard_selection_mode = false;
+
 public:
     TextPainter();
 
@@ -165,6 +167,10 @@ public:
     void setWhitespaceCleanupPolicy(WhitespaceCleanup policy);
 
     WhitespaceCleanup whitespaceCleanupPolicy() const;
+
+    void setKeyboardSelectionMode(bool on);
+
+    bool inKeyboardSelectionMode() const;
 
     /* Insert some text at cursor position. */
     void insertText(const std::string &text);

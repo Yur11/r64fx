@@ -70,6 +70,17 @@ WhitespaceCleanup TextPainter::whitespaceCleanupPolicy() const
 }
 
 
+void TextPainter::setKeyboardSelectionMode(bool on)
+{
+    m_keyboard_selection_mode = on;
+}
+
+bool TextPainter::inKeyboardSelectionMode() const
+{
+    return m_keyboard_selection_mode;
+}
+
+
 void TextPainter::insertText(const std::string &text)
 {
     int nglyphs = insertGlyphs(text);
@@ -77,7 +88,12 @@ void TextPainter::insertText(const std::string &text)
     {
         reflow();
         m_cursor_position = movedBy(m_cursor_position, nglyphs);
+        if(lineStartsWithNewline(m_cursor_position.line()) && m_cursor_position.column() == 0)
+        {
+            m_cursor_position.setColumn(1);
+        }
     }
+    m_preferred_cursor_column = m_cursor_position.column();
 }
 
 
@@ -140,22 +156,6 @@ void TextPainter::reflow()
     }//for
 
     m_text_size.setHeight(m_lines.size() * font->height());
-
-    /* Remove extra spaces. */
-//     for(auto &line : m_lines)
-//     {
-//         if(m_whitespace_cleanup == WhitespaceCleanup::FrontAndBack || m_whitespace_cleanup == WhitespaceCleanup::Front)
-//             for(int i=line.begin();  i != line.end()  && m_glyphs[i].text() == " ";  line.setBegin(++i));
-//
-//         if(m_whitespace_cleanup == WhitespaceCleanup::FrontAndBack || m_whitespace_cleanup == WhitespaceCleanup::Back)
-//             for(int i=line.end()-1;  i > line.begin() && m_glyphs[i].text() == " ";  line.setEnd(--i));
-//     }
-
-//     cout << "reflow:\n";
-//     for(auto &line : m_lines)
-//     {
-//         cout << "    " << line.begin() << " --> " << line.end() << "\n";
-//     }
 }
 
 
@@ -577,8 +577,6 @@ void TextPainter::moveCursorVertically(int direction)
     int curr_line = m_cursor_position.line();
     int next_line = m_cursor_position.line() + direction;
 
-    cout << "pref: " << m_preferred_cursor_column << "\n";
-
     bool curr_got_newline = lineStartsWithNewline(curr_line);
     bool next_got_newline = lineStartsWithNewline(next_line);
     if(curr_got_newline)
@@ -635,8 +633,15 @@ void TextPainter::moveCursorRight()
 
 void TextPainter::homeCursor()
 {
-    m_cursor_position.setColumn(0);
-    m_preferred_cursor_column = 0;
+    if(lineStartsWithNewline(m_cursor_position.line()))
+    {
+        m_cursor_position.setColumn(1);
+    }
+    else
+    {
+        m_cursor_position.setColumn(0);
+    }
+    m_preferred_cursor_column = m_cursor_position.column();
 }
 
 
@@ -656,16 +661,9 @@ void TextPainter::deleteAfterCursor()
     }
     else
     {
-//         auto new_cursor_position = movedBy(m_cursor_position, +1);
-//         if(new_cursor_position > m_cursor_position)
-//         {
-//             int text_begin;
-//             int text_end;
-//             findRangeTextIndices(text_begin, text_end, new_cursor_position, m_cursor_position);
-//             text.erase(text.begin() + text_begin, text.begin() + text_end);
-//         }
+
     }
-//     m_preferred_cursor_column = m_cursor_position.column();
+    m_preferred_cursor_column = m_cursor_position.column();
 }
 
 
@@ -677,16 +675,14 @@ void TextPainter::deleteBeforeCursor()
     }
     else
     {
-//         auto new_cursor_position = movedBy(m_cursor_position, -1);
-//         if(new_cursor_position < m_cursor_position)
-//         {
-//             int text_begin = cursorPosition2TextIndex(new_cursor_position);
-//             int text_end   = cursorPosition2TextIndex(m_cursor_position);
-// //             findRangeTextIndices(text_begin, text_end, new_cursor_position, m_cursor_position);
-//             text.erase(text.begin() + text_begin, text.begin() + text_end);
-//             reflow();
-//             m_cursor_position = textIndex2CursorPosition(text_begin);
-//         }
+        auto idx = glyphIndex(m_cursor_position);
+        if(idx > 0)
+        {
+            idx--;
+            m_glyphs.erase(m_glyphs.begin() + idx);
+            reflow();
+            m_cursor_position = movedBy(TextCursorPosition(0, 0), idx);
+        }
     }
     m_preferred_cursor_column = m_cursor_position.column();
 }
