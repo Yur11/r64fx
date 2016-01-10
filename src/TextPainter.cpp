@@ -83,11 +83,12 @@ bool TextPainter::inKeyboardSelectionMode() const
 
 void TextPainter::insertText(const std::string &text)
 {
+    int idx = cursorPositionToGlyphIndex(m_cursor_position);
     int nglyphs = insertGlyphs(text);
     if(nglyphs > 0)
     {
         reflow();
-        m_cursor_position = movedBy(m_cursor_position, nglyphs);
+        m_cursor_position = glyphIndexToCursorPosition(idx + nglyphs);
         if(lineStartsWithNewline(m_cursor_position.line()) && m_cursor_position.column() == 0)
         {
             m_cursor_position.setColumn(1);
@@ -435,79 +436,99 @@ Point<int> TextPainter::findCursorCoords(TextCursorPosition tcp)
 }
 
 
-TextCursorPosition TextPainter::movedBy(TextCursorPosition tcp, int nglyphs)
-{
-    if(nglyphs == 0)
-        return tcp;
+// TextCursorPosition TextPainter::movedBy(TextCursorPosition tcp, int nglyphs)
+// {
+//     if(nglyphs == 0)
+//         return tcp;
+//
+//     if(nglyphs < 0) //Move backwards.
+//     {
+//         nglyphs = -nglyphs;
+//         while(nglyphs)
+//         {
+//             if(nglyphs <= tcp.column())
+//             {
+//                 tcp.setColumn(tcp.column() - nglyphs);
+//                 break;
+//             }
+//             else
+//             {
+//                 nglyphs -= tcp.column();
+//                 if(tcp.line() == 0)
+//                 {
+//                     tcp.setColumn(0); //No more glyphs.
+//                     break;
+//                 }
+//                 else
+//                 {
+//                     tcp.setLine(tcp.line() - 1);
+//                     tcp.setColumn(m_lines[tcp.line()].glyphCount() + 1);
+//                 }
+//             }
+//         }
+//     }
+//     else //Move forwards.
+//     {
+//         while(nglyphs)
+//         {
+//             auto &line = m_lines[tcp.line()];
+//             int slack = line.glyphCount() - tcp.column();
+//             if(nglyphs <= slack)
+//             {
+//                 tcp.setColumn(tcp.column() + nglyphs);
+//                 break;
+//             }
+//             else
+//             {
+//                 nglyphs -= slack + 1;
+//                 if(tcp.line() == (int)m_lines.size() - 1)
+//                 {
+//                     tcp.setColumn(line.glyphCount()); //No more glyphs.
+//                     break;
+//                 }
+//                 else
+//                 {
+//                     tcp.setLine(tcp.line() + 1);
+//                     tcp.setColumn(0);
+//                 }
+//             }
+//         }
+//     }
+//
+//     return tcp;
+// }
 
-    if(nglyphs < 0) //Move backwards.
-    {
-        nglyphs = -nglyphs;
-        while(nglyphs)
-        {
-            if(nglyphs <= tcp.column())
-            {
-                tcp.setColumn(tcp.column() - nglyphs);
-                break;
-            }
-            else
-            {
-                nglyphs -= tcp.column();
-                if(tcp.line() == 0)
-                {
-                    tcp.setColumn(0); //No more glyphs.
-                    break;
-                }
-                else
-                {
-                    tcp.setLine(tcp.line() - 1);
-                    tcp.setColumn(m_lines[tcp.line()].glyphCount() + 1);
-                }
-            }
-        }
-    }
-    else //Move forwards.
-    {
-        while(nglyphs)
-        {
-            auto &line = m_lines[tcp.line()];
-            int slack = line.glyphCount() - tcp.column();
-            if(nglyphs <= slack)
-            {
-                tcp.setColumn(tcp.column() + nglyphs);
-                break;
-            }
-            else
-            {
-                nglyphs -= slack + 1;
-                if(tcp.line() == (int)m_lines.size() - 1)
-                {
-                    tcp.setColumn(line.glyphCount()); //No more glyphs.
-                    break;
-                }
-                else
-                {
-                    tcp.setLine(tcp.line() + 1);
-                    tcp.setColumn(0);
-                }
-            }
-        }
-    }
 
-    return tcp;
-}
-
-
-int TextPainter::glyphIndex(TextCursorPosition tcp) const
+int TextPainter::cursorPositionToGlyphIndex(TextCursorPosition tcp) const
 {
     auto &line = m_lines[tcp.line()];
     return line.begin() + tcp.column();
 }
 
 
+TextCursorPosition TextPainter::glyphIndexToCursorPosition(int index) const
+{
+    if(index < 1)
+        return TextCursorPosition(0, 0);
+
+    for(int l=0; l<(int)m_lines.size(); l++)
+    {
+        auto &line = m_lines[l];
+        if(index <= line.end())
+        {
+            return TextCursorPosition(
+                l, index - line.begin()
+            );
+        }
+    }
+
+    return TextCursorPosition(m_lines.size() - 1, m_lines.back().glyphCount());
+}
+
+
 GlyphEntry TextPainter::glyphAt(TextCursorPosition tcp) const
 {
-    return m_glyphs[glyphIndex(tcp)];
+    return m_glyphs[cursorPositionToGlyphIndex(tcp)];
 }
 
 
@@ -593,7 +614,7 @@ void TextPainter::moveCursorVertically(int direction)
     int next_col;
     if(m_preferred_cursor_column > m_lines[next_line].glyphCount())
     {
-        next_col = m_lines[curr_line].glyphCount();
+        next_col = m_lines[next_line].glyphCount();
     }
     else
     {
@@ -608,25 +629,41 @@ void TextPainter::moveCursorVertically(int direction)
 
 void TextPainter::moveCursorLeft()
 {
-    int offset = -1;
-    if(m_cursor_position.column() == 1 && lineStartsWithNewline(m_cursor_position.line()))
+    if(m_cursor_position.column() > (lineStartsWithNewline(m_cursor_position.line()) ? 1 : 0))
     {
-        offset = -2;
+        m_cursor_position.setColumn(
+            m_cursor_position.column() - 1
+        );
     }
-    m_cursor_position = movedBy(m_cursor_position, offset);
+    else if(m_cursor_position.line() > 0)
+    {
+        m_cursor_position.setLine(
+            m_cursor_position.line() - 1
+        );
+        endCursor();
+    }
+
     m_preferred_cursor_column = m_cursor_position.column();
 }
 
 
 void TextPainter::moveCursorRight()
 {
-    m_cursor_position = movedBy(m_cursor_position, +1);
-    if(m_cursor_position.column() == 0 && lineStartsWithNewline(m_cursor_position.line()))
+    auto &line = m_lines[m_cursor_position.line()];
+    if(m_cursor_position.column() < line.glyphCount())
     {
         m_cursor_position.setColumn(
             m_cursor_position.column() + 1
         );
     }
+    else if((m_cursor_position.line() + 1) < (int)m_lines.size())
+    {
+        m_cursor_position.setLine(
+            m_cursor_position.line() + 1
+        );
+        homeCursor();
+    }
+
     m_preferred_cursor_column = m_cursor_position.column();
 }
 
@@ -649,7 +686,7 @@ void TextPainter::endCursor()
 {
     auto line = m_lines[m_cursor_position.line()];
     m_cursor_position.setColumn(line.glyphCount());
-    m_preferred_cursor_column = std::numeric_limits<int>::max();
+    m_preferred_cursor_column = m_cursor_position.column();
 }
 
 
@@ -661,7 +698,12 @@ void TextPainter::deleteAfterCursor()
     }
     else
     {
-
+        auto idx = cursorPositionToGlyphIndex(m_cursor_position);
+        if(idx < (int)m_glyphs.size())
+        {
+            m_glyphs.erase(m_glyphs.begin() + idx);
+            reflow();
+        }
     }
     m_preferred_cursor_column = m_cursor_position.column();
 }
@@ -675,13 +717,13 @@ void TextPainter::deleteBeforeCursor()
     }
     else
     {
-        auto idx = glyphIndex(m_cursor_position);
+        auto idx = cursorPositionToGlyphIndex(m_cursor_position);
         if(idx > 0)
         {
             idx--;
             m_glyphs.erase(m_glyphs.begin() + idx);
             reflow();
-            m_cursor_position = movedBy(TextCursorPosition(0, 0), idx);
+            m_cursor_position = glyphIndexToCursorPosition(idx);
         }
     }
     m_preferred_cursor_column = m_cursor_position.column();
@@ -693,8 +735,8 @@ void TextPainter::deleteSelection()
     if(m_selection_start > m_selection_end)
         swap(m_selection_start, m_selection_end);
 
-    int begin_idx = glyphIndex(m_selection_start);
-    int end_idx   = glyphIndex(m_selection_end);
+    int begin_idx = cursorPositionToGlyphIndex(m_selection_start);
+    int end_idx   = cursorPositionToGlyphIndex(m_selection_end);
 
     m_glyphs.erase(
         m_glyphs.begin() + begin_idx,
@@ -720,7 +762,7 @@ void TextPainter::clear()
 
 int TextPainter::insertGlyphs(const std::string &text)
 {
-    int glyph_index = glyphIndex(m_cursor_position);
+    int glyph_index = cursorPositionToGlyphIndex(m_cursor_position);
     int num_glyphs = 0;
     int text_index = 0;
     for(;;)

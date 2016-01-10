@@ -204,10 +204,11 @@ public:
 
     /* Return cursor position moved some number glyphs forwards or backwards.
      * Positive nglyphs values implies forward cursor movement. */
-    TextCursorPosition movedBy(TextCursorPosition tcp, int nglyphs);
+//     TextCursorPosition movedBy(TextCursorPosition tcp, int nglyphs);
 
-    /* Find index of the glyph that is located after the cursor. */
-    int glyphIndex(TextCursorPosition tcp) const;
+    int cursorPositionToGlyphIndex(TextCursorPosition tcp) const;
+
+    TextCursorPosition glyphIndexToCursorPosition(int index) const;
 
     GlyphEntry glyphAt(TextCursorPosition tcp) const;
 
