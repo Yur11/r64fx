@@ -21,9 +21,9 @@ void window_resize           (Window* window, int width, int height);
 void window_mouse_press      (Window* window, int x, int y, unsigned int button);
 void window_mouse_release    (Window* window, int x, int y, unsigned int button);
 void window_mouse_move       (Window* window, int x, int y);
-void window_key_press        (Window* window, int key);
-void window_key_release      (Window* window, int key);
-void window_text_input       (Window* window, const std::string &text, int key);
+void window_key_press        (Window* window, unsigned int key);
+void window_key_release      (Window* window, unsigned int key);
+void window_text_input       (Window* window, const std::string &text, unsigned int key);
 void window_close            (Window* window);
 
 namespace{
@@ -753,9 +753,11 @@ void Widget::mouseMoveEvent(MouseMoveEvent* event)
 }
 
 
-void window_key_press(Window* window, int key)
+void window_key_press(Window* window, unsigned int key)
 {
     auto d = (WindowWidgetData*) window->data();
+
+    Keyboard::trackModifierPress(key);
 
     KeyPressEvent event(key);
     if(g_focus_owner)
@@ -775,9 +777,11 @@ void Widget::keyPressEvent(KeyPressEvent* event)
 }
 
 
-void window_key_release(Window* window, int key)
+void window_key_release(Window* window, unsigned int key)
 {
     auto d = (WindowWidgetData*) window->data();
+
+    Keyboard::trackModifierRelease(key);
 
     KeyReleaseEvent event(key);
     if(g_focus_owner)
@@ -797,9 +801,11 @@ void Widget::keyReleaseEvent(KeyReleaseEvent* event)
 }
 
 
-void window_text_input(Window* window, const std::string &text, int key)
+void window_text_input(Window* window, const std::string &text, unsigned int key)
 {
     auto d = (WindowWidgetData*) window->data();
+
+    Keyboard::trackModifierPress(key);
 
     TextInputEvent event(text, key);
     if(g_focus_owner)

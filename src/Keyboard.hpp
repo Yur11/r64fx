@@ -11,10 +11,35 @@ namespace r64fx{
 
 namespace Keyboard{
 namespace Key{
-
-const char* toString(int key);
-
+    const char* toString(int key);
 }//namespace Key
+
+bool LeftShiftDown();
+bool LeftCtrlDown();
+bool LeftAltDown();
+bool RightShiftDown();
+bool RightCtrlDown();
+bool RightAltDown();
+
+inline bool ShiftDown()
+{
+    return LeftShiftDown() || RightShiftDown();
+}
+
+inline bool CtrlDown()
+{
+    return LeftCtrlDown() || RightCtrlDown();
+}
+
+inline bool AltDown()
+{
+    return LeftAltDown() || RightAltDown();
+}
+
+void trackModifierPress(unsigned int key);
+
+void trackModifierRelease(unsigned int key);
+
 }//namespace Keyboard
 
 

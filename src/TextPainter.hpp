@@ -197,14 +197,16 @@ public:
 
     void paintSelectionBackground(Image* image, Color<unsigned char> color, Point<int> offset);
 
+    void getText(std::string &str);
+
+    void getText(std::string &str, int a, int b);
+
+    void getText(std::string &str, TextCursorPosition a, TextCursorPosition b);
+
     /* Find text cursor position based on a point within Rect{{0, 0}, textSize()}. */
     TextCursorPosition findCursorPosition(Point<int> p);
 
     Point<int> findCursorCoords(TextCursorPosition tcp);
-
-    /* Return cursor position moved some number glyphs forwards or backwards.
-     * Positive nglyphs values implies forward cursor movement. */
-//     TextCursorPosition movedBy(TextCursorPosition tcp, int nglyphs);
 
     int cursorPositionToGlyphIndex(TextCursorPosition tcp) const;
 
@@ -224,11 +226,17 @@ public:
 
     TextCursorPosition selectionEnd() const;
 
+    void selectAll();
+
     bool hasSelection() const;
 
     void moveCursorUp();
 
+    void selectUp();
+
     void moveCursorDown();
+
+    void selectDown();
 
 private:
     void moveCursorVertically(int direction);
@@ -236,17 +244,27 @@ private:
 public:
     void moveCursorLeft();
 
+    void selectLeft();
+
     void moveCursorRight();
+
+    void selectRight();
 
     void homeCursor();
 
+    void homeSelection();
+
     void endCursor();
+
+    void endSelection();
 
     void deleteAfterCursor();
 
     void deleteBeforeCursor();
 
     void deleteSelection();
+
+    void clearSelection();
 
     void clear();
 

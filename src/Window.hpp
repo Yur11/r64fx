@@ -26,9 +26,9 @@ public:
         void (*mouse_press)   (Window* window, int x, int y, unsigned int button);
         void (*mouse_release) (Window* window, int x, int y, unsigned int button);
         void (*mouse_move)    (Window* window, int x, int y);
-        void (*key_press)     (Window* window, int key);
-        void (*key_release)   (Window* window, int key);
-        void (*text_input)    (Window* window, const std::string &text, int key);
+        void (*key_press)     (Window* window, unsigned int key);
+        void (*key_release)   (Window* window, unsigned int key);
+        void (*text_input)    (Window* window, const std::string &text, unsigned int key);
         void (*close)         (Window* window);
     };
 
