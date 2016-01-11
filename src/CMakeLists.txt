@@ -19,6 +19,7 @@ set(SRC
     Image.cpp
     ImageUtils.cpp
     Keyboard.cpp
+    KeyboardModifiers.cpp
     Mouse.cpp
     Painter.cpp
     Program.cpp

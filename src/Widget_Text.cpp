@@ -4,6 +4,8 @@
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "Keyboard.hpp"
+#include "KeyboardModifiers.hpp"
+#include "KeyEvent.hpp"
 #include "Mouse.hpp"
 #include "Program.hpp"
 #include "TextPainter.hpp"

@@ -2,6 +2,8 @@
 #include "Window.hpp"
 #include "Mouse.hpp"
 #include "Keyboard.hpp"
+#include "KeyboardModifiers.hpp"
+#include "KeyEvent.hpp"
 #include "Painter.hpp"
 #include "Program.hpp"
 
