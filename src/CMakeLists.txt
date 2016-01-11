@@ -28,6 +28,7 @@ set(SRC
     Shader_rgba_tex.cpp
     StringUtils.cpp
     TextPainter.cpp
+    UndoRedoChain.cpp
     Widget.cpp
     Widget_Dummy.cpp
     Widget_Text.cpp
