@@ -246,133 +246,29 @@ void Widget_Text::keyReleaseEvent(KeyReleaseEvent* event)
 
 void Widget_Text::textInputEvent(TextInputEvent* event)
 {
-    if(event->key() == Keyboard::Key::F11)
-    {
-        string text;
-        m_text_painter->getText(text, m_text_painter->selectionStart(), m_text_painter->selectionEnd());
-        cout << text << "\n";
-    }
-    else if(event->key() == Keyboard::Key::F12)
-    {
-        string text;
-        m_text_painter->getText(text);
-        cout << text << "\n";
-    }
-    else if(event->key() == Keyboard::Key::Escape)
+    if(event->key() == Keyboard::Key::Escape)
     {
         removeFocus();
     }
-    else if(event->key() == Keyboard::Key::Up)
+    else
     {
-        if(Keyboard::ShiftDown())
+        string text;
+        if(event->key() == Keyboard::Key::Return)
         {
-            m_text_painter->selectUp();
+            text = "\n";
         }
         else
         {
-            if(m_text_painter->hasSelection())
-            {
-                m_text_painter->clearSelection();
-            }
-            m_text_painter->moveCursorUp();
+            text = event->text();
         }
-    }
-    else if(event->key() == Keyboard::Key::Down)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            m_text_painter->selectDown();
-        }
-        else
-        {
-            if(m_text_painter->hasSelection())
-            {
-                m_text_painter->clearSelection();
-            }
-            m_text_painter->moveCursorDown();
-        }
-    }
-    else if(event->key() == Keyboard::Key::Left)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            m_text_painter->selectLeft();
-        }
-        else
-        {
-            if(m_text_painter->hasSelection())
-            {
-                m_text_painter->clearSelection();
-            }
-            m_text_painter->moveCursorLeft();
-        }
-    }
-    else if(event->key() == Keyboard::Key::Right)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            m_text_painter->selectRight();
-        }
-        else
-        {
-            if(m_text_painter->hasSelection())
-            {
-                m_text_painter->clearSelection();
-            }
-            m_text_painter->moveCursorRight();
-        }
-    }
-    else if(event->key() == Keyboard::Key::Home)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            m_text_painter->homeSelection();
-        }
-        else
-        {
-            if(m_text_painter->hasSelection())
-            {
-                m_text_painter->clearSelection();
-            }
-            m_text_painter->homeCursor();
-        }
-    }
-    else if(event->key() == Keyboard::Key::End)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            m_text_painter->endSelection();
-        }
-        else
-        {
-            if(m_text_painter->hasSelection())
-            {
-                m_text_painter->clearSelection();
-            }
-            m_text_painter->endCursor();
-        }
-    }
-    if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::A)
-    {
-        m_text_painter->selectAll();
-    }
-    else if(event->key() == Keyboard::Key::Delete)
-    {
-        m_text_painter->deleteAfterCursor();
-    }
-    else if(event->key() == Keyboard::Key::Backspace)
-    {
-        m_text_painter->deleteBeforeCursor();
-    }
-    else if(event->key() == Keyboard::Key::Return)
-    {
-        m_text_painter->insertText("\n");
-    }
-    else if(!event->text().empty())
-    {
-        m_text_painter->insertText(event->text());
-    }
 
+        m_text_painter->processTextInput(
+            event->key(),
+            text,
+            Keyboard::ShiftDown(),
+            Keyboard::CtrlDown()
+        );
+    }
     update();
 }
 

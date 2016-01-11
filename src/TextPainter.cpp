@@ -2,6 +2,7 @@
 #include "Font.hpp"
 #include "StringUtils.hpp"
 #include "ImageUtils.hpp"
+#include "Keyboard.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -837,6 +838,131 @@ bool TextPainter::lineStartsWithNewline(int l) const
 {
     auto &line = m_lines[l];
     return m_glyphs[line.begin()].isNewline();
+}
+
+
+bool TextPainter::processTextInput(unsigned int key, const std::string &text, bool shift_down, bool ctrl_down)
+{
+    if(key == Keyboard::Key::Up)
+    {
+        if(shift_down)
+        {
+            selectUp();
+        }
+        else
+        {
+            if(hasSelection())
+            {
+                clearSelection();
+            }
+            moveCursorUp();
+        }
+        return true;
+    }
+    else if(key == Keyboard::Key::Down)
+    {
+        if(shift_down)
+        {
+            selectDown();
+        }
+        else
+        {
+            if(hasSelection())
+            {
+                clearSelection();
+            }
+            moveCursorDown();
+        }
+        return true;
+    }
+    else if(key == Keyboard::Key::Left)
+    {
+        if(shift_down)
+        {
+            selectLeft();
+        }
+        else
+        {
+            if(hasSelection())
+            {
+                clearSelection();
+            }
+            moveCursorLeft();
+        }
+        return true;
+    }
+    else if(key == Keyboard::Key::Right)
+    {
+        if(shift_down)
+        {
+            selectRight();
+        }
+        else
+        {
+            if(hasSelection())
+            {
+                clearSelection();
+            }
+            moveCursorRight();
+        }
+        return true;
+    }
+    else if(key == Keyboard::Key::Home)
+    {
+        if(shift_down)
+        {
+            homeSelection();
+        }
+        else
+        {
+            if(hasSelection())
+            {
+                clearSelection();
+            }
+            homeCursor();
+        }
+        return true;
+    }
+    else if(key == Keyboard::Key::End)
+    {
+        if(shift_down)
+        {
+            endSelection();
+        }
+        else
+        {
+            if(hasSelection())
+            {
+                clearSelection();
+            }
+            endCursor();
+        }
+        return true;
+    }
+    if(ctrl_down && key == Keyboard::Key::A)
+    {
+        selectAll();
+        return true;
+    }
+    else if(key == Keyboard::Key::Delete)
+    {
+        deleteAfterCursor();
+        return true;
+    }
+    else if(key == Keyboard::Key::Backspace)
+    {
+        deleteBeforeCursor();
+        return true;
+    }
+    else if(!text.empty())
+    {
+        insertText(text);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 }//namespace r64fx

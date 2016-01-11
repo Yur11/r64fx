@@ -122,6 +122,7 @@ template<typename StreamT> StreamT &operator<<(StreamT &stream, TextCursorPositi
 }
 
 
+/* Helper class for rendering and editing text. */
 class TextPainter{
     TextWrap                m_text_wrap           = TextWrap::None;
     TextAlignment           m_text_alignment      = TextAlignment::Left;
@@ -283,6 +284,10 @@ private:
     void retreatToWordStart(int &i);
 
     bool lineStartsWithNewline(int l) const;
+
+
+public:
+    bool processTextInput(unsigned int key, const std::string &text, bool shift_down, bool ctrl_down);
 };
 
 }//namespace
