@@ -27,15 +27,6 @@ enum class TextAlignment{
     Left, Right, Center
 };
 
-
-enum class WhitespaceCleanup{
-    None,
-    Front,
-    Back,
-    FrontAndBack
-};
-
-
 }//namespace r64fx
 
 #endif//R64FX_TEXT_FLAGS_HPP

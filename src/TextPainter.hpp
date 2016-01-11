@@ -126,7 +126,6 @@ class TextPainter{
     TextWrap                m_text_wrap           = TextWrap::None;
     TextAlignment           m_text_alignment      = TextAlignment::Left;
     int                     m_reflow_width        = 100;
-    WhitespaceCleanup       m_whitespace_cleanup  = WhitespaceCleanup::FrontAndBack;
 
     std::vector<GlyphEntry> m_glyphs;
     std::vector<GlyphLine>  m_lines;
@@ -136,22 +135,23 @@ class TextPainter{
     TextCursorPosition      m_selection_start = {0, 0};
     TextCursorPosition      m_selection_end   = {0, 0};
 
+    /* A list of rectangles that comprise selection background. */
     std::vector<Rect<int>>  m_selection_rects;
-        //A list of rectangles that comprise selection background.
 
+    /* For moving cursor up and down. */
     int                     m_preferred_cursor_column = 0;
-        //For moving cursor up and down.
 
-    bool m_keyboard_selection_mode = false;
 
 public:
+    /* Must be set before doing anything else! */
+    Font* font = nullptr;
+
     TextPainter();
 
     ~TextPainter();
 
-    /* Must be set before doing anything else! */
-    Font* font = nullptr;
 
+    /* Configs. */
     void setTextWrap(TextWrap text_wrap);
 
     TextWrap textWrap() const;
@@ -164,60 +164,82 @@ public:
 
     TextAlignment textAlignment() const;
 
-    void setWhitespaceCleanupPolicy(WhitespaceCleanup policy);
 
-    WhitespaceCleanup whitespaceCleanupPolicy() const;
-
-    void setKeyboardSelectionMode(bool on);
-
-    bool inKeyboardSelectionMode() const;
-
-    /* Insert some text at cursor position. */
+    /* Text input. */
     void insertText(const std::string &text);
 
+private:
+    int insertGlyphs(const std::string &text);
+
+public:
+    /* Reflow text using current reflow width. */
     void reflow();
 
+    /* Allign text using current text alignment setting. */
     void reallign();
 
     /* Update selection geometry data based on selection start and end positions. */
     void updateSelection();
 
+
     /* As calculated by the reflow method. */
     int lineCount() const;
 
-    /* Size of the image that can fit the text.
+    /* Size of the rectangle that can fit the text.
      * As calculated be the reflow method. */
     Size<int> textSize() const;
 
-    /* Paint text onto image.
-     * Use an offset from that top-left corner. */
+
+    /* Rendering images. */
     void paint(Image* image, Point<int> offset = {0, 0});
 
     void paintText(Image* image, Color<unsigned char> fg, Color<unsigned char> bg, Point<int> offset = {0, 0});
 
     void paintSelectionBackground(Image* image, Color<unsigned char> color, Point<int> offset);
 
+
+    /* Rendering text. */
     void getText(std::string &str);
 
     void getText(std::string &str, int a, int b);
 
     void getText(std::string &str, TextCursorPosition a, TextCursorPosition b);
 
-    /* Find text cursor position based on a point within Rect{{0, 0}, textSize()}. */
-    TextCursorPosition findCursorPosition(Point<int> p);
 
-    Point<int> findCursorCoords(TextCursorPosition tcp);
+    /* Conversions. */
+    TextCursorPosition findCursorPosition(Point<int> p) const;
+
+    Point<int> findCursorCoords(TextCursorPosition tcp) const;
 
     int cursorPositionToGlyphIndex(TextCursorPosition tcp) const;
 
     TextCursorPosition glyphIndexToCursorPosition(int index) const;
 
-    GlyphEntry glyphAt(TextCursorPosition tcp) const;
 
+    /* Cursor movement. */
     void setCursorPosition(TextCursorPosition tcp);
 
     TextCursorPosition cursorPosition() const;
 
+    void moveCursorUp();
+
+    void moveCursorDown();
+
+private:
+    void moveCursorVertically(int direction);
+
+public:
+
+    void moveCursorLeft();
+
+    void moveCursorRight();
+
+    void homeCursor();
+
+    void endCursor();
+
+
+    /* Text selection. */
     void setSelectionStart(TextCursorPosition tcp);
 
     TextCursorPosition selectionStart() const;
@@ -228,54 +250,39 @@ public:
 
     void selectAll();
 
-    bool hasSelection() const;
-
-    void moveCursorUp();
-
     void selectUp();
-
-    void moveCursorDown();
 
     void selectDown();
 
-private:
-    void moveCursorVertically(int direction);
-
-public:
-    void moveCursorLeft();
-
     void selectLeft();
-
-    void moveCursorRight();
 
     void selectRight();
 
-    void homeCursor();
-
     void homeSelection();
-
-    void endCursor();
 
     void endSelection();
 
+    void clearSelection();
+
+    bool hasSelection() const;
+
+
+    /* Text deletion. */
     void deleteAfterCursor();
 
     void deleteBeforeCursor();
 
     void deleteSelection();
 
-    void clearSelection();
 
     void clear();
 
 private:
-    int insertGlyphs(const std::string &text);
-
     void clearLines();
 
     void retreatToWordStart(int &i);
 
-    bool lineStartsWithNewline(int l);
+    bool lineStartsWithNewline(int l) const;
 };
 
 }//namespace

@@ -58,29 +58,6 @@ int TextPainter::reflowWidth() const
 }
 
 
-void TextPainter::setWhitespaceCleanupPolicy(WhitespaceCleanup policy)
-{
-    m_whitespace_cleanup = policy;
-}
-
-
-WhitespaceCleanup TextPainter::whitespaceCleanupPolicy() const
-{
-    return m_whitespace_cleanup;
-}
-
-
-void TextPainter::setKeyboardSelectionMode(bool on)
-{
-    m_keyboard_selection_mode = on;
-}
-
-bool TextPainter::inKeyboardSelectionMode() const
-{
-    return m_keyboard_selection_mode;
-}
-
-
 void TextPainter::insertText(const std::string &text)
 {
     int idx = cursorPositionToGlyphIndex(m_cursor_position);
@@ -95,6 +72,51 @@ void TextPainter::insertText(const std::string &text)
         }
     }
     m_preferred_cursor_column = m_cursor_position.column();
+}
+
+
+int TextPainter::insertGlyphs(const std::string &text)
+{
+    int glyph_index = cursorPositionToGlyphIndex(m_cursor_position);
+    int num_glyphs = 0;
+    int text_index = 0;
+    for(;;)
+    {
+        int nbytes = next_utf8(text, text_index);
+        if(nbytes < 0)
+        {
+            cerr << "TextPainter: Error reading utf8!\n";
+            return num_glyphs;
+        }
+
+        int next_index = text_index + nbytes;
+        if(next_index > (int)text.size())
+        {
+            cerr << "TextPainter: String size mismatch!\n";
+            return num_glyphs;
+        }
+
+        auto char_text = text.substr(text_index, nbytes);
+        auto glyph = font->fetchGlyph(char_text);
+        if(!glyph)
+        {
+            cerr << "TextPainter: Failed to fetch glyph!\n";
+            break;
+        }
+
+        m_glyphs.insert(
+            m_glyphs.begin() + glyph_index,
+            GlyphEntry(glyph)
+        );
+        num_glyphs++;
+        glyph_index++;
+
+        text_index = next_index;
+        if(text_index >= (int)text.size())
+            break;
+    }
+
+    return num_glyphs;
 }
 
 
@@ -389,7 +411,7 @@ void TextPainter::getText(std::string &str, TextCursorPosition a, TextCursorPosi
 }
 
 
-TextCursorPosition TextPainter::findCursorPosition(Point<int> p)
+TextCursorPosition TextPainter::findCursorPosition(Point<int> p) const
 {
     if(m_glyphs.empty())
         return TextCursorPosition(0, 0);
@@ -438,7 +460,7 @@ TextCursorPosition TextPainter::findCursorPosition(Point<int> p)
 }
 
 
-Point<int> TextPainter::findCursorCoords(TextCursorPosition tcp)
+Point<int> TextPainter::findCursorCoords(TextCursorPosition tcp) const
 {
     int y = -1;
     int x = -1;
@@ -490,12 +512,6 @@ TextCursorPosition TextPainter::glyphIndexToCursorPosition(int index) const
 }
 
 
-GlyphEntry TextPainter::glyphAt(TextCursorPosition tcp) const
-{
-    return m_glyphs[cursorPositionToGlyphIndex(tcp)];
-}
-
-
 void TextPainter::setCursorPosition(TextCursorPosition tcp)
 {
     m_cursor_position = tcp;
@@ -509,44 +525,6 @@ TextCursorPosition TextPainter::cursorPosition() const
 }
 
 
-void TextPainter::setSelectionStart(TextCursorPosition tcp)
-{
-    m_selection_start = tcp;
-}
-
-
-TextCursorPosition TextPainter::selectionStart() const
-{
-    return m_selection_start;
-}
-
-
-void TextPainter::setSelectionEnd(TextCursorPosition tcp)
-{
-    m_selection_end = tcp;
-}
-
-
-TextCursorPosition TextPainter::selectionEnd() const
-{
-    return m_selection_end;
-}
-
-
-void TextPainter::selectAll()
-{
-    m_selection_start = glyphIndexToCursorPosition(0);
-    m_selection_end   = glyphIndexToCursorPosition(m_glyphs.size());
-    updateSelection();
-}
-
-
-bool TextPainter::hasSelection() const
-{
-    return selectionStart() != selectionEnd();
-}
-
-
 void TextPainter::moveCursorUp()
 {
     if(m_cursor_position.line() > 0)
@@ -556,32 +534,12 @@ void TextPainter::moveCursorUp()
 }
 
 
-void TextPainter::selectUp()
-{
-    if(!hasSelection())
-        m_selection_start = m_cursor_position;
-    moveCursorUp();
-        m_selection_end = m_cursor_position;
-    updateSelection();
-}
-
-
 void TextPainter::moveCursorDown()
 {
     if(m_cursor_position.line() < int(m_lines.size() - 1))
     {
         moveCursorVertically(+1);
     }
-}
-
-
-void TextPainter::selectDown()
-{
-    if(!hasSelection())
-        m_selection_start = m_cursor_position;
-    moveCursorDown();
-        m_selection_end = m_cursor_position;
-    updateSelection();
 }
 
 
@@ -639,16 +597,6 @@ void TextPainter::moveCursorLeft()
 }
 
 
-void TextPainter::selectLeft()
-{
-    if(!hasSelection())
-        m_selection_start = m_cursor_position;
-    moveCursorLeft();
-        m_selection_end = m_cursor_position;
-    updateSelection();
-}
-
-
 void TextPainter::moveCursorRight()
 {
     auto &line = m_lines[m_cursor_position.line()];
@@ -670,16 +618,6 @@ void TextPainter::moveCursorRight()
 }
 
 
-void TextPainter::selectRight()
-{
-    if(!hasSelection())
-        m_selection_start = m_cursor_position;
-    moveCursorRight();
-        m_selection_end = m_cursor_position;
-    updateSelection();
-}
-
-
 void TextPainter::homeCursor()
 {
     if(lineStartsWithNewline(m_cursor_position.line()))
@@ -694,6 +632,86 @@ void TextPainter::homeCursor()
 }
 
 
+void TextPainter::endCursor()
+{
+    auto line = m_lines[m_cursor_position.line()];
+    m_cursor_position.setColumn(line.glyphCount());
+    m_preferred_cursor_column = m_cursor_position.column();
+}
+
+
+void TextPainter::setSelectionStart(TextCursorPosition tcp)
+{
+    m_selection_start = tcp;
+}
+
+
+TextCursorPosition TextPainter::selectionStart() const
+{
+    return m_selection_start;
+}
+
+
+void TextPainter::setSelectionEnd(TextCursorPosition tcp)
+{
+    m_selection_end = tcp;
+}
+
+
+TextCursorPosition TextPainter::selectionEnd() const
+{
+    return m_selection_end;
+}
+
+
+void TextPainter::selectAll()
+{
+    m_selection_start = glyphIndexToCursorPosition(0);
+    m_selection_end   = glyphIndexToCursorPosition(m_glyphs.size());
+    updateSelection();
+}
+
+
+void TextPainter::selectUp()
+{
+    if(!hasSelection())
+        m_selection_start = m_cursor_position;
+    moveCursorUp();
+        m_selection_end = m_cursor_position;
+    updateSelection();
+}
+
+
+void TextPainter::selectDown()
+{
+    if(!hasSelection())
+        m_selection_start = m_cursor_position;
+    moveCursorDown();
+        m_selection_end = m_cursor_position;
+    updateSelection();
+}
+
+
+void TextPainter::selectLeft()
+{
+    if(!hasSelection())
+        m_selection_start = m_cursor_position;
+    moveCursorLeft();
+        m_selection_end = m_cursor_position;
+    updateSelection();
+}
+
+
+void TextPainter::selectRight()
+{
+    if(!hasSelection())
+        m_selection_start = m_cursor_position;
+    moveCursorRight();
+        m_selection_end = m_cursor_position;
+    updateSelection();
+}
+
+
 void TextPainter::homeSelection()
 {
     if(!hasSelection())
@@ -704,14 +722,6 @@ void TextPainter::homeSelection()
 }
 
 
-void TextPainter::endCursor()
-{
-    auto line = m_lines[m_cursor_position.line()];
-    m_cursor_position.setColumn(line.glyphCount());
-    m_preferred_cursor_column = m_cursor_position.column();
-}
-
-
 void TextPainter::endSelection()
 {
     if(!hasSelection())
@@ -719,6 +729,19 @@ void TextPainter::endSelection()
     endCursor();
         m_selection_end = m_cursor_position;
     updateSelection();
+}
+
+
+void TextPainter::clearSelection()
+{
+    m_selection_start = m_selection_end = {0, 0};
+    updateSelection();
+}
+
+
+bool TextPainter::hasSelection() const
+{
+    return selectionStart() != selectionEnd();
 }
 
 
@@ -781,13 +804,6 @@ void TextPainter::deleteSelection()
 }
 
 
-void TextPainter::clearSelection()
-{
-    m_selection_start = m_selection_end = {0, 0};
-    updateSelection();
-}
-
-
 void TextPainter::clear()
 {
     m_glyphs.clear();
@@ -797,51 +813,6 @@ void TextPainter::clear()
     );
     m_cursor_position = {0, 0};
     clearSelection();
-}
-
-
-int TextPainter::insertGlyphs(const std::string &text)
-{
-    int glyph_index = cursorPositionToGlyphIndex(m_cursor_position);
-    int num_glyphs = 0;
-    int text_index = 0;
-    for(;;)
-    {
-        int nbytes = next_utf8(text, text_index);
-        if(nbytes < 0)
-        {
-            cerr << "TextPainter: Error reading utf8!\n";
-            return num_glyphs;
-        }
-
-        int next_index = text_index + nbytes;
-        if(next_index > (int)text.size())
-        {
-            cerr << "TextPainter: String size mismatch!\n";
-            return num_glyphs;
-        }
-
-        auto char_text = text.substr(text_index, nbytes);
-        auto glyph = font->fetchGlyph(char_text);
-        if(!glyph)
-        {
-            cerr << "TextPainter: Failed to fetch glyph!\n";
-            break;
-        }
-
-        m_glyphs.insert(
-            m_glyphs.begin() + glyph_index,
-            GlyphEntry(glyph)
-        );
-        num_glyphs++;
-        glyph_index++;
-
-        text_index = next_index;
-        if(text_index >= (int)text.size())
-            break;
-    }
-
-    return num_glyphs;
 }
 
 
@@ -862,7 +833,7 @@ void TextPainter::retreatToWordStart(int &i)
 }
 
 
-bool TextPainter::lineStartsWithNewline(int l)
+bool TextPainter::lineStartsWithNewline(int l) const
 {
     auto &line = m_lines[l];
     return m_glyphs[line.begin()].isNewline();
