@@ -784,6 +784,7 @@ void TextPainter::deleteSelection()
 void TextPainter::clearSelection()
 {
     m_selection_start = m_selection_end = {0, 0};
+    updateSelection();
 }
 
 

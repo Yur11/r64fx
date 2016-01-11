@@ -263,44 +263,92 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     else if(event->key() == Keyboard::Key::Up)
     {
         if(Keyboard::ShiftDown())
+        {
             m_text_painter->selectUp();
+        }
         else
+        {
+            if(m_text_painter->hasSelection())
+            {
+                m_text_painter->clearSelection();
+            }
             m_text_painter->moveCursorUp();
+        }
     }
     else if(event->key() == Keyboard::Key::Down)
     {
         if(Keyboard::ShiftDown())
+        {
             m_text_painter->selectDown();
+        }
         else
+        {
+            if(m_text_painter->hasSelection())
+            {
+                m_text_painter->clearSelection();
+            }
             m_text_painter->moveCursorDown();
+        }
     }
     else if(event->key() == Keyboard::Key::Left)
     {
         if(Keyboard::ShiftDown())
+        {
             m_text_painter->selectLeft();
+        }
         else
+        {
+            if(m_text_painter->hasSelection())
+            {
+                m_text_painter->clearSelection();
+            }
             m_text_painter->moveCursorLeft();
+        }
     }
     else if(event->key() == Keyboard::Key::Right)
     {
         if(Keyboard::ShiftDown())
+        {
             m_text_painter->selectRight();
+        }
         else
+        {
+            if(m_text_painter->hasSelection())
+            {
+                m_text_painter->clearSelection();
+            }
             m_text_painter->moveCursorRight();
+        }
     }
     else if(event->key() == Keyboard::Key::Home)
     {
         if(Keyboard::ShiftDown())
+        {
             m_text_painter->homeSelection();
+        }
         else
+        {
+            if(m_text_painter->hasSelection())
+            {
+                m_text_painter->clearSelection();
+            }
             m_text_painter->homeCursor();
+        }
     }
     else if(event->key() == Keyboard::Key::End)
     {
         if(Keyboard::ShiftDown())
+        {
             m_text_painter->endSelection();
+        }
         else
+        {
+            if(m_text_painter->hasSelection())
+            {
+                m_text_painter->clearSelection();
+            }
             m_text_painter->endCursor();
+        }
     }
     if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::A)
     {
