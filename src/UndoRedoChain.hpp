@@ -5,15 +5,15 @@
 
 namespace r64fx{
 
-struct UndoRedoAction{
-    void (*undo)(void* action_data, void* chain_data) = nullptr;
-    void (*redo)(void* action_data, void* chain_data) = nullptr;
-    void* data = nullptr;
+class UndoRedoItem{
+public:
+    virtual void undo(void* data) = 0;
+    virtual void redo(void* data) = 0;
 };
 
 
 class UndoRedoChain{
-    std::vector<UndoRedoAction> m_chain;
+    std::vector<UndoRedoItem*> m_chain;
     int   m_index = -1;
     void* m_data  = nullptr;
 
@@ -22,13 +22,7 @@ public:
 
     void* data() const;
 
-    void addAction(const UndoRedoAction &action);
-
-    void addAction(
-        void (*undo)(void* action_data, void* chain_data),
-        void (*redo)(void* action_data, void* chain_data),
-        void* data
-    );
+    void addItem(UndoRedoItem *action);
 
     bool canUndo() const;
 
@@ -37,8 +31,6 @@ public:
     bool canRedo() const;
 
     void redo();
-
-    void doLatest();
 
     void clear();
 

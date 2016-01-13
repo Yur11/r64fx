@@ -14,27 +14,13 @@ void* UndoRedoChain::data() const
 }
 
 
-void UndoRedoChain::addAction(const UndoRedoAction &action)
+void UndoRedoChain::addItem(UndoRedoItem *action)
 {
-    if(m_index < (int)m_chain.size())
+    if(!m_chain.empty() && m_index < (int)m_chain.size())
     {
         m_chain.erase(m_chain.begin() + m_index, m_chain.end());
     }
     m_chain.push_back(action);
-}
-
-
-void UndoRedoChain::addAction(
-    void (*undo)(void* action_data, void* chain_data),
-    void (*redo)(void* action_data, void* chain_data),
-    void* data
-)
-{
-    UndoRedoAction act;
-    act.undo = undo;
-    act.redo = redo;
-    act.data = data;
-    addAction(act);
 }
 
 
@@ -52,7 +38,7 @@ void UndoRedoChain::undo()
     if(canUndo())
     {
         auto &act = m_chain[m_index];
-        act.undo(act.data, m_data);
+        act->undo(m_data);
         m_index--;
     }
 }
@@ -73,17 +59,7 @@ void UndoRedoChain::redo()
     {
         m_index++;
         auto &act = m_chain[m_index];
-        act.redo(act.data, m_data);
-    }
-}
-
-
-void UndoRedoChain::doLatest()
-{
-    if(!m_chain.empty())
-    {
-        auto &act = m_chain.back();
-        act.redo(act.data, m_data);
+        act->redo(m_data);
     }
 }
 
