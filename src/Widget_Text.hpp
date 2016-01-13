@@ -10,7 +10,7 @@ class Font;
 class Image;
 
 class Widget_Text : public Widget{
-    void*         m       = nullptr;
+    void*         m[2]    = {nullptr, nullptr};
     Image*        m_image = nullptr;
 
 public:
@@ -20,6 +20,10 @@ public:
 
     Widget_Text(Widget* parent = nullptr);
 
+private:
+    void initUndoRedoChain();
+
+public:
     virtual ~Widget_Text();
 
     void setText(std::string *text);
@@ -66,6 +70,7 @@ protected:
     virtual void textInputEvent(TextInputEvent* event);
 
     virtual void closeEvent();
+
 };
 
 }//namespace r64fx

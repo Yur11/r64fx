@@ -30,6 +30,20 @@ public:
 };
 
 
+class GlyphString : public std::vector<GlyphEntry>{
+public:
+    GlyphString() {}
+
+    GlyphString(std::vector<GlyphEntry>::iterator it);
+
+    GlyphString(std::vector<GlyphEntry>::iterator begin, std::vector<GlyphEntry>::iterator end);
+
+    void getText(std::string &str, int a, int b) const;
+
+    void getText(std::string &str) const;
+};
+
+
 class GlyphLine{
     int m_begin;   //Index of the first glyph in line.
     int m_end;     //Index past the last glyph in line,
@@ -122,13 +136,16 @@ template<typename StreamT> StreamT &operator<<(StreamT &stream, TextCursorPositi
 }
 
 
+class TextPainter;
+
+
 /* Helper class for rendering and editing text. */
 class TextPainter{
     TextWrap                m_text_wrap           = TextWrap::None;
     TextAlignment           m_text_alignment      = TextAlignment::Left;
     int                     m_reflow_width        = 100;
 
-    std::vector<GlyphEntry> m_glyphs;
+    GlyphString             m_glyphs;
     std::vector<GlyphLine>  m_lines;
     Size<int>               m_text_size  = {0, 0};
 
@@ -141,7 +158,6 @@ class TextPainter{
 
     /* For moving cursor up and down. */
     int                     m_preferred_cursor_column = 0;
-
 
 public:
     /* Must be set before doing anything else! */
@@ -166,13 +182,22 @@ public:
     TextAlignment textAlignment() const;
 
 
-    /* Text input. */
-    void insertText(const std::string &text);
+    /* Insert some text at cursor position. */
+    void insertText(
+        const std::string &text,
+        GlyphString* removed_glyphs = nullptr,
+        GlyphString* added_glyphs   = nullptr
+    );
+
+    void insertText(const GlyphString &glyphs);
 
 private:
     int insertGlyphs(const std::string &text);
 
 public:
+    /* Remove some text at cursor position. */
+    void removeText(int nglyphs);
+
     /* Reflow text using current reflow width. */
     void reflow();
 
@@ -269,13 +294,17 @@ public:
 
 
     /* Text deletion. */
-    void deleteAfterCursor();
+    void deleteAfterCursor(GlyphString* removed_glyphs = nullptr);
 
-    void deleteBeforeCursor();
+    void deleteBeforeCursor(GlyphString* removed_glyphs = nullptr);
 
-    void deleteSelection();
+    void deleteSelection(GlyphString* removed_glyphs = nullptr);
+
+private:
+    void removeSelectedGlyphs(GlyphString* removed_glyphs = nullptr);
 
 
+public:
     void clear();
 
 private:
@@ -285,9 +314,6 @@ private:
 
     bool lineStartsWithNewline(int l) const;
 
-
-public:
-    bool processTextInput(unsigned int key, const std::string &text, bool shift_down, bool ctrl_down);
 };
 
 }//namespace

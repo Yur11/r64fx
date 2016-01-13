@@ -9,39 +9,107 @@
 #include "Mouse.hpp"
 #include "Program.hpp"
 #include "TextPainter.hpp"
+#include "UndoRedoChain.hpp"
 
 #include <iostream>
 
-#define m_text_painter ((TextPainter*)m)
+#define m_text_painter ((TextPainter*)m[0])
+
+#define m_undo_redo_chain ((UndoRedoChain*)m[1])
 
 using namespace std;
 
 namespace r64fx{
 
-
 Widget_Text::Widget_Text(const std::string &text, Font* font, Widget* parent)
 : Widget(parent)
 {
-    m = new TextPainter;
+    m[0] = new TextPainter;
     setFont(font);
     setText(text);
+    initUndoRedoChain();
 }
 
 
 Widget_Text::Widget_Text(const std::string &text, Widget* parent)
 : Widget(parent)
 {
-    m = new TextPainter;
+    m[0] = new TextPainter;
     setFont(nullptr);
     setText(text);
+    initUndoRedoChain();
 }
 
 
 Widget_Text::Widget_Text(Widget* parent)
 : Widget(parent)
 {
-    m = new TextPainter;
+    m[0] = new TextPainter;
     setFont(nullptr);
+    initUndoRedoChain();
+}
+
+
+namespace{
+
+class TextAddedItem : public UndoRedoItem{
+    string m_text;
+    int    m_position = 0;
+
+public:
+
+    virtual void undo(void* data)
+    {
+
+    }
+
+    virtual void redo(void* data)
+    {
+
+    }
+};
+
+
+class TextDeletedItem : public UndoRedoItem{
+    string m_text;
+    int    m_position = 0;
+
+public:
+    virtual void undo(void* data)
+    {
+
+    }
+
+    virtual void redo(void* data)
+    {
+
+    }
+};
+
+
+class TextReplacedItem : public UndoRedoItem{
+    string m_new_text;
+    string m_old_text;
+    int    m_position = 0;
+
+public:
+    virtual void undo(void* data)
+    {
+
+    }
+
+    virtual void redo(void* data)
+    {
+
+    }
+};
+
+}//namespace
+
+
+void Widget_Text::initUndoRedoChain()
+{
+
 }
 
 
@@ -246,29 +314,134 @@ void Widget_Text::keyReleaseEvent(KeyReleaseEvent* event)
 
 void Widget_Text::textInputEvent(TextInputEvent* event)
 {
+    auto tp     = m_text_painter;
+    auto key    = event->key();
+    const auto &text  = event->text();
+
     if(event->key() == Keyboard::Key::Escape)
     {
         removeFocus();
     }
-    else
+    else if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::Z)
     {
-        string text;
-        if(event->key() == Keyboard::Key::Return)
+//         m_undo_redo_chain->undo();
+    }
+    else if(Keyboard::CtrlDown()
+        && (event->key() == Keyboard::Key::Y || (Keyboard::ShiftDown() && event->key() == Keyboard::Key::Z) ))
+    {
+//         m_undo_redo_chain->redo();
+    }
+    else if(key == Keyboard::Key::Up)
+    {
+        if(Keyboard::ShiftDown())
         {
-            text = "\n";
+            tp->selectUp();
         }
         else
         {
-            text = event->text();
+            if(tp->hasSelection())
+            {
+                tp->clearSelection();
+            }
+            tp->moveCursorUp();
         }
-
-        m_text_painter->processTextInput(
-            event->key(),
-            text,
-            Keyboard::ShiftDown(),
-            Keyboard::CtrlDown()
-        );
     }
+    else if(key == Keyboard::Key::Down)
+    {
+        if(Keyboard::ShiftDown())
+        {
+            tp->selectDown();
+        }
+        else
+        {
+            if(tp->hasSelection())
+            {
+                tp->clearSelection();
+            }
+            tp->moveCursorDown();
+        }
+    }
+    else if(key == Keyboard::Key::Left)
+    {
+        if(Keyboard::ShiftDown())
+        {
+            tp->selectLeft();
+        }
+        else
+        {
+            if(tp->hasSelection())
+            {
+                tp->clearSelection();
+            }
+            tp->moveCursorLeft();
+        }
+    }
+    else if(key == Keyboard::Key::Right)
+    {
+        if(Keyboard::ShiftDown())
+        {
+            tp->selectRight();
+        }
+        else
+        {
+            if(tp->hasSelection())
+            {
+                tp->clearSelection();
+            }
+            tp->moveCursorRight();
+        }
+    }
+    else if(key == Keyboard::Key::Home)
+    {
+        if(Keyboard::ShiftDown())
+        {
+            tp->homeSelection();
+        }
+        else
+        {
+            if(tp->hasSelection())
+            {
+                tp->clearSelection();
+            }
+            tp->homeCursor();
+        }
+    }
+    else if(key == Keyboard::Key::End)
+    {
+        if(Keyboard::ShiftDown())
+        {
+            tp->endSelection();
+        }
+        else
+        {
+            if(tp->hasSelection())
+            {
+                tp->clearSelection();
+            }
+            tp->endCursor();
+        }
+    }
+    if(Keyboard::CtrlDown() && key == Keyboard::Key::A)
+    {
+        tp->selectAll();
+    }
+    else if(key == Keyboard::Key::Delete)
+    {
+        tp->deleteAfterCursor();
+    }
+    else if(key == Keyboard::Key::Backspace)
+    {
+        tp->deleteBeforeCursor();
+    }
+    else if(key == Keyboard::Key::Return)
+    {
+        tp->insertText("\n");
+    }
+    else if(!text.empty())
+    {
+        tp->insertText(text);
+    }
+
     update();
 }
 

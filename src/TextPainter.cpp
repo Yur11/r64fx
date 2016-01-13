@@ -8,9 +8,42 @@
 #include <limits>
 #include <iostream>
 
+
 using namespace std;
 
 namespace r64fx{
+
+GlyphString::GlyphString(std::vector<GlyphEntry>::iterator it)
+: std::vector<GlyphEntry>(it, it + 1)
+{
+
+}
+
+
+GlyphString::GlyphString(std::vector<GlyphEntry>::iterator begin, std::vector<GlyphEntry>::iterator end)
+: std::vector<GlyphEntry>(begin, end)
+{
+
+}
+
+
+void GlyphString::getText(std::string &str, int a, int b) const
+{
+    if(a > b)
+        std::swap(a, b);
+
+    for(int i=a; i<b; i++)
+    {
+        str += (*this)[i].text();
+    }
+}
+
+
+void GlyphString::getText(std::string &str) const
+{
+    getText(str, 0, size());
+}
+
 
 TextPainter::TextPainter()
 {
@@ -59,14 +92,53 @@ int TextPainter::reflowWidth() const
 }
 
 
-void TextPainter::insertText(const std::string &text)
+void TextPainter::insertText(
+    const std::string &text,
+    GlyphString* removed_glyphs,
+    GlyphString* added_glyphs
+)
 {
+    if(hasSelection())
+    {
+        removeSelectedGlyphs(removed_glyphs);
+        clearSelection();
+    }
+
     int idx = cursorPositionToGlyphIndex(m_cursor_position);
     int nglyphs = insertGlyphs(text);
     if(nglyphs > 0)
     {
+        if(added_glyphs)
+        {
+            added_glyphs->assign(
+                m_glyphs.begin() + idx,
+                m_glyphs.begin() + idx + nglyphs
+            );
+        }
+
         reflow();
         m_cursor_position = glyphIndexToCursorPosition(idx + nglyphs);
+        if(lineStartsWithNewline(m_cursor_position.line()) && m_cursor_position.column() == 0)
+        {
+            m_cursor_position.setColumn(1);
+        }
+    }
+    m_preferred_cursor_column = m_cursor_position.column();
+}
+
+
+void TextPainter::insertText(const GlyphString &glyphs)
+{
+    if(!glyphs.empty())
+    {
+        int idx = cursorPositionToGlyphIndex(m_cursor_position);
+        m_glyphs.insert(
+            m_glyphs.begin() + idx,
+            glyphs.begin(), glyphs.end()
+        );
+
+        reflow();
+        m_cursor_position = glyphIndexToCursorPosition(idx + glyphs.size());
         if(lineStartsWithNewline(m_cursor_position.line()) && m_cursor_position.column() == 0)
         {
             m_cursor_position.setColumn(1);
@@ -118,6 +190,23 @@ int TextPainter::insertGlyphs(const std::string &text)
     }
 
     return num_glyphs;
+}
+
+
+void TextPainter::removeText(int nglyphs)
+{
+    if(m_glyphs.empty())
+        return;
+
+    int idx = cursorPositionToGlyphIndex(m_cursor_position);
+    int end_idx = idx + nglyphs;
+    if(end_idx > (int)m_glyphs.size())
+        end_idx = m_glyphs.size();
+
+    if(idx >= end_idx)
+        return;
+
+    m_glyphs.erase(m_glyphs.begin() + idx, m_glyphs.begin() + end_idx);
 }
 
 
@@ -396,13 +485,7 @@ void TextPainter::getText(std::string &str)
 
 void TextPainter::getText(std::string &str, int a, int b)
 {
-    if(a > b)
-        swap(a, b);
-
-    for(int i=a; i<b; i++)
-    {
-        str += m_glyphs[i].text();
-    }
+    m_glyphs.getText(str, a, b);
 }
 
 
@@ -746,11 +829,11 @@ bool TextPainter::hasSelection() const
 }
 
 
-void TextPainter::deleteAfterCursor()
+void TextPainter::deleteAfterCursor(GlyphString* out_glyphs)
 {
     if(hasSelection())
     {
-        deleteSelection();
+        deleteSelection(out_glyphs);
     }
     else
     {
@@ -765,11 +848,11 @@ void TextPainter::deleteAfterCursor()
 }
 
 
-void TextPainter::deleteBeforeCursor()
+void TextPainter::deleteBeforeCursor(GlyphString* out_glyphs)
 {
     if(hasSelection())
     {
-        deleteSelection();
+        deleteSelection(out_glyphs);
     }
     else
     {
@@ -777,6 +860,13 @@ void TextPainter::deleteBeforeCursor()
         if(idx > 0)
         {
             idx--;
+            if(out_glyphs)
+            {
+                out_glyphs->assign(
+                    m_glyphs.begin() + idx,
+                    m_glyphs.begin() + idx + 1
+                );
+            }
             m_glyphs.erase(m_glyphs.begin() + idx);
             reflow();
             m_cursor_position = glyphIndexToCursorPosition(idx);
@@ -786,7 +876,15 @@ void TextPainter::deleteBeforeCursor()
 }
 
 
-void TextPainter::deleteSelection()
+void TextPainter::deleteSelection(GlyphString* out_glyphs)
+{
+    removeSelectedGlyphs();
+    reflow();
+    updateSelection();
+}
+
+
+void TextPainter::removeSelectedGlyphs(GlyphString* out_glyphs)
 {
     if(m_selection_start > m_selection_end)
         swap(m_selection_start, m_selection_end);
@@ -794,14 +892,20 @@ void TextPainter::deleteSelection()
     int begin_idx = cursorPositionToGlyphIndex(m_selection_start);
     int end_idx   = cursorPositionToGlyphIndex(m_selection_end);
 
+    if(out_glyphs)
+    {
+        out_glyphs->assign(
+            m_glyphs.begin() + begin_idx,
+            m_glyphs.begin() + end_idx
+        );
+    }
+
     m_glyphs.erase(
         m_glyphs.begin() + begin_idx,
         m_glyphs.begin() + end_idx
     );
 
     m_selection_end = m_cursor_position = m_selection_start;
-    reflow();
-    updateSelection();
 }
 
 
@@ -838,131 +942,6 @@ bool TextPainter::lineStartsWithNewline(int l) const
 {
     auto &line = m_lines[l];
     return m_glyphs[line.begin()].isNewline();
-}
-
-
-bool TextPainter::processTextInput(unsigned int key, const std::string &text, bool shift_down, bool ctrl_down)
-{
-    if(key == Keyboard::Key::Up)
-    {
-        if(shift_down)
-        {
-            selectUp();
-        }
-        else
-        {
-            if(hasSelection())
-            {
-                clearSelection();
-            }
-            moveCursorUp();
-        }
-        return true;
-    }
-    else if(key == Keyboard::Key::Down)
-    {
-        if(shift_down)
-        {
-            selectDown();
-        }
-        else
-        {
-            if(hasSelection())
-            {
-                clearSelection();
-            }
-            moveCursorDown();
-        }
-        return true;
-    }
-    else if(key == Keyboard::Key::Left)
-    {
-        if(shift_down)
-        {
-            selectLeft();
-        }
-        else
-        {
-            if(hasSelection())
-            {
-                clearSelection();
-            }
-            moveCursorLeft();
-        }
-        return true;
-    }
-    else if(key == Keyboard::Key::Right)
-    {
-        if(shift_down)
-        {
-            selectRight();
-        }
-        else
-        {
-            if(hasSelection())
-            {
-                clearSelection();
-            }
-            moveCursorRight();
-        }
-        return true;
-    }
-    else if(key == Keyboard::Key::Home)
-    {
-        if(shift_down)
-        {
-            homeSelection();
-        }
-        else
-        {
-            if(hasSelection())
-            {
-                clearSelection();
-            }
-            homeCursor();
-        }
-        return true;
-    }
-    else if(key == Keyboard::Key::End)
-    {
-        if(shift_down)
-        {
-            endSelection();
-        }
-        else
-        {
-            if(hasSelection())
-            {
-                clearSelection();
-            }
-            endCursor();
-        }
-        return true;
-    }
-    if(ctrl_down && key == Keyboard::Key::A)
-    {
-        selectAll();
-        return true;
-    }
-    else if(key == Keyboard::Key::Delete)
-    {
-        deleteAfterCursor();
-        return true;
-    }
-    else if(key == Keyboard::Key::Backspace)
-    {
-        deleteBeforeCursor();
-        return true;
-    }
-    else if(!text.empty())
-    {
-        insertText(text);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
 }
 
 }//namespace r64fx
