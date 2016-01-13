@@ -43,6 +43,14 @@ public:
     void getText(std::string &str) const;
 };
 
+template<typename StreamT> inline StreamT &operator<<(StreamT &stream, const GlyphString &glyphs)
+{
+    std::string str;
+    glyphs.getText(str);
+    stream << str;
+    return stream;
+}
+
 
 class GlyphLine{
     int m_begin;   //Index of the first glyph in line.
@@ -78,7 +86,12 @@ class TextCursorPosition{
     int m_column;
 
 public:
-    TextCursorPosition(int line = 0, int column = 0)
+    TextCursorPosition()
+    : m_line(0)
+    , m_column(0)
+    {}
+
+    TextCursorPosition(int line, int column)
     : m_line(line)
     , m_column(column)
     {}

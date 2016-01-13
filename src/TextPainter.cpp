@@ -840,6 +840,13 @@ void TextPainter::deleteAfterCursor(GlyphString* out_glyphs)
         auto idx = cursorPositionToGlyphIndex(m_cursor_position);
         if(idx < (int)m_glyphs.size())
         {
+            if(out_glyphs)
+            {
+                out_glyphs->assign(
+                    m_glyphs.begin() + idx,
+                    m_glyphs.begin() + idx + 1
+                );
+            }
             m_glyphs.erase(m_glyphs.begin() + idx);
             reflow();
         }
@@ -878,7 +885,7 @@ void TextPainter::deleteBeforeCursor(GlyphString* out_glyphs)
 
 void TextPainter::deleteSelection(GlyphString* out_glyphs)
 {
-    removeSelectedGlyphs();
+    removeSelectedGlyphs(out_glyphs);
     reflow();
     updateSelection();
 }

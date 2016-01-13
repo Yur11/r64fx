@@ -7,6 +7,8 @@ namespace r64fx{
 
 class UndoRedoItem{
 public:
+    virtual ~UndoRedoItem() {}
+
     virtual void undo(void* data) = 0;
     virtual void redo(void* data) = 0;
 };
@@ -36,6 +38,7 @@ public:
 
     int size() const;
 
+    int index() const;
 };
 
 }//namespace r64fx

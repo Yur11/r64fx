@@ -52,27 +52,7 @@ Widget_Text::Widget_Text(Widget* parent)
 
 namespace{
 
-class TextAddedItem : public UndoRedoItem{
-    string m_text;
-    int    m_position = 0;
-
-public:
-
-    virtual void undo(void* data)
-    {
-
-    }
-
-    virtual void redo(void* data)
-    {
-
-    }
-};
-
-
-class TextDeletedItem : public UndoRedoItem{
-    string m_text;
-    int    m_position = 0;
+class UndoRedoItem_TextAdded : public UndoRedoItem{
 
 public:
     virtual void undo(void* data)
@@ -87,10 +67,49 @@ public:
 };
 
 
-class TextReplacedItem : public UndoRedoItem{
-    string m_new_text;
-    string m_old_text;
-    int    m_position = 0;
+class UndoRedoItem_TextDeleted : public UndoRedoItem{
+    GlyphString m_glyphs;
+    int         m_cursor_position;
+    int         m_selection_start;
+    int         m_selection_end;
+
+public:
+    UndoRedoItem_TextDeleted(const GlyphString &glyphs, int cursor_position, int selection_start, int selection_end)
+    : m_glyphs(glyphs)
+    , m_cursor_position(cursor_position)
+    , m_selection_start(selection_start)
+    , m_selection_end(selection_end)
+    {}
+
+    virtual void undo(void* data)
+    {
+        auto tp = (TextPainter*) data;
+        tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
+        cout << "undo: " << m_glyphs << "\n";
+        tp->insertText(m_glyphs);
+        if(m_selection_start != m_selection_end)
+        {
+            tp->setSelectionStart(tp->glyphIndexToCursorPosition(m_selection_start));
+            tp->setSelectionEnd(tp->glyphIndexToCursorPosition(m_selection_end));
+            tp->updateSelection();
+        }
+    }
+
+    virtual void redo(void* data)
+    {
+        auto tp = (TextPainter*) data;
+        tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
+        if(m_selection_start != m_selection_end)
+        {
+            tp->setSelectionStart(tp->glyphIndexToCursorPosition(m_selection_start));
+            tp->setSelectionEnd(tp->glyphIndexToCursorPosition(m_selection_end));
+        }
+        tp->deleteAfterCursor();
+    }
+};
+
+
+class UndoRedoItem_TextReplaced : public UndoRedoItem{
 
 public:
     virtual void undo(void* data)
@@ -109,7 +128,8 @@ public:
 
 void Widget_Text::initUndoRedoChain()
 {
-
+    m[1] = new UndoRedoChain;
+    m_undo_redo_chain->setData(m_text_painter);
 }
 
 
@@ -315,6 +335,7 @@ void Widget_Text::keyReleaseEvent(KeyReleaseEvent* event)
 void Widget_Text::textInputEvent(TextInputEvent* event)
 {
     auto tp     = m_text_painter;
+    auto uc     = m_undo_redo_chain;
     auto key    = event->key();
     const auto &text  = event->text();
 
@@ -324,12 +345,13 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
     else if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::Z)
     {
-//         m_undo_redo_chain->undo();
+        cout << "undo: " << uc->index() << "\n";
+        uc->undo();
     }
-    else if(Keyboard::CtrlDown()
-        && (event->key() == Keyboard::Key::Y || (Keyboard::ShiftDown() && event->key() == Keyboard::Key::Z) ))
+    else if(Keyboard::CtrlDown() && (event->key() == Keyboard::Key::Y))
     {
-//         m_undo_redo_chain->redo();
+        cout << "redo: " << uc->index() << "\n";
+        uc->redo();
     }
     else if(key == Keyboard::Key::Up)
     {
@@ -421,17 +443,41 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
             tp->endCursor();
         }
     }
-    if(Keyboard::CtrlDown() && key == Keyboard::Key::A)
+    else if(Keyboard::CtrlDown() && key == Keyboard::Key::A)
     {
         tp->selectAll();
     }
     else if(key == Keyboard::Key::Delete)
     {
-        tp->deleteAfterCursor();
+        int selection_start = tp->cursorPositionToGlyphIndex(tp->selectionStart());
+        int selection_end   = tp->cursorPositionToGlyphIndex(tp->selectionEnd());
+        int cursor_pos      = tp->cursorPositionToGlyphIndex(tp->cursorPosition());
+
+        GlyphString glyphs;
+        tp->deleteAfterCursor(&glyphs);
+
+        uc->addItem(new UndoRedoItem_TextDeleted(
+            glyphs, cursor_pos, selection_start, selection_end
+        ));
+
+        cout << "delete: " << glyphs << "\n";
+        cout << uc->size() << "\n";
     }
     else if(key == Keyboard::Key::Backspace)
     {
-        tp->deleteBeforeCursor();
+        int selection_start = tp->cursorPositionToGlyphIndex(tp->selectionStart());
+        int selection_end   = tp->cursorPositionToGlyphIndex(tp->selectionEnd());
+
+        GlyphString glyphs;
+        tp->deleteBeforeCursor(&glyphs);
+
+        int cursor_pos = tp->cursorPositionToGlyphIndex(tp->cursorPosition());
+
+        uc->addItem(new UndoRedoItem_TextDeleted(
+            glyphs, cursor_pos, selection_start, selection_end
+        ));
+
+        cout << uc->size() << "\n";
     }
     else if(key == Keyboard::Key::Return)
     {

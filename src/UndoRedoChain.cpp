@@ -16,11 +16,16 @@ void* UndoRedoChain::data() const
 
 void UndoRedoChain::addItem(UndoRedoItem *action)
 {
-    if(!m_chain.empty() && m_index < (int)m_chain.size())
+    if(!m_chain.empty() && (m_index + 1) < (int)m_chain.size())
     {
-        m_chain.erase(m_chain.begin() + m_index, m_chain.end());
+        for(auto it = (m_chain.begin() + m_index + 1); it != m_chain.end(); it++)
+        {
+            delete *it;
+        }
+        m_chain.erase(m_chain.begin() + m_index + 1, m_chain.end());
     }
     m_chain.push_back(action);
+    m_index = m_chain.size() - 1;
 }
 
 
@@ -66,13 +71,24 @@ void UndoRedoChain::redo()
 
 void UndoRedoChain::clear()
 {
+    for(auto item : m_chain)
+    {
+        delete item;
+    }
     m_chain.clear();
+    m_index = -1;
 }
 
 
 int UndoRedoChain::size() const
 {
     return m_chain.size();
+}
+
+
+int UndoRedoChain::index() const
+{
+    return m_index;
 }
 
 }//namespace r64fx
