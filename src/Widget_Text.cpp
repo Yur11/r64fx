@@ -53,16 +53,35 @@ Widget_Text::Widget_Text(Widget* parent)
 namespace{
 
 class UndoRedoItem_TextAdded : public UndoRedoItem{
+    GlyphString m_glyphs;
+    int         m_cursor_position;
 
 public:
+    UndoRedoItem_TextAdded(const GlyphString &glyphs, int cursor_position)
+    : m_glyphs(glyphs)
+    , m_cursor_position(cursor_position)
+    {}
+
     virtual void undo(void* data)
     {
+        auto tp = (TextPainter*) data;
 
+        tp->setSelectionStart(
+            tp->glyphIndexToCursorPosition(m_cursor_position)
+        );
+
+        tp->setSelectionEnd(
+            tp->glyphIndexToCursorPosition(m_cursor_position + m_glyphs.size())
+        );
+
+        tp->deleteSelection();
     }
 
     virtual void redo(void* data)
     {
-
+        auto tp = (TextPainter*) data;
+        tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
+        tp->insertText(m_glyphs);
     }
 };
 
@@ -85,7 +104,6 @@ public:
     {
         auto tp = (TextPainter*) data;
         tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
-        cout << "undo: " << m_glyphs << "\n";
         tp->insertText(m_glyphs);
         if(m_selection_start != m_selection_end)
         {
@@ -110,16 +128,61 @@ public:
 
 
 class UndoRedoItem_TextReplaced : public UndoRedoItem{
+    GlyphString m_removed_glyphs;
+    GlyphString m_added_glyphs;
+    int         m_cursor_position;
 
 public:
+    UndoRedoItem_TextReplaced(const GlyphString &removed_glyphs, const GlyphString &added_glyphs, int cursor_position)
+    : m_removed_glyphs(removed_glyphs)
+    , m_added_glyphs(added_glyphs)
+    , m_cursor_position(cursor_position)
+    {}
+
     virtual void undo(void* data)
     {
+        auto tp = (TextPainter*) data;
 
+        tp->setSelectionStart(
+            tp->glyphIndexToCursorPosition(m_cursor_position)
+        );
+
+        tp->setSelectionEnd(
+            tp->glyphIndexToCursorPosition(m_cursor_position + m_added_glyphs.size())
+        );
+
+        tp->deleteSelection();
+
+        tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
+        tp->insertText(m_removed_glyphs);
+
+        tp->setSelectionStart(
+            tp->glyphIndexToCursorPosition(m_cursor_position)
+        );
+
+        tp->setSelectionEnd(
+            tp->glyphIndexToCursorPosition(m_cursor_position + m_removed_glyphs.size())
+        );
+
+        tp->updateSelection();
     }
 
     virtual void redo(void* data)
     {
+        auto tp = (TextPainter*) data;
 
+        tp->setSelectionStart(
+            tp->glyphIndexToCursorPosition(m_cursor_position)
+        );
+
+        tp->setSelectionEnd(
+            tp->glyphIndexToCursorPosition(m_cursor_position + m_removed_glyphs.size())
+        );
+
+        tp->deleteSelection();
+
+        tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
+        tp->insertText(m_added_glyphs);
     }
 };
 
@@ -143,6 +206,30 @@ void Widget_Text::setText(const std::string &text)
 {
     m_text_painter->clear();
     m_text_painter->insertText(text);
+}
+
+
+void Widget_Text::insertText(const std::string &text)
+{
+    auto tp = m_text_painter;
+    auto uc = m_undo_redo_chain;
+
+    int cursor_position = tp->cursorPositionToGlyphIndex(tp->cursorPosition());
+
+    GlyphString removed_glyphs, added_glyphs;
+    tp->insertText(text, &removed_glyphs, &added_glyphs);
+
+    if(uc)
+    {
+        if(removed_glyphs.empty())
+        {
+            uc->addItem(new UndoRedoItem_TextAdded(added_glyphs, cursor_position));
+        }
+        else
+        {
+            uc->addItem(new UndoRedoItem_TextReplaced(removed_glyphs, added_glyphs, cursor_position));
+        }
+    }
 }
 
 
@@ -460,7 +547,6 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
             glyphs, cursor_pos, selection_start, selection_end
         ));
 
-        cout << "delete: " << glyphs << "\n";
         cout << uc->size() << "\n";
     }
     else if(key == Keyboard::Key::Backspace)
@@ -481,11 +567,11 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
     else if(key == Keyboard::Key::Return)
     {
-        tp->insertText("\n");
+        insertText("\n");
     }
     else if(!text.empty())
     {
-        tp->insertText(text);
+        insertText(text);
     }
 
     update();

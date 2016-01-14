@@ -26,9 +26,9 @@ private:
 public:
     virtual ~Widget_Text();
 
-    void setText(std::string *text);
-
     void setText(const std::string &text);
+
+    void insertText(const std::string &text);
 
     void setFont(Font* font);
 
