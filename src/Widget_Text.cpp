@@ -52,137 +52,220 @@ Widget_Text::Widget_Text(Widget* parent)
 
 namespace{
 
-class UndoRedoItem_TextAdded : public UndoRedoItem{
-    GlyphString m_glyphs;
-    int         m_cursor_position;
+class CursorsMixin{
+    int m_cursor_position_before;
+    int m_selection_start_before;
+    int m_selection_end_before;
+
+    int m_cursor_position_after;
+    int m_selection_start_after;
+    int m_selection_end_after;
 
 public:
-    UndoRedoItem_TextAdded(const GlyphString &glyphs, int cursor_position)
-    : m_glyphs(glyphs)
-    , m_cursor_position(cursor_position)
-    {}
-
-    virtual void undo(void* data)
+    void saveCursorsBefore(TextPainter* tp)
     {
-        auto tp = (TextPainter*) data;
-
-        tp->setSelectionStart(
-            tp->glyphIndexToCursorPosition(m_cursor_position)
+        m_cursor_position_before = tp->cursorPositionToGlyphIndex(
+            tp->cursorPosition()
         );
 
-        tp->setSelectionEnd(
-            tp->glyphIndexToCursorPosition(m_cursor_position + m_glyphs.size())
+        m_selection_start_before = tp->cursorPositionToGlyphIndex(
+            tp->selectionStart()
         );
 
-        tp->deleteSelection();
+        m_selection_end_before   = tp->cursorPositionToGlyphIndex(
+            tp->selectionEnd()
+        );
     }
 
-    virtual void redo(void* data)
+    void saveCursorsAfter(TextPainter* tp)
     {
-        auto tp = (TextPainter*) data;
-        tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
-        tp->insertText(m_glyphs);
+        m_cursor_position_after = tp->cursorPositionToGlyphIndex(
+            tp->cursorPosition()
+        );
+
+        m_selection_start_after = tp->cursorPositionToGlyphIndex(
+            tp->selectionStart()
+        );
+
+        m_selection_end_after   = tp->cursorPositionToGlyphIndex(
+            tp->selectionEnd()
+        );
+    }
+
+    void restoreCursorsBefore(TextPainter* tp)
+    {
+        tp->setCursorPosition(tp->glyphIndexToCursorPosition(
+            m_cursor_position_before
+        ));
+
+        tp->setSelectionStart(tp->glyphIndexToCursorPosition(
+            m_selection_start_before
+        ));
+
+        tp->setSelectionEnd(tp->glyphIndexToCursorPosition(
+            m_selection_end_before
+        ));
+    }
+
+    void restoreCursorsAfter(TextPainter* tp)
+    {
+        tp->setCursorPosition(tp->glyphIndexToCursorPosition(
+            m_cursor_position_after
+        ));
+
+        tp->setSelectionStart(tp->glyphIndexToCursorPosition(
+            m_selection_start_after
+        ));
+
+        tp->setSelectionEnd(tp->glyphIndexToCursorPosition(
+            m_selection_end_after
+        ));
+    }
+
+    inline int cursorPositionBefore() const
+    {
+        return m_cursor_position_before;
     }
 };
 
 
-class UndoRedoItem_TextDeleted : public UndoRedoItem{
-    GlyphString m_glyphs;
-    int         m_cursor_position;
-    int         m_selection_start;
-    int         m_selection_end;
-
-public:
-    UndoRedoItem_TextDeleted(const GlyphString &glyphs, int cursor_position, int selection_start, int selection_end)
-    : m_glyphs(glyphs)
-    , m_cursor_position(cursor_position)
-    , m_selection_start(selection_start)
-    , m_selection_end(selection_end)
-    {}
-
-    virtual void undo(void* data)
-    {
-        auto tp = (TextPainter*) data;
-        tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
-        tp->insertText(m_glyphs);
-        if(m_selection_start != m_selection_end)
-        {
-            tp->setSelectionStart(tp->glyphIndexToCursorPosition(m_selection_start));
-            tp->setSelectionEnd(tp->glyphIndexToCursorPosition(m_selection_end));
-            tp->updateSelection();
-        }
-    }
-
-    virtual void redo(void* data)
-    {
-        auto tp = (TextPainter*) data;
-        tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
-        if(m_selection_start != m_selection_end)
-        {
-            tp->setSelectionStart(tp->glyphIndexToCursorPosition(m_selection_start));
-            tp->setSelectionEnd(tp->glyphIndexToCursorPosition(m_selection_end));
-        }
-        tp->deleteAfterCursor();
-    }
-};
-
-
-class UndoRedoItem_TextReplaced : public UndoRedoItem{
-    GlyphString m_removed_glyphs;
+class TextAddedMixin{
     GlyphString m_added_glyphs;
-    int         m_cursor_position;
 
 public:
-    UndoRedoItem_TextReplaced(const GlyphString &removed_glyphs, const GlyphString &added_glyphs, int cursor_position)
-    : m_removed_glyphs(removed_glyphs)
-    , m_added_glyphs(added_glyphs)
-    , m_cursor_position(cursor_position)
-    {}
+    inline void saveAddedGlyphs(const GlyphString &glyphs)
+    {
+        m_added_glyphs = glyphs;
+    }
 
+    inline const GlyphString &addedGlyphs() const
+    {
+        return m_added_glyphs;
+    }
+};
+
+
+class TextRemovedMixin{
+    GlyphString m_removed_glyphs;
+
+public:
+    inline void saveRemovedGlyphs(const GlyphString &glyphs)
+    {
+        m_removed_glyphs = glyphs;
+    }
+
+    inline const GlyphString &removedGlyphs() const
+    {
+        return m_removed_glyphs;
+    }
+};
+
+
+class UndoRedoItem_TextAdded
+: public UndoRedoItem
+, public CursorsMixin
+, public TextAddedMixin
+{
+public:
     virtual void undo(void* data)
     {
         auto tp = (TextPainter*) data;
 
-        tp->setSelectionStart(
-            tp->glyphIndexToCursorPosition(m_cursor_position)
-        );
+        tp->setSelectionStart(tp->glyphIndexToCursorPosition(
+            cursorPositionBefore()
+        ));
 
-        tp->setSelectionEnd(
-            tp->glyphIndexToCursorPosition(m_cursor_position + m_added_glyphs.size())
-        );
+        tp->setSelectionEnd(tp->glyphIndexToCursorPosition(
+            cursorPositionBefore() + addedGlyphs().size()
+        ));
 
         tp->deleteSelection();
 
-        tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
-        tp->insertText(m_removed_glyphs);
-
-        tp->setSelectionStart(
-            tp->glyphIndexToCursorPosition(m_cursor_position)
-        );
-
-        tp->setSelectionEnd(
-            tp->glyphIndexToCursorPosition(m_cursor_position + m_removed_glyphs.size())
-        );
-
+        restoreCursorsBefore(tp);
         tp->updateSelection();
     }
 
     virtual void redo(void* data)
     {
         auto tp = (TextPainter*) data;
+        restoreCursorsBefore(tp);
+        tp->insertText(addedGlyphs());
+        restoreCursorsAfter(tp);
+        tp->updateSelection();
+    }
+};
 
-        tp->setSelectionStart(
-            tp->glyphIndexToCursorPosition(m_cursor_position)
-        );
 
-        tp->setSelectionEnd(
-            tp->glyphIndexToCursorPosition(m_cursor_position + m_removed_glyphs.size())
-        );
+class UndoRedoItem_TextDeleted
+: public UndoRedoItem
+, public CursorsMixin
+, public TextRemovedMixin{
+    bool m_removed_before_cursor; //Delete or Backspace
 
-        tp->deleteSelection();
+public:
+    UndoRedoItem_TextDeleted(bool removed_before_cursor)
+    : m_removed_before_cursor(removed_before_cursor)
+    {}
 
-        tp->setCursorPosition(tp->glyphIndexToCursorPosition(m_cursor_position));
-        tp->insertText(m_added_glyphs);
+    virtual void undo(void* data)
+    {
+        auto tp = (TextPainter*) data;
+        restoreCursorsAfter(tp);
+        tp->insertText(removedGlyphs());
+        restoreCursorsBefore(tp);
+        tp->updateSelection();
+    }
+
+    virtual void redo(void* data)
+    {
+        auto tp = (TextPainter*) data;
+        restoreCursorsBefore(tp);
+        if(m_removed_before_cursor)
+        {
+            tp->deleteBeforeCursor();
+        }
+        else
+        {
+            tp->deleteAfterCursor();
+        }
+        restoreCursorsAfter(tp);
+        tp->updateSelection();
+    }
+};
+
+
+class UndoRedoItem_TextReplaced
+: public UndoRedoItem
+, public CursorsMixin
+, public TextRemovedMixin
+, public TextAddedMixin{
+public:
+    virtual void undo(void* data)
+    {
+        auto tp = (TextPainter*) data;
+
+        tp->setSelectionStart(tp->glyphIndexToCursorPosition(
+            cursorPositionBefore()
+        ));
+
+        tp->setSelectionEnd(tp->glyphIndexToCursorPosition(
+            cursorPositionBefore() + addedGlyphs().size()
+        ));
+
+        tp->deleteAfterCursor();
+        tp->insertText(removedGlyphs());
+
+        restoreCursorsBefore(tp);
+        tp->updateSelection();
+    }
+
+    virtual void redo(void* data)
+    {
+        auto tp = (TextPainter*) data;
+        restoreCursorsBefore(tp);
+        tp->insertText(addedGlyphs());
+        restoreCursorsAfter(tp);
+        tp->updateSelection();
     }
 };
 
@@ -214,21 +297,26 @@ void Widget_Text::insertText(const std::string &text)
     auto tp = m_text_painter;
     auto uc = m_undo_redo_chain;
 
-    int cursor_position = tp->cursorPositionToGlyphIndex(tp->cursorPosition());
-
-    GlyphString removed_glyphs, added_glyphs;
-    tp->insertText(text, &removed_glyphs, &added_glyphs);
-
-    if(uc)
+    if(tp->hasSelection())
     {
-        if(removed_glyphs.empty())
-        {
-            uc->addItem(new UndoRedoItem_TextAdded(added_glyphs, cursor_position));
-        }
-        else
-        {
-            uc->addItem(new UndoRedoItem_TextReplaced(removed_glyphs, added_glyphs, cursor_position));
-        }
+        auto item = new UndoRedoItem_TextReplaced;
+        item->saveCursorsBefore(tp);
+        GlyphString removed_glyphs, added_glyphs;
+        tp->insertText(text, &removed_glyphs, &added_glyphs);
+        item->saveRemovedGlyphs(removed_glyphs);
+        item->saveAddedGlyphs(added_glyphs);
+        item->saveCursorsAfter(tp);
+        uc->addItem(item);
+    }
+    else
+    {
+        auto item = new UndoRedoItem_TextAdded;
+        item->saveCursorsBefore(tp);
+        GlyphString added_glyphs;
+        tp->insertText(text, nullptr, &added_glyphs);
+        item->saveAddedGlyphs(added_glyphs);
+        item->saveCursorsAfter(tp);
+        uc->addItem(item);
     }
 }
 
@@ -536,32 +624,25 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
     else if(key == Keyboard::Key::Delete)
     {
-        int selection_start = tp->cursorPositionToGlyphIndex(tp->selectionStart());
-        int selection_end   = tp->cursorPositionToGlyphIndex(tp->selectionEnd());
-        int cursor_pos      = tp->cursorPositionToGlyphIndex(tp->cursorPosition());
-
+        auto item = new UndoRedoItem_TextDeleted(false);
+        item->saveCursorsBefore(tp);
         GlyphString glyphs;
         tp->deleteAfterCursor(&glyphs);
-
-        uc->addItem(new UndoRedoItem_TextDeleted(
-            glyphs, cursor_pos, selection_start, selection_end
-        ));
+        item->saveRemovedGlyphs(glyphs);
+        item->saveCursorsAfter(tp);
+        uc->addItem(item);
 
         cout << uc->size() << "\n";
     }
     else if(key == Keyboard::Key::Backspace)
     {
-        int selection_start = tp->cursorPositionToGlyphIndex(tp->selectionStart());
-        int selection_end   = tp->cursorPositionToGlyphIndex(tp->selectionEnd());
-
+        auto item = new UndoRedoItem_TextDeleted(true);
+        item->saveCursorsBefore(tp);
         GlyphString glyphs;
         tp->deleteBeforeCursor(&glyphs);
-
-        int cursor_pos = tp->cursorPositionToGlyphIndex(tp->cursorPosition());
-
-        uc->addItem(new UndoRedoItem_TextDeleted(
-            glyphs, cursor_pos, selection_start, selection_end
-        ));
+        item->saveRemovedGlyphs(glyphs);
+        item->saveCursorsAfter(tp);
+        uc->addItem(item);
 
         cout << uc->size() << "\n";
     }
