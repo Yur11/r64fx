@@ -22,14 +22,15 @@ public:
     };
 
     struct Events{
-        void (*resize)        (Window* window, int width, int height);
-        void (*mouse_press)   (Window* window, int x, int y, unsigned int button);
-        void (*mouse_release) (Window* window, int x, int y, unsigned int button);
-        void (*mouse_move)    (Window* window, int x, int y);
-        void (*key_press)     (Window* window, unsigned int key);
-        void (*key_release)   (Window* window, unsigned int key);
-        void (*text_input)    (Window* window, const std::string &text, unsigned int key);
-        void (*close)         (Window* window);
+        void (*resize)                (Window* window, int width, int height);
+        void (*mouse_press)           (Window* window, int x, int y, unsigned int button);
+        void (*mouse_release)         (Window* window, int x, int y, unsigned int button);
+        void (*mouse_move)            (Window* window, int x, int y);
+        void (*key_press)             (Window* window, unsigned int key);
+        void (*key_release)           (Window* window, unsigned int key);
+        void (*text_input)            (Window* window, const std::string &text, unsigned int key);
+        void (*selection_text_input)  (Window* window, const std::string &text);
+        void (*close)                 (Window* window);
     };
 
     inline void setData(void* data) { m_data = data; }
@@ -66,6 +67,12 @@ public:
     virtual void stopTextInput() = 0;
 
     virtual bool doingTextInput() = 0;
+
+    virtual void setSelection(const std::string &text) = 0;
+
+    virtual bool hasSelection() = 0;
+
+    virtual void requestSelection() = 0;
 
     static Window* newInstance(
         int width = 800, int height = 600,

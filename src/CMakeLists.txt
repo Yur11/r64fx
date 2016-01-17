@@ -14,7 +14,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/usr/include/freetype2/")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_BUILTIN_FONTS")
 
 set(SRC
-    AudioData.cpp
     Font.cpp
     Image.cpp
     ImageUtils.cpp
@@ -23,6 +22,7 @@ set(SRC
     Mouse.cpp
     Painter.cpp
     Program.cpp
+    SignalData.cpp
     Shader.cpp
     Shader_rgba.cpp
     Shader_rgba_tex.cpp

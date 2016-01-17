@@ -207,15 +207,16 @@ protected:
 private:
     void reconfigureChildren(ReconfigureEvent* event);
 
-    friend void process_window_updates (Window* window, void*);
-    friend void window_resize          (Window* window, int width, int height);
-    friend void window_mouse_press     (Window* window, int x, int y, unsigned int button);
-    friend void window_mouse_release   (Window* window, int x, int y, unsigned int button);
-    friend void window_mouse_move      (Window* window, int x, int y);
-    friend void window_key_press       (Window* window, unsigned int key);
-    friend void window_key_release     (Window* window, unsigned int key);
-    friend void window_text_input      (Window* window, const std::string &text, unsigned int key);
-    friend void window_close           (Window* window);
+    friend void process_window_updates       (Window* window, void*);
+    friend void window_resize                (Window* window, int width, int height);
+    friend void window_mouse_press           (Window* window, int x, int y, unsigned int button);
+    friend void window_mouse_release         (Window* window, int x, int y, unsigned int button);
+    friend void window_mouse_move            (Window* window, int x, int y);
+    friend void window_key_press             (Window* window, unsigned int key);
+    friend void window_key_release           (Window* window, unsigned int key);
+    friend void window_text_input            (Window* window, const std::string &text, unsigned int key);
+    friend void window_selection_text_input  (Window* window, const std::string &text);
+    friend void window_close                 (Window* window);
 };
     
 }//namespace r64fx

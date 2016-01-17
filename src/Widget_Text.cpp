@@ -10,6 +10,7 @@
 #include "Program.hpp"
 #include "TextPainter.hpp"
 #include "UndoRedoChain.hpp"
+#include "Window.hpp"
 
 #include <iostream>
 
@@ -463,13 +464,24 @@ void Widget_Text::resizeEvent(ResizeEvent* event)
 void Widget_Text::mousePressEvent(MousePressEvent* event)
 {
     Widget::mousePressEvent(event);
-    if(event->button() == MouseButton::Left())
+    if(event->button() == MouseButton::Right())
+    {
+    }
+    else if(event->button() == MouseButton::Left() || event->button() == MouseButton::Middle())
     {
         auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10));
         m_text_painter->setCursorPosition(tcp);
         m_text_painter->setSelectionStart(tcp);
         m_text_painter->setSelectionEnd(tcp);
         m_text_painter->updateSelection();
+        if(event->button() == MouseButton::Middle())
+        {
+            auto w = root()->window();
+            if(w)
+            {
+                w->requestSelection();
+            }
+        }
     }
     update();
 }
@@ -478,6 +490,16 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
 void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
 {
     Widget::mouseReleaseEvent(event);
+    if(m_text_painter->hasSelection())
+    {
+        auto w = root()->window();
+        if(w)
+        {
+            w->setSelection(
+                m_text_painter->getSelectionText()
+            );
+        }
+    }
 }
 
 

@@ -54,6 +54,12 @@ namespace{
     Atom g_WM_DELETE_WINDOW;
     Atom g_NET_WM_NAME;
     Atom g_UTF8_STRING;
+    Atom g_TEXT;
+    Atom g_TARGETS;
+    Atom g_MULTIPLE;
+
+    Atom   g_R64FX_SELECTION;
+    string g_selection_text = "";
 
 #ifdef R64FX_USE_MITSHM
     int g_mitshm_major = 0;
@@ -86,10 +92,16 @@ namespace{
                 abort();
             }
 
-            g_WM_PROTOCOLS       = XInternAtom(g_display, "WM_PROTOCOLS",       False);
-            g_WM_DELETE_WINDOW   = XInternAtom(g_display, "WM_DELETE_WINDOW",   False);
-            g_NET_WM_NAME        = XInternAtom(g_display, "_NET_WM_NAME",       False);
-            g_UTF8_STRING        = XInternAtom(g_display, "UTF8_STRING",        False);
+            g_WM_PROTOCOLS       = XInternAtom(g_display, "WM_PROTOCOLS",       True);
+            g_WM_DELETE_WINDOW   = XInternAtom(g_display, "WM_DELETE_WINDOW",   True);
+            g_NET_WM_NAME        = XInternAtom(g_display, "_NET_WM_NAME",       True);
+            g_UTF8_STRING        = XInternAtom(g_display, "UTF8_STRING",        True);
+            g_TEXT               = XInternAtom(g_display, "TEXT",               True);
+            g_TARGETS            = XInternAtom(g_display, "TARGETS",            True);
+            g_MULTIPLE           = XInternAtom(g_display, "MULTIPLE",           True);
+
+            g_R64FX_SELECTION    = XInternAtom(g_display, "_R64FX_SELECTION", False);
+            cout << "selection: " << g_R64FX_SELECTION << "\n";
 
 #ifdef R64FX_USE_MITSHM
             XShmQueryVersion(g_display, &g_mitshm_major, &g_mitshm_minor, &g_mitshm_has_pixmaps);
@@ -157,6 +169,16 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     virtual void stopTextInput();
 
     virtual bool doingTextInput();
+
+    virtual void setSelection(const std::string &text);
+
+    virtual bool hasSelection();
+
+    virtual void requestSelection();
+
+    void sendSelection(const XSelectionRequestEvent &in);
+
+    void recieveSelection(const XSelectionEvent &in, Window::Events* events);
 
     inline ::Window xWindow() const { return m_xwindow; }
 
@@ -251,6 +273,187 @@ void WindowX11::stopTextInput()
 bool WindowX11::doingTextInput()
 {
     return g_text_input_grabber == this;
+}
+
+
+void WindowX11::setSelection(const std::string &text)
+{
+    g_selection_text = text;
+    XSetSelectionOwner(g_display, XA_PRIMARY, m_xwindow, CurrentTime);
+}
+
+
+bool WindowX11::hasSelection()
+{
+    return XGetSelectionOwner(g_display, XA_PRIMARY) == m_xwindow;
+}
+
+
+void WindowX11::requestSelection()
+{
+    XConvertSelection(
+        g_display,
+        XA_PRIMARY,
+        g_TEXT,
+        g_R64FX_SELECTION,
+        m_xwindow,
+        CurrentTime
+    );
+}
+
+
+void WindowX11::sendSelection(const XSelectionRequestEvent &in)
+{
+    if(in.property == None)
+    {
+        cerr << "property is None!\n";
+        return;
+    }
+
+    if(in.selection == XA_PRIMARY)
+    {
+        XEvent xevent;
+        auto &out = xevent.xselection;
+        out.type      = SelectionNotify;
+        out.display   = in.display;
+        out.requestor = in.requestor;
+        out.selection = in.selection;
+        out.target    = in.target;
+        out.property  = in.property;
+        out.time      = in.time;
+
+        if(in.target == g_TARGETS)
+        {
+            cout << "Target TARGETS!\n";
+
+            Atom targets[3] = {g_TARGETS, g_TEXT, g_MULTIPLE};
+
+            XChangeProperty(
+                g_display,
+                in.requestor,
+                in.property,
+                in.target,
+                32,
+                PropModeReplace,
+                (unsigned char*) targets,
+                3
+            );
+
+            if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
+            {
+                cerr << "Failed to send selection event!\n";
+            }
+        }
+        else if(in.target == g_TEXT)
+        {
+            cout << "Target TEXT!\n";
+
+            XChangeProperty(
+                g_display,
+                in.requestor,
+                in.property,
+                in.target,
+                8,
+                PropModeReplace,
+                (unsigned char*) g_selection_text.c_str(),
+                g_selection_text.size()
+            );
+
+            if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
+            {
+                cerr << "Failed to send selection event!\n";
+            }
+        }
+        else
+        {
+            cout << "Bad target!\n";
+        }
+    }
+    else
+    {
+        cerr << "Not a primary selection!\n";
+    }
+}
+
+
+void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* events)
+{
+    if(in.selection == XA_PRIMARY)
+    {
+        if(in.target == g_TARGETS)
+        {
+            cout << "Got targets!\n";
+        }
+        else if(in.target == g_TEXT)
+        {
+            cout << "Got text!\n";
+            if(in.property == g_R64FX_SELECTION)
+            {
+                Atom            type;
+                int             format;
+                unsigned long   nitems;
+                unsigned long   bytes_after;
+                unsigned char*  data;
+
+                /* Get property length. */
+                int result = XGetWindowProperty(
+                    g_display, m_xwindow, g_R64FX_SELECTION,
+                    0, 0, False,
+                    g_TEXT,
+                    &type, &format, &nitems, &bytes_after,
+                    &data
+                );
+
+                if(result != Success)
+                {
+                    cerr << "Failed to get window property size!\n";
+                    return;
+                }
+
+                if(format == 8 && bytes_after > 0)
+                {
+                    int size = bytes_after;
+                    while(size % 4)
+                        size++;
+                    size /= 4;
+
+                    result = XGetWindowProperty(
+                        g_display, m_xwindow, g_R64FX_SELECTION,
+                        0, size, True,
+                        g_TEXT,
+                        &type, &format, &nitems, &bytes_after,
+                        &data
+                    );
+
+                    if(result != Success)
+                    {
+                        cerr << "Failed to get window property data!\n";
+                        return;
+                    }
+
+                    string text((char*)data);
+                    events->selection_text_input(this, text);
+                    XFree(data);
+                }
+                else
+                {
+                    cerr << "Unsupported text property format!\n";
+                }
+            }
+        }
+        else
+        {
+            cout << "Got other!\n";
+        }
+    }
+    else
+    {
+        cout << "Not primary!\n";
+        cout << in.selection << "\n";
+        char* buff = XGetAtomName(g_display, in.selection);
+        cout << buff << "\n";
+        XFree(buff);
+    }
 }
 
 
@@ -349,6 +552,29 @@ void WindowX11::processSomeEvents(Window::Events* events)
                     }
                     events->resize(window, new_w, new_h);
                 }
+                break;
+            }
+
+            case SelectionClear:
+            {
+                cout << "SelectionClear\n";
+                cout << "\n";
+                break;
+            }
+
+            case SelectionRequest:
+            {
+                cout << "SelectionRequest\n";
+                window->sendSelection(xevent.xselectionrequest);
+                cout << "\n";
+                break;
+            }
+
+            case SelectionNotify:
+            {
+                cout << "SelectionNotify\n";
+                window->recieveSelection(xevent.xselection, events);
+                cout << "\n";
                 break;
             }
 

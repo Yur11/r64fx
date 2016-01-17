@@ -244,6 +244,7 @@ public:
 
     void getText(std::string &str, TextCursorPosition a, TextCursorPosition b);
 
+    std::string getSelectionText();
 
     /* Conversions. */
     TextCursorPosition findCursorPosition(Point<int> p) const;

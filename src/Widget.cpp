@@ -18,15 +18,16 @@ using namespace std;
 
 namespace r64fx{
 
-void process_window_updates  (Window* window, void*);
-void window_resize           (Window* window, int width, int height);
-void window_mouse_press      (Window* window, int x, int y, unsigned int button);
-void window_mouse_release    (Window* window, int x, int y, unsigned int button);
-void window_mouse_move       (Window* window, int x, int y);
-void window_key_press        (Window* window, unsigned int key);
-void window_key_release      (Window* window, unsigned int key);
-void window_text_input       (Window* window, const std::string &text, unsigned int key);
-void window_close            (Window* window);
+void process_window_updates      (Window* window, void*);
+void window_resize               (Window* window, int width, int height);
+void window_mouse_press          (Window* window, int x, int y, unsigned int button);
+void window_mouse_release        (Window* window, int x, int y, unsigned int button);
+void window_mouse_move           (Window* window, int x, int y);
+void window_key_press            (Window* window, unsigned int key);
+void window_key_release          (Window* window, unsigned int key);
+void window_text_input           (Window* window, const std::string &text, unsigned int key);
+void window_selection_text_input (Window* window, const std::string &text);
+void window_close                (Window* window);
 
 namespace{
     void set_bits(unsigned long &flags, const bool yes, unsigned long mask)
@@ -83,6 +84,7 @@ namespace{
         window_key_press,
         window_key_release,
         window_text_input,
+        window_selection_text_input,
         window_close
     };
 
@@ -148,17 +150,13 @@ void Widget::add(Widget* child)
 
 Widget* Widget::root()
 {
-    if(isWindow())
+    if(isWindow() || !m_parent.widget)
     {
         return this;
     }
-    else if(m_parent.widget)
-    {
-        return m_parent.widget->root();
-    }
     else
     {
-        return nullptr;
+        return m_parent.widget->root();
     }
 }
 
@@ -824,6 +822,12 @@ void window_text_input(Window* window, const std::string &text, unsigned int key
 void Widget::textInputEvent(TextInputEvent* event)
 {
 
+}
+
+
+void window_selection_text_input(Window* window, const std::string &text)
+{
+    cout << "Widget::window_selection_text_input:\n" << text << "\n";
 }
 
 

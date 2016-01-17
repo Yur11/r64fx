@@ -495,6 +495,19 @@ void TextPainter::getText(std::string &str, TextCursorPosition a, TextCursorPosi
 }
 
 
+std::string TextPainter::getSelectionText()
+{
+    auto a = selectionStart();
+    auto b = selectionEnd();
+    if(a > b)
+        swap(a, b);
+
+    string str;
+    getText(str, a, b);
+    return str;
+}
+
+
 TextCursorPosition TextPainter::findCursorPosition(Point<int> p) const
 {
     if(m_glyphs.empty())

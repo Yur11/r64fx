@@ -136,7 +136,7 @@ private:
 //         m_Widget->setSize({1000, 600});
 //         m_Widget->show();
 
-        m_Font = new Font("mono", 20, 72);
+        m_Font = new Font("", 20, 72);
 
         mwt = new Widget_Text(lorem_ipsum, m_Font);
         mwt->setPosition({50, 50});
