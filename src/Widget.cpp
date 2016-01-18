@@ -46,6 +46,8 @@ namespace{
     /* Widget that currently has keyboard focus. */
     Widget* g_focus_owner = nullptr;
 
+    Widget* g_selection_requestor = nullptr;
+
     /* Maximum number of individual rectangles
      * that can be repainted after reconf. cycle. */
     constexpr int max_rects = 16;
@@ -469,6 +471,17 @@ bool Widget::doingTextInput()
 }
 
 
+void Widget::requestSelection()
+{
+    auto win = root()->window();
+    if(win)
+    {
+        g_selection_requestor = this;
+        win->requestSelection();
+    }
+}
+
+
 void Widget::update()
 {
     m_flags |= R64FX_WIDGET_WANTS_UPDATE;
@@ -827,7 +840,17 @@ void Widget::textInputEvent(TextInputEvent* event)
 
 void window_selection_text_input(Window* window, const std::string &text)
 {
-    cout << "Widget::window_selection_text_input:\n" << text << "\n";
+    if(g_selection_requestor)
+    {
+        g_selection_requestor->selectionInputEvent(text);
+        g_selection_requestor = nullptr;
+    }
+}
+
+
+void Widget::selectionInputEvent(const std::string &text)
+{
+
 }
 
 

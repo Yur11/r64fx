@@ -138,6 +138,10 @@ public:
 
     bool doingTextInput();
 
+    /* Make a request for current selection to be delivered to this widget.
+     * The result is delivered in textSelectionInputEvent(). */
+    void requestSelection();
+
 
 /* === Update/Reconfigure cycle === */
 
@@ -201,6 +205,8 @@ protected:
     virtual void keyReleaseEvent(KeyReleaseEvent* event);
 
     virtual void textInputEvent(TextInputEvent* event);
+
+    virtual void selectionInputEvent(const std::string &text);
 
     virtual void closeEvent();
 

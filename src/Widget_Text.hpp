@@ -69,6 +69,8 @@ protected:
 
     virtual void textInputEvent(TextInputEvent* event);
 
+    virtual void selectionInputEvent(const std::string &text);
+
     virtual void closeEvent();
 
 };

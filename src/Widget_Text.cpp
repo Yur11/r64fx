@@ -476,11 +476,7 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
         m_text_painter->updateSelection();
         if(event->button() == MouseButton::Middle())
         {
-            auto w = root()->window();
-            if(w)
-            {
-                w->requestSelection();
-            }
+            requestSelection();
         }
     }
     update();
@@ -542,12 +538,10 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
     else if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::Z)
     {
-        cout << "undo: " << uc->index() << "\n";
         uc->undo();
     }
     else if(Keyboard::CtrlDown() && (event->key() == Keyboard::Key::Y))
     {
-        cout << "redo: " << uc->index() << "\n";
         uc->redo();
     }
     else if(key == Keyboard::Key::Up)
@@ -653,8 +647,6 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         item->saveRemovedGlyphs(glyphs);
         item->saveCursorsAfter(tp);
         uc->addItem(item);
-
-        cout << uc->size() << "\n";
     }
     else if(key == Keyboard::Key::Backspace)
     {
@@ -665,8 +657,6 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         item->saveRemovedGlyphs(glyphs);
         item->saveCursorsAfter(tp);
         uc->addItem(item);
-
-        cout << uc->size() << "\n";
     }
     else if(key == Keyboard::Key::Return)
     {
@@ -678,6 +668,16 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
 
     update();
+}
+
+
+void Widget_Text::selectionInputEvent(const std::string &text)
+{
+    if(!text.empty())
+    {
+        insertText(text);
+        update();
+    }
 }
 
 

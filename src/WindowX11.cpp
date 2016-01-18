@@ -99,9 +99,7 @@ namespace{
             g_TEXT               = XInternAtom(g_display, "TEXT",               True);
             g_TARGETS            = XInternAtom(g_display, "TARGETS",            True);
             g_MULTIPLE           = XInternAtom(g_display, "MULTIPLE",           True);
-
             g_R64FX_SELECTION    = XInternAtom(g_display, "_R64FX_SELECTION", False);
-            cout << "selection: " << g_R64FX_SELECTION << "\n";
 
 #ifdef R64FX_USE_MITSHM
             XShmQueryVersion(g_display, &g_mitshm_major, &g_mitshm_minor, &g_mitshm_has_pixmaps);
@@ -306,7 +304,6 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
 {
     if(in.property == None)
     {
-        cerr << "property is None!\n";
         return;
     }
 
@@ -324,9 +321,7 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
 
         if(in.target == g_TARGETS)
         {
-            cout << "Target TARGETS!\n";
-
-            Atom targets[3] = {g_TARGETS, g_TEXT, g_MULTIPLE};
+            Atom targets[3] = {g_TARGETS, g_TEXT};
 
             XChangeProperty(
                 g_display,
@@ -346,8 +341,6 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
         }
         else if(in.target == g_TEXT)
         {
-            cout << "Target TEXT!\n";
-
             XChangeProperty(
                 g_display,
                 in.requestor,
@@ -364,14 +357,6 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
                 cerr << "Failed to send selection event!\n";
             }
         }
-        else
-        {
-            cout << "Bad target!\n";
-        }
-    }
-    else
-    {
-        cerr << "Not a primary selection!\n";
     }
 }
 
@@ -382,11 +367,9 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* even
     {
         if(in.target == g_TARGETS)
         {
-            cout << "Got targets!\n";
         }
         else if(in.target == g_TEXT)
         {
-            cout << "Got text!\n";
             if(in.property == g_R64FX_SELECTION)
             {
                 Atom            type;
@@ -441,18 +424,6 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* even
                 }
             }
         }
-        else
-        {
-            cout << "Got other!\n";
-        }
-    }
-    else
-    {
-        cout << "Not primary!\n";
-        cout << in.selection << "\n";
-        char* buff = XGetAtomName(g_display, in.selection);
-        cout << buff << "\n";
-        XFree(buff);
     }
 }
 
@@ -557,24 +528,18 @@ void WindowX11::processSomeEvents(Window::Events* events)
 
             case SelectionClear:
             {
-                cout << "SelectionClear\n";
-                cout << "\n";
                 break;
             }
 
             case SelectionRequest:
             {
-                cout << "SelectionRequest\n";
                 window->sendSelection(xevent.xselectionrequest);
-                cout << "\n";
                 break;
             }
 
             case SelectionNotify:
             {
-                cout << "SelectionNotify\n";
                 window->recieveSelection(xevent.xselection, events);
-                cout << "\n";
                 break;
             }
 
