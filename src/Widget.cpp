@@ -471,6 +471,16 @@ bool Widget::doingTextInput()
 }
 
 
+void Widget::setSelection(const std::string &text)
+{
+    auto win = root()->window();
+    if(win)
+    {
+        win->setSelection(text);
+    }
+}
+
+
 void Widget::requestSelection()
 {
     auto win = root()->window();

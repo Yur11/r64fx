@@ -488,13 +488,7 @@ void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
     Widget::mouseReleaseEvent(event);
     if(m_text_painter->hasSelection())
     {
-        auto w = root()->window();
-        if(w)
-        {
-            w->setSelection(
-                m_text_painter->getSelectionText()
-            );
-        }
+        setSelection(m_text_painter->selectionText());
     }
 }
 
@@ -531,6 +525,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     auto uc     = m_undo_redo_chain;
     auto key    = event->key();
     const auto &text  = event->text();
+    bool touched_selection = false;
 
     if(event->key() == Keyboard::Key::Escape)
     {
@@ -549,6 +544,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         if(Keyboard::ShiftDown())
         {
             tp->selectUp();
+            touched_selection = true;
         }
         else
         {
@@ -564,6 +560,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         if(Keyboard::ShiftDown())
         {
             tp->selectDown();
+            touched_selection = true;
         }
         else
         {
@@ -579,6 +576,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         if(Keyboard::ShiftDown())
         {
             tp->selectLeft();
+            touched_selection = true;
         }
         else
         {
@@ -594,6 +592,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         if(Keyboard::ShiftDown())
         {
             tp->selectRight();
+            touched_selection = true;
         }
         else
         {
@@ -609,6 +608,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         if(Keyboard::ShiftDown())
         {
             tp->homeSelection();
+            touched_selection = true;
         }
         else
         {
@@ -624,6 +624,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         if(Keyboard::ShiftDown())
         {
             tp->endSelection();
+            touched_selection = true;
         }
         else
         {
@@ -637,6 +638,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     else if(Keyboard::CtrlDown() && key == Keyboard::Key::A)
     {
         tp->selectAll();
+        touched_selection = true;
     }
     else if(key == Keyboard::Key::Delete)
     {
@@ -665,6 +667,11 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     else if(!text.empty())
     {
         insertText(text);
+    }
+
+    if(tp->hasSelection() && touched_selection)
+    {
+        setSelection(tp->selectionText());
     }
 
     update();

@@ -138,6 +138,8 @@ public:
 
     bool doingTextInput();
 
+    void setSelection(const std::string &text);
+
     /* Make a request for current selection to be delivered to this widget.
      * The result is delivered in textSelectionInputEvent(). */
     void requestSelection();

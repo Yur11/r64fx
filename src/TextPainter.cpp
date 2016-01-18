@@ -495,7 +495,7 @@ void TextPainter::getText(std::string &str, TextCursorPosition a, TextCursorPosi
 }
 
 
-std::string TextPainter::getSelectionText()
+std::string TextPainter::selectionText()
 {
     auto a = selectionStart();
     auto b = selectionEnd();
