@@ -50,15 +50,28 @@ namespace{
 
     WindowX11* g_text_input_grabber = nullptr;
 
-    Atom g_WM_PROTOCOLS;
-    Atom g_WM_DELETE_WINDOW;
-    Atom g_NET_WM_NAME;
-    Atom g_UTF8_STRING;
-    Atom g_TEXT;
-    Atom g_TARGETS;
-    Atom g_MULTIPLE;
+    namespace X11_Atom{
+        Atom WM_PROTOCOLS;
+        Atom WM_DELETE_WINDOW;
+        Atom _NET_WM_NAME;
+        Atom UTF8_STRING;
+        Atom TEXT;
+        Atom TARGETS;
+        Atom MULTIPLE;
+        Atom _R64FX_SELECTION;
+    }
 
-    Atom   g_R64FX_SELECTION;
+    bool intern_atom(const char* name, Atom &atom, bool only_if_exists)
+    {
+        atom = XInternAtom(g_display, name, only_if_exists);
+        if(atom == None)
+        {
+            cerr << "Failed to intern atom " << name << "\n";
+            return false;
+        }
+        return true;
+    }
+
     string g_selection_text = "";
 
 #ifdef R64FX_USE_MITSHM
@@ -92,14 +105,25 @@ namespace{
                 abort();
             }
 
-            g_WM_PROTOCOLS       = XInternAtom(g_display, "WM_PROTOCOLS",       True);
-            g_WM_DELETE_WINDOW   = XInternAtom(g_display, "WM_DELETE_WINDOW",   True);
-            g_NET_WM_NAME        = XInternAtom(g_display, "_NET_WM_NAME",       True);
-            g_UTF8_STRING        = XInternAtom(g_display, "UTF8_STRING",        True);
-            g_TEXT               = XInternAtom(g_display, "TEXT",               True);
-            g_TARGETS            = XInternAtom(g_display, "TARGETS",            True);
-            g_MULTIPLE           = XInternAtom(g_display, "MULTIPLE",           True);
-            g_R64FX_SELECTION    = XInternAtom(g_display, "_R64FX_SELECTION", False);
+#define R64FX_INTERN_ATOM(name, only_if_exists) intern_atom(#name, X11_Atom::name, only_if_exists)
+
+            R64FX_INTERN_ATOM( WM_PROTOCOLS,     true  );
+            R64FX_INTERN_ATOM( WM_DELETE_WINDOW, true  );
+            R64FX_INTERN_ATOM( _NET_WM_NAME,     true  );
+            R64FX_INTERN_ATOM( UTF8_STRING,      true  );
+            R64FX_INTERN_ATOM( TEXT,             true  );
+            R64FX_INTERN_ATOM( TARGETS,          true  );
+            R64FX_INTERN_ATOM( MULTIPLE,         true  );
+            R64FX_INTERN_ATOM( _R64FX_SELECTION, false );
+
+//             g_WM_PROTOCOLS       = XInternAtom(g_display, "WM_PROTOCOLS",       True);
+//             g_WM_DELETE_WINDOW   = XInternAtom(g_display, "WM_DELETE_WINDOW",   True);
+//             g_NET_WM_NAME        = XInternAtom(g_display, "_NET_WM_NAME",       True);
+//             g_UTF8_STRING        = XInternAtom(g_display, "UTF8_STRING",        True);
+//             g_TEXT               = XInternAtom(g_display, "TEXT",               True);
+//             g_TARGETS            = XInternAtom(g_display, "TARGETS",            True);
+//             g_MULTIPLE           = XInternAtom(g_display, "MULTIPLE",           True);
+//             g_R64FX_SELECTION    = XInternAtom(g_display, "_R64FX_SELECTION", False);
 
 #ifdef R64FX_USE_MITSHM
             XShmQueryVersion(g_display, &g_mitshm_major, &g_mitshm_minor, &g_mitshm_has_pixmaps);
@@ -292,8 +316,8 @@ void WindowX11::requestSelection()
     XConvertSelection(
         g_display,
         XA_PRIMARY,
-        g_TEXT,
-        g_R64FX_SELECTION,
+        X11_Atom::TEXT,
+        X11_Atom::_R64FX_SELECTION,
         m_xwindow,
         CurrentTime
     );
@@ -319,9 +343,9 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
         out.property  = in.property;
         out.time      = in.time;
 
-        if(in.target == g_TARGETS)
+        if(in.target == X11_Atom::TARGETS)
         {
-            Atom targets[3] = {g_TARGETS, g_TEXT};
+            Atom targets[3] = {X11_Atom::TARGETS, X11_Atom::TEXT};
 
             XChangeProperty(
                 g_display,
@@ -339,7 +363,7 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
                 cerr << "Failed to send selection event!\n";
             }
         }
-        else if(in.target == g_TEXT)
+        else if(in.target == X11_Atom::TEXT)
         {
             XChangeProperty(
                 g_display,
@@ -365,12 +389,12 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* even
 {
     if(in.selection == XA_PRIMARY)
     {
-        if(in.target == g_TARGETS)
+        if(in.target == X11_Atom::TARGETS)
         {
         }
-        else if(in.target == g_TEXT)
+        else if(in.target == X11_Atom::TEXT)
         {
-            if(in.property == g_R64FX_SELECTION)
+            if(in.property == X11_Atom::_R64FX_SELECTION)
             {
                 Atom            type;
                 int             format;
@@ -380,9 +404,9 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* even
 
                 /* Get property length. */
                 int result = XGetWindowProperty(
-                    g_display, m_xwindow, g_R64FX_SELECTION,
+                    g_display, m_xwindow, X11_Atom::_R64FX_SELECTION,
                     0, 0, False,
-                    g_TEXT,
+                    X11_Atom::TEXT,
                     &type, &format, &nitems, &bytes_after,
                     &data
                 );
@@ -401,9 +425,9 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* even
                     size /= 4;
 
                     result = XGetWindowProperty(
-                        g_display, m_xwindow, g_R64FX_SELECTION,
+                        g_display, m_xwindow, X11_Atom::_R64FX_SELECTION,
                         0, size, True,
-                        g_TEXT,
+                        X11_Atom::TEXT,
                         &type, &format, &nitems, &bytes_after,
                         &data
                     );
@@ -545,7 +569,7 @@ void WindowX11::processSomeEvents(Window::Events* events)
 
             case ClientMessage:
             {
-                if(xevent.xclient.message_type == g_WM_PROTOCOLS)
+                if(xevent.xclient.message_type == X11_Atom::WM_PROTOCOLS)
                 {
                     events->close(window);
                 }
@@ -573,7 +597,7 @@ void WindowX11::processSomeEvents(Window::Events* events)
 
 void WindowX11::setupEvents()
 {
-    XSetWMProtocols(g_display, m_xwindow, &g_WM_DELETE_WINDOW, 1);
+    XSetWMProtocols(g_display, m_xwindow, &X11_Atom::WM_DELETE_WINDOW, 1);
 
     XSelectInput(
         g_display, m_xwindow,
