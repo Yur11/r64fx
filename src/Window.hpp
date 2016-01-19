@@ -29,7 +29,7 @@ public:
         void (*key_press)             (Window* window, unsigned int key);
         void (*key_release)           (Window* window, unsigned int key);
         void (*text_input)            (Window* window, const std::string &text, unsigned int key);
-        void (*selection_text_input)  (Window* window, const std::string &text);
+        void (*clipboard_input)       (Window* window, const std::string &text, bool selection);
         void (*close)                 (Window* window);
     };
 
@@ -73,6 +73,10 @@ public:
     virtual bool hasSelection() = 0;
 
     virtual void requestSelection() = 0;
+
+    virtual void setClipboardData(const std::string &text) = 0;
+
+    virtual void requestClipboardData() = 0;
 
     static Window* newInstance(
         int width = 800, int height = 600,

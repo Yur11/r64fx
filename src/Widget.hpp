@@ -16,6 +16,7 @@ class MouseMoveEvent;
 class KeyPressEvent;
 class KeyReleaseEvent;
 class TextInputEvent;
+class ClipboardEvent;
 
 class Widget : public LinkedList<Widget>::Node{
 
@@ -140,9 +141,13 @@ public:
 
     void setSelection(const std::string &text);
 
+    void setClipboardData(const std::string &text);
+
     /* Make a request for current selection to be delivered to this widget.
      * The result is delivered in textSelectionInputEvent(). */
     void requestSelection();
+
+    void requestClipboardData();
 
 
 /* === Update/Reconfigure cycle === */
@@ -208,7 +213,7 @@ protected:
 
     virtual void textInputEvent(TextInputEvent* event);
 
-    virtual void selectionInputEvent(const std::string &text);
+    virtual void clipboardInputEvent(ClipboardEvent* event);
 
     virtual void closeEvent();
 
@@ -223,7 +228,7 @@ private:
     friend void window_key_press             (Window* window, unsigned int key);
     friend void window_key_release           (Window* window, unsigned int key);
     friend void window_text_input            (Window* window, const std::string &text, unsigned int key);
-    friend void window_selection_text_input  (Window* window, const std::string &text);
+    friend void window_clipboard_input       (Window* window, const std::string &text, bool selection);
     friend void window_close                 (Window* window);
 };
     

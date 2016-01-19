@@ -4,6 +4,7 @@
 #include "Keyboard.hpp"
 #include "KeyboardModifiers.hpp"
 #include "KeyEvent.hpp"
+#include "ClipboardEvent.hpp"
 #include "Painter.hpp"
 #include "Program.hpp"
 
@@ -26,7 +27,7 @@ void window_mouse_move           (Window* window, int x, int y);
 void window_key_press            (Window* window, unsigned int key);
 void window_key_release          (Window* window, unsigned int key);
 void window_text_input           (Window* window, const std::string &text, unsigned int key);
-void window_selection_text_input (Window* window, const std::string &text);
+void window_clipboard_input      (Window* window, const std::string &text, bool selection);
 void window_close                (Window* window);
 
 namespace{
@@ -46,7 +47,7 @@ namespace{
     /* Widget that currently has keyboard focus. */
     Widget* g_focus_owner = nullptr;
 
-    Widget* g_selection_requestor = nullptr;
+    Widget* g_clipboard_requestor = nullptr;
 
     /* Maximum number of individual rectangles
      * that can be repainted after reconf. cycle. */
@@ -86,7 +87,7 @@ namespace{
         window_key_press,
         window_key_release,
         window_text_input,
-        window_selection_text_input,
+        window_clipboard_input,
         window_close
     };
 
@@ -481,13 +482,34 @@ void Widget::setSelection(const std::string &text)
 }
 
 
+void Widget::setClipboardData(const std::string &text)
+{
+    auto win = root()->window();
+    if(win)
+    {
+        win->setClipboardData(text);
+    }
+}
+
+
 void Widget::requestSelection()
 {
     auto win = root()->window();
     if(win)
     {
-        g_selection_requestor = this;
+        g_clipboard_requestor = this;
         win->requestSelection();
+    }
+}
+
+
+void Widget::requestClipboardData()
+{
+    auto win = root()->window();
+    if(win)
+    {
+        g_clipboard_requestor = this;
+        win->requestClipboardData();
     }
 }
 
@@ -848,17 +870,18 @@ void Widget::textInputEvent(TextInputEvent* event)
 }
 
 
-void window_selection_text_input(Window* window, const std::string &text)
+void window_clipboard_input(Window* window, const std::string &text, bool selection)
 {
-    if(g_selection_requestor)
+    if(g_clipboard_requestor)
     {
-        g_selection_requestor->selectionInputEvent(text);
-        g_selection_requestor = nullptr;
+        ClipboardEvent event(text, (selection ? ClipboardEvent::Type::Selection : ClipboardEvent::Type::Paste));
+        g_clipboard_requestor->clipboardInputEvent(&event);
+        g_clipboard_requestor = nullptr;
     }
 }
 
 
-void Widget::selectionInputEvent(const std::string &text)
+void Widget::clipboardInputEvent(ClipboardEvent* event)
 {
 
 }

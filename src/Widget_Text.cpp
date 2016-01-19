@@ -6,6 +6,7 @@
 #include "Keyboard.hpp"
 #include "KeyboardModifiers.hpp"
 #include "KeyEvent.hpp"
+#include "ClipboardEvent.hpp"
 #include "Mouse.hpp"
 #include "Program.hpp"
 #include "TextPainter.hpp"
@@ -640,6 +641,25 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         tp->selectAll();
         touched_selection = true;
     }
+    else if(Keyboard::CtrlDown() && key == Keyboard::Key::C)
+    {
+        if(tp->hasSelection())
+        {
+            setClipboardData(tp->selectionText());
+        }
+    }
+    else if(Keyboard::CtrlDown() && key == Keyboard::Key::X)
+    {
+        if(tp->hasSelection())
+        {
+            setClipboardData(tp->selectionText());
+            tp->deleteSelection();
+        }
+    }
+    else if(Keyboard::CtrlDown() && key == Keyboard::Key::V)
+    {
+        requestClipboardData();
+    }
     else if(key == Keyboard::Key::Delete)
     {
         auto item = new UndoRedoItem_TextDeleted(false);
@@ -678,11 +698,11 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
 }
 
 
-void Widget_Text::selectionInputEvent(const std::string &text)
+void Widget_Text::clipboardInputEvent(ClipboardEvent* event)
 {
-    if(!text.empty())
+    if(!event->text().empty())
     {
-        insertText(text);
+        insertText(event->text());
         update();
     }
 }

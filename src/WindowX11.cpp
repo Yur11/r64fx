@@ -59,6 +59,8 @@ namespace{
         Atom TARGETS;
         Atom MULTIPLE;
         Atom _R64FX_SELECTION;
+        Atom CLIPBOARD;
+        Atom _R64FX_CLIPBOARD;
     }
 
     bool intern_atom(const char* name, Atom &atom, bool only_if_exists)
@@ -73,6 +75,7 @@ namespace{
     }
 
     string g_selection_text = "";
+    string g_clipboard_text = "";
 
 #ifdef R64FX_USE_MITSHM
     int g_mitshm_major = 0;
@@ -115,6 +118,8 @@ namespace{
             R64FX_INTERN_ATOM( TARGETS,          true  );
             R64FX_INTERN_ATOM( MULTIPLE,         true  );
             R64FX_INTERN_ATOM( _R64FX_SELECTION, false );
+            R64FX_INTERN_ATOM( CLIPBOARD,        true  );
+            R64FX_INTERN_ATOM( _R64FX_CLIPBOARD, false );
 
 //             g_WM_PROTOCOLS       = XInternAtom(g_display, "WM_PROTOCOLS",       True);
 //             g_WM_DELETE_WINDOW   = XInternAtom(g_display, "WM_DELETE_WINDOW",   True);
@@ -198,9 +203,9 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual void requestSelection();
 
-    void sendSelection(const XSelectionRequestEvent &in);
+    virtual void setClipboardData(const std::string &text);
 
-    void recieveSelection(const XSelectionEvent &in, Window::Events* events);
+    virtual void requestClipboardData();
 
     inline ::Window xWindow() const { return m_xwindow; }
 
@@ -213,6 +218,10 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     static void processSomeEvents(Window::Events* events);
 
     void setupEvents();
+
+    void sendSelection(const XSelectionRequestEvent &in);
+
+    void recieveSelection(const XSelectionEvent &in, Window::Events* events);
 
     void updateAttrs();
 
@@ -324,131 +333,23 @@ void WindowX11::requestSelection()
 }
 
 
-void WindowX11::sendSelection(const XSelectionRequestEvent &in)
+void WindowX11::setClipboardData(const std::string &text)
 {
-    if(in.property == None)
-    {
-        return;
-    }
-
-    if(in.selection == XA_PRIMARY)
-    {
-        XEvent xevent;
-        auto &out = xevent.xselection;
-        out.type      = SelectionNotify;
-        out.display   = in.display;
-        out.requestor = in.requestor;
-        out.selection = in.selection;
-        out.target    = in.target;
-        out.property  = in.property;
-        out.time      = in.time;
-
-        if(in.target == X11_Atom::TARGETS)
-        {
-            Atom targets[3] = {X11_Atom::TARGETS, X11_Atom::TEXT};
-
-            XChangeProperty(
-                g_display,
-                in.requestor,
-                in.property,
-                in.target,
-                32,
-                PropModeReplace,
-                (unsigned char*) targets,
-                3
-            );
-
-            if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
-            {
-                cerr << "Failed to send selection event!\n";
-            }
-        }
-        else if(in.target == X11_Atom::TEXT)
-        {
-            XChangeProperty(
-                g_display,
-                in.requestor,
-                in.property,
-                in.target,
-                8,
-                PropModeReplace,
-                (unsigned char*) g_selection_text.c_str(),
-                g_selection_text.size()
-            );
-
-            if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
-            {
-                cerr << "Failed to send selection event!\n";
-            }
-        }
-    }
+    g_clipboard_text = text;
+    XSetSelectionOwner(g_display, X11_Atom::CLIPBOARD, m_xwindow, CurrentTime);
 }
 
 
-void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* events)
+void WindowX11::requestClipboardData()
 {
-    if(in.selection == XA_PRIMARY)
-    {
-        if(in.target == X11_Atom::TARGETS)
-        {
-        }
-        else if(in.target == X11_Atom::TEXT)
-        {
-            if(in.property == X11_Atom::_R64FX_SELECTION)
-            {
-                Atom            type;
-                int             format;
-                unsigned long   nitems;
-                unsigned long   bytes_after;
-                unsigned char*  data;
-
-                /* Get property length. */
-                int result = XGetWindowProperty(
-                    g_display, m_xwindow, X11_Atom::_R64FX_SELECTION,
-                    0, 0, False,
-                    X11_Atom::TEXT,
-                    &type, &format, &nitems, &bytes_after,
-                    &data
-                );
-
-                if(result != Success)
-                {
-                    cerr << "Failed to get window property size!\n";
-                    return;
-                }
-
-                if(format == 8 && bytes_after > 0)
-                {
-                    int size = bytes_after;
-                    while(size % 4)
-                        size++;
-                    size /= 4;
-
-                    result = XGetWindowProperty(
-                        g_display, m_xwindow, X11_Atom::_R64FX_SELECTION,
-                        0, size, True,
-                        X11_Atom::TEXT,
-                        &type, &format, &nitems, &bytes_after,
-                        &data
-                    );
-
-                    if(result != Success)
-                    {
-                        cerr << "Failed to get window property data!\n";
-                        return;
-                    }
-
-                    string text((char*)data);
-                    events->selection_text_input(this, text);
-                    XFree(data);
-                }
-                else
-                {
-                    cerr << "Unsupported text property format!\n";
-                }
-            }
-        }
-    }
+    XConvertSelection(
+        g_display,
+        XA_PRIMARY,
+        X11_Atom::TEXT,
+        X11_Atom::_R64FX_CLIPBOARD,
+        m_xwindow,
+        CurrentTime
+    );
 }
 
 
@@ -552,18 +453,24 @@ void WindowX11::processSomeEvents(Window::Events* events)
 
             case SelectionClear:
             {
+                cout << "SelectionClear\n";
+                cout << "\n";
                 break;
             }
 
             case SelectionRequest:
             {
+                cout << "SelectionRequest\n";
                 window->sendSelection(xevent.xselectionrequest);
+                cout << "\n";
                 break;
             }
 
             case SelectionNotify:
             {
+                cout << "SelectionNotify\n";
                 window->recieveSelection(xevent.xselection, events);
+                cout << "\n";
                 break;
             }
 
@@ -605,6 +512,157 @@ void WindowX11::setupEvents()
         ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
         StructureNotifyMask
     );
+}
+
+
+void WindowX11::sendSelection(const XSelectionRequestEvent &in)
+{
+    if(in.property == None)
+    {
+        cout << "property None\n";
+        return;
+    }
+
+    if(in.selection == XA_PRIMARY || in.selection == X11_Atom::CLIPBOARD)
+    {
+        XEvent xevent;
+        auto &out = xevent.xselection;
+        out.type      = SelectionNotify;
+        out.display   = in.display;
+        out.requestor = in.requestor;
+        out.selection = in.selection;
+        out.target    = in.target;
+        out.property  = in.property;
+        out.time      = in.time;
+
+        if(in.target == X11_Atom::TARGETS)
+        {
+            cout << "tagets\n";
+            Atom targets[3] = {X11_Atom::TARGETS, X11_Atom::TEXT};
+
+            XChangeProperty(
+                g_display,
+                in.requestor,
+                in.property,
+                in.target,
+                32,
+                PropModeReplace,
+                (unsigned char*) targets,
+                3
+            );
+
+            if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
+            {
+                cerr << "Failed to send selection event!\n";
+            }
+        }
+        else if(in.target == X11_Atom::TEXT || in.target == X11_Atom::UTF8_STRING)
+        {
+            string* str = nullptr;
+            if(in.selection == XA_PRIMARY)
+            {
+                str = &g_selection_text;
+            }
+            else
+            {
+                str = &g_clipboard_text;
+            }
+
+            XChangeProperty(
+                g_display,
+                in.requestor,
+                in.property,
+                in.target,
+                8,
+                PropModeReplace,
+                (unsigned char*) str->c_str(),
+                str->size()
+            );
+
+            if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
+            {
+                cerr << "Failed to send selection event!\n";
+            }
+        }
+        else
+        {
+            cout << "other!\n";
+            char* str = XGetAtomName(g_display, in.target);
+            cout << str << "\n";
+            XFree(str);
+        }
+    }
+}
+
+
+void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* events)
+{
+    if(in.selection == XA_PRIMARY)
+    {
+        if(in.target == X11_Atom::TARGETS)
+        {
+        }
+        else if(in.target == X11_Atom::TEXT)
+        {
+            if(in.property == X11_Atom::_R64FX_SELECTION || in.property == X11_Atom::_R64FX_CLIPBOARD)
+            {
+                Atom            type;
+                int             format;
+                unsigned long   nitems;
+                unsigned long   bytes_after;
+                unsigned char*  data;
+
+                /* Get property length. */
+                int result = XGetWindowProperty(
+                    g_display, m_xwindow, in.property,
+                    0, 0, False,
+                    X11_Atom::TEXT,
+                    &type, &format, &nitems, &bytes_after,
+                    &data
+                );
+
+                if(result != Success)
+                {
+                    cerr << "Failed to get window property size!\n";
+                    return;
+                }
+
+                if(format == 8 && bytes_after > 0)
+                {
+                    int size = bytes_after;
+                    while(size % 4)
+                        size++;
+                    size /= 4;
+
+                    result = XGetWindowProperty(
+                        g_display, m_xwindow, in.property,
+                        0, size, True,
+                        X11_Atom::TEXT,
+                        &type, &format, &nitems, &bytes_after,
+                        &data
+                    );
+
+                    if(result != Success)
+                    {
+                        cerr << "Failed to get window property data!\n";
+                        return;
+                    }
+
+                    string text((char*)data);
+                    events->clipboard_input(this, text, (in.property == X11_Atom::_R64FX_SELECTION));
+                    XFree(data);
+                }
+                else
+                {
+                    cerr << "Unsupported text property format!\n";
+                }
+            }
+            else
+            {
+                cout << "OTHER\n";
+            }
+        }
+    }
 }
 
 
