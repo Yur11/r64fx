@@ -390,7 +390,7 @@ void WindowX11::processSomeEvents(Window::Events* events)
                     {
                         str = string(buff, nbytes);
                     }
-                    events->text_input(window, str, keysym);
+                    events->text_input(window, str, XLookupKeysym(&xevent.xkey, 0));
                 }
                 else
                 {

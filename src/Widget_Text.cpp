@@ -323,6 +323,23 @@ void Widget_Text::insertText(const std::string &text)
 }
 
 
+void Widget_Text::deleteAtCursorPosition(bool backspace)
+{
+    auto tp   = m_text_painter;
+    auto uc   = m_undo_redo_chain;
+    auto item = new UndoRedoItem_TextDeleted(true);
+    item->saveCursorsBefore(tp);
+    GlyphString glyphs;
+    if(backspace)
+        tp->deleteBeforeCursor(&glyphs);
+    else
+        tp->deleteAfterCursor(&glyphs);
+    item->saveRemovedGlyphs(glyphs);
+    item->saveCursorsAfter(tp);
+    uc->addItem(item);
+}
+
+
 void Widget_Text::setFont(Font* font)
 {
     if(ownsFont())
@@ -532,6 +549,10 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     {
         removeFocus();
     }
+    else if(Keyboard::CtrlDown() && Keyboard::ShiftDown() && event->key() == Keyboard::Key::Z)
+    {
+        uc->redo();
+    }
     else if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::Z)
     {
         uc->undo();
@@ -653,7 +674,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         if(tp->hasSelection())
         {
             setClipboardData(tp->selectionText());
-            tp->deleteSelection();
+            deleteAtCursorPosition(false);
         }
     }
     else if(Keyboard::CtrlDown() && key == Keyboard::Key::V)
@@ -662,23 +683,11 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
     else if(key == Keyboard::Key::Delete)
     {
-        auto item = new UndoRedoItem_TextDeleted(false);
-        item->saveCursorsBefore(tp);
-        GlyphString glyphs;
-        tp->deleteAfterCursor(&glyphs);
-        item->saveRemovedGlyphs(glyphs);
-        item->saveCursorsAfter(tp);
-        uc->addItem(item);
+        deleteAtCursorPosition(false);
     }
     else if(key == Keyboard::Key::Backspace)
     {
-        auto item = new UndoRedoItem_TextDeleted(true);
-        item->saveCursorsBefore(tp);
-        GlyphString glyphs;
-        tp->deleteBeforeCursor(&glyphs);
-        item->saveRemovedGlyphs(glyphs);
-        item->saveCursorsAfter(tp);
-        uc->addItem(item);
+        deleteAtCursorPosition(true);
     }
     else if(key == Keyboard::Key::Return)
     {

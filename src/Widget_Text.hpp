@@ -30,6 +30,8 @@ public:
 
     void insertText(const std::string &text);
 
+    void deleteAtCursorPosition(bool backspace);
+
     void setFont(Font* font);
 
     void setFont(std::string font_name);
