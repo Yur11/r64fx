@@ -74,6 +74,8 @@ public:
 
     virtual void requestSelection() = 0;
 
+    virtual void requestTargets() = 0;
+
     virtual void setClipboardData(const std::string &text) = 0;
 
     virtual void requestClipboardData() = 0;

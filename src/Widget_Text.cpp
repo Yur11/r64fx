@@ -679,6 +679,12 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
     else if(Keyboard::CtrlDown() && key == Keyboard::Key::V)
     {
+//         auto win = root()->window();
+//         if(win)
+//         {
+//             cout << "win->requestTargets()\n";
+//             win->requestTargets();
+//         }
         requestClipboardData();
     }
     else if(key == Keyboard::Key::Delete)

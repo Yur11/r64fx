@@ -207,6 +207,8 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual void requestClipboardData();
 
+    virtual void requestTargets();
+
     inline ::Window xWindow() const { return m_xwindow; }
 
     inline XIC inputContext() const { return m_input_context; }
@@ -344,8 +346,21 @@ void WindowX11::requestClipboardData()
 {
     XConvertSelection(
         g_display,
-        XA_PRIMARY,
+        X11_Atom::CLIPBOARD,
         X11_Atom::TEXT,
+        X11_Atom::_R64FX_CLIPBOARD,
+        m_xwindow,
+        CurrentTime
+    );
+}
+
+
+void WindowX11::requestTargets()
+{
+    XConvertSelection(
+        g_display,
+        X11_Atom::CLIPBOARD,
+        X11_Atom::TARGETS,
         X11_Atom::_R64FX_CLIPBOARD,
         m_xwindow,
         CurrentTime
@@ -537,7 +552,7 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
 
         if(in.target == X11_Atom::TARGETS)
         {
-            cout << "tagets\n";
+            cout << "Tagets\n";
             Atom targets[3] = {X11_Atom::TARGETS, X11_Atom::TEXT};
 
             XChangeProperty(
@@ -558,6 +573,8 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
         }
         else if(in.target == X11_Atom::TEXT || in.target == X11_Atom::UTF8_STRING)
         {
+            cout << "Text\n";
+
             string* str = nullptr;
             if(in.selection == XA_PRIMARY)
             {
@@ -597,13 +614,16 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
 
 void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* events)
 {
-    if(in.selection == XA_PRIMARY)
+    if(in.selection == XA_PRIMARY || in.selection == X11_Atom::CLIPBOARD)
     {
         if(in.target == X11_Atom::TARGETS)
         {
+            cout << "Targets\n";
         }
         else if(in.target == X11_Atom::TEXT)
         {
+            cout << "Text\n";
+
             if(in.property == X11_Atom::_R64FX_SELECTION || in.property == X11_Atom::_R64FX_CLIPBOARD)
             {
                 Atom            type;
