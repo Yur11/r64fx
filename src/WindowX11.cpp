@@ -61,6 +61,10 @@ namespace{
         Atom _R64FX_SELECTION;
         Atom CLIPBOARD;
         Atom _R64FX_CLIPBOARD;
+
+        Atom XdndAware;
+        Atom XdndEnter;
+        Atom XdndLeave;
     }
 
     bool intern_atom(const char* name, Atom &atom, bool only_if_exists)
@@ -129,6 +133,10 @@ namespace{
             R64FX_INTERN_ATOM( CLIPBOARD,        true  );
             R64FX_INTERN_ATOM( _R64FX_CLIPBOARD, false );
 
+            R64FX_INTERN_ATOM( XdndAware, false );
+            R64FX_INTERN_ATOM( XdndEnter, false );
+            R64FX_INTERN_ATOM( XdndLeave, false );
+
 #ifdef R64FX_USE_MITSHM
             XShmQueryVersion(g_display, &g_mitshm_major, &g_mitshm_minor, &g_mitshm_has_pixmaps);
             g_mitsm_completion_event = XShmGetEventBase(g_display) + ShmCompletion;
@@ -158,6 +166,34 @@ namespace{
     int g_glx_major = 0;
     int g_glx_minor = 0;
 #endif//R64FX_USE_GL
+
+    void get_dnd_type_list(const long* msg_data, vector<Atom> &types)
+    {
+        ::Window source = msg_data[0];
+        if(source == None)
+        {
+            cerr << "Source is none!\n";
+            return;
+        }
+
+        if(msg_data[1] & 1)
+        {
+            cout << "More types!\n";
+
+        }
+        else
+        {
+            cout << "Less types!\n";
+
+            for(int i=2; i<5; i++)
+            {
+                if(msg_data[i] != None)
+                {
+                    types.push_back(msg_data[i]);
+                }
+            }
+        }
+    }
 }//namespace
 
 
@@ -477,30 +513,40 @@ void WindowX11::processSomeEvents(Window::Events* events)
 
             case SelectionClear:
             {
-                cout << "SelectionClear\n";
-                cout << "\n";
                 break;
             }
 
             case SelectionRequest:
             {
-                cout << "SelectionRequest\n";
                 window->sendSelection(xevent.xselectionrequest);
-                cout << "\n";
                 break;
             }
 
             case SelectionNotify:
             {
-                cout << "SelectionNotify\n";
                 window->recieveSelection(xevent.xselection, events);
-                cout << "\n";
                 break;
             }
 
             case ClientMessage:
             {
-                if(xevent.xclient.message_type == X11_Atom::WM_PROTOCOLS)
+                auto &msg = xevent.xclient;
+
+                if(msg.message_type == X11_Atom::XdndEnter)
+                {
+                    cout << "XdndEnter\n";
+                    vector<Atom> types;
+                    get_dnd_type_list(msg.data.l, types);
+                    for(auto atom : types)
+                    {
+                        cout << atom << " -> " << atom_name(atom) << "\n";
+                    }
+                }
+                else if(msg.message_type == X11_Atom::XdndLeave)
+                {
+                    cout << "XdndLeave\n";
+                }
+                else if(msg.message_type == X11_Atom::WM_PROTOCOLS)
                 {
                     events->close(window);
                 }
@@ -535,6 +581,18 @@ void WindowX11::setupEvents()
         KeyPressMask | KeyReleaseMask |
         ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
         StructureNotifyMask
+    );
+
+    unsigned int dnd_version = 5;
+    XChangeProperty(
+        g_display,
+        m_xwindow,
+        X11_Atom::XdndAware,
+        XA_ATOM,
+        32,
+        PropModeReplace,
+        (unsigned char*)&dnd_version,
+        1
     );
 }
 
