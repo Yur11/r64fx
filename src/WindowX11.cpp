@@ -50,45 +50,15 @@ namespace{
 
     WindowX11* g_text_input_grabber = nullptr;
 
-    namespace X11_Atom{
-        Atom WM_PROTOCOLS;
-        Atom WM_DELETE_WINDOW;
-        Atom _NET_WM_NAME;
-        Atom UTF8_STRING;
-        Atom TEXT;
-        Atom TARGETS;
-        Atom MULTIPLE;
-        Atom _R64FX_SELECTION;
-        Atom CLIPBOARD;
-        Atom _R64FX_CLIPBOARD;
-
-        Atom XdndAware;
-        Atom XdndEnter;
-        Atom XdndLeave;
-    }
-
-    bool intern_atom(const char* name, Atom &atom, bool only_if_exists)
-    {
-        atom = XInternAtom(g_display, name, only_if_exists);
-        if(atom == None)
-        {
-            cerr << "Failed to intern atom " << name << "\n";
-            return false;
-        }
-        return true;
-    }
-
-    string atom_name(Atom atom)
-    {
-        char* buff = XGetAtomName(g_display, atom);
-        string str(buff);
-        XFree(buff);
-        return str;
-    }
-
     string g_selection_text = "";
     string g_clipboard_text = "";
+}//namespace
 
+#include "WindowX11_Atoms.cxx"
+#include "WindowX11_Properties.cxx"
+#include "WindowX11_XDND.cxx"
+
+namespace{
 #ifdef R64FX_USE_MITSHM
     int g_mitshm_major = 0;
     int g_mitshm_minor = 0;
@@ -120,22 +90,7 @@ namespace{
                 abort();
             }
 
-#define R64FX_INTERN_ATOM(name, only_if_exists) intern_atom(#name, X11_Atom::name, only_if_exists)
-
-            R64FX_INTERN_ATOM( WM_PROTOCOLS,     true  );
-            R64FX_INTERN_ATOM( WM_DELETE_WINDOW, true  );
-            R64FX_INTERN_ATOM( _NET_WM_NAME,     true  );
-            R64FX_INTERN_ATOM( UTF8_STRING,      true  );
-            R64FX_INTERN_ATOM( TEXT,             true  );
-            R64FX_INTERN_ATOM( TARGETS,          true  );
-            R64FX_INTERN_ATOM( MULTIPLE,         true  );
-            R64FX_INTERN_ATOM( _R64FX_SELECTION, false );
-            R64FX_INTERN_ATOM( CLIPBOARD,        true  );
-            R64FX_INTERN_ATOM( _R64FX_CLIPBOARD, false );
-
-            R64FX_INTERN_ATOM( XdndAware, false );
-            R64FX_INTERN_ATOM( XdndEnter, false );
-            R64FX_INTERN_ATOM( XdndLeave, false );
+            init_atoms();
 
 #ifdef R64FX_USE_MITSHM
             XShmQueryVersion(g_display, &g_mitshm_major, &g_mitshm_minor, &g_mitshm_has_pixmaps);
@@ -167,146 +122,6 @@ namespace{
     int g_glx_minor = 0;
 #endif//R64FX_USE_GL
 
-
-    bool get_window_property(
-        ::Window  xwindow,
-        Atom      property,
-        Atom      expected_type,
-        int       expected_format,
-        bool      delete_property,
-
-        Atom            &out_type,
-        unsigned long   &out_nitems,
-        unsigned char*  &out_data
-    )
-    {
-        int             format;
-        unsigned long   bytes_after;
-
-        /* Get property length. */
-        int result = XGetWindowProperty(
-            g_display, xwindow, property,
-            0, 0, False,
-            expected_type,
-            &out_type, &format, &out_nitems, &bytes_after,
-            &out_data
-        );
-
-        if(result != Success)
-        {
-            return false;
-        }
-
-        if(format == expected_format && bytes_after > 0)
-        {
-            int size = bytes_after;
-            while(size % 4)
-                size++;
-            size /= 4;
-
-            result = XGetWindowProperty(
-                g_display, xwindow, property,
-                0, size, delete_property,
-                expected_type,
-                &out_type, &format, &out_nitems, &bytes_after,
-                &out_data
-            );
-
-            return result == Success;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-
-    bool get_window_text_property(
-        ::Window  xwindow,
-        Atom      property,
-        Atom      expected_type,
-        bool      delete_property,
-        string    &out_text
-    )
-    {
-        unsigned char* data = nullptr;
-        unsigned long nitems = 0;
-        Atom type;
-
-        bool ok = get_window_property(xwindow, property, expected_type, 8, delete_property, type, nitems, data);
-        if(ok && nitems > 0)
-        {
-            out_text = string((char*)data, nitems);
-            XFree(data);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-
-    bool get_window_atom_list_property(
-        ::Window  xwindow,
-        Atom      property,
-        Atom      expected_type,
-        bool      delete_property,
-        vector<Atom> &atoms
-    )
-    {
-        unsigned char* data = nullptr;
-        unsigned long nitems = 0;
-        Atom type;
-
-        bool ok = get_window_property(xwindow, property, expected_type, 32, delete_property, type, nitems, data);
-        if(ok)
-        {
-            if(nitems > 0)
-            {
-                Atom* atoms_buff = (Atom*) data;
-                for(int i=0; i<(int)nitems; i++)
-                {
-                    atoms.push_back(atoms_buff[i]);
-                }
-                XFree(data);
-            }
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-
-    void get_dnd_type_list(const long* msg_data, vector<Atom> &types)
-    {
-        ::Window source = msg_data[0];
-        if(source == None)
-        {
-            cerr << "Source is none!\n";
-            return;
-        }
-
-        if(msg_data[1] & 1)
-        {
-            cout << "More types!\n";
-
-        }
-        else
-        {
-            cout << "Less types!\n";
-
-            for(int i=2; i<5; i++)
-            {
-                if(msg_data[i] != None)
-                {
-                    types.push_back(msg_data[i]);
-                }
-            }
-        }
-    }
 }//namespace
 
 
@@ -377,9 +192,9 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 };
 
 
-#include "WindowXImage.cxx"
+#include "WindowX11_XImage.cxx"
 #ifdef R64FX_USE_GL
-#include "WindowGLX.cxx"
+#include "WindowX11_GLX.cxx"
 #endif//R64FX_USE_GL
 
 
