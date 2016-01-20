@@ -167,6 +167,119 @@ namespace{
     int g_glx_minor = 0;
 #endif//R64FX_USE_GL
 
+
+    bool get_window_property(
+        ::Window  xwindow,
+        Atom      property,
+        Atom      expected_type,
+        int       expected_format,
+        bool      delete_property,
+
+        Atom            &out_type,
+        unsigned long   &out_nitems,
+        unsigned char*  &out_data
+    )
+    {
+        int             format;
+        unsigned long   bytes_after;
+
+        /* Get property length. */
+        int result = XGetWindowProperty(
+            g_display, xwindow, property,
+            0, 0, False,
+            expected_type,
+            &out_type, &format, &out_nitems, &bytes_after,
+            &out_data
+        );
+
+        if(result != Success)
+        {
+            return false;
+        }
+
+        if(format == expected_format && bytes_after > 0)
+        {
+            int size = bytes_after;
+            while(size % 4)
+                size++;
+            size /= 4;
+
+            result = XGetWindowProperty(
+                g_display, xwindow, property,
+                0, size, delete_property,
+                expected_type,
+                &out_type, &format, &out_nitems, &bytes_after,
+                &out_data
+            );
+
+            return result == Success;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+
+    bool get_window_text_property(
+        ::Window  xwindow,
+        Atom      property,
+        Atom      expected_type,
+        bool      delete_property,
+        string    &out_text
+    )
+    {
+        unsigned char* data = nullptr;
+        unsigned long nitems = 0;
+        Atom type;
+
+        bool ok = get_window_property(xwindow, property, expected_type, 8, delete_property, type, nitems, data);
+        if(ok && nitems > 0)
+        {
+            out_text = string((char*)data, nitems);
+            XFree(data);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+
+    bool get_window_atom_list_property(
+        ::Window  xwindow,
+        Atom      property,
+        Atom      expected_type,
+        bool      delete_property,
+        vector<Atom> &atoms
+    )
+    {
+        unsigned char* data = nullptr;
+        unsigned long nitems = 0;
+        Atom type;
+
+        bool ok = get_window_property(xwindow, property, expected_type, 32, delete_property, type, nitems, data);
+        if(ok)
+        {
+            if(nitems > 0)
+            {
+                Atom* atoms_buff = (Atom*) data;
+                for(int i=0; i<(int)nitems; i++)
+                {
+                    atoms.push_back(atoms_buff[i]);
+                }
+                XFree(data);
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+
     void get_dnd_type_list(const long* msg_data, vector<Atom> &types)
     {
         ::Window source = msg_data[0];
@@ -261,31 +374,6 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     void updateAttrs();
 
     void setupInputContext();
-
-    bool getProperty(
-        Atom  property,
-        Atom  expected_type,
-        int   expected_format,
-        bool  delete_property,
-
-        Atom            &out_type,
-        unsigned long   &out_nitems,
-        unsigned char*  &out_data
-    );
-
-    bool getTextProperty(
-        Atom    property,
-        Atom    expected_type,
-        bool    delete_property,
-        string  &out_text
-    );
-
-    bool getAtomListProperty(
-        Atom    property,
-        Atom    expected_type,
-        bool    delete_property,
-        vector<Atom> &atoms
-    );
 };
 
 
@@ -677,7 +765,9 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* even
         if(in.target == X11_Atom::TARGETS)
         {
             vector<Atom> atoms;
-            if(getAtomListProperty(in.property, XA_ATOM, true, atoms))
+            if(get_window_atom_list_property(
+                m_xwindow, in.property, XA_ATOM, true, atoms
+            ))
             {
                 cout << "atoms: " << atoms.size() << "\n";
                 for(auto atom : atoms)
@@ -737,7 +827,9 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* even
         {
 
             string text;
-            if(getTextProperty(in.property, in.target, true, text))
+            if(get_window_text_property(
+                m_xwindow, in.property, in.target, true, text
+            ))
             {
                 events->clipboard_input(this, text, (in.property == X11_Atom::_R64FX_SELECTION));
             }
@@ -806,115 +898,6 @@ void WindowX11::setupInputContext()
     {
         cerr << "Failed to create input context!\n";
         abort();
-    }
-}
-
-
-bool WindowX11::getProperty(
-    Atom  property,
-    Atom  expected_type,
-    int   expected_format,
-    bool  delete_property,
-
-    Atom            &out_type,
-    unsigned long   &out_nitems,
-    unsigned char*  &out_data
-)
-{
-    int             format;
-    unsigned long   bytes_after;
-
-    /* Get property length. */
-    int result = XGetWindowProperty(
-        g_display, m_xwindow, property,
-        0, 0, False,
-        expected_type,
-        &out_type, &format, &out_nitems, &bytes_after,
-        &out_data
-    );
-
-    if(result != Success)
-    {
-        return false;
-    }
-
-    if(format == expected_format && bytes_after > 0)
-    {
-        int size = bytes_after;
-        while(size % 4)
-            size++;
-        size /= 4;
-
-        result = XGetWindowProperty(
-            g_display, m_xwindow, property,
-            0, size, delete_property,
-            expected_type,
-            &out_type, &format, &out_nitems, &bytes_after,
-            &out_data
-        );
-
-        return result == Success;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
-bool WindowX11::getTextProperty(
-    Atom    property,
-    Atom    expected_type,
-    bool    delete_property,
-    string  &out_text
-)
-{
-    unsigned char* data = nullptr;
-    unsigned long nitems = 0;
-    Atom type;
-
-    bool ok = getProperty(property, expected_type, 8, delete_property, type, nitems, data);
-    if(ok && nitems > 0)
-    {
-        out_text = string((char*)data, nitems);
-        XFree(data);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
-bool WindowX11::getAtomListProperty(
-    Atom    property,
-    Atom    expected_type,
-    bool    delete_property,
-    vector<Atom> &atoms
-)
-{
-    unsigned char* data = nullptr;
-    unsigned long nitems = 0;
-    Atom type;
-
-    bool ok = getProperty(property, expected_type, 32, delete_property, type, nitems, data);
-    if(ok)
-    {
-        if(nitems > 0)
-        {
-            Atom* atoms_buff = (Atom*) data;
-            for(int i=0; i<(int)nitems; i++)
-            {
-                atoms.push_back(atoms_buff[i]);
-            }
-            XFree(data);
-        }
-        return true;
-    }
-    else
-    {
-        return false;
     }
 }
 
