@@ -17,6 +17,11 @@ namespace X11_Atom{
     Atom XdndAware;
     Atom XdndEnter;
     Atom XdndLeave;
+    Atom XdndTypeList;
+    Atom XdndPosition;
+    Atom XdndStatus;
+    Atom XdndDrop;
+    Atom XdndFinished;
 }
 
 
@@ -47,9 +52,14 @@ void init_atoms()
         R64FX_INTERN_ATOM( CLIPBOARD,        true  );
         R64FX_INTERN_ATOM( _R64FX_CLIPBOARD, false );
 
-        R64FX_INTERN_ATOM( XdndAware, false );
-        R64FX_INTERN_ATOM( XdndEnter, false );
-        R64FX_INTERN_ATOM( XdndLeave, false );
+        R64FX_INTERN_ATOM( XdndAware,    false );
+        R64FX_INTERN_ATOM( XdndEnter,    false );
+        R64FX_INTERN_ATOM( XdndLeave,    false );
+        R64FX_INTERN_ATOM( XdndTypeList, false );
+        R64FX_INTERN_ATOM( XdndPosition, false );
+        R64FX_INTERN_ATOM( XdndStatus,   false );
+        R64FX_INTERN_ATOM( XdndDrop,     false );
+        R64FX_INTERN_ATOM( XdndFinished, false );
 
 #undef R64FX_INTERN_ATOM
 }

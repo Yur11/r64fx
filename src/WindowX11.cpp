@@ -322,8 +322,9 @@ void WindowX11::processSomeEvents(Window::Events* events)
     {
         XEvent xevent;
         XNextEvent(g_display, &xevent);
+        auto xwindow = xevent.xany.window;
 
-        WindowX11* window = getWindowFromXWindow(xevent.xany.window);
+        WindowX11* window = getWindowFromXWindow(xwindow);
         if(!window)
         {
             continue;
@@ -435,7 +436,15 @@ void WindowX11::processSomeEvents(Window::Events* events)
             {
                 auto &msg = xevent.xclient;
 
-                if(msg.message_type == X11_Atom::XdndEnter)
+                if(msg.message_type == X11_Atom::XdndPosition)
+                {
+                    cout << "XdndPosition\n";
+                    int x, y;
+                    get_dnd_position(msg.data.l, x, y);
+                    cout << x << ", " << y << "\n";
+                    request_all_dnd_positions(xwindow, dnd_source(msg.data.l));
+                }
+                else if(msg.message_type == X11_Atom::XdndEnter)
                 {
                     cout << "XdndEnter\n";
                     vector<Atom> types;
@@ -448,6 +457,11 @@ void WindowX11::processSomeEvents(Window::Events* events)
                 else if(msg.message_type == X11_Atom::XdndLeave)
                 {
                     cout << "XdndLeave\n";
+                }
+                else if(msg.message_type == X11_Atom::XdndDrop)
+                {
+                    cout << "XdndDrop\n";
+                    send_dnd_finished(xwindow, dnd_source(msg.data.l), false);
                 }
                 else if(msg.message_type == X11_Atom::WM_PROTOCOLS)
                 {
