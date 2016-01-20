@@ -74,6 +74,14 @@ namespace{
         return true;
     }
 
+    string atom_name(Atom atom)
+    {
+        char* buff = XGetAtomName(g_display, atom);
+        string str(buff);
+        XFree(buff);
+        return str;
+    }
+
     string g_selection_text = "";
     string g_clipboard_text = "";
 
@@ -120,15 +128,6 @@ namespace{
             R64FX_INTERN_ATOM( _R64FX_SELECTION, false );
             R64FX_INTERN_ATOM( CLIPBOARD,        true  );
             R64FX_INTERN_ATOM( _R64FX_CLIPBOARD, false );
-
-//             g_WM_PROTOCOLS       = XInternAtom(g_display, "WM_PROTOCOLS",       True);
-//             g_WM_DELETE_WINDOW   = XInternAtom(g_display, "WM_DELETE_WINDOW",   True);
-//             g_NET_WM_NAME        = XInternAtom(g_display, "_NET_WM_NAME",       True);
-//             g_UTF8_STRING        = XInternAtom(g_display, "UTF8_STRING",        True);
-//             g_TEXT               = XInternAtom(g_display, "TEXT",               True);
-//             g_TARGETS            = XInternAtom(g_display, "TARGETS",            True);
-//             g_MULTIPLE           = XInternAtom(g_display, "MULTIPLE",           True);
-//             g_R64FX_SELECTION    = XInternAtom(g_display, "_R64FX_SELECTION", False);
 
 #ifdef R64FX_USE_MITSHM
             XShmQueryVersion(g_display, &g_mitshm_major, &g_mitshm_minor, &g_mitshm_has_pixmaps);
@@ -207,8 +206,6 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual void requestClipboardData();
 
-    virtual void requestTargets();
-
     inline ::Window xWindow() const { return m_xwindow; }
 
     inline XIC inputContext() const { return m_input_context; }
@@ -228,6 +225,31 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     void updateAttrs();
 
     void setupInputContext();
+
+    bool getProperty(
+        Atom  property,
+        Atom  expected_type,
+        int   expected_format,
+        bool  delete_property,
+
+        Atom            &out_type,
+        unsigned long   &out_nitems,
+        unsigned char*  &out_data
+    );
+
+    bool getTextProperty(
+        Atom    property,
+        Atom    expected_type,
+        bool    delete_property,
+        string  &out_text
+    );
+
+    bool getAtomListProperty(
+        Atom    property,
+        Atom    expected_type,
+        bool    delete_property,
+        vector<Atom> &atoms
+    );
 };
 
 
@@ -343,19 +365,6 @@ void WindowX11::setClipboardData(const std::string &text)
 
 
 void WindowX11::requestClipboardData()
-{
-    XConvertSelection(
-        g_display,
-        X11_Atom::CLIPBOARD,
-        X11_Atom::TEXT,
-        X11_Atom::_R64FX_CLIPBOARD,
-        m_xwindow,
-        CurrentTime
-    );
-}
-
-
-void WindowX11::requestTargets()
 {
     XConvertSelection(
         g_display,
@@ -552,14 +561,13 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
 
         if(in.target == X11_Atom::TARGETS)
         {
-            cout << "Tagets\n";
-            Atom targets[3] = {X11_Atom::TARGETS, X11_Atom::TEXT};
+            Atom targets[3] = {X11_Atom::TARGETS, X11_Atom::UTF8_STRING, X11_Atom::TEXT};
 
             XChangeProperty(
                 g_display,
                 in.requestor,
                 in.property,
-                in.target,
+                XA_ATOM,
                 32,
                 PropModeReplace,
                 (unsigned char*) targets,
@@ -573,8 +581,6 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
         }
         else if(in.target == X11_Atom::TEXT || in.target == X11_Atom::UTF8_STRING)
         {
-            cout << "Text\n";
-
             string* str = nullptr;
             if(in.selection == XA_PRIMARY)
             {
@@ -601,85 +607,85 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
                 cerr << "Failed to send selection event!\n";
             }
         }
-        else
-        {
-            cout << "other!\n";
-            char* str = XGetAtomName(g_display, in.target);
-            cout << str << "\n";
-            XFree(str);
-        }
     }
 }
 
 
 void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* events)
 {
-    if(in.selection == XA_PRIMARY || in.selection == X11_Atom::CLIPBOARD)
+    if((in.selection == XA_PRIMARY || in.selection == X11_Atom::CLIPBOARD) &&
+       (in.property == X11_Atom::_R64FX_SELECTION || in.property == X11_Atom::_R64FX_CLIPBOARD))
     {
         if(in.target == X11_Atom::TARGETS)
         {
-            cout << "Targets\n";
-        }
-        else if(in.target == X11_Atom::TEXT)
-        {
-            cout << "Text\n";
-
-            if(in.property == X11_Atom::_R64FX_SELECTION || in.property == X11_Atom::_R64FX_CLIPBOARD)
+            vector<Atom> atoms;
+            if(getAtomListProperty(in.property, XA_ATOM, true, atoms))
             {
-                Atom            type;
-                int             format;
-                unsigned long   nitems;
-                unsigned long   bytes_after;
-                unsigned char*  data;
-
-                /* Get property length. */
-                int result = XGetWindowProperty(
-                    g_display, m_xwindow, in.property,
-                    0, 0, False,
-                    X11_Atom::TEXT,
-                    &type, &format, &nitems, &bytes_after,
-                    &data
-                );
-
-                if(result != Success)
+                cout << "atoms: " << atoms.size() << "\n";
+                for(auto atom : atoms)
                 {
-                    cerr << "Failed to get window property size!\n";
-                    return;
+                    cout << "    " << atom;
+                    if(atom != None)
+                    {
+                        cout << " -> " << atom_name(atom);
+                    }
+                    cout << "\n";
                 }
 
-                if(format == 8 && bytes_after > 0)
+                Atom best_type = None;
+                for(auto atom : atoms)
                 {
-                    int size = bytes_after;
-                    while(size % 4)
-                        size++;
-                    size /= 4;
-
-                    result = XGetWindowProperty(
-                        g_display, m_xwindow, in.property,
-                        0, size, True,
-                        X11_Atom::TEXT,
-                        &type, &format, &nitems, &bytes_after,
-                        &data
-                    );
-
-                    if(result != Success)
+                    if(atom == X11_Atom::UTF8_STRING)
                     {
-                        cerr << "Failed to get window property data!\n";
-                        return;
+                        if(best_type == None)
+                        {
+                            best_type = atom;
+                            break;
+                        }
                     }
+                    else if(atom == X11_Atom::TEXT)
+                    {
+                        if(best_type == None)
+                        {
+                            best_type = atom;
+                        }
+                    }
+                }
 
-                    string text((char*)data);
-                    events->clipboard_input(this, text, (in.property == X11_Atom::_R64FX_SELECTION));
-                    XFree(data);
+                if(best_type != None)
+                {
+                    cout << "requesting: " << atom_name(best_type) << "\n";
+
+                    XConvertSelection(
+                        g_display,
+                        X11_Atom::CLIPBOARD,
+                        best_type,
+                        X11_Atom::_R64FX_CLIPBOARD,
+                        m_xwindow,
+                        CurrentTime
+                    );
                 }
                 else
                 {
-                    cerr << "Unsupported text property format!\n";
+                    cout << "Skip!\n";
                 }
             }
             else
             {
-                cout << "OTHER\n";
+                cerr << "Failed to get window property " << atom_name(in.property) << "\n";
+            }
+        }
+        else if(in.target == X11_Atom::TEXT || in.target == X11_Atom::UTF8_STRING)
+        {
+
+            string text;
+            if(getTextProperty(in.property, in.target, true, text))
+            {
+                events->clipboard_input(this, text, (in.property == X11_Atom::_R64FX_SELECTION));
+            }
+            else
+            {
+                cerr << "Failed to get window property " << atom_name(in.property) << "\n";
             }
         }
     }
@@ -742,6 +748,115 @@ void WindowX11::setupInputContext()
     {
         cerr << "Failed to create input context!\n";
         abort();
+    }
+}
+
+
+bool WindowX11::getProperty(
+    Atom  property,
+    Atom  expected_type,
+    int   expected_format,
+    bool  delete_property,
+
+    Atom            &out_type,
+    unsigned long   &out_nitems,
+    unsigned char*  &out_data
+)
+{
+    int             format;
+    unsigned long   bytes_after;
+
+    /* Get property length. */
+    int result = XGetWindowProperty(
+        g_display, m_xwindow, property,
+        0, 0, False,
+        expected_type,
+        &out_type, &format, &out_nitems, &bytes_after,
+        &out_data
+    );
+
+    if(result != Success)
+    {
+        return false;
+    }
+
+    if(format == expected_format && bytes_after > 0)
+    {
+        int size = bytes_after;
+        while(size % 4)
+            size++;
+        size /= 4;
+
+        result = XGetWindowProperty(
+            g_display, m_xwindow, property,
+            0, size, delete_property,
+            expected_type,
+            &out_type, &format, &out_nitems, &bytes_after,
+            &out_data
+        );
+
+        return result == Success;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+bool WindowX11::getTextProperty(
+    Atom    property,
+    Atom    expected_type,
+    bool    delete_property,
+    string  &out_text
+)
+{
+    unsigned char* data = nullptr;
+    unsigned long nitems = 0;
+    Atom type;
+
+    bool ok = getProperty(property, expected_type, 8, delete_property, type, nitems, data);
+    if(ok && nitems > 0)
+    {
+        out_text = string((char*)data, nitems);
+        XFree(data);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+bool WindowX11::getAtomListProperty(
+    Atom    property,
+    Atom    expected_type,
+    bool    delete_property,
+    vector<Atom> &atoms
+)
+{
+    unsigned char* data = nullptr;
+    unsigned long nitems = 0;
+    Atom type;
+
+    bool ok = getProperty(property, expected_type, 32, delete_property, type, nitems, data);
+    if(ok)
+    {
+        if(nitems > 0)
+        {
+            Atom* atoms_buff = (Atom*) data;
+            for(int i=0; i<(int)nitems; i++)
+            {
+                atoms.push_back(atoms_buff[i]);
+            }
+            XFree(data);
+        }
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 
