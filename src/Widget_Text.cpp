@@ -6,7 +6,7 @@
 #include "Keyboard.hpp"
 #include "KeyboardModifiers.hpp"
 #include "KeyEvent.hpp"
-#include "ClipboardEvent.hpp"
+#include "Clipboard.hpp"
 #include "Mouse.hpp"
 #include "Program.hpp"
 #include "TextPainter.hpp"
@@ -494,7 +494,7 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
         m_text_painter->updateSelection();
         if(event->button() == MouseButton::Middle())
         {
-            requestSelection();
+//             requestSelection();
         }
     }
     update();
@@ -506,7 +506,7 @@ void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
     Widget::mouseReleaseEvent(event);
     if(m_text_painter->hasSelection())
     {
-        setSelection(m_text_painter->selectionText());
+//         setSelection(m_text_painter->selectionText());
     }
 }
 
@@ -666,14 +666,14 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     {
         if(tp->hasSelection())
         {
-            setClipboardData(tp->selectionText());
+//             setClipboardData(tp->selectionText());
         }
     }
     else if(Keyboard::CtrlDown() && key == Keyboard::Key::X)
     {
         if(tp->hasSelection())
         {
-            setClipboardData(tp->selectionText());
+//             setClipboardData(tp->selectionText());
             deleteAtCursorPosition(false);
         }
     }
@@ -685,7 +685,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
 //             cout << "win->requestTargets()\n";
 //             win->requestTargets();
 //         }
-        requestClipboardData();
+//         requestClipboardData();
     }
     else if(key == Keyboard::Key::Delete)
     {
@@ -706,21 +706,21 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
 
     if(tp->hasSelection() && touched_selection)
     {
-        setSelection(tp->selectionText());
+//         setSelection(tp->selectionText());
     }
 
     update();
 }
 
 
-void Widget_Text::clipboardInputEvent(ClipboardEvent* event)
-{
-    if(!event->text().empty())
-    {
-        insertText(event->text());
-        update();
-    }
-}
+// void Widget_Text::clipboardInputEvent(ClipboardEvent* event)
+// {
+//     if(!event->text().empty())
+//     {
+//         insertText(event->text());
+//         update();
+//     }
+// }
 
 
 void Widget_Text::closeEvent()

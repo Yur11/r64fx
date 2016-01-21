@@ -5,6 +5,7 @@
 #include "LinkedList.hpp"
 #include "Rect.hpp"
 #include "Mouse.hpp"
+#include "ClipboardMode.hpp"
 
 namespace r64fx{
 
@@ -16,7 +17,9 @@ class MouseMoveEvent;
 class KeyPressEvent;
 class KeyReleaseEvent;
 class TextInputEvent;
-class ClipboardEvent;
+class ClipboardMetadata;
+class ClipboardMetadataEvent;
+class ClipboardDataEvent;
 
 class Widget : public LinkedList<Widget>::Node{
 
@@ -139,16 +142,14 @@ public:
 
     bool doingTextInput();
 
-    void setSelection(const std::string &text);
 
-    void setClipboardData(const std::string &text);
+/* === Clipboard, Selections, Drag and Drop === */
 
-    /* Make a request for current selection to be delivered to this widget.
-     * The result is delivered in textSelectionInputEvent(). */
-    void requestSelection();
+    void anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode);
 
-    void requestClipboardData();
+    void requestClipboardMetadata();
 
+    void requestClipboardData(ClipboardMetadata* metadata);
 
 /* === Update/Reconfigure cycle === */
 
@@ -213,7 +214,9 @@ protected:
 
     virtual void textInputEvent(TextInputEvent* event);
 
-    virtual void clipboardInputEvent(ClipboardEvent* event);
+    virtual void clipboardDataEvent(ClipboardDataEvent* event);
+
+    virtual void clipboardMetadataEvent(ClipboardMetadataEvent* event);
 
     virtual void closeEvent();
 
@@ -221,14 +224,17 @@ private:
     void reconfigureChildren(ReconfigureEvent* event);
 
     friend void process_window_updates       (Window* window, void*);
+
     friend void window_resize                (Window* window, int width, int height);
+
     friend void window_mouse_press           (Window* window, int x, int y, unsigned int button);
     friend void window_mouse_release         (Window* window, int x, int y, unsigned int button);
     friend void window_mouse_move            (Window* window, int x, int y);
+
     friend void window_key_press             (Window* window, unsigned int key);
     friend void window_key_release           (Window* window, unsigned int key);
     friend void window_text_input            (Window* window, const std::string &text, unsigned int key);
-    friend void window_clipboard_input       (Window* window, const std::string &text, bool selection);
+
     friend void window_close                 (Window* window);
 };
     

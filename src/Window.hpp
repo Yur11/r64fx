@@ -2,13 +2,14 @@
 #define R64FX_WINDOW_HPP
 
 #include <string>
+#include <vector>
 #include "Rect.hpp"
+#include "ClipboardMode.hpp"
 
 namespace r64fx{
 
-class Widget;
-class Painter;
 class Image;
+class ClipboardDataType;
 
 class Window{
     void* m_data = nullptr;
@@ -22,15 +23,36 @@ public:
     };
 
     struct Events{
+        /* A window has been resized. */
         void (*resize)                (Window* window, int width, int height);
+
+        /* Mouse pointer moved. */
         void (*mouse_press)           (Window* window, int x, int y, unsigned int button);
         void (*mouse_release)         (Window* window, int x, int y, unsigned int button);
         void (*mouse_move)            (Window* window, int x, int y);
-        void (*key_press)             (Window* window, unsigned int key);
-        void (*key_release)           (Window* window, unsigned int key);
-        void (*text_input)            (Window* window, const std::string &text, unsigned int key);
-        void (*clipboard_input)       (Window* window, const std::string &text, bool selection);
-        void (*close)                 (Window* window);
+
+        /* A key has been pressed. */
+        void (*key_press)      (Window* window, unsigned int key);
+
+        /* A key has been released. */
+        void (*key_release)    (Window* window, unsigned int key);
+
+        /* New text input.
+         * Use startTextInput(), stopTextInput() and doingTextInput() methods. */
+        void (*text_input)     (Window* window, const std::string &text, unsigned int key);
+
+        void (*clipboard_metadata) (Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode);
+        void (*clipboard_data) (Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode);
+
+//         void (*drag_enter)    (Window* window);
+//         void (*drag_move)     (Window* window, int x, int y);
+//         void (*drag_leave)    (Window* window);
+//         void (*drag_finished) (Window* window);
+//         void (*drag_types)    (Window* window, std::string* types, int ntypes);
+//         void (*drag_data)     (Window* window, void* data, int size);
+//         void (*drop)          (Window* window);
+
+        void (*close)(Window* window);
     };
 
     inline void setData(void* data) { m_data = data; }
@@ -52,15 +74,18 @@ public:
 
     virtual int height() = 0;
 
+
     virtual void makeCurrent() = 0;
 
     virtual void repaint(Rect<int>* rects = nullptr, int numrects = 0) = 0;
 
     virtual Image* image() = 0;
 
+
     virtual void setTitle(std::string title) = 0;
 
     virtual std::string title() = 0;
+
 
     virtual void startTextInput() = 0;
 
@@ -68,15 +93,18 @@ public:
 
     virtual bool doingTextInput() = 0;
 
-    virtual void setSelection(const std::string &text) = 0;
 
-    virtual bool hasSelection() = 0;
+    virtual void setSelectionData (std::string type, void* data, int data_size, bool copy_data) = 0;
+    virtual void setClipboardData (std::string type, void* data, int data_size, bool copy_data) = 0;
+    virtual void startDrag        (std::string type, void* data, int data_size, bool copy_data) = 0;
 
-    virtual void requestSelection() = 0;
+    virtual void requestSelectionTypes() = 0;
+    virtual void requestClipboardTypes() = 0;
+    virtual void requestDragTypes()      = 0;
 
-    virtual void setClipboardData(const std::string &text) = 0;
-
-    virtual void requestClipboardData() = 0;
+    virtual void requestSelectionData (std::string type) = 0;
+    virtual void requestClipboardData (std::string type) = 0;
+    virtual void requestDragData      (std::string type) = 0;
 
     static Window* newInstance(
         int width = 800, int height = 600,

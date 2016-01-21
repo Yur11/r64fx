@@ -22,7 +22,82 @@ using namespace std;
 
 namespace r64fx{
 
-class WindowX11;
+struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
+    WindowX11*         m_window;
+    ::Window           m_xwindow;
+    XWindowAttributes  m_attrs;
+    string             m_title;
+    XIC                m_input_context;
+
+    virtual ~WindowX11() {}
+
+    virtual void setup(int width, int height) = 0;
+
+    virtual void cleanup() = 0;
+
+    virtual void show();
+
+    virtual void hide();
+
+    virtual void resize(int width, int height);
+
+    virtual int width();
+
+    virtual int height();
+
+    virtual Image* image() { return nullptr; }
+
+
+    virtual void setTitle(std::string title);
+
+    virtual std::string title();
+
+
+    virtual void startTextInput();
+
+    virtual void stopTextInput();
+
+    virtual bool doingTextInput();
+
+
+    virtual void setSelectionData (std::string type, void* data, int data_size, bool copy_data);
+    virtual void setClipboardData (std::string type, void* data, int data_size, bool copy_data);
+    virtual void startDrag        (std::string type, void* data, int data_size, bool copy_data);
+
+
+    void requestTypes(Atom selection, Atom property);
+
+    virtual void requestSelectionTypes();
+    virtual void requestClipboardTypes();
+    virtual void requestDragTypes();
+
+
+    virtual void requestSelectionData (std::string type);
+    virtual void requestClipboardData (std::string type);
+    virtual void requestDragData      (std::string type);
+
+
+    inline ::Window xWindow() const { return m_xwindow; }
+
+    inline XIC inputContext() const { return m_input_context; }
+
+    static WindowX11* getWindowFromXWindow(::Window xwindow);
+
+    static unsigned int getEventButton(XButtonEvent* event);
+
+    static void processSomeEvents(Window::Events* events);
+
+    void setupEvents();
+
+    void sendSelection(const XSelectionRequestEvent &in);
+
+    void recieveSelection(const XSelectionEvent &in, Window::Events* events);
+
+    void updateAttrs();
+
+    void setupInputContext();
+};
+
 
 namespace{
     LinkedList<WindowX11> g_all_windows;
@@ -50,8 +125,24 @@ namespace{
 
     WindowX11* g_text_input_grabber = nullptr;
 
-    string g_selection_text = "";
-    string g_clipboard_text = "";
+    void* g_selection_data = nullptr;
+    void* g_clipboard_data = nullptr;
+    void* g_drag_data      = nullptr;
+
+    int g_selection_data_size = 0;
+    int g_clipboard_data_size = 0;
+    int g_drag_data_size      = 0;
+
+    bool owns_selection_data = false;
+    bool owns_clipboard_data = false;
+    bool owns_drag_data      = false;
+
+    bool g_incoming_drag = false;
+    bool g_outgoing_drag = false;
+
+    bool g_drag_types_requested = false;
+    vector<string> g_drag_types;
+
 }//namespace
 
 #include "WindowX11_Atoms.cxx"
@@ -122,74 +213,17 @@ namespace{
     int g_glx_minor = 0;
 #endif//R64FX_USE_GL
 
+
+// //     Atom type_to_atom(string type)
+// //     {
+// //
+// //     }
+// //
+// //     void atoms_to_types(const vector<Atom> &atoms, vector<string> &types)
+// //     {
+// //
+// //     }
 }//namespace
-
-
-struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
-    WindowX11*         m_window;
-    ::Window           m_xwindow;
-    XWindowAttributes  m_attrs;
-    string             m_title;
-    XIC                m_input_context;
-
-    virtual ~WindowX11() {}
-
-    virtual void setup(int width, int height) = 0;
-
-    virtual void cleanup() = 0;
-
-    virtual void show();
-
-    virtual void hide();
-
-    virtual void resize(int width, int height);
-
-    virtual int width();
-
-    virtual int height();
-
-    virtual void setTitle(std::string title);
-
-    virtual Image* image() { return nullptr; }
-
-    virtual std::string title();
-
-    virtual void startTextInput();
-
-    virtual void stopTextInput();
-
-    virtual bool doingTextInput();
-
-    virtual void setSelection(const std::string &text);
-
-    virtual bool hasSelection();
-
-    virtual void requestSelection();
-
-    virtual void setClipboardData(const std::string &text);
-
-    virtual void requestClipboardData();
-
-    inline ::Window xWindow() const { return m_xwindow; }
-
-    inline XIC inputContext() const { return m_input_context; }
-
-    static WindowX11* getWindowFromXWindow(::Window xwindow);
-
-    static unsigned int getEventButton(XButtonEvent* event);
-
-    static void processSomeEvents(Window::Events* events);
-
-    void setupEvents();
-
-    void sendSelection(const XSelectionRequestEvent &in);
-
-    void recieveSelection(const XSelectionEvent &in, Window::Events* events);
-
-    void updateAttrs();
-
-    void setupInputContext();
-};
 
 
 #include "WindowX11_XImage.cxx"
@@ -270,54 +304,126 @@ bool WindowX11::doingTextInput()
 }
 
 
-void WindowX11::setSelection(const std::string &text)
+void WindowX11::setSelectionData(std::string type, void* data, int data_size, bool copy_data)
 {
-    g_selection_text = text;
     XSetSelectionOwner(g_display, XA_PRIMARY, m_xwindow, CurrentTime);
 }
 
 
-bool WindowX11::hasSelection()
+void WindowX11::setClipboardData(std::string type, void* data, int data_size, bool copy_data)
 {
-    return XGetSelectionOwner(g_display, XA_PRIMARY) == m_xwindow;
-}
-
-
-void WindowX11::requestSelection()
-{
-    XConvertSelection(
-        g_display,
-        XA_PRIMARY,
-        X11_Atom::TEXT,
-        X11_Atom::_R64FX_SELECTION,
-        m_xwindow,
-        CurrentTime
-    );
-}
-
-
-void WindowX11::setClipboardData(const std::string &text)
-{
-    g_clipboard_text = text;
     XSetSelectionOwner(g_display, X11_Atom::CLIPBOARD, m_xwindow, CurrentTime);
 }
 
 
-void WindowX11::requestClipboardData()
+void WindowX11::startDrag(std::string type, void* data, int data_size, bool copy_data)
+{
+    g_outgoing_drag = true;
+}
+
+
+void WindowX11::requestTypes(Atom selection, Atom property)
 {
     XConvertSelection(
         g_display,
-        X11_Atom::CLIPBOARD,
+        selection,
         X11_Atom::TARGETS,
-        X11_Atom::_R64FX_CLIPBOARD,
+        property,
         m_xwindow,
         CurrentTime
     );
 }
 
 
+void WindowX11::requestSelectionTypes()
+{
+    requestTypes(XA_PRIMARY, X11_Atom::_R64FX_SELECTION);
+}
+
+
+void WindowX11::requestClipboardTypes()
+{
+    requestTypes(X11_Atom::CLIPBOARD, X11_Atom::_R64FX_CLIPBOARD);
+}
+
+
+void WindowX11::requestDragTypes()
+{
+    g_drag_types_requested = true;
+}
+
+
+void WindowX11::requestSelectionData(std::string type)
+{
+
+}
+
+
+void WindowX11::requestClipboardData(std::string type)
+{
+
+}
+
+
+void WindowX11::requestDragData(std::string type)
+{
+
+}
+
+
+// void WindowX11::setSelection(const std::string &text)
+// {
+//     g_selection_text = text;
+//     XSetSelectionOwner(g_display, XA_PRIMARY, m_xwindow, CurrentTime);
+// }
+//
+//
+// bool WindowX11::hasSelection()
+// {
+//     return XGetSelectionOwner(g_display, XA_PRIMARY) == m_xwindow;
+// }
+//
+//
+// void WindowX11::requestSelection()
+// {
+//     XConvertSelection(
+//         g_display,
+//         XA_PRIMARY,
+//         X11_Atom::TEXT,
+//         X11_Atom::_R64FX_SELECTION,
+//         m_xwindow,
+//         CurrentTime
+//     );
+// }
+//
+//
+// void WindowX11::setClipboardData(const std::string &text)
+// {
+//     g_clipboard_text = text;
+//     XSetSelectionOwner(g_display, X11_Atom::CLIPBOARD, m_xwindow, CurrentTime);
+// }
+//
+//
+// void WindowX11::requestClipboardData()
+// {
+//     XConvertSelection(
+//         g_display,
+//         X11_Atom::CLIPBOARD,
+//         X11_Atom::TARGETS,
+//         X11_Atom::_R64FX_CLIPBOARD,
+//         m_xwindow,
+//         CurrentTime
+//     );
+// }
+
+
 void WindowX11::processSomeEvents(Window::Events* events)
 {
+    if(g_drag_types_requested)
+    {
+        g_drag_types_requested = false;
+    }
+
     while(XPending(g_display))
     {
         XEvent xevent;
@@ -442,7 +548,11 @@ void WindowX11::processSomeEvents(Window::Events* events)
                     int x, y;
                     get_dnd_position(msg.data.l, x, y);
                     cout << x << ", " << y << "\n";
-                    request_all_dnd_positions(xwindow, dnd_source(msg.data.l));
+                    if(!g_incoming_drag)
+                    {
+                        g_incoming_drag = true;
+                        request_all_dnd_positions(xwindow, dnd_source(msg.data.l));
+                    }
                 }
                 else if(msg.message_type == X11_Atom::XdndEnter)
                 {
@@ -457,11 +567,17 @@ void WindowX11::processSomeEvents(Window::Events* events)
                 else if(msg.message_type == X11_Atom::XdndLeave)
                 {
                     cout << "XdndLeave\n";
+                    g_incoming_drag = false;
                 }
                 else if(msg.message_type == X11_Atom::XdndDrop)
                 {
                     cout << "XdndDrop\n";
                     send_dnd_finished(xwindow, dnd_source(msg.data.l), false);
+                    g_incoming_drag = false;
+                }
+                else if(msg.message_type == X11_Atom::XdndFinished)
+                {
+                    cout << "XdndFinished\n";
                 }
                 else if(msg.message_type == X11_Atom::WM_PROTOCOLS)
                 {
@@ -556,31 +672,31 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
         }
         else if(in.target == X11_Atom::TEXT || in.target == X11_Atom::UTF8_STRING)
         {
-            string* str = nullptr;
-            if(in.selection == XA_PRIMARY)
-            {
-                str = &g_selection_text;
-            }
-            else
-            {
-                str = &g_clipboard_text;
-            }
-
-            XChangeProperty(
-                g_display,
-                in.requestor,
-                in.property,
-                in.target,
-                8,
-                PropModeReplace,
-                (unsigned char*) str->c_str(),
-                str->size()
-            );
-
-            if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
-            {
-                cerr << "Failed to send selection event!\n";
-            }
+//             string* str = nullptr;
+//             if(in.selection == XA_PRIMARY)
+//             {
+//                 str = &g_selection_text;
+//             }
+//             else
+//             {
+//                 str = &g_clipboard_text;
+//             }
+//
+//             XChangeProperty(
+//                 g_display,
+//                 in.requestor,
+//                 in.property,
+//                 in.target,
+//                 8,
+//                 PropModeReplace,
+//                 (unsigned char*) str->c_str(),
+//                 str->size()
+//             );
+//
+//             if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
+//             {
+//                 cerr << "Failed to send selection event!\n";
+//             }
         }
     }
 }
@@ -660,7 +776,7 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* even
                 m_xwindow, in.property, in.target, true, text
             ))
             {
-                events->clipboard_input(this, text, (in.property == X11_Atom::_R64FX_SELECTION));
+//                 events->clipboard_input(this, text, (in.property == X11_Atom::_R64FX_SELECTION));
             }
             else
             {

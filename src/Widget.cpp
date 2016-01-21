@@ -4,7 +4,7 @@
 #include "Keyboard.hpp"
 #include "KeyboardModifiers.hpp"
 #include "KeyEvent.hpp"
-#include "ClipboardEvent.hpp"
+#include "Clipboard.hpp"
 #include "Painter.hpp"
 #include "Program.hpp"
 
@@ -55,7 +55,7 @@ namespace{
 
     /* Collection of data attached to the window.
      * We should be able to cast back and forth
-     * between WindowWidgetData and ReconfContext. */
+     * between WindowWidgetData and Window::ReconfigureEvent. */
     struct WindowWidgetData : Widget::ReconfigureEvent{
 
         /* Root widget shown in the window that
@@ -79,17 +79,7 @@ namespace{
     };
 
 
-    Window::Events events = {
-        window_resize,
-        window_mouse_press,
-        window_mouse_release,
-        window_mouse_move,
-        window_key_press,
-        window_key_release,
-        window_text_input,
-        window_clipboard_input,
-        window_close
-    };
+    Window::Events events;
 
 }//namespace
 
@@ -260,6 +250,21 @@ bool Widget::isVisible() const
 
 void Widget::show()
 {
+    if(!events.close)
+    {
+        events.resize = window_resize;
+
+        events.mouse_press   = window_mouse_press;
+        events.mouse_release = window_mouse_release;
+        events.mouse_move    = window_mouse_move;
+
+        events.key_press   = window_key_press;
+        events.key_release = window_key_release;
+        events.text_input  = window_text_input;
+
+        events.close = window_close;
+    }
+
     if(!isWindow())
     {
         auto window = Window::newInstance(
@@ -468,48 +473,6 @@ bool Widget::doingTextInput()
     else
     {
         return false;
-    }
-}
-
-
-void Widget::setSelection(const std::string &text)
-{
-    auto win = root()->window();
-    if(win)
-    {
-        win->setSelection(text);
-    }
-}
-
-
-void Widget::setClipboardData(const std::string &text)
-{
-    auto win = root()->window();
-    if(win)
-    {
-        win->setClipboardData(text);
-    }
-}
-
-
-void Widget::requestSelection()
-{
-    auto win = root()->window();
-    if(win)
-    {
-        g_clipboard_requestor = this;
-        win->requestSelection();
-    }
-}
-
-
-void Widget::requestClipboardData()
-{
-    auto win = root()->window();
-    if(win)
-    {
-        g_clipboard_requestor = this;
-        win->requestClipboardData();
     }
 }
 
@@ -872,19 +835,31 @@ void Widget::textInputEvent(TextInputEvent* event)
 
 void window_clipboard_input(Window* window, const std::string &text, bool selection)
 {
-    if(g_clipboard_requestor)
-    {
-        ClipboardEvent event(text, (selection ? ClipboardEvent::Type::Selection : ClipboardEvent::Type::Paste));
-        g_clipboard_requestor->clipboardInputEvent(&event);
-        g_clipboard_requestor = nullptr;
-    }
+//     if(g_clipboard_requestor)
+//     {
+//         ClipboardEvent event(text, (selection ? ClipboardEvent::Type::Selection : ClipboardEvent::Type::Paste));
+//         g_clipboard_requestor->clipboardInputEvent(&event);
+//         g_clipboard_requestor = nullptr;
+//     }
 }
 
 
-void Widget::clipboardInputEvent(ClipboardEvent* event)
+void Widget::clipboardDataEvent(ClipboardDataEvent* event)
 {
 
 }
+
+
+void Widget::clipboardMetadataEvent(ClipboardMetadataEvent* event)
+{
+
+}
+
+
+// void Widget::clipboardInputEvent(ClipboardEvent* event)
+// {
+//
+// }
 
 
 void window_close(Window* window)
