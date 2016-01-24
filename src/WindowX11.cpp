@@ -71,13 +71,13 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     static unsigned int getEventButton(XButtonEvent* event);
 
-    static void processSomeEvents(Window::Events* events);
+    static void processSomeEvents(WindowEvents* events);
 
     void setupEvents();
 
     void sendSelection(const XSelectionRequestEvent &in);
 
-    void recieveSelection(const XSelectionEvent &in, Window::Events* events);
+    void recieveSelection(const XSelectionEvent &in, WindowEvents* events);
 
     void updateAttrs();
 
@@ -129,7 +129,7 @@ namespace{
     }
 
     bool g_incoming_drag = false;
-    bool g_outgoing_drag = false;
+//     bool g_outgoing_drag = false;
 
 }//namespace
 
@@ -354,7 +354,7 @@ void WindowX11::anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode 
 // }
 
 
-void WindowX11::processSomeEvents(Window::Events* events)
+void WindowX11::processSomeEvents(WindowEvents* events)
 {
 //     if(g_drag_types_requested)
 //     {
@@ -397,18 +397,18 @@ void WindowX11::processSomeEvents(Window::Events* events)
                     {
                         str = string(buff, nbytes);
                     }
-                    events->text_input(window, str, XLookupKeysym(&xevent.xkey, 0));
+                    events->textInputEvent(window, str, XLookupKeysym(&xevent.xkey, 0));
                 }
                 else
                 {
-                    events->key_press(window, XLookupKeysym(&xevent.xkey, 0));
+                    events->keyPressEvent(window, XLookupKeysym(&xevent.xkey, 0));
                 }
                 break;
             }
 
             case KeyRelease:
             {
-                events->key_release(window, XLookupKeysym(&xevent.xkey, 0));
+                events->keyReleaseEvent(window, XLookupKeysym(&xevent.xkey, 0));
                 break;
             }
 
@@ -417,7 +417,7 @@ void WindowX11::processSomeEvents(Window::Events* events)
                 unsigned int button = getEventButton(&xevent.xbutton);
                 if(button != R64FX_MOUSE_BUTTON_NONE)
                 {
-                    events->mouse_press(window, xevent.xbutton.x, xevent.xbutton.y, button);
+                    events->mousePressEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
                 }
                 break;
             }
@@ -427,14 +427,14 @@ void WindowX11::processSomeEvents(Window::Events* events)
                 unsigned int button = getEventButton(&xevent.xbutton);
                 if(button != R64FX_MOUSE_BUTTON_NONE)
                 {
-                    events->mouse_release(window, xevent.xbutton.x, xevent.xbutton.y, button);
+                    events->mouseReleaseEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
                 }
                 break;
             }
 
             case MotionNotify:
             {
-                events->mouse_move(window, xevent.xmotion.x, xevent.xmotion.y);
+                events->mouseMoveEvent(window, xevent.xmotion.x, xevent.xmotion.y);
                 break;
             }
 
@@ -453,7 +453,7 @@ void WindowX11::processSomeEvents(Window::Events* events)
                         auto windowximage = (WindowXImage*) window;
                         windowximage->resizeImage();
                     }
-                    events->resize(window, new_w, new_h);
+                    events->resizeEvent(window, new_w, new_h);
                 }
                 break;
             }
@@ -518,7 +518,7 @@ void WindowX11::processSomeEvents(Window::Events* events)
                 }
                 else if(msg.message_type == X11_Atom::WM_PROTOCOLS)
                 {
-                    events->close(window);
+                    events->closeEvent(window);
                 }
                 break;
             }
@@ -631,7 +631,7 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
 }
 
 
-void WindowX11::recieveSelection(const XSelectionEvent &in, Window::Events* events)
+void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEvents* events)
 {
     if((in.selection == XA_PRIMARY || in.selection == X11_Atom::CLIPBOARD) &&
        (in.property == X11_Atom::_R64FX_SELECTION || in.property == X11_Atom::_R64FX_CLIPBOARD))
@@ -824,7 +824,7 @@ void Window::deleteInstance(Window* window)
 }
 
 
-void Window::processSomeEvents(Window::Events* events)
+void Window::processSomeEvents(WindowEvents* events)
 {
     WindowX11::processSomeEvents(events);
 }

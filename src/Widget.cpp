@@ -5,6 +5,7 @@
 #include "KeyboardModifiers.hpp"
 #include "KeyEvent.hpp"
 #include "Clipboard.hpp"
+#include "ClipboardEvent.hpp"
 #include "Painter.hpp"
 #include "Program.hpp"
 
@@ -19,16 +20,30 @@ using namespace std;
 
 namespace r64fx{
 
-void process_window_updates      (Window* window, void*);
-void window_resize               (Window* window, int width, int height);
-void window_mouse_press          (Window* window, int x, int y, unsigned int button);
-void window_mouse_release        (Window* window, int x, int y, unsigned int button);
-void window_mouse_move           (Window* window, int x, int y);
-void window_key_press            (Window* window, unsigned int key);
-void window_key_release          (Window* window, unsigned int key);
-void window_text_input           (Window* window, const std::string &text, unsigned int key);
-void window_clipboard_input      (Window* window, const std::string &text, bool selection);
-void window_close                (Window* window);
+class WindowEvents_Widget : public WindowEvents{
+    virtual void resizeEvent(Window* window, int width, int height);
+
+    virtual void mousePressEvent   (Window* window, int x, int y, unsigned int button);
+    virtual void mouseReleaseEvent (Window* window, int x, int y, unsigned int button);
+    virtual void mouseMoveEvent    (Window* window, int x, int y);
+
+    virtual void keyPressEvent     (Window* window, unsigned int key);
+    virtual void keyReleaseEvent   (Window* window, unsigned int key);
+
+    virtual void textInputEvent    (Window* window, const std::string &text, unsigned int key);
+
+    virtual void clipboardDataRecieveEvent
+                         (Window* window, ClipboardDataType type, void* data, int size, ClipboardMode mode);
+
+    virtual void clipboardDataTransmitEvent
+                         (Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode);
+
+    virtual void clipboardMetadataRecieveEvent
+                         (Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode);
+
+    virtual void closeEvent(Window* window);
+};
+
 
 namespace{
     void set_bits(unsigned long &flags, const bool yes, unsigned long mask)
@@ -111,7 +126,7 @@ namespace{
     };
 
 
-    Window::Events events;
+    WindowEvents_Widget g_events;
 
 }//namespace
 
@@ -282,21 +297,6 @@ bool Widget::isVisible() const
 
 void Widget::show()
 {
-    if(!events.close)
-    {
-        events.resize = window_resize;
-
-        events.mouse_press   = window_mouse_press;
-        events.mouse_release = window_mouse_release;
-        events.mouse_move    = window_mouse_move;
-
-        events.key_press   = window_key_press;
-        events.key_release = window_key_release;
-        events.text_input  = window_text_input;
-
-        events.close = window_close;
-    }
-
     if(!isWindow())
     {
         auto window = Window::newInstance(
@@ -564,13 +564,6 @@ Rect<int> Widget::ReconfigureEvent::visibleRect()
 }
 
 
-void Widget::processEvents()
-{
-    Window::processSomeEvents(&events);
-    Window::forEach(process_window_updates, nullptr);
-}
-
-
 void process_window_updates(Window* window, void*)
 {
     window->makeCurrent();
@@ -610,6 +603,13 @@ void process_window_updates(Window* window, void*)
             }
         }
     }
+}
+
+
+void Widget::processEvents()
+{
+    Window::processSomeEvents(&g_events);
+    Window::forEach(process_window_updates, nullptr);
 }
 
 
@@ -693,7 +693,7 @@ void Widget::focusOutEvent()
 }
 
 
-void window_resize(Window* window, int width, int height)
+void WindowEvents_Widget::resizeEvent(Window* window, int width, int height)
 {
     auto d = (WindowWidgetData*) window->data();
     d->widget->setSize({width, height});
@@ -707,7 +707,7 @@ void Widget::resizeEvent(ResizeEvent* event)
 }
 
 
-void window_mouse_press(Window* window, int x, int y, unsigned int button)
+void WindowEvents_Widget::mousePressEvent(Window* window, int x, int y, unsigned int button)
 {
     auto d = (WindowWidgetData*) window->data();
 
@@ -749,7 +749,7 @@ void Widget::mousePressEvent(MousePressEvent* event)
 }
 
 
-void window_mouse_release(Window* window, int x, int y, unsigned int button)
+void WindowEvents_Widget::mouseReleaseEvent(Window* window, int x, int y, unsigned int button)
 {
     auto d = (WindowWidgetData*) window->data();
 
@@ -786,7 +786,7 @@ void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 }
 
 
-void window_mouse_move(Window* window, int x, int y)
+void WindowEvents_Widget::mouseMoveEvent(Window* window, int x, int y)
 {
     auto d = (WindowWidgetData*) window->data();
 
@@ -822,7 +822,7 @@ void Widget::mouseMoveEvent(MouseMoveEvent* event)
 }
 
 
-void window_key_press(Window* window, unsigned int key)
+void WindowEvents_Widget::keyPressEvent(Window* window, unsigned int key)
 {
     auto d = (WindowWidgetData*) window->data();
 
@@ -846,7 +846,7 @@ void Widget::keyPressEvent(KeyPressEvent* event)
 }
 
 
-void window_key_release(Window* window, unsigned int key)
+void WindowEvents_Widget::keyReleaseEvent(Window* window, unsigned int key)
 {
     auto d = (WindowWidgetData*) window->data();
 
@@ -870,7 +870,7 @@ void Widget::keyReleaseEvent(KeyReleaseEvent* event)
 }
 
 
-void window_text_input(Window* window, const std::string &text, unsigned int key)
+void WindowEvents_Widget::textInputEvent(Window* window, const std::string &text, unsigned int key)
 {
     auto d = (WindowWidgetData*) window->data();
 
@@ -894,20 +894,13 @@ void Widget::textInputEvent(TextInputEvent* event)
 }
 
 
-void window_clipboard_input(Window* window, const std::string &text, bool selection)
+
+void WindowEvents_Widget::clipboardDataRecieveEvent
+(Window* window, ClipboardDataType type, void* data, int size, ClipboardMode mode)
 {
-//     if(g_clipboard_requestor)
-//     {
-//         ClipboardEvent event(text, (selection ? ClipboardEvent::Type::Selection : ClipboardEvent::Type::Paste));
-//         g_clipboard_requestor->clipboardInputEvent(&event);
-//         g_clipboard_requestor = nullptr;
-//     }
-}
-
-
-void Widget::clipboardMetadataEvent(ClipboardMetadataEvent* event)
-{
-
+    auto d = (WindowWidgetData*) window->data();
+    ClipboardDataRecieveEvent event;
+    d->widget->clipboardDataRecieveEvent(&event);
 }
 
 
@@ -917,13 +910,37 @@ void Widget::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 }
 
 
+void WindowEvents_Widget::clipboardDataTransmitEvent
+(Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode)
+{
+    auto d = (WindowWidgetData*) window->data();
+    ClipboardDataTransmitEvent event;
+    d->widget->clipboardDataTransmitEvent(&event);
+}
+
+
 void Widget::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 {
 
 }
 
 
-void window_close(Window* window)
+void WindowEvents_Widget::clipboardMetadataRecieveEvent
+(Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode)
+{
+    auto d = (WindowWidgetData*) window->data();
+    ClipboardMetadataRecieveEvent event;
+    d->widget->clipboardMetadataRecieveEvent(&event);
+}
+
+
+void Widget::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
+{
+
+}
+
+
+void WindowEvents_Widget::closeEvent(Window* window)
 {
     auto d = (WindowWidgetData*) window->data();
     d->widget->closeEvent();

@@ -13,7 +13,7 @@ class ClipboardDataTransmitEvent{
 };
 
 
-class ClipboardMetadataEvent{
+class ClipboardMetadataRecieveEvent{
 
 };
 

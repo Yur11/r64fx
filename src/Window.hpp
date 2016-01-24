@@ -8,8 +8,36 @@
 
 namespace r64fx{
 
+class Window;
 class Image;
 class ClipboardDataType;
+
+
+class WindowEvents{
+public:
+    virtual void resizeEvent(Window* window, int width, int height) = 0;
+
+    virtual void mousePressEvent   (Window* window, int x, int y, unsigned int button) = 0;
+    virtual void mouseReleaseEvent (Window* window, int x, int y, unsigned int button) = 0;
+    virtual void mouseMoveEvent    (Window* window, int x, int y) = 0;
+
+    virtual void keyPressEvent     (Window* window, unsigned int key) = 0;
+    virtual void keyReleaseEvent   (Window* window, unsigned int key) = 0;
+
+    virtual void textInputEvent    (Window* window, const std::string &text, unsigned int key) = 0;
+
+    virtual void clipboardDataRecieveEvent
+                         (Window* window, ClipboardDataType type, void* data, int size, ClipboardMode mode) = 0;
+
+    virtual void clipboardDataTransmitEvent
+                         (Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode) = 0;
+
+    virtual void clipboardMetadataRecieveEvent
+                         (Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode) = 0;
+
+    virtual void closeEvent(Window* window) = 0;
+};
+
 
 class Window{
     void* m_data = nullptr;
@@ -20,39 +48,6 @@ public:
 #ifdef R64FX_USE_GL
         ,GL
 #endif//R64FX_USE_GL
-    };
-
-    struct Events{
-        /* A window has been resized. */
-        void (*resize)                (Window* window, int width, int height);
-
-        /* Mouse pointer moved. */
-        void (*mouse_press)           (Window* window, int x, int y, unsigned int button);
-        void (*mouse_release)         (Window* window, int x, int y, unsigned int button);
-        void (*mouse_move)            (Window* window, int x, int y);
-
-        /* A key has been pressed. */
-        void (*key_press)      (Window* window, unsigned int key);
-
-        /* A key has been released. */
-        void (*key_release)    (Window* window, unsigned int key);
-
-        /* New text input.
-         * Use startTextInput(), stopTextInput() and doingTextInput() methods. */
-        void (*text_input)     (Window* window, const std::string &text, unsigned int key);
-
-        void (*clipboard_metadata) (Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode);
-        void (*clipboard_data) (Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode);
-
-//         void (*drag_enter)    (Window* window);
-//         void (*drag_move)     (Window* window, int x, int y);
-//         void (*drag_leave)    (Window* window);
-//         void (*drag_finished) (Window* window);
-//         void (*drag_types)    (Window* window, std::string* types, int ntypes);
-//         void (*drag_data)     (Window* window, void* data, int size);
-//         void (*drop)          (Window* window);
-
-        void (*close)(Window* window);
     };
 
     inline void setData(void* data) { m_data = data; }
@@ -105,7 +100,7 @@ public:
 
     static void deleteInstance(Window* window);
 
-    static void processSomeEvents(Window::Events* events);
+    static void processSomeEvents(WindowEvents* events);
 
     static void forEach(void (*fun)(Window* window, void* data), void* data);
 };
