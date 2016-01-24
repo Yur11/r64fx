@@ -60,21 +60,7 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     virtual bool doingTextInput();
 
 
-    virtual void setSelectionData (std::string type, void* data, int data_size, bool copy_data);
-    virtual void setClipboardData (std::string type, void* data, int data_size, bool copy_data);
-    virtual void startDrag        (std::string type, void* data, int data_size, bool copy_data);
-
-
-    void requestTypes(Atom selection, Atom property);
-
-    virtual void requestSelectionTypes();
-    virtual void requestClipboardTypes();
-    virtual void requestDragTypes();
-
-
-    virtual void requestSelectionData (std::string type);
-    virtual void requestClipboardData (std::string type);
-    virtual void requestDragData      (std::string type);
+    virtual void anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode);
 
 
     inline ::Window xWindow() const { return m_xwindow; }
@@ -125,23 +111,25 @@ namespace{
 
     WindowX11* g_text_input_grabber = nullptr;
 
-    void* g_selection_data = nullptr;
-    void* g_clipboard_data = nullptr;
-    void* g_drag_data      = nullptr;
+    ClipboardMetadata* g_metadata_clipboard     = nullptr;
+    ClipboardMetadata* g_metadata_selection     = nullptr;
+    ClipboardMetadata* g_metadata_drag_and_drop = nullptr;
 
-    int g_selection_data_size = 0;
-    int g_clipboard_data_size = 0;
-    int g_drag_data_size      = 0;
-
-    bool owns_selection_data = false;
-    bool owns_clipboard_data = false;
-    bool owns_drag_data      = false;
+    inline ClipboardMetadata* &g_metadata(ClipboardMode mode)
+    {
+        switch(mode)
+        {
+            case ClipboardMode::Clipboard:
+                return g_metadata_clipboard;
+            case ClipboardMode::Selection:
+                return g_metadata_selection;
+            default:
+                return g_metadata_drag_and_drop;
+        }
+    }
 
     bool g_incoming_drag = false;
     bool g_outgoing_drag = false;
-
-    bool g_drag_types_requested = false;
-    vector<string> g_drag_types;
 
 }//namespace
 
@@ -213,16 +201,6 @@ namespace{
     int g_glx_minor = 0;
 #endif//R64FX_USE_GL
 
-
-// //     Atom type_to_atom(string type)
-// //     {
-// //
-// //     }
-// //
-// //     void atoms_to_types(const vector<Atom> &atoms, vector<string> &types)
-// //     {
-// //
-// //     }
 }//namespace
 
 
@@ -304,80 +282,39 @@ bool WindowX11::doingTextInput()
 }
 
 
-void WindowX11::setSelectionData(std::string type, void* data, int data_size, bool copy_data)
+Atom atom(ClipboardMode mode)
 {
-    XSetSelectionOwner(g_display, XA_PRIMARY, m_xwindow, CurrentTime);
+    switch(mode)
+    {
+        case ClipboardMode::Clipboard:
+            return X11_Atom::CLIPBOARD;
+
+        case ClipboardMode::Selection:
+            return XA_PRIMARY;
+
+        case ClipboardMode::DragAndDrop:
+            return X11_Atom::XdndSelection;
+
+        default:
+            return None;
+    }
 }
 
 
-void WindowX11::setClipboardData(std::string type, void* data, int data_size, bool copy_data)
+void WindowX11::anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode)
 {
-    XSetSelectionOwner(g_display, X11_Atom::CLIPBOARD, m_xwindow, CurrentTime);
+    Atom selection = atom(mode);
+    if(selection == None)
+    {
+        cerr << "Bad ClipboardMode!\n";
+        return;
+    }
+
+    XSetSelectionOwner(g_display, selection, m_xwindow, CurrentTime);
+    g_metadata(mode) = metadata;
 }
 
 
-void WindowX11::startDrag(std::string type, void* data, int data_size, bool copy_data)
-{
-    g_outgoing_drag = true;
-}
-
-
-void WindowX11::requestTypes(Atom selection, Atom property)
-{
-    XConvertSelection(
-        g_display,
-        selection,
-        X11_Atom::TARGETS,
-        property,
-        m_xwindow,
-        CurrentTime
-    );
-}
-
-
-void WindowX11::requestSelectionTypes()
-{
-    requestTypes(XA_PRIMARY, X11_Atom::_R64FX_SELECTION);
-}
-
-
-void WindowX11::requestClipboardTypes()
-{
-    requestTypes(X11_Atom::CLIPBOARD, X11_Atom::_R64FX_CLIPBOARD);
-}
-
-
-void WindowX11::requestDragTypes()
-{
-    g_drag_types_requested = true;
-}
-
-
-void WindowX11::requestSelectionData(std::string type)
-{
-
-}
-
-
-void WindowX11::requestClipboardData(std::string type)
-{
-
-}
-
-
-void WindowX11::requestDragData(std::string type)
-{
-
-}
-
-
-// void WindowX11::setSelection(const std::string &text)
-// {
-//     g_selection_text = text;
-//     XSetSelectionOwner(g_display, XA_PRIMARY, m_xwindow, CurrentTime);
-// }
-//
-//
 // bool WindowX11::hasSelection()
 // {
 //     return XGetSelectionOwner(g_display, XA_PRIMARY) == m_xwindow;
@@ -419,10 +356,10 @@ void WindowX11::requestDragData(std::string type)
 
 void WindowX11::processSomeEvents(Window::Events* events)
 {
-    if(g_drag_types_requested)
-    {
-        g_drag_types_requested = false;
-    }
+//     if(g_drag_types_requested)
+//     {
+//         g_drag_types_requested = false;
+//     }
 
     while(XPending(g_display))
     {
@@ -672,31 +609,23 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
         }
         else if(in.target == X11_Atom::TEXT || in.target == X11_Atom::UTF8_STRING)
         {
-//             string* str = nullptr;
-//             if(in.selection == XA_PRIMARY)
-//             {
-//                 str = &g_selection_text;
-//             }
-//             else
-//             {
-//                 str = &g_clipboard_text;
-//             }
-//
-//             XChangeProperty(
-//                 g_display,
-//                 in.requestor,
-//                 in.property,
-//                 in.target,
-//                 8,
-//                 PropModeReplace,
-//                 (unsigned char*) str->c_str(),
-//                 str->size()
-//             );
-//
-//             if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
-//             {
-//                 cerr << "Failed to send selection event!\n";
-//             }
+            string str = "Debugme!?";
+
+            XChangeProperty(
+                g_display,
+                in.requestor,
+                in.property,
+                in.target,
+                8,
+                PropModeReplace,
+                (unsigned char*) str.c_str(),
+                str.size()
+            );
+
+            if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
+            {
+                cerr << "Failed to send selection event!\n";
+            }
         }
     }
 }

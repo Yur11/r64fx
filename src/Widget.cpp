@@ -47,7 +47,39 @@ namespace{
     /* Widget that currently has keyboard focus. */
     Widget* g_focus_owner = nullptr;
 
-    Widget* g_clipboard_requestor = nullptr;
+    Widget* g_anouncer_clipboard       = nullptr;
+    Widget* g_anouncer_selection       = nullptr;
+    Widget* g_anouncer_drag_and_drop   = nullptr;
+
+    Widget* g_requestor_clipboard      = nullptr;
+    Widget* g_requestor_selection      = nullptr;
+    Widget* g_requestor_drag_and_drop  = nullptr;
+
+    inline Widget* &anouncer(ClipboardMode mode)
+    {
+        switch(mode)
+        {
+            case ClipboardMode::Clipboard:
+                return g_anouncer_clipboard;
+            case ClipboardMode::Selection:
+                return g_anouncer_selection;
+            default:
+                return g_anouncer_drag_and_drop;
+        }
+    }
+
+    inline Widget* &requestor(ClipboardMode mode)
+    {
+        switch(mode)
+        {
+            case ClipboardMode::Clipboard:
+                return g_requestor_clipboard;
+            case ClipboardMode::Selection:
+                return g_requestor_selection;
+            default:
+                return g_requestor_drag_and_drop;
+        }
+    }
 
     /* Maximum number of individual rectangles
      * that can be repainted after reconf. cycle. */
@@ -141,11 +173,11 @@ void Widget::add(Widget* child)
 }
 
 
-Widget* Widget::root()
+Widget* Widget::root() const
 {
     if(isWindow() || !m_parent.widget)
     {
-        return this;
+        return (Widget* const)this;
     }
     else
     {
@@ -340,6 +372,12 @@ Window* Widget::window() const
 }
 
 
+Window* Widget::rootWindow() const
+{
+    return root()->window();
+}
+
+
 bool Widget::isWindow() const
 {
     return m_flags & R64FX_WIDGET_IS_WINDOW;
@@ -474,6 +512,29 @@ bool Widget::doingTextInput()
     {
         return false;
     }
+}
+
+
+void Widget::anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode)
+{
+    auto win = rootWindow();
+    if(win)
+    {
+        win->anounceClipboardData(metadata, mode);
+        requestor(mode) = this;
+    }
+}
+
+
+void Widget::requestClipboardMetadata(ClipboardMode mode)
+{
+
+}
+
+
+void Widget::requestClipboardData(ClipboardMetadata* metadata, ClipboardMode mode)
+{
+
 }
 
 
@@ -844,22 +905,22 @@ void window_clipboard_input(Window* window, const std::string &text, bool select
 }
 
 
-void Widget::clipboardDataEvent(ClipboardDataEvent* event)
-{
-
-}
-
-
 void Widget::clipboardMetadataEvent(ClipboardMetadataEvent* event)
 {
 
 }
 
 
-// void Widget::clipboardInputEvent(ClipboardEvent* event)
-// {
-//
-// }
+void Widget::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
+{
+
+}
+
+
+void Widget::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
+{
+
+}
 
 
 void window_close(Window* window)

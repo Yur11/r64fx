@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "Rect.hpp"
-#include "ClipboardMode.hpp"
+#include "Clipboard.hpp"
 
 namespace r64fx{
 
@@ -94,17 +94,8 @@ public:
     virtual bool doingTextInput() = 0;
 
 
-    virtual void setSelectionData (std::string type, void* data, int data_size, bool copy_data) = 0;
-    virtual void setClipboardData (std::string type, void* data, int data_size, bool copy_data) = 0;
-    virtual void startDrag        (std::string type, void* data, int data_size, bool copy_data) = 0;
+    virtual void anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode) = 0;
 
-    virtual void requestSelectionTypes() = 0;
-    virtual void requestClipboardTypes() = 0;
-    virtual void requestDragTypes()      = 0;
-
-    virtual void requestSelectionData (std::string type) = 0;
-    virtual void requestClipboardData (std::string type) = 0;
-    virtual void requestDragData      (std::string type) = 0;
 
     static Window* newInstance(
         int width = 800, int height = 600,

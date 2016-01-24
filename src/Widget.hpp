@@ -5,7 +5,7 @@
 #include "LinkedList.hpp"
 #include "Rect.hpp"
 #include "Mouse.hpp"
-#include "ClipboardMode.hpp"
+#include "Clipboard.hpp"
 
 namespace r64fx{
 
@@ -19,7 +19,8 @@ class KeyReleaseEvent;
 class TextInputEvent;
 class ClipboardMetadata;
 class ClipboardMetadataEvent;
-class ClipboardDataEvent;
+class ClipboardDataRecieveEvent;
+class ClipboardDataTransmitEvent;
 
 class Widget : public LinkedList<Widget>::Node{
 
@@ -59,7 +60,7 @@ public:
     /* Effectivly calls setParent on the given widget. */
     void add(Widget* child);
 
-    Widget* root();
+    Widget* root() const;
 
 
 /* === Geometry. === */
@@ -101,6 +102,8 @@ public:
     void close();
 
     Window* window() const;
+
+    Window* rootWindow() const;
 
     bool isWindow() const;
 
@@ -147,9 +150,10 @@ public:
 
     void anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode);
 
-    void requestClipboardMetadata();
+    void requestClipboardMetadata(ClipboardMode mode);
 
-    void requestClipboardData(ClipboardMetadata* metadata);
+    void requestClipboardData(ClipboardMetadata* metadata, ClipboardMode mode);
+
 
 /* === Update/Reconfigure cycle === */
 
@@ -214,9 +218,11 @@ protected:
 
     virtual void textInputEvent(TextInputEvent* event);
 
-    virtual void clipboardDataEvent(ClipboardDataEvent* event);
-
     virtual void clipboardMetadataEvent(ClipboardMetadataEvent* event);
+
+    virtual void clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event);
+
+    virtual void clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event);
 
     virtual void closeEvent();
 

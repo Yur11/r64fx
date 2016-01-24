@@ -506,7 +506,7 @@ void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
     Widget::mouseReleaseEvent(event);
     if(m_text_painter->hasSelection())
     {
-//         setSelection(m_text_painter->selectionText());
+        anounceClipboardData(nullptr, ClipboardMode::Selection);
     }
 }
 

@@ -1,12 +1,17 @@
 #ifndef R64FX_CLIPBOARD_HPP
 #define R64FX_CLIPBOARD_HPP
 
-#include "ClipboardMode.hpp"
 #include "Point.hpp"
 #include <string>
 #include <vector>
 
 namespace r64fx{
+
+enum class ClipboardMode{
+    Clipboard,
+    Selection,
+    DragAndDrop
+};
 
 class ClipboardDataType{
     std::string m_str;
@@ -34,39 +39,6 @@ public:
     Point<int> position() const;
 };
 
-
-class ClipboardDataEvent{
-    void* m_data;
-    int   m_size;
-};
-
-
-class ClipboardMetadataEvent{
-
-};
-
-
-// class ClipboardEvent{
-// public:
-//     enum class Type{
-//         Paste,
-//         Selection
-//     };
-//
-// private:
-//     std::string m_text;
-//     Type        m_type;
-//
-// public:
-//     ClipboardEvent(const std::string &text, Type type)
-//     : m_text(text)
-//     , m_type(type)
-//     {}
-//
-//     inline std::string text() const { return m_text; }
-//
-//     inline Type type() const { return m_type; }
-// };
 
 }//namespace r64x
 
