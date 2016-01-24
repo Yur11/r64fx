@@ -609,6 +609,8 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
         }
         else if(in.target == X11_Atom::TEXT || in.target == X11_Atom::UTF8_STRING)
         {
+            cout << "Send selection!\n";
+
             string str = "Debugme!?";
 
             XChangeProperty(

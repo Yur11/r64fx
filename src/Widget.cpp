@@ -898,9 +898,12 @@ void Widget::textInputEvent(TextInputEvent* event)
 void WindowEvents_Widget::clipboardDataRecieveEvent
 (Window* window, ClipboardDataType type, void* data, int size, ClipboardMode mode)
 {
-    auto d = (WindowWidgetData*) window->data();
-    ClipboardDataRecieveEvent event;
-    d->widget->clipboardDataRecieveEvent(&event);
+    auto widget = requestor(mode);
+    if(widget)
+    {
+        ClipboardDataRecieveEvent event;
+        widget->clipboardDataRecieveEvent(&event);
+    }
 }
 
 
@@ -913,24 +916,30 @@ void Widget::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 void WindowEvents_Widget::clipboardDataTransmitEvent
 (Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode)
 {
-    auto d = (WindowWidgetData*) window->data();
-    ClipboardDataTransmitEvent event;
-    d->widget->clipboardDataTransmitEvent(&event);
+    auto widget = anouncer(mode);
+    if(widget)
+    {
+        ClipboardDataTransmitEvent event;
+        widget->clipboardDataTransmitEvent(&event);
+    }
 }
 
 
 void Widget::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 {
-
+    cout << "clipboardDataTransmitEvent\n";
 }
 
 
 void WindowEvents_Widget::clipboardMetadataRecieveEvent
 (Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode)
 {
-    auto d = (WindowWidgetData*) window->data();
-    ClipboardMetadataRecieveEvent event;
-    d->widget->clipboardMetadataRecieveEvent(&event);
+    auto widget = requestor(mode);
+    if(widget)
+    {
+        ClipboardMetadataRecieveEvent event;
+        widget->clipboardMetadataRecieveEvent(&event);
+    }
 }
 
 
