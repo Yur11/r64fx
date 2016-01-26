@@ -89,7 +89,7 @@ public:
     virtual bool doingTextInput() = 0;
 
 
-    virtual void anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode) = 0;
+    virtual void anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode) = 0;
 
 
     static Window* newInstance(

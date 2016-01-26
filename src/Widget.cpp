@@ -515,7 +515,7 @@ bool Widget::doingTextInput()
 }
 
 
-void Widget::anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode)
+void Widget::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode)
 {
     auto win = rootWindow();
     if(win)

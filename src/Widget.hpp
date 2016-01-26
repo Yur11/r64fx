@@ -149,7 +149,7 @@ public:
 
 /* === Clipboard, Selections, Drag and Drop === */
 
-    void anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode);
+    void anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode);
 
     void requestClipboardMetadata(ClipboardMode mode);
 

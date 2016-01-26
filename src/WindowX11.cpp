@@ -60,7 +60,7 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     virtual bool doingTextInput();
 
 
-    virtual void anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode);
+    virtual void anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode);
 
 
     inline ::Window xWindow() const { return m_xwindow; }
@@ -78,6 +78,8 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     void sendSelection(const XSelectionRequestEvent &in);
 
     void recieveSelection(const XSelectionEvent &in, WindowEvents* events);
+
+    void clearSelection(const XSelectionClearEvent &in);
 
     void updateAttrs();
 
@@ -111,20 +113,22 @@ namespace{
 
     WindowX11* g_text_input_grabber = nullptr;
 
-    ClipboardMetadata* g_metadata_clipboard     = nullptr;
-    ClipboardMetadata* g_metadata_selection     = nullptr;
-    ClipboardMetadata* g_metadata_drag_and_drop = nullptr;
+    ClipboardMetadata g_metadata_clipboard;
+    ClipboardMetadata g_metadata_selection;
+    ClipboardMetadata g_metadata_drag_and_drop;
 
-    inline ClipboardMetadata* &g_metadata(ClipboardMode mode)
+    inline ClipboardMetadata* g_metadata(ClipboardMode mode)
     {
         switch(mode)
         {
             case ClipboardMode::Clipboard:
-                return g_metadata_clipboard;
+                return &g_metadata_clipboard;
             case ClipboardMode::Selection:
-                return g_metadata_selection;
+                return &g_metadata_selection;
+            case ClipboardMode::DragAndDrop:
+                return &g_metadata_drag_and_drop;
             default:
-                return g_metadata_drag_and_drop;
+                return nullptr;
         }
     }
 
@@ -136,6 +140,21 @@ namespace{
 #include "WindowX11_Atoms.cxx"
 #include "WindowX11_Properties.cxx"
 #include "WindowX11_XDND.cxx"
+
+
+namespace{
+    inline ClipboardMetadata* g_metadata(Atom selection)
+    {
+        if(selection == X11_Atom::CLIPBOARD)
+            return &g_metadata_clipboard;
+        if(selection == XA_PRIMARY)
+            return &g_metadata_selection;
+        if(selection == X11_Atom::XdndSelection)
+            return &g_metadata_drag_and_drop;
+        return nullptr;
+    }
+}//namespace
+
 
 namespace{
 #ifdef R64FX_USE_MITSHM
@@ -301,7 +320,7 @@ Atom atom(ClipboardMode mode)
 }
 
 
-void WindowX11::anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode mode)
+void WindowX11::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode)
 {
     Atom selection = atom(mode);
     if(selection == None)
@@ -310,8 +329,12 @@ void WindowX11::anounceClipboardData(ClipboardMetadata* metadata, ClipboardMode 
         return;
     }
 
-    XSetSelectionOwner(g_display, selection, m_xwindow, CurrentTime);
-    g_metadata(mode) = metadata;
+    auto m = g_metadata(mode);
+    if(m)
+    {
+        XSetSelectionOwner(g_display, selection, m_xwindow, CurrentTime);
+        *m = metadata;
+    }
 }
 
 
@@ -460,6 +483,7 @@ void WindowX11::processSomeEvents(WindowEvents* events)
 
             case SelectionClear:
             {
+                window->clearSelection(xevent.xselectionclear);
                 break;
             }
 
@@ -611,6 +635,7 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
         {
             cout << "Send selection!\n";
 
+
             string str = "Debugme!?";
 
             XChangeProperty(
@@ -714,6 +739,18 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEvents* events
                 cerr << "Failed to get window property " << atom_name(in.property) << "\n";
             }
         }
+    }
+}
+
+
+void WindowX11::clearSelection(const XSelectionClearEvent &in)
+{
+    cout << "clearSelection\n";
+    auto m = g_metadata(in.selection);
+    if(m)
+    {
+        m->clear();
+        cout << "OK!\n";
     }
 }
 

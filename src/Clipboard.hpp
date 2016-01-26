@@ -2,7 +2,6 @@
 #define R64FX_CLIPBOARD_HPP
 
 #include "Point.hpp"
-#include <string>
 #include <vector>
 
 namespace r64fx{
@@ -13,30 +12,30 @@ enum class ClipboardMode{
     DragAndDrop
 };
 
+
 class ClipboardDataType{
-    std::string m_str;
+    const char* m_str;
 
 public:
-    explicit ClipboardDataType(std::string str = "") : m_str(str) {}
+    ClipboardDataType(const char* str = "") : m_str(str) {}
 
-    bool isText() const;
-
-    std::string mimeType() const;
+    inline const char* str() const { return m_str; }
 };
 
 
-class ClipboardMetadata{
-    std::vector<ClipboardDataType> m_types;
-    Point<int> m_position; //For drag and drop.
+class ClipboardMetadata : public std::vector<ClipboardDataType>{
 
 public:
-    ClipboardMetadata(const ClipboardDataType &type, Point<int> position = {0, 0});
+    ClipboardMetadata(const std::vector<ClipboardDataType> &types)
+    : std::vector<ClipboardDataType>(types)
+    {}
 
-    ClipboardMetadata(const std::vector<ClipboardDataType> &types, Point<int> position = {0, 0});
+    ClipboardMetadata(ClipboardDataType type)
+    : std::vector<ClipboardDataType>{type}
+    {}
 
-    const std::vector<ClipboardDataType>& types() const;
-
-    Point<int> position() const;
+    ClipboardMetadata()
+    {}
 };
 
 

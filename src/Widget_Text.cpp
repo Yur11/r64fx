@@ -23,6 +23,13 @@ using namespace std;
 
 namespace r64fx{
 
+namespace{
+
+ClipboardDataType type_text_plain("text/plain");
+ClipboardMetadata clipboard_metadata(type_text_plain);
+
+}//namespace
+
 Widget_Text::Widget_Text(const std::string &text, Font* font, Widget* parent)
 : Widget(parent)
 {
@@ -506,7 +513,7 @@ void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
     Widget::mouseReleaseEvent(event);
     if(m_text_painter->hasSelection())
     {
-        anounceClipboardData(nullptr, ClipboardMode::Selection);
+        anounceClipboardData(clipboard_metadata, ClipboardMode::Selection);
     }
 }
 
