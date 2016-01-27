@@ -26,6 +26,7 @@ namespace r64fx{
 namespace{
 
 ClipboardDataType type_text_plain("text/plain");
+string g_selection_text;
 
 }//namespace
 
@@ -512,6 +513,7 @@ void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
     Widget::mouseReleaseEvent(event);
     if(m_text_painter->hasSelection())
     {
+        g_selection_text = m_text_painter->selectionText();
         anounceClipboardData(type_text_plain, ClipboardMode::Selection);
     }
 }
@@ -721,6 +723,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
 
 void Widget_Text::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 {
+    cout << "Widget_Text::ClipboardDataRecieveEvent\n";
     if(event->mode() != ClipboardMode::Bad /*&& event->type() == type_text_plain*/ && event->data() != nullptr && event->size() > 0)
     {
         string text((const char*)event->data(), event->size());
@@ -730,14 +733,11 @@ void Widget_Text::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 }
 
 
-// void Widget_Text::clipboardInputEvent(ClipboardEvent* event)
-// {
-//     if(!event->text().empty())
-//     {
-//         insertText(event->text());
-//         update();
-//     }
-// }
+void Widget_Text::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
+{
+    cout << "Widget_Text::clipboardDataTransmitEvent\n";
+    event->transmit((void*)g_selection_text.c_str(), g_selection_text.size());
+}
 
 
 void Widget_Text::closeEvent()

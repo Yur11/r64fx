@@ -1,7 +1,7 @@
 #ifndef R64FX_CLIPBOARD_EVENT_HPP
 #define R64FX_CLIPBOARD_EVENT_HPP
 
-#include "ClipboardEvent.hpp"
+#include "Clipboard.hpp"
 
 namespace r64fx{
 
@@ -22,8 +22,8 @@ public:
 
 
 class ClipboardDataRecieveEvent : public ClipboardEvent{
-    void*         m_data = nullptr;
-    int           m_size = 0;
+    void* m_data = nullptr;
+    int   m_size = 0;
 
 public:
     ClipboardDataRecieveEvent(ClipboardMode mode, ClipboardDataType type, void* data, int size)
@@ -38,8 +38,18 @@ public:
 };
 
 
-class ClipboardDataTransmitEvent{
+class ClipboardDataTransmitEvent : ClipboardEvent{
+    void** m_data = nullptr;
+    int*   m_size = nullptr;
 
+public:
+    ClipboardDataTransmitEvent(ClipboardMode mode, ClipboardDataType type, void** data, int* size)
+    : ClipboardEvent(mode, type)
+    , m_data(data)
+    , m_size(size)
+    {}
+
+    void transmit(void* data, int size);
 };
 
 

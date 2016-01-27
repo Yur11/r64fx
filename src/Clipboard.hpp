@@ -15,10 +15,12 @@ enum class ClipboardMode{
 
 
 class ClipboardDataType{
-    const char* m_name;
+    const char* m_name = nullptr;
 
 public:
     ClipboardDataType(const char* name = "") : m_name(name) {}
+
+    inline bool isGood() const { return m_name != nullptr; }
 
     inline const char* name() const { return m_name; }
 };

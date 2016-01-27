@@ -15,6 +15,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_BUILTIN_FONTS")
 
 set(SRC
     Clipboard.cpp
+    ClipboardEvent.cpp
     Font.cpp
     Image.cpp
     ImageUtils.cpp

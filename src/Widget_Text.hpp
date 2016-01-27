@@ -73,6 +73,8 @@ protected:
 
     virtual void clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event);
 
+    virtual void clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event);
+
     virtual void closeEvent();
 
 };

@@ -78,7 +78,7 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     void setupEvents();
 
-    void sendSelection(const XSelectionRequestEvent &in);
+    void sendSelection(const XSelectionRequestEvent &in, WindowEvents* events);
 
     void recieveSelection(const XSelectionEvent &in, WindowEvents* events);
 
@@ -493,7 +493,7 @@ void WindowX11::processSomeEvents(WindowEvents* events)
 
             case SelectionRequest:
             {
-                window->sendSelection(xevent.xselectionrequest);
+                window->sendSelection(xevent.xselectionrequest, events);
                 break;
             }
 
@@ -595,7 +595,7 @@ void WindowX11::setupEvents()
 }
 
 
-void WindowX11::sendSelection(const XSelectionRequestEvent &in)
+void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEvents* events)
 {
     if(in.property == None)
     {
@@ -651,24 +651,61 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
         }
         else
         {
-
-
-            string str = "Debugme!?";
-
-            XChangeProperty(
-                g_display,
-                in.requestor,
-                in.property,
-                in.target,
-                8,
-                PropModeReplace,
-                (unsigned char*) str.c_str(),
-                str.size()
-            );
-
-            if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
+            ClipboardDataType cdt;
+            for(auto &type : *m)
             {
-                cerr << "Failed to send selection event!\n";
+                string type_name(type.name());
+                if(type_name == "text/plain")
+                {
+                    if(
+                        in.target == X11_Atom::TEXT ||
+                        in.target == X11_Atom::UTF8_STRING
+                    )
+                    {
+                        cdt = type;
+                        g_requested_text_type_atom = in.target;
+                        break;
+                    }
+                }
+
+                if(in.target == get_extra_atom(type_name))
+                {
+                    cdt = type;
+                    break;
+                }
+            }
+
+            if(cdt.isGood())
+            {
+                void* data = nullptr;
+                int size = 0;
+
+                events->clipboardDataTransmitEvent(
+                    this,
+                    cdt,
+                    &data,
+                    &size,
+                    clipboard_mode(in.selection)
+                );
+
+                if(data != nullptr && size > 0)
+                {
+                    XChangeProperty(
+                        g_display,
+                        in.requestor,
+                        in.property,
+                        in.target,
+                        8,
+                        PropModeReplace,
+                        (unsigned char*) data,
+                        size
+                    );
+
+                    if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
+                    {
+                        cerr << "Failed to send selection event!\n";
+                    }
+                }
             }
         }
     }

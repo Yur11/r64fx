@@ -524,7 +524,7 @@ void Widget::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMo
     if(win)
     {
         win->anounceClipboardData(metadata, mode);
-        requestor(mode) = this;
+        anouncer(mode) = this;
     }
 }
 
@@ -930,7 +930,7 @@ void WindowEvents_Widget::clipboardDataTransmitEvent
     auto widget = anouncer(mode);
     if(widget)
     {
-        ClipboardDataTransmitEvent event;
+        ClipboardDataTransmitEvent event(mode, type, data, size);
         widget->clipboardDataTransmitEvent(&event);
     }
 }
@@ -938,7 +938,6 @@ void WindowEvents_Widget::clipboardDataTransmitEvent
 
 void Widget::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 {
-    cout << "clipboardDataTransmitEvent\n";
 }
 
 
