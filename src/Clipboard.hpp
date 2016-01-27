@@ -7,6 +7,7 @@
 namespace r64fx{
 
 enum class ClipboardMode{
+    Bad,
     Clipboard,
     Selection,
     DragAndDrop
@@ -14,13 +15,16 @@ enum class ClipboardMode{
 
 
 class ClipboardDataType{
-    const char* m_str;
+    const char* m_name;
 
 public:
-    ClipboardDataType(const char* str = "") : m_str(str) {}
+    ClipboardDataType(const char* name = "") : m_name(name) {}
 
-    inline const char* str() const { return m_str; }
+    inline const char* name() const { return m_name; }
 };
+
+
+bool operator==(ClipboardDataType a, ClipboardDataType b);
 
 
 class ClipboardMetadata : public std::vector<ClipboardDataType>{

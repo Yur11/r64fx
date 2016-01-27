@@ -51,7 +51,6 @@ void init_atoms()
         R64FX_INTERN_ATOM( MULTIPLE,         true  );
         R64FX_INTERN_ATOM( _R64FX_SELECTION, false );
         R64FX_INTERN_ATOM( CLIPBOARD,        true  );
-        R64FX_INTERN_ATOM( _R64FX_CLIPBOARD, false );
 
         R64FX_INTERN_ATOM( XdndAware,     false );
         R64FX_INTERN_ATOM( XdndEnter,     false );
@@ -73,6 +72,24 @@ string atom_name(Atom atom)
     string str(buff);
     XFree(buff);
     return str;
+}
+
+
+map<string, Atom> g_extra_atoms;
+
+Atom get_extra_atom(string name)
+{
+    auto it = g_extra_atoms.find(name);
+    if(it == g_extra_atoms.end())
+    {
+        Atom atom = XInternAtom(g_display, name.c_str(), False);
+        g_extra_atoms[name] = atom;
+        return atom;
+    }
+    else
+    {
+        return it->second;
+    }
 }
 
 }//namespace

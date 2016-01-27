@@ -71,6 +71,8 @@ protected:
 
     virtual void textInputEvent(TextInputEvent* event);
 
+    virtual void clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event);
+
     virtual void closeEvent();
 
 };

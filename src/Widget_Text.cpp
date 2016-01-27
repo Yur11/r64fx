@@ -6,7 +6,7 @@
 #include "Keyboard.hpp"
 #include "KeyboardModifiers.hpp"
 #include "KeyEvent.hpp"
-#include "Clipboard.hpp"
+#include "ClipboardEvent.hpp"
 #include "Mouse.hpp"
 #include "Program.hpp"
 #include "TextPainter.hpp"
@@ -26,7 +26,6 @@ namespace r64fx{
 namespace{
 
 ClipboardDataType type_text_plain("text/plain");
-ClipboardMetadata clipboard_metadata(type_text_plain);
 
 }//namespace
 
@@ -501,7 +500,7 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
         m_text_painter->updateSelection();
         if(event->button() == MouseButton::Middle())
         {
-//             requestSelection();
+            requestClipboardData(type_text_plain, ClipboardMode::Selection);
         }
     }
     update();
@@ -513,7 +512,7 @@ void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
     Widget::mouseReleaseEvent(event);
     if(m_text_painter->hasSelection())
     {
-        anounceClipboardData(clipboard_metadata, ClipboardMode::Selection);
+        anounceClipboardData(type_text_plain, ClipboardMode::Selection);
     }
 }
 
@@ -717,6 +716,17 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     }
 
     update();
+}
+
+
+void Widget_Text::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
+{
+    if(event->mode() != ClipboardMode::Bad /*&& event->type() == type_text_plain*/ && event->data() != nullptr && event->size() > 0)
+    {
+        string text((const char*)event->data(), event->size());
+        insertText(text);
+        update();
+    }
 }
 
 

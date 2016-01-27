@@ -91,6 +91,8 @@ public:
 
     virtual void anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode) = 0;
 
+    virtual void requestClipboardData(ClipboardDataType type, ClipboardMode mode) = 0;
+
 
     static Window* newInstance(
         int width = 800, int height = 600,

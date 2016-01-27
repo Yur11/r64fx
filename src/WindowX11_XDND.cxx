@@ -11,31 +11,31 @@ namespace{
 
 void get_dnd_type_list(const long* msg_data, vector<Atom> &types)
 {
-    if(msg_data[1] & 1)
-    {
-        bool ok = get_window_atom_list_property(
-            dnd_source(msg_data),
-            X11_Atom::XdndTypeList,
-            XA_ATOM,
-            false,
-            types
-        );
-
-        if(!ok)
-        {
-            cerr << "Failed to fetch dnd source types!\n";
-        }
-    }
-    else
-    {
-        for(int i=2; i<5; i++)
-        {
-            if(msg_data[i] != None)
-            {
-                types.push_back(msg_data[i]);
-            }
-        }
-    }
+//     if(msg_data[1] & 1)
+//     {
+//         bool ok = get_window_atom_list_property(
+//             dnd_source(msg_data),
+//             X11_Atom::XdndTypeList,
+//             XA_ATOM,
+//             false,
+//             types
+//         );
+//
+//         if(!ok)
+//         {
+//             cerr << "Failed to fetch dnd source types!\n";
+//         }
+//     }
+//     else
+//     {
+//         for(int i=2; i<5; i++)
+//         {
+//             if(msg_data[i] != None)
+//             {
+//                 types.push_back(msg_data[i]);
+//             }
+//         }
+//     }
 }
 
 

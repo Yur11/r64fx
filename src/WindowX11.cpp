@@ -16,6 +16,7 @@
 #endif//R64FX_USE_GL
 
 #include <vector>
+#include <map>
 #include <iostream>
 
 using namespace std;
@@ -61,6 +62,8 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
 
     virtual void anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode);
+
+    virtual void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 
 
     inline ::Window xWindow() const { return m_xwindow; }
@@ -132,9 +135,13 @@ namespace{
         }
     }
 
+    ClipboardDataType g_requested_clipboard_type;
+
+    Atom g_requested_clipboard_type_atom = None;
+    Atom g_requested_text_type_atom      = None;
+
     bool g_incoming_drag = false;
 //     bool g_outgoing_drag = false;
-
 }//namespace
 
 #include "WindowX11_Atoms.cxx"
@@ -152,6 +159,41 @@ namespace{
         if(selection == X11_Atom::XdndSelection)
             return &g_metadata_drag_and_drop;
         return nullptr;
+    }
+
+    inline Atom atom(ClipboardMode mode)
+    {
+        switch(mode)
+        {
+            case ClipboardMode::Clipboard:
+                return X11_Atom::CLIPBOARD;
+            case ClipboardMode::Selection:
+                return XA_PRIMARY;
+            case ClipboardMode::DragAndDrop:
+                return X11_Atom::XdndSelection;
+            default:
+                return 0;
+        }
+    }
+
+    inline ClipboardMode clipboard_mode(Atom selection)
+    {
+        if(selection == XA_PRIMARY)
+        {
+            return ClipboardMode::Selection;
+        }
+        else if(selection == X11_Atom::CLIPBOARD)
+        {
+            return ClipboardMode::Clipboard;
+        }
+        else if(selection == X11_Atom::XdndSelection)
+        {
+            return ClipboardMode::DragAndDrop;
+        }
+        else
+        {
+            return ClipboardMode::Bad;
+        }
     }
 }//namespace
 
@@ -301,25 +343,6 @@ bool WindowX11::doingTextInput()
 }
 
 
-Atom atom(ClipboardMode mode)
-{
-    switch(mode)
-    {
-        case ClipboardMode::Clipboard:
-            return X11_Atom::CLIPBOARD;
-
-        case ClipboardMode::Selection:
-            return XA_PRIMARY;
-
-        case ClipboardMode::DragAndDrop:
-            return X11_Atom::XdndSelection;
-
-        default:
-            return None;
-    }
-}
-
-
 void WindowX11::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode)
 {
     Atom selection = atom(mode);
@@ -338,52 +361,33 @@ void WindowX11::anounceClipboardData(const ClipboardMetadata &metadata, Clipboar
 }
 
 
-// bool WindowX11::hasSelection()
-// {
-//     return XGetSelectionOwner(g_display, XA_PRIMARY) == m_xwindow;
-// }
-//
-//
-// void WindowX11::requestSelection()
-// {
-//     XConvertSelection(
-//         g_display,
-//         XA_PRIMARY,
-//         X11_Atom::TEXT,
-//         X11_Atom::_R64FX_SELECTION,
-//         m_xwindow,
-//         CurrentTime
-//     );
-// }
-//
-//
-// void WindowX11::setClipboardData(const std::string &text)
-// {
-//     g_clipboard_text = text;
-//     XSetSelectionOwner(g_display, X11_Atom::CLIPBOARD, m_xwindow, CurrentTime);
-// }
-//
-//
-// void WindowX11::requestClipboardData()
-// {
-//     XConvertSelection(
-//         g_display,
-//         X11_Atom::CLIPBOARD,
-//         X11_Atom::TARGETS,
-//         X11_Atom::_R64FX_CLIPBOARD,
-//         m_xwindow,
-//         CurrentTime
-//     );
-// }
+void WindowX11::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
+{
+    Atom type_atom = None;
+    if(string(type.name()) == "text/plain" && g_requested_text_type_atom != None)
+    {
+        type_atom = g_requested_text_type_atom;
+    }
+    else
+    {
+        type_atom = get_extra_atom(type.name());
+    }
+
+    XConvertSelection(
+        g_display,
+        atom(mode),
+        type_atom,
+        X11_Atom::_R64FX_SELECTION,
+        m_xwindow,
+        CurrentTime
+    );
+
+    g_requested_clipboard_type_atom = type_atom;
+}
 
 
 void WindowX11::processSomeEvents(WindowEvents* events)
 {
-//     if(g_drag_types_requested)
-//     {
-//         g_drag_types_requested = false;
-//     }
-
     while(XPending(g_display))
     {
         XEvent xevent;
@@ -599,7 +603,10 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
         return;
     }
 
-    if(in.selection == XA_PRIMARY || in.selection == X11_Atom::CLIPBOARD)
+    auto m = g_metadata(in.selection);
+
+//     if(in.selection == XA_PRIMARY || in.selection == X11_Atom::CLIPBOARD)
+    if(m)
     {
         XEvent xevent;
         auto &out = xevent.xselection;
@@ -613,7 +620,18 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
 
         if(in.target == X11_Atom::TARGETS)
         {
-            Atom targets[3] = {X11_Atom::TARGETS, X11_Atom::UTF8_STRING, X11_Atom::TEXT};
+            vector<Atom> targets = {X11_Atom::TARGETS};
+            for(auto &type : *m)
+            {
+                string type_name(type.name());
+                if(type_name == "text/plain")
+                {
+                    targets.push_back(X11_Atom::UTF8_STRING);
+                    targets.push_back(X11_Atom::TEXT);
+                }
+
+                targets.push_back(get_extra_atom(type_name));
+            }
 
             XChangeProperty(
                 g_display,
@@ -622,8 +640,8 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
                 XA_ATOM,
                 32,
                 PropModeReplace,
-                (unsigned char*) targets,
-                3
+                (unsigned char*) targets.data(),
+                targets.size()
             );
 
             if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
@@ -631,9 +649,8 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in)
                 cerr << "Failed to send selection event!\n";
             }
         }
-        else if(in.target == X11_Atom::TEXT || in.target == X11_Atom::UTF8_STRING)
+        else
         {
-            cout << "Send selection!\n";
 
 
             string str = "Debugme!?";
@@ -665,79 +682,27 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEvents* events
     {
         if(in.target == X11_Atom::TARGETS)
         {
-            vector<Atom> atoms;
-            if(get_window_atom_list_property(
-                m_xwindow, in.property, XA_ATOM, true, atoms
-            ))
-            {
-                cout << "atoms: " << atoms.size() << "\n";
-                for(auto atom : atoms)
-                {
-                    cout << "    " << atom;
-                    if(atom != None)
-                    {
-                        cout << " -> " << atom_name(atom);
-                    }
-                    cout << "\n";
-                }
-
-                Atom best_type = None;
-                for(auto atom : atoms)
-                {
-                    if(atom == X11_Atom::UTF8_STRING)
-                    {
-                        if(best_type == None)
-                        {
-                            best_type = atom;
-                            break;
-                        }
-                    }
-                    else if(atom == X11_Atom::TEXT)
-                    {
-                        if(best_type == None)
-                        {
-                            best_type = atom;
-                        }
-                    }
-                }
-
-                if(best_type != None)
-                {
-                    cout << "requesting: " << atom_name(best_type) << "\n";
-
-                    XConvertSelection(
-                        g_display,
-                        X11_Atom::CLIPBOARD,
-                        best_type,
-                        X11_Atom::_R64FX_CLIPBOARD,
-                        m_xwindow,
-                        CurrentTime
-                    );
-                }
-                else
-                {
-                    cout << "Skip!\n";
-                }
-            }
-            else
-            {
-                cerr << "Failed to get window property " << atom_name(in.property) << "\n";
-            }
+            cout << "Got targets!\n";
         }
-        else if(in.target == X11_Atom::TEXT || in.target == X11_Atom::UTF8_STRING)
+        else if(in.target == g_requested_clipboard_type_atom)
         {
+            unsigned long  nitems = 0;
+            unsigned char* data   = nullptr;
 
-            string text;
-            if(get_window_text_property(
-                m_xwindow, in.property, in.target, true, text
-            ))
-            {
-//                 events->clipboard_input(this, text, (in.property == X11_Atom::_R64FX_SELECTION));
-            }
-            else
-            {
-                cerr << "Failed to get window property " << atom_name(in.property) << "\n";
-            }
+            get_window_property(
+                m_xwindow,
+                in.property,
+                false,
+                nitems,
+                data
+            );
+
+            events->clipboardDataRecieveEvent(
+                this,
+                g_requested_clipboard_type,
+                (void*)data, (int)nitems,
+                clipboard_mode(in.selection)
+            );
         }
     }
 }

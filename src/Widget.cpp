@@ -517,6 +517,9 @@ bool Widget::doingTextInput()
 
 void Widget::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode)
 {
+    if(mode == ClipboardMode::Bad)
+        return;
+
     auto win = rootWindow();
     if(win)
     {
@@ -532,9 +535,17 @@ void Widget::requestClipboardMetadata(ClipboardMode mode)
 }
 
 
-void Widget::requestClipboardData(ClipboardMetadata* metadata, ClipboardMode mode)
+void Widget::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
 {
+    if(mode == ClipboardMode::Bad)
+        return;
 
+    auto win = rootWindow();
+    if(win)
+    {
+        win->requestClipboardData(type, mode);
+        requestor(mode) = this;
+    }
 }
 
 
@@ -901,7 +912,7 @@ void WindowEvents_Widget::clipboardDataRecieveEvent
     auto widget = requestor(mode);
     if(widget)
     {
-        ClipboardDataRecieveEvent event;
+        ClipboardDataRecieveEvent event(mode, type, data, size);
         widget->clipboardDataRecieveEvent(&event);
     }
 }

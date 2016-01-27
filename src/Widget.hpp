@@ -153,7 +153,7 @@ public:
 
     void requestClipboardMetadata(ClipboardMode mode);
 
-    void requestClipboardData(ClipboardMetadata* metadata, ClipboardMode mode);
+    void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 
 
 /* === Update/Reconfigure cycle === */
