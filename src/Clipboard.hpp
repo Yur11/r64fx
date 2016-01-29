@@ -42,6 +42,13 @@ public:
 
     ClipboardMetadata()
     {}
+
+    bool contains(ClipboardDataType type);
+
+    inline bool contains(const char* type_name)
+    {
+        return contains(ClipboardDataType(type_name));
+    }
 };
 
 

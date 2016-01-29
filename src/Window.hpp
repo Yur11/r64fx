@@ -33,7 +33,7 @@ public:
                          (Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode) = 0;
 
     virtual void clipboardMetadataRecieveEvent
-                         (Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode) = 0;
+                         (Window* window, const ClipboardMetadata &metadata, ClipboardMode mode) = 0;
 
     virtual void closeEvent(Window* window) = 0;
 };
@@ -93,6 +93,7 @@ public:
 
     virtual void requestClipboardData(ClipboardDataType type, ClipboardMode mode) = 0;
 
+    virtual void requestClipboardMetadata(const ClipboardMetadata &filter, ClipboardMode mode) = 0;
 
     static Window* newInstance(
         int width = 800, int height = 600,

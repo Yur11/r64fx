@@ -8,10 +8,10 @@ bool get_window_property(
     bool      delete_property,
 
     unsigned long   &out_nitems,
-    unsigned char*  &out_data
+    unsigned char*  &out_data,
+    int             &format
 )
 {
-    int             format;
     unsigned long   bytes_after;
     Atom            out_type;
 

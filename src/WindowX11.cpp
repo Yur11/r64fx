@@ -65,6 +65,8 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 
+    virtual void requestClipboardMetadata(const ClipboardMetadata &filter, ClipboardMode mode);
+
 
     inline ::Window xWindow() const { return m_xwindow; }
 
@@ -134,6 +136,8 @@ namespace{
                 return nullptr;
         }
     }
+
+    ClipboardMetadata g_clipboard_metadata_filter;
 
     ClipboardDataType g_requested_clipboard_type;
 
@@ -367,6 +371,7 @@ void WindowX11::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
     if(string(type.name()) == "text/plain" && g_requested_text_type_atom != None)
     {
         type_atom = g_requested_text_type_atom;
+        g_requested_text_type_atom = None;
     }
     else
     {
@@ -383,6 +388,21 @@ void WindowX11::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
     );
 
     g_requested_clipboard_type_atom = type_atom;
+}
+
+
+void WindowX11::requestClipboardMetadata(const ClipboardMetadata &filter, ClipboardMode mode)
+{
+    g_clipboard_metadata_filter = filter;
+
+    XConvertSelection(
+        g_display,
+        atom(mode),
+        X11_Atom::TARGETS,
+        X11_Atom::_R64FX_SELECTION,
+        m_xwindow,
+        CurrentTime
+    );
 }
 
 
@@ -714,24 +734,61 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEvents* ev
 
 void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEvents* events)
 {
+    cout << "recieveSelection\n";
+
     if((in.selection == XA_PRIMARY || in.selection == X11_Atom::CLIPBOARD) &&
        (in.property == X11_Atom::_R64FX_SELECTION || in.property == X11_Atom::_R64FX_CLIPBOARD))
     {
         if(in.target == X11_Atom::TARGETS)
         {
-            cout << "Got targets!\n";
-        }
-        else if(in.target == g_requested_clipboard_type_atom)
-        {
             unsigned long  nitems = 0;
             unsigned char* data   = nullptr;
+            int format = 0;
 
             get_window_property(
                 m_xwindow,
                 in.property,
                 false,
                 nitems,
-                data
+                data,
+                format
+            );
+
+            if(format == 32 && nitems > 0)
+            {
+                ClipboardMetadata metadata;
+                auto atoms = (Atom*)data;
+                for(int i=0; i<(int)nitems; i++)
+                {
+                    Atom atom = atoms[i];
+                    string name = atom_name(atom);
+
+                    ClipboardDataType type(name.c_str());
+                    if(g_clipboard_metadata_filter.contains(type))
+                    {
+                        metadata.push_back(type);
+                    }
+                }
+
+//                 events->ClipboardMetadataRecieveEvent(
+//                     this,
+//
+//                 );
+            }
+        }
+        else if(in.target == g_requested_clipboard_type_atom)
+        {
+            unsigned long  nitems = 0;
+            unsigned char* data   = nullptr;
+            int format = 0;
+
+            get_window_property(
+                m_xwindow,
+                in.property,
+                false,
+                nitems,
+                data,
+                format
             );
 
             events->clipboardDataRecieveEvent(
@@ -747,7 +804,7 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEvents* events
 
 void WindowX11::clearSelection(const XSelectionClearEvent &in)
 {
-    cout << "clearSelection\n";
+    cout << "WindowX11::clearSelection\n";
     auto m = g_metadata(in.selection);
     if(m)
     {

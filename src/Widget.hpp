@@ -151,7 +151,7 @@ public:
 
     void anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode);
 
-    void requestClipboardMetadata(ClipboardMode mode);
+    void requestClipboardMetadata(const ClipboardMetadata &filter, ClipboardMode mode);
 
     void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 

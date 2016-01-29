@@ -501,7 +501,8 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
         m_text_painter->updateSelection();
         if(event->button() == MouseButton::Middle())
         {
-            requestClipboardData(type_text_plain, ClipboardMode::Selection);
+//             requestClipboardData(type_text_plain, ClipboardMode::Selection);
+            requestClipboardMetadata(type_text_plain, ClipboardMode::Selection);
         }
     }
     update();
@@ -737,6 +738,12 @@ void Widget_Text::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 {
     cout << "Widget_Text::clipboardDataTransmitEvent\n";
     event->transmit((void*)g_selection_text.c_str(), g_selection_text.size());
+}
+
+
+void Widget_Text::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
+{
+    cout << "Widget_Text::clipboardMetadataRecieveEvent\n";
 }
 
 

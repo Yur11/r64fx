@@ -39,7 +39,7 @@ class WindowEvents_Widget : public WindowEvents{
                          (Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode);
 
     virtual void clipboardMetadataRecieveEvent
-                         (Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode);
+                         (Window* window, const ClipboardMetadata &metadata, ClipboardMode mode);
 
     virtual void closeEvent(Window* window);
 };
@@ -529,9 +529,17 @@ void Widget::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMo
 }
 
 
-void Widget::requestClipboardMetadata(ClipboardMode mode)
+void Widget::requestClipboardMetadata(const ClipboardMetadata &filter, ClipboardMode mode)
 {
+    if(mode == ClipboardMode::Bad)
+        return;
 
+    auto win = rootWindow();
+    if(win)
+    {
+        win->requestClipboardMetadata(filter, mode);
+        requestor(mode) = this;
+    }
 }
 
 
@@ -942,12 +950,12 @@ void Widget::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 
 
 void WindowEvents_Widget::clipboardMetadataRecieveEvent
-(Window* window, ClipboardDataType* types, int ntypes, ClipboardMode mode)
+(Window* window, const ClipboardMetadata &metadata, ClipboardMode mode)
 {
     auto widget = requestor(mode);
     if(widget)
     {
-        ClipboardMetadataRecieveEvent event;
+        ClipboardMetadataRecieveEvent event(mode, metadata);
         widget->clipboardMetadataRecieveEvent(&event);
     }
 }
