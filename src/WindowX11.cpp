@@ -65,7 +65,7 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 
-    virtual void requestClipboardMetadata(const ClipboardMetadata &filter, ClipboardMode mode);
+    virtual void requestClipboardMetadata(ClipboardMode mode);
 
 
     inline ::Window xWindow() const { return m_xwindow; }

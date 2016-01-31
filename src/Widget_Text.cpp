@@ -24,11 +24,10 @@ using namespace std;
 namespace r64fx{
 
 namespace{
-
-ClipboardDataType type_text_plain("text/plain");
-string g_selection_text;
-
+    string g_selection_text = "";
+    string g_clipboard_text = "";
 }//namespace
+
 
 Widget_Text::Widget_Text(const std::string &text, Font* font, Widget* parent)
 : Widget(parent)
@@ -501,7 +500,7 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
         m_text_painter->updateSelection();
         if(event->button() == MouseButton::Middle())
         {
-            requestClipboardMetadata(type_text_plain, ClipboardMode::Selection);
+            requestClipboardMetadata(ClipboardMode::Selection);
         }
     }
     update();
@@ -514,7 +513,7 @@ void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
     if(m_text_painter->hasSelection())
     {
         g_selection_text = m_text_painter->selectionText();
-        anounceClipboardData(type_text_plain, ClipboardMode::Selection);
+        anounceClipboardData("text/plain", ClipboardMode::Selection);
     }
 }
 
@@ -674,26 +673,22 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     {
         if(tp->hasSelection())
         {
-//             setClipboardData(tp->selectionText());
+            g_clipboard_text = tp->selectionText();
+            anounceClipboardData("text/plain", ClipboardMode::Clipboard);
         }
     }
     else if(Keyboard::CtrlDown() && key == Keyboard::Key::X)
     {
         if(tp->hasSelection())
         {
-//             setClipboardData(tp->selectionText());
+            g_clipboard_text = tp->selectionText();
+            anounceClipboardData("text/plain", ClipboardMode::Clipboard);
             deleteAtCursorPosition(false);
         }
     }
     else if(Keyboard::CtrlDown() && key == Keyboard::Key::V)
     {
-//         auto win = root()->window();
-//         if(win)
-//         {
-//             cout << "win->requestTargets()\n";
-//             win->requestTargets();
-//         }
-//         requestClipboardData();
+        requestClipboardMetadata(ClipboardMode::Clipboard);
     }
     else if(key == Keyboard::Key::Delete)
     {
@@ -714,7 +709,8 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
 
     if(tp->hasSelection() && touched_selection)
     {
-//         setSelection(tp->selectionText());
+        g_selection_text = m_text_painter->selectionText();
+        anounceClipboardData("text/plain", ClipboardMode::Selection);
     }
 
     update();
@@ -723,7 +719,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
 
 void Widget_Text::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 {
-    cout << "Widget_Text::ClipboardDataRecieveEvent\n";
+    cout << event->type().name() << "\n";
     if(event->mode() != ClipboardMode::Bad /*&& event->type() == type_text_plain*/ && event->data() != nullptr && event->size() > 0)
     {
         string text((const char*)event->data(), event->size());
@@ -735,7 +731,6 @@ void Widget_Text::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 
 void Widget_Text::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 {
-    cout << "Widget_Text::clipboardDataTransmitEvent\n";
     event->transmit((void*)g_selection_text.c_str(), g_selection_text.size());
 }
 

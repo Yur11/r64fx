@@ -68,7 +68,7 @@ public:
 
     virtual void requestClipboardData(ClipboardDataType type, ClipboardMode mode) = 0;
 
-    virtual void requestClipboardMetadata(const ClipboardMetadata &filter, ClipboardMode mode) = 0;
+    virtual void requestClipboardMetadata(ClipboardMode mode) = 0;
 
     static Window* newInstance(
         int width = 800, int height = 600,

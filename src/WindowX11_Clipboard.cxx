@@ -1,17 +1,15 @@
 namespace{
 
 struct ClipboardImpl{
-    ClipboardMetadata   metadata;
-
-    ClipboardMode       mode;
-
     Atom                selection;
+
+    ClipboardMetadata   metadata;
+    ClipboardMode       mode;
     Atom                requested_clipboard_type;
 
     void clear()
     {
         metadata.clear();
-        selection = None;
         requested_clipboard_type = None;
     }
 };
@@ -104,7 +102,7 @@ void WindowX11::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
 }
 
 
-void WindowX11::requestClipboardMetadata(const ClipboardMetadata &filter, ClipboardMode mode)
+void WindowX11::requestClipboardMetadata(ClipboardMode mode)
 {
     auto cb = clipboard(mode);
     if(!cb)
@@ -155,11 +153,11 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEvents* ev
         for(auto &type : cb->metadata)
         {
             string type_name(type.name());
-            if(type_name == "text/plain")
-            {
-                targets.push_back(X11_Atom::UTF8_STRING);
-                targets.push_back(X11_Atom::TEXT);
-            }
+//             if(type_name == "text/plain")
+//             {
+//                 targets.push_back(X11_Atom::UTF8_STRING);
+//                 targets.push_back(X11_Atom::TEXT);
+//             }
 
             targets.push_back(get_extra_atom(type_name));
         }
@@ -182,11 +180,7 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEvents* ev
     }
     else
     {
-        ClipboardDataType cdt;
-        if(in.target == X11_Atom::UTF8_STRING || in.target == X11_Atom::TEXT)
-        {
-            cdt = ClipboardDataType("text/plain");
-        }
+        ClipboardDataType cdt(atom_name(in.target));
 
         if(cdt.isGood())
         {
@@ -302,6 +296,8 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEvents* events
 
 void WindowX11::clearSelection(const XSelectionClearEvent &in)
 {
+    cout << "clearSelection\n";
+
     auto cb = clipboard(in.selection);
     if(!cb)
     {

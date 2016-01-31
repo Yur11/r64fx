@@ -46,6 +46,10 @@ public:
     : std::vector<ClipboardDataType>{type}
     {}
 
+    ClipboardMetadata(const char* type)
+    : std::vector<ClipboardDataType>{ClipboardDataType(type)}
+    {}
+
     ClipboardMetadata()
     {}
 

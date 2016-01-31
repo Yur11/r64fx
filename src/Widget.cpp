@@ -529,7 +529,7 @@ void Widget::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMo
 }
 
 
-void Widget::requestClipboardMetadata(const ClipboardMetadata &filter, ClipboardMode mode)
+void Widget::requestClipboardMetadata(ClipboardMode mode)
 {
     if(mode == ClipboardMode::Bad)
         return;
@@ -537,7 +537,7 @@ void Widget::requestClipboardMetadata(const ClipboardMetadata &filter, Clipboard
     auto win = rootWindow();
     if(win)
     {
-        win->requestClipboardMetadata(filter, mode);
+        win->requestClipboardMetadata(mode);
         requestor(mode) = this;
     }
 }
