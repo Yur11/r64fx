@@ -11,7 +11,7 @@ bool operator==(ClipboardDataType a, ClipboardDataType b)
 }
 
 
-bool ClipboardMetadata::contains(ClipboardDataType type)
+bool ClipboardMetadata::has(const ClipboardDataType &type) const
 {
     for(auto it=begin(); it!=end(); it++)
     {

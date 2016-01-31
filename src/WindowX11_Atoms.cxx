@@ -8,9 +8,9 @@ namespace X11_Atom{
     Atom _NET_WM_NAME;
     Atom UTF8_STRING;
     Atom TEXT;
+    Atom STRING;
     Atom TARGETS;
     Atom MULTIPLE;
-    Atom _R64FX_SELECTION;
     Atom CLIPBOARD;
     Atom _R64FX_CLIPBOARD;
 
@@ -47,10 +47,12 @@ void init_atoms()
         R64FX_INTERN_ATOM( _NET_WM_NAME,     true  );
         R64FX_INTERN_ATOM( UTF8_STRING,      true  );
         R64FX_INTERN_ATOM( TEXT,             true  );
+        R64FX_INTERN_ATOM( STRING,           true  );
         R64FX_INTERN_ATOM( TARGETS,          true  );
         R64FX_INTERN_ATOM( MULTIPLE,         true  );
-        R64FX_INTERN_ATOM( _R64FX_SELECTION, false );
         R64FX_INTERN_ATOM( CLIPBOARD,        true  );
+
+        R64FX_INTERN_ATOM( _R64FX_CLIPBOARD, false );
 
         R64FX_INTERN_ATOM( XdndAware,     false );
         R64FX_INTERN_ATOM( XdndEnter,     false );

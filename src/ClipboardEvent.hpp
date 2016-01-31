@@ -48,7 +48,7 @@ public:
 };
 
 
-class ClipboardDataTransmitEvent : ClipboardDataEvent{
+class ClipboardDataTransmitEvent : public ClipboardDataEvent{
     void** m_data = nullptr;
     int*   m_size = nullptr;
 
@@ -63,7 +63,7 @@ public:
 };
 
 
-class ClipboardMetadataRecieveEvent : ClipboardEvent{
+class ClipboardMetadataRecieveEvent : public ClipboardEvent{
     const ClipboardMetadata &m_metadata;
 
 public:
@@ -73,6 +73,11 @@ public:
     {}
 
     inline const ClipboardMetadata &metadata() const { return m_metadata; }
+
+    inline bool has(const ClipboardDataType &type) const
+    {
+        return m_metadata.has(type);
+    }
 };
 
 }//namespace r64fx

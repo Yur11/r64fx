@@ -501,7 +501,6 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
         m_text_painter->updateSelection();
         if(event->button() == MouseButton::Middle())
         {
-//             requestClipboardData(type_text_plain, ClipboardMode::Selection);
             requestClipboardMetadata(type_text_plain, ClipboardMode::Selection);
         }
     }
@@ -743,7 +742,10 @@ void Widget_Text::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 
 void Widget_Text::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
 {
-    cout << "Widget_Text::clipboardMetadataRecieveEvent\n";
+    if(event->has("text/plain"))
+    {
+        requestClipboardData("text/plain", event->mode());
+    }
 }
 
 

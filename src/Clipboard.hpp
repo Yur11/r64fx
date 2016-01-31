@@ -2,7 +2,9 @@
 #define R64FX_CLIPBOARD_HPP
 
 #include "Point.hpp"
+#include <string>
 #include <vector>
+
 
 namespace r64fx{
 
@@ -15,14 +17,18 @@ enum class ClipboardMode{
 
 
 class ClipboardDataType{
-    const char* m_name = nullptr;
+    std::string m_name;
 
 public:
-    ClipboardDataType(const char* name = "") : m_name(name) {}
+    ClipboardDataType() : m_name("") {}
 
-    inline bool isGood() const { return m_name != nullptr; }
+    ClipboardDataType(const std::string &name) : m_name(name) {}
 
-    inline const char* name() const { return m_name; }
+    ClipboardDataType(const char* name) : m_name(name) {}
+
+    inline bool isGood() const { return !m_name.empty(); }
+
+    inline std::string name() const { return m_name; }
 };
 
 
@@ -43,12 +49,7 @@ public:
     ClipboardMetadata()
     {}
 
-    bool contains(ClipboardDataType type);
-
-    inline bool contains(const char* type_name)
-    {
-        return contains(ClipboardDataType(type_name));
-    }
+    bool has(const ClipboardDataType &type) const;
 };
 
 

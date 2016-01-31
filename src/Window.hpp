@@ -9,34 +9,9 @@
 namespace r64fx{
 
 class Window;
+class WindowEvents;
 class Image;
 class ClipboardDataType;
-
-
-class WindowEvents{
-public:
-    virtual void resizeEvent(Window* window, int width, int height) = 0;
-
-    virtual void mousePressEvent   (Window* window, int x, int y, unsigned int button) = 0;
-    virtual void mouseReleaseEvent (Window* window, int x, int y, unsigned int button) = 0;
-    virtual void mouseMoveEvent    (Window* window, int x, int y) = 0;
-
-    virtual void keyPressEvent     (Window* window, unsigned int key) = 0;
-    virtual void keyReleaseEvent   (Window* window, unsigned int key) = 0;
-
-    virtual void textInputEvent    (Window* window, const std::string &text, unsigned int key) = 0;
-
-    virtual void clipboardDataRecieveEvent
-                         (Window* window, ClipboardDataType type, void* data, int size, ClipboardMode mode) = 0;
-
-    virtual void clipboardDataTransmitEvent
-                         (Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode) = 0;
-
-    virtual void clipboardMetadataRecieveEvent
-                         (Window* window, const ClipboardMetadata &metadata, ClipboardMode mode) = 0;
-
-    virtual void closeEvent(Window* window) = 0;
-};
 
 
 class Window{
@@ -106,6 +81,32 @@ public:
     static void processSomeEvents(WindowEvents* events);
 
     static void forEach(void (*fun)(Window* window, void* data), void* data);
+};
+
+
+class WindowEvents{
+public:
+    virtual void resizeEvent(Window* window, int width, int height) = 0;
+
+    virtual void mousePressEvent   (Window* window, int x, int y, unsigned int button) = 0;
+    virtual void mouseReleaseEvent (Window* window, int x, int y, unsigned int button) = 0;
+    virtual void mouseMoveEvent    (Window* window, int x, int y) = 0;
+
+    virtual void keyPressEvent     (Window* window, unsigned int key) = 0;
+    virtual void keyReleaseEvent   (Window* window, unsigned int key) = 0;
+
+    virtual void textInputEvent    (Window* window, const std::string &text, unsigned int key) = 0;
+
+    virtual void clipboardDataRecieveEvent
+                         (Window* window, ClipboardDataType type, void* data, int size, ClipboardMode mode) = 0;
+
+    virtual void clipboardDataTransmitEvent
+                         (Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode) = 0;
+
+    virtual void clipboardMetadataRecieveEvent
+                         (Window* window, const ClipboardMetadata &metadata, ClipboardMode mode) = 0;
+
+    virtual void closeEvent(Window* window) = 0;
 };
 
 };
