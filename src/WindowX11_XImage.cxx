@@ -1,5 +1,25 @@
 /* To be included in WindowX11.cpp */
 
+namespace{
+#ifdef R64FX_USE_MITSHM
+    int g_mitshm_major = 0;
+    int g_mitshm_minor = 0;
+    int g_mitshm_has_pixmaps = 0;
+    int g_mitsm_completion_event = 0;
+
+    inline bool got_mitshm() { return g_mitshm_major > 0; }
+
+    inline bool got_mitshm_pixmaps() { return g_mitshm_has_pixmaps; }
+
+    void init_mitshm()
+    {
+        XShmQueryVersion(g_display, &g_mitshm_major, &g_mitshm_minor, &g_mitshm_has_pixmaps);
+        g_mitsm_completion_event = XShmGetEventBase(g_display) + ShmCompletion;
+    }
+#endif//R64FX_USE_MITSHM
+}//namespace
+
+
 struct WindowXImage : public WindowX11{
     Image*           m_image   = nullptr;
     XGCValues        m_xgc_values;

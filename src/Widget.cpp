@@ -41,6 +41,10 @@ class WindowEvents_Widget : public WindowEvents{
     virtual void clipboardMetadataRecieveEvent
                          (Window* window, const ClipboardMetadata &metadata, ClipboardMode mode);
 
+    virtual void dndEnterEvent    (Window* window, int x, int y);
+    virtual void dndLeaveEvent    (Window* window);
+    virtual void dndMoveEvent     (Window* window, int x, int y);
+
     virtual void closeEvent(Window* window);
 };
 
@@ -69,6 +73,8 @@ namespace{
     Widget* g_requestor_clipboard      = nullptr;
     Widget* g_requestor_selection      = nullptr;
     Widget* g_requestor_drag_and_drop  = nullptr;
+
+    Widget* g_dnd_target = nullptr;
 
     inline Widget* &anouncer(ClipboardMode mode)
     {
@@ -962,6 +968,42 @@ void WindowEvents_Widget::clipboardMetadataRecieveEvent
 
 
 void Widget::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
+{
+
+}
+
+
+void WindowEvents_Widget::dndEnterEvent(Window* window, int x, int y)
+{
+    cout << "dnd enter: " << x << ", " << y << "\n";
+}
+
+
+void Widget::dndEnterEvent(DndEnterEvent* event)
+{
+
+}
+
+
+void WindowEvents_Widget::dndLeaveEvent(Window* window)
+{
+
+}
+
+
+void Widget::dndLeaveEvent(DndLeaveEvent* event)
+{
+
+}
+
+
+void WindowEvents_Widget::dndMoveEvent(Window* window, int x, int y)
+{
+    cout << "dnd move:  " << x << ", " << y << "\n";
+}
+
+
+void Widget::dndMoveEvent(DndMoveEvent* event)
 {
 
 }

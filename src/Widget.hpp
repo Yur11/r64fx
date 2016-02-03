@@ -21,6 +21,9 @@ class ClipboardMetadata;
 class ClipboardDataRecieveEvent;
 class ClipboardDataTransmitEvent;
 class ClipboardMetadataRecieveEvent;
+class DndEnterEvent;
+class DndLeaveEvent;
+class DndMoveEvent;
 
 
 class Widget : public LinkedList<Widget>::Node{
@@ -224,6 +227,12 @@ protected:
     virtual void clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event);
 
     virtual void clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event);
+
+    virtual void dndEnterEvent(DndEnterEvent* event);
+
+    virtual void dndLeaveEvent(DndLeaveEvent* event);
+
+    virtual void dndMoveEvent(DndMoveEvent* event);
 
     virtual void closeEvent();
 

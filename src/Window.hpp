@@ -38,6 +38,10 @@ public:
 
     virtual void hide() = 0;
 
+    virtual int x() = 0;
+
+    virtual int y() = 0;
+
     virtual void resize(int width, int height) = 0;
 
     virtual int width() = 0;
@@ -105,6 +109,10 @@ public:
 
     virtual void clipboardMetadataRecieveEvent
                          (Window* window, const ClipboardMetadata &metadata, ClipboardMode mode) = 0;
+
+    virtual void dndEnterEvent    (Window* window, int x, int y) = 0;
+    virtual void dndLeaveEvent    (Window* window) = 0;
+    virtual void dndMoveEvent     (Window* window, int x, int y) = 0;
 
     virtual void closeEvent(Window* window) = 0;
 };

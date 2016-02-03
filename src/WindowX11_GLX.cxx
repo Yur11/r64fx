@@ -1,5 +1,11 @@
 /* To be included in WindowX11.cpp */
 
+namespace{
+    int g_glx_major = 0;
+    int g_glx_minor = 0;
+}//namespace
+
+
 struct WindowGLX : public WindowX11{
     GLXContext m_gl_context = 0;
 

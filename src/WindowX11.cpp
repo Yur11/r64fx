@@ -30,6 +30,9 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     string             m_title;
     XIC                m_input_context;
 
+    int mx = 0;
+    int my = 0;
+
     virtual ~WindowX11() {}
 
     virtual void setup(int width, int height) = 0;
@@ -39,6 +42,10 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     virtual void show();
 
     virtual void hide();
+
+    virtual int x();
+
+    virtual int y();
 
     virtual void resize(int width, int height);
 
@@ -122,24 +129,18 @@ namespace{
 //     bool g_outgoing_drag = false;
 }//namespace
 
+
 #include "WindowX11_Atoms.cxx"
 #include "WindowX11_Properties.cxx"
 #include "WindowX11_Clipboard.cxx"
 #include "WindowX11_XDND.cxx"
+#include "WindowX11_XImage.cxx"
+#ifdef R64FX_USE_GL
+#include "WindowX11_GLX.cxx"
+#endif//R64FX_USE_GL
 
 
 namespace{
-#ifdef R64FX_USE_MITSHM
-    int g_mitshm_major = 0;
-    int g_mitshm_minor = 0;
-    int g_mitshm_has_pixmaps = 0;
-    int g_mitsm_completion_event = 0;
-
-    inline bool got_mitshm() { return g_mitshm_major > 0; }
-
-    inline bool got_mitshm_pixmaps() { return g_mitshm_has_pixmaps; }
-#endif//R64FX_USE_MITSHM
-
     void init_x_if_needed()
     {
         if(!g_display)
@@ -162,10 +163,8 @@ namespace{
 
             init_atoms();
             init_clipboard();
-
 #ifdef R64FX_USE_MITSHM
-            XShmQueryVersion(g_display, &g_mitshm_major, &g_mitshm_minor, &g_mitshm_has_pixmaps);
-            g_mitsm_completion_event = XShmGetEventBase(g_display) + ShmCompletion;
+            init_mitshm();
 #endif//R64FX_USE_MITSHM
         }
     }
@@ -187,19 +186,7 @@ namespace{
             g_display = 0;
         }
     }
-
-#ifdef R64FX_USE_GL
-    int g_glx_major = 0;
-    int g_glx_minor = 0;
-#endif//R64FX_USE_GL
-
 }//namespace
-
-
-#include "WindowX11_XImage.cxx"
-#ifdef R64FX_USE_GL
-#include "WindowX11_GLX.cxx"
-#endif//R64FX_USE_GL
 
 
 void WindowX11::show()
@@ -211,6 +198,18 @@ void WindowX11::show()
 void WindowX11::hide()
 {
     XUnmapWindow(g_display, m_xwindow);
+}
+
+
+int WindowX11::x()
+{
+    return mx;
+}
+
+
+int WindowX11::y()
+{
+    return my;
 }
 
 
@@ -355,6 +354,9 @@ void WindowX11::processSomeEvents(WindowEvents* events)
 
             case ConfigureNotify:
             {
+                window->mx = xevent.xconfigure.x;
+                window->my = xevent.xconfigure.y;
+
                 int old_w = window->width();
                 int old_h = window->height();
                 window->updateAttrs();
@@ -397,34 +399,37 @@ void WindowX11::processSomeEvents(WindowEvents* events)
 
                 if(msg.message_type == X11_Atom::XdndPosition)
                 {
-                    cout << "XdndPosition\n";
                     int x, y;
                     get_dnd_position(msg.data.l, x, y);
                     cout << x << ", " << y << "\n";
                     if(!g_incoming_drag)
                     {
                         g_incoming_drag = true;
+                        window->updateAttrs();
                         request_all_dnd_positions(xwindow, dnd_source(msg.data.l));
+                        events->dndEnterEvent(window, x - window->x(), y - window->y());
+                    }
+                    else
+                    {
+                        events->dndMoveEvent(window, x - window->x(), y - window->y());
                     }
                 }
                 else if(msg.message_type == X11_Atom::XdndEnter)
                 {
-                    cout << "XdndEnter\n";
                     vector<Atom> types;
                     get_dnd_type_list(msg.data.l, types);
-                    for(auto atom : types)
-                    {
-                        cout << atom << " -> " << atom_name(atom) << "\n";
-                    }
+//                     for(auto atom : types)
+//                     {
+//                         cout << atom << " -> " << atom_name(atom) << "\n";
+//                     }
                 }
                 else if(msg.message_type == X11_Atom::XdndLeave)
                 {
-                    cout << "XdndLeave\n";
                     g_incoming_drag = false;
+                    events->dndLeaveEvent(window);
                 }
                 else if(msg.message_type == X11_Atom::XdndDrop)
                 {
-                    cout << "XdndDrop\n";
                     send_dnd_finished(xwindow, dnd_source(msg.data.l), false);
                     g_incoming_drag = false;
                 }

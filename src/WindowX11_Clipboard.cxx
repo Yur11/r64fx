@@ -1,3 +1,5 @@
+/* To be included in WindowX11.cpp */
+
 namespace{
 
 struct ClipboardImpl{
