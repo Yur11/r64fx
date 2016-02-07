@@ -113,6 +113,7 @@ public:
     virtual void dndEnterEvent    (Window* window, int x, int y) = 0;
     virtual void dndLeaveEvent    (Window* window) = 0;
     virtual void dndMoveEvent     (Window* window, int x, int y) = 0;
+    virtual void dndDropEvent     (Window* window) = 0;
 
     virtual void closeEvent(Window* window) = 0;
 };

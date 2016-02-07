@@ -44,6 +44,7 @@ class WindowEvents_Widget : public WindowEvents{
     virtual void dndEnterEvent    (Window* window, int x, int y);
     virtual void dndLeaveEvent    (Window* window);
     virtual void dndMoveEvent     (Window* window, int x, int y);
+    virtual void dndDropEvent     (Window* window);
 
     virtual void closeEvent(Window* window);
 };
@@ -1006,6 +1007,12 @@ void WindowEvents_Widget::dndMoveEvent(Window* window, int x, int y)
 void Widget::dndMoveEvent(DndMoveEvent* event)
 {
 
+}
+
+
+void WindowEvents_Widget::dndDropEvent(Window* window)
+{
+    cout << "drop\n";
 }
 
 

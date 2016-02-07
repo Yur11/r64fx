@@ -401,7 +401,6 @@ void WindowX11::processSomeEvents(WindowEvents* events)
                 {
                     int x, y;
                     get_dnd_position(msg.data.l, x, y);
-                    cout << x << ", " << y << "\n";
                     if(!g_incoming_drag)
                     {
                         g_incoming_drag = true;
@@ -432,6 +431,7 @@ void WindowX11::processSomeEvents(WindowEvents* events)
                 {
                     send_dnd_finished(xwindow, dnd_source(msg.data.l), false);
                     g_incoming_drag = false;
+                    events->dndDropEvent(window);
                 }
                 else if(msg.message_type == X11_Atom::XdndFinished)
                 {

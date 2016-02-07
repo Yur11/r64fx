@@ -24,6 +24,7 @@ class ClipboardMetadataRecieveEvent;
 class DndEnterEvent;
 class DndLeaveEvent;
 class DndMoveEvent;
+class DndDropEvent;
 
 
 class Widget : public LinkedList<Widget>::Node{
