@@ -438,22 +438,23 @@ void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
     m_image = new Image(width(), height(), 4);
     fill(m_image, {255, 255, 255, 0});
 
-    m_text_painter->paintSelectionBackground(m_image, {148, 202, 239}, {10, 10});
-    m_text_painter->paintText(m_image, {0, 0, 0}, {0, 0, 0}, {10, 10});
+    m_text_painter->paintSelectionBackground(
+        m_image, {148, 202, 239}, {paddingLeft(), paddingTop()}
+    );
+
+    m_text_painter->paintText(
+        m_image, {0, 0, 0}, {0, 0, 0}, {paddingLeft(), paddingTop()}
+    );
+
     draw_rect(
-        m_image,
-        {0, 0, 0},
-        intersection(
-            Rect<int>(10, 10, m_text_painter->textSize().width(), m_text_painter->textSize().height()),
-            Rect<int>(0, 0, width(), height())
-        )
+        m_image, {0, 0, 0}, {0, 0, width(), height()}
     );
 
     for(int y=0; y<m_text_painter->font->height(); y++)
     {
         auto cursor_pos = m_text_painter->findCursorCoords(m_text_painter->cursorPosition());
-        int xx = cursor_pos.x() + 10;
-        int yy = cursor_pos.y() + 10 + y;
+        int xx = cursor_pos.x() + paddingLeft();
+        int yy = cursor_pos.y() + paddingTop() + y;
 
         if(xx >= 0 &&
            xx < m_image->width() &&
@@ -488,7 +489,7 @@ void Widget_Text::focusOutEvent()
 
 void Widget_Text::resizeEvent(ResizeEvent* event)
 {
-    m_text_painter->setReflowWidth(event->width() - 20);
+    m_text_painter->setReflowWidth(event->width() - paddingLeft() - paddingRight());
     m_text_painter->reflow();
     m_text_painter->reallign();
 }
@@ -502,7 +503,9 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
     }
     else if(event->button() == MouseButton::Left() || event->button() == MouseButton::Middle())
     {
-        auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10));
+        auto tcp = m_text_painter->findCursorPosition(
+            event->position() - Point<int>(paddingLeft(), paddingTop())
+        );
         m_text_painter->setCursorPosition(tcp);
         m_text_painter->setSelectionStart(tcp);
         m_text_painter->setSelectionEnd(tcp);
@@ -531,7 +534,9 @@ void Widget_Text::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(pressedButtons() & MouseButton::Left())
     {
-        auto tcp = m_text_painter->findCursorPosition(event->position() - Point<int>(10, 10));
+        auto tcp = m_text_painter->findCursorPosition(
+            event->position() - Point<int>(paddingLeft(), paddingTop())
+        );
         m_text_painter->setCursorPosition(tcp);
         m_text_painter->setSelectionEnd(tcp);
         m_text_painter->updateSelection();

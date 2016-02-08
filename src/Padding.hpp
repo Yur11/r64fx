@@ -31,6 +31,10 @@ public:
     }
 
     inline void setPadding(T padding) { setPadding(padding, padding, padding, padding); }
+
+    inline T paddingWidth() const { return paddingLeft() + paddingRight(); }
+
+    inline T paddingHeight() const { return paddingTop() + paddingBottom(); }
 };
     
 }//namespace r64fx

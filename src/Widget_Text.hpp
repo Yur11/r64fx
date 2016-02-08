@@ -2,6 +2,7 @@
 #define R64FX_WIDGET_TEXT_HPP
 
 #include "Widget.hpp"
+#include "Padding.hpp"
 #include "TextFlags.hpp"
 
 namespace r64fx{
@@ -9,7 +10,7 @@ namespace r64fx{
 class Font;
 class Image;
 
-class Widget_Text : public Widget{
+class Widget_Text : public Widget, public Padding<int>{
     void*         m[2]    = {nullptr, nullptr};
     Image*        m_image = nullptr;
 

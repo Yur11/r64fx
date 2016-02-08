@@ -142,12 +142,16 @@ private:
         m_container = new Widget_Container;
         for(int i=0; i<2; i++)
         {
-            auto wt = new Widget_Text("Hello!\n", m_Font, m_container);
-            wt->setWidth(200);
-            wt->setHeight(200);
-            wt->setTextWrap(TextWrap::Word);
+            auto wt = new Widget_Text("", m_Font, m_container);
+            wt->setWidth(300);
+            wt->setHeight(300);
+            wt->setPadding(5);
+            wt->setTextWrap(TextWrap::Anywhere);
             wt->setTextAlignment(TextAlignment::Left);
+
         }
+        m_container->setPadding(5);
+        m_container->setSpacing(5);
         m_container->alignHorizontally();
         m_container->show();
     }
