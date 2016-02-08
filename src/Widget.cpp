@@ -223,7 +223,7 @@ Point<int> Widget::position() const
 void Widget::setSize(Size<int> size)
 {
     m_rect.setSize(size);
-    if(isWindow() && size == Size<int>(m_parent.window->width(), m_parent.window->height()))
+    if(isWindow() && size != Size<int>(m_parent.window->width(), m_parent.window->height()))
     {
         m_parent.window->resize(size.width(), size.height());
     }
@@ -240,7 +240,7 @@ Size<int> Widget::size() const
 
 void Widget::setWidth(int width)
 {
-    m_rect.setWidth(width);
+    setSize({width, height()});
 }
 
 
@@ -252,7 +252,7 @@ int Widget::width() const
 
 void Widget::setHeight(int height)
 {
-    m_rect.setHeight(height);
+    setSize({width(), height});
 }
 
 
