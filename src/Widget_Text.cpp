@@ -440,14 +440,14 @@ void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
 
     m_text_painter->paintSelectionBackground(m_image, {148, 202, 239}, {10, 10});
     m_text_painter->paintText(m_image, {0, 0, 0}, {0, 0, 0}, {10, 10});
-//     draw_rect(
-//         m_image,
-//         {0, 0, 0},
-//         intersection(
-//             Rect<int>(10, 10, m_text_painter->textSize().width(), m_text_painter->textSize().height()),
-//             Rect<int>(0, 0, width(), height())
-//         )
-//     );
+    draw_rect(
+        m_image,
+        {0, 0, 0},
+        intersection(
+            Rect<int>(10, 10, m_text_painter->textSize().width(), m_text_painter->textSize().height()),
+            Rect<int>(0, 0, width(), height())
+        )
+    );
 
     for(int y=0; y<m_text_painter->font->height(); y++)
     {

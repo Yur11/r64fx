@@ -140,14 +140,15 @@ private:
         m_Font = new Font("", 20, 72);
 
         m_container = new Widget_Container;
-
-//         wt = new Widget_Text(lorem_ipsum, m_Font);
-//         wt->setWidth(500);
-//         wt->setHeight(10);
-//         wt->setTextWrap(TextWrap::Word);
-//         wt->setTextAlignment(TextAlignment::Left);
-//         wt->show();
-
+        for(int i=0; i<2; i++)
+        {
+            auto wt = new Widget_Text("Hello!\n", m_Font, m_container);
+            wt->setWidth(200);
+            wt->setHeight(200);
+            wt->setTextWrap(TextWrap::Word);
+            wt->setTextAlignment(TextAlignment::Left);
+        }
+        m_container->alignHorizontally();
         m_container->show();
     }
     
