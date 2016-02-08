@@ -18,6 +18,8 @@ public:
 
     Widget_Text(const std::string &text, Widget* parent = nullptr);
 
+    Widget_Text(Font* font, Widget* parent = nullptr);
+
     Widget_Text(Widget* parent = nullptr);
 
 private:

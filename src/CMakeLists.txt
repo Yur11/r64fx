@@ -32,6 +32,7 @@ set(SRC
     TextPainter.cpp
     UndoRedoChain.cpp
     Widget.cpp
+    Widget_Container.cpp
     Widget_Dummy.cpp
     Widget_Text.cpp
     Window.cpp

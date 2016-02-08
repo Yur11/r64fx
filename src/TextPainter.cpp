@@ -98,6 +98,9 @@ void TextPainter::insertText(
     GlyphString* added_glyphs
 )
 {
+    if(text.empty())
+        return;
+
     if(hasSelection())
     {
         removeSelectedGlyphs(removed_glyphs);

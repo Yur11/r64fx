@@ -80,6 +80,18 @@ public:
             return ptr;
         }
 
+        inline LinkedList<T>::Iterator operator++(int)
+        {
+            ptr = ptr->next();
+            return ptr;
+        }
+
+        inline LinkedList<T>::Iterator operator--(int)
+        {
+            ptr = ptr->prev();
+            return ptr;
+        }
+
         inline T* operator*()
         {
             return ptr;

@@ -190,7 +190,7 @@ void WindowGLX::setup(int width, int height)
     m_gl_context = glXCreateContextAttribsARB(
         g_display,
         best_cfg.config[0],
-        0, //Exising Context
+        0, //Existing Context
         True,
         context_attribs
     );

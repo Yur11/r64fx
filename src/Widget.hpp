@@ -44,6 +44,9 @@ class Widget : public LinkedList<Widget>::Node{
     LinkedList<Widget> m_children;
 
 protected:
+    inline LinkedList<Widget>::Iterator begin() const { return m_children.begin(); }
+
+    inline LinkedList<Widget>::Iterator end() const { return nullptr; }
 
     /* Bit-packed bool flags.
      * These can be used by the base class as well as by derived classes. Hence protected access.

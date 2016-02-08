@@ -49,6 +49,15 @@ Widget_Text::Widget_Text(const std::string &text, Widget* parent)
 }
 
 
+Widget_Text::Widget_Text(Font* font, Widget* parent)
+{
+    m[0] = new TextPainter;
+    setFont(font);
+    setText("");
+    initUndoRedoChain();
+}
+
+
 Widget_Text::Widget_Text(Widget* parent)
 : Widget(parent)
 {

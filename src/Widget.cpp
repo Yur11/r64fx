@@ -306,6 +306,12 @@ void Widget::show()
 {
     if(!isWindow())
     {
+        if(width() <= 0)
+            setWidth(100);
+
+        if(height() <= 0)
+            setHeight(100);
+
         auto window = Window::newInstance(
             width(), height(), "", Window::Type::GL
         );

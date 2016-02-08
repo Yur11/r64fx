@@ -9,6 +9,7 @@
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
+#include "Widget_Container.hpp"
 #include "Widget_Dummy.hpp"
 #include "Widget_Text.hpp"
 
@@ -124,7 +125,7 @@ class MyProgram : public Program{
 //     Painter* m_painter = nullptr;
 //     Point<int> m_point = {10, 10};
     Font*   m_Font = nullptr;
-    Widget_Text* mwt = nullptr;
+    Widget_Container* m_container = nullptr;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -138,13 +139,16 @@ private:
 
         m_Font = new Font("", 20, 72);
 
-        mwt = new Widget_Text(lorem_ipsum, m_Font);
-        mwt->setPosition({50, 50});
-        mwt->setWidth(500);
-        mwt->setHeight(10);
-        mwt->setTextWrap(TextWrap::Word);
-        mwt->setTextAlignment(TextAlignment::Left);
-        mwt->show();
+        m_container = new Widget_Container;
+
+//         wt = new Widget_Text(lorem_ipsum, m_Font);
+//         wt->setWidth(500);
+//         wt->setHeight(10);
+//         wt->setTextWrap(TextWrap::Word);
+//         wt->setTextAlignment(TextAlignment::Left);
+//         wt->show();
+
+        m_container->show();
     }
     
     virtual void cleanup()
@@ -153,8 +157,8 @@ private:
         if(m_Font)
             delete m_Font;
 
-        if(mwt)
-            delete mwt;
+        if(m_container)
+            delete m_container;
     }
 };
 
