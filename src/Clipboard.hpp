@@ -16,6 +16,33 @@ enum class ClipboardMode{
 };
 
 
+template<typename StreamT> StreamT &operator<<(StreamT &stream, ClipboardMode mode)
+{
+    switch(mode)
+    {
+        case ClipboardMode::Bad:
+            stream << "Bad";
+        break;
+
+        case ClipboardMode::Clipboard:
+            stream << "Clipboard";
+        break;
+
+        case ClipboardMode::Selection:
+            stream << "Selection";
+        break;
+
+        case ClipboardMode::DragAndDrop:
+            stream << "DragAndDrop";
+        break;
+
+        default:
+        break;
+    }
+    return stream;
+}
+
+
 class ClipboardDataType{
     std::string m_name;
 
