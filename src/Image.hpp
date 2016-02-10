@@ -19,7 +19,7 @@ public:
 
     bool ownsData() const;
     
-    void load(int w, int h, int c, unsigned char* data, bool copy_data);
+    void load(int w, int h, int c, unsigned char* data = nullptr, bool copy_data = false);
     
     void free();
     

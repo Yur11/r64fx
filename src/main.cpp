@@ -13,90 +13,60 @@
 #include "Widget_Dummy.hpp"
 #include "Widget_Text.hpp"
 
+#include "KeyEvent.hpp"
+
 using namespace std;
 using namespace r64fx;
 
 
-const char* lorem_ipsum =
-"Lorem ipsum dolor    sit amet, consectetur adipiscing elit.\n"
-"Donec a diam lectus. Sed sit amet ipsum mauris.\n"
-"Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit.\n"
-"Donec et mollis dolor. Praesent et diam eget libero egestas mattis sit amet vitae augue.\n\n\n"
-"Nam tincidunt congue enim, ut porta lorem lacinia consectetur.\n"
-"Donec ut libero sed arcu vehicula ultricies a non tortor.\n"
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean ut gravida lorem.\n\n"
-"Ut turpis felis, pulvinar a semper sed, adipiscing id dolor.\n"
-"Pellentesque auctor nisi id magna consequat sagittis.\n"
-;
-
-
 class MyWidget : public Widget{
-    Image*  m_Image = nullptr;
-    float*  data = nullptr;
-    int     data_size = 256;
+    Image  m_Image;
+    float  m_shiftx = 0.0f;
+    float  m_shifty = 0.0f;
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget(parent)
     {
-        m_Image = new Image(200, 100, 4);
-        {
-            fill(m_Image, { 255, 255, 255, 255 });
-        }
-        {
-            unsigned char px[4] = { 255, 0, 0, 0 };
-            m_Image->setPixel(49, 49, px);
-            m_Image->setPixel(50, 49, px);
-            m_Image->setPixel(49, 50, px);
-            m_Image->setPixel(50, 50, px);
-        }
-        draw_border(m_Image, {0, 0, 0, 0});
 
-        auto wwd = new Widget_Dummy({230, 240, 210}, this);
-        wwd->setPosition({600, 100});
-        wwd->setSize({300, 300});
-
-        auto wwd1 = new Widget_Dummy({255, 0, 255}, wwd);
-        wwd1->setPosition({50, 50});
-        wwd1->setSize({100, 100});
-
-        auto wwd2 = new Widget_Dummy({0, 255, 255}, wwd);
-        wwd2->setPosition({150, 150});
-        wwd2->setSize({100, 100});
-
-        auto wwd3 = new Widget_Dummy({255, 0, 0}, wwd);
-        wwd3->setPosition({170, 30});
-        wwd3->setSize({80, 80});
-
-        auto wwwd1 = new Widget_Dummy({0, 120, 0}, wwd1);
-        wwwd1->setPosition({10, 10});
-        wwwd1->setSize({20, 20});
-
-        auto wwwd2 = new Widget_Dummy({0, 120, 0}, wwd1);
-        wwwd2->setPosition({30, 30});
-        wwwd2->setSize({20, 20});
-
-        auto wwwd3 = new Widget_Dummy({0, 120, 0}, wwd2);
-        wwwd3->setPosition({10, 10});
-        wwwd3->setSize({20, 20});
     }
 
     ~MyWidget()
     {
-        if(m_Image)
-        {
-            delete m_Image;
-        }
-
-        if(data)
-        {
-            delete[] data;
-        }
     }
 
     virtual void reconfigureEvent(ReconfigureEvent* event)
     {
+        m_Image.load(width(), height(), 4);
+        for(int y=0; y<m_Image.height(); y++)
+        {
+            for(int x=0; x<m_Image.width(); x++)
+            {
+                unsigned char px[4] = { 127, 180, 255, 0 };
+                m_Image.setPixel(x, y, px);
+            }
+        }
+
+        unsigned char fg[4] = {0, 0, 0, 0};
+        unsigned char bg[4] = {255, 255, 255, 255};
+
+//         Image src(100, 3, 4);
+//         fill(&src, {0, 0, 0, 0});
+//
+//         Transform2D<float> transform;
+//         transform.translate(125, 125);
+//         transform.rotate(m_shift);
+//         transform.translate(0, -1);
+//
+//         bilinear_copy(&dst, &src, transform, bg, 4);
+
+        Image dst(250, 250, 4);
+        fill(&dst, {255, 255, 255, 0});
+
+        draw_line(&dst, {25 + m_shiftx, 125 + m_shifty}, {25 + m_shiftx, 140 + m_shifty}, 3, fg, bg, 4);
+        implant(&m_Image, {10, 10}, &dst);
+
         auto painter = event->painter();
-        painter->fillRect({255, 255, 255}, rect());
+        painter->putImage(&m_Image);
         Widget::reconfigureEvent(event);
     }
 
@@ -105,13 +75,29 @@ public:
         Widget::mousePressEvent(event);
     }
 
-//     virtual void keyPressEvent(KeyPressEvent* event)
-//     {
-//     }
+    virtual void keyPressEvent(KeyPressEvent* event)
+    {
+        const float step = 1;
 
-//     virtual void textInputEvent(TextInputEvent* event)
-//     {
-//     }
+        if(event->key() == Keyboard::Key::Up)
+        {
+            m_shifty -= step;
+        }
+        else if(event->key() == Keyboard::Key::Down)
+        {
+            m_shifty += step;
+        }
+        else if(event->key() == Keyboard::Key::Left)
+        {
+            m_shiftx -= step;
+        }
+        else if(event->key() == Keyboard::Key::Right)
+        {
+            m_shiftx += step;
+        }
+
+        update();
+    }
 
     virtual void closeEvent()
     {
@@ -121,9 +107,6 @@ public:
 
 
 class MyProgram : public Program{
-//     MyWidget* m_Widget = nullptr;
-//     Painter* m_painter = nullptr;
-//     Point<int> m_point = {10, 10};
     Font*   m_Font = nullptr;
     Widget_Container* m_container = nullptr;
 
@@ -140,7 +123,13 @@ private:
         m_Font = new Font("", 20, 72);
 
         m_container = new Widget_Container;
-        for(int i=0; i<2; i++)
+        {
+            auto mw = new MyWidget(m_container);
+            mw->setWidth(300);
+            mw->setHeight(300);
+        }
+
+        for(int i=0; i<1; i++)
         {
             auto wt = new Widget_Text("", m_Font, m_container);
             wt->setWidth(300);

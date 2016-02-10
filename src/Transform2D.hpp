@@ -7,7 +7,7 @@ namespace r64fx{
 
 template<typename T> class Transform2D{
 /*
-    Let's only relevant keep parts of the matrix.
+    Let's keep only relevant parts of the matrix.
 
     a b c   x
     d e f * y
@@ -25,15 +25,17 @@ template<typename T> class Transform2D{
 public:
     void translate(T x, T y)
     {
-        c += x;
-        f += y;
+        c -= x;
+        f -= y;
     }
 
     void rotate(T angle)
     {
-        T sinang = sin(angle);
-        T cosang = cos(angle);
+        rotate(sin(angle), cos(angle));
+    }
 
+    void rotate(T sinang, T cosang)
+    {
         auto newa = cosang*a - sinang*d;
         auto newb = cosang*b - sinang*e;
         auto newc = cosang*c - sinang*f;
@@ -59,18 +61,11 @@ public:
         f *= sy;
     }
 
-    /** @brief Apply the transform to a point (x, y)*/
-    void operator()(T &x, T &y)
+    template<typename P> void operator()(P &p) const
     {
-        T newx = a*x + b*y + c;
-        T newy = d*x + e*y + f;
-        x = newx;
-        y = newy;
-    }
-
-    template<typename P> void operator()(P &p)
-    {
-        operator()(p.x, p.y);
+        T newx = a*p.x() + b*p.y() + c;
+        T newy = d*p.x() + e*p.y() + f;
+        p = {newx, newy};
     }
 };
 

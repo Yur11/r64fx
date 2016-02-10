@@ -4,6 +4,10 @@
 #include <assert.h>
 #endif//R64FX_DEBUG
 
+#include <iostream>
+
+using namespace std;
+
 namespace r64fx{
 
 void draw_rect(Image* dst, Color<unsigned char> color, Rect<int> rect)
@@ -36,24 +40,28 @@ void draw_border(Image* dst, Color<unsigned char> color)
 }
 
 
-void fill(Image* dst, Color<unsigned char> color, Rect<int> rect)
+void fill(Image* dst, unsigned char* components, int ncomponents, Rect<int> rect)
 {
+#ifdef DEBUG
+    assert(dst->channelCount() >= ncomponents);
+#endif//DEBUG
+
     for(int y=0; y<rect.height(); y++)
     {
         for(int x=0; x<rect.width(); x++)
         {
-            for(int c=0; c<dst->channelCount(); c++)
+            for(int c=0; c<ncomponents; c++)
             {
-                dst->pixel(x + rect.x(), y + rect.y())[c] = color.vec[c];
+                dst->pixel(x + rect.x(), y + rect.y())[c] = components[c];
             }
         }
     }
 }
 
 
-void fill(Image* dst, Color<unsigned char> color)
+void fill(Image* dst, unsigned char* components, int ncomponents)
 {
-    fill(dst, color, Rect<int>(0, 0, dst->width(), dst->height()));
+    fill(dst, components, ncomponents, Rect<int>(0, 0, dst->width(), dst->height()));
 }
 
 
@@ -130,6 +138,96 @@ void implant(Image* dst, Point<int> pos, Image* src)
             }
         }
     }
+}
+
+
+void bilinear_copy(
+    Image* dst,
+    Image* src,
+    const Transform2D<float> &transform,
+    unsigned char* bg_components, int ncomponents
+)
+{
+    for(int y=0; y<dst->height(); y++)
+    {
+        for(int x=0; x<dst->width(); x++)
+        {
+            Point<float> p(x, y);
+            transform(p);
+
+            float x1 = floor(p.x());
+            float x2 = x1 + 1;
+
+            float y1 = floor(p.y());
+            float y2 = y1 + 1;
+
+            float fracx = x2 - p.x();
+            float fracy = y2 - p.y();
+            for(int c=0; c<4; c++)
+            {
+                float p11 = bg_components[c];
+                float p12 = bg_components[c];
+                float p21 = bg_components[c];
+                float p22 = bg_components[c];
+
+                if(x1 >=0 && x1 < src->width() && y1 >=0 && y1 < src->height())
+                {
+                    p11 = src->pixel(x1, y1)[c];
+                }
+
+                if(x1 >=0 && x1 < src->width() && y2 >=0 && y2 < src->height())
+                {
+                    p12 = src->pixel(x1, y2)[c];
+                }
+
+                if(x2 >=0 && x2 < src->width() && y1 >=0 && y1 < src->height())
+                {
+                    p21 = src->pixel(x2, y1)[c];
+                }
+
+                if(x2 >=0 && x2 < src->width() && y2 >=0 && y2 < src->height())
+                {
+                    p22 = src->pixel(x2, y2)[c];
+                }
+
+                float val =
+                    p22 * (1-fracx) * (1-fracy) +
+                    p12 * fracx     * (1-fracy) +
+                    p21 * (1-fracx) * fracy     +
+                    p11 * fracx     * fracy;
+                dst->pixel(x, y)[c] = (unsigned char)(val);
+            }
+        }
+    }
+}
+
+
+void draw_line(
+    Image* dst,
+    Point<float> a, Point<float> b,
+    int thickness,
+    unsigned char* fg_components, unsigned char* bg_components, int ncomponents
+)
+{
+#ifdef R64FX_DEBUG
+    assert(dst->channelCount() >= ncomponents);
+#endif//R64FX_DEBUG
+
+    float dx = b.x() - a.x();
+    float dy = b.y() - a.y();
+    float length = sqrt(dx*dx + dy*dy);
+    float length_rcp = 1.0f / length;
+    float cosang = dx * length_rcp;
+    float sinang = dy * length_rcp;
+
+    Image src(length, thickness, ncomponents);
+    fill(&src, fg_components, ncomponents);
+
+    Transform2D<float> transform;
+    transform.translate(a.x(), a.y());
+    transform.rotate(sinang, cosang);
+
+    bilinear_copy(dst, &src, transform, bg_components, ncomponents);
 }
 
 }//namespace r64fx
