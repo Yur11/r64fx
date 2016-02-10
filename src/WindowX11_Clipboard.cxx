@@ -68,6 +68,8 @@ ClipboardImpl* clipboard(Atom selection)
 
 void WindowX11::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode)
 {
+    cout << "anounceClipboardData: " << mode << "\n";
+
     auto cb = clipboard(mode);
     if(!cb)
     {
@@ -82,6 +84,8 @@ void WindowX11::anounceClipboardData(const ClipboardMetadata &metadata, Clipboar
 
 void WindowX11::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
 {
+    cout << "requestClipboardData: " << mode << "\n";
+
     auto cb = clipboard(mode);
     if(!cb)
     {

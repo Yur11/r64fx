@@ -132,6 +132,10 @@ public:
 
     static MouseButton pressedButtons();
 
+    void grabMouseOnClick(bool yes);
+
+    bool grabsMouseOnClick() const;
+
 
 /* === Keyboard === */
 

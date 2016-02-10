@@ -142,6 +142,7 @@ Widget::Widget(Widget* parent)
 {
     setParent(parent);
     setFocusOnClick(true);
+    grabMouseOnClick(true);
 }
 
 
@@ -446,6 +447,18 @@ bool Widget::isMouseGrabber() const
 MouseButton Widget::pressedButtons()
 {
     return pressed_buttons;
+}
+
+
+void Widget::grabMouseOnClick(bool yes)
+{
+    set_bits(m_flags, yes, R64FX_WIDGET_GRABS_MOUSE_ON_CLICK);
+}
+
+
+bool Widget::grabsMouseOnClick() const
+{
+    return m_flags & R64FX_WIDGET_GRABS_MOUSE_ON_CLICK;
 }
 
 
@@ -763,6 +776,11 @@ void WindowEvents_Widget::mousePressEvent(Window* window, int x, int y, unsigned
 
 void Widget::mousePressEvent(MousePressEvent* event)
 {
+    if(grabsMouseOnClick())
+    {
+        grabMouse();
+    }
+
     if(gainsFocusOnClick())
     {
         setFocus();
@@ -805,6 +823,11 @@ void WindowEvents_Widget::mouseReleaseEvent(Window* window, int x, int y, unsign
 
 void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 {
+    if(grabsMouseOnClick() && isMouseGrabber())
+    {
+        ungrabMouse();
+    }
+
     for(auto child : m_children)
     {
         if((child->isVisible() && child->rect().overlaps(event->position())))
@@ -1031,7 +1054,7 @@ void WindowEvents_Widget::closeEvent(Window* window)
 
 void Widget::closeEvent()
 {
-
+    Program::quit();
 }
 
 }//namespace r64fx

@@ -12,6 +12,7 @@ namespace X11_Atom{
     Atom TARGETS;
     Atom MULTIPLE;
     Atom CLIPBOARD;
+    
     Atom _R64FX_CLIPBOARD;
 
     Atom XdndAware;

@@ -79,9 +79,6 @@ protected:
     virtual void clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event);
 
     virtual void clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event);
-
-    virtual void closeEvent();
-
 };
 
 }//namespace r64fx

@@ -436,7 +436,14 @@ void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
         delete m_image;
     }
     m_image = new Image(width(), height(), 4);
-    fill(m_image, {255, 255, 255, 0});
+    if(isMouseGrabber())
+    {
+        fill(m_image, {255, 127, 127, 0});
+    }
+    else
+    {
+        fill(m_image, {255, 255, 255, 0});
+    }
 
     m_text_painter->paintSelectionBackground(
         m_image, {148, 202, 239}, {paddingLeft(), paddingTop()}
@@ -527,6 +534,7 @@ void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
         g_selection_text = m_text_painter->selectionText();
         anounceClipboardData("text/plain", ClipboardMode::Selection);
     }
+    update();
 }
 
 
@@ -734,7 +742,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
 void Widget_Text::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 {
     cout << event->type().name() << "\n";
-    if(event->mode() != ClipboardMode::Bad /*&& event->type() == type_text_plain*/ && event->data() != nullptr && event->size() > 0)
+    if(event->mode() != ClipboardMode::Bad && event->data() != nullptr && event->size() > 0)
     {
         string text((const char*)event->data(), event->size());
         insertText(text);
@@ -755,12 +763,6 @@ void Widget_Text::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* e
     {
         requestClipboardData("text/plain", event->mode());
     }
-}
-
-
-void Widget_Text::closeEvent()
-{
-    Program::quit();
 }
 
 }//namespace r64fx
