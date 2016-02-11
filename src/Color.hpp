@@ -9,7 +9,9 @@ union Color{
     T vec[4];
     struct{ T r, g, b, a; } component;
     
-    Color(T r = T(), T g = T(), T b = T(), T a = T()) : vec{ r, g, b, a } {}
+    Color() : vec{ T(), T(), T(), T() } {}
+
+    Color(T r, T g, T b, T a = T()) : vec{ r, g, b, a } {}
     
     inline void setRed(T val)   { vec[0] = val; }
     inline void setGreen(T val) { vec[1] = val; }

@@ -21,8 +21,8 @@ using namespace r64fx;
 
 class MyWidget : public Widget{
     Image  m_Image;
-    float  m_shiftx = 0.0f;
-    float  m_shifty = 0.0f;
+    int  m_shiftx = 0;
+    int  m_shifty = 1;
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget(parent)
@@ -46,24 +46,26 @@ public:
             }
         }
 
-        unsigned char fg[4] = {0, 0, 0, 0};
-        unsigned char bg[4] = {255, 255, 255, 255};
+        unsigned char fg = 255;
+        unsigned char bg = 0;
 
-//         Image src(100, 3, 4);
-//         fill(&src, {0, 0, 0, 0});
-//
-//         Transform2D<float> transform;
-//         transform.translate(125, 125);
-//         transform.rotate(m_shift);
-//         transform.translate(0, -1);
-//
-//         bilinear_copy(&dst, &src, transform, bg, 4);
+        Image dst(250, 250, 1);
+        fill(&dst, 0);
 
-        Image dst(250, 250, 4);
-        fill(&dst, {255, 255, 255, 0});
+        vector<Point<float>> points;
+        for(int i=0; i<50; i++)
+        {
+            float x = (float(i) / 50.f) * M_PI * 2 + (M_PI * 0.1 * m_shiftx);
+            float y = sin(x) * 100 - 50;
 
-        draw_line(&dst, {25 + m_shiftx, 125 + m_shifty}, {25 + m_shiftx, 140 + m_shifty}, 3, fg, bg, 4);
-        implant(&m_Image, {10, 10}, &dst);
+            points.push_back({float(i*4 + 10), -y + 60});
+        }
+        draw_lines(
+            &dst, points.data(), points.size(), m_shifty, LineCapStyle::Round,
+            &fg, &bg, 1
+        );
+
+        alpha_blend(&m_Image, {10, 10}, {0, 0, 0, 0}, &dst);
 
         auto painter = event->painter();
         painter->putImage(&m_Image);
@@ -77,15 +79,20 @@ public:
 
     virtual void keyPressEvent(KeyPressEvent* event)
     {
-        const float step = 1;
+        const int step = 1;
 
         if(event->key() == Keyboard::Key::Up)
         {
-            m_shifty -= step;
+            m_shifty += step;
+            cout << m_shifty << "\n";
         }
         else if(event->key() == Keyboard::Key::Down)
         {
-            m_shifty += step;
+            if(m_shifty > 1)
+            {
+                m_shifty -= step;
+                cout << m_shifty << "\n";
+            }
         }
         else if(event->key() == Keyboard::Key::Left)
         {
