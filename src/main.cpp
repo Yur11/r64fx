@@ -7,6 +7,7 @@
 #include "Mouse.hpp"
 #include "Keyboard.hpp"
 #include "ImageUtils.hpp"
+#include "ImagePainter.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
 #include "Widget_Container.hpp"
@@ -122,30 +123,59 @@ public:
 
     virtual void reconfigureEvent(ReconfigureEvent* event)
     {
+        unsigned char fg[4] = { 255,   0,   0, 0 };
+        unsigned char bg[4] = { 127, 180, 255, 0 };
+        unsigned char black[4] = { 0, 0, 0, 0 };
+
         m_Image.load(width(), height(), 4);
-        for(int y=0; y<m_Image.height(); y++)
+        ImagePainter imp(&m_Image, fg, bg);
+        imp.fillBackground();
+        imp.fillForeground({10, 10, 10, 10});
+
         {
-            for(int x=0; x<m_Image.width(); x++)
-            {
-                unsigned char px[4] = { 127, 180, 255, 0 };
-                m_Image.setPixel(x, y, px);
-            }
+            Image mask(64, 64, 3);
+            ImagePainter p(&mask);
+
+            p.fill(black);
+            p.fillComponent(0, 255, {0,   0, 32, 32});
+            p.fillComponent(1, 255, {32,  0, 32, 32});
+            p.fillComponent(0, 127, {0,  32, 32, 32});
+            p.fillComponent(1, 127, {32, 32, 32, 32});
+            p.fillComponent(2, 127, {16, 16, 32, 32});
+
+            unsigned char cc[12] = {
+                255, 0, 0, 0,
+                0, 255, 0, 0,
+                0, 0, 255, 0
+            };
+            unsigned char* colors[3] = { cc, cc + 4, cc + 8 };
+
+            imp.blend({100, 100}, colors, &mask);
         }
 
-        unsigned char fg = 255;
-        unsigned char bg = 0;
-
-        Image dst(m_size, m_size, 1);
-        fill(&dst, 0);
-        Point<float> center(float(dst.width()/2), float(dst.height()/2));
-        float radius = dst.width()/2 - 5;
-        draw_radius(&dst, center, radius, m_ang, 3);
-        draw_arc(&dst, center, radius, 3, M_PI * 0.75f, M_PI * 2.25f, m_size / 3 + 10);
-
-        alpha_blend(&m_Image, {10,               10},                {0,   0,   0,   0}, &dst);
-        alpha_blend(&m_Image, {10 + dst.width(), 10},                {200, 50,  50,  0}, &dst);
-        alpha_blend(&m_Image, {10 + dst.width(), 10 + dst.height()}, {50,  100, 50,  0}, &dst);
-        alpha_blend(&m_Image, {10,               10 + dst.height()}, {50,  50,  200, 0}, &dst);
+//         for(int y=0; y<m_Image.height(); y++)
+//         {
+//             for(int x=0; x<m_Image.width(); x++)
+//             {
+//                 unsigned char px[4] = { 127, 180, 255, 0 };
+//                 m_Image.setPixel(x, y, px);
+//             }
+//         }
+//
+//         unsigned char fg = 255;
+//         unsigned char bg = 0;
+//
+//         Image dst(m_size, m_size, 1);
+//         fill(&dst, 0);
+//         Point<float> center(float(dst.width()/2), float(dst.height()/2));
+//         float radius = dst.width()/2 - 5;
+//         draw_radius(&dst, center, radius, m_ang, 3);
+//         draw_arc(&dst, center, radius, 3, M_PI * 0.75f, M_PI * 2.25f, m_size / 3 + 10);
+//
+//         alpha_blend(&m_Image, {10,               10},                {0,   0,   0,   0}, &dst);
+//         alpha_blend(&m_Image, {10 + dst.width(), 10},                {200, 50,  50,  0}, &dst);
+//         alpha_blend(&m_Image, {10 + dst.width(), 10 + dst.height()}, {50,  100, 50,  0}, &dst);
+//         alpha_blend(&m_Image, {10,               10 + dst.height()}, {50,  50,  200, 0}, &dst);
 
         auto painter = event->painter();
         painter->putImage(&m_Image);

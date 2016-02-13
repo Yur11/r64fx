@@ -18,6 +18,7 @@ set(SRC
     ClipboardEvent.cpp
     Font.cpp
     Image.cpp
+    ImagePainter.cpp
     ImageUtils.cpp
     Keyboard.cpp
     KeyboardModifiers.cpp
