@@ -679,6 +679,9 @@ void TextPainter::moveCursorVertically(int direction)
 
 void TextPainter::moveCursorLeft()
 {
+    if(m_cursor_position.line() == 0 && m_cursor_position.column() == 0)
+        return;
+
     if(m_cursor_position.column() > (lineStartsWithNewline(m_cursor_position.line()) ? 1 : 0))
     {
         m_cursor_position.setColumn(
