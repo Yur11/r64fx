@@ -2,7 +2,7 @@
 #define R64FX_IMAGE_PAINTER_HPP
 
 #include "Image.hpp"
-#include "Projection2D.hpp"
+#include "Transform2D.hpp"
 #include "Rect.hpp"
 
 namespace r64fx{
@@ -50,6 +50,10 @@ public:
     void implant(Point<int> pos, Image* img);
 
     void blend(Point<int> pos, Image* colors, Image* mask);
+
+    void implant(Transform2D<float> transform, Image* img, Rect<int> rect);
+
+    void implant(Transform2D<float> transform, Image* img);
 };
 
 }//namespace r64fx

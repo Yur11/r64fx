@@ -133,25 +133,40 @@ public:
         imp.fillForeground({10, 10, 10, 10});
 
         {
-            Image mask(64, 64, 3);
-            ImagePainter p(&mask);
+            Image square(64, 64, 4);
+            {
+                ImagePainter p(&square);
+                p.fill(black);
+            }
 
-            p.fill(black);
-            p.fillComponent(0, 255, {0,   0, 32, 32});
-            p.fillComponent(1, 255, {32,  0, 32, 32});
-            p.fillComponent(0, 127, {0,  32, 32, 32});
-            p.fillComponent(1, 127, {32, 32, 32, 32});
-            p.fillComponent(2, 127, {16, 16, 32, 32});
+            Transform2D<float> t;
+            t.translate(100, 100);
+            t.rotate(M_PI * 2.0f * m_ang);
+            t.translate(-(square.width()/2), -(square.height()/2));
 
-            unsigned char cc[12] = {
-                255, 0, 0, 0,
-                0, 255, 0, 0,
-                0, 0, 255, 0
-            };
-            Image colors(3, 1, 4, cc);
-
-            imp.blend({100, 100}, &colors, &mask);
+            imp.implant(t, &square);
         }
+
+//         {
+//             Image mask(64, 64, 3);
+//             ImagePainter p(&mask);
+//
+//             p.fill(black);
+//             p.fillComponent(0, 255, {0,   0, 32, 32});
+//             p.fillComponent(1, 255, {32,  0, 32, 32});
+//             p.fillComponent(0, 127, {0,  32, 32, 32});
+//             p.fillComponent(1, 127, {32, 32, 32, 32});
+//             p.fillComponent(2, 127, {16, 16, 32, 32});
+//
+//             unsigned char cc[12] = {
+//                 255, 0, 0, 0,
+//                 0, 255, 0, 0,
+//                 0, 0, 255, 0
+//             };
+//             Image colors(3, 1, 4, cc);
+//
+//             imp.blend({100, 100}, &colors, &mask);
+//         }
 
 //         for(int y=0; y<m_Image.height(); y++)
 //         {
@@ -189,21 +204,21 @@ public:
 
     virtual void keyPressEvent(KeyPressEvent* event)
     {
-        const float step = 0.05;
+        const float step = 0.005;
 
         if(event->key() == Keyboard::Key::Up)
         {
-            if(m_ang <= (M_PI * 2.25f - step))
-                m_ang += step;
-//             if(m_ang >= (M_PI * 2))
-//                 m_ang -= (M_PI * 2);
+//             if(m_ang <= (M_PI * 2.25f - step))
+            m_ang += step;
+            if(m_ang >= (M_PI * 2))
+                m_ang -= (M_PI * 2);
         }
         else if(event->key() == Keyboard::Key::Down)
         {
-            if(m_ang >= (M_PI * 0.75f + step))
-                m_ang -= step;
-//             if(m_ang < 0)
-//                 m_ang -= (M_PI * 2);
+//             if(m_ang >= (M_PI * 0.75f + step))
+            m_ang -= step;
+            if(m_ang < 0)
+                m_ang -= (M_PI * 2);
         }
         else if(event->key() == Keyboard::Key::Left)
         {

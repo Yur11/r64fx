@@ -239,4 +239,105 @@ void ImagePainter::blend(Point<int> pos, Image* colors, Image* mask)
     }
 }
 
+
+void ImagePainter::implant(Transform2D<float> transform, Image* img, Rect<int> rect)
+{
+#ifdef R64FX_DEBUG
+    assert(m_img != nullptr);
+    assert(img != nullptr);
+    assert(img->componentCount() == m_img->componentCount());
+#endif//R64FX_DEBUG
+
+    Image* src = img;
+    Image* dst = m_img;
+
+    if(rect.left() < 0)
+    rect.setLeft(0);
+
+    if(rect.top() < 0)
+        rect.setTop(0);
+
+    if(rect.right() >= dst->width())
+        rect.setRight(dst->width() - 1);
+
+    if(rect.bottom() >= dst->height())
+        rect.setBottom(dst->height() - 1);
+
+    for(int y=rect.top(); y<rect.bottom(); y++)
+    {
+        for(int x=rect.left(); x<rect.right(); x++)
+        {
+            Point<float> p(x, y);
+            transform(p);
+
+            float x1 = floor(p.x());
+            float x2 = x1 + 1;
+
+            float y1 = floor(p.y());
+            float y2 = y1 + 1;
+
+            float fracx = x2 - p.x();
+            float fracy = y2 - p.y();
+            for(int c=0; c<dst->componentCount(); c++)
+            {
+                float p11 = m_bg[c];
+                float p12 = m_bg[c];
+                float p21 = m_bg[c];
+                float p22 = m_bg[c];
+
+                if(x1 >=0 && x1 < src->width() && y1 >=0 && y1 < src->height())
+                {
+                    p11 = src->pixel(x1, y1)[c];
+                }
+
+                if(x1 >=0 && x1 < src->width() && y2 >=0 && y2 < src->height())
+                {
+                    p12 = src->pixel(x1, y2)[c];
+                }
+
+                if(x2 >=0 && x2 < src->width() && y1 >=0 && y1 < src->height())
+                {
+                    p21 = src->pixel(x2, y1)[c];
+                }
+
+                if(x2 >=0 && x2 < src->width() && y2 >=0 && y2 < src->height())
+                {
+                    p22 = src->pixel(x2, y2)[c];
+                }
+
+                float val =
+                    p22 * (1-fracx) * (1-fracy) +
+                    p12 * fracx     * (1-fracy) +
+                    p21 * (1-fracx) * fracy     +
+                    p11 * fracx     * fracy;
+
+                auto px = dst->pixel(x, y);
+
+//                 if(mode == BilinearCopyMode::Replace)
+                {
+                    px[c] = (unsigned char)(val);
+                }
+//                 else if(mode == BilinearCopyMode::AddWithSaturation)
+//                 {
+//                     px[c] = (unsigned char) min(255.0f, float(px[c]) + val);
+//                 }
+//                 else if(mode == BilinearCopyMode::Max)
+//                 {
+//                     px[c] = max((unsigned char)(val), px[c]);
+//                 }
+//                 else if(mode == BilinearCopyMode::Average)
+//                 {
+//                     px[c] = (unsigned char)((val + float(px[c])) * 0.5);
+//                 }
+            }
+        }
+    }
+}
+
+
+void ImagePainter::implant(Transform2D<float> transform, Image* img)
+{
+    implant(transform, img, {0, 0, m_img->width(), m_img->height()});
+}
+
 }//namespace r64fx
