@@ -348,7 +348,6 @@ void ImagePainter::drawCircle(Point<float> center, float radius, float thickness
 #endif//R64FX_DEBUG
 
     Image* dst = m_img;
-    float ht = thickness * 0.5;
     float rcp = 1.0f / 255.0f;
 
     for(int y=rect.top(); y<rect.bottom(); y++)
@@ -358,7 +357,7 @@ void ImagePainter::drawCircle(Point<float> center, float radius, float thickness
             float dx = float(x - center.x());
             float dy = float(y - center.y());
             float distance = sqrt(dx*dx + dy*dy);
-            if(distance > (radius - ht) && distance < (radius + ht))
+            if(distance >= (radius - thickness) && distance <= radius)
             {
                 for(int c=0; c<dst->componentCount(); c++)
                 {
@@ -368,13 +367,13 @@ void ImagePainter::drawCircle(Point<float> center, float radius, float thickness
             else
             {
                 float d;
-                if(distance < (radius - ht))
+                if(distance < (radius - thickness))
                 {
-                    d = (radius - ht) - distance;
+                    d = (radius - thickness) - distance;
                 }
                 else
                 {
-                    d = distance - (radius + ht);
+                    d = distance - radius;
                 }
 
                 if(d < 1.0f)
