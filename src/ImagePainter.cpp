@@ -340,4 +340,61 @@ void ImagePainter::implant(Transform2D<float> transform, Image* img)
     implant(transform, img, {0, 0, m_img->width(), m_img->height()});
 }
 
+
+void ImagePainter::drawCircle(Point<float> center, float radius, float thickness, Rect<int> rect)
+{
+#ifdef R64FX_DEBUG
+    assert(m_img != nullptr);
+#endif//R64FX_DEBUG
+
+    Image* dst = m_img;
+    float ht = thickness * 0.5;
+    float rcp = 1.0f / 255.0f;
+
+    for(int y=rect.top(); y<rect.bottom(); y++)
+    {
+        for(int x=rect.left(); x<rect.right(); x++)
+        {
+            float dx = float(x - center.x());
+            float dy = float(y - center.y());
+            float distance = sqrt(dx*dx + dy*dy);
+            if(distance > (radius - ht) && distance < (radius + ht))
+            {
+                for(int c=0; c<dst->componentCount(); c++)
+                {
+                    dst->pixel(x, y)[c] = m_fg[c];
+                }
+            }
+            else
+            {
+                float d;
+                if(distance < (radius - ht))
+                {
+                    d = (radius - ht) - distance;
+                }
+                else
+                {
+                    d = distance - (radius + ht);
+                }
+
+                if(d < 1.0f)
+                {
+                    for(int c=0; c<dst->componentCount(); c++)
+                    {
+                        auto px = dst->pixel(x, y);
+                        float val = float(px[c]) * rcp * d + float(m_fg[c]) * rcp * (1.0f - d);
+                        px[c] = (unsigned char)(val * 255.0f);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+void ImagePainter::drawCircle(Point<float> center, float radius, float thickness)
+{
+    drawCircle(center, radius, thickness, {0, 0, m_img->width(), m_img->height()});
+}
+
 }//namespace r64fx

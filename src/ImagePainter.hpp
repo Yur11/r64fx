@@ -54,6 +54,10 @@ public:
     void implant(Transform2D<float> transform, Image* img, Rect<int> rect);
 
     void implant(Transform2D<float> transform, Image* img);
+
+    void drawCircle(Point<float> center, float radius, float thickness, Rect<int> rect);
+
+    void drawCircle(Point<float> center, float radius, float thickness);
 };
 
 }//namespace r64fx
