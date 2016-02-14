@@ -37,8 +37,8 @@ ImagePainter::ImagePainter(Image* img, unsigned char* fg, unsigned char* bg)
 void ImagePainter::setImage(Image* img)
 {
 #ifdef R64FX_DEBUG
-    assert(img->channelCount() >= 1);
-    assert(img->channelCount() <= 4);
+    assert(img->componentCount() >= 1);
+    assert(img->componentCount() <= 4);
 #endif//R64FX_DEBUG
     m_img = img;
 }
@@ -142,7 +142,7 @@ void ImagePainter::fill(unsigned char* components, Rect<int> rect)
     {
         for(int x=0; x<rect.width(); x++)
         {
-            for(int c=0; c<m_img->channelCount(); c++)
+            for(int c=0; c<m_img->componentCount(); c++)
             {
                 m_img->pixel(x + rect.x(), y + rect.y())[c] = components[c];
             }
@@ -162,7 +162,7 @@ void ImagePainter::implant(Point<int> pos, Image* img)
 #ifdef R64FX_DEBUG
     assert(m_img != nullptr);
     assert(img != nullptr);
-    assert(m_img->channelCount() == img->channelCount());
+    assert(m_img->componentCount() == img->componentCount());
 #endif//R64FX_DEBUG
 
     Image* dst = m_img;
@@ -184,7 +184,7 @@ void ImagePainter::implant(Point<int> pos, Image* img)
             auto dstpx = dst->pixel(x + dst_offset_x, y + dst_offset_y);
             auto srcpx = src->pixel(x + src_offset_x, y + src_offset_y);
 
-            for(int c=0; c<dst->channelCount(); c++)
+            for(int c=0; c<dst->componentCount(); c++)
             {
                 dstpx[c] = srcpx[c];
             }
@@ -198,7 +198,7 @@ void ImagePainter::blend(Point<int> pos, Image* colors, Image* mask)
 #ifdef R64FX_DEBUG
     assert(m_img != nullptr);
     assert(mask != nullptr);
-    assert(mask->channelCount() == colors->width());
+    assert(mask->componentCount() == colors->width());
 #endif//R64FX_DEBUG
 
     Image* dst = m_img;
@@ -224,12 +224,12 @@ void ImagePainter::blend(Point<int> pos, Image* colors, Image* mask)
             auto dstpx = dst->pixel(x + dst_offset_x, y + dst_offset_y);
             auto mskpx = mask->pixel(x + src_offset_x, y + src_offset_y);
 
-            for(int m=0; m<mask->channelCount(); m++)
+            for(int m=0; m<mask->componentCount(); m++)
             {
                 float alpha            = float(      mskpx[m]) * rcp;
                 float one_minus_alpha  = float(255 - mskpx[m]) * rcp;
 
-                for(int c=0; c<dst->channelCount(); c++)
+                for(int c=0; c<dst->componentCount(); c++)
                 {
                     float result = float(dstpx[c]) * one_minus_alpha + float(colors->pixel(m, 0)[c]) * alpha;
                     dstpx[c] = (unsigned char)result;

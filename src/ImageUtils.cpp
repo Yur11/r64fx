@@ -13,14 +13,14 @@ namespace r64fx{
 void draw_rect(Image* dst, Color<unsigned char> color, Rect<int> rect)
 {
 #ifdef R64FX_DEBUG
-    assert(dst->channelCount() <= 4);
+    assert(dst->componentCount() <= 4);
 #endif//R64FX_DEBUG
 
     for(int x=0; x<rect.width(); x++)
     {
         auto px1 = dst->pixel(x + rect.x(), rect.y());
         auto px2 = dst->pixel(x + rect.x(), rect.y() + rect.height() - 1);
-        for(int c=0; c<dst->channelCount(); c++)
+        for(int c=0; c<dst->componentCount(); c++)
             px1[c] = px2[c] = color.vec[c];
     }
 
@@ -28,7 +28,7 @@ void draw_rect(Image* dst, Color<unsigned char> color, Rect<int> rect)
     {
         auto px1 = dst->pixel(rect.x(),                    y + rect.y());
         auto px2 = dst->pixel(rect.x() + rect.width() - 1, y + rect.y());
-        for(int c=0; c<dst->channelCount(); c++)
+        for(int c=0; c<dst->componentCount(); c++)
             px1[c] = px2[c] = color.vec[c];
     }
 }
@@ -43,7 +43,7 @@ void draw_border(Image* dst, Color<unsigned char> color)
 void fill(Image* dst, unsigned char* components, int ncomponents, Rect<int> rect)
 {
 #ifdef R64FX_DEBUG
-    assert(dst->channelCount() >= ncomponents);
+    assert(dst->componentCount() >= ncomponents);
 #endif//R64FX_DEBUG
 
     for(int y=0; y<rect.height(); y++)
@@ -68,8 +68,8 @@ void fill(Image* dst, unsigned char* components, int ncomponents)
 void alpha_blend(Image* dst, Point<int> pos, Color<unsigned char> color, Image* alpha)
 {
 #ifdef R64FX_DEBUG
-    assert(alpha->channelCount() == 1);
-    assert(dst->channelCount() == 3 || dst->channelCount() == 4);
+    assert(alpha->componentCount() == 1);
+    assert(dst->componentCount() == 3 || dst->componentCount() == 4);
 #endif//R64FX_DEBUG
 
     static const float rcp = 1.0f / float(255);
@@ -114,7 +114,7 @@ void alpha_blend(Image* dst, Point<int> pos, Color<unsigned char> color, Image* 
 void implant(Image* dst, Point<int> pos, Image* src)
 {
 #ifdef R64FX_DEBUG
-    assert(dst->channelCount() == src->channelCount());
+    assert(dst->componentCount() == src->componentCount());
 #endif//R64FX_DEBUG
 
     Rect<int> dst_rect = {0, 0, dst->width(), dst->height()};
@@ -132,7 +132,7 @@ void implant(Image* dst, Point<int> pos, Image* src)
         {
             auto dstpx = dst->pixel(x + dst_offset_x, y + dst_offset_y);
             auto srcpx = src->pixel(x + src_offset_x, y + src_offset_y);
-            for(int c=0; c<dst->channelCount(); c++)
+            for(int c=0; c<dst->componentCount(); c++)
             {
                 dstpx[c] = srcpx[c];
             }
@@ -243,7 +243,7 @@ void draw_line(
 )
 {
 #ifdef R64FX_DEBUG
-    assert(dst->channelCount() >= ncomponents);
+    assert(dst->componentCount() >= ncomponents);
 #endif//R64FX_DEBUG
 
     float dx = b.x() - a.x();

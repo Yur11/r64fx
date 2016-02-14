@@ -31,7 +31,7 @@ public:
 
     inline int height() const { return m_height; }
 
-    inline int channelCount() const { return m_channel_count; }
+    inline int componentCount() const { return m_channel_count; }
 
     unsigned char* pixel(int x, int y) const;
 

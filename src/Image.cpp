@@ -85,7 +85,7 @@ unsigned char* Image::pixel(int x, int y) const
     assert(y < height());
 #endif//R64FX_DEBUG
 
-    return data() + y * width() * channelCount() + x * channelCount();
+    return data() + y * width() * componentCount() + x * componentCount();
 }
 
 
@@ -96,7 +96,7 @@ void Image::setPixel(int x, int y, unsigned char* px)
     assert(y < height());
 #endif//R64FX_DEBUG
 
-    for(int c=0; c<channelCount(); c++)
+    for(int c=0; c<componentCount(); c++)
     {
         pixel(x, y)[c] = px[c];
     }

@@ -74,7 +74,7 @@ void put_image_routine(PaintContext* ctx)
     {
         for(int x=0; x<rect.width(); x++)
         {
-            for(int c=0; c<dst->channelCount(); c++)
+            for(int c=0; c<dst->componentCount(); c++)
             {
                 dst->pixel(x + rect.x(), y + rect.y())[c] = src->pixel(x, y)[c];
             }
