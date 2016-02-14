@@ -193,11 +193,12 @@ void ImagePainter::implant(Point<int> pos, Image* img)
 }
 
 
-void ImagePainter::blend(Point<int> pos, unsigned char** colors, Image* mask)
+void ImagePainter::blend(Point<int> pos, Image* colors, Image* mask)
 {
 #ifdef R64FX_DEBUG
     assert(m_img != nullptr);
     assert(mask != nullptr);
+    assert(mask->channelCount() == colors->width());
 #endif//R64FX_DEBUG
 
     Image* dst = m_img;
@@ -223,15 +224,15 @@ void ImagePainter::blend(Point<int> pos, unsigned char** colors, Image* mask)
             auto dstpx = dst->pixel(x + dst_offset_x, y + dst_offset_y);
             auto mskpx = mask->pixel(x + src_offset_x, y + src_offset_y);
 
-            for(int c=0; c<mask->channelCount(); c++)
+            for(int m=0; m<mask->channelCount(); m++)
             {
-                float alpha            = float(      mskpx[c]) * rcp;
-                float one_minus_alpha  = float(255 - mskpx[c]) * rcp;
+                float alpha            = float(      mskpx[m]) * rcp;
+                float one_minus_alpha  = float(255 - mskpx[m]) * rcp;
 
-                for(int i=0; i<dst->channelCount(); i++)
+                for(int c=0; c<dst->channelCount(); c++)
                 {
-                    float result = float(dstpx[i]) * one_minus_alpha + float(colors[c][i]) * alpha;
-                    dstpx[i] = (unsigned char)result;
+                    float result = float(dstpx[c]) * one_minus_alpha + float(colors->pixel(m, 0)[c]) * alpha;
+                    dstpx[c] = (unsigned char)result;
                 }
             }
         }

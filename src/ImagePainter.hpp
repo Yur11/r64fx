@@ -49,7 +49,7 @@ public:
 
     void implant(Point<int> pos, Image* img);
 
-    void blend(Point<int> pos, unsigned char** colors, Image* mask);
+    void blend(Point<int> pos, Image* colors, Image* mask);
 };
 
 }//namespace r64fx

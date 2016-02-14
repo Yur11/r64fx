@@ -148,9 +148,9 @@ public:
                 0, 255, 0, 0,
                 0, 0, 255, 0
             };
-            unsigned char* colors[3] = { cc, cc + 4, cc + 8 };
+            Image colors(3, 1, 4, cc);
 
-            imp.blend({100, 100}, colors, &mask);
+            imp.blend({100, 100}, &colors, &mask);
         }
 
 //         for(int y=0; y<m_Image.height(); y++)
