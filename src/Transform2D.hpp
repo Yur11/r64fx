@@ -36,12 +36,12 @@ public:
 
     void rotate(T sinang, T cosang)
     {
-        auto newa = cosang*a - sinang*d;
-        auto newb = cosang*b - sinang*e;
-        auto newc = cosang*c - sinang*f;
-        auto newd = sinang*a + cosang*d;
-        auto newe = sinang*b + cosang*e;
-        auto newf = sinang*c + cosang*f;
+        auto newa = cosang*a + sinang*d;
+        auto newb = cosang*b + sinang*e;
+        auto newc = cosang*c + sinang*f;
+        auto newd = cosang*d - sinang*a;
+        auto newe = cosang*e - sinang*b;
+        auto newf = cosang*f - sinang*c;
 
         a = newa;
         b = newb;
