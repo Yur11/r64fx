@@ -16,6 +16,13 @@ template<typename T> struct Point{
     inline T x() const { return vec[0]; }
     inline T y() const { return vec[1]; }
     
+    inline Point<T> &operator=(const Point<T> &other)
+    {
+        vec[0] = other.vec[0];
+        vec[1] = other.vec[1];
+        return *this;
+    }
+
     inline Point<T> operator-()
     {
         return Point<T>(-x(), -y());
