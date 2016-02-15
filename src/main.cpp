@@ -45,7 +45,8 @@ public:
         ImagePainter imp(&m_Image, fg, bg);
         imp.fillBackground();
         imp.fillForeground({10, 10, 10, 10});
-        imp.drawCircle({100, 100}, m_radius, m_thickness);
+        imp.drawArc({100, 100}, m_radius, M_PI * 0.75f, M_PI * 0.25f, m_thickness);
+//         imp.drawLine({10, 10}, {110, 110}, 5);
 
         auto painter = event->painter();
         painter->putImage(&m_Image);

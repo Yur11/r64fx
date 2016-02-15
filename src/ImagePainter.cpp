@@ -3,6 +3,8 @@
 #include <assert.h>
 #endif//R64FX_DEBUG
 
+#include <iostream>
+using namespace std;
 
 namespace r64fx{
 
@@ -267,6 +269,8 @@ void ImagePainter::implant(Transform2D<float> transform, Image* img, Rect<int> r
     {
         for(int x=rect.left(); x<rect.right(); x++)
         {
+            auto dstpx = dst->pixel(x, y);
+
             Point<float> p(x, y);
             transform(p);
 
@@ -280,10 +284,10 @@ void ImagePainter::implant(Transform2D<float> transform, Image* img, Rect<int> r
             float fracy = y2 - p.y();
             for(int c=0; c<dst->componentCount(); c++)
             {
-                float p11 = m_bg[c];
-                float p12 = m_bg[c];
-                float p21 = m_bg[c];
-                float p22 = m_bg[c];
+                float p11 = dstpx[c];
+                float p12 = dstpx[c];
+                float p21 = dstpx[c];
+                float p22 = dstpx[c];
 
                 if(x1 >=0 && x1 < src->width() && y1 >=0 && y1 < src->height())
                 {
@@ -311,24 +315,7 @@ void ImagePainter::implant(Transform2D<float> transform, Image* img, Rect<int> r
                     p21 * (1-fracx) * fracy     +
                     p11 * fracx     * fracy;
 
-                auto px = dst->pixel(x, y);
-
-//                 if(mode == BilinearCopyMode::Replace)
-                {
-                    px[c] = (unsigned char)(val);
-                }
-//                 else if(mode == BilinearCopyMode::AddWithSaturation)
-//                 {
-//                     px[c] = (unsigned char) min(255.0f, float(px[c]) + val);
-//                 }
-//                 else if(mode == BilinearCopyMode::Max)
-//                 {
-//                     px[c] = max((unsigned char)(val), px[c]);
-//                 }
-//                 else if(mode == BilinearCopyMode::Average)
-//                 {
-//                     px[c] = (unsigned char)((val + float(px[c])) * 0.5);
-//                 }
+                dstpx[c] = (unsigned char)(val);
             }
         }
     }
@@ -341,7 +328,7 @@ void ImagePainter::implant(Transform2D<float> transform, Image* img)
 }
 
 
-void ImagePainter::drawCircle(Point<float> center, float radius, float thickness, Rect<int> rect)
+void ImagePainter::drawArc(Point<float> center, float radius, float arca, float arcb, float thickness, Rect<int> rect)
 {
 #ifdef R64FX_DEBUG
     assert(m_img != nullptr);
@@ -349,19 +336,34 @@ void ImagePainter::drawCircle(Point<float> center, float radius, float thickness
 
     Image* dst = m_img;
     float rcp = 1.0f / 255.0f;
+    bool flip_arc = false;
+    if(arca > arcb)
+    {
+        swap(arca, arcb);
+        flip_arc = true;
+    }
 
     for(int y=rect.top(); y<rect.bottom(); y++)
     {
         for(int x=rect.left(); x<rect.right(); x++)
         {
-            float dx = float(x - center.x());
-            float dy = float(y - center.y());
+            float dx = float(center.x() - x);
+            float dy = float(center.y() - y);
             float distance = sqrt(dx*dx + dy*dy);
             if(distance >= (radius - thickness) && distance <= radius)
             {
-                for(int c=0; c<dst->componentCount(); c++)
+                float angle = atan2(dy, dx) + M_PI;
+
+                bool in_arc = (angle > arca && angle < arcb);
+                if(flip_arc)
+                    in_arc = !in_arc;
+
+                if(in_arc)
                 {
-                    dst->pixel(x, y)[c] = m_fg[c];
+                    for(int c=0; c<dst->componentCount(); c++)
+                    {
+                        dst->pixel(x, y)[c] = m_fg[c];
+                    }
                 }
             }
             else
@@ -378,22 +380,81 @@ void ImagePainter::drawCircle(Point<float> center, float radius, float thickness
 
                 if(d < 1.0f)
                 {
-                    for(int c=0; c<dst->componentCount(); c++)
+                    float angle = atan2(dy, dx) + M_PI;
+
+                    bool in_arc = (angle > arca && angle < arcb);
+                    if(flip_arc)
+                        in_arc = !in_arc;
+
+                    if(in_arc)
                     {
-                        auto px = dst->pixel(x, y);
-                        float val = float(px[c]) * rcp * d + float(m_fg[c]) * rcp * (1.0f - d);
-                        px[c] = (unsigned char)(val * 255.0f);
+                        for(int c=0; c<dst->componentCount(); c++)
+                        {
+                            auto px = dst->pixel(x, y);
+                            float val = float(px[c]) * rcp * d + float(m_fg[c]) * rcp * (1.0f - d);
+                            px[c] = (unsigned char)(val * 255.0f);
+                        }
                     }
                 }
             }
         }
     }
+
+    float sina = sin(arca);
+    float cosa = cos(arca);
+    drawLine(
+        {center.x() + cosa * (radius - thickness), center.y() + sina * (radius - thickness)},
+        {center.x() + cosa * radius,               center.y() + sina * radius},
+        1
+    );
+
+    float sinb = sin(arcb);
+    float cosb = cos(arcb);
+    drawLine(
+        {center.x() + cosb * (radius - thickness), center.y() + sinb * (radius - thickness)},
+        {center.x() + cosb * radius,               center.y() + sinb * radius},
+        1
+    );
 }
 
 
-void ImagePainter::drawCircle(Point<float> center, float radius, float thickness)
+void ImagePainter::drawArc(Point<float> center, float radius, float arca, float arcb, float thickness)
 {
-    drawCircle(center, radius, thickness, {0, 0, m_img->width(), m_img->height()});
+    drawArc(center, radius, arca, arcb, thickness, {0, 0, m_img->width(), m_img->height()});
+}
+
+
+void ImagePainter::drawLine(Point<float> a, Point<float> b, float thickness)
+{
+    float dx = b.x() - a.x();
+    float dy = b.y() - a.y();
+    float length = sqrt(dx*dx + dy*dy);
+    float length_rcp = 1.0f / length;
+    float cosang = dx * length_rcp;
+    float sinang = dy * length_rcp;
+
+    int min_x = min(a.x(), b.x());
+    int min_y = min(a.y(), b.y());
+
+    Image src(max(1, int(length)), max(1, int(thickness)), m_img->componentCount());
+    {
+        ImagePainter p(&src);
+        p.fill(m_fg);
+    }
+
+    Transform2D<float> t;
+    t.translate(a.x(), a.y());
+    t.rotate(sinang, cosang);
+    t.translate(-int(float(thickness) * 0.5), -int(float(thickness) * 0.5));
+
+    Rect<int> r = {
+        min_x - int(thickness)*2,
+        min_y - int(thickness)*2,
+        int(abs(dx)) + int(thickness)*4,
+        int(abs(dy)) + int(thickness)*4
+    };
+
+    implant(t, &src, r);
 }
 
 }//namespace r64fx
