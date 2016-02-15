@@ -60,6 +60,8 @@ public:
     void drawArc(Point<float> center, float radius, float arca, float arcb, float thickness);
 
     void drawLine(Point<float> a, Point<float> b, float thickness);
+
+    void drawRadius(Point<float> center, float angle, float outer, float inner, float thickness);
 };
 
 }//namespace r64fx

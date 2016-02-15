@@ -400,21 +400,8 @@ void ImagePainter::drawArc(Point<float> center, float radius, float arca, float 
         }
     }
 
-    float sina = sin(arca);
-    float cosa = cos(arca);
-    drawLine(
-        {center.x() + cosa * (radius - thickness), center.y() + sina * (radius - thickness)},
-        {center.x() + cosa * radius,               center.y() + sina * radius},
-        1
-    );
-
-    float sinb = sin(arcb);
-    float cosb = cos(arcb);
-    drawLine(
-        {center.x() + cosb * (radius - thickness), center.y() + sinb * (radius - thickness)},
-        {center.x() + cosb * radius,               center.y() + sinb * radius},
-        1
-    );
+    drawRadius(center, arca, radius, (radius - thickness), 1);
+    drawRadius(center, arcb, radius, (radius - thickness), 1);
 }
 
 
@@ -455,6 +442,18 @@ void ImagePainter::drawLine(Point<float> a, Point<float> b, float thickness)
     };
 
     implant(t, &src, r);
+}
+
+
+void ImagePainter::drawRadius(Point<float> center, float angle, float outer, float inner, float thickness)
+{
+    float sinang = sin(angle);
+    float cosang = cos(angle);
+    drawLine(
+        {center.x() + cosang * inner, center.y() + sinang * inner},
+        {center.x() + cosang * outer, center.y() + sinang * outer},
+        thickness
+    );
 }
 
 }//namespace r64fx
