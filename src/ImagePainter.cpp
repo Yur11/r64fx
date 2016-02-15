@@ -350,7 +350,7 @@ void ImagePainter::drawArc(Point<float> center, float radius, float arca, float 
             float dx = float(center.x() - x);
             float dy = float(center.y() - y);
             float distance = sqrt(dx*dx + dy*dy);
-            if(distance >= (radius - thickness) && distance <= radius)
+            if(distance >= (radius - thickness) && distance < radius)
             {
                 float angle = atan2(dy, dx) + M_PI;
 
@@ -432,7 +432,7 @@ void ImagePainter::drawLine(Point<float> a, Point<float> b, float thickness)
     Transform2D<float> t;
     t.translate(a.x(), a.y());
     t.rotate(sinang, cosang);
-    t.translate(-int(float(thickness) * 0.5), -int(float(thickness) * 0.5));
+    t.translate(0.0f, -int(float(thickness) * 0.5));
 
     Rect<int> r = {
         min_x - int(thickness)*2,
