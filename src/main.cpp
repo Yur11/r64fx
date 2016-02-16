@@ -54,7 +54,7 @@ public:
         unsigned char bg[4]     = { 127, 180, 255, 0 };
         unsigned char black[4]  = { 0, 0, 0, 0 };
         unsigned char red[4]    = { 255, 0, 0, 0 };
-        unsigned char orange[4] = { 187, 107, 36 };
+        unsigned char orange[4] = { 242, 96, 1 };
 
         m_Image.load(width(), height(), 4);
         ImagePainter imp(&m_Image, fg, bg);
