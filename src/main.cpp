@@ -11,6 +11,7 @@
 #include "Painter.hpp"
 #include "Font.hpp"
 #include "Widget_Container.hpp"
+#include "Widget_Control.hpp"
 #include "Widget_Dummy.hpp"
 #include "Widget_Text.hpp"
 
@@ -53,7 +54,7 @@ public:
         unsigned char fg[4]     = { 0,   0,   0, 0 };
         unsigned char bg[4]     = { 127, 180, 255, 0 };
         unsigned char black[4]  = { 0, 0, 0, 0 };
-        unsigned char red[4]    = { 255, 0, 0, 0 };
+//         unsigned char red[4]    = { 255, 0, 0, 0 };
         unsigned char orange[4] = { 242, 96, 1 };
 
         m_Image.load(width(), height(), 4);
@@ -169,6 +170,9 @@ private:
             mw->setWidth(300);
             mw->setHeight(300);
         }
+
+        auto wc = new Widget_Control(m_container);
+        wc->setSize({50, 50});
 
         for(int i=0; i<1; i++)
         {
