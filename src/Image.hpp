@@ -7,7 +7,7 @@ class Image{
     unsigned char* m_data = nullptr;
     int m_width = 0;
     int m_height = 0;
-    int m_channel_count = 0;
+    int m_component_count = 0;
     unsigned int m_flags = 0;
 
     Image(const Image&){}
@@ -31,13 +31,17 @@ public:
 
     inline int height() const { return m_height; }
 
-    inline int componentCount() const { return m_channel_count; }
+    inline int componentCount() const { return m_component_count; }
 
     unsigned char* pixel(int x, int y) const;
 
     inline unsigned char* operator()(int x, int y) const { return pixel(x, y); }
 
     void setPixel(int x, int y, unsigned char* px);
+
+protected:
+    inline void setData(unsigned char* data) { m_data = data; }
+
 };
 
 }//namespace r64fx

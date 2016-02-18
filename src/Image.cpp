@@ -58,7 +58,7 @@ void Image::load(int w, int h, int c, unsigned char* data, bool copy_data)
         }
         m_width = w;
         m_height = h;
-        m_channel_count = c;
+        m_component_count = c;
     }
 }
 
@@ -73,7 +73,7 @@ void Image::free()
     m_data = nullptr;
     m_width = 0;
     m_height = 0;
-    m_channel_count = 0;
+    m_component_count = 0;
     m_flags = 0;
 }
 
