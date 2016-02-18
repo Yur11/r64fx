@@ -172,10 +172,12 @@ private:
         }
 
         auto subcontainer = new Widget_Container(m_container);
-        auto wc1 = new Widget_Control(ControlType::Knob, {64, 64}, subcontainer);
-        auto wc2 = new Widget_Control(ControlType::Knob, {64, 64}, subcontainer);
-        auto wc3 = new Widget_Control(ControlType::Knob, {64, 64}, subcontainer);
-        auto wc4 = new Widget_Control(ControlType::Knob, {64, 64}, subcontainer);
+        auto wc1 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
+        auto wc2 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
+        auto wc3 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
+        auto wc4 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
+        auto wc5 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
+        auto wc6 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
         subcontainer->setSpacing(5);
         subcontainer->alignVertically();
 

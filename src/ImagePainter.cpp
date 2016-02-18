@@ -435,11 +435,13 @@ void ImagePainter::drawLine(Point<float> a, Point<float> b, float thickness)
     t.translate(0.0f, -int(float(thickness) * 0.5));
 
     Rect<int> r = {
-        min_x - int(thickness)*2,
-        min_y - int(thickness)*2,
-        int(abs(dx)) + int(thickness)*4,
-        int(abs(dy)) + int(thickness)*4
+        min_x - int(thickness) + 1,
+        min_y - int(thickness) + 1,
+        int(abs(dx)) + int(thickness)*2,
+        int(abs(dy)) + int(thickness)*2
     };
+
+//     Rect<int> r = {0, 0, m_img->width(), m_img->height()};
 
     implant(t, &src, r);
 }

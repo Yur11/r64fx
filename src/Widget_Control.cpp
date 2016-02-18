@@ -86,7 +86,7 @@ struct ControlAnimation_Knob : public ControlAnimation{
             unsigned char orange[4] = { 242, 96, 1 };
             int hs = (size / 2);
             int radius = hs - 1;
-            int thickness = 3;
+            int thickness = 2;
 
             imgainim.pickFrame(i);
             ImagePainter p(&imgainim);
@@ -97,12 +97,12 @@ struct ControlAnimation_Knob : public ControlAnimation{
 
             float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
             p.setForegroundComponents(orange);
-            p.drawArc({float(hs), float(hs)}, radius, M_PI * 0.75f, angle, thickness);
+            p.drawArc({float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle, thickness);
             p.setForegroundComponents(black);
-            p.drawArc({float(hs), float(hs)}, radius, angle, M_PI * 0.25f, thickness);
+            p.drawArc({float(hs), float(hs)}, radius - 1, angle, M_PI * 0.25f, thickness);
             p.setForegroundComponents(i > min_position ? orange : black);
             p.drawRadius(
-                {float(hs), float(hs)}, angle, radius + 1, 0, thickness + 1
+                {float(hs), float(hs)}, angle, radius, 0, thickness + 1
             );
         }
     }
