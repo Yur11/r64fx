@@ -19,10 +19,19 @@ public:
     inline void setHeight(T height) { mh = height; }
 
     inline T height() const { return mh; }
-    
-    inline bool operator==(const Size<T> &other) { return mw == other.width() && mh == other.height(); }
-    inline bool operator!=(const Size<T> &other) { return mw != other.width() || mh != other.height(); }
 };
+
+
+template<typename T> inline bool operator==(const Size<T> &a, const Size<T> &b)
+{
+    return a.width() == b.width() && a.height() == b.height();
+}
+
+
+template<typename T> inline bool operator!=(const Size<T> &a, const Size<T> &b)
+{
+    return !operator==(a, b);
+}
 
 
 template<typename Ost, typename T> inline Ost &operator<<(Ost &ost, Size<T> size)

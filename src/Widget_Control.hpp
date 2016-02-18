@@ -5,12 +5,17 @@
 
 namespace r64fx{
 
-class ControlAnimation;
+enum class ControlType{
+    Knob
+};
+
 
 class Widget_Control : public Widget{
+    void* m = nullptr;
+    int m_position = 0;
 
 public:
-    Widget_Control(Widget* parent = nullptr);
+    Widget_Control(ControlType type, Size<int> size, Widget* parent = nullptr);
 
     ~Widget_Control();
 

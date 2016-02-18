@@ -11,6 +11,25 @@ namespace r64fx{
 ImageAnimation::ImageAnimation(int w, int h, int c, int nframes)
 : Image(0, 0, 0)
 {
+    resize(w, h, c, nframes);
+}
+
+
+ImageAnimation::ImageAnimation()
+: Image(0, 0, 0)
+{
+
+}
+
+
+ImageAnimation::~ImageAnimation()
+{
+    free();
+}
+
+
+void ImageAnimation::resize(int w, int h, int c, int nframes)
+{
     if(w <= 0 || h <= 0 || c <= 0 || nframes <= 0)
         return;
 
@@ -29,6 +48,7 @@ ImageAnimation::ImageAnimation(int w, int h, int c, int nframes)
         if(!frame)
         {
             cerr << "ImageAnimation: Failed to allocate frame!\n";
+            free();
             return;
         }
     }
@@ -37,7 +57,7 @@ ImageAnimation::ImageAnimation(int w, int h, int c, int nframes)
 }
 
 
-ImageAnimation::~ImageAnimation()
+void ImageAnimation::free()
 {
     if(m_frames)
     {
@@ -51,6 +71,12 @@ ImageAnimation::~ImageAnimation()
         }
         delete m_frames;
     }
+}
+
+
+bool ImageAnimation::isGood() const
+{
+    return m_frames != nullptr;
 }
 
 

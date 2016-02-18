@@ -5,6 +5,10 @@
 
 namespace r64fx{
 
+namespace{
+    Point<int> g_last_mouse_event_pos = {0, 0};
+}
+
 class MouseButton{
     unsigned int m_code;
 
@@ -87,16 +91,26 @@ inline MouseButton &operator&=(MouseButton &a, MouseButton b)
 
 class MouseEvent{
     Point<int>  m_position;
+    Point<int>  m_delta;
     MouseButton m_button;
 
 public:
     bool handled = false;
 
+    explicit MouseEvent(int x, int y, int dx, int dy, MouseButton button)
+    : m_position{x, y}
+    , m_delta{dx, dy}
+    , m_button(button)
+    {
+        g_last_mouse_event_pos = m_position;
+    }
+
     explicit MouseEvent(int x, int y, MouseButton button)
     : m_position{x, y}
     , m_button(button)
     {
-
+        m_delta = m_position - g_last_mouse_event_pos;
+        g_last_mouse_event_pos = m_position;
     }
 
     inline void setPosition(Point<int> position) { m_position = position; }
@@ -105,6 +119,11 @@ public:
 
     inline int x() const { return m_position.x(); }
     inline int y() const { return m_position.y(); }
+
+    inline Point<int> delta() const { return m_delta; }
+
+    inline int dx() const { return m_delta.x(); }
+    inline int dy() const { return m_delta.y(); }
 
     inline MouseButton button() const { return m_button; }
 };

@@ -11,11 +11,20 @@ class ImageAnimation : public Image{
 public:
     ImageAnimation(int w, int h, int c, int nframes);
 
+    ImageAnimation();
+
     ~ImageAnimation();
+
+    void resize(int w, int h, int c, int nframes);
+
+    void free();
+
+    bool isGood() const;
 
     int frameCount() const;
 
     void pickFrame(int i);
+
 };
 
 }//namespace r64fx

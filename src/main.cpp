@@ -171,8 +171,13 @@ private:
             mw->setHeight(300);
         }
 
-        auto wc = new Widget_Control(m_container);
-        wc->setSize({50, 50});
+        auto subcontainer = new Widget_Container(m_container);
+        auto wc1 = new Widget_Control(ControlType::Knob, {64, 64}, subcontainer);
+        auto wc2 = new Widget_Control(ControlType::Knob, {64, 64}, subcontainer);
+        auto wc3 = new Widget_Control(ControlType::Knob, {64, 64}, subcontainer);
+        auto wc4 = new Widget_Control(ControlType::Knob, {64, 64}, subcontainer);
+        subcontainer->setSpacing(5);
+        subcontainer->alignVertically();
 
         for(int i=0; i<1; i++)
         {
