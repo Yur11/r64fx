@@ -6,13 +6,25 @@
 namespace r64fx{
 
 enum class ControlType{
-    Knob
+    UnipolarRadius,
+    BipolarRadius,
+    UnipolarArc,
+    BipolarArc,
+    UnipolarSector,
+    BipolarSector,
+    VerticalFader,
+    HorizontalFader
+};
+
+
+class ControlAnimation{
+
 };
 
 
 class Widget_Control : public Widget{
-    void* m = nullptr;
-    int m_position = 0;
+    ControlAnimation*  m_animation = nullptr;
+    int                m_position  = 0;
 
 public:
     Widget_Control(ControlType type, Size<int> size, Widget* parent = nullptr);

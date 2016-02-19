@@ -53,24 +53,11 @@ public:
     {
         unsigned char fg[4]     = { 0,   0,   0, 0 };
         unsigned char bg[4]     = { 127, 180, 255, 0 };
-        unsigned char black[4]  = { 0, 0, 0, 0 };
-//         unsigned char red[4]    = { 255, 0, 0, 0 };
-        unsigned char orange[4] = { 242, 96, 1 };
+
 
         m_Image.load(width(), height(), 4);
         ImagePainter imp(&m_Image, fg, bg);
         imp.fillBackground();
-        imp.fillForeground({10, 10, 10, 10});
-        float angle = normalize_angle((float(m_val) / 512) * 1.5f * M_PI + 0.75f * M_PI);
-        imp.setForegroundComponents(orange);
-        imp.drawArc({100, 100}, m_radius, M_PI * 0.75f, angle, m_thickness);
-        imp.setForegroundComponents(black);
-        imp.drawArc({100, 100}, m_radius, angle, M_PI * 0.25f, m_thickness);
-        imp.setForegroundComponents(m_val > 0 ? orange : black);
-        imp.drawRadius(
-            {100, 100}, angle, m_radius + 1, 0, m_thickness + 1
-        );
-        imp.setForegroundComponents(black);
 
         auto painter = event->painter();
         painter->putImage(&m_Image);
@@ -172,12 +159,11 @@ private:
         }
 
         auto subcontainer = new Widget_Container(m_container);
-        auto wc1 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
-        auto wc2 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
-        auto wc3 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
-        auto wc4 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
-        auto wc5 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
-        auto wc6 = new Widget_Control(ControlType::Knob, {48, 48}, subcontainer);
+        auto wc1 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, subcontainer);
+        auto wc2 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, subcontainer);
+        auto wc3 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, subcontainer);
+        auto wc4 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, subcontainer);
+        auto wc5 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, subcontainer);
         subcontainer->setSpacing(5);
         subcontainer->alignVertically();
 

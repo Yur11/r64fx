@@ -4,19 +4,17 @@
 #include "ImageAnimation.hpp"
 #include "ImagePainter.hpp"
 
-#define m_animation ((ControlAnimation*)m)
-
 #include <iostream>
 using namespace std;
 
 
 namespace r64fx{
 
-struct ControlAnimation{
+struct ControlAnimationImpl : public ControlAnimation{
     int min_position = 0;
     int max_position = 255;
 
-    virtual ~ControlAnimation() {}
+    virtual ~ControlAnimationImpl() {}
 
     int positionRange() const
     {
@@ -73,34 +71,32 @@ float normalize_angle(float angle)
 }
 
 
-struct ControlAnimation_Knob : public ControlAnimation{
+struct ControlAnimation_Knob : public ControlAnimationImpl{
     ImageAnimation imgainim;
 
     ControlAnimation_Knob(int size)
     {
-        imgainim.resize(size, size, 4, positionRange());
+        imgainim.resize(size, size, 2, positionRange());
         for(int i=0; i<positionRange(); i++)
         {
-            unsigned char grey[4]   = { 200, 200, 200, 0 };
-            unsigned char black[4]  = { 0, 0, 0, 0 };
-            unsigned char orange[4] = { 242, 96, 1 };
+            unsigned char a[2] = {255, 0};
+            unsigned char b[2] = {0, 255};
+            unsigned char o[2] = {0, 0};
+
             int hs = (size / 2);
             int radius = hs - 1;
             int thickness = 2;
 
             imgainim.pickFrame(i);
             ImagePainter p(&imgainim);
-//             unsigned char color[4];
-//             for(int j=0; j<4; j++)
-//                 color[j] = (unsigned char)i;
-            p.fill(grey);
+            p.fill(o);
 
             float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
-            p.setForegroundComponents(orange);
+            p.setForegroundComponents(a);
             p.drawArc({float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle, thickness);
-            p.setForegroundComponents(black);
+            p.setForegroundComponents(b);
             p.drawArc({float(hs), float(hs)}, radius - 1, angle, M_PI * 0.25f, thickness);
-            p.setForegroundComponents(i > min_position ? orange : black);
+            p.setForegroundComponents(i > min_position ? a : b);
             p.drawRadius(
                 {float(hs), float(hs)}, angle, radius, 0, thickness + 1
             );
@@ -112,7 +108,7 @@ struct ControlAnimation_Knob : public ControlAnimation{
         if(imgainim.isGood())
         {
             imgainim.pickFrame(position - min_position);
-            painter->putImage(&imgainim);
+//             painter->blendColors(&imgainim);
         }
     }
 };
@@ -131,7 +127,7 @@ ControlAnimation* newAnimation(ControlType type, Size<int> size)
     ControlAnimation* animation = nullptr;
     switch(type)
     {
-        case ControlType::Knob:
+        case ControlType::UnipolarRadius:
         {
             animation = new(std::nothrow) ControlAnimation_Knob(
                 min(size.width(), size.height())
@@ -155,7 +151,7 @@ ControlAnimation* newAnimation(ControlType type, Size<int> size)
 
 Widget_Control::Widget_Control(ControlType type, Size<int> size, Widget* parent) : Widget(parent)
 {
-    m = newAnimation(type, size);
+    m_animation = newAnimation(type, size);
     setSize(size);
 }
 
@@ -175,7 +171,8 @@ void Widget_Control::reconfigureEvent(ReconfigureEvent* event)
     p->fillRect({127, 127, 127}, {0, 0, width(), height()});
     if(m_animation)
     {
-        m_animation->repaint(m_position, p);
+        auto anim = (ControlAnimationImpl*) m_animation;
+        anim->repaint(m_position, p);
     }
     Widget::reconfigureEvent(event);
 }
@@ -194,7 +191,8 @@ void Widget_Control::mouseMoveEvent(MouseMoveEvent* event)
 
     if(event->button() & MouseButton::Left())
     {
-        m_position = m_animation->newPosition(m_position, event);
+        auto anim = (ControlAnimationImpl*) m_animation;
+        m_position = anim->newPosition(m_position, event);
         update();
     }
 }

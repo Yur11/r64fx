@@ -175,6 +175,8 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos);
 
+    virtual void blend(Point<int> pos, Image* colors, Image* mask);
+
     virtual void repaint(Rect<int>* rects, int numrects);
 
     virtual void adjustForWindowSize();
@@ -218,6 +220,12 @@ void PainterImplImage::blendColors(Color<unsigned char> a, Color<unsigned char> 
     paint_context->color         = a;
     paint_context->alt_color     = b;
     blend_colors_routine(paint_context);
+}
+
+
+void PainterImplImage::blend(Point<int> pos, Image* colors, Image* mask)
+{
+
 }
 
 
@@ -268,6 +276,8 @@ struct PainterImplGL : public PainterImpl{
     virtual void putImage(Image* img, Point<int> pos);
 
     virtual void blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos);
+
+    virtual void blend(Point<int> pos, Image* colors, Image* mask);
 
     virtual void repaint(Rect<int>* rects, int numrects);
 
@@ -367,6 +377,13 @@ void PainterImplGL::blendColors(Color<unsigned char> a, Color<unsigned char> b, 
         gl_sub_tex_routine(paint_context, r, blend_colors_routine, base_texture);
     }
 }
+
+
+void PainterImplGL::blend(Point<int> pos, Image* colors, Image* mask)
+{
+
+}
+
 
 
 void PainterImplGL::repaint(Rect<int>* rects, int numrects)
