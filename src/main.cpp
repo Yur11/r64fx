@@ -7,7 +7,6 @@
 #include "Mouse.hpp"
 #include "Keyboard.hpp"
 #include "ImageUtils.hpp"
-#include "ImagePainter.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
 #include "Widget_Container.hpp"
@@ -54,10 +53,8 @@ public:
         unsigned char fg[4]     = { 0,   0,   0, 0 };
         unsigned char bg[4]     = { 127, 180, 255, 0 };
 
-
         m_Image.load(width(), height(), 4);
-        ImagePainter imp(&m_Image, fg, bg);
-        imp.fillBackground();
+        fill(&m_Image, bg);
 
         auto painter = event->painter();
         painter->putImage(&m_Image);

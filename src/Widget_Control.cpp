@@ -2,8 +2,9 @@
 #include "Mouse.hpp"
 #include "Painter.hpp"
 #include "ImageAnimation.hpp"
-#include "ImagePainter.hpp"
+#include "ImageUtils.hpp"
 
+#include <cmath>
 #include <iostream>
 using namespace std;
 
@@ -88,16 +89,18 @@ struct ControlAnimation_Knob : public ControlAnimationImpl{
             int thickness = 2;
 
             imgainim.pickFrame(i);
-            ImagePainter p(&imgainim);
-            p.fill(o);
+            fill(&imgainim, o);
 
             float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
-            p.setForegroundComponents(a);
-            p.drawArc({float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle, thickness);
-            p.setForegroundComponents(b);
-            p.drawArc({float(hs), float(hs)}, radius - 1, angle, M_PI * 0.25f, thickness);
-            p.setForegroundComponents(i > min_position ? a : b);
-            p.drawRadius(
+
+            if(i > 0)
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle, thickness);
+
+            if(i < (positionRange()-1))
+                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, angle, M_PI * 0.25f, thickness);
+
+            draw_radius(
+                &imgainim, (i>0 ? b : a),
                 {float(hs), float(hs)}, angle, radius, 0, thickness + 1
             );
         }
