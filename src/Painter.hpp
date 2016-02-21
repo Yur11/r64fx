@@ -61,7 +61,8 @@ public:
     /* Blend two colors using an alpha mask. */
     virtual void blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos = {0, 0}) = 0;
 
-    virtual void blend(Point<int> pos, Image* colors, Image* mask) = 0;
+    /* Blend multiple colors using multi-component alpha mask. */
+    virtual void blend(Point<int> pos, unsigned char** colors, Image* mask) = 0;
 
     /** @brief Make the changes visible.
 

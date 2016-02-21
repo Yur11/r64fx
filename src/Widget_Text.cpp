@@ -438,11 +438,13 @@ void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
     m_image = new Image(width(), height(), 4);
     if(isMouseGrabber())
     {
-        fill(m_image, {255, 127, 127, 0});
+        unsigned char color[4] = {255, 127, 127, 0};
+        fill(m_image, color);
     }
     else
     {
-        fill(m_image, {255, 255, 255, 0});
+        unsigned char color[4] = {255, 255, 255, 0};
+        fill(m_image, color);
     }
 
     m_text_painter->paintSelectionBackground(
@@ -453,9 +455,9 @@ void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
         m_image, {0, 0, 0}, {0, 0, 0}, {paddingLeft(), paddingTop()}
     );
 
-    draw_rect(
-        m_image, {0, 0, 0}, {0, 0, width(), height()}
-    );
+//     draw_rect(
+//         m_image, {0, 0, 0}, {0, 0, width(), height()}
+//     );
 
     for(int y=0; y<m_text_painter->font->height(); y++)
     {

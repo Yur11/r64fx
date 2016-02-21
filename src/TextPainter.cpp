@@ -458,7 +458,7 @@ void TextPainter::paintText(Image* image, Color<unsigned char> fg, Color<unsigne
                     offset.y() - glyph->bearing_y() + (l*font->height()) + font->ascender()
                 };
 
-                alpha_blend(image, p, fg, glyph->image());
+                blend(image, p, fg.vec, glyph->image());
             }
             x += glyph->advance();
         }
@@ -472,7 +472,7 @@ void TextPainter::paintSelectionBackground(Image* image, Color<unsigned char> co
     {
         rect += offset;
         rect = intersection(rect, {0, 0, image->width(), image->height()});
-        fill(image, color, rect);
+        fill(image, color.vec, rect);
     }
 }
 

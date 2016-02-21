@@ -1,6 +1,7 @@
 #include "Painter.hpp"
 #include "Window.hpp"
 #include "Image.hpp"
+#include "ImageUtils.hpp"
 #include "LinkedList.hpp"
 #include <vector>
 
@@ -117,6 +118,13 @@ void blend_colors_routine(PaintContext* ctx)
 }
 
 
+void blend_routine(PaintContext* ctx)
+{
+//     ImagePainter p(ctx->target_image);
+//     p.blend(ctx->rect.position());
+}
+
+
 struct PainterImpl : public Painter{
     Window*     window    = nullptr;
 
@@ -175,7 +183,7 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos);
 
-    virtual void blend(Point<int> pos, Image* colors, Image* mask);
+    virtual void blend(Point<int> pos, unsigned char** colors, Image* mask);
 
     virtual void repaint(Rect<int>* rects, int numrects);
 
@@ -223,7 +231,7 @@ void PainterImplImage::blendColors(Color<unsigned char> a, Color<unsigned char> 
 }
 
 
-void PainterImplImage::blend(Point<int> pos, Image* colors, Image* mask)
+void PainterImplImage::blend(Point<int> pos, unsigned char** colors, Image* mask)
 {
 
 }
@@ -277,7 +285,7 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos);
 
-    virtual void blend(Point<int> pos, Image* colors, Image* mask);
+    virtual void blend(Point<int> pos, unsigned char** colors, Image* mask);
 
     virtual void repaint(Rect<int>* rects, int numrects);
 
@@ -379,7 +387,7 @@ void PainterImplGL::blendColors(Color<unsigned char> a, Color<unsigned char> b, 
 }
 
 
-void PainterImplGL::blend(Point<int> pos, Image* colors, Image* mask)
+void PainterImplGL::blend(Point<int> pos, unsigned char** colors, Image* mask)
 {
 
 }

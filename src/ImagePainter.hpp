@@ -49,11 +49,11 @@ public:
 
     void implant(Point<int> pos, Image* img);
 
-    void blend(Point<int> pos, Image* colors, Image* mask);
-
     void implant(Transform2D<float> transform, Image* img, Rect<int> rect);
 
     void implant(Transform2D<float> transform, Image* img);
+
+    void blend(Point<int> pos, unsigned char** colors, Image* mask);
 
     void drawArc(Point<float> center, float radius, float arca, float arcb, float thickness, Rect<int> rect);
 

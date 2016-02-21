@@ -195,53 +195,6 @@ void ImagePainter::implant(Point<int> pos, Image* img)
 }
 
 
-void ImagePainter::blend(Point<int> pos, Image* colors, Image* mask)
-{
-#ifdef R64FX_DEBUG
-    assert(m_img != nullptr);
-    assert(mask != nullptr);
-    assert(mask->componentCount() == colors->width());
-#endif//R64FX_DEBUG
-
-    Image* dst = m_img;
-
-    static const float rcp = 1.0f / float(255);
-
-    Rect<int> dst_rect = {0, 0, dst->width(), dst->height()};
-    Rect<int> src_rect = {pos.x(), pos.y(), mask->width(), mask->height()};
-    Rect<int> rect = intersection(src_rect, dst_rect);
-
-    if(rect.width() == 0 || rect.height() == 0)
-        return;
-
-    int src_offset_x = (pos.x() < 0 ? -pos.x() : 0);
-    int src_offset_y = (pos.y() < 0 ? -pos.y() : 0);
-    int dst_offset_x = (pos.x() > 0 ?  pos.x() : 0);
-    int dst_offset_y = (pos.y() > 0 ?  pos.y() : 0);
-
-    for(int y=0; y<rect.height(); y++)
-    {
-        for(int x=0; x<rect.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + dst_offset_x, y + dst_offset_y);
-            auto mskpx = mask->pixel(x + src_offset_x, y + src_offset_y);
-
-            for(int m=0; m<mask->componentCount(); m++)
-            {
-                float alpha            = float(      mskpx[m]) * rcp;
-                float one_minus_alpha  = float(255 - mskpx[m]) * rcp;
-
-                for(int c=0; c<dst->componentCount(); c++)
-                {
-                    float result = float(dstpx[c]) * one_minus_alpha + float(colors->pixel(m, 0)[c]) * alpha;
-                    dstpx[c] = (unsigned char)result;
-                }
-            }
-        }
-    }
-}
-
-
 void ImagePainter::implant(Transform2D<float> transform, Image* img, Rect<int> rect)
 {
 #ifdef R64FX_DEBUG
@@ -325,6 +278,52 @@ void ImagePainter::implant(Transform2D<float> transform, Image* img, Rect<int> r
 void ImagePainter::implant(Transform2D<float> transform, Image* img)
 {
     implant(transform, img, {0, 0, m_img->width(), m_img->height()});
+}
+
+
+void ImagePainter::blend(Point<int> pos, unsigned char** colors, Image* mask)
+{
+#ifdef R64FX_DEBUG
+    assert(m_img != nullptr);
+    assert(mask != nullptr);
+#endif//R64FX_DEBUG
+
+    Image* dst = m_img;
+
+    static const float rcp = 1.0f / float(255);
+
+    Rect<int> dst_rect = {0, 0, dst->width(), dst->height()};
+    Rect<int> src_rect = {pos.x(), pos.y(), mask->width(), mask->height()};
+    Rect<int> rect = intersection(src_rect, dst_rect);
+
+    if(rect.width() == 0 || rect.height() == 0)
+        return;
+
+    int src_offset_x = (pos.x() < 0 ? -pos.x() : 0);
+    int src_offset_y = (pos.y() < 0 ? -pos.y() : 0);
+    int dst_offset_x = (pos.x() > 0 ?  pos.x() : 0);
+    int dst_offset_y = (pos.y() > 0 ?  pos.y() : 0);
+
+    for(int y=0; y<rect.height(); y++)
+    {
+        for(int x=0; x<rect.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_offset_x, y + dst_offset_y);
+            auto mskpx = mask->pixel(x + src_offset_x, y + src_offset_y);
+
+            for(int m=0; m<mask->componentCount(); m++)
+            {
+                float alpha            = float(      mskpx[m]) * rcp;
+                float one_minus_alpha  = float(255 - mskpx[m]) * rcp;
+
+                for(int c=0; c<dst->componentCount(); c++)
+                {
+                    float result = float(dstpx[c]) * one_minus_alpha + float(colors[m][c]) * alpha;
+                    dstpx[c] = (unsigned char)result;
+                }
+            }
+        }
+    }
 }
 
 
