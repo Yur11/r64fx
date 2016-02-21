@@ -7,13 +7,13 @@
 
 namespace r64fx{
 
-void fill(Image* dst, int component, unsigned char value, Rect<int> rect);
-
-void fill(Image* dst, int component, unsigned char value);
-
 void fill(Image* dst, unsigned char* components, Rect<int> rect);
 
 void fill(Image* dst, unsigned char* components);
+
+void fill(Image* dst, int component, unsigned char value, Rect<int> rect);
+
+void fill(Image* dst, int component, unsigned char value);
 
 void implant(Image* dst, Point<int> pos, Image* src);
 

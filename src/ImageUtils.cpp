@@ -9,27 +9,47 @@ using namespace std;
 
 namespace r64fx{
 
-void fill(Image* dst, int component, unsigned char value, Rect<int> rect)
-{
+struct MatchedRects{
+    Point<int> dst_offset;
+    Point<int> src_offset;
+    Size<int>  size;
 
-    for(int y=0; y<rect.height(); y++)
+    MatchedRects(const Rect<int> &dst_rect, const Rect<int> &src_rect)
     {
-        for(int x=0; x<rect.width(); x++)
-        {
-            dst->pixel(x + rect.x(), y + rect.y())[component] = value;
-        }
+        match(dst_rect, src_rect);
     }
-}
 
+    MatchedRects(const Image* dst, const Point<int> &src_pos, const Image* src)
+    {
+        match(dst, src_pos, src);
+    }
 
-void fill(Image* dst, int component, unsigned char value)
-{
-    fill(dst, component, value, {0, 0, dst->width(), dst->height()});
-}
+    inline void match(const Rect<int> &dst_rect, const Rect<int> &src_rect)
+    {
+        size = intersection(src_rect, dst_rect).size();
+        src_offset.setX(src_rect.x() < 0 ? -src_rect.x() : 0);
+        src_offset.setY(src_rect.y() < 0 ? -src_rect.y() : 0);
+        dst_offset.setX(src_rect.x() > 0 ?  src_rect.x() : 0);
+        dst_offset.setY(src_rect.y() > 0 ?  src_rect.y() : 0);
+    }
+
+    inline void match(const Image* dst, const Point<int> &src_pos, const Image* src)
+    {
+        match(
+            {0, 0, dst->width(), dst->height()},
+            {src_pos.x(), src_pos.y(), src->width(), src->height()}
+        );
+    }
+};
 
 
 void fill(Image* dst, unsigned char* components, Rect<int> rect)
 {
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(components != nullptr);
+#endif//R64FX_DEBUG
+
     for(int y=0; y<rect.height(); y++)
     {
         for(int x=0; x<rect.width(); x++)
@@ -49,42 +69,43 @@ void fill(Image* dst, unsigned char* components)
 }
 
 
-void match_rects(const Rect<int> &dst_rect, const Rect<int> &src_rect, Point<int> &dst_offset, Point<int> &src_offset, Size<int> &size)
+void fill(Image* dst, int component, unsigned char value, Rect<int> rect)
 {
-    size = intersection(src_rect, dst_rect).size();
-    src_offset.setX(src_rect.x() < 0 ? -src_rect.x() : 0);
-    src_offset.setY(src_rect.y() < 0 ? -src_rect.y() : 0);
-    dst_offset.setX(src_rect.x() > 0 ?  src_rect.x() : 0);
-    dst_offset.setY(src_rect.y() > 0 ?  src_rect.y() : 0);
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+#endif//R64FX_DEBUG
+
+    for(int y=0; y<rect.height(); y++)
+    {
+        for(int x=0; x<rect.width(); x++)
+        {
+            dst->pixel(x + rect.x(), y + rect.y())[component] = value;
+        }
+    }
 }
 
 
-void match_rects(const Image* dst, const Point<int> &src_pos, const Image* src, Point<int> &dst_offset, Point<int> &src_offset, Size<int> &size)
+void fill(Image* dst, int component, unsigned char value)
 {
-    match_rects(
-        {0, 0, dst->width(), dst->height()},
-        {src_pos.x(), src_pos.y(), src->width(), src->height()},
-        dst_offset, src_offset, size
-    );
+    fill(dst, component, value, {0, 0, dst->width(), dst->height()});
 }
 
 
 void implant(Image* dst, Point<int> pos, Image* src)
 {
-    Point<int> dst_offset;
-    Point<int> src_offset;
-    Size<int>  size;
-    match_rects(
-        dst, pos, src,
-        dst_offset, src_offset, size
-    );
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(src != nullptr);
+#endif//R64FX_DEBUG
 
-    for(int y=0; y<size.height(); y++)
+    MatchedRects r(dst, pos, src);
+
+    for(int y=0; y<r.size.height(); y++)
     {
-        for(int x=0; x<size.width(); x++)
+        for(int x=0; x<r.size.width(); x++)
         {
-            auto dstpx = dst->pixel(x + dst_offset.x(), y + dst_offset.y());
-            auto srcpx = src->pixel(x + src_offset.x(), y + src_offset.y());
+            auto dstpx = dst->pixel(x + r.dst_offset.x(), y + r.dst_offset.y());
+            auto srcpx = src->pixel(x + r.src_offset.x(), y + r.src_offset.y());
 
             for(int c=0; c<dst->componentCount(); c++)
             {
@@ -187,24 +208,17 @@ void blend(Image* dst, Point<int> pos, unsigned char** colors, Image* mask)
 
     static const float rcp = 1.0f / float(255);
 
-    Rect<int> dst_rect = {0, 0, dst->width(), dst->height()};
-    Rect<int> src_rect = {pos.x(), pos.y(), mask->width(), mask->height()};
-    Rect<int> rect = intersection(src_rect, dst_rect);
+    MatchedRects r(dst, pos, mask);
 
-    if(rect.width() == 0 || rect.height() == 0)
+    if(r.size.width() <= 0 || r.size.height() <= 0)
         return;
 
-    int src_offset_x = (pos.x() < 0 ? -pos.x() : 0);
-    int src_offset_y = (pos.y() < 0 ? -pos.y() : 0);
-    int dst_offset_x = (pos.x() > 0 ?  pos.x() : 0);
-    int dst_offset_y = (pos.y() > 0 ?  pos.y() : 0);
-
-    for(int y=0; y<rect.height(); y++)
+    for(int y=0; y<r.size.height(); y++)
     {
-        for(int x=0; x<rect.width(); x++)
+        for(int x=0; x<r.size.width(); x++)
         {
-            auto dstpx = dst->pixel(x + dst_offset_x, y + dst_offset_y);
-            auto mskpx = mask->pixel(x + src_offset_x, y + src_offset_y);
+            auto dstpx = dst->pixel(x + r.dst_offset.x(), y + r.dst_offset.y());
+            auto mskpx = mask->pixel(x + r.src_offset.x(), y + r.src_offset.y());
 
             for(int m=0; m<mask->componentCount(); m++)
             {
@@ -317,6 +331,11 @@ void draw_arc(Image* dst, unsigned char* color, Point<float> center, float radiu
 
 void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b, float thickness)
 {
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(color != nullptr);
+#endif//R64FX_DEBUG
+
     float dx = b.x() - a.x();
     float dy = b.y() - a.y();
     float length = sqrt(dx*dx + dy*dy);
@@ -343,8 +362,6 @@ void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b,
         int(abs(dx)) + int(thickness)*2,
         int(abs(dy)) + int(thickness)*2
     };
-
-//     Rect<int> r = {0, 0, dst->width(), dst->height()};
 
     implant(dst, t, &src, r);
 }
