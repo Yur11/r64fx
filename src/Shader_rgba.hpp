@@ -1,3 +1,5 @@
+#ifdef R64FX_USE_GL
+
 #ifndef R64FX_SHADER_RGBA_HPP
 #define R64FX_SHADER_RGBA_HPP
 
@@ -25,3 +27,5 @@ public:
 }//namespace r64fx
 
 #endif//R64FX_SHADER_RGBA_HPP
+
+#endif//R64FX_USE_GL

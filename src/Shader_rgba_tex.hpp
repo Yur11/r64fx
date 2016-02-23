@@ -1,3 +1,5 @@
+#ifdef R64FX_USE_GL
+
 #ifndef R64FX_SHADER_RGBA_TEX_HPP
 #define R64FX_SHADER_RGBA_TEX_HPP
 
@@ -24,3 +26,5 @@ struct Shader_rgba_tex : public ShadingProgram{
 }//namespace r64fx
 
 #endif//R64FX_SHADER_RGBA_TEX_HPP
+
+#endif//R64FX_USE_GL

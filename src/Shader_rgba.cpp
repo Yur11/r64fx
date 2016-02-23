@@ -1,3 +1,5 @@
+#ifdef R64FX_USE_GL
+
 #include "Shader_rgba.hpp"
 #include "ShaderImplUtils.hpp"
 
@@ -38,3 +40,5 @@ void Shader_rgba::setScaleAndShift(float sx, float sy, float tx, float ty)
 }
 
 }//namespace r64fx
+
+#endif//R64FX_USE_GL

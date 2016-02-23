@@ -1,3 +1,5 @@
+#ifdef R64FX_USE_GL
+
 #include "Shader_rgba_tex.hpp"
 #include "ShaderImplUtils.hpp"
 
@@ -45,3 +47,5 @@ void Shader_rgba_tex::setSampler(int sampler)
 }
 
 }//namespace r64fx
+
+#endif//R64FX_USE_GL

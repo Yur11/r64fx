@@ -1,3 +1,5 @@
+#ifdef R64FX_USE_GL
+
 #ifndef R64FX_GL_HPP
 #define R64FX_GL_HPP
 
@@ -522,3 +524,5 @@ inline void Finish()
 }//namespace r64fx
 
 #endif//R64FX_GL_HPP
+
+#endif//R64FX_USE_GL

@@ -1,3 +1,5 @@
+#ifdef R64FX_USE_GL
+
 #ifndef R64FX_GUI_SHADER_H
 #define R64FX_GUI_SHADER_H
 
@@ -70,3 +72,5 @@ public:
 }//namespace r64fx
 
 #endif//R64FX_GUI_SHADER_H
+
+#endif//R64FX_USE_GL

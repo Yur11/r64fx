@@ -1,3 +1,5 @@
+#ifdef R64FX_USE_GL
+
 #include "Shader.hpp"
 #include <iostream>
 
@@ -136,3 +138,5 @@ void ShadingProgram::getUniformLocation(GLint &out, const char* name)
 }
     
 }//namespace r64x
+
+#endif//R64FX_USE_GL

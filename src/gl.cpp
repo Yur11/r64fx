@@ -1,3 +1,5 @@
+#ifdef R64FX_USE_GL
+
 #define R64FX_IMPL
 #include "gl.hpp"
 
@@ -123,3 +125,5 @@ void CheckForErrors(const char* fun_name)
 }//namespace gl
     
 }//namespace r64fx
+
+#endif//R64FX_USE_GL
