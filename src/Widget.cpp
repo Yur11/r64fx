@@ -314,7 +314,7 @@ void Widget::show()
             setHeight(100);
 
         auto window = Window::newInstance(
-            width(), height(), "", Window::Type::GL
+            width(), height(), "", Window::Type::Image
         );
 #ifdef R64FX_DEBUG
         if(!window)

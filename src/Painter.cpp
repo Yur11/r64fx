@@ -26,11 +26,15 @@ typedef void (*PaintRoutine)(PaintContext* ctx);
 
 /* Collection of values to be passed to paint routines. */
 struct PaintContext{
-    /* Rectangle given by the user. */
-    Rect<int>             orig_rect;
+    Point<int>     position;
 
-    /* Rectangle relative to the target image. */
-    Rect<int>             rect;
+    Size<int>      size;
+
+//     /* Rectangle given by the user. */
+//     Rect<int>             orig_rect;
+//
+//     /* Rectangle relative to the target image. */
+//     Rect<int>             rect;
 
     /* Color to use. */
     Color<unsigned char>  color;
@@ -44,77 +48,54 @@ struct PaintContext{
     /* Image to read pixels from. */
     Image*                source_image;
 
-    /* Data used to build plots. */
-    float*                plot_data;
+//     /* Data used to build plots. */
+//     float*                plot_data;
 };
 
 
 void fill_rect_routine(PaintContext* ctx)
 {
-    auto img    = ctx->target_image;
-    auto rect   = ctx->rect;
-    auto color  = ctx->color;
-
-    for(int y=0; y<rect.height(); y++)
-    {
-        for(int x=0; x<rect.width(); x++)
-        {
-            img->setPixel(x + rect.x(), y + rect.y(), color.vec);
-        }
-    }
+    fill(ctx->target_image, ctx->color.vec, {ctx->position, ctx->size});
 }
 
 
 void put_image_routine(PaintContext* ctx)
 {
-    auto dst   = ctx->target_image;
-    auto src   = ctx->source_image;
-    auto rect  = ctx->rect;
-
-    for(int y=0; y<rect.height(); y++)
-    {
-        for(int x=0; x<rect.width(); x++)
-        {
-            for(int c=0; c<dst->componentCount(); c++)
-            {
-                dst->pixel(x + rect.x(), y + rect.y())[c] = src->pixel(x, y)[c];
-            }
-        }
-    }
+    implant(ctx->target_image, ctx->position, ctx->source_image);
 }
 
 
 void blend_colors_routine(PaintContext* ctx)
 {
-    auto dst   = ctx->target_image;
-    auto mask  = ctx->source_image;
-    auto rect  = ctx->rect;
-
-    static const float rcp = 1.0f / 255.0f;
-
-    Color<float> a = {
-        rcp * ctx->color.red(),
-        rcp * ctx->color.green(),
-        rcp * ctx->color.blue(),
-        rcp * ctx->color.alpha()
-    };
-
-    Color<float> b = {
-        rcp * ctx->alt_color.red(),
-        rcp * ctx->alt_color.green(),
-        rcp * ctx->alt_color.blue(),
-        rcp * ctx->alt_color.alpha()
-    };
-
-    for(int y=0; y<rect.height(); y++)
-    {
-        for(int x=0; x<rect.width(); x++)
-        {
-            unsigned char px = mask->pixel(x, y)[0];
-            Color<float> c = a * float(px) + b * float(255 - px);
-            dst->setPixel(x + rect.x(), y + rect.y(), c.to<unsigned char>().vec);
-        }
-    }
+//     auto dst   = ctx->target_image;
+//     auto mask  = ctx->source_image;
+//     auto rect  = ctx->rect;
+//
+//     static const float rcp = 1.0f / 255.0f;
+//
+//     Color<float> a = {
+//         rcp * ctx->color.red(),
+//         rcp * ctx->color.green(),
+//         rcp * ctx->color.blue(),
+//         rcp * ctx->color.alpha()
+//     };
+//
+//     Color<float> b = {
+//         rcp * ctx->alt_color.red(),
+//         rcp * ctx->alt_color.green(),
+//         rcp * ctx->alt_color.blue(),
+//         rcp * ctx->alt_color.alpha()
+//     };
+//
+//     for(int y=0; y<rect.height(); y++)
+//     {
+//         for(int x=0; x<rect.width(); x++)
+//         {
+//             unsigned char px = mask->pixel(x, y)[0];
+//             Color<float> c = a * float(px) + b * float(255 - px);
+//             dst->setPixel(x + rect.x(), y + rect.y(), c.to<unsigned char>().vec);
+//         }
+//     }
 }
 
 
@@ -207,8 +188,9 @@ PainterImplImage::~PainterImplImage()
 
 void PainterImplImage::fillRect(Color<unsigned char> color, Rect<int> rect)
 {
-    paint_context->rect          = clip(rect + offset());
-    paint_context->color         = color;
+    paint_context->position  = rect.position() + offset();
+    paint_context->size      = rect.size();
+    paint_context->color     = color;
     fill_rect_routine(paint_context);
 }
 
@@ -216,18 +198,19 @@ void PainterImplImage::fillRect(Color<unsigned char> color, Rect<int> rect)
 void PainterImplImage::putImage(Image* img, Point<int> pos)
 {
     paint_context->source_image  = img;
-    paint_context->rect          = clip(Rect<int>(pos + offset(), {img->width(), img->height()}));
+//     paint_context->rect          = clip(Rect<int>(pos + offset(), {img->width(), img->height()}));
+    paint_context->position = pos + offset();
     put_image_routine(paint_context);
 }
 
 
 void PainterImplImage::blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos)
 {
-    paint_context->source_image  = mask;
-    paint_context->rect          = clip(Rect<int>(pos + offset(), {mask->width(), mask->height()}));
-    paint_context->color         = a;
-    paint_context->alt_color     = b;
-    blend_colors_routine(paint_context);
+//     paint_context->source_image  = mask;
+//     paint_context->rect          = clip(Rect<int>(pos + offset(), {mask->width(), mask->height()}));
+//     paint_context->color         = a;
+//     paint_context->alt_color     = b;
+//     blend_colors_routine(paint_context);
 }
 
 
