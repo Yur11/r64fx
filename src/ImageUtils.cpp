@@ -40,6 +40,7 @@ struct MatchedRects{
             {src_pos.x(), src_pos.y(), src->width(), src->height()}
         );
     }
+
 };
 
 
@@ -239,6 +240,7 @@ void blend(Image* dst, Point<int> pos, unsigned char** colors, Image* mask)
 void blend(Image* dst, Point<int> pos, unsigned char* color, Image* mask)
 {
 #ifdef R64FX_DEBUG
+    assert(mask != nullptr);
     assert(mask->componentCount() == 1);
 #endif//R64FX_DEBUG
     blend(dst, pos, &color, mask);

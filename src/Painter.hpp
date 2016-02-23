@@ -45,7 +45,7 @@ public:
                       Offset and clipping are applied.
                       to the rectange before it's used.
      */
-    virtual void fillRect(Color<unsigned char> color, Rect<int> rect) = 0;
+    virtual void fillRect(unsigned char* color, Rect<int> rect) = 0;
 
     /** @brief        Put an image at the given position.
 
@@ -58,8 +58,6 @@ public:
      */
     virtual void putImage(Image* img, Point<int> pos = {0, 0}) = 0;
 
-    /* Blend two colors using an alpha mask. */
-    virtual void blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos = {0, 0}) = 0;
 
     /* Blend multiple colors using multi-component alpha mask. */
     virtual void blend(Point<int> pos, unsigned char** colors, Image* mask) = 0;

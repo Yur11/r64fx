@@ -24,25 +24,25 @@ Widget_Dummy::~Widget_Dummy()
 
 void Widget_Dummy::reconfigureEvent(ReconfigureEvent* event)
 {
-    auto painter = event->painter();
-    Rect<int> rect = {0, 0, width(), height()};
-
-    if(rect != event->visibleRect())
-    {
-        painter->fillRect({63, 63, 63}, {{0, 0}, size()});
-    }
-    else if(on)
-    {
-        painter->fillRect({127, 127, 127}, {{0, 0}, size()});
-    }
-    else
-    {
-        painter->fillRect(m_Color, {{0, 0}, size()});
-    }
-
-    Widget::reconfigureEvent(event);
-
-    painter->fillRect({0, 0, 0}, {m_Point, {10, 10}});
+//     auto painter = event->painter();
+//     Rect<int> rect = {0, 0, width(), height()};
+//
+//     if(rect != event->visibleRect())
+//     {
+//         painter->fillRect({63, 63, 63}, {{0, 0}, size()});
+//     }
+//     else if(on)
+//     {
+//         painter->fillRect({127, 127, 127}, {{0, 0}, size()});
+//     }
+//     else
+//     {
+//         painter->fillRect(m_Color, {{0, 0}, size()});
+//     }
+//
+//     Widget::reconfigureEvent(event);
+//
+//     painter->fillRect({0, 0, 0}, {m_Point, {10, 10}});
 }
 
 

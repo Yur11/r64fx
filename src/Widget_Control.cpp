@@ -170,8 +170,10 @@ Widget_Control::~Widget_Control()
 
 void Widget_Control::reconfigureEvent(ReconfigureEvent* event)
 {
+    static unsigned char color[4] = {127, 127, 127, 0};
+
     auto p = event->painter();
-    p->fillRect({127, 127, 127}, {0, 0, width(), height()});
+    p->fillRect(color, {0, 0, width(), height()});
     if(m_animation)
     {
         auto anim = (ControlAnimationImpl*) m_animation;
