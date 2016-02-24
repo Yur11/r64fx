@@ -18,6 +18,8 @@ void fill(Image* dst, int component, unsigned char value);
 
 void implant(Image* dst, Point<int> pos, Image* src);
 
+void implant(Image* dst, const RectIntersection<int> &intersection, Image* src);
+
 void implant(Image* dst, Transform2D<float> transform, Image* src, Rect<int> rect);
 
 void implant(Image* dst, Transform2D<float> transform, Image* src);
@@ -25,7 +27,11 @@ void implant(Image* dst, Transform2D<float> transform, Image* src);
 
 void blend(Image* dst, Point<int> pos, unsigned char** colors, Image* mask);
 
+void blend(Image* dst, const RectIntersection<int> &intersection, unsigned char** colors, Image* mask);
+
 void blend(Image* dst, Point<int> pos, unsigned char* color, Image* mask);
+
+void blend(Image* dst, const RectIntersection<int> &intersection, unsigned char* color, Image* mask);
 
 
 void draw_arc(

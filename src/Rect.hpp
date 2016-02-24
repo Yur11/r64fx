@@ -143,6 +143,38 @@ template<typename StreamT, typename T> StreamT &operator<<(StreamT &stream, Rect
     stream << rect.x() << ", " << rect.y() << ", " << rect.width() << ", " << rect.height();
     return stream;
 }
+
+
+template<typename T> class RectIntersection{
+    Size<T>  m_size;
+    Point<T> m_dst_offset;
+    Point<T> m_src_offset;
+
+public:
+    RectIntersection(const Rect<T> &dst_rect, const Rect<T> &src_rect)
+    {
+        m_size = intersection(src_rect, dst_rect).size();
+        m_src_offset.setX(src_rect.x() < 0 ? -src_rect.x() : 0);
+        m_src_offset.setY(src_rect.y() < 0 ? -src_rect.y() : 0);
+        m_dst_offset.setX(src_rect.x() > 0 ?  src_rect.x() : 0);
+        m_dst_offset.setY(src_rect.y() > 0 ?  src_rect.y() : 0);
+    }
+
+    inline Size<T> size() const { return m_size; }
+
+    inline T width()  const { return m_size.width(); }
+    inline T height() const { return m_size.height(); }
+
+    inline Point<T> dstOffset() const { m_dst_offset; }
+
+    inline T dstx() const { return m_dst_offset.x(); }
+    inline T dsty() const { return m_dst_offset.y(); }
+
+    inline Point<T> srcOffset() const { m_src_offset; }
+
+    inline T srcx() const { return m_src_offset.x(); }
+    inline T srcy() const { return m_src_offset.y(); }
+};
     
 }//namespace r64fx
 
