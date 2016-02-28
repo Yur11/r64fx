@@ -19,178 +19,148 @@ using namespace std;
 
 namespace r64fx{
 
+struct PaintRoutine : public RectIntersection<int>{
+    Image* dst = nullptr;
 
-class PaintContext;
+    PaintRoutine(Image* dst, const Rect<int> &src_rect)
+    : RectIntersection<int>({0, 0, dst->width(), dst->height()}, src_rect)
+    , dst(dst)
+    {}
 
-typedef void (*PaintRoutine)(PaintContext* ctx);
+    PaintRoutine(const RectIntersection &intersection)
+    : RectIntersection<int>(intersection)
+    {}
 
-/* Collection of values to be passed to paint routines. */
-struct PaintContext{
-    /* Image to put pixels in. */
-    Image*           target_image;
-
-    /* Image to read pixels from. */
-    Image*           source_image;
-
-    /* Position to put target image at. */
-    Point<int>       position;
-
-    /* Size of the rect. to process. */
-    Size<int>        size;
-
-    /* Colors to use. */
-    unsigned char**  colors = nullptr;
+    virtual void paint() = 0;
 };
 
 
-void fill_rect_routine(PaintContext* ctx)
-{
-    fill(ctx->target_image, ctx->colors[0], {ctx->position, ctx->size});
-}
+struct PaintRoutine_FillRect : public PaintRoutine{
+    unsigned char* color = nullptr;
+
+    PaintRoutine_FillRect(Image* dst, const Rect<int> &rect, unsigned char* color)
+    : PaintRoutine(dst, rect)
+    , color(color)
+    {}
+
+    virtual void paint()
+    {
+        fill(dst, color, dstRect());
+    }
+};
 
 
-void put_image_routine(PaintContext* ctx)
-{
-    implant(ctx->target_image, ctx->position, ctx->source_image);
-}
+struct PaintRoutine_PutImage : public PaintRoutine{
+    Image* src = nullptr;
+
+    PaintRoutine_PutImage(Image* dst, Point<int> pos, Image* src)
+    : PaintRoutine(dst, {pos.x(), pos.y(), src->width(), src->height()})
+    , src(src)
+    {}
+
+    virtual void paint()
+    {
+        implant(dst, dstOffset(), src);
+    }
+};
 
 
-void blend_routine(PaintContext* ctx)
-{
-    blend(ctx->target_image, ctx->position, ctx->colors, ctx->source_image);
-}
+class PaintRoutine_BlendColors : public PaintRoutine{
+    unsigned char** colors = nullptr;
+    Image*          mask   = nullptr;
+
+public:
+    PaintRoutine_BlendColors(Image* dst, Point<int> pos, unsigned char** colors, Image* mask)
+    : PaintRoutine(dst, {pos.x(), pos.y(), mask->width(), mask->height()})
+    , mask(mask)
+    {}
+
+    virtual void paint()
+    {
+        blend(dst, dstOffset(), colors, mask);
+    }
+};
 
 
 struct PainterImpl : public Painter{
     Window*     window    = nullptr;
 
-    /** @brief Reusable PaintContext instance; */
-    PaintContext* paint_context = nullptr;
-
     Rect<int> current_clip_rect;
 
-    PainterImpl(Window* window);
+    PainterImpl(Window* window)
+    : window(window)
+    {
 
-    virtual ~PainterImpl();
+    }
 
-    virtual void setClipRect(Rect<int> rect);
+    virtual ~PainterImpl()
+    {
+
+    }
+
+    virtual void setClipRect(Rect<int> rect)
+    {
+        current_clip_rect = rect;
+    }
 
     /** @brief Clip a rectangle with the current_clip_rect. */
-    Rect<int> clip(Rect<int> rect);
-
+    Rect<int> clip(Rect<int> rect)
+    {
+        return intersection(
+            current_clip_rect,
+            rect
+        );
+    }
 };//PainterImpl
 
 
-PainterImpl::PainterImpl(Window* window) : window(window)
-{
-    paint_context = new PaintContext;
-}
-
-
-PainterImpl::~PainterImpl()
-{
-    delete paint_context;
-}
-
-
-void PainterImpl::setClipRect(Rect<int> rect)
-{
-    current_clip_rect = rect;
-}
-
-
-Rect<int> PainterImpl::clip(Rect<int> rect)
-{
-    return intersection(
-        current_clip_rect,
-        rect
-    );
-}
-
-
 struct PainterImplImage : public PainterImpl{
-    PainterImplImage(Window* window);
+    PainterImplImage(Window* window)
+    : PainterImpl(window)
+    {
 
-    virtual ~PainterImplImage();
+    }
 
-    virtual void fillRect(unsigned char*, Rect<int> rect);
+    virtual ~PainterImplImage()
+    {
 
-    virtual void putImage(Image* img, Point<int> pos);
+    }
 
-    virtual void blend(Point<int> pos, unsigned char** colors, Image* mask);
+    virtual void fillRect(const Rect<int> &rect, unsigned char* color)
+    {
+        PaintRoutine_FillRect routine(window->image(), rect + offset(), color);
+        routine.paint();
+    }
 
-    virtual void repaint(Rect<int>* rects, int numrects);
+    virtual void putImage(Image* img, Point<int> pos)
+    {
+        PaintRoutine_PutImage routine(window->image(), pos + offset(), img);
+        routine.paint();
+    }
 
-    virtual void adjustForWindowSize();
 
+    virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
+    {
+        PaintRoutine_BlendColors routine(window->image(), pos + offset(), colors, mask);
+        routine.paint();
+    }
+
+    virtual void repaint(Rect<int>* rects, int numrects)
+    {
+        for(int i=0; i<numrects; i++)
+        {
+            rects[i] = clip(rects[i]);
+        }
+        window->repaint(rects, numrects);
+    }
+
+    virtual void adjustForWindowSize()
+    {
+        setClipRect({0, 0, window->width(), window->height()});
+        setOffset({0, 0});
+    }
 };//PainterImplImage
 
-
-PainterImplImage::PainterImplImage(Window* window)
-: PainterImpl(window)
-{
-
-}
-
-
-PainterImplImage::~PainterImplImage()
-{
-
-}
-
-
-void PainterImplImage::fillRect(unsigned char* color, Rect<int> rect)
-{
-    paint_context->position  = rect.position() + offset();
-    paint_context->size      = rect.size();
-    paint_context->colors    = &color;
-    fill_rect_routine(paint_context);
-}
-
-
-void PainterImplImage::putImage(Image* img, Point<int> pos)
-{
-    paint_context->source_image  = img;
-    paint_context->position = pos + offset();
-    put_image_routine(paint_context);
-}
-
-
-// void PainterImplImage::blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos)
-// {
-//     paint_context->source_image  = mask;
-//     paint_context->rect          = clip(Rect<int>(pos + offset(), {mask->width(), mask->height()}));
-//     paint_context->color         = a;
-//     paint_context->alt_color     = b;
-//     blend_colors_routine(paint_context);
-// }
-
-
-void PainterImplImage::blend(Point<int> pos, unsigned char** colors, Image* mask)
-{
-    paint_context->position     = pos;
-    paint_context->colors       = colors;
-    paint_context->source_image = mask;
-    blend_routine(paint_context);
-}
-
-
-void PainterImplImage::repaint(Rect<int>* rects, int numrects)
-{
-    for(int i=0; i<numrects; i++)
-    {
-        rects[i] = clip(rects[i]);
-    }
-    window->repaint(rects, numrects);
-}
-
-
-void PainterImplImage::adjustForWindowSize()
-{
-    paint_context->target_image = window->image();
-    setClipRect({0, 0, window->width(), window->height()});
-    setOffset({0, 0});
-}
 
 
 #ifdef R64FX_USE_GL
@@ -213,285 +183,236 @@ struct PainterImplGL : public PainterImpl{
     GLuint base_vao;
     GLuint base_vbo;
 
-    PainterImplGL(Window* window);
-
-    virtual ~PainterImplGL();
-
-    virtual void fillRect(Color<unsigned char> color, Rect<int> rect);
-
-    virtual void putImage(Image* img, Point<int> pos);
-
-    virtual void blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos);
-
-    virtual void blend(Point<int> pos, unsigned char** colors, Image* mask);
-
-    virtual void repaint(Rect<int>* rects, int numrects);
-
-    virtual void adjustForWindowSize();
-
-    static void initSharedGLStuffIfNeeded();
-
-    static void cleanupSharedGLStuffIfNeeded();
-
-    void initGLStuff();
-
-    void cleanupGLStuff();
-
-    void resizeBaseTextureIfNeeded(int w, int h);
-
-    void deleteBaseTextureIfNeeded();
-
-};//PainterImplImage
-
-
-PainterImplGL::PainterImplGL(Window* window)
-:PainterImpl(window)
-{
-    initSharedGLStuffIfNeeded();
-    initGLStuff();
-    PainterImplGL_count++;
-}
-
-
-PainterImplGL::~PainterImplGL()
-{
-    cleanupGLStuff();
-    PainterImplGL_count--;
-    if(PainterImplGL_count == 0)
+    PainterImplGL(Window* window)
+    :PainterImpl(window)
     {
-        cleanupSharedGLStuffIfNeeded();
+        initSharedGLStuffIfNeeded();
+        initGLStuff();
+        PainterImplGL_count++;
     }
+
+    virtual ~PainterImplGL()
+    {
+        cleanupGLStuff();
+        PainterImplGL_count--;
+        if(PainterImplGL_count == 0)
+        {
+            cleanupSharedGLStuffIfNeeded();
+        }
 #ifdef R64FX_DEBUG
-    else if(PainterImplGL_count <= 0)
-    {
-        cerr << "Warning PainterImplGL_count is " << PainterImplGL_count << "!\n";
-        cerr << "Something is really wrong!\n";
-    }
+        else if(PainterImplGL_count <= 0)
+        {
+            cerr << "Warning PainterImplGL_count is " << PainterImplGL_count << "!\n";
+            cerr << "Something is really wrong!\n";
+        }
 #endif//R64FX_DEBUG
-}
-
-
-void gl_sub_tex_routine(PaintContext* ctx, Rect<int> r, void (*routine)(PaintContext*), GLuint texture)
-{
-    Image img(r.width(), r.height(), 4);
-
-    ctx->target_image = &img;
-    ctx->rect = { 0, 0, r.width(), r.height() };
-    routine(ctx);
-
-    gl::BindTexture(GL_TEXTURE_2D, texture);
-    gl::TexSubImage2D(
-        GL_TEXTURE_2D, 0,
-        r.x(), r.y(), r.width(), r.height(),
-        GL_RGBA, GL_UNSIGNED_BYTE, img.data()
-    );
-}
-
-
-void PainterImplGL::fillRect(Color<unsigned char> color, Rect<int> rect)
-{
-    Rect<int> r = clip(rect + offset());
-    if(r.width() > 0 && r.height() > 0)
-    {
-        paint_context->color = color;
-        gl_sub_tex_routine(paint_context, r, fill_rect_routine, base_texture);
     }
-}
 
-
-void PainterImplGL::putImage(Image* image, Point<int> pos)
-{
-    Rect<int> rect(pos + offset(), {image->width(), image->height()});
-    Rect<int> r = clip(rect);
-    if(r.width() > 0 && r.height() > 0)
+    virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
-        paint_context->source_image = image;
-        gl_sub_tex_routine(paint_context, r, put_image_routine, base_texture);
+        RectIntersection<int> intersection(
+            {0, 0, window->width(), window->height()}, rect + offset()
+        );
+        Image subteximg(intersection.width(), intersection.height(), 4);
+        PaintRoutine_FillRect routine(&subteximg, {0, 0, subteximg.width(), subteximg.height()}, color);
+        routine.paint();
+        addToBaseTexture(&subteximg, intersection.dstOffset());
     }
-}
 
-
-void PainterImplGL::blendColors(Color<unsigned char> a, Color<unsigned char> b, Image* mask, Point<int> pos)
-{
-    Rect<int> rect(pos + offset(), {mask->width(), mask->height()});
-    Rect<int> r = clip(rect);
-    if(r.width() > 0 && r.height() > 0)
+    virtual void putImage(Image* img, Point<int> pos)
     {
-        paint_context->source_image = mask;
-        paint_context->color        = a;
-        paint_context->alt_color    = b;
-        gl_sub_tex_routine(paint_context, r, blend_colors_routine, base_texture);
+        pos += offset();
+        RectIntersection<int> intersection(
+            {0, 0, window->width(), window->height()},
+            Rect<int>(pos.x(), pos.y(), img->width(), img->height())
+        );
+        if(intersection.width() == img->width() && intersection.height() == img->height())
+        {
+            addToBaseTexture(img, pos);
+        }
+        else
+        {
+            Image subteximg(intersection.width(), intersection.height(), 4);
+            PaintRoutine_PutImage routine(&subteximg, pos, img);
+            addToBaseTexture(&subteximg, intersection.dstOffset());
+        }
     }
-}
 
+    virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
+    {
+        RectIntersection<int> intersection(
+            {0, 0, window->width(), window->height()},
+            Rect<int>(pos.x(), pos.y(), mask->width(), mask->height()) + offset()
+        );
+        Image subteximg(intersection.width(), intersection.height(), 4);
 
-void PainterImplGL::blend(Point<int> pos, unsigned char** colors, Image* mask)
-{
+//         PaintRoutine_BlendColors routine(window->image(), pos + offset(), colors, mask);
+//         addToBaseTexture(&subteximg, intersection.dstOffset());
+    }
 
-}
+    void addToBaseTexture(Image* img, Point<int> pos)
+    {
+        gl::BindTexture(GL_TEXTURE_2D, base_texture);
+        gl::TexSubImage2D(
+            GL_TEXTURE_2D, 0,
+            pos.x(), pos.y(), img->width(), img->height(),
+            GL_RGBA, GL_UNSIGNED_BYTE, img->data()
+        );
+    }
 
+    virtual void repaint(Rect<int>* rects, int numrects)
+    {
+        gl::BindTexture(GL_TEXTURE_2D, base_texture);
+        g_Shader_rgba_tex->use();
+        g_Shader_rgba_tex->setScaleAndShift(
+            2.0f/float(window->width()),
+           -2.0f/float(window->height()),
+           -1.0f,
+            1.0f
+        );
+        g_Shader_rgba_tex->setSampler(0);
+        gl::BindVertexArray(base_vao);
+        gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
+        window->repaint(rects, numrects);
+        gl::Finish();
+    }
 
-void PainterImplGL::repaint(Rect<int>* rects, int numrects)
-{
-    gl::BindTexture(GL_TEXTURE_2D, base_texture);
-    g_Shader_rgba_tex->use();
-    g_Shader_rgba_tex->setScaleAndShift(
-        2.0f/float(window->width()),
-       -2.0f/float(window->height()),
-       -1.0f,
-        1.0f
-    );
-    g_Shader_rgba_tex->setSampler(0);
-    gl::BindVertexArray(base_vao);
-    gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    virtual void adjustForWindowSize()
+    {
+        resizeBaseTextureIfNeeded(window->width(), window->height());
 
-    window->repaint(rects, numrects);
-    gl::Finish();
-}
+        gl::Viewport(0, 0, window->width(), window->height());
+        gl::Clear(GL_COLOR_BUFFER_BIT);
 
+        float buff[16];
 
-void PainterImplGL::adjustForWindowSize()
-{
-    resizeBaseTextureIfNeeded(window->width(), window->height());
-    
-    gl::Viewport(0, 0, window->width(), window->height());
-    gl::Clear(GL_COLOR_BUFFER_BIT);
+        /* Position. */
+        buff[0] = 0.0f;
+        buff[1] = 0.0f;
+        buff[2] = float(window->width());
+        buff[3] = 0.0f;
+        buff[4] = float(window->width());
+        buff[5] = float(window->height());
+        buff[6] = 0.0f;
+        buff[7] = float(window->height());
 
-    float buff[16];
+        /* Tex. Coords. */
+        buff[8]  = 0.0f;
+        buff[9]  = 0.0f;
+        buff[10] = float(window->width()) / float(base_texture_size.width());
+        buff[11] = 0.0f;
+        buff[12] = float(window->width())  / float(base_texture_size.width());
+        buff[13] = float(window->height()) / float(base_texture_size.height());
+        buff[14] = 0.0f;
+        buff[15] = float(window->height()) / float(base_texture_size.height());
 
-    /* Position. */
-    buff[0] = 0.0f;
-    buff[1] = 0.0f;
-    buff[2] = float(window->width());
-    buff[3] = 0.0f;
-    buff[4] = float(window->width());
-    buff[5] = float(window->height());
-    buff[6] = 0.0f;
-    buff[7] = float(window->height());
+        gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
+        gl::BufferSubData(GL_ARRAY_BUFFER, 0, 64, buff);
 
-    /* Tex. Coords. */
-    buff[8]  = 0.0f;
-    buff[9]  = 0.0f;
-    buff[10] = float(window->width()) / float(base_texture_size.width());
-    buff[11] = 0.0f;
-    buff[12] = float(window->width())  / float(base_texture_size.width());
-    buff[13] = float(window->height()) / float(base_texture_size.height());
-    buff[14] = 0.0f;
-    buff[15] = float(window->height()) / float(base_texture_size.height());
+        setClipRect({0, 0, window->width(), window->height()});
+        setOffset({0, 0});
+    }
 
-    gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
-    gl::BufferSubData(GL_ARRAY_BUFFER, 0, 64, buff);
+    static void initSharedGLStuffIfNeeded()
+    {
+        if(gl_stuff_is_good)
+            return;
 
-    setClipRect({0, 0, window->width(), window->height()});
-    setOffset({0, 0});
-}
+        int major, minor;
+        gl::GetIntegerv(GL_MAJOR_VERSION, &major);
+        gl::GetIntegerv(GL_MINOR_VERSION, &minor);
+        cout << "gl: " << major << "." << minor << "\n";
 
+        gl::InitIfNeeded();
+        gl::ClearColor(1.0, 1.0, 1.0, 0.0);
 
-void PainterImplGL::initSharedGLStuffIfNeeded()
-{
-    if(gl_stuff_is_good)
-        return;
+        g_Shader_rgba = new Shader_rgba;
+        if(!g_Shader_rgba->isOk())
+            abort();
 
-    int major, minor;
-    gl::GetIntegerv(GL_MAJOR_VERSION, &major);
-    gl::GetIntegerv(GL_MINOR_VERSION, &minor);
-    cout << "gl: " << major << "." << minor << "\n";
+        g_Shader_rgba_tex = new Shader_rgba_tex;
+        if(!g_Shader_rgba_tex->isOk())
+            abort();
 
-    gl::InitIfNeeded();
-    gl::ClearColor(1.0, 1.0, 1.0, 0.0);
+        gl::Enable(GL_PRIMITIVE_RESTART);
+        gl::PrimitiveRestartIndex(primitive_restart);
 
-    g_Shader_rgba = new Shader_rgba;
-    if(!g_Shader_rgba->isOk())
-        abort();
+        gl_stuff_is_good = true;
+    }
 
-    g_Shader_rgba_tex = new Shader_rgba_tex;
-    if(!g_Shader_rgba_tex->isOk())
-        abort();
+    static void cleanupSharedGLStuffIfNeeded()
+    {
+        if(!gl_stuff_is_good)
+            return;
 
-    gl::Enable(GL_PRIMITIVE_RESTART);
-    gl::PrimitiveRestartIndex(primitive_restart);
+        if(g_Shader_rgba)
+            delete g_Shader_rgba;
 
-    gl_stuff_is_good = true;
-}
+        if(g_Shader_rgba_tex)
+            delete g_Shader_rgba_tex;
+    }
 
+    void initGLStuff()
+    {
+        gl::GenVertexArrays(1, &base_vao);
+        gl::BindVertexArray(base_vao);
+        gl::GenBuffers(1, &base_vbo);
+        gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
+        gl::BufferData(GL_ARRAY_BUFFER, 64, nullptr, GL_STATIC_DRAW);
+        gl::EnableVertexAttribArray(g_Shader_rgba_tex->attr_position);
+        gl::VertexAttribPointer(
+            g_Shader_rgba_tex->attr_position,
+            2, GL_FLOAT, GL_FALSE,
+            0, 0
+        );
+        gl::EnableVertexAttribArray(g_Shader_rgba_tex->attr_tex_coord);
+        gl::VertexAttribPointer(
+            g_Shader_rgba_tex->attr_tex_coord,
+            2, GL_FLOAT, GL_FALSE,
+            0, 32
+        );
+    }
 
-void PainterImplGL::cleanupSharedGLStuffIfNeeded()
-{
-    if(!gl_stuff_is_good)
-        return;
+    void cleanupGLStuff()
+    {
+        gl::DeleteVertexArrays(1, &base_vao);
+        gl::DeleteBuffers(1, &base_vbo);
+    }
 
-    if(g_Shader_rgba)
-        delete g_Shader_rgba;
+    void resizeBaseTextureIfNeeded(int w, int h)
+    {
+        bool tex_resize_needed = ( base_texture == 0 || w > base_texture_size.width() || h > base_texture_size.height() );
+        if(!tex_resize_needed)
+            return;
 
-    if(g_Shader_rgba_tex)
-        delete g_Shader_rgba_tex;
-}
+        deleteBaseTextureIfNeeded();
 
+        /* Texture width must be divisible by 4 ? */
+        while(w & 3)
+            w++;
 
-void PainterImplGL::initGLStuff()
-{
-    gl::GenVertexArrays(1, &base_vao);
-    gl::BindVertexArray(base_vao);
-    gl::GenBuffers(1, &base_vbo);
-    gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
-    gl::BufferData(GL_ARRAY_BUFFER, 64, nullptr, GL_STATIC_DRAW);
-    gl::EnableVertexAttribArray(g_Shader_rgba_tex->attr_position);
-    gl::VertexAttribPointer(
-        g_Shader_rgba_tex->attr_position,
-        2, GL_FLOAT, GL_FALSE,
-        0, 0
-    );
-    gl::EnableVertexAttribArray(g_Shader_rgba_tex->attr_tex_coord);
-    gl::VertexAttribPointer(
-        g_Shader_rgba_tex->attr_tex_coord,
-        2, GL_FLOAT, GL_FALSE,
-        0, 32
-    );
-}
+        gl::GenTextures(1, &base_texture);
+        gl::BindTexture(GL_TEXTURE_2D, base_texture);
+        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        gl::TexStorage2D(
+            GL_TEXTURE_2D,
+            1,
+            GL_RGBA8,
+            w, h
+        );
 
+        base_texture_size = {w, h};
+    }
 
-void PainterImplGL::cleanupGLStuff()
-{
-    gl::DeleteVertexArrays(1, &base_vao);
-    gl::DeleteBuffers(1, &base_vbo);
-}
-
-
-void PainterImplGL::resizeBaseTextureIfNeeded(int w, int h)
-{
-    bool tex_resize_needed = ( base_texture == 0 || w > base_texture_size.width() || h > base_texture_size.height() );
-    if(!tex_resize_needed)
-        return;
-
-    deleteBaseTextureIfNeeded();
-
-    /* Texture width must be divisible by 4 ? */
-    while(w & 3)
-        w++;
-
-    gl::GenTextures(1, &base_texture);
-    gl::BindTexture(GL_TEXTURE_2D, base_texture);
-    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    gl::TexStorage2D(
-        GL_TEXTURE_2D,
-        1,
-        GL_RGBA8,
-        w, h
-    );
-
-    base_texture_size = {w, h};
-}
-
-
-void PainterImplGL::deleteBaseTextureIfNeeded()
-{
-    if(base_texture)
-        gl::DeleteTextures(1, &base_texture);
-}
+    void deleteBaseTextureIfNeeded()
+    {
+        if(base_texture)
+            gl::DeleteTextures(1, &base_texture);
+    }
+};//PainterImplImage
 #endif//R64FX_USE_GL
-
 
 
 Painter* Painter::newInstance(Window* window)

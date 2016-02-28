@@ -160,20 +160,22 @@ public:
         m_dst_offset.setY(src_rect.y() > 0 ?  src_rect.y() : 0);
     }
 
-    inline Size<T> size() const { return m_size; }
+    RectIntersection(){}
 
+    inline Size<T> size() const { return m_size; }
     inline T width()  const { return m_size.width(); }
     inline T height() const { return m_size.height(); }
 
-    inline Point<T> dstOffset() const { m_dst_offset; }
-
+    inline Point<T> dstOffset() const { return m_dst_offset; }
     inline T dstx() const { return m_dst_offset.x(); }
     inline T dsty() const { return m_dst_offset.y(); }
+    inline Rect<int> dstRect() const { return {dstOffset(), size()}; }
 
-    inline Point<T> srcOffset() const { m_src_offset; }
 
+    inline Point<T> srcOffset() const { return m_src_offset; }
     inline T srcx() const { return m_src_offset.x(); }
     inline T srcy() const { return m_src_offset.y(); }
+    inline Rect<int> srcRect() const { return {srcOffset(), size()}; }
 };
     
 }//namespace r64fx
