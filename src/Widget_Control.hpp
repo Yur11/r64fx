@@ -8,8 +8,6 @@ namespace r64fx{
 enum class ControlType{
     UnipolarRadius,
     BipolarRadius,
-    UnipolarArc,
-    BipolarArc,
     UnipolarSector,
     BipolarSector,
     VerticalFader,

@@ -77,8 +77,8 @@ struct ControlAnimation_Knob : public ControlAnimationImpl{
 
     virtual void repaint(int position, Painter* painter)
     {
-        unsigned char a[4] = {0, 0, 0, 0};
-        unsigned char b[4] = {0, 255, 0, 0};
+        unsigned char a[4] = {1, 96, 242, 0};
+        unsigned char b[4] = {242, 96, 1, 0};
         unsigned char* colors[2] = {a, b};
 
         if(imgainim.isGood())
@@ -91,21 +91,19 @@ struct ControlAnimation_Knob : public ControlAnimationImpl{
 
 
 struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
-    using ControlAnimation_Knob::ControlAnimation_Knob;
-
     ControlAnimation_Knob_UnipolarLarge(int size)
     {
+        unsigned char a[2] = {255, 0};
+        unsigned char b[2] = {0, 255};
+        unsigned char o[2] = {0, 0};
+
+        int hs = (size / 2);
+        int radius = hs - 1;
+        int thickness = 2;
+
         imgainim.resize(size, size, 2, positionRange());
         for(int i=0; i<positionRange(); i++)
         {
-            unsigned char a[2] = {255, 0};
-            unsigned char b[2] = {0, 255};
-            unsigned char o[2] = {0, 0};
-
-            int hs = (size / 2);
-            int radius = hs - 1;
-            int thickness = 2;
-
             imgainim.pickFrame(i);
             fill(&imgainim, o);
 
@@ -127,21 +125,19 @@ struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
 
 
 struct ControlAnimation_Knob_BipolarLarge : public ControlAnimation_Knob{
-    using ControlAnimation_Knob::ControlAnimation_Knob;
-
     ControlAnimation_Knob_BipolarLarge(int size)
     {
+        unsigned char a[2] = {255, 0};
+        unsigned char b[2] = {0, 255};
+        unsigned char o[2] = {0, 0};
+
+        int hs = (size / 2);
+        int radius = hs - 1;
+        int thickness = 2;
+
         imgainim.resize(size, size, 2, positionRange());
         for(int i=0; i<positionRange(); i++)
         {
-            unsigned char a[2] = {255, 0};
-            unsigned char b[2] = {0, 255};
-            unsigned char o[2] = {0, 0};
-
-            int hs = (size / 2);
-            int radius = hs - 1;
-            int thickness = 2;
-
             imgainim.pickFrame(i);
             fill(&imgainim, o);
 
@@ -180,6 +176,83 @@ struct ControlAnimation_Knob_BipolarLarge : public ControlAnimation_Knob{
 };
 
 
+struct ControlAnimation_Knob_UnipolarSector : public ControlAnimation_Knob{
+    ControlAnimation_Knob_UnipolarSector(int size)
+    {
+        imgainim.resize(size, size, 2, positionRange());
+        for(int i=0; i<positionRange(); i++)
+        {
+            unsigned char a[2] = {255, 0};
+            unsigned char b[2] = {0, 255};
+            unsigned char o[2] = {0, 0};
+
+            int hs = (size / 2);
+            int radius = hs - 1;
+            int thickness = radius - 1;
+
+            imgainim.pickFrame(i);
+            fill(&imgainim, o);
+
+            float angle = normalize_angle((float(i) / (positionRange() - 1)) * 2.0f * M_PI + 0.5f * M_PI);
+
+            if(i == 0)
+            {
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
+            }
+            else if(i == (positionRange() - 1))
+            {
+                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
+            }
+            else
+            {
+                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, angle, thickness);
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle, M_PI * 0.5f, thickness);
+            }
+        }
+    }
+};
+
+
+struct ControlAnimation_Knob_BipolarSector : public ControlAnimation_Knob{
+    ControlAnimation_Knob_BipolarSector(int size)
+    {
+        imgainim.resize(size, size, 2, positionRange());
+        for(int i=0; i<positionRange(); i++)
+        {
+            unsigned char a[2] = {255, 0};
+            unsigned char b[2] = {0, 255};
+            unsigned char o[2] = {0, 0};
+
+            int hs = (size / 2);
+            int radius = hs - 1;
+            int thickness = radius - 1;
+
+            imgainim.pickFrame(i);
+            fill(&imgainim, o);
+
+            float angle = normalize_angle((float(i) / (positionRange() - 1)) * 2.0f * M_PI + 0.5f * M_PI);
+
+            if(i == (positionRange()/2))
+            {
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
+            }
+            else if(i < (positionRange()/2))
+            {
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, angle,       thickness);
+                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, angle,       M_PI * 1.5f, thickness);
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f, M_PI * 0.5f, thickness);
+            }
+            else
+            {
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, M_PI * 1.5f, thickness);
+                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f, angle,       thickness);
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle,       M_PI * 0.5f, thickness);
+            }
+        }
+    }
+};
+
+
 ControlAnimation* newAnimation(ControlType type, Size<int> size)
 {
     for(auto entry : g_animations)
@@ -204,6 +277,22 @@ ControlAnimation* newAnimation(ControlType type, Size<int> size)
         case ControlType::BipolarRadius:
         {
             animation = new(std::nothrow) ControlAnimation_Knob_BipolarLarge(
+                min(size.width(), size.height())
+            );
+            break;
+        }
+
+        case ControlType::UnipolarSector:
+        {
+            animation = new(std::nothrow) ControlAnimation_Knob_UnipolarSector(
+                min(size.width(), size.height())
+            );
+            break;
+        }
+
+        case ControlType::BipolarSector:
+        {
+            animation = new(std::nothrow) ControlAnimation_Knob_BipolarSector(
                 min(size.width(), size.height())
             );
             break;
@@ -242,7 +331,7 @@ Widget_Control::~Widget_Control()
 
 void Widget_Control::reconfigureEvent(ReconfigureEvent* event)
 {
-    static unsigned char color[4] = {127, 127, 127, 0};
+    static unsigned char color[4] = {161, 172, 176, 0};
 
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, color);

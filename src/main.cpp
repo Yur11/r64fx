@@ -158,8 +158,8 @@ private:
         auto subcontainer = new Widget_Container(m_container);
         auto wc1 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, subcontainer);
         auto wc2 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, subcontainer);
-        auto wc3 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, subcontainer);
-        auto wc4 = new Widget_Control(ControlType::BipolarRadius,  {50, 50}, subcontainer);
+        auto wc3 = new Widget_Control(ControlType::UnipolarSector, {50, 50}, subcontainer);
+        auto wc4 = new Widget_Control(ControlType::BipolarSector,  {50, 50}, subcontainer);
         auto wc5 = new Widget_Control(ControlType::BipolarRadius,  {50, 50}, subcontainer);
         subcontainer->setSpacing(5);
         subcontainer->alignVertically();
