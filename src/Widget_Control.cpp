@@ -126,6 +126,60 @@ struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
 };
 
 
+struct ControlAnimation_Knob_BipolarLarge : public ControlAnimation_Knob{
+    using ControlAnimation_Knob::ControlAnimation_Knob;
+
+    ControlAnimation_Knob_BipolarLarge(int size)
+    {
+        imgainim.resize(size, size, 2, positionRange());
+        for(int i=0; i<positionRange(); i++)
+        {
+            unsigned char a[2] = {255, 0};
+            unsigned char b[2] = {0, 255};
+            unsigned char o[2] = {0, 0};
+
+            int hs = (size / 2);
+            int radius = hs - 1;
+            int thickness = 2;
+
+            imgainim.pickFrame(i);
+            fill(&imgainim, o);
+
+            float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
+
+            if(i == positionRange()/2)
+            {
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, M_PI * 0.25f, thickness);
+                draw_radius(
+                    &imgainim, a,
+                    {float(hs), float(hs)}, angle, radius, 0, thickness + 1
+                );
+            }
+            else
+            {
+                if(i < positionRange()/2)
+                {
+                    draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle,        thickness);
+                    draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, angle,        M_PI * 0.25f, thickness);
+                    draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f,  M_PI * 0.25f, thickness);
+                }
+                else
+                {
+                    draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, M_PI * 1.5f,  thickness);
+                    draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f,  angle,        thickness);
+                    draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle,        M_PI * 0.25f, thickness);
+                }
+
+                draw_radius(
+                    &imgainim, b,
+                    {float(hs), float(hs)}, angle, radius, 0, thickness + 1
+                );
+            }
+        }
+    }
+};
+
+
 ControlAnimation* newAnimation(ControlType type, Size<int> size)
 {
     for(auto entry : g_animations)
@@ -144,6 +198,15 @@ ControlAnimation* newAnimation(ControlType type, Size<int> size)
             animation = new(std::nothrow) ControlAnimation_Knob_UnipolarLarge(
                 min(size.width(), size.height())
             );
+            break;
+        }
+
+        case ControlType::BipolarRadius:
+        {
+            animation = new(std::nothrow) ControlAnimation_Knob_BipolarLarge(
+                min(size.width(), size.height())
+            );
+            break;
         }
 
         default:
