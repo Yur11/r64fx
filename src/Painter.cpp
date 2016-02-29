@@ -72,6 +72,7 @@ class PaintRoutine_BlendColors : public PaintRoutine{
 public:
     PaintRoutine_BlendColors(Image* dst, Point<int> pos, unsigned char** colors, Image* mask)
     : PaintRoutine(dst, {pos.x(), pos.y(), mask->width(), mask->height()})
+    , colors(colors)
     , mask(mask)
     {}
 

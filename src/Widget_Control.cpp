@@ -75,7 +75,25 @@ float normalize_angle(float angle)
 struct ControlAnimation_Knob : public ControlAnimationImpl{
     ImageAnimation imgainim;
 
-    ControlAnimation_Knob(int size)
+    virtual void repaint(int position, Painter* painter)
+    {
+        unsigned char a[4] = {0, 0, 0, 0};
+        unsigned char b[4] = {0, 255, 0, 0};
+        unsigned char* colors[2] = {a, b};
+
+        if(imgainim.isGood())
+        {
+            imgainim.pickFrame(position - min_position);
+            painter->blendColors({0, 0}, colors, &imgainim);
+        }
+    }
+};
+
+
+struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
+    using ControlAnimation_Knob::ControlAnimation_Knob;
+
+    ControlAnimation_Knob_UnipolarLarge(int size)
     {
         imgainim.resize(size, size, 2, positionRange());
         for(int i=0; i<positionRange(); i++)
@@ -94,24 +112,15 @@ struct ControlAnimation_Knob : public ControlAnimationImpl{
             float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
 
             if(i > 0)
-                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle, thickness);
+                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle, thickness);
 
             if(i < (positionRange()-1))
-                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, angle, M_PI * 0.25f, thickness);
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle, M_PI * 0.25f, thickness);
 
             draw_radius(
                 &imgainim, (i>0 ? b : a),
                 {float(hs), float(hs)}, angle, radius, 0, thickness + 1
             );
-        }
-    }
-
-    virtual void repaint(int position, Painter* painter)
-    {
-        if(imgainim.isGood())
-        {
-            imgainim.pickFrame(position - min_position);
-//             painter->blendColors(&imgainim);
         }
     }
 };
@@ -132,7 +141,7 @@ ControlAnimation* newAnimation(ControlType type, Size<int> size)
     {
         case ControlType::UnipolarRadius:
         {
-            animation = new(std::nothrow) ControlAnimation_Knob(
+            animation = new(std::nothrow) ControlAnimation_Knob_UnipolarLarge(
                 min(size.width(), size.height())
             );
         }
