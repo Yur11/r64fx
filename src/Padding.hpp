@@ -4,10 +4,10 @@
 namespace r64fx{
     
 template<typename T> class Padding{
-    T m_left;
-    T m_top;
-    T m_right;
-    T m_bottom;
+    T m_left    = T();
+    T m_top     = T();
+    T m_right   = T();
+    T m_bottom  = T();
     
 public:
     inline T paddingLeft()   const { return m_left; }
