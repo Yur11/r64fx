@@ -13,6 +13,7 @@
 #include "Widget_Control.hpp"
 #include "Widget_Dummy.hpp"
 #include "Widget_Text.hpp"
+#include "Widget_View.hpp"
 
 #include "KeyEvent.hpp"
 
@@ -63,66 +64,17 @@ public:
 
     virtual void mousePressEvent(MousePressEvent* event)
     {
-        if(event->button() == MouseButton::Left())
-        {
-            m_mouse_pos = event->position();
-        }
         Widget::mousePressEvent(event);
     }
 
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
-        if(event->button() & MouseButton::Left())
-        {
-            float dy = m_mouse_pos.y() - event->y();
-            if(dy != 0)
-            {
-                if(m_val >= 0 && m_val <= 511)
-                {
-                    m_val += dy;
-                    if(m_val < 0)
-                    {
-                        m_val = 0;
-                    }
-                    else if(m_val > 511)
-                    {
-                        m_val = 511;
-                    }
-                    update();
-                }
-            }
-            m_mouse_pos = event->position();
-        }
+        Widget::mouseMoveEvent(event);
     }
 
     virtual void keyPressEvent(KeyPressEvent* event)
     {
-        if(event->key() == Keyboard::Key::Up)
-        {
-            m_radius+= 0.5f;
-        }
-        else if(event->key() == Keyboard::Key::Down)
-        {
-            if(m_radius > 1.0f)
-            {
-                m_radius -= 0.5f;
-            }
-        }
-        else if(event->key() == Keyboard::Key::Left)
-        {
-            if(m_thickness > 0.5f)
-            {
-                m_thickness -= 0.5f;
-            }
-        }
-        else if(event->key() == Keyboard::Key::Right)
-        {
-            m_thickness += 0.5f;
-        }
-
-        cout << m_radius << ", " << m_thickness << "\n";
-
-        update();
+        Widget::keyPressEvent(event);
     }
 
     virtual void closeEvent()

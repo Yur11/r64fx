@@ -185,6 +185,10 @@ public:
         /* Painter to be used by reconfigure implementation. */
         Painter* painter();
 
+        void setOffset(Point<int> offset);
+
+        Point<int> offset() const;
+
         /* Widgets visible rect. as clipped by the parent structures. */
         Rect<int> visibleRect();
     };

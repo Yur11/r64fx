@@ -3,6 +3,7 @@
 
 #include "Color.hpp"
 #include "Rect.hpp"
+#include "Offset.hpp"
 #include "Orientation.hpp"
 
 namespace r64fx{
@@ -10,8 +11,7 @@ namespace r64fx{
 class Image;
 class Window;
 
-class Painter{
-    Point<int> m_offset  = {0, 0};
+class Painter : public Offset<int>{
 
 protected:
     virtual ~Painter() {};
@@ -20,14 +20,6 @@ public:
     static Painter* newInstance(Window* window);
 
     static void deleteInstance(Painter* painter);
-
-    inline void setOffset(Point<int> offset) { m_offset = offset; }
-
-    /** @brief Set current offset value.
-        Positive x,y values denote an offset
-        towards the bottom right corner of the window.
-     */
-    inline Point<int> offset() const { return m_offset; }
 
     /** @brief Set current clipping rect.
 

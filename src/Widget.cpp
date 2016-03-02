@@ -602,6 +602,20 @@ Painter* Widget::ReconfigureEvent::painter()
 }
 
 
+void Widget::ReconfigureEvent::setOffset(Point<int> offset)
+{
+    auto d = (WindowWidgetData*) this;
+    d->painter->setOffset(offset);
+}
+
+
+Point<int> Widget::ReconfigureEvent::offset() const
+{
+    auto d = (WindowWidgetData*) this;
+    return d->painter->offset();
+}
+
+
 Rect<int> Widget::ReconfigureEvent::visibleRect()
 {
     auto d = (WindowWidgetData*) this;
