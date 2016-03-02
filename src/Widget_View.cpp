@@ -2,7 +2,7 @@
 
 namespace r64fx{
 
-Widget_View::Widget_View(Widget* parent)
+Widget_View::Widget_View(Widget* parent) : Widget(parent)
 {
 
 }
@@ -16,10 +16,8 @@ Widget_View::~Widget_View()
 
 void Widget_View::reconfigureEvent(ReconfigureEvent* event)
 {
-    auto old_offset = event->offset();
-    event->setOffset(old_offset + offset());
+    event->setOffset(event->offset() + offset());
     Widget::reconfigureEvent(event);
-    event->setOffset(old_offset);
 }
 
 

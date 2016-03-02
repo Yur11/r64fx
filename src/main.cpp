@@ -32,17 +32,16 @@ float normalize_angle(float angle)
 }
 
 
-class MyWidget : public Widget{
+class MyWidget : public Widget_View{
     Image  m_Image;
-    float  m_radius = 32.0f;
-    float  m_thickness = 3.0f;
-    int    m_val = 0;
-    Point<int> m_mouse_pos;
 
 public:
-    MyWidget(Widget* parent = nullptr) : Widget(parent)
+    MyWidget(Widget* parent = nullptr) : Widget_View(parent)
     {
-
+        auto wc1 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, this);
+        wc1->setPosition({100, 100});
+        auto wc2 = new Widget_Control(ControlType::BipolarRadius,  {50, 50}, this);
+        wc2->setPosition({160, 100});
     }
 
     ~MyWidget()
@@ -51,15 +50,23 @@ public:
 
     virtual void reconfigureEvent(ReconfigureEvent* event)
     {
-        unsigned char fg[4]     = { 0,   0,   0, 0 };
-        unsigned char bg[4]     = { 127, 180, 255, 0 };
+        unsigned char fg[4] = { 0,   0,   0,   0 };
+        unsigned char bg[4] = { 127, 180, 255, 0 };
 
         m_Image.load(width(), height(), 4);
         fill(&m_Image, bg);
+        auto r = intersection(
+            Rect<int>(50, 50, 10, 10) + offset(),
+            Rect<int>(0, 0, m_Image.width(), m_Image.height())
+        );
+        if(r.width() > 0 && r.height() > 0)
+        {
+            fill(&m_Image, fg, r);
+        }
 
         auto painter = event->painter();
         painter->putImage(&m_Image);
-        Widget::reconfigureEvent(event);
+        Widget_View::reconfigureEvent(event);
     }
 
     virtual void mousePressEvent(MousePressEvent* event)
@@ -69,11 +76,38 @@ public:
 
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
-        Widget::mouseMoveEvent(event);
+        if(event->button() & MouseButton::Left())
+        {
+            setOffset(offset() + event->delta());
+            update();
+        }
+        else
+        {
+            Widget::mouseMoveEvent(event);
+        }
     }
 
     virtual void keyPressEvent(KeyPressEvent* event)
     {
+        int step = 1;
+        if(event->key() == Keyboard::Key::Up)
+        {
+            setOffsetY(offsetY() - step);
+        }
+        else if(event->key() == Keyboard::Key::Down)
+        {
+            setOffsetY(offsetY() + step);
+        }
+        else if(event->key() == Keyboard::Key::Left)
+        {
+            setOffsetX(offsetX() - step);
+        }
+        else if(event->key() == Keyboard::Key::Right)
+        {
+            setOffsetX(offsetX() + step);
+        }
+        update();
+
         Widget::keyPressEvent(event);
     }
 
@@ -94,10 +128,6 @@ public:
 private:
     virtual void setup()
     {
-//         m_Widget = new MyWidget;
-//         m_Widget->setSize({1000, 600});
-//         m_Widget->show();
-
         m_Font = new Font("", 20, 72);
 
         m_container = new Widget_Container;
@@ -116,16 +146,13 @@ private:
         subcontainer->setSpacing(5);
         subcontainer->alignVertically();
 
-        for(int i=0; i<1; i++)
-        {
-            auto wt = new Widget_Text("", m_Font, m_container);
-            wt->setWidth(300);
-            wt->setHeight(300);
-            wt->setPadding(5);
-            wt->setTextWrap(TextWrap::Anywhere);
-            wt->setTextAlignment(TextAlignment::Left);
+        auto wt = new Widget_Text("", m_Font, m_container);
+        wt->setWidth(300);
+        wt->setHeight(300);
+        wt->setPadding(5);
+        wt->setTextWrap(TextWrap::Anywhere);
+        wt->setTextAlignment(TextAlignment::Left);
 
-        }
         m_container->setPadding(5);
         m_container->setSpacing(5);
         m_container->alignHorizontally();

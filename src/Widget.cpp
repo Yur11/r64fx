@@ -1,4 +1,5 @@
 #include "Widget.hpp"
+#include "Widget_View.hpp"
 #include "Window.hpp"
 #include "Mouse.hpp"
 #include "Keyboard.hpp"
@@ -683,6 +684,13 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
     auto d = (WindowWidgetData*) event;
     auto parent_visible_rect = d->visible_rect;
     bool got_rect = d->got_rect;
+
+    Point<int> extra_offset = {0, 0};
+    auto wv = dynamic_cast<Widget_View*>(this);
+    if(wv)
+    {
+        extra_offset = wv->offset();
+    }
 
     if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
     {
