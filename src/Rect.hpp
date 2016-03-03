@@ -151,6 +151,14 @@ template<typename T> class RectIntersection{
     Point<T> m_src_offset;
 
 public:
+    RectIntersection(Point<T> dst_offset, Size<T> size, Point<T> src_offset)
+    : m_size(size)
+    , m_dst_offset(dst_offset)
+    , m_src_offset(src_offset)
+    {
+
+    }
+
     RectIntersection(const Rect<T> &dst_rect, const Rect<T> &src_rect)
     {
         m_size = intersection(src_rect, dst_rect).size();
