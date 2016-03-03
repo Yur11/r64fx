@@ -19,70 +19,6 @@ using namespace std;
 
 namespace r64fx{
 
-struct PaintRoutine : public RectIntersection<int>{
-    Image* dst = nullptr;
-
-    PaintRoutine(Image* dst, const Rect<int> &src_rect)
-    : RectIntersection<int>({0, 0, dst->width(), dst->height()}, src_rect)
-    , dst(dst)
-    {}
-
-    PaintRoutine(const RectIntersection &intersection)
-    : RectIntersection<int>(intersection)
-    {}
-
-    virtual void paint() = 0;
-};
-
-
-struct PaintRoutine_FillRect : public PaintRoutine{
-    unsigned char* color = nullptr;
-
-    PaintRoutine_FillRect(Image* dst, const Rect<int> &rect, unsigned char* color)
-    : PaintRoutine(dst, rect)
-    , color(color)
-    {}
-
-    virtual void paint()
-    {
-        fill(dst, color, dstRect());
-    }
-};
-
-
-struct PaintRoutine_PutImage : public PaintRoutine{
-    Image* src = nullptr;
-
-    PaintRoutine_PutImage(Image* dst, Point<int> pos, Image* src)
-    : PaintRoutine(dst, {pos.x(), pos.y(), src->width(), src->height()})
-    , src(src)
-    {}
-
-    virtual void paint()
-    {
-        implant(dst, dstOffset(), src);
-    }
-};
-
-
-class PaintRoutine_BlendColors : public PaintRoutine{
-    unsigned char** colors = nullptr;
-    Image*          mask   = nullptr;
-
-public:
-    PaintRoutine_BlendColors(Image* dst, Point<int> pos, unsigned char** colors, Image* mask)
-    : PaintRoutine(dst, {pos.x(), pos.y(), mask->width(), mask->height()})
-    , colors(colors)
-    , mask(mask)
-    {}
-
-    virtual void paint()
-    {
-        blend(dst, dstOffset(), colors, mask);
-    }
-};
-
-
 struct PainterImpl : public Painter{
     Window*     window    = nullptr;
 
@@ -129,21 +65,36 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
-        PaintRoutine_FillRect routine(window->image(), rect + offset(), color);
-        routine.paint();
+        RectIntersection<int> intersection(current_clip_rect, rect + offset());
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            fill(window->image(), color, intersection.dstRect());
+        }
     }
 
     virtual void putImage(Image* img, Point<int> pos)
     {
-        PaintRoutine_PutImage routine(window->image(), pos + offset(), img);
-        routine.paint();
+        RectIntersection<int> intersection(
+            current_clip_rect,
+            {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
+        );
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            implant(window->image(), intersection, img);
+        }
     }
 
 
     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
     {
-        PaintRoutine_BlendColors routine(window->image(), pos + offset(), colors, mask);
-        routine.paint();
+        RectIntersection<int> intersection(
+            current_clip_rect,
+            {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
+        );
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            blend(window->image(), intersection.dstOffset(), colors, mask);
+        }
     }
 
     virtual void repaint(Rect<int>* rects, int numrects)
@@ -211,44 +162,57 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
-        RectIntersection<int> intersection(
-            {0, 0, window->width(), window->height()}, rect + offset()
-        );
-        Image subteximg(intersection.width(), intersection.height(), 4);
-        PaintRoutine_FillRect routine(&subteximg, {0, 0, subteximg.width(), subteximg.height()}, color);
-        routine.paint();
-        addToBaseTexture(&subteximg, intersection.dstOffset());
+        RectIntersection<int> intersection(current_clip_rect, rect + offset());
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            Image dst(intersection.width(), intersection.height(), 4);
+            if(dst.isGood())
+            {
+                fill(&dst, color);
+                addToBaseTexture(&dst, intersection.dstOffset());
+            }
+        }
     }
 
     virtual void putImage(Image* img, Point<int> pos)
     {
-        pos += offset();
         RectIntersection<int> intersection(
-            {0, 0, window->width(), window->height()},
-            Rect<int>(pos.x(), pos.y(), img->width(), img->height())
+            current_clip_rect,
+            {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
         );
-        if(intersection.width() == img->width() && intersection.height() == img->height())
+        if(intersection.width() > 0 && intersection.height() > 0)
         {
-            addToBaseTexture(img, pos);
-        }
-        else
-        {
-            Image subteximg(intersection.width(), intersection.height(), 4);
-            PaintRoutine_PutImage routine(&subteximg, pos, img);
-            addToBaseTexture(&subteximg, intersection.dstOffset());
+            if(intersection.width() == img->width() && intersection.height() == img->height())
+            {
+                addToBaseTexture(img, pos + offset());
+            }
+            else
+            {
+                Image dst(intersection.width(), intersection.height(), 4);
+                if(dst.isGood())
+                {
+                    implant(&dst, {{0, 0}, intersection.size(), intersection.srcOffset()}, img);
+                    addToBaseTexture(&dst, intersection.dstOffset());
+                }
+            }
         }
     }
 
     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
     {
         RectIntersection<int> intersection(
-            {0, 0, window->width(), window->height()},
-            Rect<int>(pos.x(), pos.y(), mask->width(), mask->height()) + offset()
+            current_clip_rect,
+            {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
         );
-        Image subteximg(intersection.width(), intersection.height(), 4);
-
-//         PaintRoutine_BlendColors routine(window->image(), pos + offset(), colors, mask);
-//         addToBaseTexture(&subteximg, intersection.dstOffset());
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            Image dst(intersection.width(), intersection.height(), 4);
+            if(dst.isGood())
+            {
+                blend(&dst, {{0, 0}, intersection.size(), intersection.srcOffset()}, colors, mask);
+                addToBaseTexture(&dst, intersection.dstOffset());
+            }
+        }
     }
 
     void addToBaseTexture(Image* img, Point<int> pos)
