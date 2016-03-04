@@ -14,30 +14,23 @@ Widget_View::~Widget_View()
 }
 
 
-void Widget_View::reconfigureEvent(ReconfigureEvent* event)
-{
-    event->setOffset(event->offset() + offset());
-    Widget::reconfigureEvent(event);
-}
-
-
 void Widget_View::mousePressEvent(MousePressEvent* event)
 {
-    event->setPosition(event->position() + offset());
+    event->setPosition(event->position() - offset());
     Widget::mousePressEvent(event);
 }
 
 
 void Widget_View::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    event->setPosition(event->position() + offset());
+    event->setPosition(event->position() - offset());
     Widget::mouseReleaseEvent(event);
 }
 
 
 void Widget_View::mouseMoveEvent(MouseMoveEvent* event)
 {
-    event->setPosition(event->position() + offset());
+    event->setPosition(event->position() - offset());
     Widget::mouseMoveEvent(event);
 }
 

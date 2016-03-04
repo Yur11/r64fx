@@ -14,8 +14,6 @@ public:
     ~Widget_View();
 
 protected:
-    virtual void reconfigureEvent(ReconfigureEvent* event);
-
     virtual void mousePressEvent(MousePressEvent* event);
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);

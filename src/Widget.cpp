@@ -131,6 +131,9 @@ namespace{
 
         /* Used in reconf. logic. */
         bool got_rect = false;
+
+        /* Total offset for every nested scrollable view. */
+        Point<int> view_offset = {0, 0};
     };
 
 
@@ -685,52 +688,51 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
     auto parent_visible_rect = d->visible_rect;
     bool got_rect = d->got_rect;
 
-    Point<int> extra_offset = {0, 0};
-    auto wv = dynamic_cast<Widget_View*>(this);
-    if(wv)
-    {
-        extra_offset = wv->offset();
-    }
-
     if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
     {
+        /* Calculate a rectangle to process on the window surface
+           if we don't aleady have one for one of the parents. */
         if(!d->got_rect)
         {
             if(d->num_rects < max_rects)
             {
-                d->rects[d->num_rects] = toRootCoords({0, 0, width(), height()});
+                d->rects[d->num_rects] = /*toRootCoords({0, 0, width(), height()})*/
+                Rect<int>(d->painter->offset(), size());
                 d->num_rects++;
                 d->got_rect = true;
             }
         }
 
+        /* Calculate children visibility. */
         for(auto child : m_children)
         {
-            if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
+            auto visible_rect = intersection(child->rect(), parent_visible_rect);
+            if(visible_rect.width() > 0 && visible_rect.height() > 0)
             {
-                auto visible_rect = intersection(child->rect(), parent_visible_rect);
-                if(visible_rect.width() > 0 && visible_rect.height() > 0)
-                {
-                    child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
-                    child->m_flags |= R64FX_WIDGET_WANTS_UPDATE;
-                }
-                else
-                {
-                    child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
-                }
+                child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
+                child->m_flags |= R64FX_WIDGET_WANTS_UPDATE;
+            }
+            else
+            {
+                child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
             }
         }
     }
 
+    auto widget_view = dynamic_cast<Widget_View*>(this);//We may have offsets.
+
+    /* Recursively process children. */
     for(auto child : m_children)
     {
         if(child->isVisible() && (child->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
         {
             auto offset = d->painter->offset();
-            d->painter->setOffset(offset + child->position());
+            d->painter->setOffset(
+                offset + child->position() + (widget_view ? widget_view->offset() : Point<int>(0, 0))
+            );
             auto visible_rect = intersection(child->rect(), parent_visible_rect);
             d->visible_rect = {0, 0, visible_rect.width(), visible_rect.height()};
-            if(child->m_flags & R64FX_WIDGET_WANTS_UPDATE)
+            if((child->m_flags & R64FX_WIDGET_WANTS_UPDATE))
             {
                 child->reconfigureEvent((ReconfigureEvent*)d);
             }

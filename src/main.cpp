@@ -71,7 +71,7 @@ public:
 
     virtual void mousePressEvent(MousePressEvent* event)
     {
-        Widget::mousePressEvent(event);
+        Widget_View::mousePressEvent(event);
     }
 
     virtual void mouseMoveEvent(MouseMoveEvent* event)
@@ -83,7 +83,7 @@ public:
         }
         else
         {
-            Widget::mouseMoveEvent(event);
+            Widget_View::mouseMoveEvent(event);
         }
     }
 
