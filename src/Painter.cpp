@@ -40,6 +40,11 @@ struct PainterImpl : public Painter{
         current_clip_rect = rect;
     }
 
+    virtual Rect<int> clipRect()
+    {
+        return current_clip_rect;
+    }
+
     /** @brief Clip a rectangle with the current_clip_rect. */
     Rect<int> clip(Rect<int> rect)
     {

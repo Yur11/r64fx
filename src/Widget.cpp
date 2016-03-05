@@ -696,8 +696,9 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
         {
             if(d->num_rects < max_rects)
             {
-                d->rects[d->num_rects] = /*toRootCoords({0, 0, width(), height()})*/
-                Rect<int>(d->painter->offset(), size());
+                d->rects[d->num_rects] = intersection(
+                    Rect<int>(d->painter->offset(), size()), d->painter->clipRect()
+                );
                 d->num_rects++;
                 d->got_rect = true;
             }
@@ -730,8 +731,19 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
             d->painter->setOffset(
                 offset + child->position() + (widget_view ? widget_view->offset() : Point<int>(0, 0))
             );
+
+            Rect<int> clip_rect;
+            if(widget_view)
+            {
+                clip_rect = d->painter->clipRect();
+                d->painter->setClipRect(toRootCoords({
+                    0, 0, width(), height()
+                }));
+            }
+
             auto visible_rect = intersection(child->rect(), parent_visible_rect);
             d->visible_rect = {0, 0, visible_rect.width(), visible_rect.height()};
+
             if((child->m_flags & R64FX_WIDGET_WANTS_UPDATE))
             {
                 child->reconfigureEvent((ReconfigureEvent*)d);
@@ -740,6 +752,12 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
             {
                 child->reconfigureChildren((ReconfigureEvent*)d);
             }
+
+            if(widget_view)
+            {
+                d->painter->setClipRect(clip_rect);
+            }
+
             d->painter->setOffset(offset);
         }
     }

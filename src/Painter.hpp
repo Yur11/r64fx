@@ -29,6 +29,8 @@ public:
      */
     virtual void setClipRect(Rect<int> rect) = 0;
 
+    virtual Rect<int> clipRect() = 0;
+
     /** Fill a rectangle with the given color.
 
         rect   Rectangle coords. to fill.
