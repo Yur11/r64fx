@@ -93,7 +93,7 @@ struct PainterImplImage : public PainterImpl{
         );
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            blend(window->image(), intersection.dstOffset(), colors, mask);
+            blend(window->image(), intersection, colors, mask);
         }
     }
 
