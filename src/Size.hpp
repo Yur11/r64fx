@@ -36,7 +36,7 @@ template<typename T> inline bool operator!=(const Size<T> &a, const Size<T> &b)
 
 template<typename Ost, typename T> inline Ost &operator<<(Ost &ost, Size<T> size)
 {
-    ost << "Size{" << size.w << ", " << size.h << "}";
+    ost << "Size{" << size.width() << ", " << size.height() << "}";
     return ost;
 }
     
