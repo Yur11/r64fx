@@ -75,7 +75,7 @@ template<typename T> struct Point{
 
 template<typename StreamT, typename T> StreamT &operator<<(StreamT &stream, const Point<T> &point)
 {
-    stream << point.x() << ", " << point.y();
+    stream << "Point{" << point.x() << ", " << point.y() << "}";
     return stream;
 }
     

@@ -720,7 +720,7 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
         }
     }
 
-    auto widget_view = dynamic_cast<Widget_View*>(this);//We may have offsets.
+    auto widget_view_self = dynamic_cast<Widget_View*>(this);//We may have offsets.
 
     /* Recursively process children. */
     for(auto child : m_children)
@@ -729,11 +729,11 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
         {
             auto offset = d->painter->offset();
             d->painter->setOffset(
-                offset + child->position() + (widget_view ? widget_view->offset() : Point<int>(0, 0))
+                offset + child->position() + (widget_view_self ? widget_view_self->offset() : Point<int>(0, 0))
             );
 
             Rect<int> clip_rect;
-            if(widget_view)
+            if(widget_view_self)
             {
                 clip_rect = d->painter->clipRect();
                 d->painter->setClipRect(toRootCoords({
@@ -753,7 +753,7 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
                 child->reconfigureChildren((ReconfigureEvent*)d);
             }
 
-            if(widget_view)
+            if(widget_view_self)
             {
                 d->painter->setClipRect(clip_rect);
             }

@@ -153,7 +153,7 @@ private:
         wt->setTextWrap(TextWrap::Anywhere);
         wt->setTextAlignment(TextAlignment::Left);
 
-        m_container->setPadding(5);
+        m_container->setPadding(20);
         m_container->setSpacing(5);
         m_container->alignHorizontally();
         m_container->show();

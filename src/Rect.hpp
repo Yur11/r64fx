@@ -119,7 +119,7 @@ template<typename T> Rect<T> operator+(Rect<T> rect, Point<T> offset)
 }
 
 
-template<typename T> Rect<T> intersection(Rect<T> a, Rect<T> b)
+template<typename T> Rect<T> intersection(const Rect<T> &a, const Rect<T> &b)
 {
     T max_left  = max(a.left(),  b.left());
     T min_right = min(a.right(), b.right());
@@ -138,9 +138,15 @@ template<typename T> Rect<T> intersection(Rect<T> a, Rect<T> b)
 }
 
 
+template<typename T> inline Rect<T> operator&(const Rect<T> &a, const Rect<T> &b)
+{
+    return intersection(a, b);
+}
+
+
 template<typename StreamT, typename T> StreamT &operator<<(StreamT &stream, Rect<T> rect)
 {
-    stream << rect.x() << ", " << rect.y() << ", " << rect.width() << ", " << rect.height();
+    stream << "Rect{" << rect.x() << ", " << rect.y() << ", " << rect.width() << ", " << rect.height() << "}";
     return stream;
 }
 
@@ -161,11 +167,13 @@ public:
 
     RectIntersection(const Rect<T> &dst_rect, const Rect<T> &src_rect)
     {
-        m_size = intersection(src_rect, dst_rect).size();
-        m_src_offset.setX(src_rect.x() < 0 ? -src_rect.x() : 0);
-        m_src_offset.setY(src_rect.y() < 0 ? -src_rect.y() : 0);
-        m_dst_offset.setX(src_rect.x() > 0 ?  src_rect.x() : 0);
-        m_dst_offset.setY(src_rect.y() > 0 ?  src_rect.y() : 0);
+        Rect<int> rect = intersection(src_rect, dst_rect);
+        if(rect.width() > 0 && rect.height() > 0)
+        {
+            m_size = rect.size();
+            m_dst_offset = rect.position() - dst_rect.position();
+            m_src_offset = rect.position() - src_rect.position();
+        }
     }
 
     RectIntersection(){}
@@ -177,13 +185,13 @@ public:
     inline Point<T> dstOffset() const { return m_dst_offset; }
     inline T dstx() const { return m_dst_offset.x(); }
     inline T dsty() const { return m_dst_offset.y(); }
-    inline Rect<int> dstRect() const { return {dstOffset(), size()}; }
+//     inline Rect<int> dstRect() const { return {dstOffset(), size()}; }
 
 
     inline Point<T> srcOffset() const { return m_src_offset; }
     inline T srcx() const { return m_src_offset.x(); }
     inline T srcy() const { return m_src_offset.y(); }
-    inline Rect<int> srcRect() const { return {srcOffset(), size()}; }
+//     inline Rect<int> srcRect() const { return {srcOffset(), size()}; }
 };
     
 }//namespace r64fx

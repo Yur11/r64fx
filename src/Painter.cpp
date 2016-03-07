@@ -70,10 +70,10 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
-        RectIntersection<int> intersection(current_clip_rect, rect + offset());
-        if(intersection.width() > 0 && intersection.height() > 0)
+        auto intersection_rect = clip(rect + offset());
+        if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
-            fill(window->image(), color, intersection.dstRect());
+            fill(window->image(), color, intersection_rect);
         }
     }
 
@@ -85,7 +85,13 @@ struct PainterImplImage : public PainterImpl{
         );
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            implant(window->image(), intersection, img);
+            implant(
+                window->image(),
+                intersection.dstOffset() + current_clip_rect.position(),
+                intersection.size(),
+                intersection.srcOffset(),
+                img
+            );
         }
     }
 
@@ -98,7 +104,13 @@ struct PainterImplImage : public PainterImpl{
         );
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            blend(window->image(), intersection, colors, mask);
+            blend(
+                window->image(),
+                intersection.dstOffset() + current_clip_rect.position(),
+                intersection.size(),
+                intersection.srcOffset(),
+                colors, mask
+            );
         }
     }
 
@@ -135,6 +147,7 @@ namespace
 
 
 struct PainterImplGL : public PainterImpl{
+    Image base_texture_image;
     GLuint base_texture = 0;
     Size<int> base_texture_size;
     GLuint base_vao;
@@ -167,15 +180,11 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
-        RectIntersection<int> intersection(current_clip_rect, rect + offset());
-        if(intersection.width() > 0 && intersection.height() > 0)
+        auto intersection_rect = clip(rect + offset());
+        if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
-            Image dst(intersection.width(), intersection.height(), 4);
-            if(dst.isGood())
-            {
-                fill(&dst, color);
-                addToBaseTexture(&dst, intersection.dstOffset());
-            }
+            fill(&base_texture_image, color, intersection_rect);
+            addToBaseTexture(&base_texture_image, {0, 0});
         }
     }
 
@@ -187,19 +196,14 @@ struct PainterImplGL : public PainterImpl{
         );
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            if(intersection.width() == img->width() && intersection.height() == img->height())
-            {
-                addToBaseTexture(img, pos + offset());
-            }
-            else
-            {
-                Image dst(intersection.width(), intersection.height(), 4);
-                if(dst.isGood())
-                {
-                    implant(&dst, {{0, 0}, intersection.size(), intersection.srcOffset()}, img);
-                    addToBaseTexture(&dst, intersection.dstOffset());
-                }
-            }
+            implant(
+                &base_texture_image,
+                intersection.dstOffset() + current_clip_rect.position(),
+                intersection.size(),
+                intersection.srcOffset(),
+                img
+            );
+            addToBaseTexture(&base_texture_image, {0, 0});
         }
     }
 
@@ -211,12 +215,14 @@ struct PainterImplGL : public PainterImpl{
         );
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            Image dst(intersection.width(), intersection.height(), 4);
-            if(dst.isGood())
-            {
-                blend(&dst, {{0, 0}, intersection.size(), intersection.srcOffset()}, colors, mask);
-                addToBaseTexture(&dst, intersection.dstOffset());
-            }
+            blend(
+                &base_texture_image,
+                intersection.dstOffset() + current_clip_rect.position(),
+                intersection.size(),
+                intersection.srcOffset(),
+                colors, mask
+            );
+            addToBaseTexture(&base_texture_image, {0, 0});
         }
     }
 
@@ -374,6 +380,7 @@ struct PainterImplGL : public PainterImpl{
         );
 
         base_texture_size = {w, h};
+        base_texture_image.load(w, h, 4);
     }
 
     void deleteBaseTextureIfNeeded()

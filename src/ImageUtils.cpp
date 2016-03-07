@@ -101,6 +101,29 @@ void implant(Image* dst, Point<int> pos, Image* src)
 }
 
 
+void implant(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> src_offset, Image* src)
+{
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(src != nullptr);
+#endif//R64FX_DEBUG
+
+    for(int y=0; y<size.height(); y++)
+    {
+        for(int x=0; x<size.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_offset.x(), y + dst_offset.y());
+            auto srcpx = src->pixel(x + src_offset.x(), y + src_offset.y());
+
+            for(int c=0; c<dst->componentCount(); c++)
+            {
+                dstpx[c] = srcpx[c];
+            }
+        }
+    }
+}
+
+
 void implant(Image* dst, const RectIntersection<int> &intersection, Image* src)
 {
 #ifdef R64FX_DEBUG
@@ -213,6 +236,38 @@ void blend(Image* dst, Point<int> pos, unsigned char** colors, Image* mask)
         {0,       0,       dst->width(),  dst->height()},
         {pos.x(), pos.y(), mask->width(), mask->height()}
     ), colors, mask);
+}
+
+
+void blend(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> mask_offset, unsigned char** colors, Image* mask)
+{
+    #ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(mask != nullptr);
+#endif//R64FX_DEBUG
+
+    static const float rcp = 1.0f / float(255);
+
+    for(int y=0; y<size.height(); y++)
+    {
+        for(int x=0; x<size.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_offset.x(), y + dst_offset.y());
+            auto mskpx = mask->pixel(x + mask_offset.x(), y + mask_offset.y());
+
+            for(int m=0; m<mask->componentCount(); m++)
+            {
+                float alpha            = float(      mskpx[m]) * rcp;
+                float one_minus_alpha  = float(255 - mskpx[m]) * rcp;
+
+                for(int c=0; c<dst->componentCount(); c++)
+                {
+                    float result = float(dstpx[c]) * one_minus_alpha + float(colors[m][c]) * alpha;
+                    dstpx[c] = (unsigned char)result;
+                }
+            }
+        }
+    }
 }
 
 
