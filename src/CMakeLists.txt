@@ -37,6 +37,7 @@ set(SRC
     Widget_Container.cpp
     Widget_Control.cpp
     Widget_Dummy.cpp
+    Widget_ScrollBar.cpp
     Widget_Text.cpp
     Widget_View.cpp
     Window.cpp
