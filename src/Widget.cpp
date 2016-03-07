@@ -424,6 +424,30 @@ std::string Widget::windowTitle() const
 }
 
 
+void Widget::setOrientation(Orientation orientation)
+{
+    set_bits(m_flags, orientation == Orientation::Vertical, R64FX_WIDGET_IS_VERTICAL);
+}
+
+
+Orientation Widget::orientation() const
+{
+    return (m_flags & R64FX_WIDGET_IS_VERTICAL) ? Orientation::Vertical : Orientation::Horizontal;
+}
+
+
+void Widget::setPinned(bool yes)
+{
+    set_bits(m_flags, yes, R64FX_WIDGET_IS_PINNED);
+}
+
+
+bool Widget::isPinned() const
+{
+    return m_flags & R64FX_WIDGET_IS_PINNED;
+}
+
+
 void Widget::grabMouse()
 {
     g_mouse_grabber = this;
@@ -729,7 +753,8 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
         {
             auto offset = d->painter->offset();
             d->painter->setOffset(
-                offset + child->position() + (widget_view_self ? widget_view_self->offset() : Point<int>(0, 0))
+                offset + child->position()
+                + ((widget_view_self && !child->isPinned()) ? widget_view_self->offset() : Point<int>(0, 0))
             );
 
             Rect<int> clip_rect;

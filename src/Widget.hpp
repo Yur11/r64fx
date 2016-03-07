@@ -6,6 +6,7 @@
 #include "Rect.hpp"
 #include "Mouse.hpp"
 #include "Clipboard.hpp"
+#include "Orientation.hpp"
 
 namespace r64fx{
 
@@ -118,6 +119,17 @@ public:
     void setWindowTitle(std::string title);
 
     std::string windowTitle() const;
+
+
+/* === Extra Flags === */
+
+    void setOrientation(Orientation orientation);
+
+    Orientation orientation() const;
+
+    void setPinned(bool yes);
+
+    bool isPinned() const;
 
 
 /* === Mouse === */
