@@ -24,12 +24,18 @@ public:
     float handlePosition() const;
 
     void onPositionChanged(void(*callback)(Widget_ScrollBar* scroll_bar, void* data), void* data);
+
+    virtual int barLength() = 0;
+
+    int handleLength();
 };
 
 
 class Widget_ScrollBar_Vertical : public Widget_ScrollBar{
 public:
     Widget_ScrollBar_Vertical(Widget* parent = nullptr);
+
+    virtual int barLength();
 
 protected:
     virtual void reconfigureEvent(ReconfigureEvent* event);
@@ -43,6 +49,8 @@ protected:
 class Widget_ScrollBar_Horizontal : public Widget_ScrollBar{
 public:
     Widget_ScrollBar_Horizontal(Widget* parent = nullptr);
+
+    virtual int barLength();
 
 protected:
     virtual void reconfigureEvent(ReconfigureEvent* event);

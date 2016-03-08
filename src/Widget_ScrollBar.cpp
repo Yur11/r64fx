@@ -55,7 +55,7 @@ namespace{
                 {
                     img_button_down  -> pixel(i, g_scroll_bar_width - j - 1)[0] =
                     img_button_left  -> pixel(j, g_scroll_bar_width - i - 1)[0] =
-                    img_button_right -> pixel(j, i)[0]                          =
+                    img_button_right -> pixel(g_scroll_bar_width - j - 1, i)[0] =
                     img_button_up    -> pixel(i, j)[0];
                 }
             }
@@ -64,7 +64,19 @@ namespace{
 
     void cleanup_images()
     {
+        if(img_button_up)
+            delete img_button_up;
 
+        if(img_button_down)
+            delete img_button_down;
+
+        if(img_button_left)
+            delete img_button_left;
+
+        if(img_button_right)
+            delete img_button_right;
+
+        img_button_up = img_button_down = img_button_left = img_button_right = nullptr;
     }
 
     void position_changed_stub(Widget_ScrollBar*, void*) {}
@@ -115,10 +127,22 @@ void Widget_ScrollBar::onPositionChanged(void(*callback)(Widget_ScrollBar* scrol
 }
 
 
+int Widget_ScrollBar::handleLength()
+{
+    return barLength() * ratio();
+}
+
+
 Widget_ScrollBar_Vertical::Widget_ScrollBar_Vertical(Widget* parent)
 : Widget_ScrollBar(parent)
 {
     setWidth(g_scroll_bar_width);
+}
+
+
+int Widget_ScrollBar_Vertical::barLength()
+{
+    return height() - g_scroll_bar_width * 2;
 }
 
 
@@ -130,17 +154,13 @@ void Widget_ScrollBar_Vertical::reconfigureEvent(ReconfigureEvent* event)
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, bg); //Remove me!
 
-    int button_size    = width();
-    int bar_length     = height() - button_size * 2;
-    int handle_length  = bar_length * m_ratio;
-    int handle_offset  = (bar_length - handle_length) * m_handle_position;
-    Rect<int> handle_rect(0, button_size + handle_offset, width(), handle_length);
-
+    int handle_offset  = (barLength() - handleLength()) * m_handle_position;
+    Rect<int> handle_rect(0, g_scroll_bar_width + handle_offset, width(), handleLength());
     p->fillRect(handle_rect, fg);
 
     unsigned char* colors[1] = {fg};
-    p->blendColors({0, 0                     }, colors, img_button_up);
-    p->blendColors({0, height() - button_size}, colors, img_button_down);
+    p->blendColors({0, 0                            }, colors, img_button_up);
+    p->blendColors({0, height() - g_scroll_bar_width}, colors, img_button_down);
 
     Widget::reconfigureEvent(event);
 }
@@ -148,7 +168,20 @@ void Widget_ScrollBar_Vertical::reconfigureEvent(ReconfigureEvent* event)
 
 void Widget_ScrollBar_Vertical::mousePressEvent(MousePressEvent* event)
 {
-    Widget_ScrollBar::mousePressEvent(event);
+    if(event->y() < g_scroll_bar_width)
+    {
+        setHandlePosition(handlePosition() - 0.1f);
+        update();
+    }
+    else if(event->y() > (height() - g_scroll_bar_width))
+    {
+        setHandlePosition(handlePosition() + 0.1f);
+        update();
+    }
+    else
+    {
+        Widget_ScrollBar::mousePressEvent(event);
+    }
 }
 
 
@@ -157,10 +190,8 @@ void Widget_ScrollBar_Vertical::mouseMoveEvent(MouseMoveEvent* event)
     if(!(event->button() & MouseButton::Left()) || event->dy() == 0)
         return;
 
-    int button_size  = width();
-    int bar_length   = height() - button_size * 2;
-    int length       = bar_length - bar_length * m_ratio;
-    float step       = float(event->dy()) / float(length);
+    int length = barLength() - handleLength();
+    float step = float(event->dy()) / float(length);
     setHandlePosition(handlePosition() + step);
     update();
 }
@@ -174,26 +205,48 @@ Widget_ScrollBar_Horizontal::Widget_ScrollBar_Horizontal(Widget* parent)
 }
 
 
+int Widget_ScrollBar_Horizontal::barLength()
+{
+    return width() - g_scroll_bar_width * 2;
+}
+
+
 void Widget_ScrollBar_Horizontal::reconfigureEvent(ReconfigureEvent* event)
 {
-//     static unsigned char color[4] = {255, 0, 0, 0};
-//
-//     auto p = event->painter();
-//     Rect<int> handle_rect;
-//
-//     int handle_length = width() * m_ratio;
-//     int handle_offset = (width() - handle_length) * m_handle_position;
-//     handle_rect = {handle_offset, 0, handle_length, height()};
-//
-//     p->fillRect(handle_rect, color);
-//
-//     Widget::reconfigureEvent(event);
+    static unsigned char fg[4] = {127, 127, 127, 0};
+    static unsigned char bg[4] = {127, 180, 255, 0};
+
+    auto p = event->painter();
+    p->fillRect({0, 0, width(), height()}, bg); //Remove me!
+
+    int handle_offset  = (barLength() - handleLength()) * m_handle_position;
+    Rect<int> handle_rect(g_scroll_bar_width + handle_offset, 0, handleLength(), height());
+    p->fillRect(handle_rect, fg);
+
+    unsigned char* colors[1] = {fg};
+    p->blendColors({0, 0                           }, colors, img_button_left);
+    p->blendColors({width() - g_scroll_bar_width, 0}, colors, img_button_right);
+
+    Widget::reconfigureEvent(event);
 }
 
 
 void Widget_ScrollBar_Horizontal::mousePressEvent(MousePressEvent* event)
 {
-//     Widget_ScrollBar::mousePressEvent(event);
+    if(event->x() < g_scroll_bar_width)
+    {
+        setHandlePosition(handlePosition() - 0.1);
+        update();
+    }
+    else if(event->x() > (width() - g_scroll_bar_width))
+    {
+        setHandlePosition(handlePosition() + 0.1);
+        update();
+    }
+    else
+    {
+        Widget_ScrollBar::mousePressEvent(event);
+    }
 }
 
 
@@ -201,6 +254,11 @@ void Widget_ScrollBar_Horizontal::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(!(event->button() & MouseButton::Left()))
         return;
+
+    int length       = barLength() - handleLength();
+    float step       = float(event->dx()) / float(length);
+    setHandlePosition(handlePosition() + step);
+    update();
 }
 
 }//namespace r64fx
