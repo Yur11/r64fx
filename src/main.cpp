@@ -14,6 +14,7 @@
 #include "Widget_Dummy.hpp"
 #include "Widget_Text.hpp"
 #include "Widget_View.hpp"
+#include "Widget_ScrollBar.hpp"
 
 #include "KeyEvent.hpp"
 
@@ -66,6 +67,7 @@ public:
 
         auto painter = event->painter();
         painter->putImage(&m_Image);
+
         Widget_View::reconfigureEvent(event);
     }
 
@@ -132,9 +134,13 @@ private:
 
         m_container = new Widget_Container;
         {
-            auto mw = new MyWidget(m_container);
-            mw->setWidth(300);
-            mw->setHeight(300);
+            auto subcontainer = new Widget_Container(m_container);
+            auto mw = new MyWidget(subcontainer);
+            mw->setSize({300, 300});
+            auto sb = new Widget_ScrollBar_Vertical(subcontainer);
+            sb->setSize({10, 300});
+            sb->setRatio(0.5f);
+            subcontainer->alignHorizontally();
         }
 
         auto subcontainer = new Widget_Container(m_container);
