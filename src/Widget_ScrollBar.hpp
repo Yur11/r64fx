@@ -34,6 +34,8 @@ public:
 protected:
     virtual void reconfigureEvent(ReconfigureEvent* event);
 
+    virtual void mousePressEvent(MousePressEvent* event);
+
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 };
 
@@ -44,6 +46,8 @@ public:
 
 protected:
     virtual void reconfigureEvent(ReconfigureEvent* event);
+
+    virtual void mousePressEvent(MousePressEvent* event);
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 };

@@ -138,7 +138,7 @@ private:
             auto mw = new MyWidget(subcontainer);
             mw->setSize({300, 300});
             auto sb = new Widget_ScrollBar_Vertical(subcontainer);
-            sb->setSize({10, 300});
+            sb->setHeight(300);
             sb->setRatio(0.5f);
             subcontainer->alignHorizontally();
         }
