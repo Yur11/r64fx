@@ -80,6 +80,25 @@ TextAlignment TextPainter::textAlignment() const
 }
 
 
+void TextPainter::resizeToText()
+{
+    int maxw = 0;
+    for(auto &line : m_lines)
+    {
+        int w = line.xOffset();
+        for(int i=line.begin(); i!=line.end(); i++)
+        {
+            GlyphEntry &ge = m_glyphs[i];
+            w += ge.advance();
+        }
+        if(w > maxw)
+            maxw = w;
+    }
+
+    m_text_size.setWidth(maxw);
+}
+
+
 void TextPainter::setReflowWidth(int width)
 {
     m_reflow_width = width;
@@ -968,6 +987,33 @@ bool TextPainter::lineStartsWithNewline(int l) const
 {
     auto &line = m_lines[l];
     return m_glyphs[line.begin()].isNewline();
+}
+
+
+bool resize_image_and_draw_text(Image* dst, const std::string &text, TextWrap wrap, Font* font)
+{
+    TextPainter tp;
+    tp.font = font;
+    tp.setTextWrap(wrap);
+    tp.setReflowWidth(std::numeric_limits<int>::max());
+    tp.insertText(text);
+    tp.reflow();
+    tp.resizeToText();
+
+    auto size = tp.textSize();
+    if(size.width() <= 0 || size.height() <= 0)
+        return false;
+
+    if(dst)
+        dst->load(size.width(), size.height(), 1);
+
+    if(!dst->isGood())
+        return false;
+
+    unsigned char color = 0;
+    fill(dst, &color);
+    tp.paint(dst);
+    return true;
 }
 
 }//namespace r64fx

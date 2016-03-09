@@ -194,6 +194,8 @@ public:
 
     TextAlignment textAlignment() const;
 
+    void resizeToText();
+
 
     /* Insert some text at cursor position. */
     void insertText(
@@ -329,6 +331,9 @@ private:
     bool lineStartsWithNewline(int l) const;
 
 };
+
+
+bool resize_image_and_draw_text(Image* dst, const std::string &text, TextWrap wrap, Font* font);
 
 }//namespace
 
