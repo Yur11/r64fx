@@ -9,13 +9,14 @@
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
+#include "Widget_Button.hpp"
 #include "Widget_Container.hpp"
 #include "Widget_Control.hpp"
 #include "Widget_Dummy.hpp"
 #include "Widget_Text.hpp"
 #include "Widget_View.hpp"
 #include "Widget_ScrollBar.hpp"
-
+#include "ImageAnimation.hpp"
 #include "KeyEvent.hpp"
 
 using namespace std;
@@ -34,7 +35,8 @@ float normalize_angle(float angle)
 
 
 class MyWidget : public Widget_View{
-    Image  m_Image;
+    Image m_Image;
+    ImageAnimation* m_animation = nullptr;
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget_View(parent)
@@ -43,10 +45,26 @@ public:
         wc1->setPosition({100, 100});
         auto wc2 = new Widget_Control(ControlType::BipolarRadius,  {50, 50}, this);
         wc2->setPosition({160, 100});
+
+        unsigned char red[4]    = {255, 0, 0, 0};
+        unsigned char green[4]  = {0, 255, 0, 0};
+        unsigned char blue[4]   = {0, 0, 255, 0};
+        unsigned char* colors[3] = {red, green, blue};
+        m_animation = new_button_animation(20, 20, colors, 3);
+
+        auto wb = new Widget_Button(m_animation, this);
+        wb->setPosition({100, 200});
+        wb->onClick([](Widget_Button* button, void*){
+            cout << "click " << button->state() << "\n";
+            button->pickNextStateLoop();
+            button->update();
+        });
     }
 
     ~MyWidget()
     {
+        if(m_animation)
+            delete m_animation;
     }
 
     virtual void reconfigureEvent(ReconfigureEvent* event)

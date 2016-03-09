@@ -2,6 +2,7 @@
 #include "WidgetFlags.hpp"
 #include "Painter.hpp"
 #include "ImageAnimation.hpp"
+#include "ImageUtils.hpp"
 #include "TextPainter.hpp"
 
 #include <iostream>
@@ -36,7 +37,20 @@ Widget_Button::Widget_Button(std::string text, std::string font_name, Widget* pa
     if(m_animation)
     {
         setSize({m_animation->width(), m_animation->height()});
+        setState(0);
     }
+}
+
+
+Widget_Button::Widget_Button(ImageAnimation* animation, Widget* parent)
+: Widget(parent)
+{
+    if(!animation)
+        return;
+
+    m_animation = animation;
+    m_flags &= ~R64FX_WIDGET_OWNS_DATA;
+    setSize({m_animation->width(), m_animation->height()});
 }
 
 
@@ -59,22 +73,41 @@ void Widget_Button::onClick(void (*callback)(Widget_Button* button, void* data),
 }
 
 
-void Widget_Button::setState(int frame)
+void Widget_Button::setState(int state)
 {
-    if(frame < m_animation->frameCount() && frame >= 0)
-        m_animation->pickFrame(frame);
+    if(state >= 0 && state < m_animation->frameCount())
+    {
+        m_state = state;
+        m_animation->pickFrame(state);
+    }
+}
+
+
+int Widget_Button::state()
+{
+    return m_state;
+}
+
+
+void Widget_Button::pickNextStateLoop()
+{
+    if(!m_animation)
+        return;
+
+    m_state++;
+    if(m_state >= m_animation->frameCount())
+        m_state = 0;
+    m_animation->pickFrame(m_state);
 }
 
 
 void Widget_Button::reconfigureEvent(ReconfigureEvent* event)
 {
-    unsigned char bg[4] = {0, 0, 0, 0};
-    unsigned char fg[4] = {255, 255, 255, 255};
-
     auto p = event->painter();
-    p->fillRect({0, 0, width(), height()}, bg);
-    unsigned char* colors[1] = {fg};
-    p->blendColors({0, 0}, colors, m_animation);
+    if(m_animation)
+    {
+        p->putImage(m_animation, {0, 0});
+    }
     Widget::reconfigureEvent(event);
 }
 
@@ -83,6 +116,19 @@ void Widget_Button::mousePressEvent(MousePressEvent* event)
 {
     m_on_click(this, m_on_click_data);
     Widget::mousePressEvent(event);
+}
+
+
+ImageAnimation* new_button_animation(int width, int height, unsigned char** colors, int nframes)
+{
+    auto animation = new ImageAnimation(width, height, 4, nframes);
+    for(int i=0; i<nframes; i++)
+    {
+        animation->pickFrame(i);
+        fill(animation, colors[i]);
+    }
+    animation->pickFrame(0);
+    return animation;
 }
 
 }//namespace r64fx
