@@ -29,4 +29,6 @@
 /* Pinned widget are not scrollable in Widget_View. */
 #define R64FX_WIDGET_IS_PINNED               (1 << 0x0A)
 
+#define R64FX_WIDGET_OWNS_DATA               (1 << 0x0B)
+
 #endif//R64FX_WIDGET_FLAGS_HPP
