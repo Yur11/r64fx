@@ -318,7 +318,7 @@ void Widget::show()
             setHeight(100);
 
         auto window = Window::newInstance(
-            width(), height(), "", Window::Type::Image
+            width(), height(), "", Window::Type::GL
         );
 #ifdef R64FX_DEBUG
         if(!window)
@@ -615,7 +615,7 @@ void Widget::update()
 {
     m_flags |= R64FX_WIDGET_WANTS_UPDATE;
     auto widget = parent();
-    while(widget && !(widget->m_flags & R64FX_CHILD_WANTS_UPDATE))
+    while(widget && !(widget->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
     {
         widget->m_flags |= R64FX_CHILD_WANTS_UPDATE;
         widget = widget->parent();
