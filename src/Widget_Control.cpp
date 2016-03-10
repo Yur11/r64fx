@@ -15,42 +15,23 @@ namespace{
 }
 
 struct ControlAnimationImpl : public ControlAnimation{
-    int min_position = 0;
-    int max_position = 255;
-    float min_value = 0.0f;
-    float max_value = 1.0f;
-
     virtual ~ControlAnimationImpl() {}
-
-    int positionRange() const
-    {
-        return max_position - min_position + 1;
-    }
 
     int newPosition(int old_position, MouseMoveEvent* event)
     {
-        int pos = old_position - event->dy();
-        if(pos < min_position)
-            pos = min_position;
-        else if(pos > max_position)
-            pos = max_position;
-        return pos;
+        return boundPosition(old_position - event->dy());
     }
 
     virtual void repaint(int position, Painter* painter) = 0;
 
     float positionToValue(int position)
     {
-        int position_range = max_position - min_position;
-        float value_range = max_value - min_value;
-        return float(position) * (value_range / float(position_range));
+        return float(position) * (valueRange() / float(positionRange()));
     }
 
     int valueToPosition(float value)
     {
-        int position_range = max_position - min_position;
-        float value_range = max_value - min_value;
-        return value * (float(position_range) / value_range);
+        return value * (float(positionRange()) / valueRange());
     }
 };
 
@@ -102,7 +83,7 @@ struct ControlAnimation_Knob : public ControlAnimationImpl{
 
         if(imgainim.isGood())
         {
-            imgainim.pickFrame(position - min_position);
+            imgainim.pickFrame(position - minPosition());
             painter->blendColors({0, 0}, colors, &imgainim);
         }
     }
@@ -112,6 +93,9 @@ struct ControlAnimation_Knob : public ControlAnimationImpl{
 struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
     ControlAnimation_Knob_UnipolarLarge(int size)
     {
+        setMinValue(0.0f);
+        setMaxValue(1.0f);
+
         unsigned char a[2] = {255, 0};
         unsigned char b[2] = {0, 255};
         unsigned char o[2] = {0, 0};
@@ -146,6 +130,9 @@ struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
 struct ControlAnimation_Knob_BipolarLarge : public ControlAnimation_Knob{
     ControlAnimation_Knob_BipolarLarge(int size)
     {
+        setMinValue(-1.0f);
+        setMaxValue(+1.0f);
+
         unsigned char a[2] = {255, 0};
         unsigned char b[2] = {0, 255};
         unsigned char o[2] = {0, 0};
@@ -198,6 +185,9 @@ struct ControlAnimation_Knob_BipolarLarge : public ControlAnimation_Knob{
 struct ControlAnimation_Knob_UnipolarSector : public ControlAnimation_Knob{
     ControlAnimation_Knob_UnipolarSector(int size)
     {
+        setMinValue(0.0f);
+        setMaxValue(1.0f);
+
         imgainim.resize(size, size, 2, positionRange());
         for(int i=0; i<positionRange(); i++)
         {
@@ -235,6 +225,9 @@ struct ControlAnimation_Knob_UnipolarSector : public ControlAnimation_Knob{
 struct ControlAnimation_Knob_BipolarSector : public ControlAnimation_Knob{
     ControlAnimation_Knob_BipolarSector(int size)
     {
+        setMinValue(-1.0f);
+        setMaxValue(+1.0f);
+
         imgainim.resize(size, size, 2, positionRange());
         for(int i=0; i<positionRange(); i++)
         {
@@ -356,7 +349,7 @@ void Widget_Control::setValue(float value)
         return;
 
     auto anim = (ControlAnimationImpl*) m_animation;
-    m_position = anim->valueToPosition(value);
+    m_position = anim->boundPosition(anim->valueToPosition(value));
 }
 
 
@@ -410,8 +403,8 @@ void Widget_Control::mouseMoveEvent(MouseMoveEvent* event)
     {
         auto anim = (ControlAnimationImpl*) m_animation;
         m_position = anim->newPosition(m_position, event);
-        update();
         m_on_value_changed(this, m_on_value_changed_data);
+        update();
     }
 }
 

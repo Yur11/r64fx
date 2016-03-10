@@ -16,7 +16,38 @@ enum class ControlType{
 
 
 class ControlAnimation{
+    int m_min_position = 0;
+    int m_max_position = 255;
 
+    float m_min_value = 0.0f;
+    float m_max_value = 1.0f;
+
+public:
+    inline void setMinPosition(int pos) { m_min_position = pos; }
+    inline void setMaxPosition(int pos) { m_max_position = pos; }
+
+    inline int minPosition() const { return m_min_position; }
+    inline int maxPosition() const { return m_max_position; }
+
+    inline int positionRange() const { return maxPosition() - minPosition() + 1; }
+
+    inline int boundPosition(int pos) const
+    {
+        if(pos < minPosition())
+            return minPosition();
+        else if(pos > maxPosition())
+            return maxPosition();
+        else
+            return pos;
+    }
+
+    inline void setMinValue(int val) { m_min_value = val; }
+    inline void setMaxValue(int val) { m_max_value = val; }
+
+    inline int minValue() const { return m_min_value; }
+    inline int maxValue() const { return m_max_value; }
+
+    inline int valueRange() const { return maxValue() - minValue(); }
 };
 
 
@@ -40,9 +71,9 @@ public:
 protected:
     virtual void reconfigureEvent(ReconfigureEvent* event);
 
-    void mousePressEvent(MousePressEvent* event);
+    virtual void mousePressEvent(MousePressEvent* event);
 
-    void mouseMoveEvent(MouseMoveEvent* event);
+    virtual void mouseMoveEvent(MouseMoveEvent* event);
 };
 
 }//namespace r64fx

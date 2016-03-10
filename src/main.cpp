@@ -44,8 +44,8 @@ public:
         auto wc1 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, this);
         wc1->setPosition({100, 100});
 
-        auto wc2 = new Widget_Control(ControlType::BipolarRadius,  {50, 50}, this);
-        wc2->setPosition({160, 100});
+        auto wc2 = new Widget_Control(ControlType::UnipolarRadius,  {50, 50}, this);
+        wc2->setPosition({160, 160});
 
         wc1->onValueChanged([](Widget_Control* control, void* data){
             auto wc2 = (Widget_Control*) data;
@@ -55,7 +55,7 @@ public:
 
         wc2->onValueChanged([](Widget_Control* control, void* data){
             auto wc1 = (Widget_Control*) data;
-            wc1->setValue(control->value() * 0.5f);
+            wc1->setValue(control->value());
             wc1->update();
         }, wc1);
 
