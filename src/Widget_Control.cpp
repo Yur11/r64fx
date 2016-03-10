@@ -8,12 +8,17 @@
 #include <iostream>
 using namespace std;
 
-
 namespace r64fx{
+
+namespace{
+    void on_value_changed_stub(Widget_Control*, void*) {}
+}
 
 struct ControlAnimationImpl : public ControlAnimation{
     int min_position = 0;
     int max_position = 255;
+    float min_value = 0.0f;
+    float max_value = 1.0f;
 
     virtual ~ControlAnimationImpl() {}
 
@@ -33,6 +38,20 @@ struct ControlAnimationImpl : public ControlAnimation{
     }
 
     virtual void repaint(int position, Painter* painter) = 0;
+
+    float positionToValue(int position)
+    {
+        int position_range = max_position - min_position;
+        float value_range = max_value - min_value;
+        return float(position) * (value_range / float(position_range));
+    }
+
+    int valueToPosition(float value)
+    {
+        int position_range = max_position - min_position;
+        float value_range = max_value - min_value;
+        return value * (float(position_range) / value_range);
+    }
 };
 
 
@@ -313,7 +332,9 @@ ControlAnimation* newAnimation(ControlType type, Size<int> size)
 }
 
 
-Widget_Control::Widget_Control(ControlType type, Size<int> size, Widget* parent) : Widget(parent)
+Widget_Control::Widget_Control(ControlType type, Size<int> size, Widget* parent)
+: Widget(parent)
+, m_on_value_changed(on_value_changed_stub)
 {
     m_animation = newAnimation(type, size);
     setSize(size);
@@ -326,6 +347,36 @@ Widget_Control::~Widget_Control()
     {
         delete m_animation;
     }
+}
+
+
+void Widget_Control::setValue(float value)
+{
+    if(!m_animation)
+        return;
+
+    auto anim = (ControlAnimationImpl*) m_animation;
+    m_position = anim->valueToPosition(value);
+}
+
+
+float Widget_Control::value() const
+{
+    if(!m_animation)
+        return 0.0f;
+
+    auto anim = (ControlAnimationImpl*) m_animation;
+    return anim->positionToValue(m_position);
+}
+
+
+void Widget_Control::onValueChanged(void (*callback)(Widget_Control*, void*), void* data)
+{
+    if(callback)
+        m_on_value_changed = callback;
+    else
+        m_on_value_changed = on_value_changed_stub;
+    m_on_value_changed_data = data;
 }
 
 
@@ -360,6 +411,7 @@ void Widget_Control::mouseMoveEvent(MouseMoveEvent* event)
         auto anim = (ControlAnimationImpl*) m_animation;
         m_position = anim->newPosition(m_position, event);
         update();
+        m_on_value_changed(this, m_on_value_changed_data);
     }
 }
 

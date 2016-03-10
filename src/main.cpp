@@ -43,8 +43,21 @@ public:
     {
         auto wc1 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, this);
         wc1->setPosition({100, 100});
+
         auto wc2 = new Widget_Control(ControlType::BipolarRadius,  {50, 50}, this);
         wc2->setPosition({160, 100});
+
+        wc1->onValueChanged([](Widget_Control* control, void* data){
+            auto wc2 = (Widget_Control*) data;
+            wc2->setValue(control->value());
+            wc2->update();
+        }, wc2);
+
+        wc2->onValueChanged([](Widget_Control* control, void* data){
+            auto wc1 = (Widget_Control*) data;
+            wc1->setValue(control->value() * 0.5f);
+            wc1->update();
+        }, wc1);
 
         unsigned char red[4]    = {255, 0, 0, 0};
         unsigned char green[4]  = {0, 255, 0, 0};
