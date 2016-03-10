@@ -89,7 +89,7 @@ int Widget_Button::state()
 }
 
 
-void Widget_Button::pickNextStateLoop()
+void Widget_Button::pickNextState()
 {
     if(!m_animation)
         return;

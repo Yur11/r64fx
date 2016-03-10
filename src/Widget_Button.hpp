@@ -28,7 +28,7 @@ public:
 
     int state();
 
-    void pickNextStateLoop();
+    void pickNextState();
 
 public:
     virtual void reconfigureEvent(ReconfigureEvent* event);

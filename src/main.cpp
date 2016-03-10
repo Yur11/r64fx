@@ -56,7 +56,7 @@ public:
         wb->setPosition({100, 200});
         wb->onClick([](Widget_Button* button, void*){
             cout << "click " << button->state() << "\n";
-            button->pickNextStateLoop();
+            button->pickNextState();
             button->update();
         });
     }
