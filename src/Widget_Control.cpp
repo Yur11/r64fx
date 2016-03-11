@@ -38,10 +38,10 @@ struct ControlAnimationImpl : public ControlAnimation{
 
 struct ControlAnimationEntry{
     ControlType        type;
-    Size<int>          size;
+    int                size;
     ControlAnimation*  animation;
 
-    ControlAnimationEntry(ControlType type, Size<int> size, ControlAnimation* animation)
+    ControlAnimationEntry(ControlType type, int size, ControlAnimation* animation)
     : type(type)
     , size(size)
     , animation(animation)
@@ -265,7 +265,44 @@ struct ControlAnimation_Knob_BipolarSector : public ControlAnimation_Knob{
 };
 
 
-ControlAnimation* newAnimation(ControlType type, Size<int> size)
+
+struct ControlAnimation_Slider : public ControlAnimationImpl{
+    ControlAnimation_Slider()
+    {
+
+    }
+};
+
+
+
+struct ControlAnimation_Slider_Vertical : public ControlAnimation_Slider{
+    ControlAnimation_Slider_Vertical()
+    {
+
+    }
+
+    virtual void repaint(int position, Painter* painter)
+    {
+
+    }
+};
+
+
+struct ControlAnimation_Slider_Horizontal : public ControlAnimation_Slider{
+    ControlAnimation_Slider_Horizontal()
+    {
+
+    }
+
+    virtual void repaint(int position, Painter* painter)
+    {
+
+    }
+};
+
+
+
+ControlAnimation* newAnimation(ControlType type, int size)
 {
     for(auto entry : g_animations)
     {
@@ -280,33 +317,36 @@ ControlAnimation* newAnimation(ControlType type, Size<int> size)
     {
         case ControlType::UnipolarRadius:
         {
-            animation = new(std::nothrow) ControlAnimation_Knob_UnipolarLarge(
-                min(size.width(), size.height())
-            );
+            animation = new(std::nothrow) ControlAnimation_Knob_UnipolarLarge(size);
             break;
         }
 
         case ControlType::BipolarRadius:
         {
-            animation = new(std::nothrow) ControlAnimation_Knob_BipolarLarge(
-                min(size.width(), size.height())
-            );
+            animation = new(std::nothrow) ControlAnimation_Knob_BipolarLarge(size);
             break;
         }
 
         case ControlType::UnipolarSector:
         {
-            animation = new(std::nothrow) ControlAnimation_Knob_UnipolarSector(
-                min(size.width(), size.height())
-            );
+            animation = new(std::nothrow) ControlAnimation_Knob_UnipolarSector(size);
             break;
         }
 
         case ControlType::BipolarSector:
         {
-            animation = new(std::nothrow) ControlAnimation_Knob_BipolarSector(
-                min(size.width(), size.height())
-            );
+            animation = new(std::nothrow) ControlAnimation_Knob_BipolarSector(size);
+            break;
+        }
+
+        case ControlType::VerticalSlider:
+        {
+
+            break;
+        }
+
+        case ControlType::HorizontalSlider:
+        {
             break;
         }
 
@@ -325,12 +365,12 @@ ControlAnimation* newAnimation(ControlType type, Size<int> size)
 }
 
 
-Widget_Control::Widget_Control(ControlType type, Size<int> size, Widget* parent)
+Widget_Control::Widget_Control(ControlType type, int size, Widget* parent)
 : Widget(parent)
 , m_on_value_changed(on_value_changed_stub)
 {
     m_animation = newAnimation(type, size);
-    setSize(size);
+    setSize({size, size});
 }
 
 

@@ -41,10 +41,10 @@ class MyWidget : public Widget_View{
 public:
     MyWidget(Widget* parent = nullptr) : Widget_View(parent)
     {
-        auto wc1 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, this);
+        auto wc1 = new Widget_Control(ControlType::UnipolarRadius, 50, this);
         wc1->setPosition({100, 100});
 
-        auto wc2 = new Widget_Control(ControlType::UnipolarRadius,  {50, 50}, this);
+        auto wc2 = new Widget_Control(ControlType::UnipolarRadius,  50, this);
         wc2->setPosition({160, 160});
 
         wc1->onValueChanged([](Widget_Control* control, void* data){
@@ -175,11 +175,11 @@ private:
         }
 
         auto subcontainer = new Widget_Container(m_container);
-        auto wc1 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, subcontainer);
-        auto wc2 = new Widget_Control(ControlType::UnipolarRadius, {50, 50}, subcontainer);
-        auto wc3 = new Widget_Control(ControlType::UnipolarSector, {50, 50}, subcontainer);
-        auto wc4 = new Widget_Control(ControlType::BipolarSector,  {50, 50}, subcontainer);
-        auto wc5 = new Widget_Control(ControlType::BipolarRadius,  {50, 50}, subcontainer);
+        auto wc1 = new Widget_Control(ControlType::UnipolarRadius, 50, subcontainer);
+        auto wc2 = new Widget_Control(ControlType::UnipolarRadius, 50, subcontainer);
+        auto wc3 = new Widget_Control(ControlType::UnipolarSector, 50, subcontainer);
+        auto wc4 = new Widget_Control(ControlType::BipolarSector,  50, subcontainer);
+        auto wc5 = new Widget_Control(ControlType::BipolarRadius,  50, subcontainer);
         subcontainer->setSpacing(5);
         subcontainer->alignVertically();
 

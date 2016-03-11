@@ -10,8 +10,8 @@ enum class ControlType{
     BipolarRadius,
     UnipolarSector,
     BipolarSector,
-    VerticalFader,
-    HorizontalFader
+    VerticalSlider,
+    HorizontalSlider
 };
 
 
@@ -58,7 +58,7 @@ class Widget_Control : public Widget{
     void*              m_on_value_changed_data = nullptr;
 
 public:
-    Widget_Control(ControlType type, Size<int> size, Widget* parent = nullptr);
+    Widget_Control(ControlType type, int size, Widget* parent = nullptr);
 
     ~Widget_Control();
 
