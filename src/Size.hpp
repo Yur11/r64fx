@@ -7,9 +7,14 @@ template<typename T> class Size{
     T mw, mh;
     
 public:
-    Size<T>(T w = T(), T h = T()) 
+    Size<T>(T w, T h)
     : mw(w)
     , mh(h)
+    {}
+
+    Size<T>()
+    : mw(T())
+    , mh(T())
     {}
     
     inline void setWidth(T width) { mw = width; }
