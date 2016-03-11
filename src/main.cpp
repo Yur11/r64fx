@@ -41,37 +41,37 @@ class MyWidget : public Widget_View{
 public:
     MyWidget(Widget* parent = nullptr) : Widget_View(parent)
     {
-        auto wc1 = new Widget_Control(ControlType::UnipolarRadius, 50, this);
-        wc1->setPosition({100, 100});
-
-        auto wc2 = new Widget_Control(ControlType::UnipolarRadius,  50, this);
-        wc2->setPosition({160, 160});
-
-        wc1->onValueChanged([](Widget_Control* control, void* data){
-            auto wc2 = (Widget_Control*) data;
-            wc2->setValue(control->value());
-            wc2->update();
-        }, wc2);
-
-        wc2->onValueChanged([](Widget_Control* control, void* data){
-            auto wc1 = (Widget_Control*) data;
-            wc1->setValue(control->value());
-            wc1->update();
-        }, wc1);
-
-        unsigned char red[4]    = {255, 0, 0, 0};
-        unsigned char green[4]  = {0, 255, 0, 0};
-        unsigned char blue[4]   = {0, 0, 255, 0};
-        unsigned char* colors[3] = {red, green, blue};
-        m_animation = new_button_animation(20, 20, colors, 3);
-
-        auto wb = new Widget_Button(m_animation, this);
-        wb->setPosition({100, 200});
-        wb->onClick([](Widget_Button* button, void*){
-            cout << "click " << button->state() << "\n";
-            button->pickNextState();
-            button->update();
-        });
+//         auto wc1 = new Widget_Control(ControlType::UnipolarRadius, 50, this);
+//         wc1->setPosition({100, 100});
+//
+//         auto wc2 = new Widget_Control(ControlType::UnipolarRadius,  50, this);
+//         wc2->setPosition({160, 160});
+//
+//         wc1->onValueChanged([](Widget_Control* control, void* data){
+//             auto wc2 = (Widget_Control*) data;
+//             wc2->setValue(control->value());
+//             wc2->update();
+//         }, wc2);
+//
+//         wc2->onValueChanged([](Widget_Control* control, void* data){
+//             auto wc1 = (Widget_Control*) data;
+//             wc1->setValue(control->value());
+//             wc1->update();
+//         }, wc1);
+//
+//         unsigned char red[4]    = {255, 0, 0, 0};
+//         unsigned char green[4]  = {0, 255, 0, 0};
+//         unsigned char blue[4]   = {0, 0, 255, 0};
+//         unsigned char* colors[3] = {red, green, blue};
+//         m_animation = new_button_animation(20, 20, colors, 3);
+//
+//         auto wb = new Widget_Button(m_animation, this);
+//         wb->setPosition({100, 200});
+//         wb->onClick([](Widget_Button* button, void*){
+//             cout << "click " << button->state() << "\n";
+//             button->pickNextState();
+//             button->update();
+//         });
     }
 
     ~MyWidget()
@@ -93,7 +93,13 @@ public:
         );
         if(r.width() > 0 && r.height() > 0)
         {
-            fill(&m_Image, fg, r);
+//             fill(&m_Image, fg, r);
+            draw_triangle(
+                &m_Image, fg,
+                Point<float>(10.0f, 10.0f) + offset().to<float>(),
+                Point<float>(80.0f, 70.0f) + offset().to<float>(),
+                Point<float>(50.0f, 90.0f) + offset().to<float>()
+            );
         }
 
         auto painter = event->painter();

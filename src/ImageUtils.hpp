@@ -11,6 +11,8 @@ void fill(Image* dst, unsigned char* components, Rect<int> rect);
 
 void fill(Image* dst, unsigned char* components);
 
+void fill(Image* dst, unsigned char value);
+
 void fill(Image* dst, int component, unsigned char value, Rect<int> rect);
 
 void fill(Image* dst, int component, unsigned char value);
@@ -49,6 +51,15 @@ void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b,
 
 
 void draw_radius(Image* dst, unsigned char* color, Point<float> center, float angle, float outer, float inner, float thickness);
+
+
+enum class DrawStyle{
+    Aliased,
+    Stroke,
+    Fill
+};
+
+void draw_triangle(Image* dst, unsigned char* color, Point<float> a, Point<float> b, Point<float> c);
 
 }//namespace r64fx
 

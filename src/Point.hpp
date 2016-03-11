@@ -70,6 +70,11 @@ template<typename T> struct Point{
     
     inline bool operator==(const Point<T> &other) { return this->x() == other.x() && this->y() == other.y(); }
     inline bool operator!=(const Point<T> &other) { return this->x() != other.x() || this->y() != other.y(); }
+
+    template<typename OtherT> Point<OtherT> to() const
+    {
+        return Point<OtherT>(OtherT(x()), OtherT(y()));
+    }
 };
 
 

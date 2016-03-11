@@ -267,6 +267,9 @@ struct ControlAnimation_Knob_BipolarSector : public ControlAnimation_Knob{
 
 
 struct ControlAnimation_Slider : public ControlAnimationImpl{
+    Image base_image;
+    Image handle_image;
+
     ControlAnimation_Slider()
     {
 
@@ -276,8 +279,11 @@ struct ControlAnimation_Slider : public ControlAnimationImpl{
 
 
 struct ControlAnimation_Slider_Vertical : public ControlAnimation_Slider{
-    ControlAnimation_Slider_Vertical()
+    ControlAnimation_Slider_Vertical(int size)
     {
+        base_image.load(size, 5, 1);
+        fill(&base_image, 255);
+
 
     }
 
@@ -289,7 +295,7 @@ struct ControlAnimation_Slider_Vertical : public ControlAnimation_Slider{
 
 
 struct ControlAnimation_Slider_Horizontal : public ControlAnimation_Slider{
-    ControlAnimation_Slider_Horizontal()
+    ControlAnimation_Slider_Horizontal(int size)
     {
 
     }
@@ -341,12 +347,13 @@ ControlAnimation* newAnimation(ControlType type, int size)
 
         case ControlType::VerticalSlider:
         {
-
+            animation = new(std::nothrow) ControlAnimation_Slider_Vertical(size);
             break;
         }
 
         case ControlType::HorizontalSlider:
         {
+            animation = new(std::nothrow) ControlAnimation_Slider_Horizontal(size);
             break;
         }
 
