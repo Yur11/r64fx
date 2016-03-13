@@ -667,15 +667,86 @@ void draw_triangle(Image* dst, unsigned char* color, Point<float> a, Point<float
         }
         else if(leftmost == bottommost)
         {
+            p1 = PredSlope(
+                topmost.x() - leftmost.x(),
+                leftmost.y() - topmost.y(),
+                leftmost.x(),
+                leftmost.y(),
+                +1.0f
+            );
+            p1.slope = -p1.slope;
 
+            p2 = PredSlope(
+                rightmost.x() - leftmost.x(),
+                leftmost.y() - rightmost.y(),
+                rightmost.x(),
+                rightmost.y(),
+                -1.0f
+            );
+            p2.slope = -p2.slope;
+
+            p3 = PredSlope(
+                rightmost.x() - topmost.x(),
+                rightmost.y() - topmost.y(),
+                topmost.x(),
+                topmost.y(),
+                +1.0f
+            );
         }
         else if(rightmost == topmost)
         {
+            p1 = PredSlope(
+                topmost.x() - leftmost.x(),
+                leftmost.y() - topmost.y(),
+                leftmost.x(),
+                leftmost.y(),
+                +1.0f
+            );
+            p1.slope = -p1.slope;
 
+            p2 = PredSlope(
+                topmost.x() - bottommost.x(),
+                bottommost.y() - topmost.y(),
+                bottommost.x(),
+                bottommost.y(),
+                 -1.0f
+            );
+            p2.slope = -p2.slope;
+
+            p3 = PredSlope(
+                bottommost.x() - leftmost.x(),
+                bottommost.y() - leftmost.y(),
+                leftmost.x(),
+                leftmost.y(),
+                -1.0f
+            );
         }
         else//(rightmost == bottommost)
         {
+            p1 = PredSlope(
+                topmost.x() - leftmost.x(),
+                leftmost.y() - topmost.y(),
+                topmost.x(),
+                topmost.y(),
+                +1.0f
+            );
+            p1.slope = -p1.slope;
 
+            p2 = PredSlope(
+                rightmost.x() - leftmost.x(),
+                rightmost.y() - leftmost.y(),
+                leftmost.x(),
+                leftmost.y(),
+                -1.0f
+            );
+
+            p3 = PredSlope(
+                rightmost.x() - topmost.x(),
+                rightmost.y() - topmost.y(),
+                topmost.x(),
+                topmost.y(),
+                +1.0f
+            );
         }
 
         Pred<PredSlope, PredSlope, PredSlope> p(p1, p2, p3);
@@ -688,9 +759,9 @@ void draw_triangle(Image* dst, unsigned char* color, Point<float> a, Point<float
         ), p);
     }
 
-    draw_line(dst, color, a, b, 1);
-    draw_line(dst, color, b, c, 1);
-    draw_line(dst, color, a, c, 1);
+//     draw_line(dst, color, a, b, 1);
+//     draw_line(dst, color, b, c, 1);
+//     draw_line(dst, color, a, c, 1);
 }
 
 }//namespace r64fx
