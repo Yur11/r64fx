@@ -56,6 +56,7 @@ set(LIBS
     freetype
     sndfile
     jack
+    pthread
 )
 
 target_link_libraries(r64x ${LIBS})

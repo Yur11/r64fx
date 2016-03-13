@@ -166,6 +166,8 @@ class MyProgram : public Program{
     Font*   m_Font = nullptr;
     Widget_Container* m_container = nullptr;
     AudioDriver* m_driver = nullptr;
+    AudioIOPort* m_input = nullptr;
+    AudioIOPort* m_output = nullptr;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -211,11 +213,37 @@ private:
         if(m_driver)
         {
             m_driver->enable();
+            m_input   = m_driver->newAudioInputPort("in");
+            m_output  = m_driver->newAudioOutputPort("out");
+
+            if(m_input && m_input->isGood() && m_output && m_output->isGood())
+            {
+                wc1->onValueChanged([](Widget_Control* control, void* data){
+                    auto self = (MyProgram*) data;
+                    self->wc1Changed(control->value());
+                }, this);
+            }
         }
         else
         {
             cerr << "No driver!\n";
         }
+    }
+
+    void wc1Changed(float value)
+    {
+        cout << value << "\n";
+        while(!m_output->tryLock())
+        {
+            usleep(50);
+        }
+        float* sample = m_output->samples();
+        int threshold = (m_driver->bufferSize() - 1) * value + 1;
+        for(int i=0; i<m_driver->bufferSize(); i++)
+        {
+            sample[i] = (i<threshold ? 1.0f : -1.0f);
+        }
+        m_output->unlock();
     }
     
     virtual void cleanup()
