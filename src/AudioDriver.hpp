@@ -1,17 +1,13 @@
 #ifndef R64FX_AUDIO_DRIVER_HPP
 #define R64FX_AUDIO_DRIVER_HPP
 
+#include "Mutex.hpp"
+
 namespace r64fx{
 
-class AudioIOPort{
+class AudioIOPort : public Mutex{
 public:
     virtual float* samples() = 0;
-
-    virtual void lock() = 0;
-
-    virtual bool tryLock() = 0;
-
-    virtual void unlock() = 0;
 
     virtual bool isInput() = 0;
 
@@ -19,7 +15,12 @@ public:
 };
 
 
-class AudioDriver{
+class MidiIOPort : public Mutex{
+    virtual int eventCount() = 0;
+};
+
+
+class AudioDriver : public Mutex{
 public:
     enum class Type{
         Jack

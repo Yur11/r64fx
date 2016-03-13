@@ -1,6 +1,5 @@
 #include "AudioDriver.hpp"
 #include <jack/jack.h>
-#include <pthread.h>
 #include <cstring>
 #include <new>
 #include <vector>
@@ -13,7 +12,6 @@ namespace r64fx{
 struct AudioIOPort_Jack : public AudioIOPort{
     float*           buffer = nullptr;
     jack_port_t*     jack_port = nullptr;
-    pthread_mutex_t  m_mutex = PTHREAD_MUTEX_INITIALIZER;
     bool             is_input = false;
     int              attempt_count = 0;
 
@@ -55,21 +53,6 @@ struct AudioIOPort_Jack : public AudioIOPort{
     virtual float* samples()
     {
         return buffer;
-    }
-
-    virtual void lock()
-    {
-        pthread_mutex_lock(&m_mutex);
-    }
-
-    virtual bool tryLock()
-    {
-        return pthread_mutex_trylock(&m_mutex) == 0;
-    }
-
-    virtual void unlock()
-    {
-        pthread_mutex_unlock(&m_mutex);
     }
 
     virtual bool isInput()

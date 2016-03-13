@@ -25,6 +25,7 @@ set(SRC
     Keyboard.cpp
     KeyboardModifiers.cpp
     Mouse.cpp
+    Mutex.cpp
     Painter.cpp
     Program.cpp
     SignalData.cpp
