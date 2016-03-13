@@ -18,6 +18,7 @@
 #include "Widget_ScrollBar.hpp"
 #include "ImageAnimation.hpp"
 #include "KeyEvent.hpp"
+#include "AudioDriver.hpp"
 
 using namespace std;
 using namespace r64fx;
@@ -164,6 +165,7 @@ public:
 class MyProgram : public Program{
     Font*   m_Font = nullptr;
     Widget_Container* m_container = nullptr;
+    AudioDriver* m_driver = nullptr;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -204,6 +206,16 @@ private:
         m_container->setSpacing(5);
         m_container->alignHorizontally();
         m_container->show();
+
+        m_driver = AudioDriver::newInstance();
+        if(m_driver)
+        {
+            m_driver->enable();
+        }
+        else
+        {
+            cerr << "No driver!\n";
+        }
     }
     
     virtual void cleanup()
@@ -214,6 +226,9 @@ private:
 
         if(m_container)
             delete m_container;
+
+        if(m_driver)
+            AudioDriver::deleteInstance(m_driver);
     }
 };
 
