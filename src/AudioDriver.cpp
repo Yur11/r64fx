@@ -1,5 +1,6 @@
 #include "AudioDriver.hpp"
 #include <jack/jack.h>
+#include <jack/midiport.h>
 #include <cstring>
 #include <new>
 #include <vector>
@@ -9,46 +10,17 @@ using namespace std;
 
 namespace r64fx{
 
-struct AudioIOPort_Jack : public AudioIOPort{
-    float*           buffer = nullptr;
-    jack_port_t*     jack_port = nullptr;
-    bool             is_input = false;
-    int              attempt_count = 0;
+struct IOPortJack{
+    jack_port_t* jack_port     = nullptr;
+    bool         is_input      = false;
+    int          attempt_count = 0;
+};
 
-    AudioIOPort_Jack(jack_client_t* jack_client, const char* name, int nframes, bool is_input)
-    : is_input(is_input)
-    {
-        jack_port = jack_port_register(
-            jack_client,
-            name,
-            JACK_DEFAULT_AUDIO_TYPE,
-            is_input ? JackPortIsInput : JackPortIsOutput,
-            0
-        );
-        if(!jack_port)
-        {
-            cerr << "Failed to create jack port \"" << name << "\"!\n";
-            return;
-        }
 
-        buffer = new(std::nothrow) float[nframes];
-        if(!buffer)
-        {
-            jack_port_unregister(jack_client, jack_port);
-            return;
-        }
+struct AudioIOPort_Jack : public AudioIOPort, public IOPortJack{
+    float* buffer = nullptr;
 
-        for(int i=0; i<nframes; i++)
-        {
-            buffer[i] = 0.0f;
-        }
-    }
-
-    virtual ~AudioIOPort_Jack()
-    {
-        if(buffer)
-            delete[] buffer;
-    }
+    virtual ~AudioIOPort_Jack(){}
 
     virtual float* samples()
     {
@@ -67,9 +39,33 @@ struct AudioIOPort_Jack : public AudioIOPort{
 };
 
 
+namespace{
+    constexpr int max_midi_event_count = 16;
+};
+
+struct MidiIOPort_Jack : public MidiIOPort, public IOPortJack{
+    MidiEvent events[max_midi_event_count];
+    int event_count = 0;
+
+    virtual ~MidiIOPort_Jack(){}
+
+    virtual MidiEvent* event(int i)
+    {
+        return events + i;
+    }
+
+    virtual int eventCount()
+    {
+        return event_count;
+    }
+};
+
+
 struct AudioDriver_Jack : public AudioDriver{
     jack_client_t* m_jack_client = nullptr;
     vector<AudioIOPort_Jack*> m_audio_ports;
+    vector<MidiIOPort_Jack*>  m_midi_ports;
+
 
     AudioDriver_Jack()
     {
@@ -81,16 +77,65 @@ struct AudioDriver_Jack : public AudioDriver{
         {
             auto self = (AudioDriver_Jack*) arg;
             auto &audio_ports = self->m_audio_ports;
+            auto &midi_ports  = self->m_midi_ports;
 
             for(auto port : audio_ports)
             {
                 port->attempt_count = 0;
             }
 
+            for(auto port : midi_ports)
+            {
+                port->attempt_count = 0;
+            }
+
             static const int max_attemt_count = 2;
-            int ports_to_process = audio_ports.size();
-            int ports_skipped = 0;
-            while(ports_to_process)
+
+            int midi_ports_to_process  = midi_ports.size();
+            int midi_ports_skipped     = 0;
+            while(midi_ports_to_process)
+            {
+                for(auto port : midi_ports)
+                {
+                    if(port->tryLock())
+                    {
+                        void* port_buff = jack_port_get_buffer(
+                            port->jack_port, nframes
+                        );
+
+                        if(port->is_input)
+                        {
+                            int nevents = jack_midi_get_event_count(port_buff);
+                            if(nevents > 0)
+                            {
+                                cout << nevents << "\n";
+                            }
+                        }
+                        else
+                        {
+
+                        }
+                        port->unlock();
+                        midi_ports_to_process--;
+                    }
+                    else
+                    {
+                        if(port->attempt_count >= max_attemt_count)
+                        {
+                            midi_ports_skipped++;
+                            midi_ports_to_process--;
+                        }
+                        else
+                        {
+                            port->attempt_count++;
+                        }
+                    }
+                }
+            }
+
+            int audio_ports_to_process = audio_ports.size();
+            int audio_ports_skipped    = 0;
+            while(audio_ports_to_process)
             {
                 for(auto port : audio_ports)
                 {
@@ -110,14 +155,14 @@ struct AudioDriver_Jack : public AudioDriver{
                             memcpy(port_buff, port->buffer, nframes * sizeof(float));
                         }
                         port->unlock();
-                        ports_to_process--;
+                        audio_ports_to_process--;
                     }
                     else
                     {
                         if(port->attempt_count >= max_attemt_count)
                         {
-                            ports_skipped++;
-                            ports_to_process--;
+                            audio_ports_skipped++;
+                            audio_ports_to_process--;
                         }
                         else
                         {
@@ -127,10 +172,16 @@ struct AudioDriver_Jack : public AudioDriver{
                 }
             }
 
-            if(ports_skipped)
+            if(midi_ports_skipped)
             {
-                cout << "Skipped " << ports_skipped << " !\n";
+                cout << "Skipped Midi Ports: " << midi_ports_skipped << "!\n";
             }
+
+            if(audio_ports_skipped)
+            {
+                cout << "Skipped Audio Ports: " << audio_ports_skipped << " !\n";
+            }
+
 
             return 0;
         }, this) != 0)
@@ -139,55 +190,96 @@ struct AudioDriver_Jack : public AudioDriver{
         }
     }
 
+
     virtual ~AudioDriver_Jack()
     {
         if(m_jack_client)
             jack_client_close(m_jack_client);
     }
 
+
     virtual bool isGood()
     {
         return m_jack_client != nullptr;
     }
+
 
     virtual void enable()
     {
         jack_activate(m_jack_client);
     }
 
+
     virtual void disable()
     {
         jack_deactivate(m_jack_client);
     }
+
 
     virtual int bufferSize()
     {
         return jack_get_buffer_size(m_jack_client);
     }
 
+
     virtual int sampleRate()
     {
         return jack_get_sample_rate(m_jack_client);
     }
+
 
     virtual AudioIOPort* newAudioInputPort(const char* name)
     {
         return newAudioPort(name, true);
     }
 
+
     virtual AudioIOPort* newAudioOutputPort(const char* name)
     {
         return newAudioPort(name, false);
     }
 
+
     AudioIOPort* newAudioPort(const char* name, bool is_input)
     {
-        auto port = new(std::nothrow) AudioIOPort_Jack(m_jack_client, name, bufferSize(), is_input);
+        auto port = new(std::nothrow) AudioIOPort_Jack;
         if(!port)
             return port;
+
+        port->jack_port = jack_port_register(
+            m_jack_client,
+            name,
+            JACK_DEFAULT_AUDIO_TYPE,
+            is_input ? JackPortIsInput : JackPortIsOutput,
+            0
+        );
+        if(!port->jack_port)
+        {
+            cerr << "Failed to create jack port \"" << name << "\"!\n";
+            delete port;
+            return nullptr;
+        }
+
+        port->buffer = new(std::nothrow) float[bufferSize()];
+        if(!port->buffer)
+        {
+            cerr << "Failed to create buffer for port \"" << name << "\"!\n";
+            jack_port_unregister(m_jack_client, port->jack_port);
+            delete port;
+            return nullptr;
+        }
+
+        for(int i=0; i<bufferSize(); i++)
+        {
+            port->buffer[i] = 0.0f;
+        }
+
+        port->is_input = is_input;
+
         m_audio_ports.push_back(port);
         return port;
     }
+
 
     virtual void deleteAudioPort(AudioIOPort* port)
     {
@@ -195,8 +287,67 @@ struct AudioDriver_Jack : public AudioDriver{
         while(it != m_audio_ports.end() || *it != port) it++;
         if(it != m_audio_ports.end())
         {
-            delete *it;
             m_audio_ports.erase(it);
+            AudioIOPort_Jack* port = *it;
+            if(port->buffer)
+                delete[] port->buffer;
+            if(port->jack_port)
+                jack_port_unregister(m_jack_client, port->jack_port);
+            delete port;
+        }
+    }
+
+
+    virtual MidiIOPort* newMidiInputPort(const char* name)
+    {
+        return newMidiPort(name, true);
+    }
+
+
+    virtual MidiIOPort* newMidiOutputPort(const char* name)
+    {
+        return newMidiPort(name, false);
+    }
+
+
+    MidiIOPort* newMidiPort(const char* name, bool is_input)
+    {
+        auto port = new(std::nothrow) MidiIOPort_Jack;
+        if(!port)
+            return port;
+
+        port->jack_port = jack_port_register(
+            m_jack_client,
+            name,
+            JACK_DEFAULT_MIDI_TYPE,
+            is_input ? JackPortIsInput : JackPortIsOutput,
+            0
+        );
+        if(!port->jack_port)
+        {
+            cerr << "Failed to create jack port \"" << name << "\"!\n";
+            delete port;
+            return nullptr;
+        }
+
+        port->is_input = is_input;
+
+        m_midi_ports.push_back(port);
+        return port;
+    }
+
+
+    virtual void deleteMidiPort(MidiIOPort* port)
+    {
+        auto it = m_midi_ports.begin();
+        while(it != m_midi_ports.end() || *it != port) it++;
+        if(it != m_midi_ports.end())
+        {
+            m_midi_ports.erase(it);
+            MidiIOPort_Jack* port = *it;
+            if(port->jack_port)
+                jack_port_unregister(m_jack_client, port->jack_port);
+            delete *it;
         }
     }
 };

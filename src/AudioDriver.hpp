@@ -15,7 +15,15 @@ public:
 };
 
 
+struct MidiEvent{
+    unsigned char  byte[3] = {0, 0, 0};
+    unsigned char  size    = 0;
+    unsigned short time    = 0;
+};
+
 class MidiIOPort : public Mutex{
+    virtual MidiEvent* event(int i) = 0;
+
     virtual int eventCount() = 0;
 };
 
@@ -43,6 +51,12 @@ public:
     virtual AudioIOPort* newAudioOutputPort(const char* name) = 0;
 
     virtual void deleteAudioPort(AudioIOPort* port) = 0;
+
+    virtual MidiIOPort* newMidiInputPort(const char* name) = 0;
+
+    virtual MidiIOPort* newMidiOutputPort(const char* name) = 0;
+
+    virtual void deleteMidiPort(MidiIOPort* port) = 0;
 
     static AudioDriver* newInstance(AudioDriver::Type type = AudioDriver::Type::Jack);
 

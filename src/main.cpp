@@ -166,6 +166,8 @@ class MyProgram : public Program{
     Font*   m_Font = nullptr;
     Widget_Container* m_container = nullptr;
     AudioDriver* m_driver = nullptr;
+    MidiIOPort*  m_midi_input = nullptr;
+    MidiIOPort*  m_midi_output = nullptr;
     AudioIOPort* m_input = nullptr;
     AudioIOPort* m_output = nullptr;
 
@@ -212,7 +214,14 @@ private:
         m_driver = AudioDriver::newInstance();
         if(m_driver)
         {
-            m_driver->enable();
+            m_midi_input   = m_driver->newMidiInputPort("midi_in");
+            m_midi_output  = m_driver->newMidiOutputPort("midi_out");
+
+            if(m_midi_input && m_midi_output)
+            {
+                cout << "Got midi ports!\n";
+            }
+
             m_input   = m_driver->newAudioInputPort("in");
             m_output  = m_driver->newAudioOutputPort("out");
 
@@ -223,6 +232,8 @@ private:
                     self->wc1Changed(control->value());
                 }, this);
             }
+
+            m_driver->enable();
         }
         else
         {
