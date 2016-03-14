@@ -26,6 +26,9 @@ public:
     static int runTimers();
 };
 
+
+long current_time();
+
 }//namespace r64fx
 
 #endif//R64FX_TIMER_HPP

@@ -227,13 +227,13 @@ private:
             cerr << "No driver!\n";
         }
 
-        m_timer1.setInterval(200);
+        m_timer1.setInterval(500);
         m_timer1.onTimeout([](Timer* timer, void*){
             cout << "time1\n";
         }, nullptr);
         m_timer1.start();
 
-        m_timer2.setInterval(400);
+        m_timer2.setInterval(1500);
         m_timer2.onTimeout([](Timer* timer, void*){
             cout << "time2\n";
         }, nullptr);

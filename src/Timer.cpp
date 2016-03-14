@@ -83,13 +83,6 @@ Thread* get_thread()
 }
 
 
-long usec()
-{
-    timeval tv;
-    gettimeofday(&tv, nullptr);
-    return tv.tv_usec + tv.tv_sec * 1000 * 1000;
-}
-
 }//namespace
 
 
@@ -133,7 +126,7 @@ void Timer::onTimeout(void (*callback)(Timer* timer, void* data), void* data)
 void Timer::start()
 {
     m_impl->is_running = true;
-    m_impl->wakeup_time = usec();
+    m_impl->wakeup_time = current_time();
 }
 
 
@@ -155,7 +148,7 @@ int Timer::runTimers()
     if(!thread)
         return -1;
 
-    long curr_time = usec();
+    long curr_time = current_time();
 
     long min_time = numeric_limits<long>::max();
     for(auto &timer : thread->timers)
@@ -185,6 +178,14 @@ int Timer::runTimers()
         return numeric_limits<int>::max();
     else
         return time_diff;
+}
+
+
+long current_time()
+{
+    timeval tv;
+    gettimeofday(&tv, nullptr);
+    return tv.tv_usec + tv.tv_sec * 1000 * 1000;
 }
 
 }//namespace r64fx
