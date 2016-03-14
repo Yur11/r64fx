@@ -24,6 +24,7 @@ set(SRC
     ImageUtils.cpp
     Keyboard.cpp
     KeyboardModifiers.cpp
+    Midi.cpp
     Mouse.cpp
     Mutex.cpp
     Painter.cpp
