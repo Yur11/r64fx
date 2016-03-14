@@ -40,7 +40,7 @@ struct AudioIOPort_Jack : public AudioIOPort, public IOPortJack{
 
 
 namespace{
-    constexpr int max_midi_event_count = 16;
+    constexpr int max_midi_event_count = 24;
 };
 
 struct MidiIOPort_Jack : public MidiIOPort, public IOPortJack{
@@ -66,6 +66,8 @@ struct AudioDriver_Jack : public AudioDriver{
     vector<AudioIOPort_Jack*> m_audio_ports;
     vector<MidiIOPort_Jack*>  m_midi_ports;
 
+    unsigned long m_count = 0;
+    Mutex         m_count_mutex;
 
     AudioDriver_Jack()
     {
@@ -73,117 +75,9 @@ struct AudioDriver_Jack : public AudioDriver{
         if(!m_jack_client)
             return;
 
-        if(jack_set_process_callback(m_jack_client, [](jack_nframes_t nframes, void* arg) -> int
-        {
+        if(jack_set_process_callback(m_jack_client, [](jack_nframes_t nframes, void* arg) -> int {
             auto self = (AudioDriver_Jack*) arg;
-            auto &audio_ports = self->m_audio_ports;
-            auto &midi_ports  = self->m_midi_ports;
-
-            for(auto port : audio_ports)
-            {
-                port->attempt_count = 0;
-            }
-
-            for(auto port : midi_ports)
-            {
-                port->attempt_count = 0;
-            }
-
-            static const int max_attemt_count = 2;
-
-            int midi_ports_to_process  = midi_ports.size();
-            int midi_ports_skipped     = 0;
-            while(midi_ports_to_process)
-            {
-                for(auto port : midi_ports)
-                {
-                    if(port->tryLock())
-                    {
-                        void* port_buff = jack_port_get_buffer(
-                            port->jack_port, nframes
-                        );
-
-                        if(port->is_input)
-                        {
-                            int nevents = jack_midi_get_event_count(port_buff);
-                            if(nevents > 0)
-                            {
-                                cout << nevents << "\n";
-                            }
-                        }
-                        else
-                        {
-
-                        }
-                        port->unlock();
-                        midi_ports_to_process--;
-                    }
-                    else
-                    {
-                        if(port->attempt_count >= max_attemt_count)
-                        {
-                            midi_ports_skipped++;
-                            midi_ports_to_process--;
-                        }
-                        else
-                        {
-                            port->attempt_count++;
-                        }
-                    }
-                }
-            }
-
-            int audio_ports_to_process = audio_ports.size();
-            int audio_ports_skipped    = 0;
-            while(audio_ports_to_process)
-            {
-                for(auto port : audio_ports)
-                {
-                    if(port->tryLock())
-                    {
-                        void* port_buff = jack_port_get_buffer(
-                            port->jack_port,
-                            nframes
-                        );
-
-                        if(port->is_input)
-                        {
-                            memcpy(port->buffer, port_buff, nframes * sizeof(float));
-                        }
-                        else
-                        {
-                            memcpy(port_buff, port->buffer, nframes * sizeof(float));
-                        }
-                        port->unlock();
-                        audio_ports_to_process--;
-                    }
-                    else
-                    {
-                        if(port->attempt_count >= max_attemt_count)
-                        {
-                            audio_ports_skipped++;
-                            audio_ports_to_process--;
-                        }
-                        else
-                        {
-                            port->attempt_count++;
-                        }
-                    }
-                }
-            }
-
-            if(midi_ports_skipped)
-            {
-                cout << "Skipped Midi Ports: " << midi_ports_skipped << "!\n";
-            }
-
-            if(audio_ports_skipped)
-            {
-                cout << "Skipped Audio Ports: " << audio_ports_skipped << " !\n";
-            }
-
-
-            return 0;
+            return self->process(nframes);
         }, this) != 0)
         {
             jack_client_close(m_jack_client);
@@ -191,10 +85,154 @@ struct AudioDriver_Jack : public AudioDriver{
     }
 
 
+    int process(int nframes)
+    {
+        for(auto port : m_audio_ports)
+        {
+            port->attempt_count = 0;
+        }
+
+        for(auto port : m_midi_ports)
+        {
+            port->attempt_count = 0;
+            port->event_count = 0;
+        }
+
+        static const int max_attemt_count = 2;
+
+        int midi_ports_to_process  = m_midi_ports.size();
+        int midi_ports_skipped     = 0;
+        while(midi_ports_to_process)
+        {
+            for(auto port : m_midi_ports)
+            {
+                if(port->tryLock())
+                {
+                    void* port_buff = jack_port_get_buffer(
+                        port->jack_port, nframes
+                    );
+
+                    if(port->is_input)
+                    {
+                        int nevents = jack_midi_get_event_count(port_buff);
+                        for(int i=0; i<nevents; i++)
+                        {
+                            jack_midi_event_t event;
+                            jack_midi_event_get(&event, port_buff, i);
+
+                            if(event.size <= 3)
+                            {
+                                MidiEvent* out_event = nullptr;
+                                if(port->event_count < max_midi_event_count)
+                                {
+                                    out_event = port->event(port->event_count);
+                                }
+                                else
+                                {
+                                    out_event = port->event(max_midi_event_count - 1);
+                                }
+
+
+                                for(int j=0; j<(int)event.size; j++)
+                                {
+                                    out_event->byte[j] = event.buffer[j];
+                                }
+                                out_event->size = event.size;
+                                out_event->time = event.time;
+                            }
+                        }
+                    }
+                    else
+                    {
+
+                    }
+                    port->unlock();
+                    midi_ports_to_process--;
+                }
+                else
+                {
+                    if(port->attempt_count >= max_attemt_count)
+                    {
+                        midi_ports_skipped++;
+                        midi_ports_to_process--;
+                    }
+                    else
+                    {
+                        port->attempt_count++;
+                    }
+                }
+            }
+        }
+
+        int audio_ports_to_process = m_audio_ports.size();
+        int audio_ports_skipped    = 0;
+        while(audio_ports_to_process)
+        {
+            for(auto port : m_audio_ports)
+            {
+                if(port->tryLock())
+                {
+                    void* port_buff = jack_port_get_buffer(
+                        port->jack_port,
+                        nframes
+                    );
+
+                    if(port->is_input)
+                    {
+                        memcpy(port->buffer, port_buff, nframes * sizeof(float));
+                    }
+                    else
+                    {
+                        memcpy(port_buff, port->buffer, nframes * sizeof(float));
+                    }
+                    port->unlock();
+                    audio_ports_to_process--;
+                }
+                else
+                {
+                    if(port->attempt_count >= max_attemt_count)
+                    {
+                        audio_ports_skipped++;
+                        audio_ports_to_process--;
+                    }
+                    else
+                    {
+                        port->attempt_count++;
+                    }
+                }
+            }
+        }
+
+        if(midi_ports_skipped)
+        {
+            cout << "Skipped Midi Ports: " << midi_ports_skipped << "!\n";
+        }
+
+        if(audio_ports_skipped)
+        {
+            cout << "Skipped Audio Ports: " << audio_ports_skipped << " !\n";
+        }
+
+        m_count_mutex.lock();
+        m_count++;
+        m_count_mutex.unlock();
+
+        return 0;
+    }
+
+
     virtual ~AudioDriver_Jack()
     {
         if(m_jack_client)
             jack_client_close(m_jack_client);
+    }
+
+
+    virtual unsigned long count()
+    {
+        m_count_mutex.lock();
+        return m_count;
+        m_count_mutex.unlock();
     }
 
 

@@ -18,7 +18,7 @@ public:
 struct MidiEvent{
     unsigned char  byte[3] = {0, 0, 0};
     unsigned char  size    = 0;
-    unsigned short time    = 0;
+    int            time    = 0;
 };
 
 class MidiIOPort : public Mutex{
@@ -37,6 +37,8 @@ public:
     virtual ~AudioDriver() {};
 
     virtual bool isGood() = 0;
+
+    virtual unsigned long count() = 0;
 
     virtual void enable() = 0;
 

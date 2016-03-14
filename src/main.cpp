@@ -23,16 +23,16 @@
 using namespace std;
 using namespace r64fx;
 
-float normalize_angle(float angle)
-{
-    while(angle > (2.0f * M_PI))
-        angle -= (2.0f * M_PI);
-
-    while(angle < 0.0f)
-        angle += (2.0f * M_PI);
-
-    return angle;
-}
+// float normalize_angle(float angle)
+// {
+//     while(angle > (2.0f * M_PI))
+//         angle -= (2.0f * M_PI);
+//
+//     while(angle < 0.0f)
+//         angle += (2.0f * M_PI);
+//
+//     return angle;
+// }
 
 
 class MyWidget : public Widget_View{
