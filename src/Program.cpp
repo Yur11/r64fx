@@ -1,5 +1,6 @@
 #include "Program.hpp"
 #include "Widget.hpp"
+#include "Timer.hpp"
 
 #include <iostream>
 #include <unistd.h>
@@ -39,7 +40,10 @@ int Program::exec()
     while(program_should_be_running)
     {
         Widget::processEvents();
-        usleep(100);
+        long sleep_time = Timer::runTimers();
+        if(sleep_time <= 0 || sleep_time > 100)
+            sleep_time = 100;
+        usleep(sleep_time);
     }
     
     g_program->cleanup();

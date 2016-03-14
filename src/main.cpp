@@ -19,21 +19,10 @@
 #include "ImageAnimation.hpp"
 #include "KeyEvent.hpp"
 #include "AudioDriver.hpp"
+#include "Timer.hpp"
 
 using namespace std;
 using namespace r64fx;
-
-// float normalize_angle(float angle)
-// {
-//     while(angle > (2.0f * M_PI))
-//         angle -= (2.0f * M_PI);
-//
-//     while(angle < 0.0f)
-//         angle += (2.0f * M_PI);
-//
-//     return angle;
-// }
-
 
 class MyWidget : public Widget_View{
     Image m_Image;
@@ -171,6 +160,9 @@ class MyProgram : public Program{
     AudioIOPort* m_input = nullptr;
     AudioIOPort* m_output = nullptr;
 
+    Timer m_timer1;
+    Timer m_timer2;
+
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
     
@@ -217,11 +209,6 @@ private:
             m_midi_input   = m_driver->newMidiInputPort("midi_in");
             m_midi_output  = m_driver->newMidiOutputPort("midi_out");
 
-            if(m_midi_input && m_midi_output)
-            {
-                cout << "Got midi ports!\n";
-            }
-
             m_input   = m_driver->newAudioInputPort("in");
             m_output  = m_driver->newAudioOutputPort("out");
 
@@ -239,6 +226,18 @@ private:
         {
             cerr << "No driver!\n";
         }
+
+        m_timer1.setInterval(200);
+        m_timer1.onTimeout([](Timer* timer, void*){
+            cout << "time1\n";
+        }, nullptr);
+        m_timer1.start();
+
+        m_timer2.setInterval(400);
+        m_timer2.onTimeout([](Timer* timer, void*){
+            cout << "time2\n";
+        }, nullptr);
+        m_timer2.start();
     }
 
     void wc1Changed(float value)

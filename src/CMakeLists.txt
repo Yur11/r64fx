@@ -34,6 +34,7 @@ set(SRC
     Shader_rgba_tex.cpp
     StringUtils.cpp
     TextPainter.cpp
+    Timer.cpp
     UndoRedoChain.cpp
     Widget.cpp
     Widget_Button.cpp
