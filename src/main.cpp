@@ -209,12 +209,40 @@ private:
 //             m_output  = m_driver->newAudioOutputPort("out");
 
             m_driver->enable();
+
+            m_timer1.onTimeout([](Timer*, void* arg){ ((MyProgram*)arg)->onTimer1(); }, this);
+            int interval = (float(m_driver->bufferSize()) / float(m_driver->sampleRate())) * 1000 * 1000 - 100;
+            if(interval < 100)
+                interval = 100;
+            cout << "interval: " << interval << "\n";
+            m_timer1.setInterval(interval);
+            m_timer1.start();
         }
         else
         {
             cerr << "No driver!\n";
         }
+    }
 
+
+    void onTimer1()
+    {
+        static long i = 0;
+        long count = m_driver->count();
+        long diff = i - count;
+        if(diff > 0)
+        {
+            m_timer1.setInterval(
+                m_timer1.interval() + 100
+            );
+        }
+        else if(diff < 0)
+        {
+            m_timer1.setInterval(
+                m_timer1.interval() - 100
+            );
+        }
+        cout << i++ << " --> " << count << " => " << diff << "\n";
     }
 
     

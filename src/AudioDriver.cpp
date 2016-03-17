@@ -63,6 +63,7 @@ int AudioDriverIOPort_Midi::eventCount()
 
 struct AudioDriver_Jack : public AudioDriver{
     jack_client_t* m_jack_client = nullptr;
+    volatile long m_count = 0;
     LinkedList<AudioDriverIOPortPrivate> m_ports;
 
     AudioDriver_Jack()
@@ -87,6 +88,7 @@ struct AudioDriver_Jack : public AudioDriver{
 
     int process(int nframes)
     {
+        m_count++;
         return 0;
     }
 
@@ -128,6 +130,11 @@ struct AudioDriver_Jack : public AudioDriver{
     virtual int sampleRate()
     {
         return jack_get_sample_rate(m_jack_client);
+    }
+
+    virtual long count()
+    {
+        return m_count;
     }
 };
 

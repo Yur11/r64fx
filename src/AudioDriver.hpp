@@ -58,6 +58,8 @@ public:
 
     virtual int sampleRate() = 0;
 
+    virtual long count() = 0;
+
     static AudioDriver* newInstance(AudioDriver::Type type = AudioDriver::Type::Jack);
 
     static void deleteInstance(AudioDriver* driver);
