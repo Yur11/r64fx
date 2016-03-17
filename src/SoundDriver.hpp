@@ -1,5 +1,5 @@
-#ifndef R64FX_AUDIO_DRIVER_HPP
-#define R64FX_AUDIO_DRIVER_HPP
+#ifndef R64FX_SOUND_DRIVER_HPP
+#define R64FX_SOUND_DRIVER_HPP
 
 #include <string>
 #include "Midi.hpp"
@@ -7,7 +7,7 @@
 
 namespace r64fx{
 
-class AudioDriverIOPort{
+class SoundDriverIOPort{
     void* m = nullptr;
 
 public:
@@ -25,13 +25,13 @@ public:
 };
 
 
-class AudioDriverIOPort_Audio : public AudioDriverIOPort{
+class SoundDriverIOPort_Audio : public SoundDriverIOPort{
 public:
     float* buffer() const;
 };
 
 
-class AudioDriverIOPort_Midi : public AudioDriverIOPort{
+class SoundDriverIOPort_Midi : public SoundDriverIOPort{
 public:
     MidiEvent* events() const;
 
@@ -39,14 +39,14 @@ public:
 };
 
 
-class AudioDriver{
+class SoundDriver{
 public:
     enum class Type{
         Bad,
         Jack
     };
 
-    virtual ~AudioDriver() {};
+    virtual ~SoundDriver() {};
 
     virtual bool isGood() = 0;
 
@@ -60,12 +60,12 @@ public:
 
     virtual long count() = 0;
 
-    static AudioDriver* newInstance(AudioDriver::Type type = AudioDriver::Type::Jack);
+    static SoundDriver* newInstance(SoundDriver::Type type = SoundDriver::Type::Jack);
 
-    static void deleteInstance(AudioDriver* driver);
+    static void deleteInstance(SoundDriver* driver);
 };
 
 
 }//namespace r64fx
 
-#endif//R64FX_AUDIO_DRIVER_HPP
+#endif//R64FX_SOUND_DRIVER_HPP

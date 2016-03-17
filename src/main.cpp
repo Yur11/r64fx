@@ -18,7 +18,7 @@
 #include "Widget_ScrollBar.hpp"
 #include "ImageAnimation.hpp"
 #include "KeyEvent.hpp"
-#include "AudioDriver.hpp"
+#include "SoundDriver.hpp"
 #include "Timer.hpp"
 
 using namespace std;
@@ -154,7 +154,7 @@ public:
 class MyProgram : public Program{
     Font*   m_Font = nullptr;
     Widget_Container* m_container = nullptr;
-    AudioDriver* m_driver = nullptr;
+    SoundDriver* m_driver = nullptr;
 
     Timer m_timer1;
     Timer m_timer2;
@@ -199,7 +199,7 @@ private:
         m_container->alignHorizontally();
         m_container->show();
 
-        m_driver = AudioDriver::newInstance();
+        m_driver = SoundDriver::newInstance();
         if(m_driver)
         {
 //             m_midi_input   = m_driver->newMidiInputPort("midi_in");
@@ -256,7 +256,7 @@ private:
             delete m_container;
 
         if(m_driver)
-            AudioDriver::deleteInstance(m_driver);
+            SoundDriver::deleteInstance(m_driver);
     }
 };
 

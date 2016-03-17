@@ -14,7 +14,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/usr/include/freetype2/")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_BUILTIN_FONTS")
 
 set(SRC
-    AudioDriver.cpp
     Clipboard.cpp
     ClipboardEvent.cpp
     Font.cpp
@@ -33,6 +32,7 @@ set(SRC
     Shader.cpp
     Shader_rgba.cpp
     Shader_rgba_tex.cpp
+    SoundDriver.cpp
     StringUtils.cpp
     TextPainter.cpp
     Timer.cpp

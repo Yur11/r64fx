@@ -1,4 +1,4 @@
-#include "AudioDriver.hpp"
+#include "SoundDriver.hpp"
 #include "LinkedList.hpp"
 #include <jack/jack.h>
 #include <jack/midiport.h>
@@ -7,66 +7,66 @@
 #include <vector>
 #include <iostream>
 
-#define m_private ((AudioDriverIOPortPrivate*)m)
+#define m_private ((SoundDriverIOPortPrivate*)m)
 
 using namespace std;
 
 namespace r64fx{
 
 
-struct AudioDriverIOPortPrivate{
+struct SoundDriverIOPortPrivate{
     union PortIface{
 
     } iface;
 
-    AudioDriverIOPort::Type type = AudioDriverIOPort::Type::Bad;
+    SoundDriverIOPort::Type type = SoundDriverIOPort::Type::Bad;
 
     string name = "";
 };
 
 
-AudioDriverIOPort::Type AudioDriverIOPort::type() const
+SoundDriverIOPort::Type SoundDriverIOPort::type() const
 {
     return m_private->type;
 }
 
 
-void AudioDriverIOPort::setName(const std::string &name)
+void SoundDriverIOPort::setName(const std::string &name)
 {
     m_private->name = name;
 }
 
 
-std::string AudioDriverIOPort::name() const
+std::string SoundDriverIOPort::name() const
 {
     return m_private->name;
 }
 
 
-float* AudioDriverIOPort_Audio::buffer() const
+float* SoundDriverIOPort_Audio::buffer() const
 {
     return 0;
 }
 
 
-MidiEvent* AudioDriverIOPort_Midi::events() const
+MidiEvent* SoundDriverIOPort_Midi::events() const
 {
     return nullptr;
 }
 
 
-int AudioDriverIOPort_Midi::eventCount()
+int SoundDriverIOPort_Midi::eventCount()
 {
     return 0;
 }
 
 
-struct AudioDriver_Jack : public AudioDriver{
+struct SoundDriver_Jack : public SoundDriver{
     jack_client_t* m_jack_client = nullptr;
     volatile long m_count = 0;
-    LinkedList<AudioDriverIOPortPrivate> m_ports;
+    LinkedList<SoundDriverIOPortPrivate> m_ports;
 
-    AudioDriver_Jack()
+    SoundDriver_Jack()
     {
         m_jack_client = jack_client_open("r64fx", JackNullOption, nullptr);
         if(!m_jack_client)
@@ -77,7 +77,7 @@ struct AudioDriver_Jack : public AudioDriver{
         });
 
         if(jack_set_process_callback(m_jack_client, [](jack_nframes_t nframes, void* arg) -> int {
-            auto self = (AudioDriver_Jack*) arg;
+            auto self = (SoundDriver_Jack*) arg;
             return self->process(nframes);
         }, this) != 0)
         {
@@ -93,7 +93,7 @@ struct AudioDriver_Jack : public AudioDriver{
     }
 
 
-    virtual ~AudioDriver_Jack()
+    virtual ~SoundDriver_Jack()
     {
         if(m_jack_client)
         {
@@ -139,14 +139,14 @@ struct AudioDriver_Jack : public AudioDriver{
 };
 
 
-AudioDriver* AudioDriver::newInstance(AudioDriver::Type type)
+SoundDriver* SoundDriver::newInstance(SoundDriver::Type type)
 {
-    AudioDriver* driver = nullptr;
+    SoundDriver* driver = nullptr;
     switch(type)
     {
-        case AudioDriver::Type::Jack:
+        case SoundDriver::Type::Jack:
         {
-            driver = new(std::nothrow) AudioDriver_Jack;
+            driver = new(std::nothrow) SoundDriver_Jack;
             break;
         }
 
@@ -165,7 +165,7 @@ AudioDriver* AudioDriver::newInstance(AudioDriver::Type type)
 }
 
 
-void AudioDriver::deleteInstance(AudioDriver* driver)
+void SoundDriver::deleteInstance(SoundDriver* driver)
 {
     delete driver;
 }
