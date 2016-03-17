@@ -11,15 +11,38 @@ class AudioDriverIOPort{
     void* m = nullptr;
 
 public:
-    virtual void setName(const std::string &name) = 0;
+    enum class Type{
+        Bad,
+        Audio,
+        Midi
+    };
 
-    virtual std::string name() = 0;
+    Type type() const;
+
+    void setName(const std::string &name);
+
+    std::string name() const;
+};
+
+
+class AudioDriverIOPort_Audio : public AudioDriverIOPort{
+public:
+    float* buffer() const;
+};
+
+
+class AudioDriverIOPort_Midi : public AudioDriverIOPort{
+public:
+    MidiEvent* events() const;
+
+    int eventCount();
 };
 
 
 class AudioDriver{
 public:
     enum class Type{
+        Bad,
         Jack
     };
 
@@ -34,18 +57,6 @@ public:
     virtual int bufferSize() = 0;
 
     virtual int sampleRate() = 0;
-
-//     virtual AudioIOPort* newAudioInputPort(const char* name) = 0;
-
-//     virtual AudioIOPort* newAudioOutputPort(const char* name) = 0;
-
-//     virtual void deleteAudioPort(AudioIOPort* port) = 0;
-
-//     virtual MidiIOPort* newMidiInputPort(const char* name) = 0;
-
-//     virtual MidiIOPort* newMidiOutputPort(const char* name) = 0;
-
-//     virtual void deleteMidiPort(MidiIOPort* port) = 0;
 
     static AudioDriver* newInstance(AudioDriver::Type type = AudioDriver::Type::Jack);
 

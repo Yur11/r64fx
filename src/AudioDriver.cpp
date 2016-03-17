@@ -1,4 +1,5 @@
 #include "AudioDriver.hpp"
+#include "LinkedList.hpp"
 #include <jack/jack.h>
 #include <jack/midiport.h>
 #include <cstring>
@@ -6,13 +7,63 @@
 #include <vector>
 #include <iostream>
 
+#define m_private ((AudioDriverIOPortPrivate*)m)
+
 using namespace std;
 
 namespace r64fx{
 
 
+struct AudioDriverIOPortPrivate{
+    union PortIface{
+
+    } iface;
+
+    AudioDriverIOPort::Type type = AudioDriverIOPort::Type::Bad;
+
+    string name = "";
+};
+
+
+AudioDriverIOPort::Type AudioDriverIOPort::type() const
+{
+    return m_private->type;
+}
+
+
+void AudioDriverIOPort::setName(const std::string &name)
+{
+    m_private->name = name;
+}
+
+
+std::string AudioDriverIOPort::name() const
+{
+    return m_private->name;
+}
+
+
+float* AudioDriverIOPort_Audio::buffer() const
+{
+    return 0;
+}
+
+
+MidiEvent* AudioDriverIOPort_Midi::events() const
+{
+    return nullptr;
+}
+
+
+int AudioDriverIOPort_Midi::eventCount()
+{
+    return 0;
+}
+
+
 struct AudioDriver_Jack : public AudioDriver{
     jack_client_t* m_jack_client = nullptr;
+    LinkedList<AudioDriverIOPortPrivate> m_ports;
 
     AudioDriver_Jack()
     {
