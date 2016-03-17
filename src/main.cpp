@@ -155,10 +155,6 @@ class MyProgram : public Program{
     Font*   m_Font = nullptr;
     Widget_Container* m_container = nullptr;
     AudioDriver* m_driver = nullptr;
-    MidiIOPort*  m_midi_input = nullptr;
-    MidiIOPort*  m_midi_output = nullptr;
-    AudioIOPort* m_input = nullptr;
-    AudioIOPort* m_output = nullptr;
 
     Timer m_timer1;
     Timer m_timer2;
@@ -206,19 +202,11 @@ private:
         m_driver = AudioDriver::newInstance();
         if(m_driver)
         {
-            m_midi_input   = m_driver->newMidiInputPort("midi_in");
-            m_midi_output  = m_driver->newMidiOutputPort("midi_out");
-
-            m_input   = m_driver->newAudioInputPort("in");
-            m_output  = m_driver->newAudioOutputPort("out");
-
-            if(m_input && m_input->isGood() && m_output && m_output->isGood())
-            {
-                wc1->onValueChanged([](Widget_Control* control, void* data){
-                    auto self = (MyProgram*) data;
-                    self->wc1Changed(control->value());
-                }, this);
-            }
+//             m_midi_input   = m_driver->newMidiInputPort("midi_in");
+//             m_midi_output  = m_driver->newMidiOutputPort("midi_out");
+//
+//             m_input   = m_driver->newAudioInputPort("in");
+//             m_output  = m_driver->newAudioOutputPort("out");
 
             m_driver->enable();
         }
@@ -227,64 +215,8 @@ private:
             cerr << "No driver!\n";
         }
 
-        m_timer1.setInterval(5000);
-        m_timer1.onTimeout([](Timer* timer, void* data){
-            auto self = (MyProgram*) data;
-            self->checkMidi();
-        }, this);
-        m_timer1.start();
-
-        m_timer2.setInterval(1500);
-//         m_timer2.onTimeout([](Timer* timer, void*){
-//             cout << "time2\n";
-//         }, nullptr);
-        m_timer2.start();
     }
 
-    void wc1Changed(float value)
-    {
-        cout << value << "\n";
-        while(!m_output->tryLock())
-        {
-            usleep(50);
-        }
-        float* sample = m_output->samples();
-        int threshold = (m_driver->bufferSize() - 1) * value + 1;
-        for(int i=0; i<m_driver->bufferSize(); i++)
-        {
-            sample[i] = (i<threshold ? 1.0f : -1.0f);
-        }
-        m_output->unlock();
-    }
-
-    void checkMidi()
-    {
-        m_midi_input->lock();
-        for(int i=0; i<m_midi_input->eventCount(); i++)
-        {
-            const MidiEvent* event = m_midi_input->event(i);
-            const MidiMessage &msg = event->message();
-
-            switch(msg.type())
-            {
-                case MidiMessage::Type::ControlChange:
-                {
-                    cout << "ControlChange: "
-                         << msg.channel() << ", "
-                         << msg.controllerNumber() << ", "
-                         << msg.controllerValue() << "\n";
-                    break;
-                }
-
-                default:
-                {
-                    cout << "other\n";
-                    break;
-                }
-            }
-        }
-        m_midi_input->unlock();
-    }
     
     virtual void cleanup()
     {
