@@ -4,8 +4,7 @@
 namespace r64fx{
 
 class MidiMessage{
-    unsigned char m_bytes[3] = {0, 0, 0};
-    unsigned char m_size = 0;
+    unsigned char m_bytes[4] = {0, 0, 0, 0};
 
 public:
     enum class Type{
@@ -41,9 +40,51 @@ public:
         Reset
     };
 
+    MidiMessage() {}
+
     MidiMessage(unsigned char* bytes, unsigned char nbytes);
 
     MidiMessage::Type type() const;
+
+    int channel() const;
+
+    int noteNumber() const;
+
+    int velocity() const;
+
+    int polyaftPressure() const;
+
+    int controllerNumber() const;
+
+    int controllerValue() const;
+
+    int programNuber() const;
+
+    int channelPressure() const;
+
+    int pitchBend() const;
+
+    int songPosition() const;
+};
+
+
+class MidiEvent{
+    MidiMessage m_message;
+    int m_time = 0;
+
+public:
+    MidiEvent() {}
+
+    MidiEvent(const MidiMessage &message, int time)
+    : m_message(message)
+    , m_time(time)
+    {
+
+    }
+
+    inline const MidiMessage &message() const { return m_message; }
+
+    inline int time() const { return m_time; }
 };
 
 }//namespace r64fx

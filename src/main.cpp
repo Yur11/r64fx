@@ -227,16 +227,17 @@ private:
             cerr << "No driver!\n";
         }
 
-        m_timer1.setInterval(500);
-        m_timer1.onTimeout([](Timer* timer, void*){
-            cout << "time1\n";
-        }, nullptr);
+        m_timer1.setInterval(5000);
+        m_timer1.onTimeout([](Timer* timer, void* data){
+            auto self = (MyProgram*) data;
+            self->checkMidi();
+        }, this);
         m_timer1.start();
 
         m_timer2.setInterval(1500);
-        m_timer2.onTimeout([](Timer* timer, void*){
-            cout << "time2\n";
-        }, nullptr);
+//         m_timer2.onTimeout([](Timer* timer, void*){
+//             cout << "time2\n";
+//         }, nullptr);
         m_timer2.start();
     }
 
@@ -254,6 +255,35 @@ private:
             sample[i] = (i<threshold ? 1.0f : -1.0f);
         }
         m_output->unlock();
+    }
+
+    void checkMidi()
+    {
+        m_midi_input->lock();
+        for(int i=0; i<m_midi_input->eventCount(); i++)
+        {
+            const MidiEvent* event = m_midi_input->event(i);
+            const MidiMessage &msg = event->message();
+
+            switch(msg.type())
+            {
+                case MidiMessage::Type::ControlChange:
+                {
+                    cout << "ControlChange: "
+                         << msg.channel() << ", "
+                         << msg.controllerNumber() << ", "
+                         << msg.controllerValue() << "\n";
+                    break;
+                }
+
+                default:
+                {
+                    cout << "other\n";
+                    break;
+                }
+            }
+        }
+        m_midi_input->unlock();
     }
     
     virtual void cleanup()

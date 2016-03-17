@@ -1,7 +1,9 @@
 #ifndef R64FX_AUDIO_DRIVER_HPP
 #define R64FX_AUDIO_DRIVER_HPP
 
+#include "Midi.hpp"
 #include "Mutex.hpp"
+
 
 namespace r64fx{
 
@@ -15,13 +17,8 @@ public:
 };
 
 
-struct MidiEvent{
-    unsigned char  byte[3] = {0, 0, 0};
-    unsigned char  size    = 0;
-    int            time    = 0;
-};
-
 class MidiIOPort : public Mutex{
+public:
     virtual MidiEvent* event(int i) = 0;
 
     virtual int eventCount() = 0;

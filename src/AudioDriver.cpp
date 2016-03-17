@@ -75,6 +75,10 @@ struct AudioDriver_Jack : public AudioDriver{
         if(!m_jack_client)
             return;
 
+        jack_set_error_function([](const char* message){
+            cout << "Jack Error: " << message << "\n";
+        });
+
         if(jack_set_process_callback(m_jack_client, [](jack_nframes_t nframes, void* arg) -> int {
             auto self = (AudioDriver_Jack*) arg;
             return self->process(nframes);
@@ -126,19 +130,16 @@ struct AudioDriver_Jack : public AudioDriver{
                                 if(port->event_count < max_midi_event_count)
                                 {
                                     out_event = port->event(port->event_count);
+                                    port->event_count++;
                                 }
                                 else
                                 {
                                     out_event = port->event(max_midi_event_count - 1);
                                 }
 
-
-                                for(int j=0; j<(int)event.size; j++)
-                                {
-                                    out_event->byte[j] = event.buffer[j];
-                                }
-                                out_event->size = event.size;
-                                out_event->time = event.time;
+                                out_event[0] = MidiEvent(
+                                    MidiMessage(event.buffer, event.size), event.time
+                                );
                             }
                         }
                     }
@@ -213,9 +214,22 @@ struct AudioDriver_Jack : public AudioDriver{
             cout << "Skipped Audio Ports: " << audio_ports_skipped << " !\n";
         }
 
-        m_count_mutex.lock();
-        m_count++;
-        m_count_mutex.unlock();
+        int attempt_count = 0;
+        while(attempt_count < 10)
+        {
+            attempt_count++;
+            if(m_count_mutex.tryLock())
+            {
+                m_count++;
+                m_count_mutex.unlock();
+                break;
+            }
+        }
+
+        if(attempt_count > 1)
+        {
+            cout << "Attempt Count: " << attempt_count << "\n";
+        }
 
         return 0;
     }
@@ -223,16 +237,19 @@ struct AudioDriver_Jack : public AudioDriver{
 
     virtual ~AudioDriver_Jack()
     {
-        if(m_jack_client)
-            jack_client_close(m_jack_client);
+//         if(m_jack_client)
+//         {
+//             jack_client_close(m_jack_client);
+//         }
     }
 
 
     virtual unsigned long count()
     {
         m_count_mutex.lock();
-        return m_count;
+        unsigned long c = m_count;
         m_count_mutex.unlock();
+        return c;
     }
 
 

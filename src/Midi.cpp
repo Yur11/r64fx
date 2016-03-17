@@ -1,10 +1,10 @@
 #include "Midi.hpp"
 
+
 namespace r64fx{
 
 MidiMessage::MidiMessage(unsigned char* bytes, unsigned char nbytes)
 {
-    m_size = nbytes;
     for(int i=0; i<nbytes; i++)
     {
         m_bytes[i] = bytes[i];
@@ -113,16 +113,16 @@ MidiMessage::Type MidiMessage::type() const
 {
     switch(m_bytes[0] & 0xF0)
     {
-        case 8:
+        case 0x80:
             return MidiMessage::Type::NoteOff;
 
-        case 9:
+        case 0x90:
             return MidiMessage::Type::NoteOn;
 
-        case 10:
+        case 0xA0:
             return MidiMessage::Type::PolyAft;
 
-        case 11:
+        case 0xB0:
         {
             if(m_bytes[1] < 120)
                 return MidiMessage::Type::ControlChange;
@@ -130,21 +130,85 @@ MidiMessage::Type MidiMessage::type() const
                 return chan_mode(m_bytes);
         }
 
-        case 12:
+        case 0xC0:
             return MidiMessage::Type::ProgramChange;
 
-        case 13:
+        case 0xD0:
             return MidiMessage::Type::ChanAft;
 
-        case 14:
+        case 0xE0:
             return MidiMessage::Type::PitchBend;
 
-        case 15:
+        case 0xF0:
             return system_common(m_bytes);
 
         default:
             return MidiMessage::Type::Bad;
     }
+}
+
+
+int MidiMessage::channel() const
+{
+    return (m_bytes[0] & 0x0F);
+}
+
+
+int MidiMessage::noteNumber() const
+{
+    return m_bytes[1];
+}
+
+
+int MidiMessage::velocity() const
+{
+    return m_bytes[2];
+}
+
+
+int MidiMessage::polyaftPressure() const
+{
+    return m_bytes[2];
+}
+
+
+int MidiMessage::controllerNumber() const
+{
+    return m_bytes[1];
+}
+
+
+int MidiMessage::controllerValue() const
+{
+    return m_bytes[2];
+}
+
+
+int MidiMessage::programNuber() const
+{
+    return m_bytes[1];
+}
+
+
+int MidiMessage::channelPressure() const
+{
+    return m_bytes[1];
+}
+
+
+int MidiMessage::pitchBend() const
+{
+    int l = m_bytes[1];
+    int m = m_bytes[2];
+    return l | (m<<7);
+}
+
+
+int MidiMessage::songPosition() const
+{
+    int l = m_bytes[1];
+    int m = m_bytes[2];
+    return l | (m<<7);
 }
 
 }//namespace r64fx
