@@ -113,6 +113,12 @@ void Timer::setInterval(long interval)
 }
 
 
+long Timer::interval() const
+{
+    return m_impl->interval;
+}
+
+
 void Timer::onTimeout(void (*callback)(Timer* timer, void* data), void* data)
 {
     if(callback)

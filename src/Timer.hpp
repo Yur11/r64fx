@@ -15,6 +15,8 @@ public:
 
     void setInterval(long interval); //in micoseconds
 
+    long interval() const;
+
     void onTimeout(void (*callback)(Timer* timer, void* data), void* data);
 
     void start();
