@@ -13,6 +13,8 @@ template<typename T> void copy_items(T* dst, const T* src, int nitems)
 
 template<typename T> class CircularBuffer{
     T*            m_buffer = nullptr;
+
+    // Must be >= 2
     unsigned int  m_size   = 0;
 
     // Read and Write pointers.
@@ -26,7 +28,7 @@ template<typename T> class CircularBuffer{
 public:
     CircularBuffer(int size, T* storage = nullptr)
     {
-        if(size <= 1)
+        if(size < 2)
             return;
 
         if(storage)
@@ -79,13 +81,9 @@ public:
         {
             return 0;
         }
-        else
-        {
-        }
 
-        bool data_is_split = (rptr > wptr);
-        int used = (data_is_split ? (m_size - rptr + wptr) : (wptr - rptr));
-        int avail = m_size - used;
+        bool free_space_is_split = (wptr >= rptr);
+        int avail = m_size - (free_space_is_split ? (wptr - rptr) : (m_size - rptr + wptr));
 
         if(nitems >= avail) // Write saturation! Update write flag.
         {
@@ -97,12 +95,7 @@ public:
             ws = 0;
         }
 
-        if(data_is_split) // Free space is in the middle.
-        {
-            copy_items(m_buffer + wptr, input, nitems);
-            wptr += nitems;
-        }
-        else
+        if(free_space_is_split)
         {
             int tail_chunk_size = m_size - wptr;
             if(nitems <= tail_chunk_size)
@@ -120,6 +113,11 @@ public:
                 copy_items(m_buffer, input + tail_chunk_size, head_chunk_size);
                 wptr = head_chunk_size;
             }
+        }
+        else // Free space is in the middle.
+        {
+            copy_items(m_buffer + wptr, input, nitems);
+            wptr += nitems;
         }
 
         w = ws | wptr;
