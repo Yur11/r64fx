@@ -8,8 +8,6 @@
 namespace r64fx{
 
 class SoundDriverIOPort{
-    void* m = nullptr;
-
 public:
     enum class Type{
         Bad,
@@ -17,25 +15,44 @@ public:
         Midi
     };
 
-    Type type() const;
+    virtual Type type() = 0;
 
-    void setName(const std::string &name);
+    enum class Direction{
+        Input,
+        Output
+    };
 
-    std::string name() const;
+    virtual Direction direction() = 0;
+
+    virtual void setName(const std::string &name) = 0;
+
+    virtual std::string name() = 0;
 };
 
 
 class SoundDriverIOPort_Audio : public SoundDriverIOPort{
-public:
-    float* buffer() const;
+
+};
+
+class SoundDriverIOPort_AudioInput   : public SoundDriverIOPort_Audio{
+
+};
+
+class SoundDriverIOPort_AudioOutput  : public SoundDriverIOPort_Audio{
+
 };
 
 
 class SoundDriverIOPort_Midi : public SoundDriverIOPort{
-public:
-    MidiEvent* events() const;
 
-    int eventCount();
+};
+
+class SoundDriverIOPort_MidiInput    : public SoundDriverIOPort_Midi{
+
+};
+
+class SoundDriverIOPort_MidiOutput   : public SoundDriverIOPort_Midi{
+
 };
 
 
@@ -48,7 +65,7 @@ public:
 
     virtual ~SoundDriver() {};
 
-    virtual bool isGood() = 0;
+    virtual SoundDriver::Type type() = 0;
 
     virtual void enable() = 0;
 
@@ -59,6 +76,8 @@ public:
     virtual int sampleRate() = 0;
 
     virtual long count() = 0;
+
+    virtual SoundDriverIOPort_AudioOutput* newAudioOutput(const std::string &name = "") = 0;
 
     static SoundDriver* newInstance(SoundDriver::Type type = SoundDriver::Type::Jack);
 

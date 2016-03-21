@@ -202,12 +202,6 @@ private:
         m_driver = SoundDriver::newInstance();
         if(m_driver)
         {
-//             m_midi_input   = m_driver->newMidiInputPort("midi_in");
-//             m_midi_output  = m_driver->newMidiOutputPort("midi_out");
-//
-//             m_input   = m_driver->newAudioInputPort("in");
-//             m_output  = m_driver->newAudioOutputPort("out");
-
             m_driver->enable();
 
             m_timer1.onTimeout([](Timer*, void* arg){ ((MyProgram*)arg)->onTimer1(); }, this);
@@ -227,22 +221,8 @@ private:
 
     void onTimer1()
     {
-        static long i = 0;
         long count = m_driver->count();
-        long diff = i - count;
-        if(diff > 0)
-        {
-            m_timer1.setInterval(
-                m_timer1.interval() + 100
-            );
-        }
-        else if(diff < 0)
-        {
-            m_timer1.setInterval(
-                m_timer1.interval() - 100
-            );
-        }
-        cout << i++ << " --> " << count << " => " << diff << "\n";
+        cout << count << "\n";
     }
 
     
