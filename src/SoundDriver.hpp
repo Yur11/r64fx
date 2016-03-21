@@ -48,7 +48,8 @@ class SoundDriverIOPort_Midi : public SoundDriverIOPort{
 };
 
 class SoundDriverIOPort_MidiInput    : public SoundDriverIOPort_Midi{
-
+public:
+    virtual int readEvents(MidiEvent* out, int nevents) = 0;
 };
 
 class SoundDriverIOPort_MidiOutput   : public SoundDriverIOPort_Midi{
@@ -77,7 +78,7 @@ public:
 
     virtual long count() = 0;
 
-    virtual SoundDriverIOPort_AudioOutput* newAudioOutput(const std::string &name = "") = 0;
+    virtual SoundDriverIOPort_MidiInput* newMidiInput(const std::string &name = "") = 0;
 
     static SoundDriver* newInstance(SoundDriver::Type type = SoundDriver::Type::Jack);
 

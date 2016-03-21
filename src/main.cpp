@@ -154,7 +154,12 @@ public:
 class MyProgram : public Program{
     Font*   m_Font = nullptr;
     Widget_Container* m_container = nullptr;
+
+    Widget_Control* m_wc1 = nullptr;
+
     SoundDriver* m_driver = nullptr;
+    SoundDriverIOPort_MidiInput* m_midi_in = nullptr;
+
 
     Timer m_timer1;
     Timer m_timer2;
@@ -180,6 +185,7 @@ private:
 
         auto subcontainer = new Widget_Container(m_container);
         auto wc1 = new Widget_Control(ControlType::UnipolarRadius, 50, subcontainer);
+        m_wc1 = wc1;
         auto wc2 = new Widget_Control(ControlType::UnipolarRadius, 50, subcontainer);
         auto wc3 = new Widget_Control(ControlType::UnipolarSector, 50, subcontainer);
         auto wc4 = new Widget_Control(ControlType::BipolarSector,  50, subcontainer);
@@ -204,6 +210,12 @@ private:
         {
             m_driver->enable();
 
+            m_midi_in = m_driver->newMidiInput("midi_in");
+            if(!m_midi_in)
+            {
+                cerr << "Failed to create midi input!\n";
+            }
+
             m_timer1.onTimeout([](Timer*, void* arg){ ((MyProgram*)arg)->onTimer1(); }, this);
             int interval = (float(m_driver->bufferSize()) / float(m_driver->sampleRate())) * 1000 * 1000 - 100;
             if(interval < 100)
@@ -211,6 +223,8 @@ private:
             cout << "interval: " << interval << "\n";
             m_timer1.setInterval(interval);
             m_timer1.start();
+
+
         }
         else
         {
@@ -221,8 +235,56 @@ private:
 
     void onTimer1()
     {
-        long count = m_driver->count();
-        cout << count << "\n";
+        if(m_midi_in)
+        {
+            MidiEvent event;
+            while(m_midi_in->readEvents(&event, 1))
+            {
+                auto msg = event.message();
+                switch(msg.type())
+                {
+                    case MidiMessage::Type::NoteOff:
+                    {
+                        cout << "NoteOff:       "
+                             << msg.channel() << ", "
+                             << msg.noteNumber() << ", "
+                             << msg.velocity() << "\n";
+                        break;
+                    }
+
+                    case MidiMessage::Type::NoteOn:
+                    {
+                        cout << "NoteOn:        "
+                             << msg.channel() << ", "
+                             << msg.noteNumber() << ", "
+                             << msg.velocity() << "\n";
+                        break;
+                    }
+
+                    case MidiMessage::Type::ControlChange:
+                    {
+                        cout << "ControlChange: "
+                             << msg.channel() << ", "
+                             << msg.controllerNumber() << ","
+                             << msg.controllerValue() << "\n";
+
+                        if(msg.controllerNumber() == 1 && m_wc1)
+                        {
+                            m_wc1->setValue(float(msg.controllerValue()) / 127.0f);
+                            m_wc1->update();
+                        }
+
+                        break;
+                    }
+
+                    default:
+                    {
+                        cout << "other\n";
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     

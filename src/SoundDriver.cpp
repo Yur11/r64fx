@@ -1,6 +1,4 @@
 #include "SoundDriver.hpp"
-#include "LinkedList.hpp"
-#include <cstring>
 #include <new>
 #include <iostream>
 

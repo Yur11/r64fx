@@ -2,33 +2,36 @@
 
 #include <jack/jack.h>
 #include <jack/midiport.h>
+#include "CircularBuffer.hpp"
+#include "LinkedList.hpp"
 
 namespace r64fx{
 
-struct SoundDriverIOPort_ImplJack{
+struct SoundDriverIOPort_Jack
+: public LinkedList<SoundDriverIOPort_Jack>::Node {
     SoundDriverIOPort*  iface      = nullptr;
-    jack_port_t*        jack_port  = nullptr;
+    jack_port_t*        aaa_port  = nullptr;
 
     bool is_audio = false;
     bool is_input = false;
 
     void setName(const std::string &name)
     {
-        jack_port_set_name(jack_port, name.c_str());
+        jack_port_set_name(aaa_port, name.c_str());
     }
 
     const char* name() const
     {
-        if(!jack_port)
+        if(!aaa_port)
             return "";
         else
-            return jack_port_short_name(jack_port);
+            return jack_port_short_name(aaa_port);
     }
 };
 
 
 struct SoundDriverIOPort_AudioInput_Jack : public SoundDriverIOPort_AudioInput{
-    SoundDriverIOPort_ImplJack* impl = nullptr;
+    SoundDriverIOPort_Jack* impl = nullptr;
 
     virtual Type type()
     {
@@ -53,7 +56,7 @@ struct SoundDriverIOPort_AudioInput_Jack : public SoundDriverIOPort_AudioInput{
 
 
 struct SoundDriverIOPort_AudioOutput_Jack : public SoundDriverIOPort_AudioOutput{
-    SoundDriverIOPort_ImplJack* impl = nullptr;
+    SoundDriverIOPort_Jack* impl = nullptr;
 
     virtual Type type()
     {
@@ -78,7 +81,16 @@ struct SoundDriverIOPort_AudioOutput_Jack : public SoundDriverIOPort_AudioOutput
 
 
 struct SoundDriverIOPort_MidiInput_Jack : public SoundDriverIOPort_MidiInput{
-    SoundDriverIOPort_ImplJack* impl = nullptr;
+    SoundDriverIOPort_Jack* impl = nullptr;
+    CircularBuffer<MidiEvent> buffer;
+
+    SoundDriverIOPort_MidiInput_Jack()
+    : buffer(32)
+    {
+
+    }
+
+    virtual ~SoundDriverIOPort_MidiInput_Jack() {}
 
     virtual Type type()
     {
@@ -99,11 +111,23 @@ struct SoundDriverIOPort_MidiInput_Jack : public SoundDriverIOPort_MidiInput{
     {
         return impl->name();
     }
+
+    virtual int readEvents(MidiEvent* out, int nevents)
+    {
+        return buffer.read(out, nevents);
+    }
 };
 
 
 struct SoundDriverIOPort_MidiOutput_Jack : public SoundDriverIOPort_MidiOutput{
-    SoundDriverIOPort_ImplJack* impl = nullptr;
+    SoundDriverIOPort_Jack* impl = nullptr;
+    CircularBuffer<MidiEvent> buffer;
+
+    SoundDriverIOPort_MidiOutput_Jack()
+    : buffer(32)
+    {
+
+    }
 
     virtual Type type()
     {
@@ -130,9 +154,13 @@ struct SoundDriverIOPort_MidiOutput_Jack : public SoundDriverIOPort_MidiOutput{
 struct SoundDriver_Jack : public SoundDriver{
     jack_client_t* m_jack_client = nullptr;
 
+    LinkedList<SoundDriverIOPort_Jack> m_ports;
+    CircularBuffer<SoundDriverIOPort_Jack*> m_new_ports;
+
     volatile long m_count = 0;
 
     SoundDriver_Jack()
+    : m_new_ports(16)
     {
         m_jack_client = jack_client_open("r64fx", JackNullOption, nullptr);
         if(!m_jack_client)
@@ -154,6 +182,57 @@ struct SoundDriver_Jack : public SoundDriver{
 
     int process(int nframes)
     {
+        constexpr int max_new_port_count = 16;
+        int new_port_count = 0;
+        SoundDriverIOPort_Jack* new_port = nullptr;
+        while(m_new_ports.read(&new_port, 1) && new_port_count < max_new_port_count)
+        {
+            if(new_port)
+            {
+                m_ports.append(new_port);
+            }
+            new_port = nullptr;
+        }
+
+
+        for(auto port : m_ports)
+        {
+            void* port_buffer = jack_port_get_buffer(port->aaa_port, nframes);
+
+            if(port->is_input)
+            {
+                if(port->is_audio)
+                {
+
+                }
+                else
+                {
+                    int nevents = jack_midi_get_event_count(port_buffer);
+                    for(int i=0; i<nevents; i++)
+                    {
+                        jack_midi_event_t event;
+                        jack_midi_event_get(&event, port_buffer, i);
+
+                        auto midi_in_port = (SoundDriverIOPort_MidiInput_Jack*)(port->iface);
+                        midi_in_port->buffer.write(MidiEvent(
+                            MidiMessage(event.buffer, event.size), event.time
+                        ));
+                    }
+                }
+            }
+            else
+            {
+                if(port->is_audio)
+                {
+
+                }
+                else
+                {
+
+                }
+            }
+        }
+
         m_count++;
         return 0;
     }
@@ -209,10 +288,40 @@ struct SoundDriver_Jack : public SoundDriver{
         return m_count;
     }
 
-    virtual SoundDriverIOPort_AudioOutput* newAudioOutput(const std::string &name = "")
+    virtual SoundDriverIOPort_MidiInput* newMidiInput(const std::string &name = "")
     {
-        auto port = new SoundDriverIOPort_AudioOutput_Jack;
-        return port;
+        auto port_iface = new(std::nothrow) SoundDriverIOPort_MidiInput_Jack;
+        if(!port_iface)
+            return nullptr;
+
+        auto port_impl = new(std::nothrow) SoundDriverIOPort_Jack;
+        if(!port_impl)
+        {
+            delete port_iface;
+            return nullptr;
+        }
+
+        port_impl->aaa_port = jack_port_register(
+            m_jack_client,
+            name.c_str(),
+            JACK_DEFAULT_MIDI_TYPE,
+            JackPortIsInput, 0
+        );
+        if(!port_impl->aaa_port)
+        {
+            delete port_iface;
+            delete port_impl;
+            return nullptr;
+        }
+
+        port_iface->impl = port_impl;
+        port_impl->iface = port_iface;
+        port_impl->is_input = true;
+        port_impl->is_audio = false;
+
+        m_new_ports.write(port_impl);
+
+        return port_iface;
     }
 
 };
