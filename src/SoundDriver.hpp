@@ -10,7 +10,6 @@ namespace r64fx{
 class SoundDriverIOPort{
 public:
     enum class Type{
-        Bad,
         Audio,
         Midi
     };
@@ -39,7 +38,8 @@ class SoundDriverIOPort_AudioInput   : public SoundDriverIOPort_Audio{
 };
 
 class SoundDriverIOPort_AudioOutput  : public SoundDriverIOPort_Audio{
-
+public:
+    virtual int writeSamples(float* samples, int nsamples) = 0;
 };
 
 
@@ -49,7 +49,7 @@ class SoundDriverIOPort_Midi : public SoundDriverIOPort{
 
 class SoundDriverIOPort_MidiInput    : public SoundDriverIOPort_Midi{
 public:
-    virtual int readEvents(MidiEvent* out, int nevents) = 0;
+    virtual int readEvents(MidiEvent* event, int nevents) = 0;
 };
 
 class SoundDriverIOPort_MidiOutput   : public SoundDriverIOPort_Midi{
@@ -77,6 +77,10 @@ public:
     virtual int sampleRate() = 0;
 
     virtual long count() = 0;
+
+    virtual int readTime(long* time) = 0;
+
+    virtual SoundDriverIOPort_AudioOutput* newAudioOutput(const std::string &name = "") = 0;
 
     virtual SoundDriverIOPort_MidiInput* newMidiInput(const std::string &name = "") = 0;
 

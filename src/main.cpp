@@ -158,8 +158,12 @@ class MyProgram : public Program{
     Widget_Control* m_wc1 = nullptr;
 
     SoundDriver* m_driver = nullptr;
-    SoundDriverIOPort_MidiInput* m_midi_in = nullptr;
+    SoundDriverIOPort_AudioOutput*  m_audio_out = nullptr;
+    SoundDriverIOPort_MidiInput*    m_midi_in = nullptr;
 
+    float  m_frequency = 440.0f;
+    float  m_value = 0.0f;
+    float* m_buffer = nullptr;
 
     Timer m_timer1;
     Timer m_timer2;
@@ -210,6 +214,14 @@ private:
         {
             m_driver->enable();
 
+            m_audio_out = m_driver->newAudioOutput("audio_out");
+            if(!m_audio_out)
+            {
+                cerr << "Failed to create audio output!\n";
+            }
+
+            m_buffer = new float[m_driver->bufferSize()];
+
             m_midi_in = m_driver->newMidiInput("midi_in");
             if(!m_midi_in)
             {
@@ -218,6 +230,7 @@ private:
 
             m_timer1.onTimeout([](Timer*, void* arg){ ((MyProgram*)arg)->onTimer1(); }, this);
             int interval = (float(m_driver->bufferSize()) / float(m_driver->sampleRate())) * 1000 * 1000 - 100;
+            interval /= 10;
             if(interval < 100)
                 interval = 100;
             cout << "interval: " << interval << "\n";
@@ -270,8 +283,10 @@ private:
 
                         if(msg.controllerNumber() == 1 && m_wc1)
                         {
-                            m_wc1->setValue(float(msg.controllerValue()) / 127.0f);
+                            float value = float(msg.controllerValue()) / 127.0f;
+                            m_wc1->setValue(value);
                             m_wc1->update();
+                            m_frequency = 440.0f * value;
                         }
 
                         break;
@@ -283,6 +298,26 @@ private:
                         break;
                     }
                 }
+            }
+        }
+
+        long time = 0;
+        if(m_audio_out && m_driver->readTime(&time))
+        {
+            float delta = m_frequency / float(m_driver->sampleRate());
+            for(int i=0; i<m_driver->bufferSize(); i++)
+            {
+                m_buffer[i] = sin(m_value * 2.0 * M_PI);
+
+                m_value += delta;
+                if(m_value >= 1.0f)
+                    m_value -= 1.0f;
+            }
+
+            int nsamples = m_audio_out->writeSamples(m_buffer, m_driver->bufferSize());
+            if(nsamples < m_driver->bufferSize())
+            {
+//                 cerr << "Wrote only " << nsamples << " samples\n";
             }
         }
     }
