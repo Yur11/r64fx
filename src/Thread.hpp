@@ -27,7 +27,7 @@ public:
 
     bool isCurrentThread() const;
 
-    static Thread currentThread();
+    static Thread thisThread();
 
     bool operator==(const Thread &other);
 };

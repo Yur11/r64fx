@@ -37,7 +37,7 @@ bool Thread::isCurrentThread() const
 }
 
 
-Thread Thread::currentThread()
+Thread Thread::thisThread()
 {
     return pthread_self();
 }

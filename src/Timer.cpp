@@ -2,9 +2,10 @@
 #include <iostream>
 #include <vector>
 #include <limits>
-#include <pthread.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include "Thread.hpp"
+#include "Mutex.hpp"
 
 using namespace std;
 
@@ -27,25 +28,25 @@ struct TimerImpl{
 #define m_impl ((TimerImpl*)m)
 
 
-struct Thread{
-    pthread_t thread;
+struct TimerThread{
+    Thread thread;
     vector<TimerImpl*> timers;
 };
 
 
 constexpr int max_threads = 16;
-Thread g_threads[max_threads];
-pthread_mutex_t g_thread_mutex = PTHREAD_MUTEX_INITIALIZER;
+TimerThread g_threads[max_threads];
+Mutex g_thread_mutex;
 
 
-Thread* get_thread()
+TimerThread* get_thread()
 {
-    pthread_t this_thread = pthread_self();
+    Thread this_thread = Thread::thisThread();
 
-    Thread* thread       = nullptr;
-    Thread* empty_thread = nullptr;
+    TimerThread* thread       = nullptr;
+    TimerThread* empty_thread = nullptr;
 
-    pthread_mutex_lock(&g_thread_mutex);
+    g_thread_mutex.lock();
 
     for(int i=0; i<max_threads; i++)
     {
@@ -58,13 +59,13 @@ Thread* get_thread()
         }
         else
         {
-            if(pthread_equal(this_thread, g_threads[i].thread))
+            if(this_thread == g_threads[i].thread)
                 thread = g_threads + i;
             break;
         }
     }
 
-    pthread_mutex_unlock(&g_thread_mutex);
+    g_thread_mutex.unlock();
 
     if(!thread)
     {
@@ -92,7 +93,7 @@ Timer::Timer(long interval)
     m_impl->iface = this;
     setInterval(interval);
 
-    Thread* thread = get_thread();numeric_limits<long>::max();
+    TimerThread* thread = get_thread();numeric_limits<long>::max();
     if(!thread)
         return;
 
@@ -150,7 +151,7 @@ bool Timer::isRunning()
 
 int Timer::runTimers()
 {
-    Thread* thread = get_thread();
+    TimerThread* thread = get_thread();
     if(!thread)
         return -1;
 
