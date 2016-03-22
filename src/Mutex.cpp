@@ -2,6 +2,7 @@
 
 namespace r64fx{
 
+#ifdef R64FX_USE_PTHREAD
 void Mutex::lock()
 {
     pthread_mutex_lock(&mutex);
@@ -18,5 +19,6 @@ void Mutex::unlock()
 {
     pthread_mutex_unlock(&mutex);
 }
+#endif//R64FX_USE_PTHREAD
 
 }//namespace

@@ -15,6 +15,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_BUILTIN_FONTS")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_JACK")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_PTHREAD")
+
 set(SRC
     Clipboard.cpp
     ClipboardEvent.cpp
@@ -37,6 +39,7 @@ set(SRC
     SoundDriver.cpp
     StringUtils.cpp
     TextPainter.cpp
+    Thread.cpp
     Timer.cpp
     UndoRedoChain.cpp
     Widget.cpp
