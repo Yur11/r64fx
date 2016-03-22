@@ -168,19 +168,34 @@ struct SoundDriverIOPort_MidiOutput_Jack : public SoundDriverIOPort_MidiOutput{
 };
 
 
+struct SoundDriverIOStatusPort_Jack : public SoundDriverIOStatusPort{
+    CircularBuffer<SoundDriverIOStatus> buffer;
+
+    SoundDriverIOStatusPort_Jack()
+    : buffer(2)
+    {
+
+    }
+
+    virtual int readStatus(SoundDriverIOStatus* status, int nitems = 1)
+    {
+        return buffer.read(status, nitems);
+    }
+};
+
+
 struct SoundDriver_Jack : public SoundDriver{
     jack_client_t* m_jack_client = nullptr;
-
-    CircularBuffer<long> m_time_buffer;
 
     LinkedList<SoundDriverIOPort_Jack> m_ports;
     CircularBuffer<SoundDriverIOPort_Jack*> m_new_ports;
 
-    volatile long m_count = 0;
+    LinkedList<SoundDriverIOStatusPort_Jack> m_status_ports;
+    CircularBuffer<SoundDriverIOStatusPort_Jack*> m_new_status_ports;
 
     SoundDriver_Jack()
-    : m_time_buffer(4)
-    , m_new_ports(16)
+    : m_new_ports(16)
+    , m_new_status_ports(2)
     {
         m_jack_client = jack_client_open("r64fx", JackNullOption, nullptr);
         if(!m_jack_client)
@@ -254,9 +269,6 @@ struct SoundDriver_Jack : public SoundDriver{
             }
         }
 
-        m_time_buffer.write(0);
-
-        m_count++;
         return 0;
     }
 
@@ -306,15 +318,6 @@ struct SoundDriver_Jack : public SoundDriver{
         return jack_get_sample_rate(m_jack_client);
     }
 
-    virtual long count()
-    {
-        return m_count;
-    }
-
-    virtual int readTime(long* time)
-    {
-        return m_time_buffer.read(time, 1);
-    }
 
     template<typename PortT> PortT* newPort(const std::string &name, int buffer_size)
     {
@@ -364,6 +367,16 @@ struct SoundDriver_Jack : public SoundDriver{
     virtual SoundDriverIOPort_MidiInput* newMidiInput(const std::string &name)
     {
         return newPort<SoundDriverIOPort_MidiInput_Jack>(name, 32);
+    }
+
+    virtual SoundDriverIOStatusPort* newStatusPort()
+    {
+        auto port = new(std::nothrow) SoundDriverIOStatusPort_Jack;
+        if(!port)
+            return nullptr;
+
+        m_new_status_ports.write(port);
+        return port;
     }
 };
 

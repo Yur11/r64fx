@@ -301,25 +301,25 @@ private:
             }
         }
 
-        long time = 0;
-        if(m_audio_out && m_driver->readTime(&time))
-        {
-            float delta = m_frequency / float(m_driver->sampleRate());
-            for(int i=0; i<m_driver->bufferSize(); i++)
-            {
-                m_buffer[i] = sin(m_value * 2.0 * M_PI);
-
-                m_value += delta;
-                if(m_value >= 1.0f)
-                    m_value -= 1.0f;
-            }
-
-            int nsamples = m_audio_out->writeSamples(m_buffer, m_driver->bufferSize());
-            if(nsamples < m_driver->bufferSize())
-            {
-//                 cerr << "Wrote only " << nsamples << " samples\n";
-            }
-        }
+//         long time = 0;
+//         if(m_audio_out && m_driver->readTime(&time))
+//         {
+//             float delta = m_frequency / float(m_driver->sampleRate());
+//             for(int i=0; i<m_driver->bufferSize(); i++)
+//             {
+//                 m_buffer[i] = sin(m_value * 2.0 * M_PI);
+//
+//                 m_value += delta;
+//                 if(m_value >= 1.0f)
+//                     m_value -= 1.0f;
+//             }
+//
+//             int nsamples = m_audio_out->writeSamples(m_buffer, m_driver->bufferSize());
+//             if(nsamples < m_driver->bufferSize())
+//             {
+// //                 cerr << "Wrote only " << nsamples << " samples\n";
+//             }
+//         }
     }
 
     

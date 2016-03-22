@@ -49,11 +49,22 @@ class SoundDriverIOPort_Midi : public SoundDriverIOPort{
 
 class SoundDriverIOPort_MidiInput    : public SoundDriverIOPort_Midi{
 public:
-    virtual int readEvents(MidiEvent* event, int nevents) = 0;
+    virtual int readEvents(MidiEvent* events, int nevents) = 0;
 };
 
 class SoundDriverIOPort_MidiOutput   : public SoundDriverIOPort_Midi{
 
+};
+
+
+struct SoundDriverIOStatus{
+    long begin_time = 0;
+    long end_time = 0;
+};
+
+class SoundDriverIOStatusPort{
+public:
+    virtual int readStatus(SoundDriverIOStatus* status, int nitems = 1) = 0;
 };
 
 
@@ -76,13 +87,11 @@ public:
 
     virtual int sampleRate() = 0;
 
-    virtual long count() = 0;
-
-    virtual int readTime(long* time) = 0;
-
     virtual SoundDriverIOPort_AudioOutput* newAudioOutput(const std::string &name = "") = 0;
 
     virtual SoundDriverIOPort_MidiInput* newMidiInput(const std::string &name = "") = 0;
+
+    virtual SoundDriverIOStatusPort* newStatusPort() = 0;
 
     static SoundDriver* newInstance(SoundDriver::Type type = SoundDriver::Type::Jack);
 
