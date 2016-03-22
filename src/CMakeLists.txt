@@ -30,6 +30,7 @@ set(SRC
     Midi.cpp
     Mouse.cpp
     Mutex.cpp
+    NodeGraph.cpp
     Painter.cpp
     Program.cpp
     SignalData.cpp
@@ -57,7 +58,7 @@ set(SRC
     sleep.cpp
 )
 
-add_executable(r64x ${SRC})
+add_executable(r64fx ${SRC})
 
 set(LIBS
     X11
@@ -69,4 +70,4 @@ set(LIBS
     pthread
 )
 
-target_link_libraries(r64x ${LIBS})
+target_link_libraries(r64fx ${LIBS})
