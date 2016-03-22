@@ -4,6 +4,7 @@
 #include <jack/midiport.h>
 #include "CircularBuffer.hpp"
 #include "LinkedList.hpp"
+#include "current_time.hpp"
 
 namespace r64fx{
 
@@ -168,7 +169,9 @@ struct SoundDriverIOPort_MidiOutput_Jack : public SoundDriverIOPort_MidiOutput{
 };
 
 
-struct SoundDriverIOStatusPort_Jack : public SoundDriverIOStatusPort{
+struct SoundDriverIOStatusPort_Jack
+: public SoundDriverIOStatusPort
+, public LinkedList<SoundDriverIOStatusPort_Jack>::Node{
     CircularBuffer<SoundDriverIOStatus> buffer;
 
     SoundDriverIOStatusPort_Jack()
@@ -217,10 +220,12 @@ struct SoundDriver_Jack : public SoundDriver{
 
     int process(int nframes)
     {
-        constexpr int max_new_port_count = 16;
+        SoundDriverIOStatus status;
+        status.begin_time = current_time();
+
         int new_port_count = 0;
         SoundDriverIOPort_Jack* new_port = nullptr;
-        while(m_new_ports.read(&new_port, 1) && new_port_count < max_new_port_count)
+        while(m_new_ports.read(&new_port, 1) && new_port_count < 16)
         {
             if(new_port)
             {
@@ -267,6 +272,22 @@ struct SoundDriver_Jack : public SoundDriver{
 
                 }
             }
+        }
+
+        SoundDriverIOStatusPort_Jack* status_port = nullptr;
+        while(m_new_status_ports.read(&status_port, 1))
+        {
+            if(status_port)
+            {
+                m_status_ports.append(status_port);
+            }
+            status_port = nullptr;
+        }
+
+        status.end_time = current_time();
+        for(auto status_port : m_status_ports)
+        {
+            status_port->buffer.write(&status, 1);
         }
 
         return 0;
@@ -359,16 +380,19 @@ struct SoundDriver_Jack : public SoundDriver{
         return port_iface;
     }
 
+
     virtual SoundDriverIOPort_AudioOutput* newAudioOutput(const std::string &name)
     {
         return newPort<SoundDriverIOPort_AudioOutput_Jack>(name, bufferSize() * 2);
     }
+
 
     virtual SoundDriverIOPort_MidiInput* newMidiInput(const std::string &name)
     {
         return newPort<SoundDriverIOPort_MidiInput_Jack>(name, 32);
     }
 
+    
     virtual SoundDriverIOStatusPort* newStatusPort()
     {
         auto port = new(std::nothrow) SoundDriverIOStatusPort_Jack;

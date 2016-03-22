@@ -60,6 +60,11 @@ class SoundDriverIOPort_MidiOutput   : public SoundDriverIOPort_Midi{
 struct SoundDriverIOStatus{
     long begin_time = 0;
     long end_time = 0;
+
+    inline operator bool()
+    {
+        return begin_time != 0 && end_time != 0;
+    }
 };
 
 class SoundDriverIOStatusPort{

@@ -20,6 +20,7 @@
 #include "KeyEvent.hpp"
 #include "SoundDriver.hpp"
 #include "Timer.hpp"
+#include "NodeGraph.hpp"
 
 using namespace std;
 using namespace r64fx;
@@ -168,6 +169,8 @@ class MyProgram : public Program{
     Timer m_timer1;
     Timer m_timer2;
 
+    NodeGraph* m_graph = nullptr;
+
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
     
@@ -210,34 +213,11 @@ private:
         m_container->show();
 
         m_driver = SoundDriver::newInstance();
-        if(m_driver)
+        m_graph = new NodeGraph(m_driver);
+        if(m_driver && m_graph)
         {
             m_driver->enable();
-
-            m_audio_out = m_driver->newAudioOutput("audio_out");
-            if(!m_audio_out)
-            {
-                cerr << "Failed to create audio output!\n";
-            }
-
-            m_buffer = new float[m_driver->bufferSize()];
-
-            m_midi_in = m_driver->newMidiInput("midi_in");
-            if(!m_midi_in)
-            {
-                cerr << "Failed to create midi input!\n";
-            }
-
-            m_timer1.onTimeout([](Timer*, void* arg){ ((MyProgram*)arg)->onTimer1(); }, this);
-            int interval = (float(m_driver->bufferSize()) / float(m_driver->sampleRate())) * 1000 * 1000 - 100;
-            interval /= 10;
-            if(interval < 100)
-                interval = 100;
-            cout << "interval: " << interval << "\n";
-            m_timer1.setInterval(interval);
-            m_timer1.start();
-
-
+            m_graph->enable();
         }
         else
         {
@@ -331,6 +311,9 @@ private:
 
         if(m_container)
             delete m_container;
+
+        if(m_graph)
+            delete m_graph;
 
         if(m_driver)
             SoundDriver::deleteInstance(m_driver);
