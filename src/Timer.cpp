@@ -104,7 +104,21 @@ Timer::Timer(long interval)
 Timer::~Timer()
 {
     if(m_impl)
+    {
+        TimerThread* thread = get_thread();
+        if(thread)
+        {
+            auto &timers = thread->timers;
+            auto it = timers.begin();
+            while(it != timers.end() || *it == m_impl) it++;
+            if(it != timers.end())
+            {
+                timers.erase(it);
+            }
+        }
+
         delete m_impl;
+    }
 }
 
 
