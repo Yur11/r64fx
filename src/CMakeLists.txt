@@ -51,8 +51,10 @@ set(SRC
     Widget_Text.cpp
     Widget_View.cpp
     Window.cpp
+    current_time.cpp
     gl.cpp
     main.cpp
+    sleep.cpp
 )
 
 add_executable(r64x ${SRC})

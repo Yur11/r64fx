@@ -2,10 +2,9 @@
 #include <iostream>
 #include <vector>
 #include <limits>
-#include <unistd.h>
-#include <sys/time.h>
 #include "Thread.hpp"
 #include "Mutex.hpp"
+#include "current_time.hpp"
 
 using namespace std;
 
@@ -199,14 +198,6 @@ int Timer::runTimers()
         return numeric_limits<int>::max();
     else
         return time_diff;
-}
-
-
-long current_time()
-{
-    timeval tv;
-    gettimeofday(&tv, nullptr);
-    return tv.tv_usec + tv.tv_sec * 1000 * 1000;
 }
 
 }//namespace r64fx
