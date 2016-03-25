@@ -213,7 +213,7 @@ private:
         m_container->show();
 
         m_driver = SoundDriver::newInstance();
-        m_graph = new NodeGraph(m_driver);
+        m_graph = NodeGraph::newInstance(m_driver);
         if(m_driver && m_graph)
         {
             m_driver->enable();
@@ -294,7 +294,7 @@ private:
             delete m_container;
 
         if(m_graph)
-            delete m_graph;
+            NodeGraph::deleteInstance(m_graph);
 
         if(m_driver)
             SoundDriver::deleteInstance(m_driver);

@@ -1,21 +1,103 @@
 #ifndef R64FX_NODE_GRAPH_HPP
 #define R64FX_NODE_GRAPH_HPP
 
+#include <string>
+#include "LinkedList.hpp"
+#include "IteratorPair.hpp"
+
+
 namespace r64fx{
 
 class SoundDriver;
 
+
+class NodePort{
+public:
+    enum class Type{
+        Signal,
+        Notes
+    };
+
+    virtual Type type() = 0;
+
+    virtual std::string name() = 0;
+
+    virtual bool isOutput() = 0;
+};
+
+class NodeInput : public NodePort{
+public:
+    virtual bool isOutput() = 0;
+};
+
+class NodeOutput : public NodePort{
+public:
+    virtual bool isOutput() = 0;
+};
+
+
+class NodeClass{
+public:
+    virtual std::string name() = 0;
+
+    virtual IteratorPair<NodeInput*> inputs() = 0;
+
+    virtual IteratorPair<NodeOutput*> outputs() = 0;
+};
+
+
+class Node{
+public:
+    virtual NodeClass* nodeClass() = 0;
+
+    virtual void setSize(int size) = 0;
+
+    virtual int size() = 0;
+};
+
+
+class NodeLink{
+public:
+    enum class Type{
+        Write,
+        Mix,
+        Modulate
+    };
+
+    virtual Type type() = 0;
+};
+
+
 class NodeGraph{
     void* m = nullptr;
 
+protected:
+    NodeGraph(){}
+
+    virtual ~NodeGraph() {};
+
 public:
-    NodeGraph(SoundDriver* driver);
+    virtual void enable() = 0;
 
-    ~NodeGraph();
+    virtual void disable() = 0;
 
-    void enable();
+//     virtual IteratorPair<NodeClass*> nodeClasses() = 0;
+//
+//     virtual Node* newNode(NodeClass* node_class) = 0;
+//
+//     virtual NodeLink* newNodeLink(
+//         Node* dst, NodeInput* dst_port,
+//         Node* src, NodePort* src_port,
+//         NodeLink::Type type = NodeLink::Type::Write,
+//         int* dst_slots = nullptr, int num_dst_slots = 0,
+//         int* src_slots = nullptr, int num_src_slots = 0
+//     ) = 0;
+//
+//     virtual IteratorPair<NodeLink> nodeLinks() = 0;
 
-    void disable();
+    static NodeGraph* newInstance(SoundDriver* sound_driver);
+
+    static void deleteInstance(NodeGraph* graph);
 };
 
 }//namespace r64fx
