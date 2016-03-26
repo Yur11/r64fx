@@ -6,24 +6,137 @@
 #include <iostream>
 #include <cmath>
 
-#define m_impl ((NodeGraphImpl*)m)
-
 
 using namespace std;
 
 namespace r64fx{
-
 
 enum class NodeGraphCommand{
     Quit
 };
 
 
+class NodeClassImpl;
+
+class NodeImpl : public Node, public LinkedList<NodeImpl>::Node{
+    int m_size;
+
+public:
+    NodeImpl(int size)
+    : m_size(size)
+    {
+
+    }
+
+    virtual ~NodeImpl()
+    {
+
+    }
+
+    virtual void setSize(int size)
+    {
+        m_size = size;
+    }
+
+    virtual int size()
+    {
+        return m_size;
+    }
+};
+
+
+struct NodeClassImpl{
+    LinkedList<NodeImpl> m_nodes;
+
+    Node* newNode()
+    {
+        auto impl = new(std::nothrow) NodeImpl(1);
+        if(!impl)
+            return nullptr;
+        m_nodes.append(impl);
+        return impl;
+    }
+
+    void deleteNode(Node* node)
+    {
+        auto impl = dynamic_cast<NodeImpl*>(node);
+        if(impl)
+        {
+            m_nodes.remove(impl);
+            delete impl;
+        }
+    }
+
+    virtual void process() = 0;
+};
+
+
+struct NodeClassImpl_AudioInput
+: public NodeClass_AudioInput
+, public NodeClassImpl{
+
+    virtual void process()
+    {
+
+    }
+};
+
+
+struct NodeClassImpl_AudioOutput
+: public NodeClass_AudioOutput
+, public NodeClassImpl{
+    float**  buffers  = nullptr;
+    float*   ports    = nullptr;
+
+    virtual void process()
+    {
+
+    }
+};
+
+
+class NodeClassImpl_MidiIO
+: public NodeClass_MidiIO
+, public NodeClassImpl{
+    virtual void process()
+    {
+
+    }
+};
+
+
+class NodeClassImpl_Oscillator
+: public NodeClass_Oscillator
+, public NodeClassImpl{
+
+    virtual void process()
+    {
+
+    }
+};
+
+
+class NodeClassImpl_Player
+: public NodeClass_Player
+, public NodeClassImpl{
+    virtual void process()
+    {
+
+    }
+};
+
+
 struct NodeGraphImpl : public NodeGraph{
     SoundDriver* driver = nullptr;
-    Thread thread;
-    CircularBuffer<NodeGraphCommand> commands;
+
     bool is_enabled = false;
+
+    Thread thread;
+
+    CircularBuffer<NodeGraphCommand> commands;
+
+    LinkedList<NodeClassImpl> m_node_classes;
+
 
     NodeGraphImpl(SoundDriver* sound_driver)
     : driver(sound_driver)
@@ -62,32 +175,6 @@ struct NodeGraphImpl : public NodeGraph{
     {
         SoundDriverIOStatusPort* status_port = driver->newStatusPort();
 
-
-        auto audio_out = driver->newAudioOutput("audio_out");
-        if(!audio_out)
-        {
-            cerr << "Failed to create audio output!\n";
-        }
-
-        auto midi_in = driver->newMidiInput("midi_in");
-        if(!midi_in)
-        {
-            cerr << "Failed to create midi input!\n";
-        }
-
-        float* buffer = new float[driver->bufferSize()];
-        for(int i=0; i<driver->bufferSize(); i++)
-        {
-            buffer[i] = 0.0f;
-        }
-
-        float freq1 = 440.0f;
-        float freq2 = 440.0f;
-        float t1 = 0.0f;
-        float t2 = 0.0f;
-        float coeff = 1.0f;
-
-
         bool running = true;
         while(running)
         {
@@ -112,68 +199,11 @@ struct NodeGraphImpl : public NodeGraph{
 
             if(status)
             {
-                MidiEvent event;
-                while(midi_in->readEvents(&event, 1))
-                {
-                    auto msg = event.message();
-                    switch(msg.type())
-                    {
-                        case MidiMessage::Type::ControlChange:
-                        {
-                            cout << msg.controllerNumber() << "," << msg.controllerValue() << "\n";
 
-                            if(msg.controllerNumber() == 1)
-                            {
-                                freq1 = 55.0f + 880.0f * float(msg.controllerValue()) / 128.0f;
-                            }
-
-                            if(msg.controllerNumber() == 2)
-                            {
-                                freq2 = 55.0f + 880.0f * float(msg.controllerValue()) / 128.0f;
-                            }
-
-                            if(msg.controllerNumber() == 3)
-                            {
-                                coeff = float(msg.controllerValue()) / 128.0f;
-                            }
-
-                            break;
-                        }
-
-                        default:
-                        {
-                            cout << "other\n";
-                            break;
-                        }
-                    }
-                }
-
-                for(int i=0; i<driver->bufferSize(); i++)
-                {
-                    float f = freq1;
-
-                    float d2 = freq2 / float(driver->sampleRate());
-                    f *= sin(t2 * M_PI * 2.0f) * coeff + (1.0f - coeff);
-                    t2 += d2;
-                    if(t2 >= 0.0f)
-                        t2 -= 1.0f;
-
-                    float d1 = f / float(driver->sampleRate());
-                    buffer[i] = sin(t1 * M_PI * 2.0f);
-                    t1 += d1;
-                    if(t1 >= 0.0f)
-                        t1 -= 1.0f;
-                }
-
-                audio_out->writeSamples(buffer, driver->bufferSize());
             }
 
             sleep_microseconds(100);
         }
-
-
-        delete buffer;
-
 
         return 0;
     }

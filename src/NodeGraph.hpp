@@ -3,8 +3,6 @@
 
 #include <string>
 #include "LinkedList.hpp"
-#include "IteratorPair.hpp"
-
 
 namespace r64fx{
 
@@ -12,6 +10,9 @@ class SoundDriver;
 
 
 class NodePort{
+protected:
+    virtual ~NodePort() {}
+
 public:
     enum class Type{
         Signal,
@@ -25,10 +26,12 @@ public:
     virtual bool isOutput() = 0;
 };
 
+
 class NodeInput : public NodePort{
 public:
     virtual bool isOutput() = 0;
 };
+
 
 class NodeOutput : public NodePort{
 public:
@@ -36,23 +39,44 @@ public:
 };
 
 
+class Node{
+public:
+    virtual void setSize(int size) = 0;
+
+    virtual int size() = 0;
+};
+
+
 class NodeClass{
 public:
     virtual std::string name() = 0;
 
-    virtual IteratorPair<NodeInput*> inputs() = 0;
-
-    virtual IteratorPair<NodeOutput*> outputs() = 0;
+    virtual Node* newNode() = 0;
 };
 
 
-class Node{
-public:
-    virtual NodeClass* nodeClass() = 0;
+class NodeClass_AudioInput : public NodeClass{
 
-    virtual void setSize(int size) = 0;
+};
 
-    virtual int size() = 0;
+
+class NodeClass_AudioOutput : public NodeClass{
+
+};
+
+
+class NodeClass_MidiIO : public NodeClass{
+
+};
+
+
+class NodeClass_Oscillator : public NodeClass{
+
+};
+
+
+class NodeClass_Player : public NodeClass{
+
 };
 
 
