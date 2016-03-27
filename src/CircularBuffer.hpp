@@ -1,6 +1,7 @@
 #ifndef R64FX_CIRCULAR_BUFFER_HPP
 #define R64FX_CIRCULAR_BUFFER_HPP
 
+#include <new>
 #include <cstring>
 
 namespace r64fx{

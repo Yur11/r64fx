@@ -16,6 +16,89 @@ enum class NodeGraphCommand{
 };
 
 
+struct NodePortImpl{
+    string  m_name   = "";
+    float*  m_buffer = nullptr;
+    int     m_size   = 0;
+
+    void resize(int new_size, float default_value = 0.0f)
+    {
+        if(new_size == m_size)
+            return;
+
+        if(new_size > 0)
+        {
+            auto new_buffer = new(std::nothrow) float[new_size];
+            if(!new_buffer)
+            {
+                cerr << "Failed to allocate port buffer!\n";
+                return;
+            }
+
+            if(m_buffer)
+            {
+                int copy_size = min(m_size, new_size);
+                for(int i=0; i<copy_size; i++)
+                {
+                    new_buffer[i] = m_buffer[i];
+                }
+
+                delete m_buffer;
+            }
+            else
+            {
+                for(int i=0; i<new_size; i++)
+                {
+                    new_buffer[i] = default_value;
+                }
+            }
+
+            m_buffer = new_buffer;
+            m_size = new_size;
+        }
+        else
+        {
+            if(m_buffer)
+            {
+                delete m_buffer;
+                m_buffer = nullptr;
+                m_size = 0;
+            }
+        }
+    }
+};
+
+
+struct NodeInputImpl
+: public NodeInput
+, public NodePortImpl{
+    virtual std::string name()
+    {
+        return m_name;
+    }
+
+    virtual bool isOutput()
+    {
+        return false;
+    }
+};
+
+
+struct NodeOutputImpl
+: public NodeOutput
+, public NodePortImpl{
+    virtual std::string name()
+    {
+        return m_name;
+    }
+
+    virtual bool isOutput()
+    {
+        return true;
+    }
+};
+
+
 class NodeClassImpl;
 
 class NodeImpl : public Node, public LinkedList<NodeImpl>::Node{
@@ -45,29 +128,28 @@ public:
 };
 
 
-struct NodeClassImpl{
-    LinkedList<NodeImpl> m_nodes;
-
-    Node* newNode()
+class Nodes : public LinkedList<NodeImpl>{
+public:
+    int totalSize() const
     {
-        auto impl = new(std::nothrow) NodeImpl(1);
-        if(!impl)
-            return nullptr;
-        m_nodes.append(impl);
-        return impl;
-    }
-
-    void deleteNode(Node* node)
-    {
-        auto impl = dynamic_cast<NodeImpl*>(node);
-        if(impl)
+        int num = 0;
+        for(auto node : *this)
         {
-            m_nodes.remove(impl);
-            delete impl;
+            num += node->size();
         }
+        return num;
     }
+};
+
+
+struct NodeClassImpl : public LinkedList<NodeClassImpl>::Node{
+    Nodes m_nodes;
+
+    virtual void prepare() = 0;
 
     virtual void process() = 0;
+
+    virtual void updatePorts() = 0;
 };
 
 
@@ -75,30 +157,83 @@ struct NodeClassImpl_AudioInput
 : public NodeClass_AudioInput
 , public NodeClassImpl{
 
+    virtual void prepare()
+    {
+
+    }
+
     virtual void process()
+    {
+
+    }
+
+    virtual void updatePorts()
     {
 
     }
 };
 
 
-struct NodeClassImpl_AudioOutput
+class NodeClassImpl_AudioOutput
 : public NodeClass_AudioOutput
 , public NodeClassImpl{
-    float**  buffers  = nullptr;
-    float*   ports    = nullptr;
+
+    NodeInputImpl m_node_input;
+
+public:
+    virtual void prepare()
+    {
+
+    }
 
     virtual void process()
+    {
+
+    }
+
+    virtual void updatePorts()
+    {
+        m_node_input.resize(m_nodes.totalSize());
+    }
+};
+
+
+class NodeClassImpl_MidiInput
+: public NodeClass_MidiInput
+, public NodeClassImpl{
+
+    virtual void prepare()
+    {
+
+    }
+
+    virtual void process()
+    {
+
+    }
+
+    virtual void updatePorts()
     {
 
     }
 };
 
 
-class NodeClassImpl_MidiIO
-: public NodeClass_MidiIO
+class NodeClassImpl_MidiOutput
+: public NodeClass_MidiOutput
 , public NodeClassImpl{
+
+    virtual void prepare()
+    {
+
+    }
+
     virtual void process()
+    {
+
+    }
+
+    virtual void updatePorts()
     {
 
     }
@@ -109,7 +244,17 @@ class NodeClassImpl_Oscillator
 : public NodeClass_Oscillator
 , public NodeClassImpl{
 
+    virtual void prepare()
+    {
+
+    }
+
     virtual void process()
+    {
+
+    }
+
+    virtual void updatePorts()
     {
 
     }
@@ -119,6 +264,32 @@ class NodeClassImpl_Oscillator
 class NodeClassImpl_Player
 : public NodeClass_Player
 , public NodeClassImpl{
+
+    virtual void prepare()
+    {
+
+    }
+
+    virtual void process()
+    {
+
+    }
+
+    virtual void updatePorts()
+    {
+
+    }
+};
+
+
+struct NodeLinkImpl : public NodeLink, public LinkedList<NodeLinkImpl>::Node{
+    NodeLink::Type m_type = NodeLink::Type::Mix;
+
+    virtual Type type()
+    {
+        return m_type;
+    }
+
     virtual void process()
     {
 
@@ -137,6 +308,7 @@ struct NodeGraphImpl : public NodeGraph{
 
     LinkedList<NodeClassImpl> m_node_classes;
 
+    LinkedList<NodeLinkImpl> m_node_links;
 
     NodeGraphImpl(SoundDriver* sound_driver)
     : driver(sound_driver)
@@ -171,6 +343,18 @@ struct NodeGraphImpl : public NodeGraph{
     }
 
 
+    virtual Node* newNode(NodeClass* node_class, int size)
+    {
+        return nullptr;
+    }
+
+
+    virtual void deleteNode(Node* node)
+    {
+
+    }
+
+
     void* process()
     {
         SoundDriverIOStatusPort* status_port = driver->newStatusPort();
@@ -194,15 +378,34 @@ struct NodeGraphImpl : public NodeGraph{
                 }
             }
 
+            for(auto node_class : m_node_classes)
+            {
+                node_class->updatePorts();
+                node_class->prepare();
+            }
+
             SoundDriverIOStatus status;
             while(status_port->readStatus(&status, 1));
 
             if(status)
             {
+                for(int i=0; i<driver->bufferSize(); i++)
+                {
+                    for(auto node_class : m_node_classes)
+                    {
+                        node_class->process();
+                    }
 
+                    for(auto node_link : m_node_links)
+                    {
+                        node_link->process();
+                    }
+                }
             }
-
-            sleep_microseconds(100);
+            else
+            {
+                sleep_microseconds(100);
+            }
         }
 
         return 0;

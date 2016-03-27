@@ -20,7 +20,7 @@
 #include "KeyEvent.hpp"
 #include "SoundDriver.hpp"
 #include "Timer.hpp"
-#include "NodeGraph.hpp"
+// #include "NodeGraph.hpp"
 
 using namespace std;
 using namespace r64fx;
@@ -169,7 +169,7 @@ class MyProgram : public Program{
     Timer m_timer1;
     Timer m_timer2;
 
-    NodeGraph* m_graph = nullptr;
+//     NodeGraph* m_graph = nullptr;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -213,11 +213,11 @@ private:
         m_container->show();
 
         m_driver = SoundDriver::newInstance();
-        m_graph = NodeGraph::newInstance(m_driver);
-        if(m_driver && m_graph)
+//         m_graph = NodeGraph::newInstance(m_driver);
+        if(m_driver/* && m_graph*/)
         {
             m_driver->enable();
-            m_graph->enable();
+//             m_graph->enable();
         }
         else
         {
@@ -293,8 +293,8 @@ private:
         if(m_container)
             delete m_container;
 
-        if(m_graph)
-            NodeGraph::deleteInstance(m_graph);
+//         if(m_graph)
+//             NodeGraph::deleteInstance(m_graph);
 
         if(m_driver)
             SoundDriver::deleteInstance(m_driver);

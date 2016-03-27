@@ -14,13 +14,6 @@ protected:
     virtual ~NodePort() {}
 
 public:
-    enum class Type{
-        Signal,
-        Notes
-    };
-
-    virtual Type type() = 0;
-
     virtual std::string name() = 0;
 
     virtual bool isOutput() = 0;
@@ -28,14 +21,12 @@ public:
 
 
 class NodeInput : public NodePort{
-public:
-    virtual bool isOutput() = 0;
+
 };
 
 
 class NodeOutput : public NodePort{
-public:
-    virtual bool isOutput() = 0;
+    
 };
 
 
@@ -49,33 +40,51 @@ public:
 
 class NodeClass{
 public:
+    enum class Type{
+        AudioInput,
+        AudioOutput,
+        MidiInput,
+        MidiOutput,
+        Oscillator,
+        Player,
+    };
+
     virtual std::string name() = 0;
-
-    virtual Node* newNode() = 0;
 };
 
 
-class NodeClass_AudioInput : public NodeClass{
-
-};
-
-
-class NodeClass_AudioOutput : public NodeClass{
+class NodeClass_AudioInput
+: public NodeClass{
 
 };
 
 
-class NodeClass_MidiIO : public NodeClass{
+class NodeClass_AudioOutput
+: public NodeClass{
 
 };
 
 
-class NodeClass_Oscillator : public NodeClass{
+class NodeClass_MidiInput
+: public NodeClass{
 
 };
 
 
-class NodeClass_Player : public NodeClass{
+class NodeClass_MidiOutput
+: public NodeClass{
+
+};
+
+
+class NodeClass_Oscillator
+: public NodeClass{
+
+};
+
+
+class NodeClass_Player
+: public NodeClass{
 
 };
 
@@ -93,8 +102,6 @@ public:
 
 
 class NodeGraph{
-    void* m = nullptr;
-
 protected:
     NodeGraph(){}
 
@@ -118,6 +125,10 @@ public:
 //     ) = 0;
 //
 //     virtual IteratorPair<NodeLink> nodeLinks() = 0;
+
+    virtual Node* newNode(NodeClass* node_class, int size) = 0;
+
+    virtual void deleteNode(Node* node) = 0;
 
     static NodeGraph* newInstance(SoundDriver* sound_driver);
 
