@@ -36,7 +36,7 @@ void SignalGraph::process()
         {
             for(auto node_class : m_node_classes)
             {
-                node_class->process();
+                node_class->process(i);
             }
         }
 

@@ -59,15 +59,18 @@ void SignalNodeClass_AudioIO::nodeRemoved(SignalNode* node)
 }
 
 
-void SignalNodeClass_AudioInput::prepare()
+void SignalNodeClass_AudioIO::prepare()
 {
 
 }
 
 
-void SignalNodeClass_AudioInput::process()
+void SignalNodeClass_AudioInput::process(int sample)
 {
-
+    for(int i=0; i<m_size; i++)
+    {
+        m_ports[i] = m_buffers[i][sample];
+    }
 }
 
 
@@ -77,15 +80,12 @@ void SignalNodeClass_AudioInput::finish()
 }
 
 
-void SignalNodeClass_AudioOutput::prepare()
+void SignalNodeClass_AudioOutput::process(int sample)
 {
-
-}
-
-
-void SignalNodeClass_AudioOutput::process()
-{
-
+    for(int i=0; i<m_size; i++)
+    {
+        m_buffers[i][sample] = m_ports[i];
+    }
 }
 
 

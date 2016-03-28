@@ -85,4 +85,16 @@ int SignalNodeClass::totalSlotCount() const
     return count;
 }
 
+
+void SignalNodeClass::setNodeData(SignalNode* node, void* data)
+{
+    node->data = data;
+}
+
+
+void* SignalNodeClass::getNodeData(SignalNode* node)
+{
+    return node->data;
+}
+
 }//namespace r64fx
