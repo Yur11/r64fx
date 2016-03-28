@@ -19,7 +19,7 @@ public:
     void addNodeClass(SignalNodeClass* node_class);
 
 public:
-    void* process();
+    void process();
 };
 
 }//namespace r64fx

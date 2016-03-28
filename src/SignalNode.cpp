@@ -1,6 +1,10 @@
 #include "SignalNode.hpp"
+#include <new>
 
 namespace r64fx{
+
+LinkedList<SignalNode> g_spare_nodes;
+
 
 void SignalNode::setParentClass(SignalNodeClass* parent_class)
 {
@@ -8,9 +12,9 @@ void SignalNode::setParentClass(SignalNodeClass* parent_class)
 }
 
 
-void SignalNode::setSlotCount(int count)
+void SignalNode::setSlotCount(int slot_count)
 {
-    m_slot_count = count;
+    m_slot_count = slot_count;
 }
 
 
@@ -32,15 +36,53 @@ int SignalNode::slotOffset() const
 }
 
 
-SignalNode* SignalNodeClass::newNode()
+SignalNode* SignalNodeClass::newNode(int slot_count)
 {
-    return nullptr;
+    SignalNode* node = nullptr;
+    if(g_spare_nodes.isEmpty())
+    {
+        node = new(std::nothrow) SignalNode;
+    }
+    else
+    {
+        node = g_spare_nodes.last();
+        g_spare_nodes.remove(node);
+    }
+
+    if(node)
+    {
+        int offset = 0;
+        if(!g_spare_nodes.isEmpty())
+        {
+            auto last_node = g_spare_nodes.last();
+            offset = last_node->slotOffset() + last_node->slotCount();
+        }
+
+        node->setParentClass(this);
+        node->setSlotCount(slot_count);
+        node->setSlotOffset(offset);
+        m_nodes.append(node);
+        nodeAppended(node);
+    }
+
+    return node;
 }
 
 
 void SignalNodeClass::deleteNode(SignalNode* node)
 {
 
+}
+
+
+int SignalNodeClass::totalSlotCount() const
+{
+    int count = 0;
+    for(auto node : m_nodes)
+    {
+        count += node->slotCount();
+    }
+    return count;
 }
 
 }//namespace r64fx

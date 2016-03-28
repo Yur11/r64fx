@@ -17,7 +17,7 @@ class SignalNode : public LinkedList<SignalNode>::Node{
     void setParentClass(SignalNodeClass* parent_class);
 
 public:
-    void setSlotCount(int count);
+    void setSlotCount(int slot_count);
 
     int slotCount() const;
 
@@ -31,7 +31,7 @@ class SignalNodeClass : public LinkedList<SignalNodeClass>::Node{
     LinkedList<SignalNode> m_nodes;
 
 public:
-    SignalNode* newNode();
+    SignalNode* newNode(int slot_count = 1);
 
     void deleteNode(SignalNode* node);
 
@@ -40,6 +40,13 @@ public:
     virtual void process() = 0;
 
     virtual void finish() = 0;
+
+    int totalSlotCount() const;
+
+protected:
+    virtual void nodeAppended(SignalNode* node) = 0;
+
+    virtual void nodeRemoved(SignalNode* node) = 0;
 };
 
 }//namespace r64fx

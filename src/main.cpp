@@ -293,9 +293,6 @@ private:
         if(m_container)
             delete m_container;
 
-//         if(m_graph)
-//             NodeGraph::deleteInstance(m_graph);
-
         if(m_driver)
             SoundDriver::deleteInstance(m_driver);
     }

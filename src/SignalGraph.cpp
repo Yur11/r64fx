@@ -20,41 +20,35 @@ void SignalGraph::addNodeClass(SignalNodeClass* node_class)
 }
 
 
-void* SignalGraph::process()
+void SignalGraph::process()
 {
-    bool running = true;
-    while(running)
-    {
-        SoundDriverIOStatus status;
-        while(m_status_port->readStatus(&status, 1));
+    SoundDriverIOStatus status;
+    while(m_status_port->readStatus(&status, 1));
 
-        if(status)
+    if(status)
+    {
+        for(auto node_class : m_node_classes)
+        {
+            node_class->prepare();
+        }
+
+        for(int i=0; i<m_driver->bufferSize(); i++)
         {
             for(auto node_class : m_node_classes)
             {
-                node_class->prepare();
-            }
-
-            for(int i=0; i<m_driver->bufferSize(); i++)
-            {
-                for(auto node_class : m_node_classes)
-                {
-                    node_class->process();
-                }
-            }
-
-            for(auto node_class : m_node_classes)
-            {
-                node_class->finish();
+                node_class->process();
             }
         }
-        else
+
+        for(auto node_class : m_node_classes)
         {
-            sleep_microseconds(100);
+            node_class->finish();
         }
     }
-
-    return nullptr;
+    else
+    {
+        sleep_microseconds(100);
+    }
 }
 
 }//namespace r64fx
