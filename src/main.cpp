@@ -19,8 +19,11 @@
 #include "ImageAnimation.hpp"
 #include "KeyEvent.hpp"
 #include "SoundDriver.hpp"
+#include "SignalGraph.hpp"
 #include "Timer.hpp"
-// #include "NodeGraph.hpp"
+#include "Thread.hpp"
+#include "sleep.hpp"
+
 
 using namespace std;
 using namespace r64fx;
@@ -169,7 +172,7 @@ class MyProgram : public Program{
     Timer m_timer1;
     Timer m_timer2;
 
-//     NodeGraph* m_graph = nullptr;
+    Thread m_graph_thread;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -213,11 +216,14 @@ private:
         m_container->show();
 
         m_driver = SoundDriver::newInstance();
-//         m_graph = NodeGraph::newInstance(m_driver);
-        if(m_driver/* && m_graph*/)
+        if(m_driver)
         {
             m_driver->enable();
-//             m_graph->enable();
+
+            m_graph_thread.run([](void* arg) -> void*{
+                auto self = (MyProgram*)arg;
+                return self->processGraph();
+            }, this);
         }
         else
         {
@@ -226,61 +232,29 @@ private:
     }
 
 
-    void onTimer1()
+    void* processGraph()
     {
-        if(m_midi_in)
+        SignalGraph graph(m_driver);
+
+        int i = 0;
+        int n = 0;
+
+        bool running = true;
+        while(running)
         {
-            MidiEvent event;
-            while(m_midi_in->readEvents(&event, 1))
+            if(graph.process())
             {
-                auto msg = event.message();
-                switch(msg.type())
-                {
-                    case MidiMessage::Type::NoteOff:
-                    {
-                        cout << "NoteOff:       "
-                             << msg.channel() << ", "
-                             << msg.noteNumber() << ", "
-                             << msg.velocity() << "\n";
-                        break;
-                    }
-
-                    case MidiMessage::Type::NoteOn:
-                    {
-                        cout << "NoteOn:        "
-                             << msg.channel() << ", "
-                             << msg.noteNumber() << ", "
-                             << msg.velocity() << "\n";
-                        break;
-                    }
-
-                    case MidiMessage::Type::ControlChange:
-                    {
-                        cout << "ControlChange: "
-                             << msg.channel() << ", "
-                             << msg.controllerNumber() << ","
-                             << msg.controllerValue() << "\n";
-
-                        if(msg.controllerNumber() == 1 && m_wc1)
-                        {
-                            float value = float(msg.controllerValue()) / 127.0f;
-                            m_wc1->setValue(value);
-                            m_wc1->update();
-                            m_frequency = 440.0f * value;
-                        }
-
-                        break;
-                    }
-
-                    default:
-                    {
-                        cout << "other\n";
-                        break;
-                    }
-                }
+                cout << i++ << " -> " << n << "\n";
+                n = 0;
+            }
+            else
+            {
+                n++;
+                sleep_microseconds(100);
             }
         }
 
+        return nullptr;
     }
 
     

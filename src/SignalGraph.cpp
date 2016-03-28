@@ -1,5 +1,4 @@
 #include "SignalGraph.hpp"
-#include "sleep.hpp"
 
 
 namespace r64fx{
@@ -20,7 +19,7 @@ void SignalGraph::addNodeClass(SignalNodeClass* node_class)
 }
 
 
-void SignalGraph::process()
+bool SignalGraph::process()
 {
     SoundDriverIOStatus status;
     while(m_status_port->readStatus(&status, 1));
@@ -44,11 +43,11 @@ void SignalGraph::process()
         {
             node_class->finish();
         }
+
+        return true;
     }
-    else
-    {
-        sleep_microseconds(100);
-    }
+
+    return false;
 }
 
 }//namespace r64fx
