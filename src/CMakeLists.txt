@@ -38,6 +38,7 @@ set(SRC
     SignalNode.cpp
     SignalNodeConnection.cpp
     SignalNode_AudioIO.cpp
+    SignalNode_Oscillator.cpp
     SignalPort.cpp
     Shader.cpp
     Shader_rgba.cpp

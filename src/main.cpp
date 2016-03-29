@@ -24,6 +24,7 @@
 #include "Thread.hpp"
 #include "sleep.hpp"
 #include "SignalNode_AudioIO.hpp"
+#include "SignalNode_Oscillator.hpp"
 
 
 using namespace std;
@@ -238,18 +239,23 @@ private:
     {
         SignalGraph graph(m_driver);
 
-        SignalNodeClass_AudioInput audio_input_class(m_driver);
-        SignalNodeClass_AudioOutput audio_output_class(m_driver);
+        SignalNodeClass_AudioInput   audio_input_class   (m_driver);
+        SignalNodeClass_AudioOutput  audio_output_class  (m_driver);
+        SignalNodeClass_Oscillator   oscillator_class    (m_driver);
 
         graph.addNodeClass(&audio_input_class);
         graph.addNodeClass(&audio_output_class);
+        graph.addNodeClass(&oscillator_class);
 
         auto output = audio_output_class.newNode("audio_output");
         auto input  = audio_input_class.newNode("audio_input");
+        auto osc    = oscillator_class.newNode();
+
+        oscillator_class.frequency()->buffer()[osc->slotOffset()] = 440.0f;
 
         auto connection = graph.newConnection(
             audio_output_class.sink(), output,
-            audio_input_class.source(), input
+            oscillator_class.sine(), osc
         );
 
         int i = 0;
