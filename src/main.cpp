@@ -25,6 +25,7 @@
 #include "sleep.hpp"
 #include "SignalNode_AudioIO.hpp"
 #include "SignalNode_Oscillator.hpp"
+#include "SoundFile.hpp"
 
 
 using namespace std;
@@ -177,6 +178,8 @@ class MyProgram : public Program{
     Thread m_graph_thread;
     bool m_graph_running = true;
 
+    SoundFile m_sound_file;
+
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
     
@@ -218,20 +221,34 @@ private:
         m_container->alignHorizontally();
         m_container->show();
 
-        m_driver = SoundDriver::newInstance();
-        if(m_driver)
+//         m_driver = SoundDriver::newInstance();
+//         if(m_driver)
         {
-            m_driver->enable();
+//             m_driver->enable();
 
-            m_graph_thread.run([](void* arg) -> void*{
-                auto self = (MyProgram*)arg;
-                return self->processGraph();
-            }, this);
+//             m_graph_thread.run([](void* arg) -> void*{
+//                 auto self = (MyProgram*)arg;
+//                 return self->processGraph();
+//             }, this);
+
+            m_sound_file.open("../amen_break.wav", SoundFile::Mode::Read);
+            if(m_sound_file.isGood())
+            {
+                cout << "OK\n";
+                cout << m_sound_file.channelCount() << "\n";
+                cout << m_sound_file.frameCount() << "\n";
+                cout << m_sound_file.sampleRate() << "\n";
+
+                float l[64];
+                float r[64];
+                float* chans[2] = {l, r};
+                cout << m_sound_file.readFramesUnpack(chans, 64) << "\n";
+            }
         }
-        else
-        {
-            cerr << "No driver!\n";
-        }
+//         else
+//         {
+//             cerr << "No driver!\n";
+//         }
     }
 
 
@@ -284,7 +301,7 @@ private:
     {
         cout << "Cleanup!\n";
         m_graph_running = false;
-        m_graph_thread.join();
+//         m_graph_thread.join();
 
         if(m_Font)
             delete m_Font;
