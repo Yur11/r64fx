@@ -30,6 +30,7 @@ public:
 
 
 class SignalNodeClass : public LinkedList<SignalNodeClass>::Node{
+protected:
     LinkedList<SignalNode> m_nodes;
 
 public:

@@ -23,6 +23,7 @@
 #include "Timer.hpp"
 #include "Thread.hpp"
 #include "sleep.hpp"
+#include "SignalNode_AudioIO.hpp"
 
 
 using namespace std;
@@ -173,6 +174,7 @@ class MyProgram : public Program{
     Timer m_timer2;
 
     Thread m_graph_thread;
+    bool m_graph_running = true;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -236,11 +238,19 @@ private:
     {
         SignalGraph graph(m_driver);
 
+        SignalNodeClass_AudioInput audio_input_class(m_driver);
+        SignalNodeClass_AudioOutput audio_output_class(m_driver);
+
+        graph.addNodeClass(&audio_input_class);
+        graph.addNodeClass(&audio_output_class);
+
+        auto output = audio_output_class.newNode("audio_output");
+        auto input  = audio_input_class.newNode("audio_input");
+
         int i = 0;
         int n = 0;
 
-        bool running = true;
-        while(running)
+        while(m_graph_running)
         {
             if(graph.process())
             {
@@ -254,6 +264,7 @@ private:
             }
         }
 
+        cout << "Graph Thread exit!\n";
         return nullptr;
     }
 
@@ -261,6 +272,9 @@ private:
     virtual void cleanup()
     {
         cout << "Cleanup!\n";
+        m_graph_running = false;
+        m_graph_thread.join();
+
         if(m_Font)
             delete m_Font;
 

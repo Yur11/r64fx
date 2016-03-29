@@ -33,6 +33,15 @@ struct SoundDriverIOPort_Jack
 
 struct SoundDriverIOPort_AudioInput_Jack : public SoundDriverIOPort_AudioInput{
     SoundDriverIOPort_Jack* impl = nullptr;
+    CircularBuffer<float> buffer;
+
+    SoundDriverIOPort_AudioInput_Jack(int buffer_size)
+    : buffer(buffer_size)
+    {
+
+    }
+
+    virtual ~SoundDriverIOPort_AudioInput_Jack() {}
 
     virtual Type type()
     {
@@ -52,6 +61,11 @@ struct SoundDriverIOPort_AudioInput_Jack : public SoundDriverIOPort_AudioInput{
     virtual std::string name()
     {
         return impl->name();
+    }
+
+    virtual int readSamples(float* samples, int nsamples)
+    {
+        return buffer.read(samples, nsamples);
     }
 };
 
@@ -378,6 +392,12 @@ struct SoundDriver_Jack : public SoundDriver{
         m_new_ports.write(port_impl);
 
         return port_iface;
+    }
+
+
+    virtual SoundDriverIOPort_AudioInput* newAudioInput(const std::string &name)
+    {
+        return newPort<SoundDriverIOPort_AudioInput_Jack>(name, bufferSize() * 2);
     }
 
 

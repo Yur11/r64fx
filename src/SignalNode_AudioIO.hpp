@@ -24,13 +24,19 @@ protected:
     void freeBuffers();
 
 public:
-    virtual void prepare();
+    SignalNode* newNode(const std::string &name, int slot_count = 1);
+
+    virtual SoundDriverIOPort::Direction direction() = 0;
 };
 
 
 class SignalNodeClass_AudioInput : public SignalNodeClass_AudioIO{
 public:
-    using SignalNodeClass_AudioIO::SignalNodeClass_AudioIO;
+    SignalNodeClass_AudioInput(SoundDriver* driver);
+
+    virtual SoundDriverIOPort::Direction direction();
+
+    virtual void prepare();
 
     virtual void process(int sample);
 
@@ -40,7 +46,11 @@ public:
 
 class SignalNodeClass_AudioOutput : public SignalNodeClass_AudioIO{
 public:
-    using SignalNodeClass_AudioIO::SignalNodeClass_AudioIO;
+    SignalNodeClass_AudioOutput(SoundDriver* driver);
+
+    virtual SoundDriverIOPort::Direction direction();
+
+    virtual void prepare();
 
     virtual void process(int sample);
 

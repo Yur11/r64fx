@@ -34,7 +34,8 @@ class SoundDriverIOPort_Audio : public SoundDriverIOPort{
 };
 
 class SoundDriverIOPort_AudioInput   : public SoundDriverIOPort_Audio{
-
+public:
+    virtual int readSamples(float* samples, int nsamples) = 0;
 };
 
 class SoundDriverIOPort_AudioOutput  : public SoundDriverIOPort_Audio{
@@ -91,6 +92,8 @@ public:
     virtual int bufferSize() = 0;
 
     virtual int sampleRate() = 0;
+
+    virtual SoundDriverIOPort_AudioInput* newAudioInput(const std::string &name = "") = 0;
 
     virtual SoundDriverIOPort_AudioOutput* newAudioOutput(const std::string &name = "") = 0;
 
