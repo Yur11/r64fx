@@ -247,6 +247,11 @@ private:
         auto output = audio_output_class.newNode("audio_output");
         auto input  = audio_input_class.newNode("audio_input");
 
+        auto connection = graph.newConnection(
+            audio_output_class.sink(), output,
+            audio_input_class.source(), input
+        );
+
         int i = 0;
         int n = 0;
 

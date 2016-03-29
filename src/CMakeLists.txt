@@ -36,6 +36,7 @@ set(SRC
     SignalData.cpp
     SignalGraph.cpp
     SignalNode.cpp
+    SignalNodeConnection.cpp
     SignalNode_AudioIO.cpp
     SignalPort.cpp
     Shader.cpp

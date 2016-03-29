@@ -18,8 +18,8 @@ void SignalNodeClass_AudioIO::reallocateBuffers()
     freeBuffers();
 
     m_size = totalSlotCount();
+    port()->resize(m_size);
 
-    m_ports = new float[m_size];
     m_buffers = new float*[m_size];
     for(int i=0; i<m_size; i++)
     {
@@ -30,12 +30,6 @@ void SignalNodeClass_AudioIO::reallocateBuffers()
 
 void SignalNodeClass_AudioIO::freeBuffers()
 {
-    if(m_ports)
-    {
-        delete m_ports;
-        m_ports = nullptr;
-    }
-
     if(m_buffers)
     {
         for(int i=0; i<m_size; i++)
@@ -124,10 +118,9 @@ void SignalNodeClass_AudioInput::prepare()
 
 void SignalNodeClass_AudioInput::process(int sample)
 {
-    cout << "SignalNodeClass_AudioInput::process " << m_size << "\n";
     for(int i=0; i<m_size; i++)
     {
-        m_ports[i] = m_buffers[i][sample];
+        m_source[i] = m_buffers[i][sample];
     }
 }
 
@@ -135,6 +128,12 @@ void SignalNodeClass_AudioInput::process(int sample)
 void SignalNodeClass_AudioInput::finish()
 {
 
+}
+
+
+SignalPort* SignalNodeClass_AudioInput::port()
+{
+    return &m_source;
 }
 
 
@@ -160,10 +159,9 @@ void SignalNodeClass_AudioOutput::prepare()
 
 void SignalNodeClass_AudioOutput::process(int sample)
 {
-    cout << "SignalNodeClass_AudioOutput::process " << m_size << "\n";
     for(int i=0; i<m_size; i++)
     {
-        m_buffers[i][sample] = m_ports[i];
+        m_buffers[i][sample] = m_sink[i];
     }
 }
 
@@ -180,6 +178,12 @@ void SignalNodeClass_AudioOutput::finish()
 
         outport->writeSamples(buffer, m_driver->bufferSize());
     }
+}
+
+
+SignalPort* SignalNodeClass_AudioOutput::port()
+{
+    return &m_sink;
 }
 
 }//namespace r64fx

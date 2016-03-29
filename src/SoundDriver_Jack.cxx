@@ -257,7 +257,8 @@ struct SoundDriver_Jack : public SoundDriver{
             {
                 if(port->is_audio)
                 {
-
+                    auto audio_in_port = (SoundDriverIOPort_AudioInput_Jack*)(port->iface);
+                    int nsamples = audio_in_port->buffer.write((float*)port_buffer, nframes);
                 }
                 else
                 {
@@ -283,8 +284,7 @@ struct SoundDriver_Jack : public SoundDriver{
                 }
                 else
                 {
-                    auto audio_in_port = (SoundDriverIOPort_AudioInput_Jack*)(port->iface);
-                    int nsamples = audio_in_port->buffer.write((float*)port_buffer, nframes);
+
                 }
             }
         }

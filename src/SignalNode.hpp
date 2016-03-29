@@ -2,6 +2,7 @@
 #define R64FX_SIGNAL_NODE_HPP
 
 #include "LinkedList.hpp"
+#include "SignalPort.hpp"
 
 namespace r64fx{
 

@@ -9,7 +9,6 @@ namespace r64fx{
 class SignalNodeClass_AudioIO : public SignalNodeClass{
 protected:
     SoundDriver*  m_driver   = nullptr;
-    float*        m_ports    = nullptr;
     float**       m_buffers  = nullptr;
     int           m_size     = 0;
 
@@ -18,6 +17,8 @@ protected:
     virtual void nodeAppended(SignalNode* node);
 
     virtual void nodeRemoved(SignalNode* node);
+
+    virtual SignalPort* port() = 0;
 
     void reallocateBuffers();
 
@@ -31,30 +32,44 @@ public:
 
 
 class SignalNodeClass_AudioInput : public SignalNodeClass_AudioIO{
+    SignalSource m_source;
+
 public:
     SignalNodeClass_AudioInput(SoundDriver* driver);
 
     virtual SoundDriverIOPort::Direction direction();
 
+    inline SignalSource* source() { return &m_source; };
+
     virtual void prepare();
 
     virtual void process(int sample);
 
     virtual void finish();
+
+protected:
+    virtual SignalPort* port();
 };
 
 
 class SignalNodeClass_AudioOutput : public SignalNodeClass_AudioIO{
+    SignalSink m_sink;
+
 public:
     SignalNodeClass_AudioOutput(SoundDriver* driver);
 
     virtual SoundDriverIOPort::Direction direction();
 
+    inline SignalSink* sink() { return &m_sink; }
+
     virtual void prepare();
 
     virtual void process(int sample);
 
     virtual void finish();
+
+protected:
+    virtual SignalPort* port();
 };
 
 }//namespace r64fx

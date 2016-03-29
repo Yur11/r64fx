@@ -19,6 +19,17 @@ void SignalGraph::addNodeClass(SignalNodeClass* node_class)
 }
 
 
+SignalNodeConnection* SignalGraph::newConnection(SignalSink* sink, SignalNode* dst_node, SignalSource* source, SignalNode* src_node)
+{
+    auto connection = new(std::nothrow) SignalNodeConnection(sink->buffer() + dst_node->slotOffset(), source->buffer() + src_node->slotOffset());
+    if(!connection)
+        return nullptr;
+
+    m_connections.append(connection);
+    return connection;
+}
+
+
 bool SignalGraph::process()
 {
     SoundDriverIOStatus status;
@@ -36,6 +47,11 @@ bool SignalGraph::process()
             for(auto node_class : m_node_classes)
             {
                 node_class->process(i);
+            }
+
+            for(auto connection : m_connections)
+            {
+                connection->process();
             }
         }
 
