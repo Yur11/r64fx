@@ -30,9 +30,11 @@ protected:
     void freeBuffers();
 
 public:
-    SignalNode* newNode(const std::string &name, int slot_count = 1);
+    virtual SignalNode* newNode(const std::string &name, int slot_count = 1);
 
-     virtual SignalDirection direction() = 0;
+    virtual void deleteNode(SignalNode* node);
+
+    virtual SignalDirection direction() = 0;
 };
 
 

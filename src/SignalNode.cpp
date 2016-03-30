@@ -37,6 +37,12 @@ int SignalNode::slotOffset() const
 }
 
 
+SignalNodeClass* SignalNode::parentClass() const
+{
+    return m_parent_class;
+}
+
+
 SignalNodeClass::SignalNodeClass(SignalGraph* parent_graph)
 {
     setParentGraph(parent_graph);
@@ -78,7 +84,12 @@ SignalNode* SignalNodeClass::newNode(int slot_count)
 
 void SignalNodeClass::deleteNode(SignalNode* node)
 {
+    if(node->parentClass() != this)
+        return;
 
+    m_nodes.remove(node);
+    nodeRemoved(node);
+    delete node;
 }
 
 
@@ -124,15 +135,15 @@ float SignalNodeClass::sampleRateReciprocal() const
 }
 
 
-void SignalNodeClass::setNodeData(SignalNode* node, void* data, int i)
+void SignalNodeClass::setNodeData(SignalNode* node, void* data)
 {
-    node->data[i] = data;
+    node->data = data;
 }
 
 
-void* SignalNodeClass::getNodeData(SignalNode* node, int i)
+void* SignalNodeClass::getNodeData(SignalNode* node)
 {
-    return node->data[i];
+    return node->data;
 }
 
 }//namespace r64fx

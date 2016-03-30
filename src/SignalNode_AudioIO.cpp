@@ -7,6 +7,7 @@ using namespace std;
 
 namespace r64fx{
 
+
 SignalNodeClass_AudioIO::SignalNodeClass_AudioIO(SignalGraph* parent_graph)
 : SignalNodeClass(parent_graph)
 {
@@ -50,42 +51,94 @@ void SignalNodeClass_AudioIO::freeBuffers()
 
 void SignalNodeClass_AudioIO::nodeAppended(SignalNode* node)
 {
-    assert(node->slotCount() == 1);
     reallocateBuffers();
 }
 
 
 void SignalNodeClass_AudioIO::nodeRemoved(SignalNode* node)
 {
-    assert(node->slotCount() == 1);
     reallocateBuffers();
 }
 
 
 SignalNode* SignalNodeClass_AudioIO::newNode(const std::string &name, int slot_count)
 {
+    if(slot_count < 0)
+        return nullptr;
+
     auto node = SignalNodeClass::newNode(slot_count);
     if(!node)
         return nullptr;
+
+    void* data = nullptr;
 
     switch(direction())
     {
         case SignalDirection::Input:
         {
-            setNodeData(node, parentGraph()->soundDriver()->newAudioInput(name), 0);
+            if(slot_count == 1)
+            {
+                data = parentGraph()->soundDriver()->newAudioInput(name);
+            }
+            else
+            {
+                data = new void*[slot_count];
+                auto ports = (SoundDriverIOPort_AudioInput**) data;
+
+                for(int i=0; i<slot_count; i++)
+                {
+                    ports[i] = parentGraph()->soundDriver()->newAudioInput(name);
+                }
+            }
+
             break;
         }
 
         case SignalDirection::Output:
         {
-            setNodeData(node, parentGraph()->soundDriver()->newAudioOutput(name), 0);
-        }
+            if(slot_count == 1)
+            {
+                data = parentGraph()->soundDriver()->newAudioOutput(name);
+            }
+            else
+            {
+                data = new void*[slot_count];
+                auto ports = (SoundDriverIOPort_AudioOutput**) data;
 
-        default:
+                for(int i=0; i<slot_count; i++)
+                {
+                    ports[i] = parentGraph()->soundDriver()->newAudioOutput(name);
+                }
+            }
+
             break;
+        }
     }
 
+    setNodeData(node, data);
+
     return node;
+}
+
+
+void SignalNodeClass_AudioIO::deleteNode(SignalNode* node)
+{
+    void* data = getNodeData(node);
+
+    if(node->slotCount() == 1)
+    {
+        auto port = (SoundDriverIOPort*) data;
+        delete port;
+    }
+    else
+    {
+        auto ports = (SoundDriverIOPort**) data;
+        for(int i=0; i<node->slotCount(); i++)
+        {
+            delete ports[i];
+        }
+        delete[] ports;
+    }
 }
 
 
@@ -106,7 +159,7 @@ void SignalNodeClass_AudioInput::prepare()
 {
     for(auto node : m_nodes)
     {
-        auto inport = (SoundDriverIOPort_AudioInput*) getNodeData(node, 0);
+        auto inport = (SoundDriverIOPort_AudioInput*) getNodeData(node);
         assert(inport);
 
         float* buffer = m_buffers[node->slotOffset()];
@@ -171,7 +224,7 @@ void SignalNodeClass_AudioOutput::finish()
 {
     for(auto node : m_nodes)
     {
-        auto outport = (SoundDriverIOPort_AudioOutput*) getNodeData(node, 0);
+        auto outport = (SoundDriverIOPort_AudioOutput*) getNodeData(node);
         assert(outport);
 
         float* buffer = m_buffers[node->slotOffset()];

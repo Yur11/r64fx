@@ -18,7 +18,7 @@ class SignalNode : public LinkedList<SignalNode>::Node{
     SignalNodeClass* m_parent_class;
     void setParentClass(SignalNodeClass* parent_class);
 
-    void* data[2] = {nullptr, nullptr};
+    void* data = nullptr;
 
 public:
     void setSlotCount(int slot_count);
@@ -28,6 +28,8 @@ public:
     void setSlotOffset(int offset);
 
     int slotOffset() const;
+
+    SignalNodeClass* parentClass() const;
 };
 
 
@@ -41,9 +43,9 @@ protected:
 public:
     SignalNodeClass(SignalGraph* parent_graph);
 
-    SignalNode* newNode(int slot_count = 1);
+    virtual SignalNode* newNode(int slot_count = 1);
 
-    void deleteNode(SignalNode* node);
+    virtual void deleteNode(SignalNode* node);
 
     int totalSlotCount() const;
 
@@ -68,9 +70,9 @@ protected:
 
     virtual void nodeRemoved(SignalNode* node) = 0;
 
-    static void setNodeData(SignalNode* node, void* data, int i);
+    static void setNodeData(SignalNode* node, void* data);
 
-    static void* getNodeData(SignalNode* node, int i);
+    static void* getNodeData(SignalNode* node);
 };
 
 }//namespace r64fx

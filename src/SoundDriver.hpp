@@ -21,6 +21,8 @@ public:
         Output
     };
 
+    virtual ~SoundDriverIOPort() {}
+
     virtual Direction direction() = 0;
 
     virtual void setName(const std::string &name) = 0;
@@ -98,6 +100,8 @@ public:
     virtual SoundDriverIOPort_AudioOutput* newAudioOutput(const std::string &name = "") = 0;
 
     virtual SoundDriverIOPort_MidiInput* newMidiInput(const std::string &name = "") = 0;
+
+    virtual void deletePort(SoundDriverIOPort* port) = 0;
 
     virtual SoundDriverIOStatusPort* newStatusPort() = 0;
 

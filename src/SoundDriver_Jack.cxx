@@ -413,6 +413,12 @@ struct SoundDriver_Jack : public SoundDriver{
         return newPort<SoundDriverIOPort_MidiInput_Jack>(name, 32);
     }
 
+
+    virtual void deletePort(SoundDriverIOPort* port)
+    {
+
+    }
+
     
     virtual SoundDriverIOStatusPort* newStatusPort()
     {
