@@ -32,6 +32,8 @@ std::string hexstr(unsigned int dword);
 
 std::string hexstr(int dword);
 
+std::string num2str(int num);
+
 }//namespace r64fx
 
 #endif//R64FX_STRING_UTILS_HPP

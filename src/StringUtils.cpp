@@ -112,4 +112,32 @@ std::string hexstr(int dword)
     return str;
 }
 
+
+std::string num2str(int num)
+{
+    if(num == 0)
+        return "0";
+
+    std::string str;
+    char sign = 0;
+
+    if(num < 0)
+    {
+        sign = '-';
+        num *= -1;
+    }
+
+    while(num)
+    {
+        char ch = (num % 10) + 48;
+        str = ch + str;
+        num /= 10;
+    }
+
+    if(sign)
+        str = sign + str;
+
+    return str;
+}
+
 }//namespace r64fx
