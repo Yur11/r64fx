@@ -262,8 +262,8 @@ private:
         SignalNodeClass_AudioOutput  audio_output_class  (&graph);
         SignalNodeClass_Oscillator   oscillator_class    (&graph);
 
-        auto output = audio_output_class.newNode("audio_output");
-        auto input  = audio_input_class.newNode("audio_input");
+        auto output = audio_output_class.newNode("audio_output", 2);
+        auto input  = audio_input_class.newNode("audio_input", 2);
         auto osc    = oscillator_class.newNode();
 
         oscillator_class.frequency()->buffer()[osc->slotOffset()] = 440.0f;

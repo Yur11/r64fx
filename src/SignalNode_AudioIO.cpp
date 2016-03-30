@@ -1,5 +1,6 @@
 #include "SignalNode_AudioIO.hpp"
 #include "SignalGraph.hpp"
+#include "StringUtils.hpp"
 #include <assert.h>
 #include <iostream>
 
@@ -87,7 +88,7 @@ SignalNode* SignalNodeClass_AudioIO::newNode(const std::string &name, int slot_c
 
                 for(int i=0; i<slot_count; i++)
                 {
-                    ports[i] = parentGraph()->soundDriver()->newAudioInput(name);
+                    ports[i] = parentGraph()->soundDriver()->newAudioInput(name + "_" + num2str(i + 1));
                 }
             }
 
@@ -107,7 +108,7 @@ SignalNode* SignalNodeClass_AudioIO::newNode(const std::string &name, int slot_c
 
                 for(int i=0; i<slot_count; i++)
                 {
-                    ports[i] = parentGraph()->soundDriver()->newAudioOutput(name);
+                    ports[i] = parentGraph()->soundDriver()->newAudioOutput(name + "_" + num2str(i + 1));
                 }
             }
 
@@ -159,13 +160,28 @@ void SignalNodeClass_AudioInput::prepare()
 {
     for(auto node : m_nodes)
     {
-        auto inport = (SoundDriverIOPort_AudioInput*) getNodeData(node);
-        assert(inport);
+        SoundDriverIOPort_AudioInput*  inport  = nullptr;
+        SoundDriverIOPort_AudioInput** inports = nullptr;
 
-        float* buffer = m_buffers[node->slotOffset()];
-        assert(buffer);
+        if(node->slotCount() == 1)
+        {
+            inport = (SoundDriverIOPort_AudioInput*) getNodeData(node);
+            inports = &inport;
+        }
+        else
+        {
+            inports = (SoundDriverIOPort_AudioInput**) getNodeData(node);
+        }
 
-        inport->readSamples(buffer, bufferSize());
+        for(int i=0; i<node->slotCount(); i++)
+        {
+            assert(inports[i]);
+
+            float* buffer = m_buffers[node->slotOffset() + i];
+            assert(buffer);
+
+            inports[i]->readSamples(buffer, bufferSize());
+        }
     }
 }
 
@@ -224,13 +240,28 @@ void SignalNodeClass_AudioOutput::finish()
 {
     for(auto node : m_nodes)
     {
-        auto outport = (SoundDriverIOPort_AudioOutput*) getNodeData(node);
-        assert(outport);
+        SoundDriverIOPort_AudioOutput*  outport  = nullptr;
+        SoundDriverIOPort_AudioOutput** outports = nullptr;
 
-        float* buffer = m_buffers[node->slotOffset()];
-        assert(buffer);
+        if(node->slotCount() == 1)
+        {
+            outport = (SoundDriverIOPort_AudioOutput*) getNodeData(node);
+            outports = &outport;
+        }
+        else
+        {
+            outports = (SoundDriverIOPort_AudioOutput**) getNodeData(node);
+        }
 
-        outport->writeSamples(buffer, bufferSize());
+        for(int i=0; i<node->slotCount(); i++)
+        {
+            assert(outports[i]);
+
+            float* buffer = m_buffers[node->slotOffset() + i];
+            assert(buffer);
+
+            outports[i]->writeSamples(buffer, bufferSize());
+        }
     }
 }
 
