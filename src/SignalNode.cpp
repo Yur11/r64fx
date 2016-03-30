@@ -1,4 +1,5 @@
 #include "SignalNode.hpp"
+#include "SignalGraph.hpp"
 #include <new>
 
 namespace r64fx{
@@ -33,6 +34,12 @@ void SignalNode::setSlotOffset(int offset)
 int SignalNode::slotOffset() const
 {
     return m_slot_offset;
+}
+
+
+SignalNodeClass::SignalNodeClass(SignalGraph* parent_graph)
+{
+    setParentGraph(parent_graph);
 }
 
 
@@ -86,15 +93,46 @@ int SignalNodeClass::totalSlotCount() const
 }
 
 
-void SignalNodeClass::setNodeData(SignalNode* node, void* data)
+void SignalNodeClass::setParentGraph(SignalGraph* parent_graph)
 {
-    node->data = data;
+    m_parent_graph = parent_graph;
+    parent_graph->m_node_classes.append(this);
 }
 
 
-void* SignalNodeClass::getNodeData(SignalNode* node)
+SignalGraph* SignalNodeClass::parentGraph() const
 {
-    return node->data;
+    return m_parent_graph;
+}
+
+
+int SignalNodeClass::bufferSize() const
+{
+    return m_parent_graph->bufferSize();
+}
+
+
+float SignalNodeClass::sampleRate() const
+{
+    return m_parent_graph->sampleRate();
+}
+
+
+float SignalNodeClass::sampleRateReciprocal() const
+{
+    return m_parent_graph->sampleRateReciprocal();
+}
+
+
+void SignalNodeClass::setNodeData(SignalNode* node, void* data, int i)
+{
+    node->data[i] = data;
+}
+
+
+void* SignalNodeClass::getNodeData(SignalNode* node, int i)
+{
+    return node->data[i];
 }
 
 }//namespace r64fx

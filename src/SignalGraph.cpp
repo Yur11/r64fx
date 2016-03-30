@@ -10,12 +10,21 @@ SignalGraph::SignalGraph(SoundDriver* driver)
 
     m_driver = driver;
     m_status_port = m_driver->newStatusPort();
+    m_buffer_size = m_driver->bufferSize();
+    m_sample_rate = m_driver->sampleRate();
+    m_sample_rate_rcp = 1.0f / m_sample_rate;
+}
+
+
+SoundDriver* SignalGraph::soundDriver() const
+{
+    return m_driver;
 }
 
 
 void SignalGraph::addNodeClass(SignalNodeClass* node_class)
 {
-    m_node_classes.append(node_class);
+    node_class->setParentGraph(this);
 }
 
 
@@ -64,6 +73,24 @@ bool SignalGraph::process()
     }
 
     return false;
+}
+
+
+int SignalGraph::bufferSize() const
+{
+    return m_buffer_size;
+}
+
+
+float SignalGraph::sampleRate() const
+{
+    return m_sample_rate;
+}
+
+
+float SignalGraph::sampleRateReciprocal() const
+{
+    return m_sample_rate_rcp;
 }
 
 }//namespace r64fx

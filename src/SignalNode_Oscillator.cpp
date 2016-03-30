@@ -3,8 +3,8 @@
 
 namespace r64fx{
 
-SignalNodeClass_Oscillator::SignalNodeClass_Oscillator(SoundDriver* driver)
-: m_driver(driver)
+SignalNodeClass_Oscillator::SignalNodeClass_Oscillator(SignalGraph* parent_graph)
+: SignalNodeClass(parent_graph)
 {
 
 }
@@ -21,7 +21,7 @@ void SignalNodeClass_Oscillator::process(int sample)
     for(int i=0; i<m_size; i++)
     {
         float* freq  = m_frequency.buffer() + i;
-        float delta = freq[0] / float(m_driver->sampleRate());
+        float delta = freq[0] * sampleRateReciprocal();
 
         float* period = m_period.buffer() + i;
         period[0] += delta;

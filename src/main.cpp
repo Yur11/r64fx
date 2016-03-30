@@ -179,6 +179,8 @@ class MyProgram : public Program{
     bool m_graph_running = true;
 
     SoundFile m_sound_file;
+    float* ml = nullptr;
+    float* mr = nullptr;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -221,15 +223,15 @@ private:
         m_container->alignHorizontally();
         m_container->show();
 
-//         m_driver = SoundDriver::newInstance();
-//         if(m_driver)
+        m_driver = SoundDriver::newInstance();
+        if(m_driver)
         {
-//             m_driver->enable();
+            m_driver->enable();
 
-//             m_graph_thread.run([](void* arg) -> void*{
-//                 auto self = (MyProgram*)arg;
-//                 return self->processGraph();
-//             }, this);
+            m_graph_thread.run([](void* arg) -> void*{
+                auto self = (MyProgram*)arg;
+                return self->processGraph();
+            }, this);
 
             m_sound_file.open("../amen_break.wav", SoundFile::Mode::Read);
             if(m_sound_file.isGood())
@@ -239,16 +241,16 @@ private:
                 cout << m_sound_file.frameCount() << "\n";
                 cout << m_sound_file.sampleRate() << "\n";
 
-                float l[64];
-                float r[64];
-                float* chans[2] = {l, r};
+                ml = new float[m_sound_file.frameCount()];
+                mr = new float[m_sound_file.frameCount()];
+                float* chans[2] = {ml, mr};
                 cout << m_sound_file.readFramesUnpack(chans, 64) << "\n";
             }
         }
-//         else
-//         {
-//             cerr << "No driver!\n";
-//         }
+        else
+        {
+            cerr << "No driver!\n";
+        }
     }
 
 
@@ -256,13 +258,9 @@ private:
     {
         SignalGraph graph(m_driver);
 
-        SignalNodeClass_AudioInput   audio_input_class   (m_driver);
-        SignalNodeClass_AudioOutput  audio_output_class  (m_driver);
-        SignalNodeClass_Oscillator   oscillator_class    (m_driver);
-
-        graph.addNodeClass(&audio_input_class);
-        graph.addNodeClass(&audio_output_class);
-        graph.addNodeClass(&oscillator_class);
+        SignalNodeClass_AudioInput   audio_input_class   (&graph);
+        SignalNodeClass_AudioOutput  audio_output_class  (&graph);
+        SignalNodeClass_Oscillator   oscillator_class    (&graph);
 
         auto output = audio_output_class.newNode("audio_output");
         auto input  = audio_input_class.newNode("audio_input");
@@ -301,7 +299,7 @@ private:
     {
         cout << "Cleanup!\n";
         m_graph_running = false;
-//         m_graph_thread.join();
+        m_graph_thread.join();
 
         if(m_Font)
             delete m_Font;
@@ -311,6 +309,12 @@ private:
 
         if(m_driver)
             SoundDriver::deleteInstance(m_driver);
+
+        if(ml)
+            delete[] ml;
+
+        if(mr)
+            delete[] mr;
     }
 };
 

@@ -7,14 +7,13 @@
 namespace r64fx{
 
 class SignalNodeClass_Oscillator : public SignalNodeClass{
-    SoundDriver* m_driver = nullptr;
     SignalSink   m_frequency;
     SignalSource m_period;
     SignalSource m_sine;
     int          m_size = 0;
 
 public:
-    SignalNodeClass_Oscillator(SoundDriver* driver);
+    SignalNodeClass_Oscillator(SignalGraph* parent_graph);
 
     inline SignalSink* frequency() { return &m_frequency; }
 
@@ -22,13 +21,13 @@ public:
 
     inline SignalSource* sine() { return &m_sine; }
 
+protected:
     virtual void prepare();
 
     virtual void process(int sample);
 
     virtual void finish();
 
-protected:
     virtual void nodeAppended(SignalNode* node);
 
     virtual void nodeRemoved(SignalNode* node);

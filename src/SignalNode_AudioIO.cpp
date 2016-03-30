@@ -1,4 +1,5 @@
 #include "SignalNode_AudioIO.hpp"
+#include "SignalGraph.hpp"
 #include <assert.h>
 #include <iostream>
 
@@ -6,8 +7,8 @@ using namespace std;
 
 namespace r64fx{
 
-SignalNodeClass_AudioIO::SignalNodeClass_AudioIO(SoundDriver* driver)
-: m_driver(driver)
+SignalNodeClass_AudioIO::SignalNodeClass_AudioIO(SignalGraph* parent_graph)
+: SignalNodeClass(parent_graph)
 {
 
 }
@@ -23,7 +24,7 @@ void SignalNodeClass_AudioIO::reallocateBuffers()
     m_buffers = new float*[m_size];
     for(int i=0; i<m_size; i++)
     {
-        m_buffers[i] = new float[m_driver->bufferSize()];
+        m_buffers[i] = new float[bufferSize()];
     }
 }
 
@@ -69,15 +70,15 @@ SignalNode* SignalNodeClass_AudioIO::newNode(const std::string &name, int slot_c
 
     switch(direction())
     {
-        case SoundDriverIOPort::Direction::Input:
+        case SignalDirection::Input:
         {
-            setNodeData(node, m_driver->newAudioInput(name));
+            setNodeData(node, parentGraph()->soundDriver()->newAudioInput(name), 0);
             break;
         }
 
-        case SoundDriverIOPort::Direction::Output:
+        case SignalDirection::Output:
         {
-            setNodeData(node, m_driver->newAudioOutput(name));
+            setNodeData(node, parentGraph()->soundDriver()->newAudioOutput(name), 0);
         }
 
         default:
@@ -88,16 +89,16 @@ SignalNode* SignalNodeClass_AudioIO::newNode(const std::string &name, int slot_c
 }
 
 
-SignalNodeClass_AudioInput::SignalNodeClass_AudioInput(SoundDriver* driver)
-: SignalNodeClass_AudioIO(driver)
+SignalNodeClass_AudioInput::SignalNodeClass_AudioInput(SignalGraph* parent_graph)
+: SignalNodeClass_AudioIO(parent_graph)
 {
 
 }
 
 
-SoundDriverIOPort::Direction SignalNodeClass_AudioInput::direction()
+SignalDirection SignalNodeClass_AudioInput::direction()
 {
-    return SoundDriverIOPort::Direction::Input;
+    return SignalDirection::Input;
 }
 
 
@@ -105,13 +106,13 @@ void SignalNodeClass_AudioInput::prepare()
 {
     for(auto node : m_nodes)
     {
-        auto inport = (SoundDriverIOPort_AudioInput*) getNodeData(node);
+        auto inport = (SoundDriverIOPort_AudioInput*) getNodeData(node, 0);
         assert(inport);
 
         float* buffer = m_buffers[node->slotOffset()];
         assert(buffer);
 
-        inport->readSamples(buffer, m_driver->bufferSize());
+        inport->readSamples(buffer, bufferSize());
     }
 }
 
@@ -137,17 +138,17 @@ SignalPort* SignalNodeClass_AudioInput::port()
 }
 
 
-SignalNodeClass_AudioOutput::SignalNodeClass_AudioOutput(SoundDriver* driver)
-: SignalNodeClass_AudioIO(driver)
+SignalNodeClass_AudioOutput::SignalNodeClass_AudioOutput(SignalGraph* parent_graph)
+: SignalNodeClass_AudioIO(parent_graph)
 {
 
 }
 
 
 
-SoundDriverIOPort::Direction SignalNodeClass_AudioOutput::direction()
+SignalDirection SignalNodeClass_AudioOutput::direction()
 {
-    return SoundDriverIOPort::Direction::Output;
+    return SignalDirection::Output;
 }
 
 
@@ -170,13 +171,13 @@ void SignalNodeClass_AudioOutput::finish()
 {
     for(auto node : m_nodes)
     {
-        auto outport = (SoundDriverIOPort_AudioOutput*) getNodeData(node);
+        auto outport = (SoundDriverIOPort_AudioOutput*) getNodeData(node, 0);
         assert(outport);
 
         float* buffer = m_buffers[node->slotOffset()];
         assert(buffer);
 
-        outport->writeSamples(buffer, m_driver->bufferSize());
+        outport->writeSamples(buffer, bufferSize());
     }
 }
 

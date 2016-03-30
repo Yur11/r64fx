@@ -30,7 +30,6 @@ set(SRC
     Midi.cpp
     Mouse.cpp
     Mutex.cpp
-#     NodeGraph.cpp
     Painter.cpp
     Program.cpp
     SignalData.cpp
@@ -39,6 +38,7 @@ set(SRC
     SignalNodeConnection.cpp
     SignalNode_AudioIO.cpp
     SignalNode_Oscillator.cpp
+    SignalNode_Player.cpp
     SignalPort.cpp
     Shader.cpp
     Shader_rgba.cpp

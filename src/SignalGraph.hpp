@@ -10,20 +10,34 @@ namespace r64fx{
 
 
 class SignalGraph{
-    SoundDriver*                       m_driver       = nullptr;
-    SoundDriverIOStatusPort*           m_status_port  = nullptr;
-    LinkedList<SignalNodeClass>        m_node_classes;
+    friend class SignalNodeClass;
+
+    SoundDriver*                      m_driver       = nullptr;
+    SoundDriverIOStatusPort*          m_status_port  = nullptr;
+    LinkedList<SignalNodeClass>       m_node_classes;
     LinkedList<SignalNodeConnection>  m_connections;
+
+    int   m_buffer_size      = 0.0f;
+    float m_sample_rate      = 0.0f;
+    float m_sample_rate_rcp  = 0.0f;
 
 public:
     SignalGraph(SoundDriver* driver);
+
+    SoundDriver* soundDriver() const;
 
     void addNodeClass(SignalNodeClass* node_class);
 
     SignalNodeConnection* newConnection(SignalSink* sink, SignalNode* dst_node, SignalSource* source, SignalNode* src_node);
 
-public:
     bool process();
+
+private:
+    int bufferSize() const;
+
+    float sampleRate() const;
+
+    float sampleRateReciprocal() const;
 };
 
 }//namespace r64fx
