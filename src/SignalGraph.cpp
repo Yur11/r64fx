@@ -28,9 +28,11 @@ void SignalGraph::addNodeClass(SignalNodeClass* node_class)
 }
 
 
-SignalNodeConnection* SignalGraph::newConnection(SignalSink* sink, SignalNode* dst_node, SignalSource* source, SignalNode* src_node)
+SignalNodeConnection* SignalGraph::newConnection(SignalNode* dst, SignalSink* dst_port, SignalNode* src, SignalPort* src_port)
 {
-    auto connection = new(std::nothrow) SignalNodeConnection(sink->buffer() + dst_node->slotOffset(), source->buffer() + src_node->slotOffset());
+    auto connection = new(std::nothrow) SignalNodeConnection(
+        dst, dst_port, src, src_port
+    );
     if(!connection)
         return nullptr;
 

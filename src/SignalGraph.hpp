@@ -28,7 +28,7 @@ public:
 
     void addNodeClass(SignalNodeClass* node_class);
 
-    SignalNodeConnection* newConnection(SignalSink* sink, SignalNode* dst_node, SignalSource* source, SignalNode* src_node);
+    SignalNodeConnection* newConnection(SignalNode* dst, SignalSink* dst_port, SignalNode* src, SignalPort* src_port);
 
     bool process();
 

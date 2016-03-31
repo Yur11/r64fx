@@ -34,7 +34,7 @@ void SignalPort::free()
 }
 
 
-float &SignalPort::operator[](int i) const
+float &SignalPort::slot(int i) const
 {
     return m_buffer[i];
 }

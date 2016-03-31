@@ -16,7 +16,7 @@ public:
 
     void free();
 
-    float &operator[](int i) const;
+    float &slot(int i) const;
 
     float* buffer() const;
 };

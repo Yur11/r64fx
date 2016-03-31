@@ -190,7 +190,7 @@ void SignalNodeClass_AudioInput::process(int sample)
 {
     for(int i=0; i<m_size; i++)
     {
-        m_source[i] = m_buffers[i][sample];
+        m_source.slot(i) = m_buffers[i][sample];
     }
 }
 
@@ -231,7 +231,7 @@ void SignalNodeClass_AudioOutput::process(int sample)
 {
     for(int i=0; i<m_size; i++)
     {
-        m_buffers[i][sample] = m_sink[i];
+        m_buffers[i][sample] = m_sink.slot(i);
     }
 }
 

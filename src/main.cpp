@@ -269,8 +269,7 @@ private:
         oscillator_class.frequency()->buffer()[osc->slotOffset()] = 440.0f;
 
         auto connection = graph.newConnection(
-            audio_output_class.sink(), output,
-            oscillator_class.sine(), osc
+            output, audio_output_class.sink(), osc, oscillator_class.sine()
         );
 
         int i = 0;
