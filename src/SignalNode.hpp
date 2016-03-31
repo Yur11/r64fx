@@ -49,6 +49,8 @@ public:
 
     int totalSlotCount() const;
 
+    virtual void forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg);
+
 protected:
     void setParentGraph(SignalGraph* parent_graph);
 

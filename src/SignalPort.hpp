@@ -1,13 +1,16 @@
 #ifndef R64FX_SIGNAL_PORT_HPP
 #define R64FX_SIGNAL_PORT_HPP
 
+#include <string>
+
 namespace r64fx{
 
 class SignalPort{
     float* m_buffer = nullptr;
+    std::string m_name = "";
 
 protected:
-    SignalPort(int size = 0);
+    SignalPort(const std::string name = "", int size = 0);
 
 public:
     ~SignalPort();
@@ -24,13 +27,13 @@ public:
 
 class SignalSink : public SignalPort{
 public:
-    SignalSink(int size = 0);
+    SignalSink(const std::string name = "", int size = 0);
 };
 
 
 class SignalSource : public SignalPort{
 public:
-    SignalSource(int size = 0);
+    SignalSource(const std::string name = "", int size = 0);
 };
 
 }//namespace r64fx

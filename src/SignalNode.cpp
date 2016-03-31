@@ -104,6 +104,12 @@ int SignalNodeClass::totalSlotCount() const
 }
 
 
+void SignalNodeClass::forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg)
+{
+
+}
+
+
 void SignalNodeClass::setParentGraph(SignalGraph* parent_graph)
 {
     m_parent_graph = parent_graph;
