@@ -112,6 +112,12 @@ SignalGraph* SignalNodeClass::parentGraph() const
 }
 
 
+SoundDriver* SignalNodeClass::soundDriver() const
+{
+    return m_parent_graph->soundDriver();
+}
+
+
 int SignalNodeClass::bufferSize() const
 {
     return m_parent_graph->bufferSize();

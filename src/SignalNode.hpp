@@ -8,6 +8,7 @@ namespace r64fx{
 
 class SignalGraph;
 class SignalNodeClass;
+class SoundDriver;
 
 class SignalNode : public LinkedList<SignalNode>::Node{
     friend class SignalNodeClass;
@@ -58,6 +59,8 @@ protected:
     void setParentGraph(SignalGraph* parent_graph);
 
     SignalGraph* parentGraph() const;
+
+    SoundDriver* soundDriver() const;
 
     int bufferSize() const;
 

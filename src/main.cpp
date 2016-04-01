@@ -24,6 +24,7 @@
 #include "Thread.hpp"
 #include "sleep.hpp"
 #include "SignalNode_AudioIO.hpp"
+#include "SignalNode_Controller.hpp"
 #include "SignalNode_Oscillator.hpp"
 #include "SignalNode_Player.hpp"
 #include "SoundFile.hpp"
@@ -260,11 +261,14 @@ private:
 
         SignalNodeClass_AudioInput   audio_input_class   (&graph);
         SignalNodeClass_AudioOutput  audio_output_class  (&graph);
+        SignalNodeClass_Controller   controller_class    (&graph);
         SignalNodeClass_Oscillator   oscillator_class    (&graph);
         SignalNodeClass_Player       player_class        (&graph);
 
         auto output = audio_output_class.newNode("audio_output", 2);
         auto input  = audio_input_class.newNode("audio_input", 2);
+        auto controller1 = controller_class.newNode("midi_in", 0, 1);
+        auto controller2 = controller_class.newNode("midi_in", 0, 2);
         auto osc    = oscillator_class.newNode();
         auto player = player_class.newNode(&m_signal_data);
 
@@ -277,8 +281,16 @@ private:
             cout << "end_point: " << end_point << "\n";
         }
 
-        auto connection = graph.newConnection(
+        graph.newConnection(
             output, audio_output_class.sink(), player, player_class.out()
+        );
+
+        graph.newConnection(
+            player, player_class.pitch(), controller1, controller_class.value()
+        );
+
+        graph.newConnection(
+            player, player_class.playEnd(), controller2, controller_class.value()
         );
 
 //         int i = 0;

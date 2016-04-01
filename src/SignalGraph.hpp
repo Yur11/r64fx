@@ -5,6 +5,7 @@
 #include "SignalNode.hpp"
 #include "SignalNodeConnection.hpp"
 #include "SoundDriver.hpp"
+#include "MidiDispatcher.hpp"
 
 namespace r64fx{
 
