@@ -56,6 +56,8 @@ public:
 protected:
     void addNewNode(SignalNode* node, int slot_count = 1);
 
+    void removeNode(SignalNode* node);
+
     void setParentGraph(SignalGraph* parent_graph);
 
     SignalGraph* parentGraph() const;

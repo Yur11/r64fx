@@ -62,12 +62,7 @@ SignalNode* SignalNodeClass::newNode(int slot_count)
 
 void SignalNodeClass::deleteNode(SignalNode* node)
 {
-    if(node->parentClass() != this)
-        return;
-
-    m_nodes.remove(node);
-    m_size -= node->slotCount();
-    nodeRemoved(node);
+    removeNode(node);
     delete node;
 }
 
@@ -95,6 +90,20 @@ void SignalNodeClass::addNewNode(SignalNode* node, int slot_count)
         m_nodes.append(node);
         m_size += slot_count;
         nodeAppended(node);
+    }
+}
+
+
+void SignalNodeClass::removeNode(SignalNode* node)
+{
+    if(node)
+    {
+        if(node->parentClass() != this)
+            return;
+
+        m_nodes.remove(node);
+        m_size -= node->slotCount();
+        nodeRemoved(node);
     }
 }
 
