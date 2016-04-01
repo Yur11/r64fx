@@ -53,6 +53,8 @@ public:
     virtual void forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg);
 
 protected:
+    void addNewNode(SignalNode* node, int slot_count = 1);
+
     void setParentGraph(SignalGraph* parent_graph);
 
     SignalGraph* parentGraph() const;

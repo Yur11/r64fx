@@ -37,6 +37,7 @@ set(SRC
     SignalNode.cpp
     SignalNodeConnection.cpp
     SignalNode_AudioIO.cpp
+    SignalNode_Controller.cpp
     SignalNode_Oscillator.cpp
     SignalNode_Player.cpp
     SignalPort.cpp
