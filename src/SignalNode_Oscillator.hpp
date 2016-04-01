@@ -10,7 +10,6 @@ class SignalNodeClass_Oscillator : public SignalNodeClass{
     SignalSink   m_frequency;
     SignalSource m_period;
     SignalSource m_sine;
-    int          m_size = 0;
 
 public:
     SignalNodeClass_Oscillator(SignalGraph* parent_graph);

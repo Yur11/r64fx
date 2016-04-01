@@ -25,7 +25,9 @@
 #include "sleep.hpp"
 #include "SignalNode_AudioIO.hpp"
 #include "SignalNode_Oscillator.hpp"
+#include "SignalNode_Player.hpp"
 #include "SoundFile.hpp"
+#include "SignalData.hpp"
 
 
 using namespace std;
@@ -179,8 +181,7 @@ class MyProgram : public Program{
     bool m_graph_running = true;
 
     SoundFile m_sound_file;
-    float* ml = nullptr;
-    float* mr = nullptr;
+    SignalData m_signal_data;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -228,24 +229,23 @@ private:
         {
             m_driver->enable();
 
+            m_sound_file.open("../amen_break.wav", SoundFile::Mode::Read);
+            if(m_sound_file.isGood())
+            {
+                m_signal_data.load(m_sound_file.frameCount(), m_sound_file.componentCount());
+                m_sound_file.readFrames(m_signal_data.data(), m_signal_data.frameCount());
+                m_signal_data.setSampleRate(m_sound_file.sampleRate());
+                cout << "fc: " << m_signal_data.frameCount() << "\n";
+                cout << "cc: " << m_signal_data.componentCount() << "\n";
+                cout << "od: " << m_signal_data.ownsData() << "\n";
+                cout << "sr: " << m_signal_data.sampleRate() << "\n";
+                m_sound_file.close();
+            }
+
             m_graph_thread.run([](void* arg) -> void*{
                 auto self = (MyProgram*)arg;
                 return self->processGraph();
             }, this);
-
-            m_sound_file.open("../amen_break.wav", SoundFile::Mode::Read);
-            if(m_sound_file.isGood())
-            {
-                cout << "OK\n";
-                cout << m_sound_file.channelCount() << "\n";
-                cout << m_sound_file.frameCount() << "\n";
-                cout << m_sound_file.sampleRate() << "\n";
-
-                ml = new float[m_sound_file.frameCount()];
-                mr = new float[m_sound_file.frameCount()];
-                float* chans[2] = {ml, mr};
-                cout << m_sound_file.readFramesUnpack(chans, 64) << "\n";
-            }
         }
         else
         {
@@ -261,25 +261,34 @@ private:
         SignalNodeClass_AudioInput   audio_input_class   (&graph);
         SignalNodeClass_AudioOutput  audio_output_class  (&graph);
         SignalNodeClass_Oscillator   oscillator_class    (&graph);
+        SignalNodeClass_Player       player_class        (&graph);
 
         auto output = audio_output_class.newNode("audio_output", 2);
         auto input  = audio_input_class.newNode("audio_input", 2);
         auto osc    = oscillator_class.newNode();
+        auto player = player_class.newNode(&m_signal_data);
 
         oscillator_class.frequency()->buffer()[osc->slotOffset()] = 440.0f;
 
+        for(int i=0; i<player->slotCount(); i++)
+        {
+            float end_point = float(m_signal_data.frameCount()) / float(m_signal_data.sampleRate());
+            player_class.playEnd()->buffer()[player->slotOffset() + i] = end_point;
+            cout << "end_point: " << end_point << "\n";
+        }
+
         auto connection = graph.newConnection(
-            output, audio_output_class.sink(), osc, oscillator_class.sine()
+            output, audio_output_class.sink(), player, player_class.out()
         );
 
-        int i = 0;
+//         int i = 0;
         int n = 0;
 
         while(m_graph_running)
         {
             if(graph.process())
             {
-                cout << i++ << " -> " << n << "\n";
+//                 cout << i++ << " -> " << n << "\n";
                 n = 0;
             }
             else
@@ -309,11 +318,7 @@ private:
         if(m_driver)
             SoundDriver::deleteInstance(m_driver);
 
-        if(ml)
-            delete[] ml;
-
-        if(mr)
-            delete[] mr;
+        m_signal_data.free();
     }
 };
 

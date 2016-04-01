@@ -5,7 +5,7 @@
 #include <assert.h>
 #endif//R64FX_DEBUG
 
-#define IMAGE_OWNS_DATA 1
+#define R64FX_OWNS_DATA 1
 
 namespace r64fx{
     
@@ -23,7 +23,7 @@ Image::~Image()
 
 bool Image::ownsData() const
 {
-    return m_flags & IMAGE_OWNS_DATA;
+    return m_flags & R64FX_OWNS_DATA;
 }
 
 
@@ -43,18 +43,18 @@ void Image::load(int w, int h, int c, unsigned char* data, bool copy_data)
                 {
                     m_data[i] = data[i];
                 }
-                m_flags |= IMAGE_OWNS_DATA;
+                m_flags |= R64FX_OWNS_DATA;
             }
             else
             {
                 m_data = data;
-                m_flags &= ~IMAGE_OWNS_DATA;
+                m_flags &= ~R64FX_OWNS_DATA;
             }
         }
         else
         {
             m_data = new (std::nothrow) unsigned char[size];
-            m_flags |= IMAGE_OWNS_DATA;
+            m_flags |= R64FX_OWNS_DATA;
         }
         m_width = w;
         m_height = h;

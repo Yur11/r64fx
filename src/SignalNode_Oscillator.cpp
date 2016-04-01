@@ -18,7 +18,7 @@ void SignalNodeClass_Oscillator::prepare()
 
 void SignalNodeClass_Oscillator::process(int sample)
 {
-    for(int i=0; i<m_size; i++)
+    for(int i=0; i<size(); i++)
     {
         float* freq  = m_frequency.buffer() + i;
         float delta = freq[0] * sampleRateReciprocal();
@@ -42,19 +42,17 @@ void SignalNodeClass_Oscillator::finish()
 
 void SignalNodeClass_Oscillator::nodeAppended(SignalNode* node)
 {
-    m_size = totalSlotCount();
-    m_frequency.resize(m_size);
-    m_period.resize(m_size);
-    m_sine.resize(m_size);
+    m_frequency.resize(size());
+    m_period.resize(size());
+    m_sine.resize(size());
 }
 
 
 void SignalNodeClass_Oscillator::nodeRemoved(SignalNode* node)
 {
-    m_size = totalSlotCount();
-    m_frequency.resize(m_size);
-    m_period.resize(m_size);
-    m_sine.resize(m_size);
+    m_frequency.resize(size());
+    m_period.resize(size());
+    m_sine.resize(size());
 }
 
 }//namespace r64fx

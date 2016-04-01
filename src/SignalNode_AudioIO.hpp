@@ -14,14 +14,9 @@ enum class SignalDirection{
 
 class SignalNodeClass_AudioIO : public SignalNodeClass{
 protected:
-    float**       m_buffers  = nullptr;
-    int           m_size     = 0;
+    float** m_buffers  = nullptr;
 
     SignalNodeClass_AudioIO(SignalGraph* parent_graph);
-
-    virtual void nodeAppended(SignalNode* node);
-
-    virtual void nodeRemoved(SignalNode* node);
 
     virtual SignalPort* port() = 0;
 
@@ -30,9 +25,9 @@ protected:
     void freeBuffers();
 
 public:
-    virtual SignalNode* newNode(const std::string &name, int slot_count = 1);
+    SignalNode* newNode(const std::string &name, int slot_count = 1);
 
-    virtual void deleteNode(SignalNode* node);
+    void deleteNode(SignalNode* node);
 
     virtual SignalDirection direction() = 0;
 };
@@ -43,6 +38,8 @@ class SignalNodeClass_AudioInput : public SignalNodeClass_AudioIO{
 
 public:
     SignalNodeClass_AudioInput(SignalGraph* parent_graph);
+
+    virtual void forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg);
 
     virtual SignalDirection direction();
 
@@ -64,6 +61,8 @@ class SignalNodeClass_AudioOutput : public SignalNodeClass_AudioIO{
 
 public:
     SignalNodeClass_AudioOutput(SignalGraph* parent_graph);
+
+    virtual void forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg);
 
     virtual SignalDirection direction();
 

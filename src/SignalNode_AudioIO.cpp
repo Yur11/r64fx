@@ -20,11 +20,8 @@ void SignalNodeClass_AudioIO::reallocateBuffers()
 {
     freeBuffers();
 
-    m_size = totalSlotCount();
-    port()->resize(m_size);
-
-    m_buffers = new float*[m_size];
-    for(int i=0; i<m_size; i++)
+    m_buffers = new float*[size()];
+    for(int i=0; i<size(); i++)
     {
         m_buffers[i] = new float[bufferSize()];
     }
@@ -35,7 +32,7 @@ void SignalNodeClass_AudioIO::freeBuffers()
 {
     if(m_buffers)
     {
-        for(int i=0; i<m_size; i++)
+        for(int i=0; i<size(); i++)
         {
             float* &buffer = m_buffers[i];
             if(buffer)
@@ -47,18 +44,6 @@ void SignalNodeClass_AudioIO::freeBuffers()
         delete m_buffers;
         m_buffers = nullptr;
     }
-}
-
-
-void SignalNodeClass_AudioIO::nodeAppended(SignalNode* node)
-{
-    reallocateBuffers();
-}
-
-
-void SignalNodeClass_AudioIO::nodeRemoved(SignalNode* node)
-{
-    reallocateBuffers();
 }
 
 
@@ -117,6 +102,7 @@ SignalNode* SignalNodeClass_AudioIO::newNode(const std::string &name, int slot_c
     }
 
     setNodeData(node, data);
+    reallocateBuffers();
 
     return node;
 }
@@ -140,6 +126,8 @@ void SignalNodeClass_AudioIO::deleteNode(SignalNode* node)
         }
         delete[] ports;
     }
+
+    reallocateBuffers();
 }
 
 
@@ -147,6 +135,12 @@ SignalNodeClass_AudioInput::SignalNodeClass_AudioInput(SignalGraph* parent_graph
 : SignalNodeClass_AudioIO(parent_graph)
 {
 
+}
+
+
+void SignalNodeClass_AudioInput::forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg)
+{
+    fun(&m_source, arg);
 }
 
 
@@ -188,7 +182,7 @@ void SignalNodeClass_AudioInput::prepare()
 
 void SignalNodeClass_AudioInput::process(int sample)
 {
-    for(int i=0; i<m_size; i++)
+    for(int i=0; i<size(); i++)
     {
         m_source.slot(i) = m_buffers[i][sample];
     }
@@ -214,6 +208,11 @@ SignalNodeClass_AudioOutput::SignalNodeClass_AudioOutput(SignalGraph* parent_gra
 }
 
 
+void SignalNodeClass_AudioOutput::forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg)
+{
+    fun(&m_sink, arg);
+}
+
 
 SignalDirection SignalNodeClass_AudioOutput::direction()
 {
@@ -229,7 +228,7 @@ void SignalNodeClass_AudioOutput::prepare()
 
 void SignalNodeClass_AudioOutput::process(int sample)
 {
-    for(int i=0; i<m_size; i++)
+    for(int i=0; i<size(); i++)
     {
         m_buffers[i][sample] = m_sink.slot(i);
     }

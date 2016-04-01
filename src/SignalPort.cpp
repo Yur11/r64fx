@@ -2,8 +2,9 @@
 
 namespace r64fx{
 
-SignalPort::SignalPort(const std::string name, int size)
+SignalPort::SignalPort(const std::string name,  float default_value, int size)
 : m_name(name)
+, m_default_value(default_value)
 {
     resize(size);
 }
@@ -22,6 +23,10 @@ void SignalPort::resize(int size)
 
     free();
     m_buffer = new float[size];
+    for(int i=0; i<size; i++)
+    {
+        m_buffer[i] = defaultValue();
+    }
 }
 
 
@@ -47,15 +52,15 @@ float* SignalPort::buffer() const
 }
 
 
-SignalSink::SignalSink(const std::string name, int size)
-: SignalPort(name, size)
+SignalSink::SignalSink(const std::string name, float default_value, int size)
+: SignalPort(name, default_value, size)
 {
 
 }
 
 
-SignalSource::SignalSource(const std::string name, int size)
-: SignalPort(name, size)
+SignalSource::SignalSource(const std::string name, float default_value, int size)
+: SignalPort(name, default_value, size)
 {
 
 }

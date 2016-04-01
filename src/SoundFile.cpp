@@ -60,9 +60,9 @@ void SoundFile::open(const std::string &path, SoundFile::Mode mode)
         return;
 
     m_mode = mode;
-    m_channel_count = sfinfo.channels;
-    m_frame_count   = sfinfo.frames;
-    m_sample_rate   = sfinfo.samplerate;
+    m_component_count = sfinfo.channels;
+    m_frame_count     = sfinfo.frames;
+    m_sample_rate     = sfinfo.samplerate;
 }
 
 
@@ -71,7 +71,7 @@ void SoundFile::close()
     if(m)
     {
         sf_close(m_sndfile);
-        m_channel_count = 0;
+        m_component_count = 0;
         m_frame_count   = 0;
         m_sample_rate   = 0;
     }
@@ -90,9 +90,9 @@ SoundFile::Mode SoundFile::mode() const
 }
 
 
-int SoundFile::channelCount() const
+int SoundFile::componentCount() const
 {
-    return m_channel_count;
+    return m_component_count;
 }
 
 
@@ -110,24 +110,24 @@ int SoundFile::sampleRate() const
 
 int SoundFile::readFrames(float* out, int nframes)
 {
-    return sf_read_float(m_sndfile, out, nframes);
+    return sf_readf_float(m_sndfile, out, nframes);
 }
 
 
 int SoundFile::readFramesUnpack(float** out, int nframes)
 {
     int frames_read = 0;
-    float* buff = new float[channelCount()];
+    float* buff = new float[componentCount()];
 
     for(int i=0; i<nframes; i++)
     {
-        int chans_read = readFrames(buff, 1) < channelCount();
+        int chans_read = readFrames(buff, 1) < componentCount();
         if(chans_read != 1)
         {
             break;
         }
 
-        for(auto c=0; c<channelCount(); c++)
+        for(auto c=0; c<componentCount(); c++)
         {
             out[c][i] = buff[c];
         }

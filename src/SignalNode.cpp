@@ -49,6 +49,12 @@ SignalNodeClass::SignalNodeClass(SignalGraph* parent_graph)
 }
 
 
+int SignalNodeClass::size() const
+{
+    return m_size;
+}
+
+
 SignalNode* SignalNodeClass::newNode(int slot_count)
 {
     SignalNode* node = nullptr;
@@ -75,6 +81,7 @@ SignalNode* SignalNodeClass::newNode(int slot_count)
         node->setSlotCount(slot_count);
         node->setSlotOffset(offset);
         m_nodes.append(node);
+        m_size += slot_count;
         nodeAppended(node);
     }
 
@@ -88,19 +95,9 @@ void SignalNodeClass::deleteNode(SignalNode* node)
         return;
 
     m_nodes.remove(node);
+    m_size -= node->slotCount();
     nodeRemoved(node);
     delete node;
-}
-
-
-int SignalNodeClass::totalSlotCount() const
-{
-    int count = 0;
-    for(auto node : m_nodes)
-    {
-        count += node->slotCount();
-    }
-    return count;
 }
 
 
@@ -141,6 +138,36 @@ float SignalNodeClass::sampleRateReciprocal() const
 }
 
 
+void SignalNodeClass::nodeAppended(SignalNode* node)
+{
+    resizePorts();
+}
+
+
+void SignalNodeClass::nodeRemoved(SignalNode* node)
+{
+    resizePorts();
+}
+
+
+void SignalNodeClass::prepare()
+{
+
+}
+
+
+void SignalNodeClass::process(int sample)
+{
+
+}
+
+
+void SignalNodeClass::finish()
+{
+
+}
+
+
 void SignalNodeClass::setNodeData(SignalNode* node, void* data)
 {
     node->data = data;
@@ -150,6 +177,15 @@ void SignalNodeClass::setNodeData(SignalNode* node, void* data)
 void* SignalNodeClass::getNodeData(SignalNode* node)
 {
     return node->data;
+}
+
+
+void SignalNodeClass::resizePorts()
+{
+    forEachPort([](SignalPort* port, void* arg){
+        auto node_class = (SignalNodeClass*)arg;
+        port->resize(node_class->size());
+    }, this);
 }
 
 }//namespace r64fx

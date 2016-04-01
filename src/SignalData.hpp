@@ -4,26 +4,34 @@
 namespace r64fx{
 
 class SignalData{
-    void*          m_data        = nullptr;
-    int            m_size        = 0;
-    int            m_chan_count  = 0;
+    float* m_data            = nullptr;
+    int    m_frame_count     = 0;
+    int    m_component_count = 0;
+    int    m_flags           = 0;
+    int    m_sample_rate     = 0.0f;
 
 public:
-    SignalData();
-
-    SignalData(int size, int channel_count);
+    SignalData(int frame_count = 0, int channel_count = 1, float* data = nullptr, bool copy_data = false);
 
     ~SignalData();
 
-    void alloc(int size, int channel_count);
+    void load(int frame_count = 0, int channel_count = 1, float* data = nullptr, bool copy_data = false);
 
     void free();
 
-    int size() const;
+    bool ownsData() const;
 
-    int channelCount() const;
+    float* data() const;
 
-    float* data(int chan = 0) const;
+    int frameCount() const;
+
+    int componentCount() const;
+
+    float* frame(int i) const;
+
+    void setSampleRate(int rate);
+
+    int sampleRate() const;
 };
 
 }//namespace r64fx

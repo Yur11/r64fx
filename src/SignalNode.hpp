@@ -36,6 +36,7 @@ public:
 class SignalNodeClass : public LinkedList<SignalNodeClass>::Node{
     friend class SignalGraph;
     SignalGraph* m_parent_graph = nullptr;
+    int m_size = 0;
 
 protected:
     LinkedList<SignalNode> m_nodes;
@@ -43,11 +44,11 @@ protected:
 public:
     SignalNodeClass(SignalGraph* parent_graph);
 
-    virtual SignalNode* newNode(int slot_count = 1);
+    int size() const;
 
-    virtual void deleteNode(SignalNode* node);
+    SignalNode* newNode(int slot_count = 1);
 
-    int totalSlotCount() const;
+    void deleteNode(SignalNode* node);
 
     virtual void forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg);
 
@@ -62,19 +63,21 @@ protected:
 
     float sampleRateReciprocal() const;
 
-    virtual void prepare() = 0;
+    virtual void nodeAppended(SignalNode* node);
 
-    virtual void process(int sample) = 0;
+    virtual void nodeRemoved(SignalNode* node);
 
-    virtual void finish() = 0;
+    virtual void prepare();
 
-    virtual void nodeAppended(SignalNode* node) = 0;
+    virtual void process(int sample);
 
-    virtual void nodeRemoved(SignalNode* node) = 0;
+    virtual void finish();
 
     static void setNodeData(SignalNode* node, void* data);
 
     static void* getNodeData(SignalNode* node);
+
+    void resizePorts();
 };
 
 }//namespace r64fx
