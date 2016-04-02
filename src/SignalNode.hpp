@@ -51,7 +51,7 @@ public:
 
     void deleteNode(SignalNode* node);
 
-    virtual void forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg);
+    virtual void forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg) = 0;
 
 protected:
     void addNewNode(SignalNode* node, int slot_count = 1);

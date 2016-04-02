@@ -20,16 +20,10 @@ public:
 
     inline SignalSource* sine() { return &m_sine; }
 
+    void forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg);
+
 protected:
-    virtual void prepare();
-
     virtual void process(int sample);
-
-    virtual void finish();
-
-    virtual void nodeAppended(SignalNode* node);
-
-    virtual void nodeRemoved(SignalNode* node);
 };
 
 }//namespace r64fx

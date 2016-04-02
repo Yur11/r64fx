@@ -5,14 +5,19 @@ namespace r64fx{
 
 SignalNodeClass_Oscillator::SignalNodeClass_Oscillator(SignalGraph* parent_graph)
 : SignalNodeClass(parent_graph)
+, m_frequency ("frequncy", 440.0f)
+, m_period    ("period",   0.0f)
+, m_sine      ("sine",     0.0f)
 {
 
 }
 
 
-void SignalNodeClass_Oscillator::prepare()
+void SignalNodeClass_Oscillator::forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg)
 {
-
+    fun(&m_frequency, arg);
+    fun(&m_period,    arg);
+    fun(&m_sine,      arg);
 }
 
 
@@ -31,28 +36,6 @@ void SignalNodeClass_Oscillator::process(int sample)
         float* sine = m_sine.buffer() + i;
         sine[0] = sin(period[0] * 2.0f * M_PI);
     }
-}
-
-
-void SignalNodeClass_Oscillator::finish()
-{
-
-}
-
-
-void SignalNodeClass_Oscillator::nodeAppended(SignalNode* node)
-{
-    m_frequency.resize(size());
-    m_period.resize(size());
-    m_sine.resize(size());
-}
-
-
-void SignalNodeClass_Oscillator::nodeRemoved(SignalNode* node)
-{
-    m_frequency.resize(size());
-    m_period.resize(size());
-    m_sine.resize(size());
 }
 
 }//namespace r64fx

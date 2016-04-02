@@ -67,12 +67,6 @@ void SignalNodeClass::deleteNode(SignalNode* node)
 }
 
 
-void SignalNodeClass::forEachPort(void (*fun)(SignalPort* port, void* arg), void* arg)
-{
-
-}
-
-
 void SignalNodeClass::addNewNode(SignalNode* node, int slot_count)
 {
     if(node)
