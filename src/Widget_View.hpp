@@ -13,12 +13,12 @@ public:
 
     ~Widget_View();
 
-protected:
-    virtual void mousePressEvent(MousePressEvent* event);
-
-    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
-
-    virtual void mouseMoveEvent(MouseMoveEvent* event);
+// protected:
+//     virtual void mousePressEvent(MousePressEvent* event);
+//
+//     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
+//
+//     virtual void mouseMoveEvent(MouseMoveEvent* event);
 };
 
 }//namespace r64fx

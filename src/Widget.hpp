@@ -71,6 +71,8 @@ public:
 
     Widget* root() const;
 
+    Widget* leafAt(Point<int> position, Point<int>* offset = nullptr);
+
 
 /* === Geometry. === */
 

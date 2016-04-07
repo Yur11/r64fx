@@ -506,7 +506,6 @@ void Widget_Text::resizeEvent(ResizeEvent* event)
 
 void Widget_Text::mousePressEvent(MousePressEvent* event)
 {
-    Widget::mousePressEvent(event);
     if(event->button() == MouseButton::Right())
     {
     }
@@ -530,7 +529,6 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
 
 void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    Widget::mouseReleaseEvent(event);
     if(m_text_painter->hasSelection())
     {
         g_selection_text = m_text_painter->selectionText();

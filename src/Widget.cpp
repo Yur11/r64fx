@@ -60,6 +60,8 @@ namespace{
             flags &= ~mask;
     }
 
+    Point<int> g_prev_mouse_position = {0, 0};
+
     MouseButton pressed_buttons = MouseButton::None();
 
     /* Widget that currently grabs mouse input. */
@@ -210,6 +212,40 @@ Widget* Widget::root() const
     {
         return m_parent.widget->root();
     }
+}
+
+
+Widget* Widget::leafAt(Point<int> position, Point<int>* offset)
+{
+    Widget* leaf = this;
+    Point<int> leaf_offset = {0, 0};
+    bool got_leaf = true;
+    while(got_leaf)
+    {
+        auto widget_view = dynamic_cast<Widget_View*>(leaf);
+        if(widget_view)
+        {
+            leaf_offset += widget_view->offset();
+        }
+
+        got_leaf = false;
+        for(auto child : m_children)
+        {
+            if(child->rect().overlaps(position - leaf_offset))
+            {
+                got_leaf = true;
+                leaf_offset += child->position();
+                leaf = child;
+                break;
+            }
+        }
+    }
+
+    if(offset)
+    {
+        offset[0] = leaf_offset;
+    }
+    return leaf;
 }
 
 
@@ -823,46 +859,41 @@ void WindowEvents_Widget::mousePressEvent(Window* window, int x, int y, unsigned
 {
     auto d = (WindowWidgetData*) window->data();
 
-    pressed_buttons |= MouseButton(button);
-    MousePressEvent event(x, y, MouseButton(button));
+    Point<int> event_position = {x, y};
+    g_prev_mouse_position = event_position;
 
-    auto grabber = Widget::mouseGrabber();
-    if(grabber)
+    pressed_buttons |= MouseButton(button);
+
+    auto widget = Widget::mouseGrabber();
+    if(widget)
     {
-        event.setPosition(
-            event.position() - grabber->toRootCoords(Point<int>(0, 0))
-        );
-        grabber->mousePressEvent(&event);
+        event_position -= widget->toRootCoords(Point<int>(0, 0));
     }
     else
     {
-        d->widget->mousePressEvent(&event);
+        Point<int> leaf_offset  = {0, 0};
+        widget = d->widget->leafAt(event_position, &leaf_offset);
+        event_position -= leaf_offset;
     }
+
+    if(widget->grabsMouseOnClick())
+    {
+        widget->grabMouse();
+    }
+
+    if(widget->gainsFocusOnClick())
+    {
+        widget->setFocus();
+    }
+
+    MousePressEvent event(event_position, {0, 0}, MouseButton(button));
+    widget->mousePressEvent(&event);
 }
 
 
 void Widget::mousePressEvent(MousePressEvent* event)
 {
-    if(grabsMouseOnClick())
-    {
-        grabMouse();
-    }
 
-    if(gainsFocusOnClick())
-    {
-        setFocus();
-    }
-
-    for(auto child : m_children)
-    {
-        if((child->isVisible() && child->rect().overlaps(event->position())))
-        {
-            auto position = event->position();
-            event->setPosition(position - child->position());
-            child->mousePressEvent(event);
-            event->setPosition(position);
-        }
-    }
 }
 
 
@@ -870,41 +901,36 @@ void WindowEvents_Widget::mouseReleaseEvent(Window* window, int x, int y, unsign
 {
     auto d = (WindowWidgetData*) window->data();
 
-    pressed_buttons &= ~MouseButton(button);
-    MouseReleaseEvent event(x, y, MouseButton(button));
+    Point<int> event_position = {x, y};
+    g_prev_mouse_position = event_position;
 
-    auto grabber = Widget::mouseGrabber();
-    if(grabber)
+    pressed_buttons &= ~MouseButton(button);
+
+    auto widget = Widget::mouseGrabber();
+    if(widget)
     {
-        event.setPosition(
-            event.position() - grabber->toRootCoords(Point<int>(0, 0))
-        );
-        grabber->mouseReleaseEvent(&event);
+        event_position -= widget->toRootCoords(Point<int>(0, 0));
     }
     else
     {
-        d->widget->mouseReleaseEvent(&event);
+        Point<int> leaf_offset = {0, 0};
+        widget = d->widget->leafAt(event_position, &leaf_offset);
+        event_position -= leaf_offset;
     }
+
+    if(widget->grabsMouseOnClick())
+    {
+        widget->ungrabMouse();
+    }
+
+    MouseReleaseEvent event(event_position, {0, 0}, MouseButton(button));
+    widget->mouseReleaseEvent(&event);
 }
 
 
 void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    if(grabsMouseOnClick() && isMouseGrabber())
-    {
-        ungrabMouse();
-    }
 
-    for(auto child : m_children)
-    {
-        if((child->isVisible() && child->rect().overlaps(event->position())))
-        {
-            auto position = event->position();
-            event->setPosition(position - child->position());
-            child->mouseReleaseEvent(event);
-            event->setPosition(position);
-        }
-    }
 }
 
 
@@ -912,35 +938,30 @@ void WindowEvents_Widget::mouseMoveEvent(Window* window, int x, int y)
 {
     auto d = (WindowWidgetData*) window->data();
 
-    MouseMoveEvent event(x, y, pressed_buttons);
+    Point<int> event_position = {x, y};
+    Point<int> event_delta = event_position - g_prev_mouse_position;
+    g_prev_mouse_position = event_position;
 
-    auto grabber = Widget::mouseGrabber();
-    if(grabber)
+    auto widget = Widget::mouseGrabber();
+    if(widget)
     {
-        event.setPosition(
-            event.position() - grabber->toRootCoords(Point<int>(0, 0))
-        );
-        grabber->mouseMoveEvent(&event);
+        event_position -= widget->toRootCoords(Point<int>(0, 0));
     }
     else
     {
-        d->widget->mouseMoveEvent(&event);
+        Point<int> leaf_offset = {0, 0};
+        widget = d->widget->leafAt(event_position, &leaf_offset);
+        event_position -= leaf_offset;
     }
+
+    MouseMoveEvent event(event_position, event_delta, MouseButton(pressed_buttons));
+    widget->mouseMoveEvent(&event);
 }
 
 
 void Widget::mouseMoveEvent(MouseMoveEvent* event)
 {
-    for(auto child : m_children)
-    {
-        if((child->isVisible() && child->rect().overlaps(event->position())))
-        {
-            auto position = event->position();
-            event->setPosition(position - child->position());
-            child->mouseMoveEvent(event);
-            event->setPosition(position);
-        }
-    }
+
 }
 
 

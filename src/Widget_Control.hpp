@@ -2,54 +2,11 @@
 #define R64FX_WIDGET_CONTROL_HPP
 
 #include "Widget.hpp"
+#include "ImageAnimation.hpp"
 
 namespace r64fx{
 
-enum class ControlType{
-    UnipolarRadius,
-    BipolarRadius,
-    UnipolarSector,
-    BipolarSector,
-    VerticalSlider,
-    HorizontalSlider
-};
-
-
-class ControlAnimation{
-    int m_min_position = 0;
-    int m_max_position = 255;
-
-    float m_min_value = 0.0f;
-    float m_max_value = 1.0f;
-
-public:
-    inline void setMinPosition(int pos) { m_min_position = pos; }
-    inline void setMaxPosition(int pos) { m_max_position = pos; }
-
-    inline int minPosition() const { return m_min_position; }
-    inline int maxPosition() const { return m_max_position; }
-
-    inline int positionRange() const { return maxPosition() - minPosition() + 1; }
-
-    inline int boundPosition(int pos) const
-    {
-        if(pos < minPosition())
-            return minPosition();
-        else if(pos > maxPosition())
-            return maxPosition();
-        else
-            return pos;
-    }
-
-    inline void setMinValue(int val) { m_min_value = val; }
-    inline void setMaxValue(int val) { m_max_value = val; }
-
-    inline int minValue() const { return m_min_value; }
-    inline int maxValue() const { return m_max_value; }
-
-    inline int valueRange() const { return maxValue() - minValue(); }
-};
-
+class ControlAnimation;
 
 class Widget_Control : public Widget{
     ControlAnimation*  m_animation = nullptr;
@@ -58,7 +15,7 @@ class Widget_Control : public Widget{
     void*              m_on_value_changed_data = nullptr;
 
 public:
-    Widget_Control(ControlType type, int size, Widget* parent = nullptr);
+    Widget_Control(ControlAnimation* animation, Widget* parent = nullptr);
 
     ~Widget_Control();
 
@@ -75,6 +32,89 @@ protected:
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 };
+
+
+class ControlAnimationState{
+    int mx = 0;
+    int my = 0;
+
+public:
+    ControlAnimationState(int x, int y);
+
+    ControlAnimationState();
+
+    void setFrameX(int frame);
+    void setFrameY(int frame);
+
+    int frameX() const;
+    int frameY() const;
+
+    static ControlAnimationState Unchanged();
+};
+
+
+class ControlAnimation{
+    Size<int> m_size = {0, 0};
+    int m_min_position = 0;
+    int m_max_position = 255;
+
+public:
+    virtual ~ControlAnimation() {}
+
+    void setSize(Size<int> size);
+
+    Size<int> size() const;
+
+    inline void setMinPosition(int pos) { m_min_position = pos; }
+    inline void setMaxPosition(int pos) { m_max_position = pos; }
+
+    inline int minPosition() const { return m_min_position; }
+    inline int maxPosition() const { return m_max_position; }
+
+    int positionRange() const;
+
+    int boundPosition(int pos) const;
+
+    virtual void paint(ControlAnimationState state);
+
+    virtual ControlAnimationState mousePress(Point<int> position);
+
+    virtual ControlAnimationState mouseMove(Point<int> position, Point<int> old_position);
+
+    virtual ControlAnimationState mouseEnter();
+
+    virtual ControlAnimationState mouseLeave();
+};
+
+
+struct ControlAnimation_Knob : public ControlAnimation{
+    ImageAnimation imgainim;
+
+    virtual void repaint(int position, Painter* painter);
+};
+
+
+struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
+    ControlAnimation_Knob_UnipolarLarge(int size);
+};
+
+
+struct ControlAnimation_Knob_BipolarLarge : public ControlAnimation_Knob{
+    ControlAnimation_Knob_BipolarLarge(int size);
+};
+
+
+struct ControlAnimation_Knob_UnipolarSector : public ControlAnimation_Knob{
+    ControlAnimation_Knob_UnipolarSector(int size);
+};
+
+
+struct ControlAnimation_Knob_BipolarSector : public ControlAnimation_Knob{
+    ControlAnimation_Knob_BipolarSector(int size);
+};
+
+
+
 
 }//namespace r64fx
 

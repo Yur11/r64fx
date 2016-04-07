@@ -1,7 +1,6 @@
 #include "Widget_Control.hpp"
 #include "Mouse.hpp"
 #include "Painter.hpp"
-#include "ImageAnimation.hpp"
 #include "ImageUtils.hpp"
 
 #include <cmath>
@@ -14,370 +13,13 @@ namespace{
     void on_value_changed_stub(Widget_Control*, void*) {}
 }
 
-struct ControlAnimationImpl : public ControlAnimation{
-    virtual ~ControlAnimationImpl() {}
 
-    int newPosition(int old_position, MouseMoveEvent* event)
-    {
-        return boundPosition(old_position - event->dy());
-    }
-
-    virtual void repaint(int position, Painter* painter) = 0;
-
-    float positionToValue(int position)
-    {
-        return float(position) * (valueRange() / float(positionRange()));
-    }
-
-    int valueToPosition(float value)
-    {
-        return value * (float(positionRange()) / valueRange());
-    }
-};
-
-
-struct ControlAnimationEntry{
-    ControlType        type;
-    int                size;
-    ControlAnimation*  animation;
-
-    ControlAnimationEntry(ControlType type, int size, ControlAnimation* animation)
-    : type(type)
-    , size(size)
-    , animation(animation)
-    {
-
-    }
-};
-
-
-inline bool operator==(const ControlAnimationEntry &a, const ControlAnimationEntry &b)
-{
-    return a.type == b.type && a.size == b.size;
-}
-
-
-vector<ControlAnimationEntry> g_animations;
-
-
-float normalize_angle(float angle)
-{
-    while(angle > (2.0f * M_PI))
-        angle -= (2.0f * M_PI);
-
-    while(angle < 0.0f)
-        angle += (2.0f * M_PI);
-
-    return angle;
-}
-
-
-struct ControlAnimation_Knob : public ControlAnimationImpl{
-    ImageAnimation imgainim;
-
-    virtual void repaint(int position, Painter* painter)
-    {
-        unsigned char a[4] = {1, 96, 242, 0};
-        unsigned char b[4] = {242, 96, 1, 0};
-        unsigned char* colors[2] = {a, b};
-
-        if(imgainim.isGood())
-        {
-            imgainim.pickFrame(position - minPosition());
-            painter->blendColors({0, 0}, colors, &imgainim);
-        }
-    }
-};
-
-
-struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
-    ControlAnimation_Knob_UnipolarLarge(int size)
-    {
-        setMinValue(0.0f);
-        setMaxValue(1.0f);
-
-        unsigned char a[2] = {255, 0};
-        unsigned char b[2] = {0, 255};
-        unsigned char o[2] = {0, 0};
-
-        int hs = (size / 2);
-        int radius = hs - 1;
-        int thickness = 2;
-
-        imgainim.resize(size, size, 2, positionRange());
-        for(int i=0; i<positionRange(); i++)
-        {
-            imgainim.pickFrame(i);
-            fill(&imgainim, o);
-
-            float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
-
-            if(i > 0)
-                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle, thickness);
-
-            if(i < (positionRange()-1))
-                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle, M_PI * 0.25f, thickness);
-
-            draw_radius(
-                &imgainim, (i>0 ? b : a),
-                {float(hs), float(hs)}, angle, radius, 0, thickness + 1
-            );
-        }
-    }
-};
-
-
-struct ControlAnimation_Knob_BipolarLarge : public ControlAnimation_Knob{
-    ControlAnimation_Knob_BipolarLarge(int size)
-    {
-        setMinValue(-1.0f);
-        setMaxValue(+1.0f);
-
-        unsigned char a[2] = {255, 0};
-        unsigned char b[2] = {0, 255};
-        unsigned char o[2] = {0, 0};
-
-        int hs = (size / 2);
-        int radius = hs - 1;
-        int thickness = 2;
-
-        imgainim.resize(size, size, 2, positionRange());
-        for(int i=0; i<positionRange(); i++)
-        {
-            imgainim.pickFrame(i);
-            fill(&imgainim, o);
-
-            float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
-
-            if(i == positionRange()/2)
-            {
-                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, M_PI * 0.25f, thickness);
-                draw_radius(
-                    &imgainim, a,
-                    {float(hs), float(hs)}, angle, radius, 0, thickness + 1
-                );
-            }
-            else
-            {
-                if(i < positionRange()/2)
-                {
-                    draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle,        thickness);
-                    draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, angle,        M_PI * 0.25f, thickness);
-                    draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f,  M_PI * 0.25f, thickness);
-                }
-                else
-                {
-                    draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, M_PI * 1.5f,  thickness);
-                    draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f,  angle,        thickness);
-                    draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle,        M_PI * 0.25f, thickness);
-                }
-
-                draw_radius(
-                    &imgainim, b,
-                    {float(hs), float(hs)}, angle, radius, 0, thickness + 1
-                );
-            }
-        }
-    }
-};
-
-
-struct ControlAnimation_Knob_UnipolarSector : public ControlAnimation_Knob{
-    ControlAnimation_Knob_UnipolarSector(int size)
-    {
-        setMinValue(0.0f);
-        setMaxValue(1.0f);
-
-        imgainim.resize(size, size, 2, positionRange());
-        for(int i=0; i<positionRange(); i++)
-        {
-            unsigned char a[2] = {255, 0};
-            unsigned char b[2] = {0, 255};
-            unsigned char o[2] = {0, 0};
-
-            int hs = (size / 2);
-            int radius = hs - 1;
-            int thickness = radius - 1;
-
-            imgainim.pickFrame(i);
-            fill(&imgainim, o);
-
-            float angle = normalize_angle((float(i) / (positionRange() - 1)) * 2.0f * M_PI + 0.5f * M_PI);
-
-            if(i == 0)
-            {
-                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
-            }
-            else if(i == (positionRange() - 1))
-            {
-                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
-            }
-            else
-            {
-                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, angle, thickness);
-                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle, M_PI * 0.5f, thickness);
-            }
-        }
-    }
-};
-
-
-struct ControlAnimation_Knob_BipolarSector : public ControlAnimation_Knob{
-    ControlAnimation_Knob_BipolarSector(int size)
-    {
-        setMinValue(-1.0f);
-        setMaxValue(+1.0f);
-
-        imgainim.resize(size, size, 2, positionRange());
-        for(int i=0; i<positionRange(); i++)
-        {
-            unsigned char a[2] = {255, 0};
-            unsigned char b[2] = {0, 255};
-            unsigned char o[2] = {0, 0};
-
-            int hs = (size / 2);
-            int radius = hs - 1;
-            int thickness = radius - 1;
-
-            imgainim.pickFrame(i);
-            fill(&imgainim, o);
-
-            float angle = normalize_angle((float(i) / (positionRange() - 1)) * 2.0f * M_PI + 0.5f * M_PI);
-
-            if(i == (positionRange()/2))
-            {
-                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
-            }
-            else if(i < (positionRange()/2))
-            {
-                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, angle,       thickness);
-                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, angle,       M_PI * 1.5f, thickness);
-                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f, M_PI * 0.5f, thickness);
-            }
-            else
-            {
-                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, M_PI * 1.5f, thickness);
-                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f, angle,       thickness);
-                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle,       M_PI * 0.5f, thickness);
-            }
-        }
-    }
-};
-
-
-
-struct ControlAnimation_Slider : public ControlAnimationImpl{
-    Image base_image;
-    Image handle_image;
-
-    ControlAnimation_Slider()
-    {
-
-    }
-};
-
-
-
-struct ControlAnimation_Slider_Vertical : public ControlAnimation_Slider{
-    ControlAnimation_Slider_Vertical(int size)
-    {
-        base_image.load(size, 5, 1);
-        fill(&base_image, 255);
-
-
-    }
-
-    virtual void repaint(int position, Painter* painter)
-    {
-
-    }
-};
-
-
-struct ControlAnimation_Slider_Horizontal : public ControlAnimation_Slider{
-    ControlAnimation_Slider_Horizontal(int size)
-    {
-
-    }
-
-    virtual void repaint(int position, Painter* painter)
-    {
-
-    }
-};
-
-
-
-ControlAnimation* newAnimation(ControlType type, int size)
-{
-    for(auto entry : g_animations)
-    {
-        if(entry == ControlAnimationEntry(type, size, nullptr))
-        {
-            return entry.animation;
-        }
-    }
-
-    ControlAnimation* animation = nullptr;
-    switch(type)
-    {
-        case ControlType::UnipolarRadius:
-        {
-            animation = new(std::nothrow) ControlAnimation_Knob_UnipolarLarge(size);
-            break;
-        }
-
-        case ControlType::BipolarRadius:
-        {
-            animation = new(std::nothrow) ControlAnimation_Knob_BipolarLarge(size);
-            break;
-        }
-
-        case ControlType::UnipolarSector:
-        {
-            animation = new(std::nothrow) ControlAnimation_Knob_UnipolarSector(size);
-            break;
-        }
-
-        case ControlType::BipolarSector:
-        {
-            animation = new(std::nothrow) ControlAnimation_Knob_BipolarSector(size);
-            break;
-        }
-
-        case ControlType::VerticalSlider:
-        {
-            animation = new(std::nothrow) ControlAnimation_Slider_Vertical(size);
-            break;
-        }
-
-        case ControlType::HorizontalSlider:
-        {
-            animation = new(std::nothrow) ControlAnimation_Slider_Horizontal(size);
-            break;
-        }
-
-        default:
-        {
-            break;
-        }
-    }
-
-    if(animation)
-    {
-        g_animations.push_back({type, size, animation});
-    }
-
-    return animation;
-}
-
-
-Widget_Control::Widget_Control(ControlType type, int size, Widget* parent)
+Widget_Control::Widget_Control(ControlAnimation* animation, Widget* parent)
 : Widget(parent)
+, m_animation(animation)
 , m_on_value_changed(on_value_changed_stub)
 {
-    m_animation = newAnimation(type, size);
-    setSize({size, size});
+    setSize(m_animation->size());
 }
 
 
@@ -395,8 +37,8 @@ void Widget_Control::setValue(float value)
     if(!m_animation)
         return;
 
-    auto anim = (ControlAnimationImpl*) m_animation;
-    m_position = anim->boundPosition(anim->valueToPosition(value));
+//     auto anim = (ControlAnimation*) m_animation;
+//     m_position = anim->boundPosition(anim->valueToPosition(value));
 }
 
 
@@ -405,8 +47,9 @@ float Widget_Control::value() const
     if(!m_animation)
         return 0.0f;
 
-    auto anim = (ControlAnimationImpl*) m_animation;
-    return anim->positionToValue(m_position);
+//     auto anim = (ControlAnimation*) m_animation;
+//     return anim->positionToValue(m_position);
+    return 0.0f;
 }
 
 
@@ -428,8 +71,8 @@ void Widget_Control::reconfigureEvent(ReconfigureEvent* event)
     p->fillRect({0, 0, width(), height()}, color);
     if(m_animation)
     {
-        auto anim = (ControlAnimationImpl*) m_animation;
-        anim->repaint(m_position, p);
+//         auto anim = (ControlAnimation*) m_animation;
+//         anim->repaint(m_position, p);
     }
     Widget::reconfigureEvent(event);
 }
@@ -448,10 +91,306 @@ void Widget_Control::mouseMoveEvent(MouseMoveEvent* event)
 
     if(event->button() & MouseButton::Left())
     {
-        auto anim = (ControlAnimationImpl*) m_animation;
-        m_position = anim->newPosition(m_position, event);
-        m_on_value_changed(this, m_on_value_changed_data);
-        update();
+//         auto anim = (ControlAnimation*) m_animation;
+//         m_position = anim->newPosition(m_position, event);
+//         m_on_value_changed(this, m_on_value_changed_data);
+//         update();
+    }
+}
+
+
+ControlAnimationState::ControlAnimationState(int x, int y)
+: mx(x)
+, my(y)
+{
+
+}
+
+
+ControlAnimationState::ControlAnimationState()
+{
+
+}
+
+
+void ControlAnimationState::setFrameX(int frame)
+{
+    mx = frame;
+}
+
+
+void ControlAnimationState::setFrameY(int frame)
+{
+    my = frame;
+}
+
+
+int ControlAnimationState::frameX() const
+{
+    return mx;
+}
+
+
+int ControlAnimationState::frameY() const
+{
+    return my;
+}
+
+
+void ControlAnimation::setSize(Size<int> size)
+{
+    m_size = size;
+}
+
+
+ControlAnimationState ControlAnimationState::Unchanged()
+{
+    return ControlAnimationState(0, 0);
+}
+
+
+Size<int> ControlAnimation::size() const
+{
+    return m_size;
+}
+
+
+int ControlAnimation::positionRange() const
+{
+    return maxPosition() - minPosition() + 1;
+}
+
+
+int ControlAnimation::boundPosition(int pos) const
+{
+    if(pos < minPosition())
+        return minPosition();
+    else if(pos > maxPosition())
+        return maxPosition();
+    else
+        return pos;
+}
+
+
+void ControlAnimation::paint(ControlAnimationState state)
+{
+
+}
+
+
+ControlAnimationState ControlAnimation::mousePress(Point<int> position)
+{
+    return ControlAnimationState::Unchanged();
+}
+
+
+ControlAnimationState ControlAnimation::mouseMove(Point<int> position, Point<int> old_position)
+{
+    return ControlAnimationState::Unchanged();
+}
+
+
+ControlAnimationState ControlAnimation::mouseEnter()
+{
+    return ControlAnimationState::Unchanged();
+}
+
+
+ControlAnimationState ControlAnimation::mouseLeave()
+{
+    return ControlAnimationState::Unchanged();
+}
+
+
+float normalize_angle(float angle)
+{
+    while(angle > (2.0f * M_PI))
+        angle -= (2.0f * M_PI);
+
+    while(angle < 0.0f)
+        angle += (2.0f * M_PI);
+
+    return angle;
+}
+
+
+void ControlAnimation_Knob::repaint(int position, Painter* painter)
+{
+    unsigned char a[4] = {1, 96, 242, 0};
+    unsigned char b[4] = {242, 96, 1, 0};
+    unsigned char* colors[2] = {a, b};
+
+    if(imgainim.isGood())
+    {
+        imgainim.pickFrame(position - minPosition());
+        painter->blendColors({0, 0}, colors, &imgainim);
+    }
+}
+
+
+ControlAnimation_Knob_UnipolarLarge::ControlAnimation_Knob_UnipolarLarge(int size)
+{
+//     setMinValue(0.0f);
+//     setMaxValue(1.0f);
+
+    unsigned char a[2] = {255, 0};
+    unsigned char b[2] = {0, 255};
+    unsigned char o[2] = {0, 0};
+
+    int hs = (size / 2);
+    int radius = hs - 1;
+    int thickness = 2;
+
+    imgainim.resize(size, size, 2, positionRange());
+    for(int i=0; i<positionRange(); i++)
+    {
+        imgainim.pickFrame(i);
+        fill(&imgainim, o);
+
+        float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
+
+        if(i > 0)
+            draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle, thickness);
+
+        if(i < (positionRange()-1))
+            draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle, M_PI * 0.25f, thickness);
+
+        draw_radius(
+            &imgainim, (i>0 ? b : a),
+            {float(hs), float(hs)}, angle, radius, 0, thickness + 1
+        );
+    }
+}
+
+
+ControlAnimation_Knob_BipolarLarge::ControlAnimation_Knob_BipolarLarge(int size)
+{
+//     setMinValue(-1.0f);
+//     setMaxValue(+1.0f);
+
+    unsigned char a[2] = {255, 0};
+    unsigned char b[2] = {0, 255};
+    unsigned char o[2] = {0, 0};
+
+    int hs = (size / 2);
+    int radius = hs - 1;
+    int thickness = 2;
+
+    imgainim.resize(size, size, 2, positionRange());
+    for(int i=0; i<positionRange(); i++)
+    {
+        imgainim.pickFrame(i);
+        fill(&imgainim, o);
+
+        float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
+
+        if(i == positionRange()/2)
+        {
+            draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, M_PI * 0.25f, thickness);
+            draw_radius(
+                &imgainim, a,
+                {float(hs), float(hs)}, angle, radius, 0, thickness + 1
+            );
+        }
+        else
+        {
+            if(i < positionRange()/2)
+            {
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle,        thickness);
+                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, angle,        M_PI * 0.25f, thickness);
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f,  M_PI * 0.25f, thickness);
+            }
+            else
+            {
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, M_PI * 1.5f,  thickness);
+                draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f,  angle,        thickness);
+                draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle,        M_PI * 0.25f, thickness);
+            }
+
+            draw_radius(
+                &imgainim, b,
+                {float(hs), float(hs)}, angle, radius, 0, thickness + 1
+            );
+        }
+    }
+}
+
+
+ControlAnimation_Knob_UnipolarSector::ControlAnimation_Knob_UnipolarSector(int size)
+{
+//     setMinValue(0.0f);
+//     setMaxValue(1.0f);
+
+    imgainim.resize(size, size, 2, positionRange());
+    for(int i=0; i<positionRange(); i++)
+    {
+        unsigned char a[2] = {255, 0};
+        unsigned char b[2] = {0, 255};
+        unsigned char o[2] = {0, 0};
+
+        int hs = (size / 2);
+        int radius = hs - 1;
+        int thickness = radius - 1;
+
+        imgainim.pickFrame(i);
+        fill(&imgainim, o);
+
+        float angle = normalize_angle((float(i) / (positionRange() - 1)) * 2.0f * M_PI + 0.5f * M_PI);
+
+        if(i == 0)
+        {
+            draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
+        }
+        else if(i == (positionRange() - 1))
+        {
+            draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
+        }
+        else
+        {
+            draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, angle, thickness);
+            draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle, M_PI * 0.5f, thickness);
+        }
+    }
+}
+
+
+ControlAnimation_Knob_BipolarSector::ControlAnimation_Knob_BipolarSector(int size)
+{
+//     setMinValue(-1.0f);
+//     setMaxValue(+1.0f);
+
+    imgainim.resize(size, size, 2, positionRange());
+    for(int i=0; i<positionRange(); i++)
+    {
+        unsigned char a[2] = {255, 0};
+        unsigned char b[2] = {0, 255};
+        unsigned char o[2] = {0, 0};
+
+        int hs = (size / 2);
+        int radius = hs - 1;
+        int thickness = radius - 1;
+
+        imgainim.pickFrame(i);
+        fill(&imgainim, o);
+
+        float angle = normalize_angle((float(i) / (positionRange() - 1)) * 2.0f * M_PI + 0.5f * M_PI);
+
+        if(i == (positionRange()/2))
+        {
+            draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
+        }
+        else if(i < (positionRange()/2))
+        {
+            draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, angle,       thickness);
+            draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, angle,       M_PI * 1.5f, thickness);
+            draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f, M_PI * 0.5f, thickness);
+        }
+        else
+        {
+            draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, M_PI * 1.5f, thickness);
+            draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f, angle,       thickness);
+            draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle,       M_PI * 0.5f, thickness);
+        }
     }
 }
 
