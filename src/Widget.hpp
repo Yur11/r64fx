@@ -150,6 +150,11 @@ public:
 
     bool grabsMouseOnClick() const;
 
+    void initMousePressEvent(Point<int> event_position, MouseButton button);
+
+    void initMouseReleaseEvent(Point<int> event_position, MouseButton button);
+
+    void initMouseMoveEvent(Point<int> event_position);
 
 /* === Keyboard === */
 
