@@ -77,3 +77,51 @@ bool Widget::doingTextInput()
         return false;
     }
 }
+
+
+void Widget::initKeyPressEvent(unsigned int key)
+{
+    Keyboard::trackModifierPress(key);
+
+    KeyPressEvent event(key);
+    if(g_focus_owner)
+    {
+        g_focus_owner->keyPressEvent(&event);
+    }
+    else
+    {
+        keyPressEvent(&event);
+    }
+}
+
+
+void Widget::initKeyReleaseEvent(unsigned int key)
+{
+    Keyboard::trackModifierRelease(key);
+
+    KeyReleaseEvent event(key);
+    if(g_focus_owner)
+    {
+        g_focus_owner->keyReleaseEvent(&event);
+    }
+    else
+    {
+        keyReleaseEvent(&event);
+    }
+}
+
+
+void Widget::initTextInputEvent(const std::string &text, unsigned int key)
+{
+    Keyboard::trackModifierPress(key);
+
+    TextInputEvent event(text, key);
+    if(g_focus_owner)
+    {
+        g_focus_owner->textInputEvent(&event);
+    }
+    else
+    {
+        textInputEvent(&event);
+    }
+}

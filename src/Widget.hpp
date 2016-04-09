@@ -177,6 +177,11 @@ public:
 
     bool doingTextInput();
 
+    void initKeyPressEvent(unsigned int key);
+
+    void initKeyReleaseEvent(unsigned int key);
+
+    void initTextInputEvent(const std::string &text, unsigned int key);
 
 /* === Clipboard, Selections, Drag and Drop === */
 

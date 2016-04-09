@@ -34,54 +34,21 @@ class WindowEvents_Widget : public WindowEvents{
     virtual void keyPressEvent(Window* window, unsigned int key)
     {
         auto d = (WindowWidgetData*) window->data();
-
-        Keyboard::trackModifierPress(key);
-
-        KeyPressEvent event(key);
-        if(g_focus_owner)
-        {
-            g_focus_owner->keyPressEvent(&event);
-        }
-        else
-        {
-            d->widget->keyPressEvent(&event);
-        }
+        d->widget->initKeyPressEvent(key);
     }
 
 
     virtual void keyReleaseEvent(Window* window, unsigned int key)
     {
         auto d = (WindowWidgetData*) window->data();
-
-        Keyboard::trackModifierRelease(key);
-
-        KeyReleaseEvent event(key);
-        if(g_focus_owner)
-        {
-            g_focus_owner->keyReleaseEvent(&event);
-        }
-        else
-        {
-            d->widget->keyReleaseEvent(&event);
-        }
+        d->widget->initKeyReleaseEvent(key);
     }
 
 
     virtual void textInputEvent(Window* window, const std::string &text, unsigned int key)
     {
         auto d = (WindowWidgetData*) window->data();
-
-        Keyboard::trackModifierPress(key);
-
-        TextInputEvent event(text, key);
-        if(g_focus_owner)
-        {
-            g_focus_owner->textInputEvent(&event);
-        }
-        else
-        {
-            d->widget->textInputEvent(&event);
-        }
+        d->widget->initTextInputEvent(text, key);
     }
 
 
