@@ -31,7 +31,7 @@ public:
     void pickNextState();
 
 public:
-    virtual void reconfigureEvent(ReconfigureEvent* event);
+    virtual void updateEvent(UpdateEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 };

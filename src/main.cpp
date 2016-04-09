@@ -73,7 +73,7 @@ public:
             delete m_animation;
     }
 
-    virtual void reconfigureEvent(ReconfigureEvent* event)
+    virtual void updateEvent(UpdateEvent* event)
     {
         unsigned char fg[4] = { 0,   0,   0,   0 };
         unsigned char bg[4] = { 127, 180, 255, 0 };
@@ -92,7 +92,7 @@ public:
         auto painter = event->painter();
         painter->putImage(&m_Image);
 
-        Widget_View::reconfigureEvent(event);
+        Widget_View::updateEvent(event);
     }
 
     virtual void mousePressEvent(MousePressEvent* event)

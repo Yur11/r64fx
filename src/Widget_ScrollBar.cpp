@@ -146,7 +146,7 @@ int Widget_ScrollBar_Vertical::barLength()
 }
 
 
-void Widget_ScrollBar_Vertical::reconfigureEvent(ReconfigureEvent* event)
+void Widget_ScrollBar_Vertical::updateEvent(UpdateEvent* event)
 {
     static unsigned char fg[4] = {127, 127, 127, 0};
     static unsigned char bg[4] = {127, 180, 255, 0};
@@ -162,7 +162,7 @@ void Widget_ScrollBar_Vertical::reconfigureEvent(ReconfigureEvent* event)
     p->blendColors({0, 0                            }, colors, img_button_up);
     p->blendColors({0, height() - g_scroll_bar_width}, colors, img_button_down);
 
-    Widget::reconfigureEvent(event);
+    Widget::updateEvent(event);
 }
 
 
@@ -211,7 +211,7 @@ int Widget_ScrollBar_Horizontal::barLength()
 }
 
 
-void Widget_ScrollBar_Horizontal::reconfigureEvent(ReconfigureEvent* event)
+void Widget_ScrollBar_Horizontal::updateEvent(UpdateEvent* event)
 {
     static unsigned char fg[4] = {127, 127, 127, 0};
     static unsigned char bg[4] = {127, 180, 255, 0};
@@ -227,7 +227,7 @@ void Widget_ScrollBar_Horizontal::reconfigureEvent(ReconfigureEvent* event)
     p->blendColors({0, 0                           }, colors, img_button_left);
     p->blendColors({width() - g_scroll_bar_width, 0}, colors, img_button_right);
 
-    Widget::reconfigureEvent(event);
+    Widget::updateEvent(event);
 }
 
 

@@ -26,7 +26,7 @@ public:
     void onValueChanged(void (*callback)(Widget_Control*, void*), void* data = nullptr);
 
 protected:
-    virtual void reconfigureEvent(ReconfigureEvent* event);
+    virtual void updateEvent(UpdateEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

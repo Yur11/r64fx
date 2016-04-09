@@ -22,7 +22,7 @@ Widget_Dummy::~Widget_Dummy()
 }
 
 
-void Widget_Dummy::reconfigureEvent(ReconfigureEvent* event)
+void Widget_Dummy::updateEvent(UpdateEvent* event)
 {
 //     auto painter = event->painter();
 //     Rect<int> rect = {0, 0, width(), height()};
@@ -40,7 +40,7 @@ void Widget_Dummy::reconfigureEvent(ReconfigureEvent* event)
 //         painter->fillRect(m_Color, {{0, 0}, size()});
 //     }
 //
-//     Widget::reconfigureEvent(event);
+//     Widget::updateEvent(event);
 //
 //     painter->fillRect({0, 0, 0}, {m_Point, {10, 10}});
 }

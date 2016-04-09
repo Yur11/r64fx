@@ -83,8 +83,8 @@ namespace{
 
     /* Collection of data attached to the window.
      * We should be able to cast back and forth
-     * between WindowWidgetData and Window::ReconfigureEvent. */
-    struct WindowWidgetData : Widget::ReconfigureEvent{
+     * between WindowWidgetData and Window::UpdateEvent. */
+    struct WindowWidgetData : Widget::UpdateEvent{
 
         /* Root widget shown in the window that
          * this context is attached to. */
@@ -354,28 +354,28 @@ void Widget::update()
 }
 
 
-Painter* Widget::ReconfigureEvent::painter()
+Painter* Widget::UpdateEvent::painter()
 {
     auto d = (WindowWidgetData*) this;
     return d->painter;
 }
 
 
-void Widget::ReconfigureEvent::setOffset(Point<int> offset)
+void Widget::UpdateEvent::setOffset(Point<int> offset)
 {
     auto d = (WindowWidgetData*) this;
     d->painter->setOffset(offset);
 }
 
 
-Point<int> Widget::ReconfigureEvent::offset() const
+Point<int> Widget::UpdateEvent::offset() const
 {
     auto d = (WindowWidgetData*) this;
     return d->painter->offset();
 }
 
 
-Rect<int> Widget::ReconfigureEvent::visibleRect()
+Rect<int> Widget::UpdateEvent::visibleRect()
 {
     auto d = (WindowWidgetData*) this;
     return d->visible_rect;
@@ -400,12 +400,12 @@ void process_window_updates(Window* window, void*)
 
         if(widget->m_flags & R64FX_WIDGET_WANTS_UPDATE)
         {
-            widget->reconfigureEvent((Widget::ReconfigureEvent*)d);
+            widget->updateEvent((Widget::UpdateEvent*)d);
             painter->repaint();
         }
         else
         {
-            widget->reconfigureChildren((Widget::ReconfigureEvent*)d);
+            widget->updateChildren((Widget::UpdateEvent*)d);
             if(d->num_rects > 0)
             {
                 for(int i=0; i<d->num_rects; i++)
@@ -431,13 +431,13 @@ void Widget::processEvents()
 }
 
 
-void Widget::reconfigureEvent(Widget::ReconfigureEvent* event)
+void Widget::updateEvent(Widget::UpdateEvent* event)
 {
-    reconfigureChildren(event);
+    updateChildren(event);
 }
 
 
-void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
+void Widget::updateChildren(Widget::UpdateEvent* event)
 {
     auto d = (WindowWidgetData*) event;
     auto parent_visible_rect = d->visible_rect;
@@ -502,11 +502,11 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
 
             if((child->m_flags & R64FX_WIDGET_WANTS_UPDATE))
             {
-                child->reconfigureEvent((ReconfigureEvent*)d);
+                child->updateEvent((UpdateEvent*)d);
             }
             else
             {
-                child->reconfigureChildren((ReconfigureEvent*)d);
+                child->updateChildren((UpdateEvent*)d);
             }
 
             if(widget_view_self)
@@ -521,18 +521,6 @@ void Widget::reconfigureChildren(Widget::ReconfigureEvent* event)
     d->got_rect = got_rect;
     d->visible_rect = parent_visible_rect;
     set_bits(m_flags, false, R64FX_WIDGET_UPDATE_FLAGS);
-}
-
-
-void Widget::focusInEvent()
-{
-
-}
-
-
-void Widget::focusOutEvent()
-{
-
 }
 
 
@@ -555,6 +543,18 @@ void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 
 
 void Widget::mouseMoveEvent(MouseMoveEvent* event)
+{
+
+}
+
+
+void Widget::focusInEvent()
+{
+
+}
+
+
+void Widget::focusOutEvent()
 {
 
 }

@@ -38,7 +38,7 @@ public:
     virtual int barLength();
 
 protected:
-    virtual void reconfigureEvent(ReconfigureEvent* event);
+    virtual void updateEvent(UpdateEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 
@@ -53,7 +53,7 @@ public:
     virtual int barLength();
 
 protected:
-    virtual void reconfigureEvent(ReconfigureEvent* event);
+    virtual void updateEvent(UpdateEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

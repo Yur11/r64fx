@@ -156,7 +156,7 @@ public:
 
     void initMouseMoveEvent(Point<int> event_position);
 
- 
+
 /* === Keyboard === */
 
     void setFocusOnClick(bool yes);
@@ -195,11 +195,11 @@ public:
     void update();
 
     /* Iface. passed down the reconfigure call tree. */
-    class ReconfigureEvent{
-        ReconfigureEvent(const ReconfigureEvent&) {}
+    class UpdateEvent{
+        UpdateEvent(const UpdateEvent&) {}
 
     protected:
-        ReconfigureEvent() {}
+        UpdateEvent() {}
 
     public:
         /* Painter to be used by reconfigure implementation. */
@@ -232,14 +232,8 @@ public:
     static void processEvents();
 
 protected:
-    /* Secondary Events */
-    virtual void reconfigureEvent(ReconfigureEvent* event);
+    virtual void updateEvent(UpdateEvent* event);
 
-    virtual void focusInEvent();
-
-    virtual void focusOutEvent();
-
-    /* Window Events */
     virtual void resizeEvent(ResizeEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
@@ -247,6 +241,10 @@ protected:
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
+
+    virtual void focusInEvent();
+
+    virtual void focusOutEvent();
 
     virtual void keyPressEvent(KeyPressEvent* event);
 
@@ -269,7 +267,7 @@ protected:
     virtual void closeEvent();
 
 private:
-    void reconfigureChildren(ReconfigureEvent* event);
+    void updateChildren(UpdateEvent* event);
 
     friend void process_window_updates(Window* window, void*);
     friend class WindowEvents_Widget;

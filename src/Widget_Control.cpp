@@ -63,7 +63,7 @@ void Widget_Control::onValueChanged(void (*callback)(Widget_Control*, void*), vo
 }
 
 
-void Widget_Control::reconfigureEvent(ReconfigureEvent* event)
+void Widget_Control::updateEvent(UpdateEvent* event)
 {
     static unsigned char color[4] = {161, 172, 176, 0};
 
@@ -74,7 +74,7 @@ void Widget_Control::reconfigureEvent(ReconfigureEvent* event)
 //         auto anim = (ControlAnimation*) m_animation;
 //         anim->repaint(m_position, p);
     }
-    Widget::reconfigureEvent(event);
+    Widget::updateEvent(event);
 }
 
 

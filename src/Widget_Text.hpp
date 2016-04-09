@@ -54,7 +54,7 @@ public:
     void resizeToText();
 
 protected:
-    virtual void reconfigureEvent(ReconfigureEvent* event);
+    virtual void updateEvent(UpdateEvent* event);
 
     virtual void focusInEvent();
 

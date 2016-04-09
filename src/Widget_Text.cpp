@@ -429,7 +429,7 @@ void Widget_Text::resizeToText()
 }
 
 
-void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
+void Widget_Text::updateEvent(UpdateEvent* event)
 {
     if(m_image)
     {
@@ -478,7 +478,7 @@ void Widget_Text::reconfigureEvent(ReconfigureEvent* event)
     auto painter = event->painter();
     painter->putImage(m_image);
 
-    Widget::reconfigureEvent(event);
+    Widget::updateEvent(event);
 }
 
 
