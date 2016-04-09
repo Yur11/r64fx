@@ -1,5 +1,15 @@
 /* To be included in Widget.cpp */
 
+namespace r64fx{
+
+Point<int> g_prev_mouse_position = {0, 0};
+
+MouseButton g_pressed_buttons = MouseButton::None();
+
+/* Widget that currently grabs mouse input. */
+Widget* g_mouse_grabber   = nullptr;
+
+
 void Widget::grabMouse()
 {
     g_mouse_grabber = this;
@@ -123,3 +133,5 @@ void Widget::initMouseMoveEvent(Point<int> event_position)
     MouseMoveEvent event(event_position, event_delta, g_pressed_buttons);
     dst->mouseMoveEvent(&event);
 }
+
+}//namespace r64fx

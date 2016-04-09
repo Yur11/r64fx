@@ -1,5 +1,11 @@
 /* To be included in Widget.cpp */
 
+namespace r64fx{
+
+/* Widget that currently has keyboard focus. */
+Widget* g_focus_owner = nullptr;
+
+
 void Widget::setFocusOnClick(bool yes)
 {
     set_bits(m_flags, yes, R64FX_WIDGET_CLICK_FOCUS);
@@ -125,3 +131,5 @@ void Widget::initTextInputEvent(const std::string &text, unsigned int key)
         textInputEvent(&event);
     }
 }
+
+}//namespace r64fx

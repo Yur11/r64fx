@@ -21,95 +21,13 @@ using namespace std;
 
 namespace r64fx{
 
-
-namespace{
-    void set_bits(unsigned long &flags, const bool yes, unsigned long mask)
-    {
-        if(yes)
-            flags |= mask;
-        else
-            flags &= ~mask;
-    }
-
-    Point<int> g_prev_mouse_position = {0, 0};
-
-    MouseButton g_pressed_buttons = MouseButton::None();
-
-    /* Widget that currently grabs mouse input. */
-    Widget* g_mouse_grabber   = nullptr;
-
-    /* Widget that currently has keyboard focus. */
-    Widget* g_focus_owner = nullptr;
-
-    Widget* g_anouncer_clipboard       = nullptr;
-    Widget* g_anouncer_selection       = nullptr;
-    Widget* g_anouncer_drag_and_drop   = nullptr;
-
-    Widget* g_requestor_clipboard      = nullptr;
-    Widget* g_requestor_selection      = nullptr;
-    Widget* g_requestor_drag_and_drop  = nullptr;
-
-    Widget* g_dnd_target = nullptr;
-
-    inline Widget* &anouncer(ClipboardMode mode)
-    {
-        switch(mode)
-        {
-            case ClipboardMode::Clipboard:
-                return g_anouncer_clipboard;
-            case ClipboardMode::Selection:
-                return g_anouncer_selection;
-            default:
-                return g_anouncer_drag_and_drop;
-        }
-    }
-
-    inline Widget* &requestor(ClipboardMode mode)
-    {
-        switch(mode)
-        {
-            case ClipboardMode::Clipboard:
-                return g_requestor_clipboard;
-            case ClipboardMode::Selection:
-                return g_requestor_selection;
-            default:
-                return g_requestor_drag_and_drop;
-        }
-    }
-
-    /* Maximum number of individual rectangles
-     * that can be repainted after reconf. cycle. */
-    constexpr int max_rects = 16;
-
-    /* Collection of data attached to the window.
-     * We should be able to cast back and forth
-     * between WindowWidgetData and Window::UpdateEvent. */
-    struct WindowWidgetData : Widget::UpdateEvent{
-
-        /* Root widget shown in the window that
-         * this context is attached to. */
-        Widget*  widget = nullptr;
-
-        /* Painter serving the window. */
-        Painter* painter = nullptr;
-
-        /* Current visible rect. passed to widget reconf. method. */
-        Rect<int> visible_rect;
-
-        /* List of rectangles to be repainted after reconf. cycle. */
-        Rect<int> rects[max_rects];
-
-        /* Number of rectangles that must be repainted. */
-        int num_rects = 0;
-
-        /* Used in reconf. logic. */
-        bool got_rect = false;
-
-        /* Total offset for every nested scrollable view. */
-        Point<int> view_offset = {0, 0};
-    };
-
-}//namespace
+void set_bits(unsigned long &flags, const bool yes, unsigned long mask)
+{
+    if(yes)
+        flags |= mask;
+    else
+        flags &= ~mask;
+}
 
 
 Widget::Widget(Widget* parent)
@@ -311,9 +229,6 @@ bool Widget::isVisible() const
 }
 
 
-
-
-
 void Widget::setOrientation(Orientation orientation)
 {
     set_bits(m_flags, orientation == Orientation::Vertical, R64FX_WIDGET_IS_VERTICAL);
@@ -337,10 +252,16 @@ bool Widget::isPinned() const
     return m_flags & R64FX_WIDGET_IS_PINNED;
 }
 
+}//namespace r64fx
+
+
 #include "WidgetImpl_Mouse.cxx"
 #include "WidgetImpl_Keyboard.cxx"
 #include "WidgetImpl_Clipboard.cxx"
 #include "WidgetImpl_Window.cxx"
+
+
+namespace r64fx{
 
 void Widget::update()
 {

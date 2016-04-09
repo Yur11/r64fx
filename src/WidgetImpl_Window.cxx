@@ -1,5 +1,40 @@
 /* To be included in Widget.cpp */
 
+namespace r64fx{
+
+/* Maximum number of individual rectangles
+    * that can be repainted after reconf. cycle. */
+constexpr int max_rects = 16;
+
+/* Collection of data attached to the window.
+    * We should be able to cast back and forth
+    * between WindowWidgetData and Window::UpdateEvent. */
+struct WindowWidgetData : Widget::UpdateEvent{
+
+    /* Root widget shown in the window that
+        * this context is attached to. */
+    Widget*  widget = nullptr;
+
+    /* Painter serving the window. */
+    Painter* painter = nullptr;
+
+    /* Current visible rect. passed to widget reconf. method. */
+    Rect<int> visible_rect;
+
+    /* List of rectangles to be repainted after reconf. cycle. */
+    Rect<int> rects[max_rects];
+
+    /* Number of rectangles that must be repainted. */
+    int num_rects = 0;
+
+    /* Used in reconf. logic. */
+    bool got_rect = false;
+
+    /* Total offset for every nested scrollable view. */
+    Point<int> view_offset = {0, 0};
+};
+
+
 class WindowEvents_Widget : public WindowEvents{
 
     virtual void resizeEvent(Window* window, int width, int height)
@@ -240,3 +275,5 @@ std::string Widget::windowTitle() const
         return "";
     }
 }
+
+}//namespace r64fx
