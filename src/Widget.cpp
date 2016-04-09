@@ -21,35 +21,6 @@ using namespace std;
 
 namespace r64fx{
 
-class WindowEvents_Widget : public WindowEvents{
-    virtual void resizeEvent(Window* window, int width, int height);
-
-    virtual void mousePressEvent   (Window* window, int x, int y, unsigned int button);
-    virtual void mouseReleaseEvent (Window* window, int x, int y, unsigned int button);
-    virtual void mouseMoveEvent    (Window* window, int x, int y);
-
-    virtual void keyPressEvent     (Window* window, unsigned int key);
-    virtual void keyReleaseEvent   (Window* window, unsigned int key);
-
-    virtual void textInputEvent    (Window* window, const std::string &text, unsigned int key);
-
-    virtual void clipboardDataRecieveEvent
-                         (Window* window, ClipboardDataType type, void* data, int size, ClipboardMode mode);
-
-    virtual void clipboardDataTransmitEvent
-                         (Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode);
-
-    virtual void clipboardMetadataRecieveEvent
-                         (Window* window, const ClipboardMetadata &metadata, ClipboardMode mode);
-
-    virtual void dndEnterEvent    (Window* window, int x, int y);
-    virtual void dndLeaveEvent    (Window* window);
-    virtual void dndMoveEvent     (Window* window, int x, int y);
-    virtual void dndDropEvent     (Window* window);
-
-    virtual void closeEvent(Window* window);
-};
-
 
 namespace{
     void set_bits(unsigned long &flags, const bool yes, unsigned long mask)
@@ -62,7 +33,7 @@ namespace{
 
     Point<int> g_prev_mouse_position = {0, 0};
 
-    MouseButton pressed_buttons = MouseButton::None();
+    MouseButton g_pressed_buttons = MouseButton::None();
 
     /* Widget that currently grabs mouse input. */
     Widget* g_mouse_grabber   = nullptr;
@@ -137,9 +108,6 @@ namespace{
         /* Total offset for every nested scrollable view. */
         Point<int> view_offset = {0, 0};
     };
-
-
-    WindowEvents_Widget g_events;
 
 }//namespace
 
@@ -343,121 +311,7 @@ bool Widget::isVisible() const
 }
 
 
-void Widget::show()
-{
-    if(!isWindow())
-    {
-        if(width() <= 0)
-            setWidth(100);
 
-        if(height() <= 0)
-            setHeight(100);
-
-        auto window = Window::newInstance(
-            width(), height(), "", Window::Type::GL
-        );
-#ifdef R64FX_DEBUG
-        if(!window)
-        {
-            cerr << "Widget: Failed to create window!\n";
-            abort();
-        }
-#endif//R64FX_DEBUG
-
-        auto painter = Painter::newInstance(window);
-#ifdef R64FX_DEBUG
-        if(!painter)
-        {
-            cerr << "Widget: Failed to create painter!\n";
-            abort();
-        }
-#endif//R64FX_DEBUG
-
-        auto d = new(nothrow) WindowWidgetData;
-#ifdef R64FX_DEBUG
-        if(!d)
-        {
-            cerr << "Widget: Failed to create WindowWidgetData!\n";
-            abort();
-        }
-#endif//R64FX_DEBUG
-
-        d->widget = this;
-        d->painter = painter;
-
-        window->setData(d);
-
-        m_parent.window = window;
-        m_flags |= R64FX_WIDGET_IS_WINDOW;
-    }
-    m_parent.window->show();
-    m_parent.window->resize(width(), height());
-    update();
-}
-
-
-void Widget::hide()
-{
-    if(isWindow())
-    {
-        m_parent.window->hide();
-    }
-}
-
-
-void Widget::close()
-{
-    if(isWindow())
-    {
-        auto d = (WindowWidgetData*) m_parent.window->data();
-
-        Painter::deleteInstance(d->painter);
-        Window::deleteInstance(m_parent.window);
-        delete d;
-        m_parent.window = nullptr;
-        m_flags &= ~R64FX_WIDGET_IS_WINDOW;
-    }
-}
-
-
-Window* Widget::window() const
-{
-    return (Window*)(isWindow() ? m_parent.window : nullptr);
-}
-
-
-Window* Widget::rootWindow() const
-{
-    return root()->window();
-}
-
-
-bool Widget::isWindow() const
-{
-    return m_flags & R64FX_WIDGET_IS_WINDOW;
-}
-
-
-void Widget::setWindowTitle(std::string title)
-{
-    if(isWindow())
-    {
-        m_parent.window->setTitle(title);
-    }
-}
-
-
-std::string Widget::windowTitle() const
-{
-    if(isWindow())
-    {
-        return m_parent.window->title();
-    }
-    else
-    {
-        return "";
-    }
-}
 
 
 void Widget::setOrientation(Orientation orientation)
@@ -483,128 +337,10 @@ bool Widget::isPinned() const
     return m_flags & R64FX_WIDGET_IS_PINNED;
 }
 
-#include "WidgetMouse.cxx"
-
-void Widget::setFocusOnClick(bool yes)
-{
-    set_bits(m_flags, yes, R64FX_WIDGET_CLICK_FOCUS);
-}
-
-
-bool Widget::gainsFocusOnClick() const
-{
-    return m_flags & R64FX_WIDGET_CLICK_FOCUS;
-}
-
-
-void Widget::setFocus()
-{
-    if(g_focus_owner)
-    {
-        g_focus_owner->focusOutEvent();
-    }
-    g_focus_owner = this;
-    g_focus_owner->focusInEvent();
-}
-
-
-void Widget::removeFocus()
-{
-    if(g_focus_owner)
-    {
-        g_focus_owner->focusOutEvent();
-    }
-    g_focus_owner = nullptr;
-}
-
-
-Widget* Widget::focusOwner()
-{
-    return g_focus_owner;
-}
-
-
-bool Widget::hasFocus() const
-{
-    return this == g_focus_owner;
-}
-
-
-void Widget::startTextInput()
-{
-    auto widget = root();
-    if(widget->isWindow())
-    {
-        widget->window()->startTextInput();
-    }
-}
-
-
-void Widget::stopTextInput()
-{
-    auto widget = root();
-    if(widget->isWindow())
-    {
-        widget->window()->stopTextInput();
-    }
-}
-
-
-bool Widget::doingTextInput()
-{
-    auto widget = root();
-    if(widget->isWindow())
-    {
-        return widget->window()->doingTextInput();
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
-void Widget::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode)
-{
-    if(mode == ClipboardMode::Bad)
-        return;
-
-    auto win = rootWindow();
-    if(win)
-    {
-        win->anounceClipboardData(metadata, mode);
-        anouncer(mode) = this;
-    }
-}
-
-
-void Widget::requestClipboardMetadata(ClipboardMode mode)
-{
-    if(mode == ClipboardMode::Bad)
-        return;
-
-    auto win = rootWindow();
-    if(win)
-    {
-        win->requestClipboardMetadata(mode);
-        requestor(mode) = this;
-    }
-}
-
-
-void Widget::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
-{
-    if(mode == ClipboardMode::Bad)
-        return;
-
-    auto win = rootWindow();
-    if(win)
-    {
-        win->requestClipboardData(type, mode);
-        requestor(mode) = this;
-    }
-}
-
+#include "WidgetImpl_Mouse.cxx"
+#include "WidgetImpl_Keyboard.cxx"
+#include "WidgetImpl_Clipboard.cxx"
+#include "WidgetImpl_Window.cxx"
 
 void Widget::update()
 {
@@ -800,24 +536,9 @@ void Widget::focusOutEvent()
 }
 
 
-void WindowEvents_Widget::resizeEvent(Window* window, int width, int height)
-{
-    auto d = (WindowWidgetData*) window->data();
-    d->widget->setSize({width, height});
-    d->widget->update();
-}
-
-
 void Widget::resizeEvent(ResizeEvent* event)
 {
 
-}
-
-
-void WindowEvents_Widget::mousePressEvent(Window* window, int x, int y, unsigned int button)
-{
-    auto d = (WindowWidgetData*) window->data();
-    d->widget->initMousePressEvent(Point<int>(x, y), MouseButton(button));
 }
 
 
@@ -827,23 +548,9 @@ void Widget::mousePressEvent(MousePressEvent* event)
 }
 
 
-void WindowEvents_Widget::mouseReleaseEvent(Window* window, int x, int y, unsigned int button)
-{
-    auto d = (WindowWidgetData*) window->data();
-    d->widget->initMouseReleaseEvent(Point<int>(x, y), MouseButton(button));
-}
-
-
 void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 {
 
-}
-
-
-void WindowEvents_Widget::mouseMoveEvent(Window* window, int x, int y)
-{
-    auto d = (WindowWidgetData*) window->data();
-    d->widget->initMouseMoveEvent(Point<int>(x, y));
 }
 
 
@@ -853,45 +560,9 @@ void Widget::mouseMoveEvent(MouseMoveEvent* event)
 }
 
 
-void WindowEvents_Widget::keyPressEvent(Window* window, unsigned int key)
-{
-    auto d = (WindowWidgetData*) window->data();
-
-    Keyboard::trackModifierPress(key);
-
-    KeyPressEvent event(key);
-    if(g_focus_owner)
-    {
-        g_focus_owner->keyPressEvent(&event);
-    }
-    else
-    {
-        d->widget->keyPressEvent(&event);
-    }
-}
-
-
 void Widget::keyPressEvent(KeyPressEvent* event)
 {
 
-}
-
-
-void WindowEvents_Widget::keyReleaseEvent(Window* window, unsigned int key)
-{
-    auto d = (WindowWidgetData*) window->data();
-
-    Keyboard::trackModifierRelease(key);
-
-    KeyReleaseEvent event(key);
-    if(g_focus_owner)
-    {
-        g_focus_owner->keyReleaseEvent(&event);
-    }
-    else
-    {
-        d->widget->keyReleaseEvent(&event);
-    }
 }
 
 
@@ -901,40 +572,9 @@ void Widget::keyReleaseEvent(KeyReleaseEvent* event)
 }
 
 
-void WindowEvents_Widget::textInputEvent(Window* window, const std::string &text, unsigned int key)
-{
-    auto d = (WindowWidgetData*) window->data();
-
-    Keyboard::trackModifierPress(key);
-
-    TextInputEvent event(text, key);
-    if(g_focus_owner)
-    {
-        g_focus_owner->textInputEvent(&event);
-    }
-    else
-    {
-        d->widget->textInputEvent(&event);
-    }
-}
-
-
 void Widget::textInputEvent(TextInputEvent* event)
 {
 
-}
-
-
-
-void WindowEvents_Widget::clipboardDataRecieveEvent
-(Window* window, ClipboardDataType type, void* data, int size, ClipboardMode mode)
-{
-    auto widget = requestor(mode);
-    if(widget)
-    {
-        ClipboardDataRecieveEvent event(mode, type, data, size);
-        widget->clipboardDataRecieveEvent(&event);
-    }
 }
 
 
@@ -944,32 +584,8 @@ void Widget::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 }
 
 
-void WindowEvents_Widget::clipboardDataTransmitEvent
-(Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode)
-{
-    auto widget = anouncer(mode);
-    if(widget)
-    {
-        ClipboardDataTransmitEvent event(mode, type, data, size);
-        widget->clipboardDataTransmitEvent(&event);
-    }
-}
-
-
 void Widget::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 {
-}
-
-
-void WindowEvents_Widget::clipboardMetadataRecieveEvent
-(Window* window, const ClipboardMetadata &metadata, ClipboardMode mode)
-{
-    auto widget = requestor(mode);
-    if(widget)
-    {
-        ClipboardMetadataRecieveEvent event(mode, metadata);
-        widget->clipboardMetadataRecieveEvent(&event);
-    }
 }
 
 
@@ -979,19 +595,7 @@ void Widget::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
 }
 
 
-void WindowEvents_Widget::dndEnterEvent(Window* window, int x, int y)
-{
-    cout << "dnd enter: " << x << ", " << y << "\n";
-}
-
-
 void Widget::dndEnterEvent(DndEnterEvent* event)
-{
-
-}
-
-
-void WindowEvents_Widget::dndLeaveEvent(Window* window)
 {
 
 }
@@ -1003,28 +607,9 @@ void Widget::dndLeaveEvent(DndLeaveEvent* event)
 }
 
 
-void WindowEvents_Widget::dndMoveEvent(Window* window, int x, int y)
-{
-    cout << "dnd move:  " << x << ", " << y << "\n";
-}
-
-
 void Widget::dndMoveEvent(DndMoveEvent* event)
 {
 
-}
-
-
-void WindowEvents_Widget::dndDropEvent(Window* window)
-{
-    cout << "drop\n";
-}
-
-
-void WindowEvents_Widget::closeEvent(Window* window)
-{
-    auto d = (WindowWidgetData*) window->data();
-    d->widget->closeEvent();
 }
 
 

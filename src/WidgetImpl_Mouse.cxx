@@ -26,7 +26,7 @@ bool Widget::isMouseGrabber() const
 
 MouseButton Widget::pressedButtons()
 {
-    return pressed_buttons;
+    return g_pressed_buttons;
 }
 
 
@@ -46,7 +46,7 @@ void Widget::initMousePressEvent(Point<int> event_position, MouseButton button)
 {
     g_prev_mouse_position = event_position;
 
-    pressed_buttons |= button;
+    g_pressed_buttons |= button;
 
     auto dst = mouseGrabber();
     if(dst)
@@ -79,7 +79,7 @@ void Widget::initMouseReleaseEvent(Point<int> event_position, MouseButton button
 {
     g_prev_mouse_position = event_position;
 
-    pressed_buttons &= ~button;
+    g_pressed_buttons &= ~button;
 
     auto dst = mouseGrabber();
     if(dst)
@@ -120,6 +120,6 @@ void Widget::initMouseMoveEvent(Point<int> event_position)
         event_position -= leaf_offset;
     }
 
-    MouseMoveEvent event(event_position, event_delta, pressed_buttons);
+    MouseMoveEvent event(event_position, event_delta, g_pressed_buttons);
     dst->mouseMoveEvent(&event);
 }

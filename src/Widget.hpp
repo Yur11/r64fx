@@ -156,6 +156,7 @@ public:
 
     void initMouseMoveEvent(Point<int> event_position);
 
+ 
 /* === Keyboard === */
 
     void setFocusOnClick(bool yes);
