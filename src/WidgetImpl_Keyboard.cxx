@@ -6,13 +6,14 @@ namespace r64fx{
 Widget* g_focus_owner = nullptr;
 
 
-void Widget::setFocusOnClick(bool yes)
+bool Widget::getsFocusOnClick(bool yes)
 {
     set_bits(m_flags, yes, R64FX_WIDGET_CLICK_FOCUS);
+    return yes;
 }
 
 
-bool Widget::gainsFocusOnClick() const
+bool Widget::getsFocusOnClick() const
 {
     return m_flags & R64FX_WIDGET_CLICK_FOCUS;
 }

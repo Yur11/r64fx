@@ -33,8 +33,8 @@ void set_bits(unsigned long &flags, const bool yes, unsigned long mask)
 Widget::Widget(Widget* parent)
 {
     setParent(parent);
-    setFocusOnClick(true);
-    grabMouseOnClick(true);
+    getsFocusOnClick(true);
+    grabsMouseOnClick(true);
 }
 
 
@@ -229,28 +229,28 @@ bool Widget::isVisible() const
 }
 
 
-void Widget::setOrientation(Orientation orientation)
-{
-    set_bits(m_flags, orientation == Orientation::Vertical, R64FX_WIDGET_IS_VERTICAL);
-}
-
-
-Orientation Widget::orientation() const
-{
-    return (m_flags & R64FX_WIDGET_IS_VERTICAL) ? Orientation::Vertical : Orientation::Horizontal;
-}
-
-
-void Widget::setPinned(bool yes)
-{
-    set_bits(m_flags, yes, R64FX_WIDGET_IS_PINNED);
-}
-
-
-bool Widget::isPinned() const
-{
-    return m_flags & R64FX_WIDGET_IS_PINNED;
-}
+// void Widget::setOrientation(Orientation orientation)
+// {
+//     set_bits(m_flags, orientation == Orientation::Vertical, R64FX_WIDGET_IS_VERTICAL);
+// }
+//
+//
+// Orientation Widget::orientation() const
+// {
+//     return (m_flags & R64FX_WIDGET_IS_VERTICAL) ? Orientation::Vertical : Orientation::Horizontal;
+// }
+//
+//
+// void Widget::setPinned(bool yes)
+// {
+//     set_bits(m_flags, yes, R64FX_WIDGET_IS_PINNED);
+// }
+//
+//
+// bool Widget::isPinned() const
+// {
+//     return m_flags & R64FX_WIDGET_IS_PINNED;
+// }
 
 }//namespace r64fx
 
@@ -406,7 +406,7 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
             auto offset = d->painter->offset();
             d->painter->setOffset(
                 offset + child->position()
-                + ((widget_view_self && !child->isPinned()) ? widget_view_self->offset() : Point<int>(0, 0))
+//                 + ((widget_view_self && !child->isPinned()) ? widget_view_self->offset() : Point<int>(0, 0))
             );
 
             Rect<int> clip_rect;

@@ -123,15 +123,15 @@ public:
     std::string windowTitle() const;
 
 
-/* === Extra Flags === */
-
-    void setOrientation(Orientation orientation);
-
-    Orientation orientation() const;
-
-    void setPinned(bool yes);
-
-    bool isPinned() const;
+// /* === Extra Flags === */
+//
+//     void setOrientation(Orientation orientation);
+//
+//     Orientation orientation() const;
+//
+//     void setPinned(bool yes);
+//
+//     bool isPinned() const;
 
 
 /* === Mouse === */
@@ -146,7 +146,7 @@ public:
 
     static MouseButton pressedButtons();
 
-    void grabMouseOnClick(bool yes);
+    bool grabsMouseOnClick(bool yes);
 
     bool grabsMouseOnClick() const;
 
@@ -159,9 +159,9 @@ public:
 
 /* === Keyboard === */
 
-    void setFocusOnClick(bool yes);
+    bool getsFocusOnClick(bool yes);
 
-    bool gainsFocusOnClick() const;
+    bool getsFocusOnClick() const;
 
     void setFocus();
 
@@ -183,6 +183,7 @@ public:
 
     void initTextInputEvent(const std::string &text, unsigned int key);
 
+
 /* === Clipboard, Selections, Drag and Drop === */
 
     void anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode);
@@ -194,12 +195,10 @@ public:
 
 /* === Update/Reconfigure cycle === */
 
-    /* Request an update for this widget.
-     * This will result in reconfigure() being called for this widget
-     * with the next processEvents() invocation. */
+    /* Request an update for this widget. */
     void update();
 
-    /* Iface. passed down the reconfigure call tree. */
+
     class UpdateEvent{
         UpdateEvent(const UpdateEvent&) {}
 
@@ -207,7 +206,6 @@ public:
         UpdateEvent() {}
 
     public:
-        /* Painter to be used by reconfigure implementation. */
         Painter* painter();
 
         void setOffset(Point<int> offset);

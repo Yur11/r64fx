@@ -40,9 +40,10 @@ MouseButton Widget::pressedButtons()
 }
 
 
-void Widget::grabMouseOnClick(bool yes)
+bool Widget::grabsMouseOnClick(bool yes)
 {
-    set_bits(m_flags, yes, R64FX_WIDGET_GRABS_MOUSE_ON_CLICK);
+    set_bits(m_flags, yes, R64FX_WIDGET_GRABS_MOUSE_ON_CLICK);\
+    return yes;
 }
 
 
@@ -75,7 +76,7 @@ void Widget::initMousePressEvent(Point<int> event_position, MouseButton button)
         dst->grabMouse();
     }
 
-    if(dst->gainsFocusOnClick())
+    if(dst->getsFocusOnClick())
     {
         dst->setFocus();
     }
