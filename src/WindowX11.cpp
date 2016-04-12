@@ -352,6 +352,18 @@ void WindowX11::processSomeEvents(WindowEvents* events)
                 break;
             }
 
+            case EnterNotify:
+            {
+                events->mouseEnterEvent(window);
+                break;
+            }
+
+            case LeaveNotify:
+            {
+                events->mouseLeaveEvent(window);
+                break;
+            }
+
             case ConfigureNotify:
             {
                 window->mx = xevent.xconfigure.x;
@@ -471,6 +483,7 @@ void WindowX11::setupEvents()
         g_display, m_xwindow,
         KeyPressMask | KeyReleaseMask |
         ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
+        EnterWindowMask | LeaveWindowMask |
         StructureNotifyMask
     );
 

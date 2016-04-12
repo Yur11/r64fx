@@ -66,6 +66,20 @@ class WindowEvents_Widget : public WindowEvents{
     }
 
 
+    virtual void mouseEnterEvent(Window* window)
+    {
+        auto d = (WindowWidgetData*) window->data();
+        d->widget->mouseEnterEvent();
+    }
+
+
+    virtual void mouseLeaveEvent(Window* window)
+    {
+        auto d = (WindowWidgetData*) window->data();
+        d->widget->mouseLeaveEvent();
+    }
+
+
     virtual void keyPressEvent(Window* window, unsigned int key)
     {
         auto d = (WindowWidgetData*) window->data();

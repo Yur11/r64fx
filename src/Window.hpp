@@ -96,6 +96,9 @@ public:
     virtual void mouseReleaseEvent (Window* window, int x, int y, unsigned int button) = 0;
     virtual void mouseMoveEvent    (Window* window, int x, int y) = 0;
 
+    virtual void mouseEnterEvent   (Window* window) = 0;
+    virtual void mouseLeaveEvent   (Window* window) = 0;
+
     virtual void keyPressEvent     (Window* window, unsigned int key) = 0;
     virtual void keyReleaseEvent   (Window* window, unsigned int key) = 0;
 
