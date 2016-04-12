@@ -245,6 +245,10 @@ protected:
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 
+    virtual void mouseEnterEvent();
+
+    virtual void mouseLeaveEvent();
+
     virtual void focusInEvent();
 
     virtual void focusOutEvent();

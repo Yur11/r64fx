@@ -469,6 +469,18 @@ void Widget::mouseMoveEvent(MouseMoveEvent* event)
 }
 
 
+void Widget::mouseEnterEvent()
+{
+    cout << this << " enter\n";
+}
+
+
+void Widget::mouseLeaveEvent()
+{
+    cout << this << " leave\n";
+}
+
+
 void Widget::focusInEvent()
 {
 
@@ -507,6 +519,7 @@ void Widget::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 
 void Widget::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 {
+
 }
 
 
