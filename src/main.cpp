@@ -34,11 +34,13 @@
 using namespace std;
 using namespace r64fx;
 
+Font* g_Font = nullptr;
+
 class MyWidget : public Widget_View{
     Image m_Image;
     ImageAnimation* m_animation = nullptr;
     float m_angle = 0.0f;
-    ControlAnimation_Pad* m_control_pad_animation;
+    ControlAnimation_MenuItem* m_control_pad_animation;
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget_View(parent)
@@ -67,7 +69,7 @@ public:
             wt->setSize({100, 100});
         }
 
-        m_control_pad_animation = new ControlAnimation_Pad({64, 64});
+        m_control_pad_animation = new ControlAnimation_MenuItem("Hello!", g_Font);
 
         {
             auto control_pad = new Widget_Control(m_control_pad_animation, this);
@@ -149,7 +151,6 @@ public:
 
 
 class MyProgram : public Program{
-    Font*   m_Font = nullptr;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -157,7 +158,7 @@ public:
 private:
     virtual void setup()
     {
-        m_Font = new Font("", 20, 72);
+        g_Font = new Font("", 20, 72);
 
         auto mw = new MyWidget();
         mw->setSize({300, 300});
@@ -168,8 +169,8 @@ private:
     {
         cout << "Cleanup!\n";
 
-        if(m_Font)
-            delete m_Font;
+        if(g_Font)
+            delete g_Font;
     }
 };
 

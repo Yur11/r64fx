@@ -2,6 +2,7 @@
 #include "Mouse.hpp"
 #include "Painter.hpp"
 #include "ImageUtils.hpp"
+#include "TextPainter.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -211,35 +212,46 @@ void Widget_Control::mouseLeaveEvent()
 }
 
 
-ControlAnimation_Pad::ControlAnimation_Pad(Size<int> size)
+ControlAnimation_MenuItem::ControlAnimation_MenuItem(const std::string &caption, Font* font)
 {
-    setSize(size);
+    auto img = text2image(caption, TextWrap::None, font);
+    if(!img)
+        return;
+
+    m_text_image = img;
+    setSize({img->width(), img->height()});
 }
 
 
 #define R64FX_PAD_HOVERED (0x1L << 63)
 
 
-void ControlAnimation_Pad::paint(ControlAnimationState state, Painter* painter)
+void ControlAnimation_MenuItem::paint(ControlAnimationState state, Painter* painter)
 {
-    unsigned char normal  [4] = {127, 127, 127, 0};
-    unsigned char hovered [4] = {255, 127,  63, 0};
+    unsigned char normal     [4] = {127, 127, 127,  0};
+    unsigned char hovered    [4] = {255, 127,  63,  0};
+    unsigned char text_color [4] = {  0,   0,   0,  0};
 
     unsigned char* color = normal;
     if(state.bits & R64FX_PAD_HOVERED)
         color = hovered;
 
     painter->fillRect({{0, 0}, size()}, color);
+    if(m_text_image)
+    {
+        unsigned char* colors = (unsigned char*)&text_color;
+        painter->blendColors({0, 0}, &colors, m_text_image);
+    }
 }
 
 
-ControlAnimationState ControlAnimation_Pad::mouseEnter(ControlAnimationState state)
+ControlAnimationState ControlAnimation_MenuItem::mouseEnter(ControlAnimationState state)
 {
     return ControlAnimationState(state.bits | R64FX_PAD_HOVERED);
 }
 
 
-ControlAnimationState ControlAnimation_Pad::mouseLeave(ControlAnimationState state)
+ControlAnimationState ControlAnimation_MenuItem::mouseLeave(ControlAnimationState state)
 {
     return ControlAnimationState(state.bits & ~R64FX_PAD_HOVERED);
 }

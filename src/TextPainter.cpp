@@ -1016,4 +1016,16 @@ bool resize_image_and_draw_text(Image* dst, const std::string &text, TextWrap wr
     return true;
 }
 
+
+Image* text2image(const std::string &text, TextWrap wrap, Font* font)
+{
+    Image* img = new Image;
+    if(!resize_image_and_draw_text(img, text, wrap, font))
+    {
+        delete img;
+        return nullptr;
+    }
+    return img;
+}
+
 }//namespace r64fx

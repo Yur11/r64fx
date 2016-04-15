@@ -335,6 +335,8 @@ private:
 
 bool resize_image_and_draw_text(Image* dst, const std::string &text, TextWrap wrap, Font* font);
 
+Image* text2image(const std::string &text, TextWrap wrap, Font* font);
+
 }//namespace
 
 #endif//R64FX_TEXT_PAINTER_HPP

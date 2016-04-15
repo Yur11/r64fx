@@ -6,6 +6,9 @@
 
 namespace r64fx{
 
+class Image;
+class Font;
+
 struct ControlAnimationState{
     unsigned long bits = 0;
 
@@ -71,9 +74,11 @@ protected:
 };
 
 
-class ControlAnimation_Pad : public ControlAnimation{
+class ControlAnimation_MenuItem : public ControlAnimation{
+    Image* m_text_image = nullptr;
+
 public:
-    ControlAnimation_Pad(Size<int> size);
+    ControlAnimation_MenuItem(const std::string &caption, Font* font);
 
     virtual void paint(ControlAnimationState state, Painter* painter);
 
