@@ -204,6 +204,11 @@ Point<int> Widget::toRootCoords(Point<int> point) const
     }
     else
     {
+        auto view = dynamic_cast<const Widget_View*>(m_parent.widget);
+        if(view)
+        {
+            point += view->offset();
+        }
         return m_parent.widget->toRootCoords(point);
     }
 }
@@ -396,7 +401,12 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
         }
     }
 
+    Point<int> view_offset = {0, 0};
     auto widget_view_self = dynamic_cast<Widget_View*>(this);//We may have offsets.
+    if(widget_view_self)
+    {
+        view_offset = widget_view_self->offset();
+    }
 
     /* Recursively process children. */
     for(auto child : m_children)
@@ -404,13 +414,13 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
         if(child->isVisible() && (child->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
         {
             auto offset = d->painter->offset();
+
             d->painter->setOffset(
-                offset + child->position()
-//                 + ((widget_view_self && !child->isPinned()) ? widget_view_self->offset() : Point<int>(0, 0))
+                offset + child->position() + view_offset
             );
 
             Rect<int> clip_rect;
-            if(widget_view_self)
+            if(widget_view_self)//?
             {
                 clip_rect = d->painter->clipRect();
                 d->painter->setClipRect(toRootCoords({
@@ -430,7 +440,7 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
                 child->updateChildren((UpdateEvent*)d);
             }
 
-            if(widget_view_self)
+            if(widget_view_self)//?
             {
                 d->painter->setClipRect(clip_rect);
             }
@@ -471,13 +481,13 @@ void Widget::mouseMoveEvent(MouseMoveEvent* event)
 
 void Widget::mouseEnterEvent()
 {
-    cout << this << " enter\n";
+
 }
 
 
 void Widget::mouseLeaveEvent()
 {
-    cout << this << " leave\n";
+
 }
 
 
