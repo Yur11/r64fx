@@ -38,6 +38,7 @@ class MyWidget : public Widget_View{
     Image m_Image;
     ImageAnimation* m_animation = nullptr;
     float m_angle = 0.0f;
+    ControlAnimation_Pad* m_control_pad_animation;
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget_View(parent)
@@ -65,12 +66,32 @@ public:
             wt->setPosition({210, 210});
             wt->setSize({100, 100});
         }
+
+        m_control_pad_animation = new ControlAnimation_Pad({64, 64});
+
+        {
+            auto control_pad = new Widget_Control(m_control_pad_animation, this);
+            control_pad->setPosition({100, 320});
+        }
+
+        {
+            auto control_pad = new Widget_Control(m_control_pad_animation, this);
+            control_pad->setPosition({174, 320});
+        }
+
+        {
+            auto control_pad = new Widget_Control(m_control_pad_animation, this);
+            control_pad->setPosition({248, 320});
+        }
     }
 
     ~MyWidget()
     {
         if(m_animation)
             delete m_animation;
+
+        if(m_control_pad_animation)
+            delete m_control_pad_animation;
     }
 
     virtual void updateEvent(UpdateEvent* event)

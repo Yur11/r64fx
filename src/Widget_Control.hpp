@@ -6,13 +6,44 @@
 
 namespace r64fx{
 
-class ControlAnimation;
+struct ControlAnimationState{
+    unsigned long bits = 0;
+
+    ControlAnimationState();
+
+    explicit ControlAnimationState(unsigned long bits);
+};
+
+
+class ControlAnimation{
+    Size<int> m_size = {0, 0};
+
+public:
+    virtual ~ControlAnimation() {}
+
+    void setSize(Size<int> size);
+
+    Size<int> size() const;
+
+    virtual void paint(ControlAnimationState state, Painter* painter);
+
+    virtual ControlAnimationState mousePress(ControlAnimationState state, Point<int> position);
+
+    virtual ControlAnimationState mouseRelease(ControlAnimationState state, Point<int> position);
+
+    virtual ControlAnimationState mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta);
+
+    virtual ControlAnimationState mouseEnter(ControlAnimationState state);
+
+    virtual ControlAnimationState mouseLeave(ControlAnimationState state);
+};
+
 
 class Widget_Control : public Widget{
-    ControlAnimation*  m_animation = nullptr;
-    int                m_position  = 0;
-    void             (*m_on_value_changed)(Widget_Control*, void*);
-    void*              m_on_value_changed_data = nullptr;
+    ControlAnimation*      m_animation = nullptr;
+    ControlAnimationState  m_state;
+    void                 (*m_on_value_changed)(Widget_Control*, void*);
+    void*                  m_on_value_changed_data = nullptr;
 
 public:
     Widget_Control(ControlAnimation* animation, Widget* parent = nullptr);
@@ -30,61 +61,27 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent* event);
 
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
+
     virtual void mouseMoveEvent(MouseMoveEvent* event);
+
+    virtual void mouseEnterEvent();
+
+    virtual void mouseLeaveEvent();
 };
 
 
-class ControlAnimationState{
-    int mx = 0;
-    int my = 0;
-
+class ControlAnimation_Pad : public ControlAnimation{
 public:
-    ControlAnimationState(int x, int y);
+    ControlAnimation_Pad(Size<int> size);
 
-    ControlAnimationState();
+    virtual void paint(ControlAnimationState state, Painter* painter);
 
-    void setFrameX(int frame);
-    void setFrameY(int frame);
+    virtual ControlAnimationState mouseEnter(ControlAnimationState state);
 
-    int frameX() const;
-    int frameY() const;
-
-    static ControlAnimationState Unchanged();
+    virtual ControlAnimationState mouseLeave(ControlAnimationState state);
 };
 
-
-class ControlAnimation{
-    Size<int> m_size = {0, 0};
-    int m_min_position = 0;
-    int m_max_position = 255;
-
-public:
-    virtual ~ControlAnimation() {}
-
-    void setSize(Size<int> size);
-
-    Size<int> size() const;
-
-    inline void setMinPosition(int pos) { m_min_position = pos; }
-    inline void setMaxPosition(int pos) { m_max_position = pos; }
-
-    inline int minPosition() const { return m_min_position; }
-    inline int maxPosition() const { return m_max_position; }
-
-    int positionRange() const;
-
-    int boundPosition(int pos) const;
-
-    virtual void paint(ControlAnimationState state);
-
-    virtual ControlAnimationState mousePress(Point<int> position);
-
-    virtual ControlAnimationState mouseMove(Point<int> position, Point<int> old_position);
-
-    virtual ControlAnimationState mouseEnter();
-
-    virtual ControlAnimationState mouseLeave();
-};
 
 
 struct ControlAnimation_Knob : public ControlAnimation{
@@ -112,8 +109,6 @@ struct ControlAnimation_Knob_UnipolarSector : public ControlAnimation_Knob{
 struct ControlAnimation_Knob_BipolarSector : public ControlAnimation_Knob{
     ControlAnimation_Knob_BipolarSector(int size);
 };
-
-
 
 
 }//namespace r64fx
