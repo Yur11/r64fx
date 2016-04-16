@@ -24,6 +24,20 @@ public:
     inline void setHeight(T height) { mh = height; }
 
     inline T height() const { return mh; }
+
+    inline Size<T> &operator+=(const Size<T> &other)
+    {
+        mw += other.width();
+        mh += other.height();
+        return *this;
+    }
+
+    inline Size<T> &operator-=(const Size<T> &other)
+    {
+        mw -= other.width();
+        mh -= other.height();
+        return *this;
+    }
 };
 
 
