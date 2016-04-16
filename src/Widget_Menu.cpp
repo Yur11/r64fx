@@ -1,8 +1,9 @@
 #include "Widget_Menu.hpp"
 #include "WidgetFlags.hpp"
 #include "Painter.hpp"
-#include "Font.hpp"
+#include "ImageUtils.hpp"
 #include "LayoutUtils.hpp"
+#include "Font.hpp"
 #include "TextPainter.hpp"
 #include <iostream>
 
@@ -35,13 +36,28 @@ public:
             return;
 
         m_image = img;
-        setSize({img->width(), img->height()});
+        setSize({m_image->width(), m_image->height()});
     }
 
 
     virtual ~Widget_MenuItem()
     {
         delete m_image;
+    }
+
+
+    void setSizeAndOffset(Size<int> size, Point<int> offset)
+    {
+        if(!m_image)
+            return;
+
+        auto new_image = new Image(size.width(), size.height(), m_image->componentCount());
+        fill(new_image, (unsigned char)0);
+        implant(new_image, offset, m_image);
+        delete m_image;
+        m_image = new_image;
+
+        setSize({m_image->width(), m_image->height()});
     }
 
 
@@ -101,11 +117,11 @@ Widget_Menu::Widget_Menu(Widget* parent)
 
 void Widget_Menu::addItem(const std::string &caption)
 {
-    auto item = new Widget_MenuItem(caption, this);
+    new Widget_MenuItem(caption, this);
 }
 
 
-void Widget_Menu::resizeAndReallign()
+void Widget_Menu::resizeAndReallign()//Kluggy!
 {
     Size<int> new_size = {0, 0};
     if(orientation() == Orientation::Vertical)
@@ -121,6 +137,39 @@ void Widget_Menu::resizeAndReallign()
         );
     }
     setSize(new_size);
+
+    int max_width = 0;
+    for(auto child : *this)
+    {
+        if(max_width < child->width())
+            max_width = child->width();
+    }
+
+    if(max_width > 0)
+    {
+        for(auto child : *this)
+        {
+            auto menu_item = dynamic_cast<Widget_MenuItem*>(child);
+            if(menu_item)
+            {
+                menu_item->setSizeAndOffset({max_width + 10, child->height() + 10}, {5, 5});
+            }
+        }
+
+        if(orientation() == Orientation::Vertical)
+        {
+            new_size = align_vertically(
+                begin(), end(), {0, 0}, 0
+            );
+        }
+        else
+        {
+            new_size = align_horizontally(
+                begin(), end(), {0, 0}, 0
+            );
+        }
+        setSize(new_size);
+    }
 }
 
 }//namespace r64fx
