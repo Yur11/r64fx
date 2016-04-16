@@ -13,6 +13,7 @@
 #include "Widget_Container.hpp"
 #include "Widget_Control.hpp"
 #include "Widget_Dummy.hpp"
+#include "Widget_Menu.hpp"
 #include "Widget_Text.hpp"
 #include "Widget_View.hpp"
 #include "Widget_ScrollBar.hpp"
@@ -84,6 +85,23 @@ public:
         {
             auto control_pad = new Widget_Control(m_control_pad_animation, this);
             control_pad->setPosition({248, 320});
+        }
+
+
+        {
+            auto menu = new Widget_Menu(this);
+            menu->setPosition({350, 100});
+            menu->setPadding(5);
+            menu->setOrientation(Orientation::Vertical);
+            menu->addItem("New");
+            menu->addItem("Open");
+            menu->addItem("Save");
+            menu->addItem("Save As");
+            menu->addItem("Save Session");
+            menu->addItem("Edit Preferences");
+            menu->addItem("Quit");
+            menu->resizeAndReallign();
+            cout << "menu: " << menu->size() << "\n";
         }
     }
 

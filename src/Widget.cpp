@@ -234,28 +234,28 @@ bool Widget::isVisible() const
 }
 
 
-// void Widget::setOrientation(Orientation orientation)
-// {
-//     set_bits(m_flags, orientation == Orientation::Vertical, R64FX_WIDGET_IS_VERTICAL);
-// }
-//
-//
-// Orientation Widget::orientation() const
-// {
-//     return (m_flags & R64FX_WIDGET_IS_VERTICAL) ? Orientation::Vertical : Orientation::Horizontal;
-// }
-//
-//
-// void Widget::setPinned(bool yes)
-// {
-//     set_bits(m_flags, yes, R64FX_WIDGET_IS_PINNED);
-// }
-//
-//
-// bool Widget::isPinned() const
-// {
-//     return m_flags & R64FX_WIDGET_IS_PINNED;
-// }
+void Widget::setOrientation(Orientation orientation)
+{
+    set_bits(m_flags, orientation == Orientation::Vertical, R64FX_WIDGET_IS_VERTICAL);
+}
+
+
+Orientation Widget::orientation() const
+{
+    return (m_flags & R64FX_WIDGET_IS_VERTICAL) ? Orientation::Vertical : Orientation::Horizontal;
+}
+
+
+void Widget::setPinned(bool yes)
+{
+    set_bits(m_flags, yes, R64FX_WIDGET_IS_PINNED);
+}
+
+
+bool Widget::isPinned() const
+{
+    return m_flags & R64FX_WIDGET_IS_PINNED;
+}
 
 }//namespace r64fx
 

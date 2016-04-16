@@ -1,5 +1,5 @@
-#ifndef R64FX_WIDGET_H
-#define R64FX_WIDGET_H
+#ifndef R64FX_WIDGET_HPP
+#define R64FX_WIDGET_HPP
 
 #include <string>
 #include "LinkedList.hpp"
@@ -10,6 +10,7 @@
 
 namespace r64fx{
 
+class Widget;
 class Window;
 class Painter;
 class MousePressEvent;
@@ -27,6 +28,7 @@ class DndLeaveEvent;
 class DndMoveEvent;
 class DndDropEvent;
 
+typedef LinkedList<Widget>::Iterator WidgetIterator;
 
 class Widget : public LinkedList<Widget>::Node{
 
@@ -44,11 +46,12 @@ class Widget : public LinkedList<Widget>::Node{
     /* A linked list of widgets children. */
     LinkedList<Widget> m_children;
 
+public:
+    inline WidgetIterator begin() const { return m_children.begin(); }
+
+    inline WidgetIterator end() const { return nullptr; }
+
 protected:
-    inline LinkedList<Widget>::Iterator begin() const { return m_children.begin(); }
-
-    inline LinkedList<Widget>::Iterator end() const { return nullptr; }
-
     /* Bit-packed bool flags.
      * These can be used by the base class as well as by derived classes. Hence protected access.
      * See WidgetFlags.hpp */
@@ -124,14 +127,14 @@ public:
 
 
 // /* === Extra Flags === */
-//
-//     void setOrientation(Orientation orientation);
-//
-//     Orientation orientation() const;
-//
-//     void setPinned(bool yes);
-//
-//     bool isPinned() const;
+
+    void setOrientation(Orientation orientation);
+
+    Orientation orientation() const;
+
+    void setPinned(bool yes);
+
+    bool isPinned() const;
 
 
 /* === Mouse === */
@@ -282,4 +285,4 @@ private:
     
 }//namespace r64fx
 
-#endif//R64FX_GUI_WIDGET_H
+#endif//R64FX_GUI_WIDGET_HPP

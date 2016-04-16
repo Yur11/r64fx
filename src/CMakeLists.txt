@@ -55,9 +55,9 @@ set(SRC
     UndoRedoChain.cpp
     Widget.cpp
     Widget_Button.cpp
-    Widget_Container.cpp
     Widget_Control.cpp
     Widget_Dummy.cpp
+    Widget_Menu.cpp
     Widget_ScrollBar.cpp
     Widget_Text.cpp
     Widget_View.cpp
