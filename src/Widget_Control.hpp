@@ -74,20 +74,6 @@ protected:
 };
 
 
-class ControlAnimation_MenuItem : public ControlAnimation{
-    Image* m_text_image = nullptr;
-
-public:
-    ControlAnimation_MenuItem(const std::string &caption, Font* font);
-
-    virtual void paint(ControlAnimationState state, Painter* painter);
-
-    virtual ControlAnimationState mouseEnter(ControlAnimationState state);
-
-    virtual ControlAnimationState mouseLeave(ControlAnimationState state);
-};
-
-
 
 struct ControlAnimation_Knob : public ControlAnimation{
     ImageAnimation imgainim;

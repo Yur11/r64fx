@@ -212,51 +212,6 @@ void Widget_Control::mouseLeaveEvent()
 }
 
 
-ControlAnimation_MenuItem::ControlAnimation_MenuItem(const std::string &caption, Font* font)
-{
-    auto img = text2image(caption, TextWrap::None, font);
-    if(!img)
-        return;
-
-    m_text_image = img;
-    setSize({img->width(), img->height()});
-}
-
-
-#define R64FX_PAD_HOVERED (0x1L << 63)
-
-
-void ControlAnimation_MenuItem::paint(ControlAnimationState state, Painter* painter)
-{
-    unsigned char normal     [4] = {127, 127, 127,  0};
-    unsigned char hovered    [4] = {255, 127,  63,  0};
-    unsigned char text_color [4] = {  0,   0,   0,  0};
-
-    unsigned char* color = normal;
-    if(state.bits & R64FX_PAD_HOVERED)
-        color = hovered;
-
-    painter->fillRect({{0, 0}, size()}, color);
-    if(m_text_image)
-    {
-        unsigned char* colors = (unsigned char*)&text_color;
-        painter->blendColors({0, 0}, &colors, m_text_image);
-    }
-}
-
-
-ControlAnimationState ControlAnimation_MenuItem::mouseEnter(ControlAnimationState state)
-{
-    return ControlAnimationState(state.bits | R64FX_PAD_HOVERED);
-}
-
-
-ControlAnimationState ControlAnimation_MenuItem::mouseLeave(ControlAnimationState state)
-{
-    return ControlAnimationState(state.bits & ~R64FX_PAD_HOVERED);
-}
-
-
 float normalize_angle(float angle)
 {
     while(angle > (2.0f * M_PI))
