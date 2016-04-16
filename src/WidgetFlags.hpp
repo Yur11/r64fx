@@ -31,4 +31,6 @@
 
 #define R64FX_WIDGET_OWNS_DATA               (1 << 0x0B)
 
+#define R64FX_WIDGET_IS_HOVERED              (1 << 0x0C)
+
 #endif//R64FX_WIDGET_FLAGS_HPP

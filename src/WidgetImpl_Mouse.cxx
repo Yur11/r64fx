@@ -140,7 +140,9 @@ void Widget::initMouseMoveEvent(Point<int> event_position)
         if(g_moused_over_widget)
         {
             g_moused_over_widget->mouseLeaveEvent();
+            g_moused_over_widget->m_flags &= ~R64FX_WIDGET_IS_HOVERED;
         }
+        dst->m_flags |= R64FX_WIDGET_IS_HOVERED;
         dst->mouseEnterEvent();
         g_moused_over_widget = dst;
     }
