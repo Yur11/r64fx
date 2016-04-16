@@ -6,7 +6,7 @@
 
 namespace r64fx{
 
-class Widget_Menu : public Widget, public Padding<int>{
+class Widget_Menu : public Widget{
 public:
     Widget_Menu(Widget* parent = nullptr);
 

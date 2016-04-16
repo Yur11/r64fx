@@ -72,7 +72,6 @@ public:
         {
             auto menu = new Widget_Menu(this);
             menu->setPosition({350, 100});
-            menu->setPadding(5);
             menu->setOrientation(Orientation::Vertical);
             menu->addItem("New");
             menu->addItem("Open");

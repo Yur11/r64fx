@@ -111,16 +111,15 @@ void Widget_Menu::resizeAndReallign()
     if(orientation() == Orientation::Vertical)
     {
         new_size = align_vertically(
-            begin(), end(), {paddingLeft(), paddingTop()}, 0
+            begin(), end(), {0, 0}, 0
         );
     }
     else
     {
         new_size = align_horizontally(
-            begin(), end(), {paddingLeft(), paddingTop()}, 0
+            begin(), end(), {0, 0}, 0
         );
     }
-    new_size += Size<int>(paddingRight(), paddingBottom());
     setSize(new_size);
 }
 
