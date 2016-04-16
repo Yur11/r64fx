@@ -115,7 +115,7 @@ Widget* Widget::leafAt(Point<int> position, Point<int>* offset)
         }
 
         got_leaf = false;
-        for(auto child : m_children)
+        for(auto child : leaf->m_children)
         {
             if(child->rect().overlaps(position - leaf_offset))
             {
