@@ -37,6 +37,73 @@ using namespace r64fx;
 
 Font* g_Font = nullptr;
 
+
+class HelloAction : public Action{
+public:
+    using Action::Action;
+
+    virtual void exec()
+    {
+        cout << "Hello\n";
+    }
+};
+
+
+class DoctorAction : public Action{
+public:
+    using Action::Action;
+
+    virtual void exec()
+    {
+        cout << "Doctor\n";
+    }
+};
+
+
+class NameAction : public Action{
+public:
+    using Action::Action;
+
+    virtual void exec()
+    {
+        cout << "Name\n";
+    }
+};
+
+
+class ContinueAction : public Action{
+public:
+    using Action::Action;
+
+    virtual void exec()
+    {
+        cout << "Continue\n";
+    }
+};
+
+
+class YesterdayAction : public Action{
+public:
+    using Action::Action;
+
+    virtual void exec()
+    {
+        cout << "Yesterday\n";
+    }
+};
+
+
+class TommorowAction : public Action{
+public:
+    using Action::Action;
+
+    virtual void exec()
+    {
+        cout << "Tommorow\n";
+    }
+};
+
+
 class MyWidget : public Widget_View{
     Image m_Image;
     ImageAnimation* m_animation = nullptr;
@@ -70,16 +137,23 @@ public:
         }
 
         {
+            auto hello_action = new HelloAction("Hello");
+            auto doctor_action = new DoctorAction("Doctor");
+            auto name_action = new NameAction("Name");
+            auto continue_action = new ContinueAction("Continue");
+            auto yesterday_action = new YesterdayAction("Yesterday");
+            auto tommorow_action = new TommorowAction("Tommorow");
+
             auto menu = new Widget_Menu(this);
             menu->setPosition({350, 100});
             menu->setOrientation(Orientation::Vertical);
-            menu->addItem("New");
-            menu->addItem("Open");
-            menu->addItem("Save");
-            menu->addItem("Save As");
-            menu->addItem("Save Session");
-            menu->addItem("Edit Preferences");
-            menu->addItem("Quit");
+            menu->resizeAndReallign();
+            menu->addItem(hello_action);
+            menu->addItem(doctor_action);
+            menu->addItem(name_action);
+            menu->addItem(continue_action);
+            menu->addItem(yesterday_action);
+            menu->addItem(tommorow_action);
             menu->resizeAndReallign();
             cout << "menu: " << menu->size() << "\n";
         }

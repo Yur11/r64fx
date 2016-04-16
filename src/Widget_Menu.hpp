@@ -2,7 +2,7 @@
 #define R64FX_WIDGET_MENU_HPP
 
 #include "Widget.hpp"
-#include "Padding.hpp"
+#include "Action.hpp"
 
 namespace r64fx{
 
@@ -10,7 +10,7 @@ class Widget_Menu : public Widget{
 public:
     Widget_Menu(Widget* parent = nullptr);
 
-    void addItem(const std::string &caption);
+    void addItem(Action* action);
 
     void resizeAndReallign();
 };

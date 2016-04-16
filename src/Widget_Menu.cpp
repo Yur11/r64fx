@@ -26,12 +26,14 @@ void init_menu_font_if_needed()
 
 class Widget_MenuItem : public Widget{
     Image* m_image = nullptr;
+    Action* m_action = nullptr;
 
 public:
-    Widget_MenuItem(const std::string &caption, Widget_Menu* parent)
+    Widget_MenuItem(Action* action, Widget_Menu* parent)
     : Widget(parent)
+    , m_action(action)
     {
-        auto img = text2image(caption, TextWrap::None, g_menu_font);
+        auto img = text2image(action->caption(), TextWrap::None, g_menu_font);
         if(!img)
             return;
 
@@ -89,7 +91,7 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent*)
     {
-
+        m_action->exec();
     }
 
 
@@ -115,9 +117,10 @@ Widget_Menu::Widget_Menu(Widget* parent)
 }
 
 
-void Widget_Menu::addItem(const std::string &caption)
+void Widget_Menu::addItem(Action* action)
 {
-    new Widget_MenuItem(caption, this);
+    if(action)
+        new Widget_MenuItem(action, this);
 }
 
 

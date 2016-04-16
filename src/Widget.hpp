@@ -126,7 +126,7 @@ public:
     std::string windowTitle() const;
 
 
-// /* === Extra Flags === */
+/* === Extra Flags === */
 
     void setOrientation(Orientation orientation);
 
