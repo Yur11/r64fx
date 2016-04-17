@@ -249,6 +249,7 @@ void Widget::close()
         auto d = (WindowWidgetData*) m_parent.window->data();
 
         Painter::deleteInstance(d->painter);
+        m_parent.window->hide();
         Window::deleteInstance(m_parent.window);
         delete d;
         m_parent.window = nullptr;

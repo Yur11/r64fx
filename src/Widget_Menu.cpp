@@ -91,6 +91,11 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent*)
     {
+        auto parent_menu = (Widget_Menu*) parent();
+        if(parent_menu)
+        {
+            parent_menu->close();
+        }
         m_action->exec();
     }
 
@@ -172,6 +177,20 @@ void Widget_Menu::resizeAndReallign()//Kluggy!
             );
         }
         setSize(new_size);
+    }
+}
+
+
+void Widget_Menu::showAt(Point<int> position, Widget* parent)
+{
+    auto parent_window = parent->root()->window();
+    if(parent_window)
+    {
+        show(Window::WmType::Menu);
+        Widget::window()->setPosition(
+            position.x() + parent_window->x(),
+            position.y() + parent_window->y()
+        );
     }
 }
 
