@@ -109,6 +109,8 @@ class MyWidget : public Widget_View{
     ImageAnimation* m_animation = nullptr;
     float m_angle = 0.0f;
 
+    Widget_Menu* m_menu = nullptr;
+
 public:
     MyWidget(Widget* parent = nullptr) : Widget_View(parent)
     {
@@ -144,18 +146,17 @@ public:
             auto yesterday_action = new YesterdayAction("Yesterday");
             auto tommorow_action = new TommorowAction("Tommorow");
 
-            auto menu = new Widget_Menu(this);
-            menu->setPosition({350, 100});
-            menu->setOrientation(Orientation::Vertical);
-            menu->resizeAndReallign();
-            menu->addItem(hello_action);
-            menu->addItem(doctor_action);
-            menu->addItem(name_action);
-            menu->addItem(continue_action);
-            menu->addItem(yesterday_action);
-            menu->addItem(tommorow_action);
-            menu->resizeAndReallign();
-            cout << "menu: " << menu->size() << "\n";
+            m_menu = new Widget_Menu;
+            m_menu->setPosition({350, 100});
+            m_menu->setOrientation(Orientation::Vertical);
+            m_menu->resizeAndReallign();
+            m_menu->addItem(hello_action);
+            m_menu->addItem(doctor_action);
+            m_menu->addItem(name_action);
+            m_menu->addItem(continue_action);
+            m_menu->addItem(yesterday_action);
+            m_menu->addItem(tommorow_action);
+            m_menu->resizeAndReallign();
         }
     }
 
@@ -189,7 +190,14 @@ public:
 
     virtual void mousePressEvent(MousePressEvent* event)
     {
-        update();
+        if(event->button() == MouseButton::Right())
+        {
+            m_menu->show(Window::WmType::Menu);
+        }
+        else
+        {
+            update();
+        }
     }
 
     virtual void mouseMoveEvent(MouseMoveEvent* event)

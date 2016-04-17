@@ -174,7 +174,11 @@ class WindowEvents_Widget : public WindowEvents{
 WindowEvents_Widget g_events;
 
 
-void Widget::show()
+void Widget::show(
+    Window::WmType  wm_type,
+    Window::Type    type,
+    Window*         modal_parent
+)
 {
     if(!isWindow())
     {
@@ -185,7 +189,7 @@ void Widget::show()
             setHeight(100);
 
         auto window = Window::newInstance(
-            width(), height(), "", Window::Type::GL
+            width(), height(), type, wm_type
         );
 #ifdef R64FX_DEBUG
         if(!window)
@@ -221,8 +225,10 @@ void Widget::show()
         m_parent.window = window;
         m_flags |= R64FX_WIDGET_IS_WINDOW;
     }
-    m_parent.window->show();
     m_parent.window->resize(width(), height());
+    if(modal_parent)
+        m_parent.window->setModalTo(modal_parent);
+    m_parent.window->show();
     update();
 }
 

@@ -60,6 +60,12 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual std::string title();
 
+    virtual void setWmType(Window::WmType wm_type);
+
+    virtual void showDecorations(bool yes);
+
+    virtual void setModalTo(Window* window);
+
 
     virtual void startTextInput();
 
@@ -247,6 +253,96 @@ void WindowX11::setTitle(string title)
 std::string WindowX11::title()
 {
     return m_title;
+}
+
+
+void WindowX11::setWmType(Window::WmType wm_type)
+{
+    Atom wm_type_atom = X11_Atom::_NET_WM_WINDOW_TYPE_NORMAL;
+
+    switch(wm_type)
+    {
+        case Window::WmType::Normal:
+            return;
+
+        case Window::WmType::Menu:
+        {
+            wm_type_atom = X11_Atom::_NET_WM_WINDOW_TYPE_MENU;
+            break;
+        }
+
+        case Window::WmType::Dialog:
+        {
+            wm_type_atom = X11_Atom::_NET_WM_WINDOW_TYPE_DIALOG;
+            break;
+        }
+
+        case Window::WmType::ToolTip:
+        {
+            wm_type_atom = X11_Atom::_NET_WM_WINDOW_TYPE_TOOLTIP;
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    XChangeProperty(
+        g_display,
+        m_xwindow,
+        X11_Atom::_NET_WM_WINDOW_TYPE,
+        XA_ATOM,
+        32,
+        PropModeReplace,
+        (unsigned char*)&wm_type_atom,
+        1
+    );
+
+    if(wm_type == Window::WmType::Menu || wm_type == Window::WmType::ToolTip)
+    {
+        showDecorations(false);
+    }
+}
+
+
+void WindowX11::showDecorations(bool yes)
+{
+    struct{
+        unsigned long  flags   = (1L << 1);
+        unsigned long  functions       = 0;
+        unsigned long  decorarations;
+        long           input_mode      = 0;
+        unsigned long  status          = 0;
+    } motif_hints;
+    motif_hints.decorarations = (yes ? 1 : 0);
+
+    XChangeProperty(
+        g_display,
+        m_xwindow,
+        X11_Atom::_MOTIF_WM_HINTS,
+        X11_Atom::_MOTIF_WM_HINTS,
+        32,
+        PropModeReplace,
+        (unsigned char*) &motif_hints,
+        5
+    );
+}
+
+
+void WindowX11::setModalTo(Window* window)
+{
+    auto window_x11 = (WindowX11*) window;
+
+    XChangeProperty(
+        g_display,
+        m_xwindow,
+        X11_Atom::WM_TRANSIENT_FOR,
+        XA_ATOM,
+        32,
+        PropModeReplace,
+        (unsigned char*)&(window_x11->m_xwindow),
+        1
+    );
 }
 
 
@@ -563,8 +659,8 @@ void WindowX11::setupInputContext()
 
 Window* Window::newInstance(
     int width, int height,
-    std::string title,
-    Window::Type type
+    Window::Type     type,
+    Window::WmType   wm_type
 )
 {
     init_x_if_needed();
@@ -584,7 +680,8 @@ Window* Window::newInstance(
     if(window)
     {
         window->setup(width, height);
-        window->setTitle(title);
+        window->setWmType(wm_type);
+        window->setTitle("r64fx");
         g_all_windows.append(window);
     }
 

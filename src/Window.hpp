@@ -18,6 +18,13 @@ class Window{
     void* m_data = nullptr;
 
 public:
+    enum class WmType{
+        Normal,
+        Menu,
+        Dialog,
+        ToolTip
+    };
+
     enum class Type{
         Image
 #ifdef R64FX_USE_GL
@@ -60,6 +67,12 @@ public:
 
     virtual std::string title() = 0;
 
+    virtual void setWmType(Window::WmType wm_type) = 0;
+
+    virtual void showDecorations(bool yes) = 0;
+
+    virtual void setModalTo(Window* window) = 0;
+
 
     virtual void startTextInput() = 0;
 
@@ -76,8 +89,8 @@ public:
 
     static Window* newInstance(
         int width = 800, int height = 600,
-        std::string title = "",
-        Window::Type type = Window::Type::Image
+        Window::Type    type     = Window::Type::Image,
+        Window::WmType  wm_type  = Window::WmType::Normal
     );
 
     static void deleteInstance(Window* window);

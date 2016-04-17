@@ -5,14 +5,29 @@ namespace{
 namespace X11_Atom{
     Atom WM_PROTOCOLS;
     Atom WM_DELETE_WINDOW;
-    Atom _NET_WM_NAME;
+    Atom WM_TRANSIENT_FOR;
     Atom UTF8_STRING;
     Atom TEXT;
     Atom STRING;
     Atom TARGETS;
     Atom MULTIPLE;
     Atom CLIPBOARD;
-    
+
+    Atom _NET_WM_NAME;
+
+    Atom _NET_WM_STATE;
+    Atom _NET_WM_STATE_MODAL;
+
+    Atom _NET_WM_WINDOW_TYPE;
+    Atom _NET_WM_WINDOW_TYPE_NORMAL;
+    Atom _NET_WM_WINDOW_TYPE_DROPDOWN_MENU;
+    Atom _NET_WM_WINDOW_TYPE_POPUP_MENU;
+    Atom _NET_WM_WINDOW_TYPE_MENU;
+    Atom _NET_WM_WINDOW_TYPE_DIALOG;
+    Atom _NET_WM_WINDOW_TYPE_TOOLTIP;
+
+    Atom _MOTIF_WM_HINTS;
+
     Atom _R64FX_CLIPBOARD;
 
     Atom XdndAware;
@@ -45,13 +60,29 @@ void init_atoms()
 
         R64FX_INTERN_ATOM( WM_PROTOCOLS,     true  );
         R64FX_INTERN_ATOM( WM_DELETE_WINDOW, true  );
-        R64FX_INTERN_ATOM( _NET_WM_NAME,     true  );
+        R64FX_INTERN_ATOM( WM_TRANSIENT_FOR, true  );
+
         R64FX_INTERN_ATOM( UTF8_STRING,      true  );
         R64FX_INTERN_ATOM( TEXT,             true  );
         R64FX_INTERN_ATOM( STRING,           true  );
         R64FX_INTERN_ATOM( TARGETS,          true  );
         R64FX_INTERN_ATOM( MULTIPLE,         true  );
         R64FX_INTERN_ATOM( CLIPBOARD,        true  );
+
+        R64FX_INTERN_ATOM( _NET_WM_NAME,     true  );
+        
+        R64FX_INTERN_ATOM( _NET_WM_STATE,        true );
+        R64FX_INTERN_ATOM( _NET_WM_STATE_MODAL,  true );
+
+        R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE,                true  );
+        R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE_NORMAL,         true  );
+        R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE_MENU,           true  );
+        R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE_POPUP_MENU,     true  );
+        R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE_DROPDOWN_MENU,  true  );
+        R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE_DIALOG,         true  );
+        R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE_TOOLTIP,        true  );
+
+        R64FX_INTERN_ATOM( _MOTIF_WM_HINTS, true );
 
         R64FX_INTERN_ATOM( _R64FX_CLIPBOARD, false );
 

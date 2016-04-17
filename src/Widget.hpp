@@ -7,6 +7,7 @@
 #include "Mouse.hpp"
 #include "Clipboard.hpp"
 #include "Orientation.hpp"
+#include "Window.hpp"
 
 namespace r64fx{
 
@@ -107,7 +108,11 @@ public:
 /* === Window === */
 
     /* Show this widget in a window. */
-    void show();
+    void show(
+        Window::WmType  wm_type        = Window::WmType::Normal,
+        Window::Type    type           = Window::Type::Image,
+        Window*         modal_parent   = nullptr
+    );
 
     /* Hide the window. */
     void hide();
