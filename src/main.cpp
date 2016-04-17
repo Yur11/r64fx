@@ -193,7 +193,10 @@ public:
         if(event->button() == MouseButton::Right())
         {
             m_menu->show(Window::WmType::Menu);
-//             m_menu->window()->setPosition(200, 200);
+            m_menu->window()->setPosition(
+                event->position().x() + window()->x(),
+                event->position().y() + window()->y()
+            );
         }
         else
         {
