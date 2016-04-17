@@ -43,6 +43,8 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual void hide();
 
+    virtual void setPosition(int x, int y);
+
     virtual int x();
 
     virtual int y();
@@ -207,6 +209,12 @@ void WindowX11::hide()
 }
 
 
+void WindowX11::setPosition(int x, int y)
+{
+    XMoveWindow(g_display, m_xwindow, x, y);
+}
+
+
 int WindowX11::x()
 {
     return mx;
@@ -298,9 +306,17 @@ void WindowX11::setWmType(Window::WmType wm_type)
         1
     );
 
-    if(wm_type == Window::WmType::Menu || wm_type == Window::WmType::ToolTip)
+    if(wm_type != Window::WmType::Normal)
     {
-        showDecorations(false);
+        XSetWindowAttributes attrs;
+        attrs.override_redirect = True;
+
+        XChangeWindowAttributes(
+            g_display,
+            m_xwindow,
+            CWOverrideRedirect,
+            &attrs
+        );
     }
 }
 

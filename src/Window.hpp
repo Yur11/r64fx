@@ -45,6 +45,8 @@ public:
 
     virtual void hide() = 0;
 
+    virtual void setPosition(int x, int y) = 0;
+
     virtual int x() = 0;
 
     virtual int y() = 0;
