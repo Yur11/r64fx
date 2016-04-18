@@ -188,13 +188,20 @@ void Widget_Menu::showAt(Point<int> position, Widget* parent)
     if(parent_window)
     {
         Size<int> screen_size = parent_window->getScreenSize();
+        Point<int> menu_position = position + parent_window->position();
+
+        if(menu_position.x() + width() > screen_size.width())
+        {
+            menu_position.setX(menu_position.x() - width());
+        }
+
+        if(menu_position.y() + height() > screen_size.height())
+        {
+            menu_position.setY(menu_position.y() - height());
+        }
 
         show(Window::WmType::Menu);
-
-        Widget::window()->setPosition(
-            position + parent_window->position()
-        );
-
+        Widget::window()->setPosition(menu_position);
         Widget::window()->grabMouse();
     }
 }
