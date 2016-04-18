@@ -57,6 +57,8 @@ public:
 
     virtual int height() = 0;
 
+    virtual Size<int> getScreenSize() = 0;
+
 
     virtual void makeCurrent() = 0;
 

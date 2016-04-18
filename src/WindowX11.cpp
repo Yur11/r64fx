@@ -55,6 +55,9 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual int height();
 
+    virtual Size<int> getScreenSize();
+
+
     virtual Image* image() { return nullptr; }
 
 
@@ -247,6 +250,14 @@ int WindowX11::width()
 int WindowX11::height()
 {
     return m_attrs.height;
+}
+
+
+Size<int> WindowX11::getScreenSize()
+{
+    XWindowAttributes attrs;
+    XGetWindowAttributes(g_display, DefaultRootWindow(g_display), &attrs);
+    return Size<int>(attrs.width, attrs.height);
 }
 
 

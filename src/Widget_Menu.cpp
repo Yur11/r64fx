@@ -187,6 +187,8 @@ void Widget_Menu::showAt(Point<int> position, Widget* parent)
     auto parent_window = parent->root()->window();
     if(parent_window)
     {
+        Size<int> screen_size = parent_window->getScreenSize();
+
         show(Window::WmType::Menu);
 
         Widget::window()->setPosition(
