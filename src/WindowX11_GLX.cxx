@@ -3,6 +3,7 @@
 namespace{
     int g_glx_major = 0;
     int g_glx_minor = 0;
+    GLXContext g_first_gl_context = 0;
 }//namespace
 
 
@@ -190,10 +191,15 @@ void WindowGLX::setup(int width, int height)
     m_gl_context = glXCreateContextAttribsARB(
         g_display,
         best_cfg.config[0],
-        0, //Existing Context
+        g_first_gl_context, //Existing Context
         True,
         context_attribs
     );
+
+    if(!g_first_gl_context)
+    {
+        g_first_gl_context = m_gl_context;
+    }
 
     makeCurrent();
     XFree(glxfbconfigs);
@@ -204,7 +210,11 @@ void WindowGLX::setup(int width, int height)
 
 void WindowGLX::cleanup()
 {
-
+    if(m_gl_context == g_first_gl_context)
+    {
+        g_first_gl_context = 0;
+    }
+    glXDestroyContext(g_display, m_gl_context);
 }
 
 
