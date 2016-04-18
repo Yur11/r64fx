@@ -225,7 +225,7 @@ void Widget::show(
         m_parent.window = window;
         m_flags |= R64FX_WIDGET_IS_WINDOW;
     }
-    m_parent.window->resize(width(), height());
+    m_parent.window->setSize(size());
     if(modal_parent)
         m_parent.window->setModalTo(modal_parent);
     m_parent.window->show();

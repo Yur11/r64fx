@@ -192,8 +192,7 @@ void Widget_Menu::showAt(Point<int> position, Widget* parent)
         show(Window::WmType::Menu);
 
         Widget::window()->setPosition(
-            position.x() + parent_window->x(),
-            position.y() + parent_window->y()
+            position + parent_window->position()
         );
 
         Widget::window()->grabMouse();

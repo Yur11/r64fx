@@ -43,17 +43,13 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual void hide();
 
-    virtual void setPosition(int x, int y);
+    virtual void setPosition(Point<int> position);
 
-    virtual int x();
+    virtual Point<int> position();
 
-    virtual int y();
+    virtual void setSize(Size<int> size);
 
-    virtual void resize(int width, int height);
-
-    virtual int width();
-
-    virtual int height();
+    virtual Size<int> size();
 
     virtual Size<int> getScreenSize();
 
@@ -217,39 +213,27 @@ void WindowX11::hide()
 }
 
 
-void WindowX11::setPosition(int x, int y)
+void WindowX11::setPosition(Point<int> position)
 {
-    XMoveWindow(g_display, m_xwindow, x, y);
+    XMoveWindow(g_display, m_xwindow, position.x(), position.y());
 }
 
 
-int WindowX11::x()
+Point<int> WindowX11::position()
 {
-    return mx;
+    return {mx, my};
 }
 
 
-int WindowX11::y()
+void WindowX11::setSize(Size<int> size)
 {
-    return my;
+    XResizeWindow(g_display, m_xwindow, size.width(), size.height());
 }
 
 
-void WindowX11::resize(int width, int height)
+Size<int> WindowX11::size()
 {
-    XResizeWindow(g_display, m_xwindow, width, height);
-}
-
-
-int WindowX11::width()
-{
-    return m_attrs.width;
-}
-
-
-int WindowX11::height()
-{
-    return m_attrs.height;
+    return {m_attrs.width, m_attrs.height};
 }
 
 

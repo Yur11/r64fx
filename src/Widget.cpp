@@ -150,9 +150,9 @@ Point<int> Widget::position() const
 void Widget::setSize(Size<int> size)
 {
     m_rect.setSize(size);
-    if(isWindow() && size != Size<int>(m_parent.window->width(), m_parent.window->height()))
+    if(isWindow() && size != m_parent.window->size())
     {
-        m_parent.window->resize(size.width(), size.height());
+        m_parent.window->setSize(size);
     }
     ResizeEvent event(size);
     resizeEvent(&event);

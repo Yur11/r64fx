@@ -45,17 +45,21 @@ public:
 
     virtual void hide() = 0;
 
-    virtual void setPosition(int x, int y) = 0;
+    virtual void setPosition(Point<int> position) = 0;
 
-    virtual int x() = 0;
+    virtual Point<int> position() = 0;
 
-    virtual int y() = 0;
+    inline int x() { return position().x(); }
 
-    virtual void resize(int width, int height) = 0;
+    inline int y() { return position().y(); }
 
-    virtual int width() = 0;
+    virtual void setSize(Size<int> size) = 0;
 
-    virtual int height() = 0;
+    virtual Size<int> size() = 0;
+
+    inline int width()  { return size().width(); }
+
+    inline int height() { return size().height(); }
 
     virtual Size<int> getScreenSize() = 0;
 
