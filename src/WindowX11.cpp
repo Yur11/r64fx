@@ -69,6 +69,11 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     virtual void setModalTo(Window* window);
 
 
+    virtual void grabMouse();
+
+    virtual void ungrabMouse();
+
+
     virtual void startTextInput();
 
     virtual void stopTextInput();
@@ -362,6 +367,28 @@ void WindowX11::setModalTo(Window* window)
 }
 
 
+void WindowX11::grabMouse()
+{
+    XGrabPointer(
+        g_display,
+        m_xwindow,
+        True,
+        ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+        GrabModeAsync, GrabModeAsync, None, None,
+        CurrentTime
+    );
+}
+
+
+void WindowX11::ungrabMouse()
+{
+    XUngrabPointer(
+        g_display,
+        CurrentTime
+    );
+}
+
+
 void WindowX11::startTextInput()
 {
     XSetICFocus(m_input_context);
@@ -443,6 +470,7 @@ void WindowX11::processSomeEvents(WindowEvents* events)
                 unsigned int button = getEventButton(&xevent.xbutton);
                 if(button != R64FX_MOUSE_BUTTON_NONE)
                 {
+                    cout << "MousePress: " << xevent.xbutton.x << ", " << xevent.xbutton.y << "\n";
                     events->mousePressEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
                 }
                 break;
@@ -594,7 +622,7 @@ void WindowX11::setupEvents()
     XSelectInput(
         g_display, m_xwindow,
         KeyPressMask | KeyReleaseMask |
-        ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
+                                        ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
         EnterWindowMask | LeaveWindowMask |
         StructureNotifyMask
     );

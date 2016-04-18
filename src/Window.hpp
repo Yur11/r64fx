@@ -76,6 +76,11 @@ public:
     virtual void setModalTo(Window* window) = 0;
 
 
+    virtual void grabMouse() = 0;
+
+    virtual void ungrabMouse() = 0;
+
+
     virtual void startTextInput() = 0;
 
     virtual void stopTextInput() = 0;
