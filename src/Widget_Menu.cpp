@@ -25,15 +25,34 @@ void init_menu_font_if_needed()
 
 
 class Widget_MenuItem : public Widget{
-    Image* m_image = nullptr;
-    Action* m_action = nullptr;
+    Image*        m_image     = nullptr;
+    Action*       m_action    = nullptr;
+    Widget_Menu*  m_sub_menu  = nullptr;
+
+    Image* createCaptionImage(const std::string &caption_text)
+    {
+        return text2image(caption_text, TextWrap::None, g_menu_font);
+    }
 
 public:
     Widget_MenuItem(Action* action, Widget_Menu* parent)
     : Widget(parent)
     , m_action(action)
     {
-        auto img = text2image(action->caption(), TextWrap::None, g_menu_font);
+        auto img = createCaptionImage(action->caption());
+        if(!img)
+            return;
+
+        m_image = img;
+        setSize({m_image->width(), m_image->height()});
+    }
+
+
+    Widget_MenuItem(Widget_Menu* sub_menu, const std::string &caption, Widget_Menu* parent)
+    : Widget(parent)
+    , m_sub_menu(sub_menu)
+    {
+        auto img = createCaptionImage(caption);
         if(!img)
             return;
 
@@ -92,12 +111,19 @@ protected:
     virtual void mousePressEvent(MousePressEvent*)
     {
         auto parent_menu = (Widget_Menu*) parent();
-        if(parent_menu && parent_menu->isWindow())
+        if(m_action)
         {
-            parent_menu->window()->ungrabMouse();
-            parent_menu->close();
+            if(parent_menu && parent_menu->isWindow())
+            {
+                parent_menu->window()->ungrabMouse();
+                parent_menu->close();
+            }
+            m_action->exec();
         }
-        m_action->exec();
+        else if(m_sub_menu)
+        {
+            m_sub_menu->showAt({width() + 1, 0}, this);
+        }
     }
 
 
@@ -123,10 +149,17 @@ Widget_Menu::Widget_Menu(Widget* parent)
 }
 
 
-void Widget_Menu::addItem(Action* action)
+void Widget_Menu::addAction(Action* action)
 {
     if(action)
         new Widget_MenuItem(action, this);
+}
+
+
+void Widget_Menu::addSubMenu(Widget_Menu* menu, const std::string &caption)
+{
+    if(menu)
+        new Widget_MenuItem(menu, caption, this);
 }
 
 

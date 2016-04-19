@@ -12,7 +12,9 @@ class Widget_Menu : public Widget{
 public:
     Widget_Menu(Widget* parent = nullptr);
 
-    void addItem(Action* action);
+    void addAction(Action* action);
+
+    void addSubMenu(Widget_Menu* menu, const std::string &caption);
 
     void resizeAndReallign();
 
