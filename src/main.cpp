@@ -184,7 +184,7 @@ public:
         m_Image.load(width(), height(), 4);
         fill(&m_Image, bg);
         auto r = intersection(
-            Rect<int>(50, 50, 10, 10) + offset(),
+            Rect<int>(0, 0, 10, 10) + offset(),
             Rect<int>(0, 0, m_Image.width(), m_Image.height())
         );
         if(r.width() > 0 && r.height() > 0)
@@ -202,7 +202,7 @@ public:
     {
         if(event->button() == MouseButton::Right())
         {
-            m_menu->showAt(event->position(), this);
+            m_menu->showAt(event->position() + offset(), this);
         }
         else
         {
