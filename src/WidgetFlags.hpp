@@ -26,7 +26,7 @@
 
 #define R64FX_WIDGET_IS_VERTICAL             (1 << 0x09)
 
-/* Pinned widget are not scrollable in Widget_View. */
+/* Pinned widget are not scrollable in Widget_ScrollArea. */
 #define R64FX_WIDGET_IS_PINNED               (1 << 0x0A)
 
 #define R64FX_WIDGET_OWNS_DATA               (1 << 0x0B)

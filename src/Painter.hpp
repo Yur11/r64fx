@@ -11,7 +11,7 @@ namespace r64fx{
 class Image;
 class Window;
 
-class Painter : public Offset<int>{
+class Painter : public OffsetMixin<int>{
 
 protected:
     virtual ~Painter() {};

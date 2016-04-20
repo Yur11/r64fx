@@ -1,5 +1,5 @@
 #include "Widget.hpp"
-#include "Widget_View.hpp"
+#include "Widget_ScrollArea.hpp"
 #include "Window.hpp"
 #include "Mouse.hpp"
 #include "Keyboard.hpp"
@@ -108,10 +108,10 @@ Widget* Widget::leafAt(Point<int> position, Point<int>* offset)
     bool got_leaf = true;
     while(got_leaf)
     {
-        auto widget_view = dynamic_cast<Widget_View*>(leaf);
-        if(widget_view)
+        auto scroll_area = dynamic_cast<Widget_ScrollArea*>(leaf);
+        if(scroll_area)
         {
-            leaf_offset += widget_view->offset();
+            leaf_offset += scroll_area->offset();
         }
 
         got_leaf = false;
@@ -216,7 +216,7 @@ Point<int> Widget::toRootCoords(Point<int> point) const
     }
     else
     {
-        auto view = dynamic_cast<const Widget_View*>(m_parent.widget);
+        auto view = dynamic_cast<const Widget_ScrollArea*>(m_parent.widget);
         if(view)
         {
             point += view->offset();
@@ -414,10 +414,10 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
     }
 
     Point<int> view_offset = {0, 0};
-    auto widget_view_self = dynamic_cast<Widget_View*>(this);//We may have offsets.
-    if(widget_view_self)
+    auto scroll_area_self = dynamic_cast<Widget_ScrollArea*>(this);//We may have offsets.
+    if(scroll_area_self)
     {
-        view_offset = widget_view_self->offset();
+        view_offset = scroll_area_self->offset();
     }
 
     /* Recursively process children. */
@@ -432,7 +432,7 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
             );
 
             Rect<int> clip_rect;
-            if(widget_view_self)//?
+            if(scroll_area_self)//?
             {
                 clip_rect = d->painter->clipRect();
                 d->painter->setClipRect(toRootCoords({
@@ -452,7 +452,7 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
                 child->updateChildren((UpdateEvent*)d);
             }
 
-            if(widget_view_self)//?
+            if(scroll_area_self)//?
             {
                 d->painter->setClipRect(clip_rect);
             }

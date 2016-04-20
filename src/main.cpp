@@ -15,7 +15,7 @@
 #include "Widget_Dummy.hpp"
 #include "Widget_Menu.hpp"
 #include "Widget_Text.hpp"
-#include "Widget_View.hpp"
+#include "Widget_ScrollArea.hpp"
 #include "Widget_ScrollBar.hpp"
 #include "ImageAnimation.hpp"
 #include "KeyEvent.hpp"
@@ -104,7 +104,7 @@ public:
 };
 
 
-class MyWidget : public Widget_View{
+class MyWidget : public Widget_ScrollArea{
     Image m_Image;
     ImageAnimation* m_animation = nullptr;
     float m_angle = 0.0f;
@@ -112,7 +112,7 @@ class MyWidget : public Widget_View{
     Widget_Menu* m_menu = nullptr;
 
 public:
-    MyWidget(Widget* parent = nullptr) : Widget_View(parent)
+    MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
         {
             auto wt = new Widget_Text(this);
@@ -195,7 +195,7 @@ public:
         auto painter = event->painter();
         painter->putImage(&m_Image);
 
-        Widget_View::updateEvent(event);
+        Widget_ScrollArea::updateEvent(event);
     }
 
     virtual void mousePressEvent(MousePressEvent* event)

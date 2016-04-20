@@ -3,7 +3,7 @@
 
 namespace r64fx{
 
-template<typename T> class Offset{
+template<typename T> class OffsetMixin{
     Point<T> m_offset = {0, 0};
 
 public:
