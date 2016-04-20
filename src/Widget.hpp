@@ -83,6 +83,10 @@ public:
     void setPosition(Point<int> pos);
 
     Point<int> position() const;
+
+    int x() const;
+
+    int y() const;
     
     void setSize(Size<int> size);
 
@@ -158,11 +162,11 @@ public:
 
     bool grabsMouseOnClick() const;
 
-    void initMousePressEvent(Point<int> event_position, MouseButton button);
+    void initMousePressEvent(Point<int> event_position, MouseButton button, bool ignore_grabs = false);
 
-    void initMouseReleaseEvent(Point<int> event_position, MouseButton button);
+    void initMouseReleaseEvent(Point<int> event_position, MouseButton button, bool ignore_grabs = false);
 
-    void initMouseMoveEvent(Point<int> event_position);
+    void initMouseMoveEvent(Point<int> event_position, bool ignore_grabs = false);
 
 
 /* === Keyboard === */

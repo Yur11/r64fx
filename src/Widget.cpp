@@ -147,6 +147,18 @@ Point<int> Widget::position() const
 }
 
 
+int Widget::x() const
+{
+    return m_rect.x();
+}
+
+
+int Widget::y() const
+{
+    return m_rect.y();
+}
+
+
 void Widget::setSize(Size<int> size)
 {
     m_rect.setSize(size);

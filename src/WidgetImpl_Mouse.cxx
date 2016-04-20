@@ -56,14 +56,14 @@ bool Widget::grabsMouseOnClick() const
 }
 
 
-void Widget::initMousePressEvent(Point<int> event_position, MouseButton button)
+void Widget::initMousePressEvent(Point<int> event_position, MouseButton button, bool ignore_grabs)
 {
     g_prev_mouse_position = event_position;
 
     g_pressed_buttons |= button;
 
     auto dst = mouseGrabber();
-    if(dst)
+    if(dst && !ignore_grabs)
     {
         event_position -= dst->toRootCoords(Point<int>(0, 0));
     }
@@ -74,7 +74,7 @@ void Widget::initMousePressEvent(Point<int> event_position, MouseButton button)
         event_position -= offset;
     }
 
-    if(dst->grabsMouseOnClick())
+    if(!ignore_grabs && dst->grabsMouseOnClick())
     {
         dst->grabMouse();
     }
@@ -89,14 +89,14 @@ void Widget::initMousePressEvent(Point<int> event_position, MouseButton button)
 }
 
 
-void Widget::initMouseReleaseEvent(Point<int> event_position, MouseButton button)
+void Widget::initMouseReleaseEvent(Point<int> event_position, MouseButton button, bool ignore_grabs)
 {
     g_prev_mouse_position = event_position;
 
     g_pressed_buttons &= ~button;
 
     auto dst = mouseGrabber();
-    if(dst)
+    if(dst && !ignore_grabs)
     {
         event_position -= dst->toRootCoords(Point<int>(0, 0));
     }
@@ -107,7 +107,7 @@ void Widget::initMouseReleaseEvent(Point<int> event_position, MouseButton button
         event_position -= leaf_offset;
     }
 
-    if(dst->grabsMouseOnClick())
+    if(!ignore_grabs && dst->grabsMouseOnClick())
     {
         dst->ungrabMouse();
     }
@@ -117,13 +117,13 @@ void Widget::initMouseReleaseEvent(Point<int> event_position, MouseButton button
 }
 
 
-void Widget::initMouseMoveEvent(Point<int> event_position)
+void Widget::initMouseMoveEvent(Point<int> event_position, bool ignore_grabs)
 {
     Point<int> event_delta = event_position - g_prev_mouse_position;
     g_prev_mouse_position = event_position;
 
     auto dst = Widget::mouseGrabber();
-    if(dst)
+    if(dst && !ignore_grabs)
     {
         event_position -= dst->toRootCoords(Point<int>(0, 0));
     }
