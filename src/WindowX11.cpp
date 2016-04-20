@@ -465,7 +465,6 @@ void WindowX11::processSomeEvents(WindowEvents* events)
                 unsigned int button = getEventButton(&xevent.xbutton);
                 if(button != R64FX_MOUSE_BUTTON_NONE)
                 {
-                    cout << "MousePress: " << xevent.xbutton.x << ", " << xevent.xbutton.y << "\n";
                     events->mousePressEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
                 }
                 break;
