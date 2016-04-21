@@ -7,7 +7,7 @@
 namespace r64fx{
 
 class Widget_Menu : public Widget{
-    Widget_Menu* m_parent_menu = nullptr;
+    Widget_Menu*  m_parent_menu    = nullptr;
 
 public:
     Widget_Menu(Widget* parent = nullptr);

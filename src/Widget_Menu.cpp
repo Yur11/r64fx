@@ -122,7 +122,7 @@ protected:
         }
         else if(m_sub_menu)
         {
-            m_sub_menu->showAt({width() + 1, 0}, this);
+            showSubMenu();
         }
     }
 
@@ -137,6 +137,10 @@ protected:
     {
         update();
     }
+
+
+private:
+    void showSubMenu();
 };
 
 }//namespace
@@ -163,8 +167,57 @@ void Widget_Menu::addSubMenu(Widget_Menu* menu, const std::string &caption)
 }
 
 
-void Widget_Menu::resizeAndReallign()//Kluggy!
+void Widget_Menu::resizeAndReallign()
 {
+    /* Resize each menu item. */
+    if(orientation() == Orientation::Vertical)
+    {
+        int max_width = 0;
+        int total_height = 0;
+        for(auto child : *this)
+        {
+            child->setPosition({0, total_height});
+            if(child->width() > max_width)
+            {
+                max_width = child->width();
+            }
+            total_height += child->height();
+        }
+
+        for(auto child : *this)
+        {
+            auto menu_item = dynamic_cast<Widget_MenuItem*>(child);
+            if(menu_item)
+            {
+                menu_item->setSizeAndOffset({max_width + 10, child->height() + 10}, {5, 5});
+            }
+        }
+    }
+    else
+    {
+        int total_width = 0;
+        int max_height = 0;
+        for(auto child : *this)
+        {
+            total_width += child->width();
+            if(child->height() > max_height)
+            {
+                max_height = child->height();
+            }
+        }
+
+        for(auto child : *this)
+        {
+            auto menu_item = dynamic_cast<Widget_MenuItem*>(child);
+            if(menu_item)
+            {
+                menu_item->setSizeAndOffset({child->width() + 10, max_height + 10}, {5, 5});
+            }
+        }
+    }
+
+
+    /* Arrange menu. */
     Size<int> new_size = {0, 0};
     if(orientation() == Orientation::Vertical)
     {
@@ -179,39 +232,6 @@ void Widget_Menu::resizeAndReallign()//Kluggy!
         );
     }
     setSize(new_size);
-
-    int max_width = 0;
-    for(auto child : *this)
-    {
-        if(max_width < child->width())
-            max_width = child->width();
-    }
-
-    if(max_width > 0)
-    {
-        for(auto child : *this)
-        {
-            auto menu_item = dynamic_cast<Widget_MenuItem*>(child);
-            if(menu_item)
-            {
-                menu_item->setSizeAndOffset({max_width + 10, child->height() + 10}, {5, 5});
-            }
-        }
-
-        if(orientation() == Orientation::Vertical)
-        {
-            new_size = align_vertically(
-                begin(), end(), {0, 0}, 0
-            );
-        }
-        else
-        {
-            new_size = align_horizontally(
-                begin(), end(), {0, 0}, 0
-            );
-        }
-        setSize(new_size);
-    }
 }
 
 
@@ -237,6 +257,87 @@ void Widget_Menu::showAt(Point<int> position, Widget* parent)
         Widget::window()->setPosition(menu_position);
         Widget::window()->grabMouse();
     }
+}
+
+
+void Widget_MenuItem::showSubMenu()
+{
+    /*We work in screen coordinates here!*/
+
+    auto parent_menu = dynamic_cast<Widget_Menu*>(parent());
+    if(!parent_menu)
+        return;
+
+    auto parent_window = parent_menu->root()->window();
+    if(!parent_window)
+        return;
+
+    Size<int> screen_size = parent_window->getScreenSize();
+
+    Point<int> menu_item_position
+        = toRootCoords(Point<int>(0, 0)) + parent_window->position();
+
+    Point<int> sub_menu_position = {0, 0};
+
+    if(parent_menu->orientation() == Orientation::Vertical)
+    {
+        if(menu_item_position.x() + parent_menu->width() + m_sub_menu->width() <= screen_size.width())
+        {
+            sub_menu_position.setX(
+                menu_item_position.x() + parent_menu->width()
+            );
+        }
+        else
+        {
+            sub_menu_position.setX(
+                menu_item_position.x() - m_sub_menu->width()
+            );
+        }
+
+        if(menu_item_position.y() + m_sub_menu->height() <= screen_size.height())
+        {
+            sub_menu_position.setY(
+                menu_item_position.y()
+            );
+        }
+        else
+        {
+            sub_menu_position.setY(
+                menu_item_position.y() - m_sub_menu->height() + height()
+            );
+        }
+    }
+    else //Parent menu is horizontal.
+    {
+        if(menu_item_position.x() + m_sub_menu->width() <= screen_size.width())
+        {
+            sub_menu_position.setX(
+                menu_item_position.x()
+            );
+        }
+        else
+        {
+            sub_menu_position.setX(
+                menu_item_position.x() - m_sub_menu->width() + width()
+            );
+        }
+
+        if(menu_item_position.y() + parent_menu->height() + m_sub_menu->height() <= screen_size.height())
+        {
+            sub_menu_position.setY(
+                menu_item_position.y() + parent_menu->height()
+            );
+        }
+        else
+        {
+            sub_menu_position.setY(
+                menu_item_position.y() - m_sub_menu->height()
+            );
+        }
+    }
+
+    m_sub_menu->show(Window::WmType::Menu, Window::Type::Image);
+    m_sub_menu->window()->setPosition(sub_menu_position);
 }
 
 }//namespace r64fx

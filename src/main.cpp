@@ -110,6 +110,7 @@ class MyWidget : public Widget_ScrollArea{
     float m_angle = 0.0f;
 
     Widget_Menu* m_menu = nullptr;
+    Widget_Menu* m_main_menu = nullptr;
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
@@ -167,6 +168,26 @@ public:
             m_menu->addAction(tommorow_action);
             m_menu->addSubMenu(sub_menu, "More...");
             m_menu->resizeAndReallign();
+
+            m_main_menu = new Widget_Menu(this);
+            m_main_menu->setOrientation(Orientation::Horizontal);
+            m_main_menu->setPosition({0, 0});
+            string menu_names[5] = { "File", "Edit", "View", "Tools", "Help" };
+            for(int i=0; i<5; i++)
+            {
+                auto menu = new Widget_Menu;
+                menu->setOrientation(Orientation::Vertical);
+                menu->addAction(hello_action);
+                menu->addAction(doctor_action);
+                menu->addAction(name_action);
+                menu->addAction(continue_action);
+                menu->addAction(yesterday_action);
+                menu->addAction(tommorow_action);
+                menu->resizeAndReallign();
+
+                m_main_menu->addSubMenu(menu, menu_names[i]);
+            }
+            m_main_menu->resizeAndReallign();
         }
     }
 
