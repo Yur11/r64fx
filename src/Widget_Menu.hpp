@@ -21,6 +21,8 @@ public:
 
     Widget* activeItem() const;
 
+    Widget_Menu* rootMenu();
+
     void addAction(Action* action);
 
     void addSubMenu(Widget_Menu* menu, const std::string &caption);

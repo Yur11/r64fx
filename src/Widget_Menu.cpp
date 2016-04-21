@@ -67,6 +67,18 @@ public:
     }
 
 
+    Action* action() const
+    {
+        return m_action;
+    }
+
+
+    Widget_Menu* subMenu() const
+    {
+        return m_sub_menu;
+    }
+
+
     void setSizeAndOffset(Size<int> size, Point<int> offset)
     {
         if(!m_image)
@@ -82,9 +94,16 @@ public:
     }
 
 
-    void reset()
+    void highlight()
+    {
+        m_flags |= R64FX_MENU_ITEM_IS_SELECTED;
+        update();
+    }
+
+    void dehighlight()
     {
         m_flags &= ~R64FX_MENU_ITEM_IS_SELECTED;
+        update();
     }
 
 protected:
@@ -121,13 +140,15 @@ protected:
             if(parent_menu && parent_menu->isWindow())
             {
                 parent_menu->window()->ungrabMouse();
-                parent_menu->close();
+                parent_menu->closeAll();
             }
+            parent_menu->rootMenu()->closeAll();
             m_action->exec();
         }
-        else if(m_sub_menu)
+        else if(m_sub_menu && showSubMenu())
         {
-            showSubMenu();
+            m_sub_menu->setParentItem(this);
+            parent_menu->setActiveItem(this);
         }
     }
 
@@ -145,7 +166,7 @@ protected:
 
 
 private:
-    void showSubMenu();
+    bool showSubMenu();
 };
 
 }//namespace
@@ -179,6 +200,26 @@ void Widget_Menu::setActiveItem(Widget* active_item)
 Widget* Widget_Menu::activeItem() const
 {
     return m_active_item;
+}
+
+
+Widget_Menu* Widget_Menu::rootMenu()
+{
+    if(!m_parent_item)
+        return this;
+
+    auto menu_item = dynamic_cast<Widget_MenuItem*>(m_parent_item);
+    if(!menu_item)
+        return this;
+
+    if(!menu_item->parent())
+        return this;
+
+    auto parent_menu = dynamic_cast<Widget_Menu*>(menu_item->parent());
+    if(!parent_menu)
+        return this;
+
+    return parent_menu->rootMenu();
 }
 
 
@@ -245,7 +286,6 @@ void Widget_Menu::resizeAndReallign()
         }
     }
 
-
     /* Arrange menu. */
     Size<int> new_size = {0, 0};
     if(orientation() == Orientation::Vertical)
@@ -289,17 +329,17 @@ void Widget_Menu::showAt(Point<int> position, Widget* parent)
 }
 
 
-void Widget_MenuItem::showSubMenu()
+bool Widget_MenuItem::showSubMenu()
 {
     /*We work in screen coordinates here!*/
 
     auto parent_menu = dynamic_cast<Widget_Menu*>(parent());
     if(!parent_menu)
-        return;
+        return false;
 
     auto parent_window = parent_menu->root()->window();
     if(!parent_window)
-        return;
+        return false;
 
     Size<int> screen_size = parent_window->getScreenSize();
 
@@ -365,18 +405,28 @@ void Widget_MenuItem::showSubMenu()
         }
     }
 
-    parent_menu->setActiveItem(m_sub_menu);
-    m_sub_menu->setParentItem(this);
     m_sub_menu->show(Window::WmType::Menu, Window::Type::Image);
     m_sub_menu->window()->setPosition(sub_menu_position);
-
-    m_flags |= R64FX_MENU_ITEM_IS_SELECTED;
+    return true;
 }
 
 
-void closeAll()
+void Widget_Menu::closeAll()
 {
-    
+    if(m_active_item)
+    {
+        auto active_menu_item = dynamic_cast<Widget_MenuItem*>(m_active_item);
+        if(active_menu_item && active_menu_item->subMenu())
+        {
+            active_menu_item->subMenu()->closeAll();
+            active_menu_item->dehighlight();
+        }
+    }
+
+    if(Widget::isWindow())
+    {
+        Widget::close();
+    }
 }
 
 }//namespace r64fx
