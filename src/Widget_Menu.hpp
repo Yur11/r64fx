@@ -7,10 +7,19 @@
 namespace r64fx{
 
 class Widget_Menu : public Widget{
-    Widget_Menu*  m_parent_menu    = nullptr;
+    Widget* m_parent_item = nullptr;
+    Widget* m_active_item = nullptr;
 
 public:
     Widget_Menu(Widget* parent = nullptr);
+
+    void setParentItem(Widget* parent_item);
+
+    Widget* parentItem() const;
+
+    void setActiveItem(Widget* active_item);
+
+    Widget* activeItem() const;
 
     void addAction(Action* action);
 
@@ -19,6 +28,8 @@ public:
     void resizeAndReallign();
 
     void showAt(Point<int> position, Widget* parent);
+
+    void closeAll();
 };
 
 }//namespace r64fx

@@ -33,4 +33,6 @@
 
 #define R64FX_WIDGET_IS_HOVERED              (1 << 0x0C)
 
+#define R64FX_MENU_ITEM_IS_SELECTED          (1 << 0x0D)
+
 #endif//R64FX_WIDGET_FLAGS_HPP

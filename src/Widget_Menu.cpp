@@ -82,6 +82,11 @@ public:
     }
 
 
+    void reset()
+    {
+        m_flags &= ~R64FX_MENU_ITEM_IS_SELECTED;
+    }
+
 protected:
     virtual void updateEvent(UpdateEvent* event)
     {
@@ -92,7 +97,7 @@ protected:
         static unsigned char text_color [4] = {  0,   0,   0,  0};
 
         unsigned char* color = normal_bg;
-        if(m_flags & R64FX_WIDGET_IS_HOVERED)
+        if(m_flags & (R64FX_WIDGET_IS_HOVERED | R64FX_MENU_ITEM_IS_SELECTED ))
         {
             color = hovered_bg;
         }
@@ -110,7 +115,7 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent*)
     {
-        auto parent_menu = (Widget_Menu*) parent();
+        auto parent_menu = dynamic_cast<Widget_Menu*>(parent());
         if(m_action)
         {
             if(parent_menu && parent_menu->isWindow())
@@ -150,6 +155,30 @@ Widget_Menu::Widget_Menu(Widget* parent)
 : Widget(parent)
 {
     init_menu_font_if_needed();
+}
+
+
+void Widget_Menu::setParentItem(Widget* parent_item)
+{
+    m_parent_item = parent_item;
+}
+
+
+Widget* Widget_Menu::parentItem() const
+{
+    return m_parent_item;
+}
+
+
+void Widget_Menu::setActiveItem(Widget* active_item)
+{
+    m_active_item = active_item;
+}
+
+
+Widget* Widget_Menu::activeItem() const
+{
+    return m_active_item;
 }
 
 
@@ -336,8 +365,18 @@ void Widget_MenuItem::showSubMenu()
         }
     }
 
+    parent_menu->setActiveItem(m_sub_menu);
+    m_sub_menu->setParentItem(this);
     m_sub_menu->show(Window::WmType::Menu, Window::Type::Image);
     m_sub_menu->window()->setPosition(sub_menu_position);
+
+    m_flags |= R64FX_MENU_ITEM_IS_SELECTED;
+}
+
+
+void closeAll()
+{
+    
 }
 
 }//namespace r64fx
