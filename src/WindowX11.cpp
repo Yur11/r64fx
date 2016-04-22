@@ -367,7 +367,7 @@ void WindowX11::grabMouse()
     XGrabPointer(
         g_display,
         m_xwindow,
-        True,
+        False,
         ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
         GrabModeAsync, GrabModeAsync, None, None,
         CurrentTime
