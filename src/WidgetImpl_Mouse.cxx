@@ -56,7 +56,12 @@ bool Widget::grabsMouseOnClick() const
 }
 
 
-void Widget::initMousePressEvent(Point<int> event_position, MouseButton button, bool ignore_grabs)
+void Widget::initMousePressEvent(
+    Point<int> event_position,
+    MouseButton button,
+    bool ignore_grabs,
+    bool ignore_self
+)
 {
     g_prev_mouse_position = event_position;
 
@@ -84,12 +89,20 @@ void Widget::initMousePressEvent(Point<int> event_position, MouseButton button, 
         dst->setFocus();
     }
 
+    if(ignore_self && dst == this)
+        return;
+
     MousePressEvent event(event_position, {0, 0}, button);
     dst->mousePressEvent(&event);
 }
 
 
-void Widget::initMouseReleaseEvent(Point<int> event_position, MouseButton button, bool ignore_grabs)
+void Widget::initMouseReleaseEvent(
+    Point<int> event_position,
+    MouseButton button,
+    bool ignore_grabs,
+    bool ignore_self
+)
 {
     g_prev_mouse_position = event_position;
 
@@ -112,12 +125,19 @@ void Widget::initMouseReleaseEvent(Point<int> event_position, MouseButton button
         dst->ungrabMouse();
     }
 
+    if(ignore_self && dst == this)
+        return;
+
     MouseReleaseEvent event(event_position, {0, 0}, button);
     dst->mouseReleaseEvent(&event);
 }
 
 
-void Widget::initMouseMoveEvent(Point<int> event_position, bool ignore_grabs)
+void Widget::initMouseMoveEvent(
+    Point<int> event_position,
+    bool ignore_grabs,
+    bool ignore_self
+)
 {
     Point<int> event_delta = event_position - g_prev_mouse_position;
     g_prev_mouse_position = event_position;
@@ -133,6 +153,9 @@ void Widget::initMouseMoveEvent(Point<int> event_position, bool ignore_grabs)
         dst = leafAt(event_position, &leaf_offset);
         event_position -= leaf_offset;
     }
+
+    if(ignore_self && dst == this)
+        return;
 
     MouseMoveEvent event(event_position, event_delta, g_pressed_buttons);
     if(dst != g_moused_over_widget)

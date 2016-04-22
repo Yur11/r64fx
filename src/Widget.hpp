@@ -162,11 +162,25 @@ public:
 
     bool grabsMouseOnClick() const;
 
-    void initMousePressEvent(Point<int> event_position, MouseButton button, bool ignore_grabs = false);
+    void initMousePressEvent(
+        Point<int> event_position,
+        MouseButton button,
+        bool ignore_grabs = false,
+        bool ignore_self  = false
+    );
 
-    void initMouseReleaseEvent(Point<int> event_position, MouseButton button, bool ignore_grabs = false);
+    void initMouseReleaseEvent(
+        Point<int> event_position,
+        MouseButton button,
+        bool ignore_grabs = false,
+        bool ignore_self  = false
+    );
 
-    void initMouseMoveEvent(Point<int> event_position, bool ignore_grabs = false);
+    void initMouseMoveEvent(
+        Point<int> event_position,
+        bool ignore_grabs = false,
+        bool ignore_self  = false
+    );
 
 
 /* === Keyboard === */
