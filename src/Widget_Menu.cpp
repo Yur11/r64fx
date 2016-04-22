@@ -58,6 +58,8 @@ public:
 
         m_image = img;
         setSize({m_image->width(), m_image->height()});
+
+        sub_menu->setParentItem(this);
     }
 
 
@@ -79,6 +81,15 @@ public:
     }
 
 
+    Widget_Menu* parentMenu() const
+    {
+        if(!parent())
+            return nullptr;
+
+        return dynamic_cast<Widget_Menu*>(parent());
+    }
+
+
     void setSizeAndOffset(Size<int> size, Point<int> offset)
     {
         if(!m_image)
@@ -93,17 +104,32 @@ public:
         setSize({m_image->width(), m_image->height()});
     }
 
-
-    void highlight()
+    void activate()
     {
-        m_flags |= R64FX_MENU_ITEM_IS_SELECTED;
-        update();
-    }
+        auto parent_menu = parentMenu();
+        if(parent_menu)
+        {
+            auto root_menu = parent_menu->rootMenu();
 
-    void dehighlight()
-    {
-        m_flags &= ~R64FX_MENU_ITEM_IS_SELECTED;
-        update();
+            if(m_action)
+            {
+                root_menu->closeAll();
+                root_menu->update();
+                m_action->exec();
+            }
+            else if(m_sub_menu && showSubMenu())
+            {
+                if(parent_menu->activeItem())
+                {
+                    auto active_menu_item = dynamic_cast<Widget_MenuItem*>(parent_menu->activeItem());
+                    if(active_menu_item && active_menu_item->subMenu())
+                    {
+                        active_menu_item->subMenu()->closeAll();
+                    }
+                }
+                parent_menu->setActiveItem(this);
+            }
+        }
     }
 
 protected:
@@ -111,20 +137,28 @@ protected:
     {
         auto p = event->painter();
 
-        static unsigned char normal_bg  [4] = {127, 127, 127,  0};
-        static unsigned char hovered_bg [4] = {255, 127,  63,  0};
-        static unsigned char text_color [4] = {  0,   0,   0,  0};
+        static unsigned char grey       [4] = {127, 127, 127,  0};
+        static unsigned char orange     [4] = {255, 127,  63,  0};
+        static unsigned char blue       [4] = { 63, 127, 255,  0};
+        static unsigned char black      [4] = {  0,   0,   0,  0};
 
-        unsigned char* color = normal_bg;
-        if(m_flags & (R64FX_WIDGET_IS_HOVERED | R64FX_MENU_ITEM_IS_SELECTED ))
+        unsigned char* color = grey;
+
+        auto parent_menu = parentMenu();
+
+        if(m_flags & R64FX_WIDGET_IS_HOVERED)
         {
-            color = hovered_bg;
+            color = orange;
+        }
+        else if(parent_menu->activeItem() == this)
+        {
+            color = blue;
         }
 
         p->fillRect({{0, 0}, size()}, color);
         if(m_image)
         {
-            unsigned char* colors = (unsigned char*)&text_color;
+            unsigned char* colors = (unsigned char*)&black;
             p->blendColors({0, 0}, &colors, m_image);
         }
 
@@ -134,27 +168,17 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent*)
     {
-        auto parent_menu = dynamic_cast<Widget_Menu*>(parent());
-        if(m_action)
-        {
-            if(parent_menu && parent_menu->isWindow())
-            {
-                parent_menu->window()->ungrabMouse();
-                parent_menu->closeAll();
-            }
-            parent_menu->rootMenu()->closeAll();
-            m_action->exec();
-        }
-        else if(m_sub_menu && showSubMenu())
-        {
-            m_sub_menu->setParentItem(this);
-            parent_menu->setActiveItem(this);
-        }
+        activate();
     }
 
 
     virtual void mouseEnterEvent()
     {
+        auto parent_menu = parentMenu();
+        if(parent_menu->activeItem())
+        {
+            activate();
+        }
         update();
     }
 
@@ -333,7 +357,7 @@ bool Widget_MenuItem::showSubMenu()
 {
     /*We work in screen coordinates here!*/
 
-    auto parent_menu = dynamic_cast<Widget_Menu*>(parent());
+    auto parent_menu = parentMenu();
     if(!parent_menu)
         return false;
 
@@ -419,9 +443,10 @@ void Widget_Menu::closeAll()
         if(active_menu_item && active_menu_item->subMenu())
         {
             active_menu_item->subMenu()->closeAll();
-            active_menu_item->dehighlight();
         }
     }
+
+    setActiveItem(nullptr);
 
     if(Widget::isWindow())
     {

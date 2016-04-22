@@ -147,16 +147,6 @@ public:
             auto yesterday_action = new YesterdayAction("Yesterday");
             auto tommorow_action = new TommorowAction("Tommorow");
 
-            auto sub_menu = new Widget_Menu;
-            sub_menu->setOrientation(Orientation::Vertical);
-            sub_menu->addAction(hello_action);
-            sub_menu->addAction(doctor_action);
-            sub_menu->addAction(name_action);
-            sub_menu->addAction(continue_action);
-            sub_menu->addAction(yesterday_action);
-            sub_menu->addAction(tommorow_action);
-            sub_menu->resizeAndReallign();
-
             m_menu = new Widget_Menu;
             m_menu->setOrientation(Orientation::Vertical);
             m_menu->resizeAndReallign();
@@ -166,7 +156,20 @@ public:
             m_menu->addAction(continue_action);
             m_menu->addAction(yesterday_action);
             m_menu->addAction(tommorow_action);
-            m_menu->addSubMenu(sub_menu, "More...");
+            for(int i=0; i<5; i++)
+            {
+                auto sub_menu = new Widget_Menu;
+                sub_menu->setOrientation(Orientation::Vertical);
+                sub_menu->addAction(hello_action);
+                sub_menu->addAction(doctor_action);
+                sub_menu->addAction(name_action);
+                sub_menu->addAction(continue_action);
+                sub_menu->addAction(yesterday_action);
+                sub_menu->addAction(tommorow_action);
+                sub_menu->resizeAndReallign();
+
+                m_menu->addSubMenu(sub_menu, "More...");
+            }
             m_menu->resizeAndReallign();
 
             m_main_menu = new Widget_Menu(this);

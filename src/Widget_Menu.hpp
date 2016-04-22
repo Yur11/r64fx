@@ -13,6 +13,7 @@ class Widget_Menu : public Widget{
 public:
     Widget_Menu(Widget* parent = nullptr);
 
+
     void setParentItem(Widget* parent_item);
 
     Widget* parentItem() const;
@@ -23,12 +24,14 @@ public:
 
     Widget_Menu* rootMenu();
 
+
     void addAction(Action* action);
 
     void addSubMenu(Widget_Menu* menu, const std::string &caption);
 
     void resizeAndReallign();
 
+    
     void showAt(Point<int> position, Widget* parent);
 
     void closeAll();
