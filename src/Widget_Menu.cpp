@@ -391,13 +391,6 @@ void Widget_Menu::closeAll()
 
     setActiveItem(nullptr);
 
-    auto root_widget = root();
-    if(root_widget->window())
-    {
-        root_widget->window()->ungrabMouse();
-        ungrabMouse();
-    }
-
     if(isWindow())
     {
         close();
@@ -418,7 +411,7 @@ void Widget_MenuItem::activate()
             root_menu->update();
             m_action->exec();
         }
-        else if(m_sub_menu && showSubMenu())
+        else if(m_sub_menu && showSubMenu() && parent_menu->activeItem() != this)
         {
             if(parent_menu->activeItem())
             {
@@ -430,6 +423,16 @@ void Widget_MenuItem::activate()
             }
             parent_menu->setActiveItem(this);
             parent_menu->update();
+
+            if(!parent_menu->isWindow())
+            {
+                auto window = parent_menu->root()->window();
+                if(window)
+                {
+                    parent_menu->grabMouse();
+                    window->grabMouse();
+                }
+            }
         }
     }
 }
@@ -487,10 +490,13 @@ void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
 void Widget_MenuItem::mouseEnterEvent()
 {
     auto parent_menu = parentMenu();
-//     if(parent_menu->activeItem())
-//     {
-//         activate();
-//     }
+    if(!parent_menu)
+        return;
+
+    if(subMenu() && (parent_menu->isWindow() || parent_menu->activeItem()))
+    {
+        activate();
+    }
     update();
 }
 
@@ -502,6 +508,31 @@ void Widget_MenuItem::mouseLeaveEvent()
 
 
 namespace{
+    bool get_menu_window_and_screen_position(Widget_Menu* menu, Window** window, Point<int> *screen_pos)
+    {
+        Widget* root = nullptr;
+        auto menu_root_pos = menu->toRootCoords(Point<int>(0, 0), &root);
+        if(!root)
+            return false;
+
+        auto menu_window = root->window();
+        if(!menu_window)
+            return false;
+
+        if(window)
+        {
+            window[0] = menu_window;
+        }
+
+        if(screen_pos)
+        {
+            screen_pos[0] = menu_root_pos + menu_window->position();
+        }
+
+        return true;
+    }
+
+
     Widget_Menu* next_open_menu(Widget_Menu* menu)
     {
         if(!menu->activeItem())
@@ -520,16 +551,9 @@ namespace{
         auto menu = first;
         while(menu)
         {
-            Widget* root = nullptr;
-            auto menu_root_pos = menu->toRootCoords(Point<int>(0, 0), &root);
-            if(!root)
+            Point<int> menu_screen_pos;
+            if(!get_menu_window_and_screen_position(menu, nullptr, &menu_screen_pos))
                 return nullptr;
-
-            auto menu_window = root->window();
-            if(!menu_window)
-                return nullptr;
-
-            auto menu_screen_pos = menu_root_pos + menu_window->position();
 
             if(Rect<int>(menu_screen_pos, menu->size()).overlaps(screen_pos))
             {
@@ -545,29 +569,37 @@ namespace{
     }
 
 
-    Widget_Menu* menu_at_widget_coords(Point<int> local_pos, Widget_Menu* first)
+    Widget_Menu* menu_at_widget_coords(Point<int> event_pos, Widget_Menu* first, Point<int>* new_event_pos)
     {
-        Widget* root = nullptr;
-        auto root_pos = first->toRootCoords(local_pos, &root);
-        if(!root)
+        Point<int> menu_screen_pos;
+        if(!get_menu_window_and_screen_position(first, nullptr, &menu_screen_pos))
             return nullptr;
 
-        if(!root->window())
-            return nullptr;
+        auto event_screen_pos = event_pos + menu_screen_pos;
 
-        auto screen_pos = root_pos + root->window()->position();
-        return menu_at(screen_pos, first);
+        auto dst_menu = menu_at(event_screen_pos, first);
+        if(dst_menu && new_event_pos)
+        {
+            Point<int> dst_menu_screen_pos;
+            if(!get_menu_window_and_screen_position(dst_menu, nullptr, &dst_menu_screen_pos))
+                return nullptr;
+
+            new_event_pos[0] = event_screen_pos - dst_menu_screen_pos;
+        }
+        
+        return dst_menu;
     }
 }//namespace
 
 
 void Widget_Menu::mousePressEvent(MousePressEvent* event)
 {
-    auto dst = menu_at_widget_coords(event->position(), this);
+    Point<int> new_event_pos;
+    auto dst = menu_at_widget_coords(event->position(), this, &new_event_pos);
     if(dst)
     {
         dst->initMousePressEvent(
-            event->position(),
+            new_event_pos,
             event->button(),
             true, true
         );
@@ -581,11 +613,12 @@ void Widget_Menu::mousePressEvent(MousePressEvent* event)
 
 void Widget_Menu::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    auto dst = menu_at_widget_coords(event->position(), this);
+    Point<int> new_event_pos;
+    auto dst = menu_at_widget_coords(event->position(), this, &new_event_pos);
     if(dst)
     {
         dst->initMouseReleaseEvent(
-            event->position(),
+            new_event_pos,
             event->button(),
             true, true
         );
@@ -595,11 +628,12 @@ void Widget_Menu::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget_Menu::mouseMoveEvent(MouseMoveEvent* event)
 {
-    auto dst = menu_at_widget_coords(event->position(), this);
+    Point<int> new_event_pos;
+    auto dst = menu_at_widget_coords(event->position(), this, &new_event_pos);
     if(dst)
     {
         dst->initMouseMoveEvent(
-            event->position(),
+            new_event_pos,
             event->delta(),
             event->button(),
             true, true
