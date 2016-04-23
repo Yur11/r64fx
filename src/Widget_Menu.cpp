@@ -587,6 +587,8 @@ void Widget_Menu::mouseMoveEvent(MouseMoveEvent* event)
     {
         dst->initMouseMoveEvent(
             event->position(),
+            event->delta(),
+            event->button(),
             true, true
         );
     }

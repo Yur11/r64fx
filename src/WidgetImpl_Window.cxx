@@ -47,13 +47,19 @@ class WindowEvents_Widget : public WindowEvents{
 
     virtual void mousePressEvent(Window* window, int x, int y, unsigned int button)
     {
+        g_pressed_buttons |= MouseButton(button);
+
         auto d = (WindowWidgetData*) window->data();
         d->widget->initMousePressEvent(Point<int>(x, y), MouseButton(button));
+
+        g_prev_mouse_position = Point<int>(x, y);
     }
 
 
     virtual void mouseReleaseEvent(Window* window, int x, int y, unsigned int button)
     {
+        g_pressed_buttons &= ~MouseButton(button);
+
         auto d = (WindowWidgetData*) window->data();
         d->widget->initMouseReleaseEvent(Point<int>(x, y), MouseButton(button));
     }
@@ -61,8 +67,13 @@ class WindowEvents_Widget : public WindowEvents{
 
     virtual void mouseMoveEvent(Window* window, int x, int y)
     {
+        Point<int> position(x, y);
+        Point<int> delta = position - g_prev_mouse_position;
+
         auto d = (WindowWidgetData*) window->data();
-        d->widget->initMouseMoveEvent(Point<int>(x, y));
+        d->widget->initMouseMoveEvent(position, delta, g_pressed_buttons);
+
+        g_prev_mouse_position = position;
     }
 
 

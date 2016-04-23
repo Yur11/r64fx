@@ -180,6 +180,8 @@ public:
 
     void initMouseMoveEvent(
         Point<int> event_position,
+        Point<int> event_delta,
+        MouseButton pressed_buttons,
         bool ignore_grabs = false,
         bool ignore_self  = false
     );

@@ -2,6 +2,8 @@
 
 namespace r64fx{
 
+namespace{
+
 Point<int> g_prev_mouse_position = {0, 0};
 
 MouseButton g_pressed_buttons = MouseButton::None();
@@ -11,6 +13,8 @@ Widget* g_moused_over_widget = nullptr;
 
 /* Widget that currently grabs mouse input. */
 Widget* g_mouse_grabber   = nullptr;
+
+}//namespace
 
 
 void Widget::grabMouse()
@@ -76,9 +80,9 @@ void Widget::initMousePressEvent(
     bool ignore_self
 )
 {
-    g_prev_mouse_position = event_position;
+//     g_prev_mouse_position = event_position;
 
-    g_pressed_buttons |= button;
+//     g_pressed_buttons |= button;
 
     auto dst = mouseGrabber();
     if(dst && !ignore_grabs)
@@ -117,9 +121,9 @@ void Widget::initMouseReleaseEvent(
     bool ignore_self
 )
 {
-    g_prev_mouse_position = event_position;
+//     g_prev_mouse_position = event_position;
 
-    g_pressed_buttons &= ~button;
+//     g_pressed_buttons &= ~button;
 
     auto dst = mouseGrabber();
     if(dst && !ignore_grabs)
@@ -148,12 +152,14 @@ void Widget::initMouseReleaseEvent(
 
 void Widget::initMouseMoveEvent(
     Point<int> event_position,
+    Point<int> event_delta,
+    MouseButton pressed_buttons,
     bool ignore_grabs,
     bool ignore_self
 )
 {
-    Point<int> event_delta = event_position - g_prev_mouse_position;
-    g_prev_mouse_position = event_position;
+//     Point<int> event_delta = event_position - g_prev_mouse_position;
+//     g_prev_mouse_position = event_position;
 
     auto dst = Widget::mouseGrabber();
     if(dst && !ignore_grabs)
@@ -170,7 +176,7 @@ void Widget::initMouseMoveEvent(
     if(ignore_self && dst == this)
         return;
 
-    MouseMoveEvent event(event_position, event_delta, g_pressed_buttons);
+    MouseMoveEvent event(event_position, event_delta, pressed_buttons);
     if(dst != g_moused_over_widget)
     {
         if(g_moused_over_widget)
