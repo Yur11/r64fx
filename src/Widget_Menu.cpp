@@ -39,6 +39,8 @@ public:
     : Widget(parent)
     , m_action(action)
     {
+        grabsMouseOnClick(false);
+
         auto img = createCaptionImage(action->caption());
         if(!img)
             return;
@@ -52,6 +54,8 @@ public:
     : Widget(parent)
     , m_sub_menu(sub_menu)
     {
+        grabsMouseOnClick(false);
+
         auto img = createCaptionImage(caption);
         if(!img)
             return;
@@ -133,61 +137,13 @@ public:
     }
 
 protected:
-    virtual void updateEvent(UpdateEvent* event)
-    {
-        auto p = event->painter();
+    virtual void updateEvent(UpdateEvent* event);
 
-        static unsigned char grey       [4] = {127, 127, 127,  0};
-        static unsigned char orange     [4] = {255, 127,  63,  0};
-        static unsigned char blue       [4] = { 63, 127, 255,  0};
-        static unsigned char black      [4] = {  0,   0,   0,  0};
+    virtual void mousePressEvent(MousePressEvent*);
 
-        unsigned char* color = grey;
+    virtual void mouseEnterEvent();
 
-        auto parent_menu = parentMenu();
-
-        if(m_flags & R64FX_WIDGET_IS_HOVERED)
-        {
-            color = orange;
-        }
-        else if(parent_menu->activeItem() == this)
-        {
-            color = blue;
-        }
-
-        p->fillRect({{0, 0}, size()}, color);
-        if(m_image)
-        {
-            unsigned char* colors = (unsigned char*)&black;
-            p->blendColors({0, 0}, &colors, m_image);
-        }
-
-        Widget::updateEvent(event);
-    }
-
-
-    virtual void mousePressEvent(MousePressEvent*)
-    {
-        activate();
-    }
-
-
-    virtual void mouseEnterEvent()
-    {
-        auto parent_menu = parentMenu();
-        if(parent_menu->activeItem())
-        {
-            activate();
-        }
-        update();
-    }
-
-
-    virtual void mouseLeaveEvent()
-    {
-        update();
-    }
-
+    virtual void mouseLeaveEvent();
 
 private:
     bool showSubMenu();
@@ -199,6 +155,7 @@ private:
 Widget_Menu::Widget_Menu(Widget* parent)
 : Widget(parent)
 {
+    grabsMouseOnClick(false);
     init_menu_font_if_needed();
 }
 
@@ -349,6 +306,7 @@ void Widget_Menu::showAt(Point<int> position, Widget* parent)
         show(Window::WmType::Menu, Window::Type::Image, parent_window);
         Widget::window()->setPosition(menu_position);
         Widget::window()->grabMouse();
+        Widget::grabMouse();
     }
 }
 
@@ -452,6 +410,80 @@ void Widget_Menu::closeAll()
     {
         Widget::close();
     }
+}
+
+
+void Widget_MenuItem::updateEvent(UpdateEvent* event)
+{
+    auto p = event->painter();
+
+    static unsigned char grey       [4] = {127, 127, 127,  0};
+    static unsigned char orange     [4] = {255, 127,  63,  0};
+    static unsigned char blue       [4] = { 63, 127, 255,  0};
+    static unsigned char black      [4] = {  0,   0,   0,  0};
+
+    unsigned char* color = grey;
+
+    auto parent_menu = parentMenu();
+
+    if(m_flags & R64FX_WIDGET_IS_HOVERED)
+    {
+        color = orange;
+    }
+    else if(parent_menu->activeItem() == this)
+    {
+        color = blue;
+    }
+
+    p->fillRect({{0, 0}, size()}, color);
+    if(m_image)
+    {
+        unsigned char* colors = (unsigned char*)&black;
+        p->blendColors({0, 0}, &colors, m_image);
+    }
+
+    Widget::updateEvent(event);
+}
+
+
+void Widget_Menu::mousePressEvent(MousePressEvent* event)
+{
+    cout << "Widget_Menu: " << event->position() << "\n";
+}
+
+
+void Widget_MenuItem::mousePressEvent(MousePressEvent*)
+{
+    activate();
+}
+
+
+void Widget_Menu::mouseReleaseEvent(MouseReleaseEvent* event)
+{
+
+}
+
+
+void Widget_Menu::mouseMoveEvent(MouseMoveEvent* event)
+{
+
+}
+
+
+void Widget_MenuItem::mouseEnterEvent()
+{
+    auto parent_menu = parentMenu();
+    if(parent_menu->activeItem())
+    {
+        activate();
+    }
+    update();
+}
+
+
+void Widget_MenuItem::mouseLeaveEvent()
+{
+    update();
 }
 
 }//namespace r64fx

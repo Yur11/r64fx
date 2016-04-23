@@ -35,6 +35,15 @@ public:
     void showAt(Point<int> position, Widget* parent);
 
     void closeAll();
+
+
+protected:
+    virtual void mousePressEvent(MousePressEvent* event);
+
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
+
+    virtual void mouseMoveEvent(MouseMoveEvent* event);
+
 };
 
 }//namespace r64fx

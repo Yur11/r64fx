@@ -33,7 +33,7 @@ Widget* Widget::mouseGrabber()
 
 bool Widget::isMouseGrabber() const
 {
-    return this == g_mouse_grabber;
+    return (this == g_mouse_grabber);
 }
 
 
@@ -122,7 +122,7 @@ void Widget::initMouseReleaseEvent(
 
     if(!ignore_grabs && dst->grabsMouseOnClick())
     {
-        dst->ungrabMouse();
+        ungrabMouse();
     }
 
     if(ignore_self && dst == this)
