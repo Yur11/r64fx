@@ -213,7 +213,7 @@ Point<int> Widget::toRootCoords(Point<int> point, Widget** root)
     auto widget = this;
     for(;;)
     {
-        point += position();
+        point += widget->position();
         if(widget->parent())
         {
             auto scroll_area = dynamic_cast<const Widget_ScrollArea*>(widget->parent());
