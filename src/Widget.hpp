@@ -104,8 +104,6 @@ public:
 
     Point<int> toRootCoords(Point<int> point) const;
 
-    Rect<int> toRootCoords(Rect<int> rect) const;
-
     bool isVisible() const;
 
 

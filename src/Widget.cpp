@@ -227,20 +227,6 @@ Point<int> Widget::toRootCoords(Point<int> point) const
 }
 
 
-Rect<int> Widget::toRootCoords(Rect<int> rect) const
-{
-    rect += position();
-    if(isWindow() || m_parent.widget == nullptr)
-    {
-        return rect;
-    }
-    else
-    {
-        return m_parent.widget->toRootCoords(rect);
-    }
-}
-
-
 bool Widget::isVisible() const
 {
     return m_flags & R64FX_WIDGET_IS_VISIBLE;
@@ -415,10 +401,10 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
     }
 
     Point<int> view_offset = {0, 0};
-    auto scroll_area_self = dynamic_cast<Widget_ScrollArea*>(this);//We may have offsets.
-    if(scroll_area_self)
+    auto scroll_area = dynamic_cast<Widget_ScrollArea*>(this);//We may have offsets.
+    if(scroll_area)
     {
-        view_offset = scroll_area_self->offset();
+        view_offset = scroll_area->offset();
     }
 
     /* Recursively process children. */
@@ -433,12 +419,13 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
             );
 
             Rect<int> clip_rect;
-            if(scroll_area_self)//?
+            if(scroll_area)
             {
                 clip_rect = d->painter->clipRect();
-                d->painter->setClipRect(toRootCoords({
-                    0, 0, width(), height()
-                }));
+                d->painter->setClipRect(Rect<int>(
+                    toRootCoords(Point<int>(0, 0)),
+                    size()
+                ));
             }
 
             auto visible_rect = intersection(child->rect(), parent_visible_rect);
@@ -453,7 +440,7 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
                 child->updateChildren((UpdateEvent*)d);
             }
 
-            if(scroll_area_self)//?
+            if(scroll_area)
             {
                 d->painter->setClipRect(clip_rect);
             }
