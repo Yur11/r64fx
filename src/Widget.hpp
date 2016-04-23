@@ -162,6 +162,10 @@ public:
 
     bool grabsMouseOnClick() const;
 
+    bool ungrabsMouseOnRelease(bool yes);
+
+    bool ungrabsMouseOnRelease() const;
+
     void initMousePressEvent(
         Point<int> event_position,
         MouseButton button,

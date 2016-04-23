@@ -35,6 +35,7 @@ Widget::Widget(Widget* parent)
     setParent(parent);
     getsFocusOnClick(true);
     grabsMouseOnClick(true);
+    ungrabsMouseOnRelease(true);
 }
 
 

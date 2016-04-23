@@ -40,6 +40,7 @@ public:
     , m_action(action)
     {
         grabsMouseOnClick(false);
+        ungrabsMouseOnRelease(false);
 
         auto img = createCaptionImage(action->caption());
         if(!img)
@@ -55,6 +56,7 @@ public:
     , m_sub_menu(sub_menu)
     {
         grabsMouseOnClick(false);
+        ungrabsMouseOnRelease(false);
 
         auto img = createCaptionImage(caption);
         if(!img)
@@ -155,7 +157,8 @@ private:
 Widget_Menu::Widget_Menu(Widget* parent)
 : Widget(parent)
 {
-    grabsMouseOnClick(false);
+    grabsMouseOnClick(true);
+    ungrabsMouseOnRelease(false);
     init_menu_font_if_needed();
 }
 

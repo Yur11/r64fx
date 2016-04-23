@@ -56,6 +56,19 @@ bool Widget::grabsMouseOnClick() const
 }
 
 
+bool Widget::ungrabsMouseOnRelease(bool yes)
+{
+    set_bits(m_flags, yes, R64FX_WIDGET_UNGRABS_MOUSE_ON_RELEASE);
+    return yes;
+}
+
+
+bool Widget::ungrabsMouseOnRelease() const
+{
+    return m_flags & R64FX_WIDGET_UNGRABS_MOUSE_ON_RELEASE;
+}
+
+
 void Widget::initMousePressEvent(
     Point<int> event_position,
     MouseButton button,
@@ -120,7 +133,7 @@ void Widget::initMouseReleaseEvent(
         event_position -= leaf_offset;
     }
 
-    if(!ignore_grabs && dst->grabsMouseOnClick())
+    if(!ignore_grabs && dst->ungrabsMouseOnRelease())
     {
         ungrabMouse();
     }
