@@ -102,7 +102,7 @@ public:
 
     Rect<int> rect() const;
 
-    Point<int> toRootCoords(Point<int> point) const;
+    Point<int> toRootCoords(Point<int> point, Widget** root = nullptr);
 
     bool isVisible() const;
 

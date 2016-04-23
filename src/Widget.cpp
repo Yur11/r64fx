@@ -208,22 +208,34 @@ Rect<int> Widget::rect() const
 }
 
 
-Point<int> Widget::toRootCoords(Point<int> point) const
+Point<int> Widget::toRootCoords(Point<int> point, Widget** root)
 {
-    point += position();
-    if(isWindow() || m_parent.widget == nullptr)
+    auto widget = this;
+    for(;;)
     {
-        return point;
-    }
-    else
-    {
-        auto view = dynamic_cast<const Widget_ScrollArea*>(m_parent.widget);
-        if(view)
+        point += position();
+        if(widget->parent())
         {
-            point += view->offset();
+            auto scroll_area = dynamic_cast<const Widget_ScrollArea*>(widget->parent());
+            if(scroll_area)
+            {
+                point += scroll_area->offset();
+            }
+            widget = widget->parent();
+            continue;
         }
-        return m_parent.widget->toRootCoords(point);
+        else
+        {
+            break;
+        }
     }
+
+    if(root)
+    {
+        root[0] = widget;
+    }
+
+    return point;
 }
 
 
