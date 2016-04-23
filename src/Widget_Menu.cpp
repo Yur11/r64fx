@@ -11,8 +11,6 @@ using namespace std;
 
 namespace r64fx{
 
-namespace{
-
 Font* g_menu_font = nullptr;
 
 void init_menu_font_if_needed()
@@ -75,68 +73,15 @@ public:
     }
 
 
-    Action* action() const
-    {
-        return m_action;
-    }
+    Action* action() const;
 
+    Widget_Menu* subMenu() const;
 
-    Widget_Menu* subMenu() const
-    {
-        return m_sub_menu;
-    }
+    Widget_Menu* parentMenu() const;
 
+    void setSizeAndOffset(Size<int> size, Point<int> offset);
 
-    Widget_Menu* parentMenu() const
-    {
-        if(!parent())
-            return nullptr;
-
-        return dynamic_cast<Widget_Menu*>(parent());
-    }
-
-
-    void setSizeAndOffset(Size<int> size, Point<int> offset)
-    {
-        if(!m_image)
-            return;
-
-        auto new_image = new Image(size.width(), size.height(), m_image->componentCount());
-        fill(new_image, (unsigned char)0);
-        implant(new_image, offset, m_image);
-        delete m_image;
-        m_image = new_image;
-
-        setSize({m_image->width(), m_image->height()});
-    }
-
-    void activate()
-    {
-        auto parent_menu = parentMenu();
-        if(parent_menu)
-        {
-            auto root_menu = parent_menu->rootMenu();
-
-            if(m_action)
-            {
-                root_menu->closeAll();
-                root_menu->update();
-                m_action->exec();
-            }
-            else if(m_sub_menu && showSubMenu())
-            {
-                if(parent_menu->activeItem())
-                {
-                    auto active_menu_item = dynamic_cast<Widget_MenuItem*>(parent_menu->activeItem());
-                    if(active_menu_item && active_menu_item->subMenu())
-                    {
-                        active_menu_item->subMenu()->closeAll();
-                    }
-                }
-                parent_menu->setActiveItem(this);
-            }
-        }
-    }
+    void activate();
 
 protected:
     virtual void updateEvent(UpdateEvent* event);
@@ -151,7 +96,66 @@ private:
     bool showSubMenu();
 };
 
-}//namespace
+
+Widget_Menu* next_open_menu(Widget_Menu* menu)
+{
+    if(!menu->activeItem())
+        return nullptr;
+
+    auto menu_item = dynamic_cast<Widget_MenuItem*>(menu->activeItem());
+    if(!menu_item)
+        return nullptr;
+
+    return menu_item->subMenu();
+}
+
+
+Action* Widget_MenuItem::action() const
+{
+    return m_action;
+}
+
+
+Widget_Menu* Widget_MenuItem::subMenu() const
+{
+    return m_sub_menu;
+}
+
+
+Widget_Menu* Widget_MenuItem::parentMenu() const
+{
+    if(!parent())
+        return nullptr;
+
+    return dynamic_cast<Widget_Menu*>(parent());
+}
+
+
+void Widget_MenuItem::setSizeAndOffset(Size<int> size, Point<int> offset)
+{
+    if(!m_image)
+        return;
+
+    auto new_image = new Image(size.width(), size.height(), m_image->componentCount());
+    fill(new_image, (unsigned char)0);
+    implant(new_image, offset, m_image);
+    delete m_image;
+    m_image = new_image;
+
+    setSize({m_image->width(), m_image->height()});
+}
+
+
+Widget_Menu* menu_at(Point<int> screen_pos, Widget_Menu* first)
+{
+    auto menu = first;
+    while(menu)
+    {
+
+    }
+
+    return nullptr;
+}
 
 
 Widget_Menu::Widget_Menu(Widget* parent)
@@ -393,6 +397,35 @@ bool Widget_MenuItem::showSubMenu()
     m_sub_menu->show(Window::WmType::Menu, Window::Type::Image);
     m_sub_menu->window()->setPosition(sub_menu_position);
     return true;
+}
+
+
+void Widget_MenuItem::activate()
+{
+    auto parent_menu = parentMenu();
+    if(parent_menu)
+    {
+        auto root_menu = parent_menu->rootMenu();
+
+        if(m_action)
+        {
+            root_menu->closeAll();
+            root_menu->update();
+            m_action->exec();
+        }
+        else if(m_sub_menu && showSubMenu())
+        {
+            if(parent_menu->activeItem())
+            {
+                auto active_menu_item = dynamic_cast<Widget_MenuItem*>(parent_menu->activeItem());
+                if(active_menu_item && active_menu_item->subMenu())
+                {
+                    active_menu_item->subMenu()->closeAll();
+                }
+            }
+            parent_menu->setActiveItem(this);
+        }
+    }
 }
 
 
