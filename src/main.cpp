@@ -238,6 +238,8 @@ public:
     {
         if(event->button() & MouseButton::Left())
         {
+            cout << "Mouse Move: " << event->position() << "\n";
+
             setOffset(offset() + event->delta());
             update();
         }

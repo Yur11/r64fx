@@ -97,19 +97,6 @@ private:
 };
 
 
-Widget_Menu* next_open_menu(Widget_Menu* menu)
-{
-    if(!menu->activeItem())
-        return nullptr;
-
-    auto menu_item = dynamic_cast<Widget_MenuItem*>(menu->activeItem());
-    if(!menu_item)
-        return nullptr;
-
-    return menu_item->subMenu();
-}
-
-
 Action* Widget_MenuItem::action() const
 {
     return m_action;
@@ -143,18 +130,6 @@ void Widget_MenuItem::setSizeAndOffset(Size<int> size, Point<int> offset)
     m_image = new_image;
 
     setSize({m_image->width(), m_image->height()});
-}
-
-
-Widget_Menu* menu_at(Point<int> screen_pos, Widget_Menu* first)
-{
-    auto menu = first;
-    while(menu)
-    {
-
-    }
-
-    return nullptr;
 }
 
 
@@ -400,6 +375,34 @@ bool Widget_MenuItem::showSubMenu()
 }
 
 
+void Widget_Menu::closeAll()
+{
+    if(m_active_item)
+    {
+        auto active_menu_item = dynamic_cast<Widget_MenuItem*>(m_active_item);
+        if(active_menu_item && active_menu_item->subMenu())
+        {
+            active_menu_item->subMenu()->closeAll();
+        }
+    }
+
+    setActiveItem(nullptr);
+
+    ungrabMouse();
+
+    auto root_widget = root();
+    if(root_widget->window())
+    {
+        root_widget->window()->ungrabMouse();
+    }
+
+    if(isWindow())
+    {
+        close();
+    }
+}
+
+
 void Widget_MenuItem::activate()
 {
     auto parent_menu = parentMenu();
@@ -425,26 +428,6 @@ void Widget_MenuItem::activate()
             }
             parent_menu->setActiveItem(this);
         }
-    }
-}
-
-
-void Widget_Menu::closeAll()
-{
-    if(m_active_item)
-    {
-        auto active_menu_item = dynamic_cast<Widget_MenuItem*>(m_active_item);
-        if(active_menu_item && active_menu_item->subMenu())
-        {
-            active_menu_item->subMenu()->closeAll();
-        }
-    }
-
-    setActiveItem(nullptr);
-
-    if(Widget::isWindow())
-    {
-        Widget::close();
     }
 }
 
@@ -482,37 +465,19 @@ void Widget_MenuItem::updateEvent(UpdateEvent* event)
 }
 
 
-void Widget_Menu::mousePressEvent(MousePressEvent* event)
-{
-    cout << "Widget_Menu: " << event->position() << "\n";
-}
-
-
 void Widget_MenuItem::mousePressEvent(MousePressEvent*)
 {
     activate();
 }
 
 
-void Widget_Menu::mouseReleaseEvent(MouseReleaseEvent* event)
-{
-
-}
-
-
-void Widget_Menu::mouseMoveEvent(MouseMoveEvent* event)
-{
-
-}
-
-
 void Widget_MenuItem::mouseEnterEvent()
 {
     auto parent_menu = parentMenu();
-    if(parent_menu->activeItem())
-    {
-        activate();
-    }
+//     if(parent_menu->activeItem())
+//     {
+//         activate();
+//     }
     update();
 }
 
@@ -520,6 +485,111 @@ void Widget_MenuItem::mouseEnterEvent()
 void Widget_MenuItem::mouseLeaveEvent()
 {
     update();
+}
+
+
+namespace{
+    Widget_Menu* next_open_menu(Widget_Menu* menu)
+    {
+        if(!menu->activeItem())
+            return nullptr;
+
+        auto menu_item = dynamic_cast<Widget_MenuItem*>(menu->activeItem());
+        if(!menu_item)
+            return nullptr;
+
+        return menu_item->subMenu();
+    }
+
+
+    Widget_Menu* menu_at(Point<int> screen_pos, Widget_Menu* first)
+    {
+        auto menu = first;
+        while(menu)
+        {
+            Widget* root = nullptr;
+            auto menu_root_pos = menu->toRootCoords(Point<int>(0, 0), &root);
+            if(!root)
+                return nullptr;
+
+            auto menu_window = root->window();
+            if(!menu_window)
+                return nullptr;
+
+            auto menu_screen_pos = menu_root_pos + menu_window->position();
+
+            if(Rect<int>(menu_screen_pos, menu->size()).overlaps(screen_pos))
+            {
+                return menu;
+            }
+            else
+            {
+                menu = next_open_menu(menu);
+            }
+        }
+
+        return nullptr;
+    }
+
+
+    Widget_Menu* menu_at_widget_coords(Point<int> local_pos, Widget_Menu* first)
+    {
+        Widget* root = nullptr;
+        auto root_pos = first->toRootCoords(local_pos, &root);
+        if(!root)
+            return nullptr;
+
+        if(!root->window())
+            return nullptr;
+
+        auto screen_pos = root_pos + root->window()->position();
+        return menu_at(screen_pos, first);
+    }
+}//namespace
+
+
+void Widget_Menu::mousePressEvent(MousePressEvent* event)
+{
+    auto dst = menu_at_widget_coords(event->position(), this);
+    if(dst)
+    {
+        dst->initMousePressEvent(
+            event->position(),
+            event->button(),
+            true, true
+        );
+    }
+    else
+    {
+        closeAll();
+    }
+}
+
+
+void Widget_Menu::mouseReleaseEvent(MouseReleaseEvent* event)
+{
+    auto dst = menu_at_widget_coords(event->position(), this);
+    if(dst)
+    {
+        dst->initMouseReleaseEvent(
+            event->position(),
+            event->button(),
+            true, true
+        );
+    }
+}
+
+
+void Widget_Menu::mouseMoveEvent(MouseMoveEvent* event)
+{
+    auto dst = menu_at_widget_coords(event->position(), this);
+    if(dst)
+    {
+        dst->initMouseMoveEvent(
+            event->position(),
+            true, true
+        );
+    }
 }
 
 }//namespace r64fx
