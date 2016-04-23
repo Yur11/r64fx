@@ -236,7 +236,7 @@ public:
 
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
-        if(event->button() & MouseButton::Left())
+        if(isMouseGrabber() && event->button() & MouseButton::Left())
         {
             cout << "Mouse Move: " << event->position() << "\n";
 

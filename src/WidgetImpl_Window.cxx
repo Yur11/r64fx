@@ -47,6 +47,8 @@ class WindowEvents_Widget : public WindowEvents{
 
     virtual void mousePressEvent(Window* window, int x, int y, unsigned int button)
     {
+        cout << "press: " << button << "\n";
+
         g_pressed_buttons |= MouseButton(button);
 
         auto d = (WindowWidgetData*) window->data();
@@ -58,6 +60,8 @@ class WindowEvents_Widget : public WindowEvents{
 
     virtual void mouseReleaseEvent(Window* window, int x, int y, unsigned int button)
     {
+        cout << "release: " << button << "\n\n";
+
         g_pressed_buttons &= ~MouseButton(button);
 
         auto d = (WindowWidgetData*) window->data();

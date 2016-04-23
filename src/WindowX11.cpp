@@ -368,7 +368,8 @@ void WindowX11::grabMouse()
         g_display,
         m_xwindow,
         False,
-        ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+        ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
+        EnterWindowMask | LeaveWindowMask,
         GrabModeAsync, GrabModeAsync, None, None,
         CurrentTime
     );
@@ -616,7 +617,7 @@ void WindowX11::setupEvents()
     XSelectInput(
         g_display, m_xwindow,
         KeyPressMask | KeyReleaseMask |
-                                        ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
+        ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
         EnterWindowMask | LeaveWindowMask |
         StructureNotifyMask
     );

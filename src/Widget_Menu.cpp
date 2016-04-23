@@ -26,6 +26,7 @@ class Widget_MenuItem : public Widget{
     Image*        m_image     = nullptr;
     Action*       m_action    = nullptr;
     Widget_Menu*  m_sub_menu  = nullptr;
+    bool          m_got_press = false;
 
     Image* createCaptionImage(const std::string &caption_text)
     {
@@ -86,7 +87,9 @@ public:
 protected:
     virtual void updateEvent(UpdateEvent* event);
 
-    virtual void mousePressEvent(MousePressEvent*);
+    virtual void mousePressEvent(MousePressEvent* event);
+
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
     virtual void mouseEnterEvent();
 
@@ -388,12 +391,11 @@ void Widget_Menu::closeAll()
 
     setActiveItem(nullptr);
 
-    ungrabMouse();
-
     auto root_widget = root();
     if(root_widget->window())
     {
         root_widget->window()->ungrabMouse();
+        ungrabMouse();
     }
 
     if(isWindow())
@@ -427,6 +429,7 @@ void Widget_MenuItem::activate()
                 }
             }
             parent_menu->setActiveItem(this);
+            parent_menu->update();
         }
     }
 }
@@ -467,7 +470,17 @@ void Widget_MenuItem::updateEvent(UpdateEvent* event)
 
 void Widget_MenuItem::mousePressEvent(MousePressEvent*)
 {
-    activate();
+    m_got_press = true;
+}
+
+
+void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
+{
+    if(m_got_press)
+    {
+        activate();
+        m_got_press = false;
+    }
 }
 
 

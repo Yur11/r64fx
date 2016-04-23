@@ -80,10 +80,6 @@ void Widget::initMousePressEvent(
     bool ignore_self
 )
 {
-//     g_prev_mouse_position = event_position;
-
-//     g_pressed_buttons |= button;
-
     auto dst = mouseGrabber();
     if(dst && !ignore_grabs)
     {
@@ -121,10 +117,6 @@ void Widget::initMouseReleaseEvent(
     bool ignore_self
 )
 {
-//     g_prev_mouse_position = event_position;
-
-//     g_pressed_buttons &= ~button;
-
     auto dst = mouseGrabber();
     if(dst && !ignore_grabs)
     {
@@ -158,9 +150,6 @@ void Widget::initMouseMoveEvent(
     bool ignore_self
 )
 {
-//     Point<int> event_delta = event_position - g_prev_mouse_position;
-//     g_prev_mouse_position = event_position;
-
     auto dst = Widget::mouseGrabber();
     if(dst && !ignore_grabs)
     {
