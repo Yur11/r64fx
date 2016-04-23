@@ -407,6 +407,12 @@ void Widget_MenuItem::activate()
 
         if(m_action)
         {
+            Window* window = root_menu->root()->window();
+            if(window)
+            {
+                ungrabMouse();
+                window->ungrabMouse();
+            }
             root_menu->closeAll();
             root_menu->update();
             m_action->exec();
@@ -586,7 +592,7 @@ namespace{
 
             new_event_pos[0] = event_screen_pos - dst_menu_screen_pos;
         }
-        
+
         return dst_menu;
     }
 }//namespace
@@ -606,6 +612,12 @@ void Widget_Menu::mousePressEvent(MousePressEvent* event)
     }
     else
     {
+        Window* window = root()->window();
+        if(window)
+        {
+            ungrabMouse();
+            window->ungrabMouse();
+        }
         closeAll();
     }
 }
