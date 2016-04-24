@@ -465,6 +465,7 @@ void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
                 ungrabMouse();
                 window->ungrabMouse();
             }
+            
             root_menu->closeAll();
             root_menu->update();
             m_action->exec();
@@ -505,16 +506,6 @@ void Widget_MenuItem::mouseEnterEvent()
     {
         parent_menu->setActiveItem(this);
         parent_menu->update();
-
-//         if(!parent_menu->isWindow())
-        {
-            auto window = parent_menu->root()->window();
-            if(window)
-            {
-                parent_menu->grabMouse();
-                window->grabMouse();
-            }
-        }
     }
 
     update();
