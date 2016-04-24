@@ -71,7 +71,7 @@ class WindowEvents_Widget : public WindowEvents{
         Point<int> delta = position - g_prev_mouse_position;
 
         auto d = (WindowWidgetData*) window->data();
-        d->widget->initMouseMoveEvent(position, delta, g_pressed_buttons);
+        g_moused_over_widget = d->widget->initMouseMoveEvent(position, delta, g_pressed_buttons, g_moused_over_widget);
 
         g_prev_mouse_position = position;
     }

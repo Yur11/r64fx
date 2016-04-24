@@ -142,10 +142,11 @@ void Widget::initMouseReleaseEvent(
 }
 
 
-void Widget::initMouseMoveEvent(
+Widget* Widget::initMouseMoveEvent(
     Point<int> event_position,
     Point<int> event_delta,
     MouseButton pressed_buttons,
+    Widget* moused_over_widget,
     bool ignore_grabs,
     bool ignore_self
 )
@@ -163,21 +164,22 @@ void Widget::initMouseMoveEvent(
     }
 
     if(ignore_self && dst == this)
-        return;
+        return dst;
 
     MouseMoveEvent event(event_position, event_delta, pressed_buttons);
-    if(dst != g_moused_over_widget)
+    if(dst != moused_over_widget)
     {
-        if(g_moused_over_widget)
+        if(moused_over_widget)
         {
-            g_moused_over_widget->mouseLeaveEvent();
-            g_moused_over_widget->m_flags &= ~R64FX_WIDGET_IS_HOVERED;
+            moused_over_widget->mouseLeaveEvent();
+            moused_over_widget->m_flags &= ~R64FX_WIDGET_IS_HOVERED;
         }
         dst->m_flags |= R64FX_WIDGET_IS_HOVERED;
         dst->mouseEnterEvent();
-        g_moused_over_widget = dst;
     }
     dst->mouseMoveEvent(&event);
+
+    return dst;
 }
 
 }//namespace r64fx

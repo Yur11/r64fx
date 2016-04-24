@@ -22,6 +22,9 @@ void init_menu_font_if_needed()
 }
 
 
+Widget* g_moused_over_menu_item = nullptr;
+
+
 class Widget_MenuItem : public Widget{
     Image*        m_image     = nullptr;
     Action*       m_action    = nullptr;
@@ -400,47 +403,6 @@ void Widget_Menu::closeAll()
 
 void Widget_MenuItem::activate()
 {
-    auto parent_menu = parentMenu();
-    if(parent_menu)
-    {
-        auto root_menu = parent_menu->rootMenu();
-
-        if(m_action)
-        {
-            Window* window = root_menu->root()->window();
-            if(window)
-            {
-                ungrabMouse();
-                window->ungrabMouse();
-            }
-            root_menu->closeAll();
-            root_menu->update();
-            m_action->exec();
-        }
-        else if(m_sub_menu && showSubMenu() && parent_menu->activeItem() != this)
-        {
-            if(parent_menu->activeItem())
-            {
-                auto active_menu_item = dynamic_cast<Widget_MenuItem*>(parent_menu->activeItem());
-                if(active_menu_item && active_menu_item->subMenu())
-                {
-                    active_menu_item->subMenu()->closeAll();
-                }
-            }
-            parent_menu->setActiveItem(this);
-            parent_menu->update();
-
-            if(!parent_menu->isWindow())
-            {
-                auto window = parent_menu->root()->window();
-                if(window)
-                {
-                    parent_menu->grabMouse();
-                    window->grabMouse();
-                }
-            }
-        }
-    }
 }
 
 
@@ -485,9 +447,40 @@ void Widget_MenuItem::mousePressEvent(MousePressEvent*)
 
 void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
 {
+    auto parent_menu = parentMenu();
+    if(!parent_menu)
+        return;
+
     if(m_got_press)
     {
-        activate();
+        auto parent_menu = parentMenu();
+
+        if(m_action)
+        {
+            auto root_menu = parent_menu->rootMenu();
+
+            Window* window = root_menu->root()->window();
+            if(window)
+            {
+                ungrabMouse();
+                window->ungrabMouse();
+            }
+            root_menu->closeAll();
+            root_menu->update();
+            m_action->exec();
+        }
+        else if(m_sub_menu && parent_menu->activeItem() != this && showSubMenu())
+        {
+            parent_menu->setActiveItem(this);
+
+            auto window = parent_menu->root()->window();
+            if(window)
+            {
+                parent_menu->grabMouse();
+                window->grabMouse();
+            }
+        }
+
         m_got_press = false;
     }
 }
@@ -499,10 +492,31 @@ void Widget_MenuItem::mouseEnterEvent()
     if(!parent_menu)
         return;
 
-    if(subMenu() && (parent_menu->isWindow() || parent_menu->activeItem()))
+    if(parent_menu->activeItem())
     {
-        activate();
+        auto active_menu_item = dynamic_cast<Widget_MenuItem*>(parent_menu->activeItem());
+        if(active_menu_item && active_menu_item->subMenu())
+        {
+            active_menu_item->subMenu()->closeAll();
+        }
     }
+
+    if(m_sub_menu && (parent_menu->isWindow() || parent_menu->activeItem()) && showSubMenu())
+    {
+        parent_menu->setActiveItem(this);
+        parent_menu->update();
+
+//         if(!parent_menu->isWindow())
+        {
+            auto window = parent_menu->root()->window();
+            if(window)
+            {
+                parent_menu->grabMouse();
+                window->grabMouse();
+            }
+        }
+    }
+
     update();
 }
 
@@ -644,10 +658,11 @@ void Widget_Menu::mouseMoveEvent(MouseMoveEvent* event)
     auto dst = menu_at_widget_coords(event->position(), this, &new_event_pos);
     if(dst)
     {
-        dst->initMouseMoveEvent(
+        g_moused_over_menu_item = dst->initMouseMoveEvent(
             new_event_pos,
             event->delta(),
             event->button(),
+            g_moused_over_menu_item,
             true, true
         );
     }

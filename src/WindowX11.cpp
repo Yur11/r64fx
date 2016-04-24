@@ -601,7 +601,7 @@ void WindowX11::processSomeEvents(WindowEvents* events)
                 else
 #endif//R64FX_USE_MITSHM
                 {
-                    cout << "Unknown Event!\n";
+//                     cout << "Unknown Event!\n";
                 }
                 break;
             }
