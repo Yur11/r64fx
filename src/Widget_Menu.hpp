@@ -43,7 +43,6 @@ protected:
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
-
 };
 
 }//namespace r64fx

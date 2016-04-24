@@ -465,7 +465,7 @@ void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
                 ungrabMouse();
                 window->ungrabMouse();
             }
-            
+
             root_menu->closeAll();
             root_menu->update();
             m_action->exec();
@@ -491,6 +491,9 @@ void Widget_MenuItem::mouseEnterEvent()
 {
     auto parent_menu = parentMenu();
     if(!parent_menu)
+        return;
+
+    if(parent_menu->activeItem() == this)
         return;
 
     if(parent_menu->activeItem())
@@ -605,6 +608,8 @@ namespace{
 
 void Widget_Menu::mousePressEvent(MousePressEvent* event)
 {
+    /* Only when mouse is grabbed! */
+
     Point<int> new_event_pos;
     auto dst = menu_at_widget_coords(event->position(), this, &new_event_pos);
     if(dst)
@@ -630,6 +635,8 @@ void Widget_Menu::mousePressEvent(MousePressEvent* event)
 
 void Widget_Menu::mouseReleaseEvent(MouseReleaseEvent* event)
 {
+    /* Only when mouse is grabbed! */
+
     Point<int> new_event_pos;
     auto dst = menu_at_widget_coords(event->position(), this, &new_event_pos);
     if(dst)
@@ -645,6 +652,8 @@ void Widget_Menu::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget_Menu::mouseMoveEvent(MouseMoveEvent* event)
 {
+    /* Only when mouse is grabbed! */
+
     Point<int> new_event_pos;
     auto dst = menu_at_widget_coords(event->position(), this, &new_event_pos);
     if(dst)
@@ -656,6 +665,14 @@ void Widget_Menu::mouseMoveEvent(MouseMoveEvent* event)
             g_moused_over_menu_item,
             true, true
         );
+    }
+    else
+    {
+        if(g_moused_over_menu_item)
+        {
+            g_moused_over_menu_item->initMouseLeaveEvent();
+            g_moused_over_menu_item = nullptr;
+        }
     }
 }
 

@@ -79,15 +79,19 @@ class WindowEvents_Widget : public WindowEvents{
 
     virtual void mouseEnterEvent(Window* window)
     {
-        auto d = (WindowWidgetData*) window->data();
-        d->widget->mouseEnterEvent();
+//         auto d = (WindowWidgetData*) window->data();
+//         d->widget->mouseEnterEvent();
     }
 
 
     virtual void mouseLeaveEvent(Window* window)
     {
-        auto d = (WindowWidgetData*) window->data();
-        d->widget->mouseLeaveEvent();
+//         auto d = (WindowWidgetData*) window->data();
+
+        if(g_moused_over_widget)
+        {
+            g_moused_over_widget->initMouseLeaveEvent();
+        }
     }
 
 

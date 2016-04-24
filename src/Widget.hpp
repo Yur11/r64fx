@@ -187,6 +187,10 @@ public:
         bool ignore_self  = false
     );
 
+    void initMouseEnterEvent();
+
+    void initMouseLeaveEvent();
+
 
 /* === Keyboard === */
 

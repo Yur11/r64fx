@@ -171,15 +171,27 @@ Widget* Widget::initMouseMoveEvent(
     {
         if(moused_over_widget)
         {
-            moused_over_widget->mouseLeaveEvent();
-            moused_over_widget->m_flags &= ~R64FX_WIDGET_IS_HOVERED;
+            moused_over_widget->initMouseLeaveEvent();
         }
-        dst->m_flags |= R64FX_WIDGET_IS_HOVERED;
-        dst->mouseEnterEvent();
+        dst->initMouseEnterEvent();
     }
     dst->mouseMoveEvent(&event);
 
     return dst;
+}
+
+
+void Widget::initMouseEnterEvent()
+{
+    m_flags |= R64FX_WIDGET_IS_HOVERED;
+    mouseEnterEvent();
+}
+
+
+void Widget::initMouseLeaveEvent()
+{
+    m_flags &= ~R64FX_WIDGET_IS_HOVERED;
+    mouseLeaveEvent();
 }
 
 }//namespace r64fx
