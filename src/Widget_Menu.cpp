@@ -510,6 +510,10 @@ void Widget_MenuItem::mouseEnterEvent()
         parent_menu->setActiveItem(this);
         parent_menu->update();
     }
+    else
+    {
+        parent_menu->setActiveItem(nullptr);
+    }
 
     update();
 }
@@ -629,6 +633,8 @@ void Widget_Menu::mousePressEvent(MousePressEvent* event)
             window->ungrabMouse();
         }
         closeAll();
+        setActiveItem(nullptr);
+        update();
     }
 }
 
