@@ -493,26 +493,32 @@ void Widget_MenuItem::mouseEnterEvent()
     if(!parent_menu)
         return;
 
-    if(parent_menu->activeItem() == this)
+    auto active_item = parent_menu->activeItem();
+
+    if(active_item == this)
         return;
 
-    if(parent_menu->activeItem())
+    if(active_item)
     {
-        auto active_menu_item = dynamic_cast<Widget_MenuItem*>(parent_menu->activeItem());
+        auto active_menu_item = dynamic_cast<Widget_MenuItem*>(active_item);
         if(active_menu_item && active_menu_item->subMenu())
         {
             active_menu_item->subMenu()->closeAll();
         }
     }
 
-    if(m_sub_menu && (parent_menu->isWindow() || parent_menu->activeItem()) && showSubMenu())
+    if(m_sub_menu && (parent_menu->isWindow() || active_item) && showSubMenu())
     {
         parent_menu->setActiveItem(this);
-        parent_menu->update();
     }
     else
     {
         parent_menu->setActiveItem(nullptr);
+    }
+
+    if(active_item)//Old active item.
+    {
+        active_item->update();
     }
 
     update();
