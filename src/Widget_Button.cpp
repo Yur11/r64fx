@@ -31,7 +31,7 @@ Widget_Button::Widget_Button(std::string text, std::string font_name, Widget* pa
     m_animation = new ImageAnimation;
 
     Font font(font_name);
-    resize_image_and_draw_text(m_animation, text, TextWrap::None, &font);
+    text2image(text, TextWrap::None, &font, m_animation);
     m_flags |= R64FX_WIDGET_OWNS_DATA;
 
     if(m_animation)

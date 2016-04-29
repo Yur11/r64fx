@@ -990,7 +990,7 @@ bool TextPainter::lineStartsWithNewline(int l) const
 }
 
 
-bool resize_image_and_draw_text(Image* dst, const std::string &text, TextWrap wrap, Font* font)
+Image* text2image(const std::string &text, TextWrap wrap, Font* font, Image* dst)
 {
     TextPainter tp;
     tp.font = font;
@@ -1002,25 +1002,26 @@ bool resize_image_and_draw_text(Image* dst, const std::string &text, TextWrap wr
 
     auto size = tp.textSize();
     if(size.width() <= 0 || size.height() <= 0)
-        return false;
+        return nullptr;
 
     if(dst)
         dst->load(size.width(), size.height(), 1);
 
     if(!dst->isGood())
-        return false;
+        return nullptr;
 
     unsigned char color = 0;
     fill(dst, &color);
     tp.paint(dst);
-    return true;
+
+    return dst;
 }
 
 
 Image* text2image(const std::string &text, TextWrap wrap, Font* font)
 {
     Image* img = new Image;
-    if(!resize_image_and_draw_text(img, text, wrap, font))
+    if(!text2image(text, wrap, font, img))
     {
         delete img;
         return nullptr;

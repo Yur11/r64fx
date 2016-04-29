@@ -333,7 +333,7 @@ private:
 };
 
 
-bool resize_image_and_draw_text(Image* dst, const std::string &text, TextWrap wrap, Font* font);
+Image* text2image(const std::string &text, TextWrap wrap, Font* font, Image* dst);
 
 Image* text2image(const std::string &text, TextWrap wrap, Font* font);
 
