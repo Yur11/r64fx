@@ -99,6 +99,7 @@ public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
         auto tree = new Widget_ItemTree(this);
+        tree->setText("I Like Pie!");
         tree->setPosition({100, 100});
         tree->setSize({100, 100});
     }

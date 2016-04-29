@@ -58,7 +58,9 @@ set(SRC
     Widget_Button.cpp
     Widget_ItemTree.cpp
     Widget_Control.cpp
+    Widget_DataItem.cpp
     Widget_Dummy.cpp
+    Widget_ItemTree.cpp
     Widget_Menu.cpp
     Widget_ScrollArea.cpp
     Widget_ScrollBar.cpp
