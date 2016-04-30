@@ -12,6 +12,13 @@ namespace{
 }//namespace
 
 
+Widget_ItemTree::Widget_ItemTree(const std::string &text, Widget* parent)
+: Widget_DataItem(text, parent)
+{
+
+}
+
+
 Widget_ItemTree::Widget_ItemTree(Widget* parent)
 : Widget_DataItem(parent)
 {
@@ -22,6 +29,59 @@ Widget_ItemTree::Widget_ItemTree(Widget* parent)
 void Widget_ItemTree::addItem(Widget_DataItem* item)
 {
     Widget::add(item);
+}
+
+
+void Widget_ItemTree::addItem(const std::string &text)
+{
+    Widget::add(new Widget_DataItem(text));
+}
+
+
+void Widget_ItemTree::resizeAndReallign()
+{
+    Widget_DataItem::resizeAndReallign();
+
+    int item_offset  = height();
+    int max_width    = width();
+    int total_height = height();
+
+    for(auto child : *this)
+    {
+        auto data_item = dynamic_cast<Widget_DataItem*>(child);
+        if(data_item)
+        {
+            data_item->resizeAndReallign();
+        }
+
+        if(child->width() > max_width)
+            max_width = child->width();
+
+        total_height += child->height();
+    }
+
+    int running_y = height();
+    for(auto child : *this)
+    {
+        child->setWidth(max_width);
+        child->setX(item_offset);
+        child->setY(running_y);
+        running_y += child->height();
+    }
+
+    setSize({max_width, total_height});
+}
+
+
+void Widget_ItemTree::collapse()
+{
+
+}
+
+
+void Widget_ItemTree::expand()
+{
+
 }
 
 

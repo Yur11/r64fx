@@ -148,9 +148,21 @@ Point<int> Widget::position() const
 }
 
 
+void Widget::setX(int x)
+{
+    m_rect.setX(x);
+}
+
+
 int Widget::x() const
 {
     return m_rect.x();
+}
+
+
+void Widget::setY(int y)
+{
+    m_rect.setY(y);
 }
 
 

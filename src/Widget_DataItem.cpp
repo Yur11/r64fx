@@ -22,6 +22,14 @@ void init_data_item_font_if_needed()
 }//namespace
 
 
+Widget_DataItem::Widget_DataItem(const std::string &text, Widget* parent)
+: Widget(parent)
+, m_text(text)
+{
+    init_data_item_font_if_needed();
+}
+
+
 Widget_DataItem::Widget_DataItem(Widget* parent)
 : Widget(parent)
 {
@@ -41,6 +49,12 @@ std::string Widget_DataItem::text() const
 }
 
 
+void Widget_DataItem::resizeAndReallign()
+{
+    setHeight(g_data_item_font->height());
+}
+
+
 void Widget_DataItem::updateEvent(UpdateEvent* event)
 {
     auto p = event->painter();
@@ -48,6 +62,10 @@ void Widget_DataItem::updateEvent(UpdateEvent* event)
     Image img;
     if(text2image(m_text, TextWrap::None, g_data_item_font, &img))
     {
+        unsigned char grey[4] = {175, 175, 175, 0};
+        p->fillRect({0, 0, img.width(), img.height()}, grey);
+
+
         unsigned char black[4] = {0, 0, 0, 0};
         unsigned char* colors[] = {black};
 

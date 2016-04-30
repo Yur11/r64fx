@@ -84,7 +84,11 @@ public:
 
     Point<int> position() const;
 
+    void setX(int x);
+
     int x() const;
+
+    void setY(int y);
 
     int y() const;
     

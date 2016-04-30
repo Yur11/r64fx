@@ -7,9 +7,19 @@ namespace r64fx{
 
 class Widget_ItemTree : public Widget_DataItem{
 public:
+    Widget_ItemTree(const std::string &text, Widget* parent = nullptr);
+
     Widget_ItemTree(Widget* parent = nullptr);
 
     void addItem(Widget_DataItem* item);
+
+    void addItem(const std::string &text);
+
+    virtual void resizeAndReallign();
+
+    void collapse();
+
+    void expand();
 
 protected:
     virtual void updateEvent(UpdateEvent* event);

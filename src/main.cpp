@@ -98,10 +98,13 @@ class MyWidget : public Widget_ScrollArea{
 public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
-        auto tree = new Widget_ItemTree(this);
-        tree->setText("I Like Pie!");
+        auto tree = new Widget_ItemTree("I Like Pie!!", this);
         tree->setPosition({100, 100});
         tree->setSize({100, 100});
+        tree->addItem("More Pie!");
+        tree->addItem("More Pie!");
+        tree->addItem("More Pie!");
+        tree->resizeAndReallign();
     }
 
     ~MyWidget()
