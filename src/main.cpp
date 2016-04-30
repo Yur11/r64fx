@@ -10,6 +10,7 @@
 #include "Painter.hpp"
 #include "Font.hpp"
 #include "Widget_Button.hpp"
+#include "Widget_ItemList.hpp"
 #include "Widget_ItemTree.hpp"
 #include "Widget_Container.hpp"
 #include "Widget_Control.hpp"
@@ -98,12 +99,15 @@ class MyWidget : public Widget_ScrollArea{
 public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
-        auto tree = new Widget_ItemTree("I Like Pie!!", this);
-        tree->setPosition({100, 100});
-        tree->addItem("More Pie!");
-        tree->addItem("More Pie!");
-        tree->addItem("More Pie!");
-        tree->resizeAndReallign();
+        auto list = new Widget_ItemList(this);
+        list->setPosition({100, 100});
+        list->addItem("More Pie!");
+        list->addItem("More Pie!");
+        list->addItem("More Pie!");
+        list->addItem("More Pie!");
+        list->addItem("More Pie!");
+        list->addItem("More Pie!");
+        list->resizeAndReallign();
     }
 
     ~MyWidget()
