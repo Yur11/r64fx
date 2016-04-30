@@ -37,6 +37,15 @@ Widget_DataItem::Widget_DataItem(Widget* parent)
 }
 
 
+Widget_DataItem::~Widget_DataItem()
+{
+    if(m_image)
+    {
+        delete m_image;
+    }
+}
+
+
 void Widget_DataItem::setText(const std::string &text)
 {
     m_text = text;
@@ -83,11 +92,16 @@ void Widget_DataItem::updateEvent(UpdateEvent* event)
 {
     auto p = event->painter();
 
-    Image img;
-    if(text2image(m_text, TextWrap::None, g_data_item_font, &img))
+    if(!m_image)
+    {
+        m_image = new Image;
+        text2image(m_text, TextWrap::None, g_data_item_font, m_image);
+    }
+
+    if(m_image)
     {
         unsigned char grey[4] = {175, 175, 175, 0};
-        p->fillRect({0, 0, img.width(), img.height()}, grey);
+        p->fillRect({0, 0, m_image->width(), m_image->height()}, grey);
 
 
         unsigned char normal [4] = {0, 0, 0, 0};
@@ -99,7 +113,7 @@ void Widget_DataItem::updateEvent(UpdateEvent* event)
         else
             colors = normal;
 
-        p->blendColors({0, 0}, &colors, &img);
+        p->blendColors({0, 0}, &colors, m_image);
     }
 
     Widget::updateEvent(event);

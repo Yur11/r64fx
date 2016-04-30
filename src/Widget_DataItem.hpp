@@ -7,11 +7,14 @@ namespace r64fx{
 
 class Widget_DataItem : public Widget{
     std::string m_text = "";
+    Image* m_image = nullptr;
 
 public:
     Widget_DataItem(const std::string &text, Widget* parent = nullptr);
 
     Widget_DataItem(Widget* parent = nullptr);
+
+    ~Widget_DataItem();
 
     void setText(const std::string &text);
 
