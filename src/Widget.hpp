@@ -195,6 +195,8 @@ public:
 
     void initMouseLeaveEvent();
 
+    bool isHovered();
+
 
 /* === Keyboard === */
 

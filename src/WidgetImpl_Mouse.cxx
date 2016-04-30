@@ -194,4 +194,10 @@ void Widget::initMouseLeaveEvent()
     mouseLeaveEvent();
 }
 
+
+bool Widget::isHovered()
+{
+    return m_flags & R64FX_WIDGET_IS_HOVERED;
+}
+
 }//namespace r64fx

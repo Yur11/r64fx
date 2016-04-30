@@ -419,7 +419,7 @@ void Widget_MenuItem::updateEvent(UpdateEvent* event)
 
     auto parent_menu = parentMenu();
 
-    if(m_flags & R64FX_WIDGET_IS_HOVERED)
+    if(Widget::isHovered())
     {
         color = orange;
     }
