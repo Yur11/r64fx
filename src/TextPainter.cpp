@@ -1029,4 +1029,17 @@ Image* text2image(const std::string &text, TextWrap wrap, Font* font)
     return img;
 }
 
+
+Size<int> find_text_bbox(const std::string &text, TextWrap wrap, Font* font)
+{
+    TextPainter tp;
+    tp.font = font;
+    tp.setTextWrap(wrap);
+    tp.setReflowWidth(std::numeric_limits<int>::max());
+    tp.insertText(text);
+    tp.reflow();
+    tp.resizeToText();
+    return tp.textSize();
+}
+
 }//namespace r64fx

@@ -337,6 +337,8 @@ Image* text2image(const std::string &text, TextWrap wrap, Font* font, Image* dst
 
 Image* text2image(const std::string &text, TextWrap wrap, Font* font);
 
+Size<int> find_text_bbox(const std::string &text, TextWrap wrap, Font* font);
+
 }//namespace
 
 #endif//R64FX_TEXT_PAINTER_HPP
