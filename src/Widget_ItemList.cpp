@@ -1,4 +1,5 @@
 #include "Widget_ItemList.hpp"
+#include "Painter.hpp"
 
 #include <iostream>
 using namespace std;
@@ -58,6 +59,12 @@ void Widget_ItemList::resizeAndReallign()
 
 void Widget_ItemList::updateEvent(UpdateEvent* event)
 {
+    auto p = event->painter();
+
+    unsigned char bg[4] = {200, 200, 200, 0};
+
+    p->fillRect({{0, 0}, size()}, bg);
+
     Widget::updateEvent(event);
 }
 
