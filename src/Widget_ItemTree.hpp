@@ -6,6 +6,7 @@
 namespace r64fx{
 
 class Widget_ItemTree : public Widget_DataItem{
+
 public:
     Widget_ItemTree(const std::string &text, Widget* parent = nullptr);
 
@@ -21,8 +22,12 @@ public:
 
     void expand();
 
+    bool isCollapsed();
+
 protected:
     virtual void updateEvent(UpdateEvent* event);
+
+    virtual void mousePressEvent(MousePressEvent* event);
 };
 
 }//namespace

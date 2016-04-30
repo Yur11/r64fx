@@ -1,5 +1,8 @@
 #include "Widget_ItemList.hpp"
 
+#include <iostream>
+using namespace std;
+
 namespace r64fx{
 
 Widget_ItemList::Widget_ItemList(Widget* parent)
@@ -23,8 +26,8 @@ void Widget_ItemList::addItem(const std::string &text)
 
 void Widget_ItemList::resizeAndReallign()
 {
-    int max_child_width  = width();
-    int total_height     = height();
+    int max_child_width  = 0;
+    int total_height     = 0;
 
     for(auto child : *this)
     {
@@ -40,7 +43,7 @@ void Widget_ItemList::resizeAndReallign()
         total_height += child->height();
     }
 
-    int running_y = height();
+    int running_y = 0;
     for(auto child : *this)
     {
         child->setWidth(max_child_width);
@@ -55,7 +58,7 @@ void Widget_ItemList::resizeAndReallign()
 
 void Widget_ItemList::updateEvent(UpdateEvent* event)
 {
-    Widget_DataItem::updateEvent(event);
+    Widget::updateEvent(event);
 }
 
 }//namespace r64fx

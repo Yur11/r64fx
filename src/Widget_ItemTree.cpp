@@ -1,4 +1,5 @@
 #include "Widget_ItemTree.hpp"
+#include "WidgetFlags.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
 
@@ -42,46 +43,69 @@ void Widget_ItemTree::resizeAndReallign()
 {
     Widget_DataItem::resizeAndReallign();
 
-    int item_offset      = height();
-    int max_child_width  = width();
-    int total_height     = height();
-
-    for(auto child : *this)
+    if(!isCollapsed())
     {
-        auto data_item = dynamic_cast<Widget_DataItem*>(child);
-        if(data_item)
+        int item_offset      = height();
+        int max_child_width  = width();
+        int total_height     = height();
+
+        for(auto child : *this)
         {
-            data_item->resizeAndReallign();
+            auto data_item = dynamic_cast<Widget_DataItem*>(child);
+            if(data_item)
+            {
+                data_item->resizeAndReallign();
+            }
+
+            if(child->width() > max_child_width)
+                max_child_width = child->width();
+
+            total_height += child->height();
         }
 
-        if(child->width() > max_child_width)
-            max_child_width = child->width();
+        int running_y = height();
+        for(auto child : *this)
+        {
+            child->setWidth(max_child_width);
+            child->setX(item_offset);
+            child->setY(running_y);
+            running_y += child->height();
+        }
 
-        total_height += child->height();
+        setSize({max_child_width + item_offset, total_height});
     }
-
-    int running_y = height();
-    for(auto child : *this)
-    {
-        child->setWidth(max_child_width);
-        child->setX(item_offset);
-        child->setY(running_y);
-        running_y += child->height();
-    }
-
-    setSize({max_child_width + item_offset, total_height});
 }
 
 
 void Widget_ItemTree::collapse()
 {
-
+    m_flags |= R64FX_WIDGET_TREE_IS_COLLAPSED;
+    auto root_item = rootDataItem();
+    root_item->resizeAndReallign();
+    auto root_item_parent = root_item->parent();
+    if(root_item_parent)
+    {
+        root_item_parent->update();
+    }
 }
 
 
 void Widget_ItemTree::expand()
 {
+    m_flags &= ~R64FX_WIDGET_TREE_IS_COLLAPSED;
+    auto root_item = rootDataItem();
+    root_item->resizeAndReallign();
+    auto root_item_parent = root_item->parent();
+    if(root_item_parent)
+    {
+        root_item_parent->update();
+    }
+}
 
+
+bool Widget_ItemTree::isCollapsed()
+{
+    return m_flags & R64FX_WIDGET_TREE_IS_COLLAPSED;
 }
 
 
@@ -96,5 +120,13 @@ void Widget_ItemTree::updateEvent(UpdateEvent* event)
     Widget_DataItem::updateEvent(event);
 }
 
+
+void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
+{
+    if(isCollapsed())
+        expand();
+    else
+        collapse();
+}
 
 }//namespace

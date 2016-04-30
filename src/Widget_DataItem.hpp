@@ -19,6 +19,10 @@ public:
 
     virtual void resizeAndReallign();
 
+    Widget_DataItem* parentDataItem();
+
+    Widget_DataItem* rootDataItem();
+
 protected:
     virtual void updateEvent(UpdateEvent* event);
 

@@ -101,12 +101,34 @@ public:
     {
         auto list = new Widget_ItemList(this);
         list->setPosition({100, 100});
-        list->addItem("More Pie!");
-        list->addItem("More Pie!");
-        list->addItem("More Pie!");
-        list->addItem("More Pie!");
-        list->addItem("More Pie!");
-        list->addItem("More Pie!");
+        list->addItem("One");
+        list->addItem("Two");
+        list->addItem("Three");
+        {
+            auto tree = new Widget_ItemTree("Four", list);
+            tree->addItem("Four One");
+            tree->addItem("Four Two");
+            tree->addItem("Four Three");
+            {
+                auto subtree = new Widget_ItemTree("Four Four", tree);
+                subtree->addItem("Four Four One");
+                subtree->addItem("Four Four Two");
+                subtree->addItem("Four Four Three");
+            }
+            tree->addItem("Four Five");
+            tree->addItem("Four Six");
+        }
+        list->addItem("Five");
+        list->addItem("Six");
+        {
+            auto tree = new Widget_ItemTree("Seven", list);
+            tree->addItem("Seven One");
+            tree->addItem("Seven Two");
+            tree->addItem("Seven Three");
+            tree->addItem("Seven Four");
+            tree->addItem("Seven Five");
+        }
+        list->addItem("Eight");
         list->resizeAndReallign();
     }
 

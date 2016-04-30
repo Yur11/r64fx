@@ -56,6 +56,29 @@ void Widget_DataItem::resizeAndReallign()
 }
 
 
+Widget_DataItem* Widget_DataItem::parentDataItem()
+{
+    if(!parent())
+        return nullptr;
+
+    auto parent_data_item = dynamic_cast<Widget_DataItem*>(parent());
+    if(!parent_data_item)
+        return nullptr;
+
+    return parent_data_item;
+}
+
+
+Widget_DataItem* Widget_DataItem::rootDataItem()
+{
+    auto parent_data_item = parentDataItem();
+    if(!parent_data_item)
+        return this;
+    else
+        return parent_data_item->rootDataItem();
+}
+
+
 void Widget_DataItem::updateEvent(UpdateEvent* event)
 {
     auto p = event->painter();

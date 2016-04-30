@@ -35,4 +35,6 @@
 
 #define R64FX_WIDGET_IS_HOVERED               (1 << 0x0D)
 
+#define R64FX_WIDGET_TREE_IS_COLLAPSED        (1 << 0x0E)
+
 #endif//R64FX_WIDGET_FLAGS_HPP
