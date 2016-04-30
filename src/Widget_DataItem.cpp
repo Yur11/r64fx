@@ -51,6 +51,7 @@ std::string Widget_DataItem::text() const
 
 void Widget_DataItem::resizeAndReallign()
 {
+    setWidth(find_text_bbox(m_text, TextWrap::None, g_data_item_font).width());
     setHeight(g_data_item_font->height());
 }
 

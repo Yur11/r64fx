@@ -42,9 +42,9 @@ void Widget_ItemTree::resizeAndReallign()
 {
     Widget_DataItem::resizeAndReallign();
 
-    int item_offset  = height();
-    int max_width    = width();
-    int total_height = height();
+    int item_offset      = height();
+    int max_child_width  = width();
+    int total_height     = height();
 
     for(auto child : *this)
     {
@@ -54,8 +54,8 @@ void Widget_ItemTree::resizeAndReallign()
             data_item->resizeAndReallign();
         }
 
-        if(child->width() > max_width)
-            max_width = child->width();
+        if(child->width() > max_child_width)
+            max_child_width = child->width();
 
         total_height += child->height();
     }
@@ -63,13 +63,13 @@ void Widget_ItemTree::resizeAndReallign()
     int running_y = height();
     for(auto child : *this)
     {
-        child->setWidth(max_width);
+        child->setWidth(max_child_width);
         child->setX(item_offset);
         child->setY(running_y);
         running_y += child->height();
     }
 
-    setSize({max_width, total_height});
+    setSize({max_child_width + item_offset, total_height});
 }
 
 
