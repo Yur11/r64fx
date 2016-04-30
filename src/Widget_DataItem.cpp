@@ -67,13 +67,31 @@ void Widget_DataItem::updateEvent(UpdateEvent* event)
         p->fillRect({0, 0, img.width(), img.height()}, grey);
 
 
-        unsigned char black[4] = {0, 0, 0, 0};
-        unsigned char* colors[] = {black};
+        unsigned char normal [4] = {0, 0, 0, 0};
+        unsigned char hovered[4] = {255, 255, 255, 0};
 
-        p->blendColors({0, 0}, colors, &img);
+        unsigned char* colors;
+        if(Widget::isHovered())
+            colors = hovered;
+        else
+            colors = normal;
+
+        p->blendColors({0, 0}, &colors, &img);
     }
 
     Widget::updateEvent(event);
+}
+
+
+void Widget_DataItem::mouseEnterEvent()
+{
+    update();
+}
+
+
+void Widget_DataItem::mouseLeaveEvent()
+{
+    update();
 }
 
 }//namespace
