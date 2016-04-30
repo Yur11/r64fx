@@ -114,6 +114,15 @@ public:
                 subtree->addItem("Four Four One");
                 subtree->addItem("Four Four Two");
                 subtree->addItem("Four Four Three");
+                {
+                    auto subsubtree = new Widget_ItemTree("Four Four Four", subtree);
+                    subsubtree->addItem("Hello");
+                    subsubtree->addItem("Doctor");
+                    subsubtree->addItem("Name");
+                    subsubtree->addItem("Continue");
+                    subsubtree->addItem("Yesterday");
+                    subsubtree->addItem("Tommorow");
+                }
             }
             tree->addItem("Four Five");
             tree->addItem("Four Six");

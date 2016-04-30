@@ -60,7 +60,7 @@ std::string Widget_DataItem::text() const
 
 void Widget_DataItem::resizeAndReallign()
 {
-    setWidth(find_text_bbox(m_text, TextWrap::None, g_data_item_font).width());
+    setWidth(find_text_bbox(m_text, TextWrap::None, g_data_item_font).width() + g_data_item_font->height());
     setHeight(g_data_item_font->height());
 }
 
@@ -100,9 +100,13 @@ void Widget_DataItem::updateEvent(UpdateEvent* event)
 
     if(m_image)
     {
-        unsigned char grey[4] = {175, 175, 175, 0};
-        p->fillRect({0, 0, m_image->width(), m_image->height()}, grey);
+        int offset = g_data_item_font->height();
 
+        unsigned char grey[4] = {175, 175, 175, 0};
+        p->fillRect({0, 0, width(), height()}, grey);
+
+        unsigned char red[4] = {127, 0, 0, 0};
+        p->fillRect({2, 2, offset - 4, offset - 4}, red);
 
         unsigned char normal [4] = {0, 0, 0, 0};
         unsigned char hovered[4] = {255, 255, 255, 0};
@@ -113,7 +117,7 @@ void Widget_DataItem::updateEvent(UpdateEvent* event)
         else
             colors = normal;
 
-        p->blendColors({0, 0}, &colors, m_image);
+        p->blendColors({offset, 0}, &colors, m_image);
     }
 
     Widget::updateEvent(event);
