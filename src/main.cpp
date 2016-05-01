@@ -20,6 +20,8 @@
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
+#include "Directory.hpp"
+#include "sleep.hpp"
 
 
 using namespace std;
@@ -226,4 +228,6 @@ int main(int argc, char* argv[])
 {
     MyProgram prog(argc, argv);
     return prog.exec();
+
+    return 0;
 }

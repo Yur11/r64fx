@@ -21,6 +21,7 @@ set(SRC
     Action.cpp
     Clipboard.cpp
     ClipboardEvent.cpp
+    Directory.cpp
     Font.cpp
     Image.cpp
     ImageAnimation.cpp
