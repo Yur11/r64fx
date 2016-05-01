@@ -55,7 +55,7 @@ Directory::Entry::Type getEntryType(dirent* ent)
 }
 
 
-void Directory::forEachEntry(void (*fun)(Directory::Entry* entry, void* arg), void* arg)
+void Directory::forEachEntry(void (*fun)(const Directory::Entry* entry, void* arg), void* arg)
 {
     if(!isOpen())
         return;

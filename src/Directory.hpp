@@ -49,9 +49,14 @@ public:
         {
             return m_name;
         }
+
+        inline bool isDirectory() const
+        {
+            return type() == Directory::Entry::Type::Directory;
+        }
     };
 
-    void forEachEntry(void (*fun)(Directory::Entry* entry, void* arg), void* arg);
+    void forEachEntry(void (*fun)(const Directory::Entry* entry, void* arg), void* arg);
 };
 
 }//namespace r64fx

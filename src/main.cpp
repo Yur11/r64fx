@@ -9,18 +9,11 @@
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "Font.hpp"
-#include "Widget_Button.hpp"
-#include "Widget_ItemList.hpp"
-#include "Widget_ItemTree.hpp"
-#include "Widget_Container.hpp"
-#include "Widget_Control.hpp"
-#include "Widget_Menu.hpp"
-#include "Widget_Text.hpp"
 #include "Widget_ScrollArea.hpp"
+#include "Widget_DirectoryBrowser.hpp"
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
-#include "Directory.hpp"
 #include "sleep.hpp"
 
 
@@ -29,118 +22,15 @@ using namespace r64fx;
 
 Font* g_Font = nullptr;
 
-
-class HelloAction : public Action{
-public:
-    using Action::Action;
-
-    virtual void exec()
-    {
-        cout << "Hello\n";
-    }
-};
-
-
-class DoctorAction : public Action{
-public:
-    using Action::Action;
-
-    virtual void exec()
-    {
-        cout << "Doctor\n";
-    }
-};
-
-
-class NameAction : public Action{
-public:
-    using Action::Action;
-
-    virtual void exec()
-    {
-        cout << "Name\n";
-    }
-};
-
-
-class ContinueAction : public Action{
-public:
-    using Action::Action;
-
-    virtual void exec()
-    {
-        cout << "Continue\n";
-    }
-};
-
-
-class YesterdayAction : public Action{
-public:
-    using Action::Action;
-
-    virtual void exec()
-    {
-        cout << "Yesterday\n";
-    }
-};
-
-
-class TommorowAction : public Action{
-public:
-    using Action::Action;
-
-    virtual void exec()
-    {
-        cout << "Tommorow\n";
-    }
-};
-
-
 class MyWidget : public Widget_ScrollArea{
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
-        auto list = new Widget_ItemList(this);
-        list->setPosition({100, 100});
-        list->addItem("One");
-        list->addItem("Two");
-        list->addItem("Three");
-        {
-            auto tree = new Widget_ItemTree("Four", list);
-            tree->addItem("Four One");
-            tree->addItem("Four Two");
-            tree->addItem("Four Three");
-            {
-                auto subtree = new Widget_ItemTree("Four Four", tree);
-                subtree->addItem("Four Four One");
-                subtree->addItem("Four Four Two");
-                subtree->addItem("Four Four Three");
-                {
-                    auto subsubtree = new Widget_ItemTree("Four Four Four", subtree);
-                    subsubtree->addItem("Hello");
-                    subsubtree->addItem("Doctor");
-                    subsubtree->addItem("Name");
-                    subsubtree->addItem("Continue");
-                    subsubtree->addItem("Yesterday");
-                    subsubtree->addItem("Tommorow");
-                }
-            }
-            tree->addItem("Four Five");
-            tree->addItem("Four Six");
-        }
-        list->addItem("Five");
-        list->addItem("Six");
-        {
-            auto tree = new Widget_ItemTree("Seven", list);
-            tree->addItem("Seven One");
-            tree->addItem("Seven Two");
-            tree->addItem("Seven Three");
-            tree->addItem("Seven Four");
-            tree->addItem("Seven Five");
-        }
-        list->addItem("Eight");
-        list->resizeAndReallign();
+        auto browser = new Widget_DirectoryBrowser("/home/yurii", this);
+        browser->setPosition({20, 20});
+        browser->populate();
+        browser->resizeAndReallign();
     }
 
     ~MyWidget()
