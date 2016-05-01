@@ -7,9 +7,14 @@
 namespace r64fx{
 
 class Widget_DirectoryBrowser : public Widget_ItemTree{
+    std::string m_path = "";
 
 public:
-    Widget_DirectoryBrowser(const std::string &path, Widget* parent = nullptr);
+    Widget_DirectoryBrowser(const std::string &caption, const std::string path, Widget* parent = nullptr);
+
+    std::string path() const;
+
+    std::string fullPath() const;
 
     void populate();
 
