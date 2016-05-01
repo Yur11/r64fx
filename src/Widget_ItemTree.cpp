@@ -8,11 +8,6 @@ using namespace std;
 
 namespace r64fx{
 
-namespace{
-
-}//namespace
-
-
 Widget_ItemTree::Widget_ItemTree(const std::string &text, Widget* parent)
 : Widget_DataItem(text, parent)
 {
