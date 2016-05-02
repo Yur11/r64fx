@@ -68,6 +68,7 @@ void Widget_ItemTree::resizeAndReallign()
         }
 
         setSize({max_child_width + item_offset, total_height});
+        cout << "total_height: " << total_height << "\n";
     }
 }
 

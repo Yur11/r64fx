@@ -27,7 +27,7 @@ class MyWidget : public Widget_ScrollArea{
 public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
-        auto browser = new Widget_DirectoryBrowser("home", "/home/yurii", this);
+        auto browser = new Widget_DirectoryBrowser("samples", "/home/yurii/Sound/Samples/freesound/", this);
         browser->setPosition({20, 20});
         browser->populate();
     }
