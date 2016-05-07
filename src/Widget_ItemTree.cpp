@@ -55,7 +55,9 @@ void Widget_ItemTree::resizeAndReallign()
             if(child->width() > max_child_width)
                 max_child_width = child->width();
 
+//             cout << total_height << " + " << child->height() << "(" << data_item->text() << ") = ";
             total_height += child->height();
+//             cout << total_height << "\n";
         }
 
         int running_y = height();
@@ -68,7 +70,7 @@ void Widget_ItemTree::resizeAndReallign()
         }
 
         setSize({max_child_width + item_offset, total_height});
-        cout << "total_height: " << total_height << "\n";
+//         cout << "total_height: " << total_height << "\n";
     }
 }
 

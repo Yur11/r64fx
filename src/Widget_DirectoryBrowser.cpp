@@ -10,7 +10,7 @@ Widget_DirectoryBrowser::Widget_DirectoryBrowser(const std::string &caption, con
 : Widget_ItemTree(caption, parent)
 , m_path(path)
 {
-    
+
 }
 
 
@@ -52,6 +52,7 @@ void Widget_DirectoryBrowser::populate()
     }, this);
 
     resizeAndReallign();
+    collapse();
 }
 
 

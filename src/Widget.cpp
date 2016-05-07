@@ -392,6 +392,13 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
     auto parent_visible_rect = d->visible_rect;
     bool got_rect = d->got_rect;
 
+    Point<int> view_offset = {0, 0};
+    auto scroll_area = dynamic_cast<Widget_ScrollArea*>(this);//We may have offsets.
+    if(scroll_area)
+    {
+        view_offset = scroll_area->offset();
+    }
+
     if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
     {
         /* Calculate a rectangle to process on the window surface
@@ -416,19 +423,15 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
             {
                 child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
                 child->m_flags |= R64FX_WIDGET_WANTS_UPDATE;
+                cout << "child: " << child << " -> 1\n";
             }
             else
             {
                 child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
+                cout << "child: " << child << " -> 0\n";
             }
+            cout << "    " << visible_rect << " : " << child->rect() << " :: " << parent_visible_rect << "\n";
         }
-    }
-
-    Point<int> view_offset = {0, 0};
-    auto scroll_area = dynamic_cast<Widget_ScrollArea*>(this);//We may have offsets.
-    if(scroll_area)
-    {
-        view_offset = scroll_area->offset();
     }
 
     /* Recursively process children. */

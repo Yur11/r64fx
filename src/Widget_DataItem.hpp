@@ -29,6 +29,8 @@ public:
 protected:
     virtual void updateEvent(UpdateEvent* event);
 
+    virtual void mousePressEvent(MousePressEvent* event);
+
     virtual void mouseEnterEvent();
 
     virtual void mouseLeaveEvent();
