@@ -3,7 +3,7 @@
 namespace r64fx{
 
 /* Maximum number of individual rectangles
-    * that can be repainted after reconf. cycle. */
+    * that can be repainted after update cycle. */
 constexpr int max_rects = 16;
 
 /* Collection of data attached to the window.
@@ -13,25 +13,22 @@ struct WindowWidgetData : Widget::UpdateEvent{
 
     /* Root widget shown in the window that
         * this context is attached to. */
-    Widget*  widget = nullptr;
+    Widget*  root_widget = nullptr;
 
     /* Painter serving the window. */
     Painter* painter = nullptr;
 
-    /* Current visible rect. passed to widget reconf. method. */
+    /* Current visible rect. passed to widget update method. */
     Rect<int> visible_rect;
 
-    /* List of rectangles to be repainted after reconf. cycle. */
+    /* List of rectangles to be repainted after update cycle. */
     Rect<int> rects[max_rects];
 
     /* Number of rectangles that must be repainted. */
     int num_rects = 0;
 
-    /* Used in reconf. logic. */
+    /* Used in update logic. */
     bool got_rect = false;
-
-    /* Total offset for every nested scrollable view. */
-    Point<int> view_offset = {0, 0};
 };
 
 
@@ -40,8 +37,8 @@ class WindowEvents_Widget : public WindowEvents{
     virtual void resizeEvent(Window* window, int width, int height)
         {
         auto d = (WindowWidgetData*) window->data();
-        d->widget->setSize({width, height});
-        d->widget->update();
+        d->root_widget->setSize({width, height});
+        d->root_widget->update();
     }
 
 
@@ -50,7 +47,7 @@ class WindowEvents_Widget : public WindowEvents{
         g_pressed_buttons |= MouseButton(button);
 
         auto d = (WindowWidgetData*) window->data();
-        d->widget->initMousePressEvent(Point<int>(x, y), MouseButton(button));
+        d->root_widget->initMousePressEvent(Point<int>(x, y), MouseButton(button));
 
         g_prev_mouse_position = Point<int>(x, y);
     }
@@ -61,7 +58,7 @@ class WindowEvents_Widget : public WindowEvents{
         g_pressed_buttons &= ~MouseButton(button);
 
         auto d = (WindowWidgetData*) window->data();
-        d->widget->initMouseReleaseEvent(Point<int>(x, y), MouseButton(button));
+        d->root_widget->initMouseReleaseEvent(Point<int>(x, y), MouseButton(button));
     }
 
 
@@ -71,7 +68,7 @@ class WindowEvents_Widget : public WindowEvents{
         Point<int> delta = position - g_prev_mouse_position;
 
         auto d = (WindowWidgetData*) window->data();
-        g_moused_over_widget = d->widget->initMouseMoveEvent(position, delta, g_pressed_buttons, g_moused_over_widget);
+        g_moused_over_widget = d->root_widget->initMouseMoveEvent(position, delta, g_pressed_buttons, g_moused_over_widget);
 
         g_prev_mouse_position = position;
     }
@@ -98,21 +95,21 @@ class WindowEvents_Widget : public WindowEvents{
     virtual void keyPressEvent(Window* window, unsigned int key)
     {
         auto d = (WindowWidgetData*) window->data();
-        d->widget->initKeyPressEvent(key);
+        d->root_widget->initKeyPressEvent(key);
     }
 
 
     virtual void keyReleaseEvent(Window* window, unsigned int key)
     {
         auto d = (WindowWidgetData*) window->data();
-        d->widget->initKeyReleaseEvent(key);
+        d->root_widget->initKeyReleaseEvent(key);
     }
 
 
     virtual void textInputEvent(Window* window, const std::string &text, unsigned int key)
     {
         auto d = (WindowWidgetData*) window->data();
-        d->widget->initTextInputEvent(text, key);
+        d->root_widget->initTextInputEvent(text, key);
     }
 
 
@@ -182,7 +179,7 @@ class WindowEvents_Widget : public WindowEvents{
     virtual void closeEvent(Window* window)
     {
         auto d = (WindowWidgetData*) window->data();
-        d->widget->closeEvent();
+        d->root_widget->closeEvent();
     }
 };
 
@@ -232,7 +229,7 @@ void Widget::show(
         }
 #endif//R64FX_DEBUG
 
-        d->widget = this;
+        d->root_widget = this;
         d->painter = painter;
 
         window->setData(d);

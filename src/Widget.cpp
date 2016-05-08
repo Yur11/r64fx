@@ -307,20 +307,6 @@ Painter* Widget::UpdateEvent::painter()
 }
 
 
-void Widget::UpdateEvent::setOffset(Point<int> offset)
-{
-    auto d = (WindowWidgetData*) this;
-    d->painter->setOffset(offset);
-}
-
-
-Point<int> Widget::UpdateEvent::offset() const
-{
-    auto d = (WindowWidgetData*) this;
-    return d->painter->offset();
-}
-
-
 Rect<int> Widget::UpdateEvent::visibleRect()
 {
     auto d = (WindowWidgetData*) this;
@@ -334,7 +320,7 @@ void process_window_updates(Window* window, void*)
 
     auto d        = (WindowWidgetData*) window->data();
     auto painter  = d->painter;
-    auto widget   = d->widget;
+    auto widget   = d->root_widget;
 
     if(widget->m_flags & R64FX_WIDGET_UPDATE_FLAGS)
     {
@@ -415,14 +401,14 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
             {
                 child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
                 child->m_flags |= R64FX_WIDGET_WANTS_UPDATE;
-//                 cout << "child: " << child << " -> 1\n";
+                cout << "child: " << child << " -> 1\n";
             }
             else
             {
                 child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
-//                 cout << "child: " << child << " -> 0\n";
+                cout << "child: " << child << " -> 0\n";
             }
-//             cout << "    " << visible_rect << " : " << child->rect() << " :: " << parent_visible_rect << "\n";
+            cout << "    " << visible_rect << " : " << child->rect() << " :: " << parent_visible_rect << "\n";
         }
     }
 
