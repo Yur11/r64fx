@@ -1,5 +1,4 @@
 #include "Widget.hpp"
-#include "Widget_ScrollArea.hpp"
 #include "Window.hpp"
 #include "Mouse.hpp"
 #include "Keyboard.hpp"
@@ -109,11 +108,7 @@ Widget* Widget::leafAt(Point<int> position, Point<int>* offset)
     bool got_leaf = true;
     while(got_leaf)
     {
-        auto scroll_area = dynamic_cast<Widget_ScrollArea*>(leaf);
-        if(scroll_area)
-        {
-            leaf_offset += scroll_area->offset();
-        }
+        leaf_offset += leaf->contentOffset();
 
         got_leaf = false;
         for(auto child : leaf->m_children)
@@ -228,11 +223,7 @@ Point<int> Widget::toRootCoords(Point<int> point, Widget** root)
         point += widget->position();
         if(widget->parent())
         {
-            auto scroll_area = dynamic_cast<const Widget_ScrollArea*>(widget->parent());
-            if(scroll_area)
-            {
-                point += scroll_area->offset();
-            }
+            point += widget->parent()->contentOffset();
             widget = widget->parent();
             continue;
         }
@@ -254,6 +245,12 @@ Point<int> Widget::toRootCoords(Point<int> point, Widget** root)
 bool Widget::isVisible() const
 {
     return m_flags & R64FX_WIDGET_IS_VISIBLE;
+}
+
+
+Point<int> Widget::contentOffset()
+{
+    return {0, 0};
 }
 
 
@@ -392,12 +389,7 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
     auto parent_visible_rect = d->visible_rect;
     bool got_rect = d->got_rect;
 
-    Point<int> view_offset = {0, 0};
-    auto scroll_area = dynamic_cast<Widget_ScrollArea*>(this);//We may have offsets.
-    if(scroll_area)
-    {
-        view_offset = scroll_area->offset();
-    }
+    Point<int> content_offset = contentOffset();
 
     if(m_flags & R64FX_WIDGET_WANTS_UPDATE)
     {
@@ -423,14 +415,14 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
             {
                 child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
                 child->m_flags |= R64FX_WIDGET_WANTS_UPDATE;
-                cout << "child: " << child << " -> 1\n";
+//                 cout << "child: " << child << " -> 1\n";
             }
             else
             {
                 child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
-                cout << "child: " << child << " -> 0\n";
+//                 cout << "child: " << child << " -> 0\n";
             }
-            cout << "    " << visible_rect << " : " << child->rect() << " :: " << parent_visible_rect << "\n";
+//             cout << "    " << visible_rect << " : " << child->rect() << " :: " << parent_visible_rect << "\n";
         }
     }
 
@@ -439,21 +431,11 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
     {
         if(child->isVisible() && (child->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
         {
-            auto offset = d->painter->offset();
+            auto old_offset = d->painter->offset();
 
             d->painter->setOffset(
-                offset + child->position() + view_offset
+                old_offset + child->position() + content_offset
             );
-
-            Rect<int> clip_rect;
-            if(scroll_area)
-            {
-                clip_rect = d->painter->clipRect();
-                d->painter->setClipRect(Rect<int>(
-                    toRootCoords(Point<int>(0, 0)),
-                    size()
-                ));
-            }
 
             auto visible_rect = intersection(child->rect(), parent_visible_rect);
             d->visible_rect = {0, 0, visible_rect.width(), visible_rect.height()};
@@ -467,12 +449,7 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
                 child->updateChildren((UpdateEvent*)d);
             }
 
-            if(scroll_area)
-            {
-                d->painter->setClipRect(clip_rect);
-            }
-
-            d->painter->setOffset(offset);
+            d->painter->setOffset(old_offset);
         }
     }
 

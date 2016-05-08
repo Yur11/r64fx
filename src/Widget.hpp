@@ -110,6 +110,8 @@ public:
 
     bool isVisible() const;
 
+    virtual Point<int> contentOffset();
+
 
 /* === Window === */
 
