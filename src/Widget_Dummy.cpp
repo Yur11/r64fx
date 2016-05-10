@@ -8,11 +8,10 @@ using namespace std;
 
 namespace r64fx{
     
-Widget_Dummy::Widget_Dummy(Color<unsigned char> color, Widget* parent)
+Widget_Dummy::Widget_Dummy(Widget* parent)
 : Widget(parent)
-, m_Color(color)
 {
-
+    changeColor();
 }
 
 
@@ -24,85 +23,49 @@ Widget_Dummy::~Widget_Dummy()
 
 void Widget_Dummy::updateEvent(UpdateEvent* event)
 {
-//     auto painter = event->painter();
-//     Rect<int> rect = {0, 0, width(), height()};
-//
-//     if(rect != event->visibleRect())
-//     {
-//         painter->fillRect({63, 63, 63}, {{0, 0}, size()});
-//     }
-//     else if(on)
-//     {
-//         painter->fillRect({127, 127, 127}, {{0, 0}, size()});
-//     }
-//     else
-//     {
-//         painter->fillRect(m_Color, {{0, 0}, size()});
-//     }
-//
-//     Widget::updateEvent(event);
-//
-//     painter->fillRect({0, 0, 0}, {m_Point, {10, 10}});
+    auto p = event->painter();
+    p->fillRect({0, 0, width(), height()}, m_color);
+    Widget::updateEvent(event);
 }
 
 
 void Widget_Dummy::mousePressEvent(MousePressEvent* event)
 {
-    Widget::mousePressEvent(event);
-
-    if(!event->handled)
-    {
-        if(event->button() == MouseButton::Left())
-        {
-            on = true;
-            event->handled = true;
-            m_Point = event->position();
-            grabMouse();
-            update();
-        }
-    }
+    changeColor();
+    update();
 }
 
 
 void Widget_Dummy::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    Widget::mouseReleaseEvent(event);
 
-    if(!event->handled)
-    {
-        if(event->button() == MouseButton::Left())
-        {
-            on = false;
-            event->handled = true;
-            ungrabMouse();
-            update();
-        }
-    }
 }
 
 
 void Widget_Dummy::mouseMoveEvent(MouseMoveEvent* event)
 {
-    Widget::mouseMoveEvent(event);
-/*
-    if(!event->handled)
-    {
-        event->handled = true;
-        m_Point = event->position();
-        update();
-    }*/
+
 }
 
 
 void Widget_Dummy::keyPressEvent(KeyPressEvent* event)
 {
-    Widget::keyPressEvent(event);
+
 }
 
 
 void Widget_Dummy::keyReleaseEvent(KeyReleaseEvent* event)
 {
-    Widget::keyReleaseEvent(event);
+
+}
+
+
+void Widget_Dummy::changeColor()
+{
+    for(int i=0; i<3; i++)
+    {
+        m_color[i] = (rand() % 127) + 128;
+    }
 }
     
 }//namespace r64fx

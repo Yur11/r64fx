@@ -7,12 +7,10 @@
 namespace r64fx{
 
 class Widget_Dummy : public Widget{
-    Color<unsigned char> m_Color;
-    Point<int> m_Point = {0, 0};
-    bool on = false;
+    unsigned char m_color[4] = {0, 0, 0, 0};
 
 public:
-    Widget_Dummy(Color<unsigned char> color, Widget* parent = nullptr);
+    Widget_Dummy(Widget* parent = nullptr);
 
     virtual ~Widget_Dummy();
 
@@ -28,6 +26,9 @@ protected:
     virtual void keyPressEvent(KeyPressEvent* event);
 
     virtual void keyReleaseEvent(KeyReleaseEvent* event);
+
+private:
+    void changeColor();
 };
 
 }//namespace r64fx

@@ -18,6 +18,9 @@ struct WindowWidgetData : Widget::UpdateEvent{
     /* Painter serving the window. */
     Painter* painter = nullptr;
 
+    /* Updated widget's position in root coordinates. */
+    Point<int> widget_root_pos;
+
     /* Current visible rect. passed to widget update method. */
     Rect<int> visible_rect;
 

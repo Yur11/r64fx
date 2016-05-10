@@ -118,7 +118,7 @@ public:
     /* Show this widget in a window. */
     void show(
         Window::WmType  wm_type        = Window::WmType::Normal,
-        Window::Type    type           = Window::Type::GL,
+        Window::Type    type           = Window::Type::Image,
         Window*         modal_parent   = nullptr
     );
 

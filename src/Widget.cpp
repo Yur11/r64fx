@@ -401,14 +401,14 @@ void Widget::updateChildren(Widget::UpdateEvent* event)
             {
                 child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
                 child->m_flags |= R64FX_WIDGET_WANTS_UPDATE;
-                cout << "child: " << child << " -> 1\n";
+//                 cout << "child: " << child << " -> 1\n";
             }
             else
             {
                 child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
-                cout << "child: " << child << " -> 0\n";
+//                 cout << "child: " << child << " -> 0\n";
             }
-            cout << "    " << visible_rect << " : " << child->rect() << " :: " << parent_visible_rect << "\n";
+//             cout << "    " << visible_rect << " : " << child->rect() << " :: " << parent_visible_rect << "\n";
         }
     }
 

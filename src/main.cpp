@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <ctime>
 
 #include "Program.hpp"
 #include "Widget.hpp"
@@ -10,7 +11,7 @@
 #include "Painter.hpp"
 #include "Font.hpp"
 #include "Widget_ScrollArea.hpp"
-#include "Widget_DirectoryBrowser.hpp"
+#include "Widget_Dummy.hpp"
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
@@ -27,9 +28,35 @@ class MyWidget : public Widget_ScrollArea{
 public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
-        auto browser = new Widget_DirectoryBrowser("samples", "/home/yurii/Sound/Samples/freesound/errorcell", this);
-        browser->setPosition({20, 20});
-        browser->populate();
+        srand(time(0));
+
+        auto dummy = new Widget_Dummy(this);
+        dummy->setSize({350, 350});
+        dummy->setPosition({50, 50});
+
+        {
+            auto subdummy = new Widget_Dummy(dummy);
+            subdummy->setSize({100, 100});
+            subdummy->setPosition({50, 50});
+        }
+
+        {
+            auto subdummy = new Widget_Dummy(dummy);
+            subdummy->setSize({100, 100});
+            subdummy->setPosition({200, 50});
+        }
+
+        {
+            auto subdummy = new Widget_Dummy(dummy);
+            subdummy->setSize({100, 100});
+            subdummy->setPosition({50, 200});
+        }
+
+        {
+            auto subdummy = new Widget_Dummy(dummy);
+            subdummy->setSize({100, 100});
+            subdummy->setPosition({200, 200});
+        }
     }
 
     ~MyWidget()
@@ -99,7 +126,7 @@ private:
         g_Font = new Font("", 20, 72);
 
         auto mw = new MyWidget();
-        mw->setSize({300, 300});
+        mw->setSize({600, 600});
         mw->show();
     }
 
