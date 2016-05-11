@@ -95,13 +95,13 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     static unsigned int getEventButton(XButtonEvent* event);
 
-    static void processSomeEvents(WindowEvents* events);
+    static void processSomeEvents(WindowEventDispatcherIface* events);
 
     void setupEvents();
 
-    void sendSelection(const XSelectionRequestEvent &in, WindowEvents* events);
+    void sendSelection(const XSelectionRequestEvent &in, WindowEventDispatcherIface* events);
 
-    void recieveSelection(const XSelectionEvent &in, WindowEvents* events);
+    void recieveSelection(const XSelectionEvent &in, WindowEventDispatcherIface* events);
 
     void clearSelection(const XSelectionClearEvent &in);
 
@@ -408,7 +408,7 @@ bool WindowX11::doingTextInput()
 }
 
 
-void WindowX11::processSomeEvents(WindowEvents* events)
+void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 {
     while(XPending(g_display))
     {
@@ -745,7 +745,7 @@ void Window::deleteInstance(Window* window)
 }
 
 
-void Window::processSomeEvents(WindowEvents* events)
+void Window::processSomeEvents(WindowEventDispatcherIface* events)
 {
     WindowX11::processSomeEvents(events);
 }

@@ -128,7 +128,7 @@ void WindowX11::requestClipboardMetadata(ClipboardMode mode)
 }
 
 
-void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEvents* events)
+void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEventDispatcherIface* events)
 {
     if(in.property == None)
     {
@@ -224,7 +224,7 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEvents* ev
 }
 
 
-void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEvents* events)
+void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEventDispatcherIface* events)
 {
     auto cb = clipboard(in.selection);
     if(!cb)

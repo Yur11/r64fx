@@ -39,7 +39,6 @@ int Program::exec()
     
     while(program_should_be_running)
     {
-        Widget::processEvents();
         long sleep_time = Timer::runTimers();
         if(sleep_time <= 0 || sleep_time > 100)
             sleep_time = 100;

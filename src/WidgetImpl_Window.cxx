@@ -2,43 +2,10 @@
 
 namespace r64fx{
 
-/* Maximum number of individual rectangles
-    * that can be repainted after update cycle. */
-constexpr int max_rects = 16;
-
-/* Collection of data attached to the window.
-    * We should be able to cast back and forth
-    * between WindowWidgetData and Window::UpdateEvent. */
-struct WindowWidgetData : Widget::UpdateEvent{
-
-    /* Root widget shown in the window that
-        * this context is attached to. */
-    Widget*  root_widget = nullptr;
-
-    /* Painter serving the window. */
-    Painter* painter = nullptr;
-
-    /* Updated widget's position in root coordinates. */
-    Point<int> widget_root_pos;
-
-    /* Current visible rect. passed to widget update method. */
-    Rect<int> visible_rect;
-
-    /* List of rectangles to be repainted after update cycle. */
-    Rect<int> rects[max_rects];
-
-    /* Number of rectangles that must be repainted. */
-    int num_rects = 0;
-
-    /* Used in update logic. */
-    bool got_rect = false;
-};
-
-
-class WindowEvents_Widget : public WindowEvents{
+class WindowEventDispatcher : public WindowEventDispatcherIface{
 
     virtual void resizeEvent(Window* window, int width, int height)
-        {
+    {
         auto d = (WindowWidgetData*) window->data();
         d->root_widget->setSize({width, height});
         d->root_widget->update();
@@ -186,7 +153,7 @@ class WindowEvents_Widget : public WindowEvents{
     }
 };
 
-WindowEvents_Widget g_events;
+long int g_window_count = 0;
 
 
 void Widget::show(
@@ -195,6 +162,7 @@ void Widget::show(
     Window*         modal_parent
 )
 {
+    /* Create new window if needed. */
     if(!isWindow())
     {
         if(width() <= 0)
@@ -224,21 +192,53 @@ void Widget::show(
 #endif//R64FX_DEBUG
 
         auto d = new(nothrow) WindowWidgetData;
+        if(d)
+        {
+            d->root_widget = this;
+            d->painter = painter;
+
+            window->setData(d);
+
+            m_parent.window = window;
+            m_flags |= R64FX_WIDGET_IS_WINDOW;
+
+            g_window_count++;
+
+            /* Setup gui timer if needed. */
+            if(!g_gui_timer)
+            {
+                g_gui_timer = new (std::nothrow) Timer;
+                if(g_gui_timer)
+                {
+                    g_gui_timer->setInterval(1000);
+                    g_gui_timer->onTimeout([](Timer* timer, void* data){
+
+                        WindowEventDispatcher events;
+                        Window::processSomeEvents(&events);
+
+                        Window::forEach([](Window* window, void* data){
+                            auto d = (WindowWidgetData*) window->data();
+                            d->root_widget->performUpdates();
+                        }, nullptr);
+
+                    }, nullptr);
+                    g_gui_timer->start();
+                }
 #ifdef R64FX_DEBUG
-        if(!d)
+                else
+                {
+                    cerr << "Widget: Failed to create gui timer!\n";
+                }
+#endif//R64FX_DEBUG
+            }
+        }
+#ifdef R64FX_DEBUG
+        else
         {
             cerr << "Widget: Failed to create WindowWidgetData!\n";
             abort();
         }
 #endif//R64FX_DEBUG
-
-        d->root_widget = this;
-        d->painter = painter;
-
-        window->setData(d);
-
-        m_parent.window = window;
-        m_flags |= R64FX_WIDGET_IS_WINDOW;
     }
     m_parent.window->setSize(size());
     if(modal_parent)
@@ -269,6 +269,28 @@ void Widget::close()
         delete d;
         m_parent.window = nullptr;
         m_flags &= ~R64FX_WIDGET_IS_WINDOW;
+
+        g_window_count--;
+        if(g_window_count == 0)
+        {
+            if(g_gui_timer)
+            {
+                g_gui_timer->stop();
+                delete g_gui_timer;
+            }
+            else
+            {
+#ifdef R64FX_DEBUG
+                cerr << "Widget: gui timer is null!\n";
+#endif//R64FX_DEBUG
+            }
+        }
+#ifdef R64FX_DEBUG
+        else if(g_window_count < 0)
+        {
+            cerr << "Widget: Window count is less than zero!\n";
+        }
+#endif//R64FX_DEBUG
     }
 }
 

@@ -236,19 +236,24 @@ public:
     void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 
 
-/* === Update/Reconfigure cycle === */
+/* === Update cycle === */
 
     /* Request an update for this widget. */
     void update();
 
+    void performUpdates();
 
+    /* UpdateEvent structure passed to the updateEvent() method. */
     class UpdateEvent{
+        friend class Widget;
+
+        void* m = nullptr;
+
         UpdateEvent(const UpdateEvent&) {}
 
-    protected:
-        UpdateEvent() {}
-
     public:
+        UpdateEvent(void* m) : m(m) {}
+
         Painter* painter();
 
         /* Widgets visible rect. as clipped by the parent structures. */
@@ -270,8 +275,6 @@ public:
 
         inline int height() const { return m_size.height(); }
     };
-
-    static void processEvents();
 
 protected:
     virtual void updateEvent(UpdateEvent* event);
@@ -315,8 +318,7 @@ protected:
 private:
     void updateChildren(UpdateEvent* event);
 
-    friend void process_window_updates(Window* window, void*);
-    friend class WindowEvents_Widget;
+    friend class WindowEventDispatcher;
 };
     
 }//namespace r64fx

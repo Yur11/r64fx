@@ -9,7 +9,7 @@
 namespace r64fx{
 
 class Window;
-class WindowEvents;
+class WindowEventDispatcherIface;
 class Image;
 class ClipboardDataType;
 
@@ -108,13 +108,13 @@ public:
 
     static void deleteInstance(Window* window);
 
-    static void processSomeEvents(WindowEvents* events);
+    static void processSomeEvents(WindowEventDispatcherIface* events);
 
     static void forEach(void (*fun)(Window* window, void* data), void* data);
 };
 
 
-class WindowEvents{
+class WindowEventDispatcherIface{
 public:
     virtual void resizeEvent(Window* window, int width, int height) = 0;
 

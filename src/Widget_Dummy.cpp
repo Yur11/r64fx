@@ -31,6 +31,7 @@ void Widget_Dummy::updateEvent(UpdateEvent* event)
 
 void Widget_Dummy::mousePressEvent(MousePressEvent* event)
 {
+    cout << "Widget_Dummy click!\n";
     changeColor();
     update();
 }
