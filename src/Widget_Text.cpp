@@ -429,7 +429,7 @@ void Widget_Text::resizeToText()
 }
 
 
-void Widget_Text::updateEvent(UpdateEvent* event)
+void Widget_Text::paintEvent(PaintEvent* event)
 {
     if(m_image)
     {
@@ -478,21 +478,21 @@ void Widget_Text::updateEvent(UpdateEvent* event)
     auto painter = event->painter();
     painter->putImage(m_image);
 
-    Widget::updateEvent(event);
+    Widget::paintEvent(event);
 }
 
 
 void Widget_Text::focusInEvent()
 {
     startTextInput();
-    update();
+    repaint();
 }
 
 
 void Widget_Text::focusOutEvent()
 {
     stopTextInput();
-    update();
+    repaint();
 }
 
 
@@ -523,7 +523,7 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
             requestClipboardMetadata(ClipboardMode::Selection);
         }
     }
-    update();
+    repaint();
 }
 
 
@@ -534,7 +534,7 @@ void Widget_Text::mouseReleaseEvent(MouseReleaseEvent* event)
         g_selection_text = m_text_painter->selectionText();
         anounceClipboardData("text/plain", ClipboardMode::Selection);
     }
-    update();
+    repaint();
 }
 
 
@@ -548,7 +548,7 @@ void Widget_Text::mouseMoveEvent(MouseMoveEvent* event)
         m_text_painter->setCursorPosition(tcp);
         m_text_painter->setSelectionEnd(tcp);
         m_text_painter->updateSelection();
-        update();
+        repaint();
     }
     Widget::mouseMoveEvent(event);
 }
@@ -735,7 +735,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
         anounceClipboardData("text/plain", ClipboardMode::Selection);
     }
 
-    update();
+    repaint();
 }
 
 
@@ -746,7 +746,7 @@ void Widget_Text::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
     {
         string text((const char*)event->data(), event->size());
         insertText(text);
-        update();
+        repaint();
     }
 }
 

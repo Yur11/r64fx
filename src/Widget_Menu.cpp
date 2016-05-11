@@ -88,7 +88,7 @@ public:
     void activate();
 
 protected:
-    virtual void updateEvent(UpdateEvent* event);
+    virtual void paintEvent(PaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 
@@ -406,7 +406,7 @@ void Widget_MenuItem::activate()
 }
 
 
-void Widget_MenuItem::updateEvent(UpdateEvent* event)
+void Widget_MenuItem::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
 
@@ -435,7 +435,7 @@ void Widget_MenuItem::updateEvent(UpdateEvent* event)
         p->blendColors({0, 0}, &colors, m_image);
     }
 
-    Widget::updateEvent(event);
+    Widget::paintEvent(event);
 }
 
 
@@ -467,7 +467,7 @@ void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
             }
 
             root_menu->closeAll();
-            root_menu->update();
+            root_menu->repaint();
             m_action->exec();
         }
         else if(m_sub_menu && parent_menu->activeItem() != this && showSubMenu())
@@ -518,16 +518,16 @@ void Widget_MenuItem::mouseEnterEvent()
 
     if(active_item)//Old active item.
     {
-        active_item->update();
+        active_item->repaint();
     }
 
-    update();
+    repaint();
 }
 
 
 void Widget_MenuItem::mouseLeaveEvent()
 {
-    update();
+    repaint();
 }
 
 
@@ -640,7 +640,7 @@ void Widget_Menu::mousePressEvent(MousePressEvent* event)
         }
         closeAll();
         setActiveItem(nullptr);
-        update();
+        repaint();
     }
 }
 

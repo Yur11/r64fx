@@ -39,6 +39,8 @@ Widget::Widget(Widget* parent)
     getsFocusOnClick(true);
     grabsMouseOnClick(true);
     ungrabsMouseOnRelease(true);
+
+    m_flags |= R64FX_WIDGET_IS_VISIBLE;
 }
 
 
@@ -117,7 +119,7 @@ Widget* Widget::leafAt(Point<int> position, Point<int>* offset)
         got_leaf = false;
         for(auto child : leaf->m_children)
         {
-            if(child->rect().overlaps(position - leaf_offset))
+            if(Rect<int>(child->position(), child->size()).overlaps(position - leaf_offset))
             {
                 got_leaf = true;
                 leaf_offset += child->position();
@@ -213,12 +215,6 @@ int Widget::height() const
 }
 
 
-Rect<int> Widget::rect() const
-{
-    return m_rect;
-}
-
-
 Point<int> Widget::toRootCoords(Point<int> point, Widget** root)
 {
     auto widget = this;
@@ -243,6 +239,49 @@ Point<int> Widget::toRootCoords(Point<int> point, Widget** root)
     }
 
     return point;
+}
+
+
+void Widget::recomputeChildrenVisibility(const Rect<int> &clip_rect)
+{
+    cout << "recomputeChildrenVisibility()\n";
+
+    auto shifted_clip_rect = clip_rect - contentOffset();
+
+    for(auto child : m_children)
+    {
+        auto visible_rect = intersection(Rect<int>(child->position(), child->size()), shifted_clip_rect);
+        if(visible_rect.width() > 0 && visible_rect.height() > 0)
+        {
+            child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
+
+            if(visible_rect.width() < child->width() || visible_rect.height() < child->height())
+            {
+                child->m_flags |= R64FX_WIDGET_IS_PARTIALLY_VISIBLE;
+            }
+            else
+            {
+                child->m_flags &= ~R64FX_WIDGET_IS_PARTIALLY_VISIBLE;
+            }
+
+            child->recomputeChildrenVisibility(Rect<int>(
+                visible_rect.position() - child->position(),
+                visible_rect.size()
+            ));
+        }
+        else
+        {
+            child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
+            child->m_flags &= ~R64FX_WIDGET_IS_PARTIALLY_VISIBLE;
+        }
+    }
+}
+
+
+void Widget::recomputeChildrenVisibility()
+{
+    Rect<int> clip_rect(0, 0, width(), height());
+    recomputeChildrenVisibility(clip_rect);
 }
 
 
@@ -284,7 +323,7 @@ bool Widget::isPinned() const
 }//namespace r64fx
 
 
-#include "WidgetImpl_UpdateCycle.cxx"
+#include "WidgetImpl_Paint.cxx"
 #include "WidgetImpl_Mouse.cxx"
 #include "WidgetImpl_Keyboard.cxx"
 #include "WidgetImpl_Clipboard.cxx"

@@ -31,7 +31,7 @@ public:
     void pickNextState();
 
 public:
-    virtual void updateEvent(UpdateEvent* event);
+    virtual void paintEvent(PaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 };

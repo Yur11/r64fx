@@ -57,7 +57,7 @@ void Widget_ItemList::resizeAndReallign()
 }
 
 
-void Widget_ItemList::updateEvent(UpdateEvent* event)
+void Widget_ItemList::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
 
@@ -65,7 +65,7 @@ void Widget_ItemList::updateEvent(UpdateEvent* event)
 
     p->fillRect({{0, 0}, size()}, bg);
 
-    Widget::updateEvent(event);
+    Widget::paintEvent(event);
 }
 
 }//namespace r64fx

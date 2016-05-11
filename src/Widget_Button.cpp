@@ -101,14 +101,14 @@ void Widget_Button::pickNextState()
 }
 
 
-void Widget_Button::updateEvent(UpdateEvent* event)
+void Widget_Button::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
     if(m_animation)
     {
         p->putImage(m_animation, {0, 0});
     }
-    Widget::updateEvent(event);
+    Widget::paintEvent(event);
 }
 
 

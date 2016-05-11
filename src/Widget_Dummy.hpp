@@ -14,7 +14,7 @@ public:
 
     virtual ~Widget_Dummy();
 
-    virtual void updateEvent(UpdateEvent* event);
+    virtual void paintEvent(PaintEvent* event);
 
 protected:
     virtual void mousePressEvent(MousePressEvent* event);

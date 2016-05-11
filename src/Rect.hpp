@@ -94,6 +94,13 @@ public:
         my += other.y();
         return *this;
     }
+
+    inline Rect<T> &operator-=(const Point<T> &other)
+    {
+        mx -= other.x();
+        my -= other.y();
+        return *this;
+    }
 };
 
 
@@ -115,7 +122,15 @@ template<typename T> bool inline operator!=(const Rect<T> &a, const Rect<T> &b)
 
 template<typename T> Rect<T> operator+(Rect<T> rect, Point<T> offset)
 {
-    return rect += offset;
+    rect += offset;
+    return rect;
+}
+
+
+template<typename T> Rect<T> operator-(Rect<T> rect, Point<T> offset)
+{
+    rect -= offset;
+    return rect;
 }
 
 

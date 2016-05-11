@@ -8,7 +8,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         auto d = (WindowWidgetData*) window->data();
         d->root_widget->setSize({width, height});
-        d->root_widget->update();
+        d->root_widget->repaint();
     }
 
 
@@ -244,7 +244,7 @@ void Widget::show(
     if(modal_parent)
         m_parent.window->setModalTo(modal_parent);
     m_parent.window->show();
-    update();
+    repaint();
 }
 
 

@@ -21,11 +21,12 @@ Widget_Dummy::~Widget_Dummy()
 }
 
 
-void Widget_Dummy::updateEvent(UpdateEvent* event)
+void Widget_Dummy::paintEvent(PaintEvent* event)
 {
+    cout << "Widget_Dummy::paintEvent() " << this << "\n";
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, m_color);
-    Widget::updateEvent(event);
+    Widget::paintEvent(event);
 }
 
 
@@ -33,7 +34,7 @@ void Widget_Dummy::mousePressEvent(MousePressEvent* event)
 {
     cout << "Widget_Dummy click!\n";
     changeColor();
-    update();
+    repaint();
 }
 
 

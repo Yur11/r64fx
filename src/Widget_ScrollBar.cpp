@@ -146,7 +146,7 @@ int Widget_ScrollBar_Vertical::barLength()
 }
 
 
-void Widget_ScrollBar_Vertical::updateEvent(UpdateEvent* event)
+void Widget_ScrollBar_Vertical::paintEvent(PaintEvent* event)
 {
     static unsigned char fg[4] = {127, 127, 127, 0};
     static unsigned char bg[4] = {127, 180, 255, 0};
@@ -162,7 +162,7 @@ void Widget_ScrollBar_Vertical::updateEvent(UpdateEvent* event)
     p->blendColors({0, 0                            }, colors, img_button_up);
     p->blendColors({0, height() - g_scroll_bar_width}, colors, img_button_down);
 
-    Widget::updateEvent(event);
+    Widget::paintEvent(event);
 }
 
 
@@ -171,12 +171,12 @@ void Widget_ScrollBar_Vertical::mousePressEvent(MousePressEvent* event)
     if(event->y() < g_scroll_bar_width)
     {
         setHandlePosition(handlePosition() - 0.1f);
-        update();
+        repaint();
     }
     else if(event->y() > (height() - g_scroll_bar_width))
     {
         setHandlePosition(handlePosition() + 0.1f);
-        update();
+        repaint();
     }
     else
     {
@@ -193,7 +193,7 @@ void Widget_ScrollBar_Vertical::mouseMoveEvent(MouseMoveEvent* event)
     int length = barLength() - handleLength();
     float step = float(event->dy()) / float(length);
     setHandlePosition(handlePosition() + step);
-    update();
+    repaint();
 }
 
 
@@ -211,7 +211,7 @@ int Widget_ScrollBar_Horizontal::barLength()
 }
 
 
-void Widget_ScrollBar_Horizontal::updateEvent(UpdateEvent* event)
+void Widget_ScrollBar_Horizontal::paintEvent(PaintEvent* event)
 {
     static unsigned char fg[4] = {127, 127, 127, 0};
     static unsigned char bg[4] = {127, 180, 255, 0};
@@ -227,7 +227,7 @@ void Widget_ScrollBar_Horizontal::updateEvent(UpdateEvent* event)
     p->blendColors({0, 0                           }, colors, img_button_left);
     p->blendColors({width() - g_scroll_bar_width, 0}, colors, img_button_right);
 
-    Widget::updateEvent(event);
+    Widget::paintEvent(event);
 }
 
 
@@ -236,12 +236,12 @@ void Widget_ScrollBar_Horizontal::mousePressEvent(MousePressEvent* event)
     if(event->x() < g_scroll_bar_width)
     {
         setHandlePosition(handlePosition() - 0.1);
-        update();
+        repaint();
     }
     else if(event->x() > (width() - g_scroll_bar_width))
     {
         setHandlePosition(handlePosition() + 0.1);
-        update();
+        repaint();
     }
     else
     {
@@ -258,7 +258,7 @@ void Widget_ScrollBar_Horizontal::mouseMoveEvent(MouseMoveEvent* event)
     int length       = barLength() - handleLength();
     float step       = float(event->dx()) / float(length);
     setHandlePosition(handlePosition() + step);
-    update();
+    repaint();
 }
 
 }//namespace r64fx

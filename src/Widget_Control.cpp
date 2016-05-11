@@ -131,14 +131,14 @@ void Widget_Control::onValueChanged(void (*callback)(Widget_Control*, void*), vo
 }
 
 
-void Widget_Control::updateEvent(UpdateEvent* event)
+void Widget_Control::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
     if(m_animation)
     {
         m_animation->paint(m_state, p);
     }
-    Widget::updateEvent(event);
+    Widget::paintEvent(event);
 }
 
 
@@ -151,7 +151,7 @@ void Widget_Control::mousePressEvent(MousePressEvent* event)
     if(new_state != m_state)
     {
         m_state = new_state;
-        update();
+        repaint();
     }
 }
 
@@ -165,7 +165,7 @@ void Widget_Control::mouseReleaseEvent(MouseReleaseEvent* event)
     if(new_state != m_state)
     {
         m_state = new_state;
-        update();
+        repaint();
     }
 }
 
@@ -179,7 +179,7 @@ void Widget_Control::mouseMoveEvent(MouseMoveEvent* event)
     if(new_state != m_state)
     {
         m_state = new_state;
-        update();
+        repaint();
     }
 }
 
@@ -193,7 +193,7 @@ void Widget_Control::mouseEnterEvent()
     if(new_state != m_state)
     {
         m_state = new_state;
-        update();
+        repaint();
     }
 }
 
@@ -207,7 +207,7 @@ void Widget_Control::mouseLeaveEvent()
     if(new_state != m_state)
     {
         m_state = new_state;
-        update();
+        repaint();
     }
 }
 

@@ -49,7 +49,7 @@ MouseButton Widget::pressedButtons()
 
 bool Widget::grabsMouseOnClick(bool yes)
 {
-    set_bits(m_flags, yes, R64FX_WIDGET_GRABS_MOUSE_ON_CLICK);\
+    set_bits(m_flags, yes, R64FX_WIDGET_GRABS_MOUSE_ON_CLICK);
     return yes;
 }
 

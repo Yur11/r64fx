@@ -16,7 +16,7 @@ public:
     virtual void resizeAndReallign();
 
 protected:
-    virtual void updateEvent(UpdateEvent* event);
+    virtual void paintEvent(PaintEvent* event);
 };
 
 }//namespace r64fx

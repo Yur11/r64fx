@@ -88,7 +88,7 @@ Widget_DataItem* Widget_DataItem::rootDataItem()
 }
 
 
-void Widget_DataItem::updateEvent(UpdateEvent* event)
+void Widget_DataItem::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
 
@@ -121,7 +121,7 @@ void Widget_DataItem::updateEvent(UpdateEvent* event)
         p->blendColors({offset, 0}, &colors, m_image);
     }
 
-    Widget::updateEvent(event);
+    Widget::paintEvent(event);
 }
 
 
@@ -133,13 +133,13 @@ void Widget_DataItem::mousePressEvent(MousePressEvent* event)
 
 void Widget_DataItem::mouseEnterEvent()
 {
-    update();
+    repaint();
 }
 
 
 void Widget_DataItem::mouseLeaveEvent()
 {
-    update();
+    repaint();
 }
 
 }//namespace

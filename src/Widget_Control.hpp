@@ -60,7 +60,7 @@ public:
     void onValueChanged(void (*callback)(Widget_Control*, void*), void* data = nullptr);
 
 protected:
-    virtual void updateEvent(UpdateEvent* event);
+    virtual void paintEvent(PaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

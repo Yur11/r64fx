@@ -83,7 +83,7 @@ void Widget_ItemTree::collapse()
     auto root_item_parent = root_item->parent();
     if(root_item_parent)
     {
-        root_item_parent->update();
+        root_item_parent->repaint();
     }
 }
 
@@ -96,7 +96,7 @@ void Widget_ItemTree::expand()
     auto root_item_parent = root_item->parent();
     if(root_item_parent)
     {
-        root_item_parent->update();
+        root_item_parent->repaint();
     }
 }
 
@@ -107,7 +107,7 @@ bool Widget_ItemTree::isCollapsed()
 }
 
 
-void Widget_ItemTree::updateEvent(UpdateEvent* event)
+void Widget_ItemTree::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
 
@@ -115,7 +115,7 @@ void Widget_ItemTree::updateEvent(UpdateEvent* event)
 
     p->fillRect({{0, 0}, size()}, bg);
 
-    Widget_DataItem::updateEvent(event);
+    Widget_DataItem::paintEvent(event);
 }
 
 

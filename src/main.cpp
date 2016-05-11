@@ -64,7 +64,7 @@ public:
 
     }
 
-    virtual void updateEvent(UpdateEvent* event)
+    virtual void paintEvent(PaintEvent* event)
     {
         auto p = event->painter();
 
@@ -73,7 +73,7 @@ public:
 
         p->fillRect({0, 0, width(), height()}, grey);
         p->fillRect({offset(), {10, 10}}, black);
-        Widget_ScrollArea::updateEvent(event);
+        Widget_ScrollArea::paintEvent(event);
     }
 
     virtual void mousePressEvent(MousePressEvent* event)
@@ -84,7 +84,7 @@ public:
         }
         else
         {
-            update();
+            repaint();
         }
     }
 
@@ -93,7 +93,8 @@ public:
         if(isMouseGrabber() && event->button() & MouseButton::Left())
         {
             setOffset(offset() + event->delta());
-            update();
+            recomputeChildrenVisibility();
+            repaint();
         }
     }
 
@@ -104,7 +105,7 @@ public:
             Program::quit();
         }
 
-        update();
+        repaint();
         Widget::keyPressEvent(event);
     }
 

@@ -104,9 +104,11 @@ public:
 
     int height() const;
 
-    Rect<int> rect() const;
-
     Point<int> toRootCoords(Point<int> point, Widget** root = nullptr);
+
+    void recomputeChildrenVisibility(const Rect<int> &clip_rect);
+
+    void recomputeChildrenVisibility();
 
     bool isVisible() const;
 
@@ -118,7 +120,7 @@ public:
     /* Show this widget in a window. */
     void show(
         Window::WmType  wm_type        = Window::WmType::Normal,
-        Window::Type    type           = Window::Type::Image,
+        Window::Type    type           = Window::Type::GL,
         Window*         modal_parent   = nullptr
     );
 
@@ -238,21 +240,21 @@ public:
 
 /* === Update cycle === */
 
-    /* Request an update for this widget. */
-    void update();
+    /* Request a repaint for this widget. */
+    void repaint();
 
     void performUpdates();
 
-    /* UpdateEvent structure passed to the updateEvent() method. */
-    class UpdateEvent{
+    /* PaintEvent structure passed to the paintEvent() method. */
+    class PaintEvent{
         friend class Widget;
 
         void* m = nullptr;
 
-        UpdateEvent(const UpdateEvent&) {}
+        PaintEvent(const PaintEvent&) {}
 
     public:
-        UpdateEvent(void* m) : m(m) {}
+        PaintEvent(void* m) : m(m) {}
 
         Painter* painter();
 
@@ -277,7 +279,7 @@ public:
     };
 
 protected:
-    virtual void updateEvent(UpdateEvent* event);
+    virtual void paintEvent(PaintEvent* event);
 
     virtual void resizeEvent(ResizeEvent* event);
 
@@ -316,7 +318,7 @@ protected:
     virtual void closeEvent();
 
 private:
-    void updateChildren(UpdateEvent* event);
+    void paintChildren(PaintEvent* event);
 
     friend class WindowEventDispatcher;
 };

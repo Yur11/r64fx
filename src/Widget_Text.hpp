@@ -54,7 +54,7 @@ public:
     void resizeToText();
 
 protected:
-    virtual void updateEvent(UpdateEvent* event);
+    virtual void paintEvent(PaintEvent* event);
 
     virtual void focusInEvent();
 
