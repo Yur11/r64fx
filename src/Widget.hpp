@@ -257,9 +257,6 @@ public:
         PaintEvent(void* m) : m(m) {}
 
         Painter* painter();
-
-        /* Widgets visible rect. as clipped by the parent structures. */
-        Rect<int> visibleRect();
     };
 
 

@@ -244,8 +244,6 @@ Point<int> Widget::toRootCoords(Point<int> point, Widget** root)
 
 void Widget::recomputeChildrenVisibility(const Rect<int> &clip_rect)
 {
-    cout << "recomputeChildrenVisibility()\n";
-
     auto shifted_clip_rect = clip_rect - contentOffset();
 
     for(auto child : m_children)

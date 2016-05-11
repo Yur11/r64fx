@@ -17,7 +17,7 @@
 /* The repaint() method has been called on one of the children. */
 #define R64FX_CHILD_WANTS_REPAINT             (1 << 0x05)
 
-#define R64FX_WIDGET_UPDATE_FLAGS             (R64FX_WIDGET_WANTS_REPAINT | R64FX_CHILD_WANTS_REPAINT)
+#define R64FX_WIDGET_REPAINT_FLAGS            (R64FX_WIDGET_WANTS_REPAINT | R64FX_CHILD_WANTS_REPAINT)
 
 /* Widget recieves focus upon mouse click. */
 #define R64FX_WIDGET_CLICK_FOCUS              (1 << 0x06)

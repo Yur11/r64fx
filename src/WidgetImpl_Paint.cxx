@@ -18,12 +18,6 @@ struct WindowWidgetData{
     /* Painter serving the window. */
     Painter* painter = nullptr;
 
-    /* Updated widget's position in root coordinates. */
-    Point<int> widget_root_pos;
-
-    /* Current visible rect. passed to widget update method. */
-    Rect<int> visible_rect;
-
     /* List of rectangles to be repainted after update cycle. */
     Rect<int> rects[max_rects];
 
@@ -32,8 +26,6 @@ struct WindowWidgetData{
 
     /* Used in update logic. */
     bool got_rect = false;
-
-    Point<int> global_position;
 };
 
 
@@ -44,18 +36,11 @@ Painter* Widget::PaintEvent::painter()
 }
 
 
-Rect<int> Widget::PaintEvent::visibleRect()
-{
-    auto d = (WindowWidgetData*) m;
-    return d->visible_rect;
-}
-
-
 void Widget::repaint()
 {
     m_flags |= R64FX_WIDGET_WANTS_REPAINT;
     auto widget = parent();
-    while(widget && !(widget->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
+    while(widget && !(widget->m_flags & R64FX_WIDGET_REPAINT_FLAGS))
     {
         widget->m_flags |= R64FX_CHILD_WANTS_REPAINT;
         widget = widget->parent();
@@ -73,26 +58,24 @@ void Widget::performUpdates()
     auto d = (WindowWidgetData*) window()->data();
     auto p = d->painter;
 
-    if(m_flags & R64FX_WIDGET_UPDATE_FLAGS)
+    if(m_flags & R64FX_WIDGET_REPAINT_FLAGS)
     {
         p->adjustForWindowSize();
+
         d->num_rects = 0;
-        d->visible_rect = {0, 0, width(), height()};
         d->got_rect = false;
-        d->global_position = {0, 0};
 
         Widget::PaintEvent event(d);
 
         if(m_flags & R64FX_WIDGET_WANTS_REPAINT)
         {
-            cout << "repaint A\n";
+            //Update whole window surface.
             paintEvent(&event);
             p->repaint();
         }
         else
         {
-            cout << "repaint B\n";
-            cout << d->num_rects << "\n";
+            //Update only certain parts of the window surface.
             paintChildren(&event);
             if(d->num_rects > 0)
             {
@@ -109,7 +92,7 @@ void Widget::performUpdates()
             }
         }
 
-        set_bits(m_flags, false, R64FX_WIDGET_UPDATE_FLAGS);
+        set_bits(m_flags, false, R64FX_WIDGET_REPAINT_FLAGS);
     }
 }
 
@@ -124,6 +107,7 @@ void Widget::paintChildren(Widget::PaintEvent* event)
 {
     auto d = (WindowWidgetData*) event->m;
     auto p = d->painter;
+    bool got_rect = d->got_rect;
 
     if(m_flags & R64FX_WIDGET_WANTS_REPAINT)
     {
@@ -135,18 +119,40 @@ void Widget::paintChildren(Widget::PaintEvent* event)
 
     for(auto child : m_children)
     {
-        if(!(child->m_flags & R64FX_WIDGET_UPDATE_FLAGS))
+        if(!(child->m_flags & R64FX_WIDGET_REPAINT_FLAGS))
             continue;
 
+        /* Children should use painter in their local coord. system. */
         auto old_offset = p->offset();
         p->setOffset(old_offset + child->position() + contentOffset());
 
-        child->paintEvent(event);
+        if(child->m_flags & R64FX_WIDGET_WANTS_REPAINT)
+        {
+            child->paintEvent(event);
+
+            /* Find portion of the window to update. */
+            if(!got_rect)
+            {
+                Rect<int> rect(p->offset(), child->size());
+                if(d->num_rects < max_rects)
+                {
+                    d->rects[d->num_rects] = rect;
+                    d->num_rects++;
+                }
+                d->got_rect = true;
+            }
+        }
+        else
+        {
+            child->paintChildren(event);
+        }
 
         p->setOffset(old_offset);
 
-        set_bits(child->m_flags, false, R64FX_WIDGET_UPDATE_FLAGS);
+        set_bits(child->m_flags, false, R64FX_WIDGET_REPAINT_FLAGS);
     }
+
+    d->got_rect = got_rect;
 }
 
 }//namespace r64fx
