@@ -12,6 +12,7 @@
 namespace r64fx{
 
 class Widget;
+class WidgetImpl;
 class Window;
 class Painter;
 class MousePressEvent;
@@ -32,6 +33,8 @@ class DndDropEvent;
 typedef LinkedList<Widget>::Iterator WidgetIterator;
 
 class Widget : public LinkedList<Widget>::Node{
+    friend class WidgetImpl;
+    friend class WindowEventDispatcher;
 
     /* Widgets parent can be either a widget or a window.
      * Never both at same time. */
@@ -247,16 +250,20 @@ public:
 
     /* PaintEvent structure passed to the paintEvent() method. */
     class PaintEvent{
-        friend class Widget;
+        friend class WidgetImpl;
 
-        void* m = nullptr;
+        WidgetImpl* m_impl = nullptr;
+
+        PaintEvent(WidgetImpl* impl)
+        : m_impl(impl)
+        {}
 
         PaintEvent(const PaintEvent&) {}
 
     public:
-        PaintEvent(void* m) : m(m) {}
+        WidgetImpl* impl() const;
 
-        Painter* painter();
+        Painter* painter() const;
     };
 
 
@@ -313,11 +320,6 @@ protected:
     virtual void dndMoveEvent(DndMoveEvent* event);
 
     virtual void closeEvent();
-
-private:
-    void paintChildren(PaintEvent* event);
-
-    friend class WindowEventDispatcher;
 };
     
 }//namespace r64fx

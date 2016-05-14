@@ -6,9 +6,9 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
     virtual void resizeEvent(Window* window, int width, int height)
     {
-        auto d = (WindowWidgetData*) window->data();
-        d->root_widget->setSize({width, height});
-        d->root_widget->repaint();
+        auto d = (WidgetImpl*) window->data();
+        d->m_root_widget->setSize({width, height});
+        d->m_root_widget->repaint();
     }
 
 
@@ -16,8 +16,8 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         g_pressed_buttons |= MouseButton(button);
 
-        auto d = (WindowWidgetData*) window->data();
-        d->root_widget->initMousePressEvent(Point<int>(x, y), MouseButton(button));
+        auto d = (WidgetImpl*) window->data();
+        d->m_root_widget->initMousePressEvent(Point<int>(x, y), MouseButton(button));
 
         g_prev_mouse_position = Point<int>(x, y);
     }
@@ -27,8 +27,8 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         g_pressed_buttons &= ~MouseButton(button);
 
-        auto d = (WindowWidgetData*) window->data();
-        d->root_widget->initMouseReleaseEvent(Point<int>(x, y), MouseButton(button));
+        auto d = (WidgetImpl*) window->data();
+        d->m_root_widget->initMouseReleaseEvent(Point<int>(x, y), MouseButton(button));
     }
 
 
@@ -37,8 +37,8 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         Point<int> position(x, y);
         Point<int> delta = position - g_prev_mouse_position;
 
-        auto d = (WindowWidgetData*) window->data();
-        g_moused_over_widget = d->root_widget->initMouseMoveEvent(position, delta, g_pressed_buttons, g_moused_over_widget);
+        auto d = (WidgetImpl*) window->data();
+        g_moused_over_widget = d->m_root_widget->initMouseMoveEvent(position, delta, g_pressed_buttons, g_moused_over_widget);
 
         g_prev_mouse_position = position;
     }
@@ -46,15 +46,12 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
     virtual void mouseEnterEvent(Window* window)
     {
-//         auto d = (WindowWidgetData*) window->data();
 //         d->widget->mouseEnterEvent();
     }
 
 
     virtual void mouseLeaveEvent(Window* window)
     {
-//         auto d = (WindowWidgetData*) window->data();
-
         if(g_moused_over_widget)
         {
             g_moused_over_widget->initMouseLeaveEvent();
@@ -64,22 +61,22 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
     virtual void keyPressEvent(Window* window, unsigned int key)
     {
-        auto d = (WindowWidgetData*) window->data();
-        d->root_widget->initKeyPressEvent(key);
+        auto d = (WidgetImpl*) window->data();
+        d->m_root_widget->initKeyPressEvent(key);
     }
 
 
     virtual void keyReleaseEvent(Window* window, unsigned int key)
     {
-        auto d = (WindowWidgetData*) window->data();
-        d->root_widget->initKeyReleaseEvent(key);
+        auto d = (WidgetImpl*) window->data();
+        d->m_root_widget->initKeyReleaseEvent(key);
     }
 
 
     virtual void textInputEvent(Window* window, const std::string &text, unsigned int key)
     {
-        auto d = (WindowWidgetData*) window->data();
-        d->root_widget->initTextInputEvent(text, key);
+        auto d = (WidgetImpl*) window->data();
+        d->m_root_widget->initTextInputEvent(text, key);
     }
 
 
@@ -148,8 +145,8 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
     virtual void closeEvent(Window* window)
     {
-        auto d = (WindowWidgetData*) window->data();
-        d->root_widget->closeEvent();
+        auto d = (WidgetImpl*) window->data();
+        d->m_root_widget->closeEvent();
     }
 };
 
@@ -191,11 +188,12 @@ void Widget::show(
         }
 #endif//R64FX_DEBUG
 
-        auto d = new(nothrow) WindowWidgetData;
+        auto d = new(std::nothrow) WidgetImpl;
         if(d)
         {
-            d->root_widget = this;
-            d->painter = painter;
+            d->m_window = window;
+            d->m_root_widget = this;
+            d->m_painter = painter;
 
             window->setData(d);
 
@@ -217,8 +215,8 @@ void Widget::show(
                         Window::processSomeEvents(&events);
 
                         Window::forEach([](Window* window, void* data){
-                            auto d = (WindowWidgetData*) window->data();
-                            d->root_widget->performUpdates();
+                            auto impl = (WidgetImpl*) window->data();
+                            impl->initPaintCycle();
                         }, nullptr);
 
                     }, nullptr);
@@ -235,8 +233,7 @@ void Widget::show(
 #ifdef R64FX_DEBUG
         else
         {
-            cerr << "Widget: Failed to create WindowWidgetData!\n";
-            abort();
+            cerr << "Widget: Failed to create WidgetImpl!\n";
         }
 #endif//R64FX_DEBUG
     }
@@ -261,12 +258,12 @@ void Widget::close()
 {
     if(isWindow())
     {
-        auto d = (WindowWidgetData*) m_parent.window->data();
+//         auto d = (WindowWidgetData*) m_parent.window->data();
 
-        Painter::deleteInstance(d->painter);
+//         Painter::deleteInstance(d->painter);
         m_parent.window->hide();
         Window::deleteInstance(m_parent.window);
-        delete d;
+//         delete d;
         m_parent.window = nullptr;
         m_flags &= ~R64FX_WIDGET_IS_WINDOW;
 

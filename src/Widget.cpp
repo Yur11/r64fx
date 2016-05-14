@@ -30,6 +30,39 @@ void set_bits(unsigned long &flags, const bool yes, unsigned long mask)
 }
 
 
+constexpr int max_rects = 32;
+
+
+struct WidgetImpl{
+    Window* m_window = nullptr;
+
+    /* Root widget shown in the window that
+        * this context is attached to. */
+    Widget*  m_root_widget = nullptr;
+
+    /* Painter serving the window. */
+    Painter* m_painter = nullptr;
+
+    inline Painter* painter() const { return m_painter; }
+
+    /* List of rectangles to be repainted after update cycle. */
+    Rect<int> m_rects[max_rects];
+
+    /* Number of rectangles that must be repainted. */
+    int m_num_rects = 0;
+
+    /* Used in update logic. */
+    bool m_got_rect = false;
+
+    void initPaintCycle();
+
+    void paintChildren(Widget* parent);
+
+    void clipChildren(Widget* parent);
+
+};
+
+
 Timer* g_gui_timer = nullptr;
 
 
@@ -329,6 +362,12 @@ bool Widget::isPinned() const
 
 
 namespace r64fx{
+
+
+void Widget::paintEvent(Widget::PaintEvent* event)
+{
+    event->impl()->paintChildren(this);
+}
 
 
 void Widget::resizeEvent(ResizeEvent* event)
