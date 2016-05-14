@@ -23,6 +23,7 @@ Widget_Dummy::~Widget_Dummy()
 
 void Widget_Dummy::paintEvent(PaintEvent* event)
 {
+    cout << "paint\n";
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, m_color);
     Widget::paintEvent(event);

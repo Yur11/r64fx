@@ -51,7 +51,7 @@ struct WidgetImpl{
     /* Number of rectangles that must be repainted. */
     int m_num_rects = 0;
 
-    /* Used in update logic. */
+    /* Used in paint logic. */
     bool m_got_rect = false;
 
     void initPaintCycle();

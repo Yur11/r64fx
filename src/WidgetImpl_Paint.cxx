@@ -30,7 +30,7 @@ void WidgetImpl::initPaintCycle()
 {
     m_window->makeCurrent();
 
-    auto flags = m_root_widget->m_flags;
+    auto &flags = m_root_widget->m_flags;
 
     if(flags & R64FX_WIDGET_REPAINT_FLAGS)
     {
