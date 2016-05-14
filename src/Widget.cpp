@@ -172,43 +172,43 @@ Widget* Widget::leafAt(Point<int> position, Point<int>* offset)
 
 void Widget::setPosition(Point<int> pos)
 {
-    m_rect.setPosition(pos);
+    m_position = pos;
 }
 
 
 Point<int> Widget::position() const
 {
-    return m_rect.position();
+    return m_position;
 }
 
 
 void Widget::setX(int x)
 {
-    m_rect.setX(x);
+    m_position.setX(x);
 }
 
 
 int Widget::x() const
 {
-    return m_rect.x();
+    return m_position.x();
 }
 
 
 void Widget::setY(int y)
 {
-    m_rect.setY(y);
+    m_position.setY(y);
 }
 
 
 int Widget::y() const
 {
-    return m_rect.y();
+    return m_position.y();
 }
 
 
 void Widget::setSize(Size<int> size)
 {
-    m_rect.setSize(size);
+    m_size = size;
     if(isWindow() && size != m_parent.window->size())
     {
         m_parent.window->setSize(size);
@@ -220,31 +220,31 @@ void Widget::setSize(Size<int> size)
 
 Size<int> Widget::size() const
 {
-    return m_rect.size();
+    return m_size;
 }
 
 
 void Widget::setWidth(int width)
 {
-    setSize({width, height()});
+    m_size.setWidth(width);
 }
 
 
 int Widget::width() const
 {
-    return m_rect.width();
+    return m_size.width();
 }
 
 
 void Widget::setHeight(int height)
 {
-    setSize({width(), height});
+    m_size.setHeight(height);
 }
 
 
 int Widget::height() const
 {
-    return m_rect.height();
+    return m_size.height();
 }
 
 

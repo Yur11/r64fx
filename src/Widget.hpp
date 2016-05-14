@@ -42,15 +42,19 @@ class Widget : public LinkedList<Widget>::Node{
         Widget* widget = nullptr;
         Window* window;
     } m_parent;
-    
-    /* Widgets geometry.
-     * Position in parents coordinate space + widget size. */
-    Rect<int> m_rect = { 0, 0, 0, 0 };
 
-    /* A linked list of widgets children. */
+    /* Position relative to the parent.
+     * {0, 0} is the top-left corner. */
+    Point<int> m_position = {0, 0};
+
+    Size<int> m_size = {0, 0};
+
+    /* A linked list of child widgets. */
     LinkedList<Widget> m_children;
 
 public:
+    /* Child iterators. */
+
     inline WidgetIterator begin() const { return m_children.begin(); }
 
     inline WidgetIterator end() const { return nullptr; }
@@ -78,6 +82,7 @@ public:
 
     Widget* root() const;
 
+    /* Find leaf child at the given position. */
     Widget* leafAt(Point<int> position, Point<int>* offset = nullptr);
 
 
@@ -241,12 +246,10 @@ public:
     void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 
 
-/* === Update cycle === */
+/* === Paint cycle === */
 
     /* Request a repaint for this widget. */
     void repaint();
-
-    void performUpdates();
 
     /* PaintEvent structure passed to the paintEvent() method. */
     class PaintEvent{
@@ -281,6 +284,7 @@ public:
 
         inline int height() const { return m_size.height(); }
     };
+
 
 protected:
     virtual void paintEvent(PaintEvent* event);
