@@ -14,6 +14,18 @@ Painter* Widget::PaintEvent::painter() const
 }
 
 
+void Widget::clip()
+{
+    m_flags |= R64FX_WIDGET_WANTS_CLIPPING;
+    auto widget = parent();
+    while(widget && !(widget->m_flags & R64FX_WIDGET_CLIP_FLAGS))
+    {
+        widget->m_flags |= R64FX_CHILD_WANTS_CLIPPING;
+        widget = widget->parent();
+    }
+}
+
+
 void Widget::repaint()
 {
     m_flags |= R64FX_WIDGET_WANTS_REPAINT;

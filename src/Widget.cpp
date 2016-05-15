@@ -59,7 +59,6 @@ struct WidgetImpl{
     void paintChildren(Widget* parent);
 
     void clipChildren(Widget* parent);
-
 };
 
 

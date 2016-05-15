@@ -248,6 +248,9 @@ public:
 
 /* === Paint cycle === */
 
+    /* Request a clipping for this widget and it's children. */
+    void clip();
+
     /* Request a repaint for this widget. */
     void repaint();
 
