@@ -94,6 +94,7 @@ public:
         {
             setOffset(offset() + event->delta());
             recomputeChildrenVisibility();
+            clip();
             repaint();
         }
     }

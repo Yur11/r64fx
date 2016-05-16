@@ -26,6 +26,69 @@ void Widget::clip()
 }
 
 
+void WidgetImpl::clip()
+{
+    if(m_root_widget->m_flags & R64FX_WIDGET_CLIP_FLAGS)
+    {
+        m_parent_global_position = {0, 0};
+        m_visible_rect = Rect<int>({0, 0}, m_root_widget->size());
+        clipChildren(m_root_widget);
+    }
+    m_root_widget->m_flags &= ~R64FX_WIDGET_CLIP_FLAGS;
+}
+
+
+void WidgetImpl::clipChildren(Widget* parent)
+{
+    Point<int> offset = parent->contentOffset();
+
+    for(auto child : *parent)
+    {
+        if(parent->m_flags & R64FX_WIDGET_WANTS_CLIPPING)
+            child->m_flags |= R64FX_WIDGET_WANTS_CLIPPING;
+
+        if(!(child->m_flags & R64FX_WIDGET_CLIP_FLAGS))
+            continue;
+
+        Point<int> old_parent_global_position = m_parent_global_position;
+        Rect<int> old_visible_rect = m_visible_rect;
+
+        Point<int> child_global_position = m_parent_global_position + offset + child->position();
+
+        Rect<int> child_global_rect(child_global_position, child->size());
+        Rect<int> rect = intersection(child_global_rect, m_visible_rect);
+
+        if(child->m_flags & R64FX_WIDGET_WANTS_CLIPPING)
+        {
+            if(rect.width() > 0 && rect.height() > 0)
+            {
+                child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
+
+                m_parent_global_position = child_global_position;
+                m_visible_rect = rect;
+                clipChildren(child);
+            }
+            else
+            {
+                cout << child << " invisible\n";
+                child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
+            }
+        }
+        else
+        {
+            m_parent_global_position = child_global_position;
+            m_visible_rect = rect;
+            clipChildren(child);
+        }
+
+        m_parent_global_position = old_parent_global_position;
+        m_visible_rect = old_visible_rect;
+
+        child->m_flags &= ~R64FX_WIDGET_CLIP_FLAGS;
+    }
+}
+
+
 void Widget::repaint()
 {
     m_flags |= R64FX_WIDGET_WANTS_REPAINT;
@@ -38,7 +101,7 @@ void Widget::repaint()
 }
 
 
-void WidgetImpl::initPaintCycle()
+void WidgetImpl::repaint()
 {
     m_window->makeCurrent();
 
@@ -80,6 +143,9 @@ void WidgetImpl::initPaintCycle()
         set_bits(flags, false, R64FX_WIDGET_REPAINT_FLAGS);
     }
 }
+
+
+
 
 
 void WidgetImpl::paintChildren(Widget* parent)
@@ -136,12 +202,6 @@ void WidgetImpl::paintChildren(Widget* parent)
     }
 
     m_got_rect = old_got_rect;
-}
-
-
-void WidgetImpl::clipChildren(Widget* parent)
-{
-
 }
 
 }//namespace r64fx

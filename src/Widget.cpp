@@ -37,7 +37,7 @@ struct WidgetImpl{
     Window* m_window = nullptr;
 
     /* Root widget shown in the window that
-        * this context is attached to. */
+     * this context is attached to. */
     Widget*  m_root_widget = nullptr;
 
     /* Painter serving the window. */
@@ -54,11 +54,17 @@ struct WidgetImpl{
     /* Used in paint logic. */
     bool m_got_rect = false;
 
-    void initPaintCycle();
+    Point<int> m_parent_global_position = {0, 0};
 
-    void paintChildren(Widget* parent);
+    Rect<int> m_visible_rect = {0, 0};
+
+    void clip();
 
     void clipChildren(Widget* parent);
+
+    void repaint();
+
+    void paintChildren(Widget* parent);
 };
 
 

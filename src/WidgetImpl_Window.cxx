@@ -216,7 +216,8 @@ void Widget::show(
 
                         Window::forEach([](Window* window, void* data){
                             auto impl = (WidgetImpl*) window->data();
-                            impl->initPaintCycle();
+                            impl->clip();
+                            impl->repaint();
                         }, nullptr);
 
                     }, nullptr);
@@ -241,6 +242,7 @@ void Widget::show(
     if(modal_parent)
         m_parent.window->setModalTo(modal_parent);
     m_parent.window->show();
+    clip();
     repaint();
 }
 
