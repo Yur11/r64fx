@@ -8,7 +8,10 @@ Widget* g_focus_owner = nullptr;
 
 bool Widget::getsFocusOnClick(bool yes)
 {
-    set_bits(m_flags, yes, R64FX_WIDGET_CLICK_FOCUS);
+    if(yes)
+        m_flags |= R64FX_WIDGET_CLICK_FOCUS;
+    else
+        m_flags &= ~R64FX_WIDGET_CLICK_FOCUS;
     return yes;
 }
 

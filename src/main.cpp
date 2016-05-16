@@ -12,6 +12,7 @@
 #include "Font.hpp"
 #include "Widget_ScrollArea.hpp"
 #include "Widget_Dummy.hpp"
+#include "Widget_DirectoryBrowser.hpp"
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
@@ -28,35 +29,39 @@ class MyWidget : public Widget_ScrollArea{
 public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
-        srand(time(0));
+//         srand(time(0));
+//
+//         auto dummy = new Widget_Dummy(this);
+//         dummy->setSize({350, 350});
+//         dummy->setPosition({50, 50});
+//
+//         {
+//             auto subdummy = new Widget_Dummy(dummy);
+//             subdummy->setSize({100, 100});
+//             subdummy->setPosition({50, 50});
+//         }
+//
+//         {
+//             auto subdummy = new Widget_Dummy(dummy);
+//             subdummy->setSize({100, 100});
+//             subdummy->setPosition({200, 50});
+//         }
+//
+//         {
+//             auto subdummy = new Widget_Dummy(dummy);
+//             subdummy->setSize({100, 100});
+//             subdummy->setPosition({50, 200});
+//         }
+//
+//         {
+//             auto subdummy = new Widget_Dummy(dummy);
+//             subdummy->setSize({100, 100});
+//             subdummy->setPosition({200, 200});
+//         }
 
-        auto dummy = new Widget_Dummy(this);
-        dummy->setSize({350, 350});
-        dummy->setPosition({50, 50});
-
-        {
-            auto subdummy = new Widget_Dummy(dummy);
-            subdummy->setSize({100, 100});
-            subdummy->setPosition({50, 50});
-        }
-
-        {
-            auto subdummy = new Widget_Dummy(dummy);
-            subdummy->setSize({100, 100});
-            subdummy->setPosition({200, 50});
-        }
-
-        {
-            auto subdummy = new Widget_Dummy(dummy);
-            subdummy->setSize({100, 100});
-            subdummy->setPosition({50, 200});
-        }
-
-        {
-            auto subdummy = new Widget_Dummy(dummy);
-            subdummy->setSize({100, 100});
-            subdummy->setPosition({200, 200});
-        }
+        auto db = new Widget_DirectoryBrowser("samples", "/home/yurii/Sound/Samples/freesound/", this);
+        db->setPosition({100, 100});
+        db->populate();
     }
 
     ~MyWidget()

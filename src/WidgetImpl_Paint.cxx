@@ -70,7 +70,6 @@ void WidgetImpl::clipChildren(Widget* parent)
             }
             else
             {
-                cout << child << " invisible\n";
                 child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
             }
         }
@@ -140,7 +139,7 @@ void WidgetImpl::repaint()
             }
         }
 
-        set_bits(flags, false, R64FX_WIDGET_REPAINT_FLAGS);
+        flags &= ~R64FX_WIDGET_REPAINT_FLAGS;
     }
 }
 
@@ -164,7 +163,7 @@ void WidgetImpl::paintChildren(Widget* parent)
 
     for(auto child : *parent)
     {
-        if(!(child->m_flags & R64FX_WIDGET_REPAINT_FLAGS))
+        if(!(child->m_flags & R64FX_WIDGET_REPAINT_FLAGS) || !child->isVisible())
             continue;
 
         auto &child_flags = child->m_flags;
@@ -198,7 +197,7 @@ void WidgetImpl::paintChildren(Widget* parent)
 
         m_painter->setOffset(old_offset);
 
-        set_bits(child_flags, false, R64FX_WIDGET_REPAINT_FLAGS);
+        child_flags &= ~R64FX_WIDGET_REPAINT_FLAGS;
     }
 
     m_got_rect = old_got_rect;

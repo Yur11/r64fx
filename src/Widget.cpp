@@ -21,17 +21,8 @@ using namespace std;
 
 namespace r64fx{
 
-void set_bits(unsigned long &flags, const bool yes, unsigned long mask)
-{
-    if(yes)
-        flags |= mask;
-    else
-        flags &= ~mask;
-}
-
 
 constexpr int max_rects = 32;
-
 
 struct WidgetImpl{
     Window* m_window = nullptr;
@@ -335,7 +326,10 @@ Point<int> Widget::contentOffset()
 
 void Widget::setOrientation(Orientation orientation)
 {
-    set_bits(m_flags, orientation == Orientation::Vertical, R64FX_WIDGET_IS_VERTICAL);
+    if(orientation == Orientation::Vertical)
+        m_flags |= R64FX_WIDGET_IS_VERTICAL;
+    else
+        m_flags &= ~R64FX_WIDGET_IS_VERTICAL;
 }
 
 
@@ -347,7 +341,10 @@ Orientation Widget::orientation() const
 
 void Widget::setPinned(bool yes)
 {
-    set_bits(m_flags, yes, R64FX_WIDGET_IS_PINNED);
+    if(yes)
+        m_flags |= R64FX_WIDGET_IS_PINNED;
+    else
+        m_flags &= ~R64FX_WIDGET_IS_PINNED;
 }
 
 
