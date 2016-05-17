@@ -103,7 +103,6 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
         int offset = g_data_item_font->height();
 
         unsigned char grey[4] = {175, 175, 175, 0};
-        grey[0] = (unsigned char)((random()%16)*16);
         p->fillRect({0, 0, width(), height()}, grey);
 
         unsigned char red[4] = {127, 0, 0, 0};
