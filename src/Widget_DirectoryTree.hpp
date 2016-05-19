@@ -6,11 +6,11 @@
 
 namespace r64fx{
 
-class Widget_DirectoryBrowser : public Widget_ItemTree{
+class Widget_DirectoryTree : public Widget_ItemTree{
     std::string m_path = "";
 
 public:
-    Widget_DirectoryBrowser(const std::string &caption, const std::string path, Widget* parent = nullptr);
+    Widget_DirectoryTree(const std::string &caption, const std::string path, Widget* parent = nullptr);
 
     std::string path() const;
 

@@ -1,4 +1,4 @@
-#include "Widget_DirectoryBrowser.hpp"
+#include "Widget_DirectoryTree.hpp"
 #include "WidgetFlags.hpp"
 
 #include <iostream>
@@ -6,7 +6,7 @@ using namespace std;
 
 namespace r64fx{
 
-Widget_DirectoryBrowser::Widget_DirectoryBrowser(const std::string &caption, const std::string path, Widget* parent)
+Widget_DirectoryTree::Widget_DirectoryTree(const std::string &caption, const std::string path, Widget* parent)
 : Widget_ItemTree(caption, parent)
 , m_path(path)
 {
@@ -14,13 +14,13 @@ Widget_DirectoryBrowser::Widget_DirectoryBrowser(const std::string &caption, con
 }
 
 
-std::string Widget_DirectoryBrowser::path() const
+std::string Widget_DirectoryTree::path() const
 {
     return m_path;
 }
 
 
-std::string Widget_DirectoryBrowser::fullPath() const
+std::string Widget_DirectoryTree::fullPath() const
 {
     std::string path = this->path();
     if(!path.empty() && path.back() != '/')
@@ -29,7 +29,7 @@ std::string Widget_DirectoryBrowser::fullPath() const
     if(!parent())
         return path;
 
-    auto parent_browser = dynamic_cast<Widget_DirectoryBrowser*>(parent());
+    auto parent_browser = dynamic_cast<Widget_DirectoryTree*>(parent());
     if(!parent_browser)
         return path;
 
@@ -37,7 +37,7 @@ std::string Widget_DirectoryBrowser::fullPath() const
 }
 
 
-void Widget_DirectoryBrowser::populate()
+void Widget_DirectoryTree::populate()
 {
     Directory dir(fullPath());
     if(!dir.isOpen())
@@ -47,7 +47,7 @@ void Widget_DirectoryBrowser::populate()
     }
 
     dir.forEachEntry([](const Directory::Entry* entry, void* arg){
-        auto self = (Widget_DirectoryBrowser*) arg;
+        auto self = (Widget_DirectoryTree*) arg;
         self->loadEntry(entry);
     }, this);
 
@@ -56,16 +56,16 @@ void Widget_DirectoryBrowser::populate()
 }
 
 
-void Widget_DirectoryBrowser::loadEntry(const Directory::Entry* entry)
+void Widget_DirectoryTree::loadEntry(const Directory::Entry* entry)
 {
     if(entry->name()[0] != '.')
     {
         Widget_DataItem* item;
         if(entry->isDirectory())
         {
-            auto browser = new Widget_DirectoryBrowser(entry->name(), fullPath() + entry->name());
-            browser->populate();
-            item = browser;
+            auto dt = new Widget_DirectoryTree(entry->name(), fullPath() + entry->name());
+            dt->populate();
+            item = dt;
         }
         else
         {

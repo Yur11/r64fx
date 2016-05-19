@@ -61,7 +61,7 @@ set(SRC
     Widget_Control.cpp
     Widget_DataItem.cpp
     Widget_Dummy.cpp
-    Widget_DirectoryBrowser.cpp
+    Widget_DirectoryTree.cpp
     Widget_ItemList.cpp
     Widget_ItemTree.cpp
     Widget_Menu.cpp

@@ -1,4 +1,5 @@
 #include "Widget_DataItem.hpp"
+#include "WidgetFlags.hpp"
 #include "Painter.hpp"
 #include "TextPainter.hpp"
 
@@ -60,6 +61,13 @@ std::string Widget_DataItem::text() const
 
 void Widget_DataItem::resizeAndReallign()
 {
+    static bool is_even = true;
+    if(is_even)
+        m_flags |= R64FX_WIDGET_IS_EVEN;
+    else
+        m_flags &= ~R64FX_WIDGET_IS_EVEN;
+    is_even = !is_even;
+
     setWidth(find_text_bbox(m_text, TextWrap::None, g_data_item_font).width() + g_data_item_font->height());
     setHeight(g_data_item_font->height());
 }
@@ -102,8 +110,9 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
     {
         int offset = g_data_item_font->height();
 
-        unsigned char grey[4] = {175, 175, 175, 0};
-        p->fillRect({0, 0, width(), height()}, grey);
+        unsigned char odd_bg[4]  = {200, 200, 200, 0};
+        unsigned char even_bg[4] = {175, 175, 175, 0};
+        p->fillRect({0, 0, width(), height()}, ((m_flags & R64FX_WIDGET_IS_EVEN) ? even_bg : odd_bg));
 
         unsigned char red[4] = {127, 0, 0, 0};
         p->fillRect({2, 2, offset - 4, offset - 4}, red);
@@ -126,7 +135,7 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
 
 void Widget_DataItem::mousePressEvent(MousePressEvent* event)
 {
-    cout << "press: " << text() << " -> " << isVisible() << " -> " << this << "\n";
+    cout << text() << "\n";
 }
 
 

@@ -62,12 +62,12 @@ void Widget_ItemTree::resizeAndReallign()
         for(auto child : *this)
         {
             child->setWidth(max_child_width);
-            child->setX(item_offset);
+//             child->setX(item_offset);
             child->setY(running_y);
             running_y += child->height();
         }
 
-        setSize({max_child_width + item_offset, total_height});
+        setHeight(total_height);
     }
 }
 

@@ -12,7 +12,7 @@
 #include "Font.hpp"
 #include "Widget_ScrollArea.hpp"
 #include "Widget_Dummy.hpp"
-#include "Widget_DirectoryBrowser.hpp"
+#include "Widget_DirectoryTree.hpp"
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
@@ -59,7 +59,7 @@ public:
 //             subdummy->setPosition({200, 200});
 //         }
 
-        auto db = new Widget_DirectoryBrowser("samples", "/home/yurii/Sound/Samples/freesound/", this);
+        auto db = new Widget_DirectoryTree("samples", "/home/yurii/Sound/Samples/freesound/", this);
         db->setPosition({100, 100});
         db->populate();
     }

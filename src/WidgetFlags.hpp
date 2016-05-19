@@ -49,4 +49,6 @@
 
 #define R64FX_WIDGET_TREE_IS_COLLAPSED        (1 << 0x12)
 
+#define R64FX_WIDGET_IS_EVEN                  (1 << 0x13)
+
 #endif//R64FX_WIDGET_FLAGS_HPP
