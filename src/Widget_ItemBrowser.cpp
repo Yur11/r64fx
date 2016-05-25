@@ -2,6 +2,9 @@
 #include "Widget_DataItem.hpp"
 #include "Painter.hpp"
 
+#include <iostream>
+
+using namespace std;
 
 namespace r64fx{
 
@@ -37,6 +40,8 @@ Widget_DataItem* Widget_ItemBrowser::rootItem()
 
 void Widget_ItemBrowser::paintEvent(Widget::PaintEvent* event)
 {
+    cout << childrenBoundingRect() << "\n";
+
     auto p = event->painter();
     unsigned char red[4] = {255, 0, 0, 0};
     p->fillRect({0, 0, width(), height()}, red);
@@ -48,7 +53,11 @@ void Widget_ItemBrowser::resizeEvent(ResizeEvent* event)
 {
     if(m_root_item)
     {
-        m_root_item->setSize(event->size());
+        if(event->width() > m_root_item->width())
+        {
+            m_root_item->setWidth(event->width());
+            
+        }
     }
 }
 

@@ -122,6 +122,8 @@ public:
 
     virtual Point<int> contentOffset();
 
+    Rect<int> childrenBoundingRect() const;
+
 
 /* === Window === */
 

@@ -10,6 +10,8 @@
 #include "Program.hpp"
 #include "Timer.hpp"
 
+#include <limits>
+
 #ifdef R64FX_DEBUG
 #include <iostream>
 #include <assert.h>
@@ -321,6 +323,35 @@ bool Widget::isVisible() const
 Point<int> Widget::contentOffset()
 {
     return {0, 0};
+}
+
+
+Rect<int> Widget::childrenBoundingRect() const
+{
+    int min_left   = std::numeric_limits<int>::max();
+    int min_top    = std::numeric_limits<int>::max();
+    int max_right  = 0;
+    int max_bottom = 0;
+
+    for(auto child : m_children)
+    {
+        Rect<int> rect(child->position(), child->size());
+
+        if(rect.left() < min_left)
+            min_left = rect.left();
+
+        if(rect.top() < min_top)
+            min_top = rect.top();
+
+        if(rect.right() > max_right)
+            max_right = rect.right();
+
+        if(rect.bottom() > max_bottom)
+            max_bottom = rect.bottom();
+    }
+
+    cout << "return: " << Rect<int>(min_left, min_top, max_right - min_left, max_bottom - min_top) << "\n";
+    return Rect<int>(min_left, min_top, max_right - min_left, max_bottom - min_top);
 }
 
 
