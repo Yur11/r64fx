@@ -8,6 +8,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         auto d = (WidgetImpl*) window->data();
         d->m_root_widget->setSize({width, height});
+        d->m_root_widget->clip();
         d->m_root_widget->repaint();
     }
 

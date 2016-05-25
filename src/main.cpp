@@ -13,6 +13,7 @@
 #include "Widget_ScrollArea.hpp"
 #include "Widget_Dummy.hpp"
 #include "Widget_DirectoryTree.hpp"
+#include "Widget_ItemBrowser.hpp"
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
@@ -58,10 +59,6 @@ public:
 //             subdummy->setSize({100, 100});
 //             subdummy->setPosition({200, 200});
 //         }
-
-        auto db = new Widget_DirectoryTree("samples", "/home/yurii/Sound/Samples/freesound/", this);
-        db->setPosition({100, 100});
-        db->populate();
     }
 
     ~MyWidget()
@@ -132,9 +129,16 @@ private:
     {
         g_Font = new Font("", 20, 72);
 
-        auto mw = new MyWidget();
-        mw->setSize({600, 600});
-        mw->show();
+//         auto mw = new MyWidget();
+//         mw->setSize({600, 600});
+//         mw->show();
+
+        auto db = new Widget_DirectoryTree("samples", "/home/yurii/Sound/Samples/freesound/");
+        db->populate();
+
+        auto ib = new Widget_ItemBrowser;
+        ib->setRootItem(db);
+        ib->show();
     }
 
     virtual void cleanup()

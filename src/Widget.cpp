@@ -374,7 +374,7 @@ void Widget::paintEvent(Widget::PaintEvent* event)
 
 void Widget::resizeEvent(ResizeEvent* event)
 {
-
+    
 }
 
 

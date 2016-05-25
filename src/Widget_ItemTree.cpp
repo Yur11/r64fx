@@ -36,11 +36,13 @@ void Widget_ItemTree::addItem(const std::string &text)
 
 void Widget_ItemTree::resizeAndReallign()
 {
+    static int depth = 0;
+    depth++;
+
     Widget_DataItem::resizeAndReallign();
 
     if(!isCollapsed())
     {
-        int item_offset      = height();
         int max_child_width  = width();
         int total_height     = height();
 
@@ -50,6 +52,7 @@ void Widget_ItemTree::resizeAndReallign()
             if(data_item)
             {
                 data_item->resizeAndReallign();
+                data_item->setTreeDepth(depth);
             }
 
             if(child->width() > max_child_width)
@@ -62,13 +65,15 @@ void Widget_ItemTree::resizeAndReallign()
         for(auto child : *this)
         {
             child->setWidth(max_child_width);
-//             child->setX(item_offset);
+            child->setX(0);
             child->setY(running_y);
             running_y += child->height();
         }
 
         setHeight(total_height);
     }
+
+    depth--;
 }
 
 

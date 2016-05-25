@@ -8,6 +8,7 @@ namespace r64fx{
 class Widget_DataItem : public Widget{
     std::string m_text = "";
     Image* m_image = nullptr;
+    int m_tree_depth = 0;
 
 public:
     Widget_DataItem(const std::string &text, Widget* parent = nullptr);
@@ -25,6 +26,10 @@ public:
     Widget_DataItem* parentDataItem();
 
     Widget_DataItem* rootDataItem();
+
+    void setTreeDepth(int depth);
+
+    int treeDepth() const;
 
 protected:
     virtual void paintEvent(PaintEvent* event);

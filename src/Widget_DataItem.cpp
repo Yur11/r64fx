@@ -96,6 +96,18 @@ Widget_DataItem* Widget_DataItem::rootDataItem()
 }
 
 
+void Widget_DataItem::setTreeDepth(int depth)
+{
+    m_tree_depth = depth;
+}
+
+
+int Widget_DataItem::treeDepth() const
+{
+    return m_tree_depth;
+}
+
+
 void Widget_DataItem::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
@@ -108,14 +120,14 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
 
     if(m_image)
     {
-        int offset = g_data_item_font->height();
+        int offset = g_data_item_font->height() * treeDepth();
 
         unsigned char odd_bg[4]  = {200, 200, 200, 0};
         unsigned char even_bg[4] = {175, 175, 175, 0};
-        p->fillRect({0, 0, width(), height()}, ((m_flags & R64FX_WIDGET_IS_EVEN) ? even_bg : odd_bg));
+        p->fillRect({0, 0, width() + offset, height()}, ((m_flags & R64FX_WIDGET_IS_EVEN) ? even_bg : odd_bg));
 
         unsigned char red[4] = {127, 0, 0, 0};
-        p->fillRect({2, 2, offset - 4, offset - 4}, red);
+//         p->fillRect({offset + 2, offset + 2, offset - 4, offset - 4}, red);
 
         unsigned char normal [4] = {0, 0, 0, 0};
         unsigned char hovered[4] = {255, 255, 255, 0};
