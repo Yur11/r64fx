@@ -25,7 +25,7 @@ void Widget_ItemList::addItem(const std::string &text)
 }
 
 
-void Widget_ItemList::resizeAndReallign()
+void Widget_ItemList::resizeAndReallign(int min_width)
 {
     int max_child_width  = 0;
     int total_height     = 0;
@@ -35,7 +35,7 @@ void Widget_ItemList::resizeAndReallign()
         auto data_item = dynamic_cast<Widget_DataItem*>(child);
         if(data_item)
         {
-            data_item->resizeAndReallign();
+            data_item->resizeAndReallign(min_width);
         }
 
         if(child->width() > max_child_width)

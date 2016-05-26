@@ -61,4 +61,5 @@ void Widget_ItemBrowser::resizeEvent(ResizeEvent* event)
     }
 }
 
+
 }//namespace r64fx

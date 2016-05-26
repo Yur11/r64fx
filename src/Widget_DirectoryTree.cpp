@@ -51,7 +51,7 @@ void Widget_DirectoryTree::populate()
         self->loadEntry(entry);
     }, this);
 
-    resizeAndReallign();
+    resizeAndReallign(0);
     collapse();
 }
 

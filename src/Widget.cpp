@@ -350,7 +350,6 @@ Rect<int> Widget::childrenBoundingRect() const
             max_bottom = rect.bottom();
     }
 
-    cout << "return: " << Rect<int>(min_left, min_top, max_right - min_left, max_bottom - min_top) << "\n";
     return Rect<int>(min_left, min_top, max_right - min_left, max_bottom - min_top);
 }
 

@@ -34,12 +34,12 @@ void Widget_ItemTree::addItem(const std::string &text)
 }
 
 
-void Widget_ItemTree::resizeAndReallign()
+void Widget_ItemTree::resizeAndReallign(int min_width)
 {
     static int depth = 0;
     depth++;
 
-    Widget_DataItem::resizeAndReallign();
+    Widget_DataItem::resizeAndReallign(min_width);
 
     if(!isCollapsed())
     {
@@ -51,7 +51,7 @@ void Widget_ItemTree::resizeAndReallign()
             auto data_item = dynamic_cast<Widget_DataItem*>(child);
             if(data_item)
             {
-                data_item->resizeAndReallign();
+                data_item->resizeAndReallign(min_width);
                 data_item->setTreeDepth(depth);
             }
 
@@ -81,10 +81,10 @@ void Widget_ItemTree::collapse()
 {
     m_flags |= R64FX_WIDGET_TREE_IS_COLLAPSED;
     auto root_item = rootDataItem();
-    root_item->resizeAndReallign();
     auto root_item_parent = root_item->parent();
     if(root_item_parent)
     {
+        root_item->resizeAndReallign(root_item_parent->width());
         root_item_parent->clip();
         root_item_parent->repaint();
     }
@@ -95,10 +95,10 @@ void Widget_ItemTree::expand()
 {
     m_flags &= ~R64FX_WIDGET_TREE_IS_COLLAPSED;
     auto root_item = rootDataItem();
-    root_item->resizeAndReallign();
     auto root_item_parent = root_item->parent();
     if(root_item_parent)
     {
+        root_item->resizeAndReallign(root_item_parent->width());
         root_item_parent->clip();
         root_item_parent->repaint();
     }

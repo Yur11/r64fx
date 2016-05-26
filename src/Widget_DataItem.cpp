@@ -59,7 +59,7 @@ std::string Widget_DataItem::text() const
 }
 
 
-void Widget_DataItem::resizeAndReallign()
+void Widget_DataItem::resizeAndReallign(int min_width)
 {
     static bool is_even = true;
     if(is_even)
@@ -68,7 +68,11 @@ void Widget_DataItem::resizeAndReallign()
         m_flags &= ~R64FX_WIDGET_IS_EVEN;
     is_even = !is_even;
 
-    setWidth(find_text_bbox(m_text, TextWrap::None, g_data_item_font).width() + g_data_item_font->height());
+    int width = find_text_bbox(m_text, TextWrap::None, g_data_item_font).width() + g_data_item_font->height();
+    if(width < min_width)
+        width = min_width;
+
+    setWidth(width);
     setHeight(g_data_item_font->height());
 }
 
@@ -147,7 +151,18 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
 
 void Widget_DataItem::mousePressEvent(MousePressEvent* event)
 {
-    cout << text() << "\n";
+    if(event->button() & MouseButton::Left())
+    {
+        cout << text() << "\n";
+    }
+    else if(event->button() & MouseButton::WheelUp())
+    {
+        cout << "Up\n";
+    }
+    else if(event->button() & MouseButton::WheelDown())
+    {
+        cout << "Down\n";
+    }
 }
 
 

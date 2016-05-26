@@ -16,7 +16,7 @@ public:
 
     void addItem(const std::string &text);
 
-    virtual void resizeAndReallign();
+    virtual void resizeAndReallign(int min_width);
 
     void collapse();
 
