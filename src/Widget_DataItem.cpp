@@ -59,6 +59,12 @@ std::string Widget_DataItem::text() const
 }
 
 
+int Widget_DataItem::lineHeight()
+{
+    return g_data_item_font->height();
+}
+
+
 void Widget_DataItem::resizeAndReallign(int min_width)
 {
     static bool is_even = true;
@@ -73,7 +79,7 @@ void Widget_DataItem::resizeAndReallign(int min_width)
         width = min_width;
 
     setWidth(width);
-    setHeight(g_data_item_font->height());
+    setHeight(lineHeight());
 }
 
 

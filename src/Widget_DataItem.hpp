@@ -21,6 +21,8 @@ public:
 
     std::string text() const;
 
+    int lineHeight();
+
     virtual void resizeAndReallign(int min_width);
 
     Widget_DataItem* parentDataItem();

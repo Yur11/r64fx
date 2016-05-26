@@ -125,10 +125,18 @@ void Widget_ItemTree::paintEvent(PaintEvent* event)
 
 void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
 {
-    if(isCollapsed())
+    if(event->y() > lineHeight())
+    {
+        Widget::mousePressEvent(event);
+    }
+    else if(isCollapsed())
+    {
         expand();
+    }
     else
+    {
         collapse();
+    }
 }
 
 }//namespace
