@@ -408,36 +408,6 @@ void Widget::resizeEvent(ResizeEvent* event)
 }
 
 
-void Widget::mousePressEvent(MousePressEvent* event)
-{
-
-}
-
-
-void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
-{
-
-}
-
-
-void Widget::mouseMoveEvent(MouseMoveEvent* event)
-{
-
-}
-
-
-void Widget::mouseEnterEvent()
-{
-
-}
-
-
-void Widget::mouseLeaveEvent()
-{
-
-}
-
-
 void Widget::focusInEvent()
 {
 

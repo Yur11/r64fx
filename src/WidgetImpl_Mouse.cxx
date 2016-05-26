@@ -93,9 +93,10 @@ void Widget::initMousePressEvent(
     }
     else
     {
-        Point<int> offset  = {0, 0};
-        dst = leafAt(event_position, &offset);
-        event_position -= offset;
+//         Point<int> offset  = {0, 0};
+//         dst = leafAt(event_position, &offset);
+//         event_position -= offset;
+        dst = this;
     }
 
     if(!ignore_grabs && dst->grabsMouseOnClick())
@@ -113,6 +114,23 @@ void Widget::initMousePressEvent(
 
     MousePressEvent event(event_position, {0, 0}, button);
     dst->mousePressEvent(&event);
+}
+
+
+void Widget::mousePressEvent(MousePressEvent* event)
+{
+    Point<int> event_pos = event->position() - contentOffset();
+    for(auto child : m_children)
+    {
+        if(Rect<int>(child->position(), child->size()).overlaps(event_pos))
+        {
+            Point<int> old_pos = event->position();
+            event->setPosition(event_pos - child->position());
+            child->mousePressEvent(event);
+            event->setPosition(old_pos);
+            break;
+        }
+    }
 }
 
 
@@ -145,6 +163,12 @@ void Widget::initMouseReleaseEvent(
 
     MouseReleaseEvent event(event_position, {0, 0}, button);
     dst->mouseReleaseEvent(&event);
+}
+
+
+void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
+{
+
 }
 
 
@@ -187,6 +211,12 @@ Widget* Widget::initMouseMoveEvent(
 }
 
 
+void Widget::mouseMoveEvent(MouseMoveEvent* event)
+{
+
+}
+
+
 void Widget::initMouseEnterEvent()
 {
     m_flags |= R64FX_WIDGET_IS_HOVERED;
@@ -194,10 +224,22 @@ void Widget::initMouseEnterEvent()
 }
 
 
+void Widget::mouseEnterEvent()
+{
+
+}
+
+
 void Widget::initMouseLeaveEvent()
 {
     m_flags &= ~R64FX_WIDGET_IS_HOVERED;
     mouseLeaveEvent();
+}
+
+
+void Widget::mouseLeaveEvent()
+{
+
 }
 
 
