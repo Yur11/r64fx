@@ -67,10 +67,6 @@ Timer* g_gui_timer = nullptr;
 Widget::Widget(Widget* parent)
 {
     setParent(parent);
-    getsFocusOnClick(true);
-    grabsMouseOnClick(true);
-    ungrabsMouseOnRelease(true);
-
     m_flags |= R64FX_WIDGET_IS_VISIBLE;
 }
 
@@ -366,21 +362,6 @@ void Widget::setOrientation(Orientation orientation)
 Orientation Widget::orientation() const
 {
     return (m_flags & R64FX_WIDGET_IS_VERTICAL) ? Orientation::Vertical : Orientation::Horizontal;
-}
-
-
-void Widget::setPinned(bool yes)
-{
-    if(yes)
-        m_flags |= R64FX_WIDGET_IS_PINNED;
-    else
-        m_flags &= ~R64FX_WIDGET_IS_PINNED;
-}
-
-
-bool Widget::isPinned() const
-{
-    return m_flags & R64FX_WIDGET_IS_PINNED;
 }
 
 }//namespace r64fx

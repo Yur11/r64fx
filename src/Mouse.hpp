@@ -91,7 +91,7 @@ class MouseEvent{
     MouseButton m_button;
 
 public:
-    bool handled = false;
+    bool ignore_grabs = false;
 
     explicit MouseEvent(Point<int> position, Point<int> delta, MouseButton button)
     : m_position(position)

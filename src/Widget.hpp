@@ -174,14 +174,6 @@ public:
 
     static MouseButton pressedButtons();
 
-    bool grabsMouseOnClick(bool yes);
-
-    bool grabsMouseOnClick() const;
-
-    bool ungrabsMouseOnRelease(bool yes);
-
-    bool ungrabsMouseOnRelease() const;
-
     void initMousePressEvent(
         Point<int> event_position,
         MouseButton button,
@@ -213,10 +205,6 @@ public:
 
 
 /* === Keyboard === */
-
-    bool getsFocusOnClick(bool yes);
-
-    bool getsFocusOnClick() const;
 
     void setFocus();
 
@@ -329,6 +317,9 @@ protected:
     virtual void dndMoveEvent(DndMoveEvent* event);
 
     virtual void closeEvent();
+
+private:
+    bool childrenMousePressEvent(MousePressEvent* event);
 };
     
 }//namespace r64fx

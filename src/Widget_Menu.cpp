@@ -41,9 +41,6 @@ public:
     : Widget(parent)
     , m_action(action)
     {
-        grabsMouseOnClick(false);
-        ungrabsMouseOnRelease(false);
-
         auto img = createCaptionImage(action->caption());
         if(!img)
             return;
@@ -57,9 +54,6 @@ public:
     : Widget(parent)
     , m_sub_menu(sub_menu)
     {
-        grabsMouseOnClick(false);
-        ungrabsMouseOnRelease(false);
-
         auto img = createCaptionImage(caption);
         if(!img)
             return;
@@ -142,8 +136,6 @@ void Widget_MenuItem::setSizeAndOffset(Size<int> size, Point<int> offset)
 Widget_Menu::Widget_Menu(Widget* parent)
 : Widget(parent)
 {
-    grabsMouseOnClick(true);
-    ungrabsMouseOnRelease(false);
     init_menu_font_if_needed();
 }
 

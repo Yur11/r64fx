@@ -27,28 +27,20 @@
 
 #define R64FX_WIDGET_REPAINT_FLAGS            (R64FX_WIDGET_WANTS_REPAINT | R64FX_CHILD_WANTS_REPAINT)
 
-/* Widget recieves focus upon mouse click. */
-#define R64FX_WIDGET_CLICK_FOCUS              (1 << 0x08)
+#define R64FX_WIDGET_UNGRABS_MOUSE_ON_RELEASE (1 << 0x08)
 
-#define R64FX_WIDGET_GRABS_MOUSE_ON_CLICK     (1 << 0x09)
+#define R64FX_WIDGET_IS_EDITABLE              (1 << 0x09)
+#define R64FX_WIDGET_OWNS_TEXT                (1 << 0x0A)
+#define R64FX_WIDGET_OWNS_FONT                (1 << 0x0B)
 
-#define R64FX_WIDGET_UNGRABS_MOUSE_ON_RELEASE (1 << 0x0A)
+#define R64FX_WIDGET_IS_VERTICAL              (1 << 0x0C)
 
-#define R64FX_WIDGET_IS_EDITABLE              (1 << 0x0B)
-#define R64FX_WIDGET_OWNS_TEXT                (1 << 0x0C)
-#define R64FX_WIDGET_OWNS_FONT                (1 << 0x0D)
+#define R64FX_WIDGET_OWNS_DATA                (1 << 0x0D)
 
-#define R64FX_WIDGET_IS_VERTICAL              (1 << 0x0E)
+#define R64FX_WIDGET_IS_HOVERED               (1 << 0x0F)
 
-/* Pinned widget are not scrollable in Widget_ScrollArea. */
-#define R64FX_WIDGET_IS_PINNED                (1 << 0x0F)
+#define R64FX_WIDGET_TREE_IS_COLLAPSED        (1 << 0x10)
 
-#define R64FX_WIDGET_OWNS_DATA                (1 << 0x10)
-
-#define R64FX_WIDGET_IS_HOVERED               (1 << 0x11)
-
-#define R64FX_WIDGET_TREE_IS_COLLAPSED        (1 << 0x12)
-
-#define R64FX_WIDGET_IS_EVEN                  (1 << 0x13)
+#define R64FX_WIDGET_IS_EVEN                  (1 << 0x11)
 
 #endif//R64FX_WIDGET_FLAGS_HPP

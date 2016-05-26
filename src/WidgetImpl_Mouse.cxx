@@ -47,38 +47,6 @@ MouseButton Widget::pressedButtons()
 }
 
 
-bool Widget::grabsMouseOnClick(bool yes)
-{
-    if(yes)
-        m_flags |= R64FX_WIDGET_GRABS_MOUSE_ON_CLICK;
-    else
-        m_flags &= ~R64FX_WIDGET_GRABS_MOUSE_ON_CLICK;
-    return yes;
-}
-
-
-bool Widget::grabsMouseOnClick() const
-{
-    return m_flags & R64FX_WIDGET_GRABS_MOUSE_ON_CLICK;
-}
-
-
-bool Widget::ungrabsMouseOnRelease(bool yes)
-{
-    if(yes)
-        m_flags |= R64FX_WIDGET_UNGRABS_MOUSE_ON_RELEASE;
-    else
-        m_flags &= ~R64FX_WIDGET_UNGRABS_MOUSE_ON_RELEASE;
-    return yes;
-}
-
-
-bool Widget::ungrabsMouseOnRelease() const
-{
-    return m_flags & R64FX_WIDGET_UNGRABS_MOUSE_ON_RELEASE;
-}
-
-
 void Widget::initMousePressEvent(
     Point<int> event_position,
     MouseButton button,
@@ -93,31 +61,29 @@ void Widget::initMousePressEvent(
     }
     else
     {
-//         Point<int> offset  = {0, 0};
-//         dst = leafAt(event_position, &offset);
-//         event_position -= offset;
         dst = this;
     }
 
-    if(!ignore_grabs && dst->grabsMouseOnClick())
-    {
-        dst->grabMouse();
-    }
-
-    if(dst->getsFocusOnClick())
-    {
-        dst->setFocus();
-    }
+    MousePressEvent event(event_position, {0, 0}, button);
 
     if(ignore_self && dst == this)
-        return;
-
-    MousePressEvent event(event_position, {0, 0}, button);
-    dst->mousePressEvent(&event);
+    {
+        dst->childrenMousePressEvent(&event);
+    }
+    else
+    {
+        dst->mousePressEvent(&event);
+    }
 }
 
 
 void Widget::mousePressEvent(MousePressEvent* event)
+{
+    childrenMousePressEvent(event);
+}
+
+
+bool Widget::childrenMousePressEvent(MousePressEvent* event)
 {
     Point<int> event_pos = event->position() - contentOffset();
     for(auto child : m_children)
@@ -128,9 +94,10 @@ void Widget::mousePressEvent(MousePressEvent* event)
             event->setPosition(event_pos - child->position());
             child->mousePressEvent(event);
             event->setPosition(old_pos);
-            break;
+            return true;
         }
     }
+    return false;
 }
 
 
@@ -151,11 +118,6 @@ void Widget::initMouseReleaseEvent(
         Point<int> leaf_offset = {0, 0};
         dst = leafAt(event_position, &leaf_offset);
         event_position -= leaf_offset;
-    }
-
-    if(!ignore_grabs && dst->ungrabsMouseOnRelease())
-    {
-        ungrabMouse();
     }
 
     if(ignore_self && dst == this)

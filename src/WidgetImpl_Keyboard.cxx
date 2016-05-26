@@ -6,22 +6,6 @@ namespace r64fx{
 Widget* g_focus_owner = nullptr;
 
 
-bool Widget::getsFocusOnClick(bool yes)
-{
-    if(yes)
-        m_flags |= R64FX_WIDGET_CLICK_FOCUS;
-    else
-        m_flags &= ~R64FX_WIDGET_CLICK_FOCUS;
-    return yes;
-}
-
-
-bool Widget::getsFocusOnClick() const
-{
-    return m_flags & R64FX_WIDGET_CLICK_FOCUS;
-}
-
-
 void Widget::setFocus()
 {
     if(g_focus_owner)
