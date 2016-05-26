@@ -115,22 +115,43 @@ void Widget::initMouseReleaseEvent(
     }
     else
     {
-        Point<int> leaf_offset = {0, 0};
-        dst = leafAt(event_position, &leaf_offset);
-        event_position -= leaf_offset;
+        dst = this;
     }
 
-    if(ignore_self && dst == this)
-        return;
-
     MouseReleaseEvent event(event_position, {0, 0}, button);
-    dst->mouseReleaseEvent(&event);
+
+    if(ignore_self && dst == this)
+    {
+        dst->childrenMouseReleaseEvent(&event);
+    }
+    else
+    {
+        dst->mouseReleaseEvent(&event);
+    }
 }
 
 
 void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 {
+    childrenMouseReleaseEvent(event);
+}
 
+
+bool Widget::childrenMouseReleaseEvent(MouseReleaseEvent* event)
+{
+    Point<int> event_pos = event->position() - contentOffset();
+    for(auto child : m_children)
+    {
+        if(Rect<int>(child->position(), child->size()).overlaps(event_pos))
+        {
+            Point<int> old_pos = event->position();
+            event->setPosition(event_pos - child->position());
+            child->mouseReleaseEvent(event);
+            event->setPosition(old_pos);
+            return true;
+        }
+    }
+    return false;
 }
 
 

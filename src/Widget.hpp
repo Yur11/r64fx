@@ -320,6 +320,8 @@ protected:
 
 private:
     bool childrenMousePressEvent(MousePressEvent* event);
+
+    bool childrenMouseReleaseEvent(MouseReleaseEvent* event);
 };
     
 }//namespace r64fx
