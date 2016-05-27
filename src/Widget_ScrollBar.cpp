@@ -9,7 +9,7 @@ using namespace std;
 
 namespace r64fx{
 
-int g_scroll_bar_width = 16;
+int g_scroll_bar_width = 15;
 
 namespace{
     Image* img_button_up     = nullptr;
@@ -30,7 +30,7 @@ namespace{
             for(int y=0; y<triangle_height; y++)
             {
                 float threshold = y * slope;
-                for(int x=0; x<half_width; x++)
+                for(int x=0; x<=half_width; x++)
                 {
                     float distance = half_width - x - 1;
                     float diff = distance - threshold;
@@ -191,9 +191,12 @@ void Widget_ScrollBar_Vertical::mouseMoveEvent(MouseMoveEvent* event)
         return;
 
     int length = barLength() - handleLength();
-    float step = float(event->dy()) / float(length);
-    setHandlePosition(handlePosition() + step);
-    repaint();
+    if(length > 0)
+    {
+        float step = float(event->dy()) / float(length);
+        setHandlePosition(handlePosition() + step);
+        repaint();
+    }
 }
 
 
@@ -213,8 +216,8 @@ int Widget_ScrollBar_Horizontal::barLength()
 
 void Widget_ScrollBar_Horizontal::paintEvent(PaintEvent* event)
 {
-    static unsigned char fg[4] = {127, 127, 127, 0};
-    static unsigned char bg[4] = {127, 180, 255, 0};
+    static unsigned char fg[4] = {200, 200, 200, 0};
+    static unsigned char bg[4] = {100, 100, 100, 0};
 
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, bg); //Remove me!
@@ -256,9 +259,12 @@ void Widget_ScrollBar_Horizontal::mouseMoveEvent(MouseMoveEvent* event)
         return;
 
     int length       = barLength() - handleLength();
-    float step       = float(event->dx()) / float(length);
-    setHandlePosition(handlePosition() + step);
-    repaint();
+    if(length > 0)
+    {
+        float step       = float(event->dx()) / float(length);
+        setHandlePosition(handlePosition() + step);
+        repaint();
+    }
 }
 
 }//namespace r64fx
