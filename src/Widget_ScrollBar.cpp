@@ -9,7 +9,7 @@ using namespace std;
 
 namespace r64fx{
 
-int g_scroll_bar_width = 20;
+int g_scroll_bar_width = 16;
 
 namespace{
     Image* img_button_up     = nullptr;

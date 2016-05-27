@@ -11,6 +11,51 @@ using namespace std;
 
 namespace r64fx{
 
+namespace{
+
+void find_children(
+    Widget_ItemBrowser*           parent,
+    Widget_ScrollArea**           scroll_area,
+    Widget_ScrollBar_Vertical**   vertical_scroll_bar    = nullptr,
+    Widget_ScrollBar_Horizontal** horizontal_scroll_bar  = nullptr
+)
+{
+    for(auto child : *parent)
+    {
+        if(scroll_area)
+        {
+            auto widget = dynamic_cast<Widget_ScrollArea*>(child);
+            if(widget)
+            {
+                *scroll_area = widget;
+                continue;
+            }
+        }
+
+        if(vertical_scroll_bar)
+        {
+            auto widget = dynamic_cast<Widget_ScrollBar_Vertical*>(child);
+            if(widget)
+            {
+                *vertical_scroll_bar = widget;
+                continue;
+            }
+        }
+
+        if(horizontal_scroll_bar)
+        {
+            auto widget = dynamic_cast<Widget_ScrollBar_Horizontal*>(child);
+            if(widget)
+            {
+                *horizontal_scroll_bar = widget;
+                continue;
+            }
+        }
+    }
+}
+
+}
+
 Widget_ItemBrowser::Widget_ItemBrowser(Widget* parent)
 : Widget(parent)
 {
@@ -113,57 +158,97 @@ void Widget_ItemBrowser::resizeEvent(ResizeEvent* event)
 //
 //         }
 //     }
+    rearrange();
+    clip();
+    repaint();
 }
 
 
 void Widget_ItemBrowser::rearrange()
 {
-    Widget_ScrollArea* scroll_area = (Widget_ScrollArea*) *begin();
+    Widget_ScrollArea*           scroll_area            = nullptr;
+    Widget_ScrollBar_Vertical*   vertical_scroll_bar    = nullptr;
+    Widget_ScrollBar_Horizontal* horizontal_scroll_bar  = nullptr;
+
+    find_children(this, &scroll_area, &vertical_scroll_bar, &horizontal_scroll_bar);
+
     if(!scroll_area)
         return;
 
-    scroll_area->setParent(nullptr);
-
-    Widget_ScrollBar* vert_sb = nullptr;
-    Widget_ScrollBar* hori_sb = nullptr;
-
     if(m_flags & R64FX_WIDGET_HAS_VERT_SCROLL_BAR)
     {
-        vert_sb = (Widget_ScrollBar*) *begin();
-        if(!vert_sb)
+        if(!vertical_scroll_bar)
         {
-            vert_sb = new Widget_ScrollBar_Vertical;
+            vertical_scroll_bar = new Widget_ScrollBar_Vertical(this);
         }
-        else
+    }
+    else
+    {
+        if(vertical_scroll_bar)
         {
-            vert_sb->setParent(nullptr);
+            vertical_scroll_bar->setParent(nullptr);
+            delete vertical_scroll_bar;
         }
     }
 
     if(m_flags & R64FX_WIDGET_HAS_HORI_SCROLL_BAR)
     {
-        hori_sb = (Widget_ScrollBar*) *begin();
-        if(!hori_sb)
+        if(!horizontal_scroll_bar)
         {
-            hori_sb = new Widget_ScrollBar_Horizontal;
+            horizontal_scroll_bar = new Widget_ScrollBar_Horizontal(this);
+        }
+    }
+    else
+    {
+        if(horizontal_scroll_bar)
+        {
+            horizontal_scroll_bar->setParent(nullptr);
+            delete horizontal_scroll_bar;
+        }
+    }
+
+    if(vertical_scroll_bar)
+    {
+        if(horizontal_scroll_bar)
+        {
+            vertical_scroll_bar->setHeight(height() - horizontal_scroll_bar->height());
         }
         else
         {
-            hori_sb->setParent(nullptr);
+            vertical_scroll_bar->setHeight(height());
         }
+        vertical_scroll_bar->setX(width() - vertical_scroll_bar->width());
+        vertical_scroll_bar->setY(0);
+
+        scroll_area->setWidth(width() - vertical_scroll_bar->width());
     }
-
-    scroll_area->setParent(this);
-
-    if(vert_sb)
+    else
     {
-        vert_sb->setParent(this);
+        scroll_area->setWidth(width());
     }
 
-    if(hori_sb)
+
+    if(horizontal_scroll_bar)
     {
-        hori_sb->setParent(this);
+        if(vertical_scroll_bar)
+        {
+            horizontal_scroll_bar->setWidth(width() - vertical_scroll_bar->width());
+        }
+        else
+        {
+            horizontal_scroll_bar->setWidth(width());
+        }
+        horizontal_scroll_bar->setX(0);
+        horizontal_scroll_bar->setY(height() - horizontal_scroll_bar->height());
+
+        scroll_area->setHeight(height() - horizontal_scroll_bar->height());
     }
+    else
+    {
+        scroll_area->setHeight(height());
+    }
+
+    scroll_area->setPosition({0, 0});
 }
 
 }//namespace r64fx
