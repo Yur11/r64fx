@@ -1,5 +1,6 @@
 #include "Widget_ScrollBar.hpp"
 #include "Image.hpp"
+#include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include <cmath>
 
@@ -9,7 +10,7 @@ using namespace std;
 
 namespace r64fx{
 
-int g_scroll_bar_width = 15;
+int g_scroll_bar_width = 25;
 
 namespace{
     Image* img_button_up     = nullptr;
@@ -23,6 +24,9 @@ namespace{
         {
             auto img = new Image(g_scroll_bar_width, g_scroll_bar_width);
             img_button_up = img;
+
+            unsigned char bg = 0;
+            fill(img, &bg);
 
             int half_width = g_scroll_bar_width / 2;
             int triangle_height = sqrt(g_scroll_bar_width * g_scroll_bar_width - half_width * half_width);
