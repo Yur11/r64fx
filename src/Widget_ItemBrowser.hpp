@@ -1,26 +1,41 @@
 #ifndef R64FX_WIDGET_ITEM_BROWSER_HPP
 #define R64FX_WIDGET_ITEM_BROWSER_HPP
 
-#include "Widget_ScrollArea.hpp"
+#include "Widget.hpp"
 
 namespace r64fx{
 
+class Widget_ScrollArea;
+class Widget_ScrollBar;
 class Widget_DataItem;
 
-class Widget_ItemBrowser : public Widget_ScrollArea{
-    Widget_DataItem* m_root_item = nullptr;
-
+class Widget_ItemBrowser : public Widget{
 public:
     Widget_ItemBrowser(Widget* parent = nullptr);
 
-    void setRootItem(Widget_DataItem* item);
+    virtual ~Widget_ItemBrowser();
 
-    Widget_DataItem* rootItem();
+//     void setRootItem(Widget_DataItem* item);
+//
+//     Widget_DataItem* rootItem();
+
+    Widget_ScrollArea* scrollArea();
+
+    void showVerticalScrollBar(bool yes);
+
+    Widget_ScrollBar* verticalScrollBar();
+
+    void showHorizontalScrollBar(bool yes);
+
+    Widget_ScrollBar* horizontalScrollBar();
 
 protected:
     virtual void paintEvent(Widget::PaintEvent* event);
 
     virtual void resizeEvent(ResizeEvent* event);
+
+private:
+    void rearrange();
 };
 
 }//namespace r64fx

@@ -73,7 +73,7 @@ Widget::Widget(Widget* parent)
 
 Widget::~Widget()
 {
-    
+    setParent(nullptr);
 }
 
     
@@ -87,14 +87,12 @@ void Widget::setParent(Widget* parent)
         return;
     }
 
-    if(!parent)
+    if(m_parent.widget)
     {
-        if(m_parent.widget)
-        {
-            m_parent.widget->m_children.remove(this);
-        }
+        m_parent.widget->m_children.remove(this);
     }
-    else
+
+    if(parent)
     {
         parent->m_children.append(this);
     }
