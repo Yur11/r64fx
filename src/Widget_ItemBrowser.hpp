@@ -15,27 +15,20 @@ public:
 
     virtual ~Widget_ItemBrowser();
 
-//     void setRootItem(Widget_DataItem* item);
-//
-//     Widget_DataItem* rootItem();
-
-    Widget_ScrollArea* scrollArea();
+    void addItem(Widget_DataItem* item);
 
     void showVerticalScrollBar(bool yes);
 
-    Widget_ScrollBar* verticalScrollBar();
-
     void showHorizontalScrollBar(bool yes);
 
-    Widget_ScrollBar* horizontalScrollBar();
+    void rearrange();
 
 protected:
     virtual void paintEvent(Widget::PaintEvent* event);
 
     virtual void resizeEvent(ResizeEvent* event);
 
-private:
-    void rearrange();
+    virtual void mousePressEvent(MousePressEvent* event);
 };
 
 }//namespace r64fx

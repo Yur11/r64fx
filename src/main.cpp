@@ -137,7 +137,8 @@ private:
         db->populate();
 
         auto ib = new Widget_ItemBrowser;
-//         ib->setRootDataItem(db);
+        ib->addItem(db);
+        ib->rearrange();
         ib->show();
     }
 

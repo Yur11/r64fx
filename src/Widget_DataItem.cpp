@@ -155,23 +155,6 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
 }
 
 
-void Widget_DataItem::mousePressEvent(MousePressEvent* event)
-{
-    if(event->button() & MouseButton::Left())
-    {
-        cout << text() << "\n";
-    }
-    else if(event->button() & MouseButton::WheelUp())
-    {
-        cout << "Up\n";
-    }
-    else if(event->button() & MouseButton::WheelDown())
-    {
-        cout << "Down\n";
-    }
-}
-
-
 void Widget_DataItem::mouseEnterEvent()
 {
     repaint();

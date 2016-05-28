@@ -1,7 +1,7 @@
 #include "Widget_ItemBrowser.hpp"
 #include "Widget_ScrollArea.hpp"
 #include "Widget_ScrollBar.hpp"
-#include "Widget_DataItem.hpp"
+#include "Widget_ItemList.hpp"
 #include "Painter.hpp"
 #include "WidgetFlags.hpp"
 
@@ -54,12 +54,41 @@ void find_children(
     }
 }
 
+
+Widget_ItemList* root_list(Widget_ScrollArea* scroll_area)
+{
+    Widget_ItemList* item_list = nullptr;
+    for(auto child : *scroll_area)
+    {
+        auto item_list_child = dynamic_cast<Widget_ItemList*>(child);
+        if(item_list_child)
+        {
+            item_list = item_list_child;
+            break;
+        }
+    }
+
+    return item_list;
+}
+
+
+Widget_ItemList* root_list(Widget_ItemBrowser* parent)
+{
+    Widget_ScrollArea* scroll_area = nullptr;
+    find_children(parent, &scroll_area);
+    if(!scroll_area)
+        return nullptr;
+
+    return root_list(scroll_area);
+}
+
 }
 
 Widget_ItemBrowser::Widget_ItemBrowser(Widget* parent)
 : Widget(parent)
 {
     auto wsa = new Widget_ScrollArea(this);
+    auto item_list = new Widget_ItemList(wsa);
     m_flags |= R64FX_WIDGET_HAS_VERT_SCROLL_BAR;
     m_flags |= R64FX_WIDGET_HAS_HORI_SCROLL_BAR;
     rearrange();
@@ -76,32 +105,13 @@ Widget_ItemBrowser::~Widget_ItemBrowser()
 }
 
 
-// void Widget_ItemBrowser::setRootItem(Widget_DataItem* item)
-// {
-//     if(m_root_item)
-//     {
-//         for(auto child : *this)
-//         {
-//             if(child == m_root_item)
-//             {
-//                 child->setParent(nullptr);
-//             }
-//         }
-//     }
-//     m_root_item = item;
-//     m_root_item->setParent(this);
-// }
-//
-//
-// Widget_DataItem* Widget_ItemBrowser::rootItem()
-// {
-//     return m_root_item;
-// }
-
-
-Widget_ScrollArea* Widget_ItemBrowser::scrollArea()
+void Widget_ItemBrowser::addItem(Widget_DataItem* item)
 {
-    return nullptr;
+    auto item_list = root_list(this);
+    if(!item_list)
+        return;
+
+    item_list->addItem(item);
 }
 
 
@@ -115,12 +125,6 @@ void Widget_ItemBrowser::showVerticalScrollBar(bool yes)
 }
 
 
-Widget_ScrollBar* Widget_ItemBrowser::verticalScrollBar()
-{
-    return nullptr;
-}
-
-
 void Widget_ItemBrowser::showHorizontalScrollBar(bool yes)
 {
     if(yes)
@@ -128,39 +132,6 @@ void Widget_ItemBrowser::showHorizontalScrollBar(bool yes)
     else
         m_flags &= ~R64FX_WIDGET_HAS_HORI_SCROLL_BAR;
     rearrange();
-}
-
-
-Widget_ScrollBar* Widget_ItemBrowser::horizontalScrollBar()
-{
-    return nullptr;
-}
-
-
-void Widget_ItemBrowser::paintEvent(Widget::PaintEvent* event)
-{
-    cout << childrenBoundingRect() << "\n";
-
-    auto p = event->painter();
-    unsigned char red[4] = {255, 0, 0, 0};
-    p->fillRect({0, 0, width(), height()}, red);
-    Widget::paintEvent(event);
-}
-
-
-void Widget_ItemBrowser::resizeEvent(ResizeEvent* event)
-{
-//     if(m_root_item)
-//     {
-//         if(event->width() > m_root_item->width())
-//         {
-//             m_root_item->setWidth(event->width());
-//
-//         }
-//     }
-    rearrange();
-    clip();
-    repaint();
 }
 
 
@@ -249,6 +220,42 @@ void Widget_ItemBrowser::rearrange()
     }
 
     scroll_area->setPosition({0, 0});
+
+    auto item_list = root_list(scroll_area);
+    if(item_list)
+    {
+        item_list->resizeAndReallign(scroll_area->width());
+    }
+}
+
+
+void Widget_ItemBrowser::paintEvent(Widget::PaintEvent* event)
+{
+    auto p = event->painter();
+    unsigned char red[4] = {255, 0, 0, 0};
+    p->fillRect({0, 0, width(), height()}, red);
+
+    Widget::paintEvent(event);
+}
+
+
+void Widget_ItemBrowser::resizeEvent(ResizeEvent* event)
+{
+    rearrange();
+    clip();
+    repaint();
+}
+
+
+void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
+{
+    Widget::mousePressEvent(event);
+
+    if(event->button() & MouseButton::Left())
+    {
+        rearrange();
+        cout << "click\n";
+    }
 }
 
 }//namespace r64fx

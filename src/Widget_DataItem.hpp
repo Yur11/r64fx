@@ -36,8 +36,6 @@ public:
 protected:
     virtual void paintEvent(PaintEvent* event);
 
-    virtual void mousePressEvent(MousePressEvent* event);
-
     virtual void mouseEnterEvent();
 
     virtual void mouseLeaveEvent();
