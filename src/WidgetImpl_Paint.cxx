@@ -60,6 +60,9 @@ void WidgetImpl::clipChildren(Widget* parent)
 
         if(child->m_flags & R64FX_WIDGET_WANTS_CLIPPING)
         {
+            Widget::ClipEvent event(rect - child_global_position);
+            child->clipEvent(&event);
+
             if(rect.width() > 0 && rect.height() > 0)
             {
                 child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
@@ -85,6 +88,12 @@ void WidgetImpl::clipChildren(Widget* parent)
 
         child->m_flags &= ~R64FX_WIDGET_CLIP_FLAGS;
     }
+}
+
+
+void Widget::clipEvent(ClipEvent* event)
+{
+
 }
 
 
@@ -202,5 +211,6 @@ void WidgetImpl::paintChildren(Widget* parent)
 
     m_got_rect = old_got_rect;
 }
+
 
 }//namespace r64fx

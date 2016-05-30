@@ -43,7 +43,4 @@
 
 #define R64FX_WIDGET_IS_EVEN                  (1 << 0x11)
 
-#define R64FX_WIDGET_HAS_VERT_SCROLL_BAR      (1 << 0x12)
-#define R64FX_WIDGET_HAS_HORI_SCROLL_BAR      (1 << 0x13)
-
 #endif//R64FX_WIDGET_FLAGS_HPP

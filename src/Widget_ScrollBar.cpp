@@ -10,7 +10,7 @@ using namespace std;
 
 namespace r64fx{
 
-int g_scroll_bar_width = 25;
+int g_scroll_bar_width = 15;
 
 namespace{
     Image* img_button_up     = nullptr;
@@ -137,6 +137,16 @@ int Widget_ScrollBar::handleLength()
 }
 
 
+void Widget_ScrollBar::mouseReleaseEvent(MouseReleaseEvent* event)
+{
+    if(isMouseGrabber())
+    {
+        ungrabMouse();
+    }
+}
+
+
+
 Widget_ScrollBar_Vertical::Widget_ScrollBar_Vertical(Widget* parent)
 : Widget_ScrollBar(parent)
 {
@@ -152,8 +162,8 @@ int Widget_ScrollBar_Vertical::barLength()
 
 void Widget_ScrollBar_Vertical::paintEvent(PaintEvent* event)
 {
-    static unsigned char fg[4] = {127, 127, 127, 0};
-    static unsigned char bg[4] = {127, 180, 255, 0};
+    static unsigned char fg[4] = {0, 0, 127, 0};
+    static unsigned char bg[4] = {0, 127, 0, 0};
 
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, bg); //Remove me!
@@ -176,15 +186,18 @@ void Widget_ScrollBar_Vertical::mousePressEvent(MousePressEvent* event)
     {
         setHandlePosition(handlePosition() - 0.1f);
         repaint();
+        m_position_changed(this, m_position_changed_data);
     }
     else if(event->y() > (height() - g_scroll_bar_width))
     {
         setHandlePosition(handlePosition() + 0.1f);
         repaint();
+        m_position_changed(this, m_position_changed_data);
     }
     else
     {
         Widget_ScrollBar::mousePressEvent(event);
+        grabMouse();
     }
 }
 
@@ -200,6 +213,7 @@ void Widget_ScrollBar_Vertical::mouseMoveEvent(MouseMoveEvent* event)
         float step = float(event->dy()) / float(length);
         setHandlePosition(handlePosition() + step);
         repaint();
+        m_position_changed(this, m_position_changed_data);
     }
 }
 
@@ -220,8 +234,8 @@ int Widget_ScrollBar_Horizontal::barLength()
 
 void Widget_ScrollBar_Horizontal::paintEvent(PaintEvent* event)
 {
-    static unsigned char fg[4] = {200, 200, 200, 0};
-    static unsigned char bg[4] = {100, 100, 100, 0};
+    static unsigned char fg[4] = {0, 0, 127, 0};
+    static unsigned char bg[4] = {0, 127, 0, 0};
 
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, bg); //Remove me!
@@ -244,15 +258,18 @@ void Widget_ScrollBar_Horizontal::mousePressEvent(MousePressEvent* event)
     {
         setHandlePosition(handlePosition() - 0.1);
         repaint();
+        m_position_changed(this, m_position_changed_data);
     }
     else if(event->x() > (width() - g_scroll_bar_width))
     {
         setHandlePosition(handlePosition() + 0.1);
         repaint();
+        m_position_changed(this, m_position_changed_data);
     }
     else
     {
         Widget_ScrollBar::mousePressEvent(event);
+        grabMouse();
     }
 }
 
@@ -262,12 +279,13 @@ void Widget_ScrollBar_Horizontal::mouseMoveEvent(MouseMoveEvent* event)
     if(!(event->button() & MouseButton::Left()))
         return;
 
-    int length       = barLength() - handleLength();
+    int length = barLength() - handleLength();
     if(length > 0)
     {
         float step       = float(event->dx()) / float(length);
         setHandlePosition(handlePosition() + step);
         repaint();
+        m_position_changed(this, m_position_changed_data);
     }
 }
 

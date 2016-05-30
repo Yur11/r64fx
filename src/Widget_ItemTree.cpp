@@ -129,13 +129,16 @@ void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
     {
         Widget::mousePressEvent(event);
     }
-    else if(isCollapsed())
+    else if(event->button() & MouseButton::Left())
     {
-        expand();
-    }
-    else
-    {
-        collapse();
+        if(isCollapsed())
+        {
+            expand();
+        }
+        else
+        {
+            collapse();
+        }
     }
 }
 

@@ -28,6 +28,9 @@ public:
     virtual int barLength() = 0;
 
     int handleLength();
+
+protected:
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 };
 
 

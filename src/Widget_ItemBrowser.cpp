@@ -89,8 +89,6 @@ Widget_ItemBrowser::Widget_ItemBrowser(Widget* parent)
 {
     auto wsa = new Widget_ScrollArea(this);
     auto item_list = new Widget_ItemList(wsa);
-    m_flags |= R64FX_WIDGET_HAS_VERT_SCROLL_BAR;
-    m_flags |= R64FX_WIDGET_HAS_HORI_SCROLL_BAR;
     rearrange();
 }
 
@@ -115,26 +113,6 @@ void Widget_ItemBrowser::addItem(Widget_DataItem* item)
 }
 
 
-void Widget_ItemBrowser::showVerticalScrollBar(bool yes)
-{
-    if(yes)
-        m_flags |= R64FX_WIDGET_HAS_VERT_SCROLL_BAR;
-    else
-        m_flags &= ~R64FX_WIDGET_HAS_VERT_SCROLL_BAR;
-    rearrange();
-}
-
-
-void Widget_ItemBrowser::showHorizontalScrollBar(bool yes)
-{
-    if(yes)
-        m_flags |= R64FX_WIDGET_HAS_HORI_SCROLL_BAR;
-    else
-        m_flags &= ~R64FX_WIDGET_HAS_HORI_SCROLL_BAR;
-    rearrange();
-}
-
-
 void Widget_ItemBrowser::rearrange()
 {
     Widget_ScrollArea*           scroll_area            = nullptr;
@@ -146,35 +124,34 @@ void Widget_ItemBrowser::rearrange()
     if(!scroll_area)
         return;
 
-    if(m_flags & R64FX_WIDGET_HAS_VERT_SCROLL_BAR)
+    auto item_list = root_list(scroll_area);
+    if(item_list)
     {
-        if(!vertical_scroll_bar)
+        Rect<int> cbr = item_list->childrenBoundingRect();
+        if(cbr.height() > scroll_area->height())
         {
-            vertical_scroll_bar = new Widget_ScrollBar_Vertical(this);
+            if(!vertical_scroll_bar)
+            {
+                vertical_scroll_bar = new Widget_ScrollBar_Vertical(this);
+                vertical_scroll_bar->onPositionChanged([](Widget_ScrollBar* sb, void* arg){
+                    auto wib = (Widget_ItemBrowser*) arg;
+                    wib->scrollTo(sb->handlePosition());
+                }, this);
+            }
         }
-    }
-    else
-    {
+        else
+        {
+            if(vertical_scroll_bar)
+            {
+                vertical_scroll_bar->setParent(nullptr);
+                delete vertical_scroll_bar;
+                vertical_scroll_bar = nullptr;
+            }
+        }
+
         if(vertical_scroll_bar)
         {
-            vertical_scroll_bar->setParent(nullptr);
-            delete vertical_scroll_bar;
-        }
-    }
-
-    if(m_flags & R64FX_WIDGET_HAS_HORI_SCROLL_BAR)
-    {
-        if(!horizontal_scroll_bar)
-        {
-            horizontal_scroll_bar = new Widget_ScrollBar_Horizontal(this);
-        }
-    }
-    else
-    {
-        if(horizontal_scroll_bar)
-        {
-            horizontal_scroll_bar->setParent(nullptr);
-            delete horizontal_scroll_bar;
+            vertical_scroll_bar->setRatio(float(scroll_area->height()) / float(item_list->height()));
         }
     }
 
@@ -199,33 +176,20 @@ void Widget_ItemBrowser::rearrange()
     }
 
 
-    if(horizontal_scroll_bar)
-    {
-        if(vertical_scroll_bar)
-        {
-            horizontal_scroll_bar->setWidth(width() - vertical_scroll_bar->width());
-        }
-        else
-        {
-            horizontal_scroll_bar->setWidth(width());
-        }
-        horizontal_scroll_bar->setX(0);
-        horizontal_scroll_bar->setY(height() - horizontal_scroll_bar->height());
-
-        scroll_area->setHeight(height() - horizontal_scroll_bar->height());
-    }
-    else
-    {
-        scroll_area->setHeight(height());
-    }
+    scroll_area->setHeight(height());
 
     scroll_area->setPosition({0, 0});
 
-    auto item_list = root_list(scroll_area);
     if(item_list)
     {
         item_list->resizeAndReallign(scroll_area->width());
     }
+}
+
+
+void Widget_ItemBrowser::scrollTo(float position)
+{
+    cout << "scroll: " << position << "\n";
 }
 
 
@@ -254,7 +218,26 @@ void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
     if(event->button() & MouseButton::Left())
     {
         rearrange();
-        cout << "click\n";
+        clip();
+        repaint();
+    }
+    else
+    {
+        Widget_ScrollArea* scroll_area = nullptr;
+        find_children(this, &scroll_area);
+        if(scroll_area)
+        {
+            if(event->button() & MouseButton::WheelUp())
+            {
+                scroll_area->setOffset(scroll_area->offset() + Point<int>(0, 20));
+            }
+            else if(event->button() & MouseButton::WheelDown())
+            {
+                scroll_area->setOffset(scroll_area->offset() - Point<int>(0, 20));
+            }
+            clip();
+            repaint();
+        }
     }
 }
 

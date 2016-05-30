@@ -279,10 +279,22 @@ public:
     };
 
 
+    class ClipEvent{
+        Rect<int> m_rect;
+
+    public:
+        ClipEvent(Rect<int> rect) : m_rect(rect) {}
+
+        inline Rect<int> rect() const { return m_rect; }
+    };
+
+
 protected:
     virtual void paintEvent(PaintEvent* event);
 
     virtual void resizeEvent(ResizeEvent* event);
+
+    virtual void clipEvent(ClipEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

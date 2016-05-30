@@ -73,7 +73,7 @@ Widget::Widget(Widget* parent)
 
 Widget::~Widget()
 {
-    setParent(nullptr);
+
 }
 
     

@@ -17,11 +17,9 @@ public:
 
     void addItem(Widget_DataItem* item);
 
-    void showVerticalScrollBar(bool yes);
-
-    void showHorizontalScrollBar(bool yes);
-
     void rearrange();
+
+    void scrollTo(float position);
 
 protected:
     virtual void paintEvent(Widget::PaintEvent* event);

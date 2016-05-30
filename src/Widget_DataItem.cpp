@@ -130,6 +130,9 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
 
     if(m_image)
     {
+        auto old_clip_rect = p->clipRect();
+        p->setClipRect(Rect<int>(toRootCoords(m_visible_rect.position()), m_visible_rect.size()));
+
         int offset = g_data_item_font->height() * treeDepth();
 
         unsigned char odd_bg[4]  = {200, 200, 200, 0};
@@ -137,7 +140,6 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
         p->fillRect({0, 0, width() + offset, height()}, ((m_flags & R64FX_WIDGET_IS_EVEN) ? even_bg : odd_bg));
 
         unsigned char red[4] = {127, 0, 0, 0};
-//         p->fillRect({offset + 2, offset + 2, offset - 4, offset - 4}, red);
 
         unsigned char normal [4] = {0, 0, 0, 0};
         unsigned char hovered[4] = {255, 255, 255, 0};
@@ -149,9 +151,17 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
             colors = normal;
 
         p->blendColors({offset, 0}, &colors, m_image);
+
+        p->setClipRect(old_clip_rect);
     }
 
     Widget::paintEvent(event);
+}
+
+
+void Widget_DataItem::clipEvent(ClipEvent* event)
+{
+    m_visible_rect = event->rect();
 }
 
 

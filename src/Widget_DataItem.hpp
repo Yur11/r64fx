@@ -9,6 +9,7 @@ class Widget_DataItem : public Widget{
     std::string m_text = "";
     Image* m_image = nullptr;
     int m_tree_depth = 0;
+    Rect<int> m_visible_rect;
 
 public:
     Widget_DataItem(const std::string &text, Widget* parent = nullptr);
@@ -35,6 +36,8 @@ public:
 
 protected:
     virtual void paintEvent(PaintEvent* event);
+
+    virtual void clipEvent(ClipEvent* event);
 
     virtual void mouseEnterEvent();
 
