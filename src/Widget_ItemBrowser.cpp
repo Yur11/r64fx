@@ -232,18 +232,42 @@ void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
     }
     else
     {
-        Widget_ScrollArea* scroll_area = nullptr;
-        find_children(this, &scroll_area);
+        Widget_ScrollArea*          scroll_area          = nullptr;
+        Widget_ScrollBar_Vertical*  vertical_scroll_bar  = nullptr;
+
+        find_children(this, &scroll_area, &vertical_scroll_bar);
+
         if(scroll_area)
         {
+            Widget_ItemList* item_list = root_list(scroll_area);
+
+            int scroll_area_height = scroll_area->height();
+            int item_list_height = item_list->height();
+            int slack_height = item_list_height - scroll_area_height;
+
             if(event->button() & MouseButton::WheelUp())
             {
                 scroll_area->setOffset(scroll_area->offset() + Point<int>(0, 20));
+                if(scroll_area->offset().y() > 0)
+                {
+                    scroll_area->setOffset({0, 0});
+                }
             }
             else if(event->button() & MouseButton::WheelDown())
             {
                 scroll_area->setOffset(scroll_area->offset() - Point<int>(0, 20));
+                if(scroll_area->offset().y() < (-slack_height))
+                {
+                    scroll_area->setOffset({0, -slack_height});
+                }
             }
+
+            if(vertical_scroll_bar)
+            {
+                float handle_position = float(-scroll_area->offset().y()) / float(slack_height);
+                vertical_scroll_bar->setHandlePosition(handle_position);
+            }
+
             clip();
             repaint();
         }
