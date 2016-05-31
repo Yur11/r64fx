@@ -124,6 +124,8 @@ void Widget_ItemBrowser::rearrange()
     if(!scroll_area)
         return;
 
+    scroll_area->setSize(this->size());
+
     auto item_list = root_list(scroll_area);
     if(item_list)
     {
@@ -157,24 +159,12 @@ void Widget_ItemBrowser::rearrange()
 
     if(vertical_scroll_bar)
     {
-        if(horizontal_scroll_bar)
-        {
-            vertical_scroll_bar->setHeight(height() - horizontal_scroll_bar->height());
-        }
-        else
-        {
-            vertical_scroll_bar->setHeight(height());
-        }
+        vertical_scroll_bar->setHeight(height());
         vertical_scroll_bar->setX(width() - vertical_scroll_bar->width());
         vertical_scroll_bar->setY(0);
 
         scroll_area->setWidth(width() - vertical_scroll_bar->width());
     }
-    else
-    {
-        scroll_area->setWidth(width());
-    }
-
 
     scroll_area->setHeight(height());
 
@@ -189,7 +179,26 @@ void Widget_ItemBrowser::rearrange()
 
 void Widget_ItemBrowser::scrollTo(float position)
 {
-    cout << "scroll: " << position << "\n";
+    Widget_ScrollArea*           scroll_area            = nullptr;
+    Widget_ScrollBar_Vertical*   vertical_scroll_bar    = nullptr;
+    Widget_ScrollBar_Horizontal* horizontal_scroll_bar  = nullptr;
+
+    find_children(this, &scroll_area, &vertical_scroll_bar, &horizontal_scroll_bar);
+
+    if(!scroll_area)
+        return;
+
+    auto item_list = root_list(scroll_area);
+    if(!item_list)
+        return;
+
+    int scroll_area_height = scroll_area->height();
+    int item_list_height = item_list->height();
+    int slack_height = item_list_height - scroll_area_height;
+    int offset = -int(float(slack_height) * position);
+    scroll_area->setOffset({0, offset});
+    clip();
+    repaint();
 }
 
 

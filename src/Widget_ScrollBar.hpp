@@ -19,7 +19,7 @@ public:
 
     float ratio() const;
 
-    void setHandlePosition(float position);
+    void setHandlePosition(float position, bool notify = false);
 
     float handlePosition() const;
 

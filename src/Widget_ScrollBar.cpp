@@ -90,6 +90,7 @@ Widget_ScrollBar::Widget_ScrollBar(Widget* parent)
 : Widget(parent)
 , m_position_changed(position_changed_stub)
 {
+    cout << "Widget_ScrollBar: " << this << "\n";
     init_images_if_needed();
 }
 
@@ -105,13 +106,16 @@ float Widget_ScrollBar::ratio() const
 }
 
 
-void Widget_ScrollBar::setHandlePosition(float position)
+void Widget_ScrollBar::setHandlePosition(float position, bool notify)
 {
     m_handle_position = position;
     if(m_handle_position < 0.0f)
         m_handle_position = 0.0f;
     else if(m_handle_position > 1.0f)
         m_handle_position = 1.0f;
+
+    if(notify)
+        m_position_changed(this, m_position_changed_data);
 }
 
 
@@ -139,6 +143,7 @@ int Widget_ScrollBar::handleLength()
 
 void Widget_ScrollBar::mouseReleaseEvent(MouseReleaseEvent* event)
 {
+    cout << "Widget_ScrollBar::mouseReleaseEvent\n";
     if(isMouseGrabber())
     {
         ungrabMouse();
@@ -184,15 +189,13 @@ void Widget_ScrollBar_Vertical::mousePressEvent(MousePressEvent* event)
 {
     if(event->y() < g_scroll_bar_width)
     {
-        setHandlePosition(handlePosition() - 0.1f);
+        setHandlePosition(handlePosition() - 0.1f, true);
         repaint();
-        m_position_changed(this, m_position_changed_data);
     }
     else if(event->y() > (height() - g_scroll_bar_width))
     {
-        setHandlePosition(handlePosition() + 0.1f);
+        setHandlePosition(handlePosition() + 0.1f, true);
         repaint();
-        m_position_changed(this, m_position_changed_data);
     }
     else
     {
@@ -211,9 +214,8 @@ void Widget_ScrollBar_Vertical::mouseMoveEvent(MouseMoveEvent* event)
     if(length > 0)
     {
         float step = float(event->dy()) / float(length);
-        setHandlePosition(handlePosition() + step);
+        setHandlePosition(handlePosition() + step, true);
         repaint();
-        m_position_changed(this, m_position_changed_data);
     }
 }
 
@@ -256,15 +258,13 @@ void Widget_ScrollBar_Horizontal::mousePressEvent(MousePressEvent* event)
 {
     if(event->x() < g_scroll_bar_width)
     {
-        setHandlePosition(handlePosition() - 0.1);
+        setHandlePosition(handlePosition() - 0.1, true);
         repaint();
-        m_position_changed(this, m_position_changed_data);
     }
     else if(event->x() > (width() - g_scroll_bar_width))
     {
-        setHandlePosition(handlePosition() + 0.1);
+        setHandlePosition(handlePosition() + 0.1, true);
         repaint();
-        m_position_changed(this, m_position_changed_data);
     }
     else
     {
@@ -283,9 +283,8 @@ void Widget_ScrollBar_Horizontal::mouseMoveEvent(MouseMoveEvent* event)
     if(length > 0)
     {
         float step       = float(event->dx()) / float(length);
-        setHandlePosition(handlePosition() + step);
+        setHandlePosition(handlePosition() + step, true);
         repaint();
-        m_position_changed(this, m_position_changed_data);
     }
 }
 
