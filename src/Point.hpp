@@ -6,8 +6,12 @@ namespace r64fx{
 template<typename T> struct Point{
     T vec[2];
     
-    Point<T>(T x = T(), T y = T())
+    Point<T>(T x, T y)
     : vec{x, y}
+    {}
+
+    Point<T>()
+    : vec{0, 0}
     {}
 
     inline void setX(T x) { vec[0] = x; }
