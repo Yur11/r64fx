@@ -90,7 +90,6 @@ Widget_ScrollBar::Widget_ScrollBar(Widget* parent)
 : Widget(parent)
 , m_position_changed(position_changed_stub)
 {
-    cout << "Widget_ScrollBar: " << this << "\n";
     init_images_if_needed();
 }
 
@@ -143,7 +142,6 @@ int Widget_ScrollBar::handleLength()
 
 void Widget_ScrollBar::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    cout << "Widget_ScrollBar::mouseReleaseEvent\n";
     if(isMouseGrabber())
     {
         ungrabMouse();
