@@ -151,9 +151,28 @@ void Widget_ItemBrowser::rearrange()
             }
         }
 
+        int scroll_area_height = scroll_area->height();
+        int item_list_height = item_list->height();
+        int slack_height = item_list_height - scroll_area_height;
+
+        if(slack_height > 0)
+        {
+            if((-scroll_area->offset().y()) > slack_height)
+            {
+                scroll_area->setOffset({0, -slack_height});
+            }
+        }
+        else
+        {
+            scroll_area->setOffset({0, 0});
+        }
+
         if(vertical_scroll_bar)
         {
             vertical_scroll_bar->setRatio(float(scroll_area->height()) / float(item_list->height()));
+
+            float handle_position = float(-scroll_area->offset().y()) / float(slack_height);
+            vertical_scroll_bar->setHandlePosition(handle_position);
         }
     }
 
@@ -197,6 +216,7 @@ void Widget_ItemBrowser::scrollTo(float position)
     int slack_height = item_list_height - scroll_area_height;
     int offset = -int(float(slack_height) * position);
     scroll_area->setOffset({0, offset});
+
     clip();
     repaint();
 }
