@@ -77,6 +77,24 @@ void Widget_ItemTree::resizeAndReallign(int min_width)
 }
 
 
+int Widget_ItemTree::enumerate(int num)
+{
+    int n = Widget_DataItem::enumerate(num);
+    if(isCollapsed())
+        return n;
+
+    for(auto child : *this)
+    {
+        auto data_item = dynamic_cast<Widget_DataItem*>(child);
+        if(data_item)
+        {
+            n = data_item->enumerate(n);
+        }
+    }
+    return n;
+}
+
+
 void Widget_ItemTree::collapse()
 {
     m_flags |= R64FX_WIDGET_TREE_IS_COLLAPSED;
@@ -85,6 +103,7 @@ void Widget_ItemTree::collapse()
     if(root_item_parent)
     {
         root_item->resizeAndReallign(root_item_parent->width());
+        root_item->enumerate(0);
         root_item_parent->clip();
         root_item_parent->repaint();
     }
@@ -99,6 +118,7 @@ void Widget_ItemTree::expand()
     if(root_item_parent)
     {
         root_item->resizeAndReallign(root_item_parent->width());
+        root_item->enumerate(0);
         root_item_parent->clip();
         root_item_parent->repaint();
     }

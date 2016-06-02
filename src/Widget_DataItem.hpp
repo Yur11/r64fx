@@ -26,6 +26,8 @@ public:
 
     virtual void resizeAndReallign(int min_width);
 
+    virtual int enumerate(int num);
+
     Widget_DataItem* parentDataItem();
 
     Widget_DataItem* rootDataItem();

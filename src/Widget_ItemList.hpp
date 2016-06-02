@@ -15,6 +15,8 @@ public:
 
     virtual void resizeAndReallign(int min_width);
 
+    virtual int enumerate(int num);
+
 protected:
     virtual void paintEvent(PaintEvent* event);
 };

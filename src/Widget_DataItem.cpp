@@ -67,19 +67,22 @@ int Widget_DataItem::lineHeight()
 
 void Widget_DataItem::resizeAndReallign(int min_width)
 {
-    static bool is_even = true;
-    if(is_even)
-        m_flags |= R64FX_WIDGET_IS_EVEN;
-    else
-        m_flags &= ~R64FX_WIDGET_IS_EVEN;
-    is_even = !is_even;
-
     int width = find_text_bbox(m_text, TextWrap::None, g_data_item_font).width() + g_data_item_font->height();
     if(width < min_width)
         width = min_width;
 
     setWidth(width);
     setHeight(lineHeight());
+}
+
+
+int Widget_DataItem::enumerate(int num)
+{
+    if(num & 1)
+        m_flags &= ~R64FX_WIDGET_IS_EVEN;
+    else
+        m_flags |= R64FX_WIDGET_IS_EVEN;
+    return num + 1;
 }
 
 

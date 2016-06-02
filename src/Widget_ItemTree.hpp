@@ -18,6 +18,8 @@ public:
 
     virtual void resizeAndReallign(int min_width);
 
+    virtual int enumerate(int num);
+
     void collapse();
 
     void expand();
