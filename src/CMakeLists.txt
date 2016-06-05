@@ -65,6 +65,7 @@ set(SRC
     Widget_DirectoryTree.cpp
     Widget_ItemList.cpp
     Widget_ItemTree.cpp
+    Widget_Label.cpp
     Widget_Menu.cpp
     Widget_ScrollArea.cpp
     Widget_ScrollBar.cpp

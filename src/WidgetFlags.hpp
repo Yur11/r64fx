@@ -43,4 +43,6 @@
 
 #define R64FX_WIDGET_IS_EVEN                  (1 << 0x11)
 
+#define R64FX_WIDGET_LABEL_OWNS_IMAGE         (1 << 0x12)
+
 #endif//R64FX_WIDGET_FLAGS_HPP
