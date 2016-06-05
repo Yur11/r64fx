@@ -149,7 +149,7 @@ void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
     {
         Widget::mousePressEvent(event);
     }
-    else if(event->button() & MouseButton::Left())
+    else if(event->button() & MouseButton::Left() && event->x() < (lineHeight() * (treeDepth() + 1)))
     {
         if(isCollapsed())
         {
