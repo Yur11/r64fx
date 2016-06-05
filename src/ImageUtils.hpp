@@ -60,6 +60,10 @@ enum class DrawStyle{
 };
 
 
+/* Draw a bunch of triangles that point in four different directions
+ * and fit in a square with the given size. */
+void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right);
+
 }//namespace r64fx
 
 #endif//R64FX_IMAGE_UTILS_HPP

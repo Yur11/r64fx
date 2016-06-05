@@ -20,50 +20,12 @@ namespace{
 
     void init_images_if_needed()
     {
-        if(!img_button_up)
-        {
-            auto img = new Image(g_scroll_bar_width, g_scroll_bar_width);
-            img_button_up = img;
+        img_button_up     = new Image;
+        img_button_down   = new Image;
+        img_button_left   = new Image;
+        img_button_right  = new Image;
 
-            unsigned char bg = 0;
-            fill(img, &bg);
-
-            int half_width = g_scroll_bar_width / 2;
-            int triangle_height = sqrt(g_scroll_bar_width * g_scroll_bar_width - half_width * half_width);
-            float slope = float(half_width) / float(triangle_height);
-            for(int y=0; y<triangle_height; y++)
-            {
-                float threshold = y * slope;
-                for(int x=0; x<=half_width; x++)
-                {
-                    float distance = half_width - x - 1;
-                    float diff = distance - threshold;
-                    unsigned char px;
-                    if(diff < 0.0f)
-                        px = 255;
-                    else if(diff < 1.0f)
-                        px = 255 - (unsigned char)(diff * 255.0f);
-                    else
-                        px = 0;
-                    img->pixel(x, y)[0] = img->pixel(g_scroll_bar_width - x - 1, y)[0] = px;
-                }
-            }
-
-            img_button_down  = new Image(g_scroll_bar_width, g_scroll_bar_width);
-            img_button_left  = new Image(g_scroll_bar_width, g_scroll_bar_width);
-            img_button_right = new Image(g_scroll_bar_width, g_scroll_bar_width);
-
-            for(int i=0; i<g_scroll_bar_width; i++)
-            {
-                for(int j=0; j<g_scroll_bar_width; j++)
-                {
-                    img_button_down  -> pixel(i, g_scroll_bar_width - j - 1)[0] =
-                    img_button_left  -> pixel(j, g_scroll_bar_width - i - 1)[0] =
-                    img_button_right -> pixel(g_scroll_bar_width - j - 1, i)[0] =
-                    img_button_up    -> pixel(i, j)[0];
-                }
-            }
-        }
+        draw_triangles(g_scroll_bar_width, img_button_up, img_button_down, img_button_left, img_button_right);
     }
 
     void cleanup_images()

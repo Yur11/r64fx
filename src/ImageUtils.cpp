@@ -473,4 +473,82 @@ void draw_radius(Image* dst, unsigned char* color, Point<float> center, float an
     );
 }
 
+
+void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
+{
+    Image img(size, size);
+
+    unsigned char bg = 0;
+    fill(&img, &bg);
+
+    int half_width = size / 2;
+    int triangle_height = sqrt(size * size - half_width * half_width);
+    float slope = float(half_width) / float(triangle_height);
+    for(int y=0; y<triangle_height; y++)
+    {
+        float threshold = y * slope;
+        for(int x=0; x<=half_width; x++)
+        {
+            float distance = half_width - x - 1;
+            float diff = distance - threshold;
+            unsigned char px;
+            if(diff < 0.0f)
+                px = 255;
+            else if(diff < 1.0f)
+                px = 255 - (unsigned char)(diff * 255.0f);
+            else
+                px = 0;
+            img.pixel(x, y)[0] = img.pixel(size - x - 1, y)[0] = px;
+        }
+    }
+
+    if(up)
+    {
+        up->load(size, size, 1);
+        for(int i=0; i<size; i++)
+        {
+            for(int j=0; j<size; j++)
+            {
+                up->pixel(i, j)[0] = img(i, j)[0];
+            }
+        }
+    }
+
+    if(down)
+    {
+        down->load(size, size, 1);
+        for(int i=0; i<size; i++)
+        {
+            for(int j=0; j<size; j++)
+            {
+                down->pixel(i, size - j - 1)[0] = img(i, j)[0];
+            }
+        }
+    }
+
+    if(left)
+    {
+        left->load(size, size, 1);
+        for(int i=0; i<size; i++)
+        {
+            for(int j=0; j<size; j++)
+            {
+                left->pixel(j, size - i - 1)[0] = img(i, j)[0];
+            }
+        }
+    }
+
+    if(right)
+    {
+        right->load(size, size, 1);
+        for(int i=0; i<size; i++)
+        {
+            for(int j=0; j<size; j++)
+            {
+                right->pixel(size - j - 1, i)[0] = img(i, j)[0];
+            }
+        }
+    }
+}
+
 }//namespace r64fx
