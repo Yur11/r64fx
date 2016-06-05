@@ -41,6 +41,12 @@ protected:
 
     virtual void clipEvent(ClipEvent* event);
 
+    virtual void mousePressEvent(MousePressEvent* event);
+
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
+
+    virtual void mouseMoveEvent(MouseMoveEvent* event);
+
     virtual void mouseEnterEvent();
 
     virtual void mouseLeaveEvent();

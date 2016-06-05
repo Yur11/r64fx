@@ -1,5 +1,6 @@
 #include "Widget_DataItem.hpp"
 #include "Widget_ItemTree.hpp"
+#include "Widget_Label.hpp"
 #include "WidgetFlags.hpp"
 #include "Painter.hpp"
 #include "TextPainter.hpp"
@@ -220,6 +221,37 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
 void Widget_DataItem::clipEvent(ClipEvent* event)
 {
     m_visible_rect = event->rect();
+}
+
+
+void Widget_DataItem::mousePressEvent(MousePressEvent* event)
+{
+    grabMouse();
+    Widget::mousePressEvent(event);
+}
+
+
+void Widget_DataItem::mouseReleaseEvent(MouseReleaseEvent* event)
+{
+    if(isMouseGrabber())
+    {
+        ungrabMouse();
+    }
+    Widget::mouseReleaseEvent(event);
+}
+
+
+void Widget_DataItem::mouseMoveEvent(MouseMoveEvent* event)
+{
+    if(event->button() & MouseButton::Left())
+    {
+        int distance = event->dx() * event->dx() + event->dy() * event->dy();
+        if(distance > 3 && (!text().empty()))
+        {
+            auto label = new Widget_Label(text());
+            startDrag(label, event->position());
+        }
+    }
 }
 
 

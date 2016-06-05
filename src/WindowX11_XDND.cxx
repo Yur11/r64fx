@@ -97,3 +97,12 @@ void send_dnd_finished(::Window drag_target, ::Window drag_source, bool accept)
 }
 
 }//namespace
+
+void WindowX11::startDrag(Window* drag_object, int anchor_x, int anchor_y)
+{
+    if(g_outgoing_drag_object)
+        return;
+
+    cout << "startDrag: " << drag_object << ", " << anchor_x << ", " << anchor_y << "\n";
+    g_outgoing_drag_object = drag_object;
+}

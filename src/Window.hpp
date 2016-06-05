@@ -22,7 +22,8 @@ public:
         Normal,
         Menu,
         Dialog,
-        ToolTip
+        ToolTip,
+        DND,
     };
 
     enum class Type{
@@ -99,6 +100,10 @@ public:
     virtual void requestClipboardData(ClipboardDataType type, ClipboardMode mode) = 0;
 
     virtual void requestClipboardMetadata(ClipboardMode mode) = 0;
+
+
+    virtual void startDrag(Window* drag_object, int anchor_x, int anchor_y) = 0;
+
 
     static Window* newInstance(
         int width = 800, int height = 600,

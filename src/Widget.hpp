@@ -235,6 +235,7 @@ public:
 
     void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 
+    void startDrag(Widget* drag_object, Point<int> anchor);
 
 /* === Paint cycle === */
 

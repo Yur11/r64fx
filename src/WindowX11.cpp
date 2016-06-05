@@ -87,6 +87,9 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     virtual void requestClipboardMetadata(ClipboardMode mode);
 
 
+    virtual void startDrag(Window* drag_object, int anchor_x, int anchor_y);
+
+
     inline ::Window xWindow() const { return m_xwindow; }
 
     inline XIC inputContext() const { return m_input_context; }
@@ -138,7 +141,8 @@ namespace{
     WindowX11* g_text_input_grabber = nullptr;
 
     bool g_incoming_drag = false;
-//     bool g_outgoing_drag = false;
+
+    Window* g_outgoing_drag_object = nullptr;
 }//namespace
 
 
@@ -288,6 +292,12 @@ void WindowX11::setWmType(Window::WmType wm_type)
         case Window::WmType::ToolTip:
         {
             wm_type_atom = X11_Atom::_NET_WM_WINDOW_TYPE_TOOLTIP;
+            break;
+        }
+
+        case Window::WmType::DND:
+        {
+            wm_type_atom = X11_Atom::_NET_WM_WINDOW_TYPE_DND;
             break;
         }
 

@@ -25,6 +25,7 @@ namespace X11_Atom{
     Atom _NET_WM_WINDOW_TYPE_MENU;
     Atom _NET_WM_WINDOW_TYPE_DIALOG;
     Atom _NET_WM_WINDOW_TYPE_TOOLTIP;
+    Atom _NET_WM_WINDOW_TYPE_DND;
 
     Atom _MOTIF_WM_HINTS;
 
@@ -81,6 +82,7 @@ void init_atoms()
         R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE_DROPDOWN_MENU,  true  );
         R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE_DIALOG,         true  );
         R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE_TOOLTIP,        true  );
+        R64FX_INTERN_ATOM( _NET_WM_WINDOW_TYPE_DND,            true  );
 
         R64FX_INTERN_ATOM( _MOTIF_WM_HINTS, true );
 
