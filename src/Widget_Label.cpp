@@ -11,7 +11,7 @@ namespace{
 
     void init()
     {
-        g_label_font = new Font("", 32, 72);
+        g_label_font = new Font("", 14, 72);
     }
 
     void init_if_needed()
@@ -92,7 +92,10 @@ void Widget_Label::setImage(Image* image, bool copy)
         m_flags &= ~R64FX_WIDGET_LABEL_OWNS_IMAGE;
     }
 
-    setSize({m_image->width(), m_image->height()});
+    if(m_image)
+    {
+        setSize({m_image->width(), m_image->height()});
+    }
 }
 
 
