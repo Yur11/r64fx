@@ -15,6 +15,8 @@ protected:
 public:
     Widget_ScrollBar(Widget* parent = nullptr);
 
+    virtual ~Widget_ScrollBar();
+
     void setRatio(float ratio);
 
     float ratio() const;

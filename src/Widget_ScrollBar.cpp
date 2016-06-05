@@ -11,6 +11,7 @@ using namespace std;
 namespace r64fx{
 
 int g_scroll_bar_width = 15;
+int g_scroll_bar_count = 0;
 
 namespace{
     Image* img_button_up     = nullptr;
@@ -18,7 +19,7 @@ namespace{
     Image* img_button_left   = nullptr;
     Image* img_button_right  = nullptr;
 
-    void init_images_if_needed()
+    void init_images()
     {
         img_button_up     = new Image;
         img_button_down   = new Image;
@@ -52,7 +53,21 @@ Widget_ScrollBar::Widget_ScrollBar(Widget* parent)
 : Widget(parent)
 , m_position_changed(position_changed_stub)
 {
-    init_images_if_needed();
+    if(g_scroll_bar_count == 0)
+    {
+        init_images();
+    }
+    g_scroll_bar_count++;
+}
+
+
+Widget_ScrollBar::~Widget_ScrollBar()
+{
+    g_scroll_bar_count--;
+    if(g_scroll_bar_count == 0)
+    {
+        cleanup_images();
+    }
 }
 
 
