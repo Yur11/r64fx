@@ -16,7 +16,7 @@ public:
 
     Widget_DataItem(Widget* parent = nullptr);
 
-    ~Widget_DataItem();
+    virtual ~Widget_DataItem();
 
     void setText(const std::string &text);
 

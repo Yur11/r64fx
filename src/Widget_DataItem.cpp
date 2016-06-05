@@ -1,7 +1,9 @@
 #include "Widget_DataItem.hpp"
+#include "Widget_ItemTree.hpp"
 #include "WidgetFlags.hpp"
 #include "Painter.hpp"
 #include "TextPainter.hpp"
+#include "ImageUtils.hpp"
 
 #include <iostream>
 using namespace std;
@@ -9,17 +11,51 @@ using namespace std;
 namespace r64fx{
 
 namespace{
+    Font*   g_data_item_font = nullptr;
+    Image*  g_button_img_down   = nullptr;
+    Image*  g_button_img_right  = nullptr;
+    int     g_button_img_offset = 0;
 
-Font* g_data_item_font = nullptr;
+    void init()
+    {
+        g_data_item_font  = new Font("", 14, 72);
+        g_button_img_down   = new Image;
+        g_button_img_right  = new Image;
 
-void init_data_item_font_if_needed()
-{
-    if(g_data_item_font)
-        return;
+        int img_size = g_data_item_font->height();
+        g_button_img_offset = 0;
+        if(img_size > 8)
+        {
+            img_size -= 8;
+            g_button_img_offset = 4;
+        }
+        draw_triangles(img_size, nullptr, g_button_img_down, nullptr, g_button_img_right);
+    }
 
-    g_data_item_font = new Font("", 14, 72);
-}
+    void cleanup()
+    {
+        if(g_button_img_down)
+            delete g_button_img_down;
 
+        if(g_button_img_right)
+            delete g_button_img_right;
+
+       g_button_img_down = g_button_img_right = nullptr;
+
+       delete g_data_item_font;
+       g_data_item_font = nullptr;
+    }
+
+    int g_data_item_count = 0;
+
+    void init_if_needed()
+    {
+        if(g_data_item_count == 0)
+        {
+            init();
+        }
+        g_data_item_count++;
+    }
 }//namespace
 
 
@@ -27,14 +63,14 @@ Widget_DataItem::Widget_DataItem(const std::string &text, Widget* parent)
 : Widget(parent)
 , m_text(text)
 {
-    init_data_item_font_if_needed();
+    init_if_needed();
 }
 
 
 Widget_DataItem::Widget_DataItem(Widget* parent)
 : Widget(parent)
 {
-    init_data_item_font_if_needed();
+    init_if_needed();
 }
 
 
@@ -43,6 +79,12 @@ Widget_DataItem::~Widget_DataItem()
     if(m_image)
     {
         delete m_image;
+    }
+
+    g_data_item_count--;
+    if(g_data_item_count == 0)
+    {
+        cleanup();
     }
 }
 
@@ -136,13 +178,11 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
         auto old_clip_rect = p->clipRect();
         p->setClipRect(Rect<int>(toRootCoords(m_visible_rect.position()), m_visible_rect.size()));
 
-        int offset = g_data_item_font->height() * treeDepth();
+        int offset = m_image->height() * treeDepth();
 
         unsigned char odd_bg[4]  = {200, 200, 200, 0};
         unsigned char even_bg[4] = {175, 175, 175, 0};
         p->fillRect({0, 0, width() + offset, height()}, ((m_flags & R64FX_WIDGET_IS_EVEN) ? even_bg : odd_bg));
-
-        unsigned char red[4] = {127, 0, 0, 0};
 
         unsigned char normal [4] = {0, 0, 0, 0};
         unsigned char hovered[4] = {255, 255, 255, 0};
@@ -153,7 +193,22 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
         else
             colors = normal;
 
-        p->blendColors({offset, 0}, &colors, m_image);
+
+        auto item_tree = dynamic_cast<Widget_ItemTree*>(this);
+        if(item_tree)
+        {
+            Image* button_img = nullptr;
+            if(item_tree->isCollapsed())
+                button_img = g_button_img_right;
+            else
+                button_img = g_button_img_down;
+            p->blendColors({offset + g_button_img_offset, g_button_img_offset}, &colors, button_img);
+            p->blendColors({offset + m_image->height(), 0}, &colors, m_image);
+        }
+        else
+        {
+            p->blendColors({offset, 0}, &colors, m_image);
+        }
 
         p->setClipRect(old_clip_rect);
     }
