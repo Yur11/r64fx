@@ -482,14 +482,14 @@ void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
     fill(&img, &bg);
 
     int half_width = size / 2;
-    int triangle_height = sqrt(size * size - half_width * half_width);
+    int triangle_height = sqrt(size * size - half_width * half_width) - 1;
     float slope = float(half_width) / float(triangle_height);
     for(int y=0; y<triangle_height; y++)
     {
         float threshold = y * slope;
         for(int x=0; x<=half_width; x++)
         {
-            float distance = half_width - x - 1;
+            float distance = half_width - x;
             float diff = distance - threshold;
             unsigned char px;
             if(diff < 0.0f)
