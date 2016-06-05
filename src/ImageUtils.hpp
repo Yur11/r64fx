@@ -59,7 +59,6 @@ enum class DrawStyle{
     Fill
 };
 
-void draw_triangle(Image* dst, unsigned char* color, Point<float> a, Point<float> b, Point<float> c);
 
 }//namespace r64fx
 
