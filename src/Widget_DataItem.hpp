@@ -36,6 +36,8 @@ public:
 
     int treeDepth() const;
 
+    int indentWidth() const;
+
 protected:
     virtual void paintEvent(PaintEvent* event);
 

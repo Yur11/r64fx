@@ -165,6 +165,12 @@ int Widget_DataItem::treeDepth() const
 }
 
 
+int Widget_DataItem::indentWidth() const
+{
+    return treeDepth() * g_data_item_font->height();
+}
+
+
 void Widget_DataItem::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
@@ -180,7 +186,7 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
         auto old_clip_rect = p->clipRect();
         p->setClipRect(Rect<int>(toRootCoords(m_visible_rect.position()), m_visible_rect.size()));
 
-        int offset = m_image->height() * treeDepth();
+        int offset = indentWidth();
 
         unsigned char odd_bg[4]  = {200, 200, 200, 0};
         unsigned char even_bg[4] = {175, 175, 175, 0};
@@ -250,7 +256,12 @@ void Widget_DataItem::mouseMoveEvent(MouseMoveEvent* event)
         if(distance > 1 && (!text().empty()))
         {
             auto label = new Widget_Label(text());
-            startDrag(label, {event->x() - m_image->height() * treeDepth(), event->y()});
+            Point<int> anchor(event->x() - indentWidth(), event->y());
+            if(anchor.x() < 0 )
+                anchor.setX(0);
+            else if(anchor.x() > label->width())
+                anchor.setX(label->width() - 1);
+            startDrag(label, anchor);
         }
     }
 }
