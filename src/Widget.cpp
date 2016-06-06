@@ -453,6 +453,12 @@ void Widget::dndMoveEvent(DndMoveEvent* event)
 }
 
 
+void Widget::dndFinishedEvent(DndFinishedEvent* event)
+{
+
+}
+
+
 void Widget::closeEvent()
 {
     Program::quit();

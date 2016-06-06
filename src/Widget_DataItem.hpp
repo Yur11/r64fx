@@ -50,6 +50,8 @@ protected:
     virtual void mouseEnterEvent();
 
     virtual void mouseLeaveEvent();
+
+    virtual void dndFinishedEvent(DndFinishedEvent* event);
 };
 
 }//namespace

@@ -143,6 +143,19 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         cout << "drop\n";
     }
 
+    virtual void dndFinished()
+    {
+        g_pressed_buttons = MouseButton::None();
+        Widget::ungrabMouse();
+        if(g_dnd_object && g_dnd_source)
+        {
+            DndFinishedEvent event(g_dnd_object);
+            g_dnd_source->dndFinishedEvent(&event);
+            g_dnd_object->close();
+            g_dnd_object = nullptr;
+            g_dnd_source = nullptr;
+        }
+    }
 
     virtual void closeEvent(Window* window)
     {

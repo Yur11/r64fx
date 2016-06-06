@@ -5,6 +5,7 @@
 #include "Painter.hpp"
 #include "TextPainter.hpp"
 #include "ImageUtils.hpp"
+#include "ClipboardEvent.hpp"
 
 #include <iostream>
 using namespace std;
@@ -246,10 +247,10 @@ void Widget_DataItem::mouseMoveEvent(MouseMoveEvent* event)
     if(event->button() & MouseButton::Left())
     {
         int distance = event->dx() * event->dx() + event->dy() * event->dy();
-        if(distance > 3 && (!text().empty()))
+        if(distance > 1 && (!text().empty()))
         {
             auto label = new Widget_Label(text());
-            startDrag(label, event->position());
+            startDrag(label, {event->x() - m_image->height() * treeDepth(), event->y()});
         }
     }
 }
@@ -264,6 +265,16 @@ void Widget_DataItem::mouseEnterEvent()
 void Widget_DataItem::mouseLeaveEvent()
 {
     repaint();
+}
+
+
+void Widget_DataItem::dndFinishedEvent(DndFinishedEvent* event)
+{
+    auto dnd_object = event->dndObject();
+    if(dnd_object)
+    {
+        delete dnd_object;
+    }
 }
 
 }//namespace

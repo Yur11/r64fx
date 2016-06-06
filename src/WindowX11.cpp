@@ -143,6 +143,8 @@ namespace{
     bool g_incoming_drag = false;
 
     Window* g_outgoing_drag_object = nullptr;
+    int g_drag_anchor_x = 0;
+    int g_drag_anchor_y = 0;
 }//namespace
 
 
@@ -486,14 +488,34 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                 unsigned int button = getEventButton(&xevent.xbutton);
                 if(button != R64FX_MOUSE_BUTTON_NONE)
                 {
-                    events->mouseReleaseEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
+                    if(g_outgoing_drag_object)
+                    {
+                        window->ungrabMouse();
+                        events->dndFinished();
+                        g_outgoing_drag_object = nullptr;
+                        g_drag_anchor_x = 0;
+                        g_drag_anchor_y = 0;
+                    }
+                    else
+                    {
+                        events->mouseReleaseEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
+                    }
                 }
                 break;
             }
 
             case MotionNotify:
             {
-                events->mouseMoveEvent(window, xevent.xmotion.x, xevent.xmotion.y);
+                if(g_outgoing_drag_object)
+                {
+                    int dnd_obj_x = xevent.xmotion.x + window->x() - g_drag_anchor_x;
+                    int dnd_obj_y = xevent.xmotion.y + window->y() - g_drag_anchor_y;
+                    g_outgoing_drag_object->setPosition({dnd_obj_x, dnd_obj_y});
+                }
+                else
+                {
+                    events->mouseMoveEvent(window, xevent.xmotion.x, xevent.xmotion.y);
+                }
                 break;
             }
 

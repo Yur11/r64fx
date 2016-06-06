@@ -103,6 +103,8 @@ void WindowX11::startDrag(Window* drag_object, int anchor_x, int anchor_y)
     if(g_outgoing_drag_object)
         return;
 
-    cout << "startDrag: " << drag_object << ", " << anchor_x << ", " << anchor_y << "\n";
     g_outgoing_drag_object = drag_object;
+    g_drag_anchor_x = anchor_x;
+    g_drag_anchor_y = anchor_y;
+    grabMouse();
 }

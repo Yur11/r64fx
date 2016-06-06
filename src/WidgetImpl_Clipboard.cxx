@@ -12,6 +12,7 @@ Widget* g_requestor_drag_and_drop  = nullptr;
 
 Widget* g_dnd_target = nullptr;
 Widget* g_dnd_object = nullptr;
+Widget* g_dnd_source = nullptr;
 
 
 inline Widget* &anouncer(ClipboardMode mode)
@@ -84,7 +85,7 @@ void Widget::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
 }
 
 
-void Widget::startDrag(Widget* drag_object, Point<int> anchor)
+void Widget::startDrag(Widget* dnd_object, Point<int> anchor)
 {
     if(g_dnd_object)
         return;
@@ -92,12 +93,13 @@ void Widget::startDrag(Widget* drag_object, Point<int> anchor)
     auto root_window = rootWindow();
     if(root_window)
     {
-        g_dnd_object = drag_object;
-        if(!drag_object->isWindow())
+        g_dnd_object = dnd_object;
+        g_dnd_source = this;
+        if(!dnd_object->isWindow())
         {
-            drag_object->show(Window::WmType::DND, Window::Type::Image);
+            dnd_object->show(Window::WmType::DND, Window::Type::Image);
         }
-        root_window->startDrag(drag_object->window(), anchor.x(), anchor.y());
+        root_window->startDrag(dnd_object->window(), anchor.x(), anchor.y());
     }
 }
 

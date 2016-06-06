@@ -5,6 +5,8 @@
 
 namespace r64fx{
 
+class Widget;
+
 class ClipboardEvent{
     ClipboardMode     m_mode = ClipboardMode::Bad;
 
@@ -78,6 +80,38 @@ public:
     {
         return m_metadata.has(type);
     }
+};
+
+
+class DndEnterEvent{
+
+};
+
+
+class DndLeaveEvent{
+
+};
+
+
+class DndMoveEvent{
+
+};
+
+
+class DndDropEvent{
+
+};
+
+
+class DndFinishedEvent{
+    Widget* m_dnd_object = nullptr;
+
+public:
+    DndFinishedEvent(Widget* dnd_object)
+    : m_dnd_object(dnd_object)
+    {}
+
+    inline Widget* dndObject() const { return m_dnd_object; }
 };
 
 }//namespace r64fx

@@ -29,6 +29,7 @@ class DndEnterEvent;
 class DndLeaveEvent;
 class DndMoveEvent;
 class DndDropEvent;
+class DndFinishedEvent;
 
 typedef LinkedList<Widget>::Iterator WidgetIterator;
 
@@ -235,7 +236,7 @@ public:
 
     void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 
-    void startDrag(Widget* drag_object, Point<int> anchor);
+    void startDrag(Widget* dnd_object, Point<int> anchor);
 
 /* === Paint cycle === */
 
@@ -328,6 +329,8 @@ protected:
     virtual void dndLeaveEvent(DndLeaveEvent* event);
 
     virtual void dndMoveEvent(DndMoveEvent* event);
+
+    virtual void dndFinishedEvent(DndFinishedEvent* event);
 
     virtual void closeEvent();
 
