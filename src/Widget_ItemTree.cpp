@@ -52,7 +52,6 @@ void Widget_ItemTree::resizeAndReallign(int min_width)
             if(data_item)
             {
                 data_item->resizeAndReallign(min_width);
-                data_item->setTreeDepth(depth);
             }
 
             if(child->width() > max_child_width)
@@ -149,7 +148,7 @@ void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
     {
         Widget::mousePressEvent(event);
     }
-    else if(event->button() & MouseButton::Left() && event->x() < (lineHeight() * (treeDepth() + 1)))
+    else if(event->button() & MouseButton::Left() && event->x() < (lineHeight() * (indent() + 1)))
     {
         if(isCollapsed())
         {

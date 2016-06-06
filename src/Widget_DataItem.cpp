@@ -153,21 +153,23 @@ Widget_DataItem* Widget_DataItem::rootDataItem()
 }
 
 
-void Widget_DataItem::setTreeDepth(int depth)
+int Widget_DataItem::indent() const
 {
-    m_tree_depth = depth;
-}
+    auto parent_widget = parent();
+    if(!parent_widget)
+        return 0;
 
+    auto parent_tree = dynamic_cast<Widget_ItemTree*>(parent_widget);
+    if(!parent_tree)
+        return 0;
 
-int Widget_DataItem::treeDepth() const
-{
-    return m_tree_depth;
+    return parent_tree->indent() + 1;
 }
 
 
 int Widget_DataItem::indentWidth() const
 {
-    return treeDepth() * g_data_item_font->height();
+    return indent() * g_data_item_font->height();
 }
 
 

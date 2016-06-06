@@ -8,7 +8,6 @@ namespace r64fx{
 class Widget_DataItem : public Widget{
     std::string m_text = "";
     Image* m_image = nullptr;
-    int m_tree_depth = 0;
     Rect<int> m_visible_rect;
 
 public:
@@ -32,9 +31,7 @@ public:
 
     Widget_DataItem* rootDataItem();
 
-    void setTreeDepth(int depth);
-
-    int treeDepth() const;
+    int indent() const;
 
     int indentWidth() const;
 
