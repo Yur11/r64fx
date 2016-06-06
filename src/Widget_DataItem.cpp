@@ -1,5 +1,6 @@
 #include "Widget_DataItem.hpp"
 #include "Widget_ItemTree.hpp"
+#include "Widget_ItemBrowser.hpp"
 #include "Widget_Label.hpp"
 #include "WidgetFlags.hpp"
 #include "Painter.hpp"
@@ -153,6 +154,25 @@ Widget_DataItem* Widget_DataItem::rootDataItem()
 }
 
 
+Widget_ItemBrowser* Widget_DataItem::parentBrowser()
+{
+    auto root_item = rootDataItem();
+    auto root_item_parent = root_item->parent();
+    if(!root_item_parent)
+        return nullptr;
+
+    auto root_item_parent_parent = root_item_parent->parent();
+    if(!root_item_parent_parent)
+        return nullptr;
+
+    auto item_browser = dynamic_cast<Widget_ItemBrowser*>(root_item_parent_parent);
+    if(!item_browser)
+        return nullptr;
+
+    return item_browser;
+}
+
+
 int Widget_DataItem::indent() const
 {
     auto parent_widget = parent();
@@ -170,6 +190,38 @@ int Widget_DataItem::indent() const
 int Widget_DataItem::indentWidth() const
 {
     return indent() * g_data_item_font->height();
+}
+
+
+void Widget_DataItem::setSelected(bool yes)
+{
+    auto item_browser = parentBrowser();
+    if(item_browser)
+    {
+        auto selected_item = item_browser->m_selected_item;
+        if(selected_item)
+        {
+            selected_item->m_flags &= ~R64FX_WIDGET_IS_SELECTED;
+            selected_item->repaint();
+        }
+
+        if(yes)
+            item_browser->setSelectedItem(this);
+        else
+            item_browser->setSelectedItem(nullptr);
+    }
+
+    if(yes)
+        m_flags |= R64FX_WIDGET_IS_SELECTED;
+    else
+        m_flags &= ~R64FX_WIDGET_IS_SELECTED;
+    repaint();
+}
+
+
+bool Widget_DataItem::isSelected() const
+{
+    return m_flags & R64FX_WIDGET_IS_SELECTED;
 }
 
 
@@ -191,18 +243,20 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
         int offset = indentWidth();
 
         unsigned char odd_bg[4]  = {200, 200, 200, 0};
-        unsigned char even_bg[4] = {175, 175, 175, 0};
+        unsigned char even_bg[4] = {190, 190, 190, 0};
         p->fillRect({0, 0, width() + offset, height()}, ((m_flags & R64FX_WIDGET_IS_EVEN) ? even_bg : odd_bg));
 
-        unsigned char normal [4] = {0, 0, 0, 0};
-        unsigned char hovered[4] = {255, 255, 255, 0};
+        unsigned char normal [4]  = {0, 0, 0, 0};
+        unsigned char hovered[4]  = {0, 127, 0, 0};
+        unsigned char selected[4] = {127, 0, 0, 255};
 
         unsigned char* colors;
-        if(Widget::isHovered())
+        if(isSelected())
+            colors = selected;
+        else if(isHovered())
             colors = hovered;
         else
             colors = normal;
-
 
         auto item_tree = dynamic_cast<Widget_ItemTree*>(this);
         if(item_tree)
@@ -235,6 +289,8 @@ void Widget_DataItem::clipEvent(ClipEvent* event)
 
 void Widget_DataItem::mousePressEvent(MousePressEvent* event)
 {
+    if(event->button() & MouseButton::Left())
+        setSelected(true);
     grabMouse();
     Widget::mousePressEvent(event);
 }

@@ -12,80 +12,81 @@ using namespace std;
 namespace r64fx{
 
 namespace{
-
-void find_children(
-    Widget_ItemBrowser*           parent,
-    Widget_ScrollArea**           scroll_area,
-    Widget_ScrollBar_Vertical**   vertical_scroll_bar    = nullptr,
-    Widget_ScrollBar_Horizontal** horizontal_scroll_bar  = nullptr
-)
-{
-    for(auto child : *parent)
+    void find_children(
+        Widget_ItemBrowser*           parent,
+        Widget_ScrollArea**           scroll_area,
+        Widget_ScrollBar_Vertical**   vertical_scroll_bar    = nullptr,
+        Widget_ScrollBar_Horizontal** horizontal_scroll_bar  = nullptr
+    )
     {
-        if(scroll_area)
+        for(auto child : *parent)
         {
-            auto widget = dynamic_cast<Widget_ScrollArea*>(child);
-            if(widget)
+            if(scroll_area)
             {
-                *scroll_area = widget;
-                continue;
+                auto widget = dynamic_cast<Widget_ScrollArea*>(child);
+                if(widget)
+                {
+                    *scroll_area = widget;
+                    continue;
+                }
             }
-        }
 
-        if(vertical_scroll_bar)
-        {
-            auto widget = dynamic_cast<Widget_ScrollBar_Vertical*>(child);
-            if(widget)
+            if(vertical_scroll_bar)
             {
-                *vertical_scroll_bar = widget;
-                continue;
+                auto widget = dynamic_cast<Widget_ScrollBar_Vertical*>(child);
+                if(widget)
+                {
+                    *vertical_scroll_bar = widget;
+                    continue;
+                }
             }
-        }
 
-        if(horizontal_scroll_bar)
-        {
-            auto widget = dynamic_cast<Widget_ScrollBar_Horizontal*>(child);
-            if(widget)
+            if(horizontal_scroll_bar)
             {
-                *horizontal_scroll_bar = widget;
-                continue;
+                auto widget = dynamic_cast<Widget_ScrollBar_Horizontal*>(child);
+                if(widget)
+                {
+                    *horizontal_scroll_bar = widget;
+                    continue;
+                }
             }
         }
     }
-}
 
 
-Widget_ItemList* root_list(Widget_ScrollArea* scroll_area)
-{
-    Widget_ItemList* item_list = nullptr;
-    for(auto child : *scroll_area)
+    Widget_ItemList* root_list(Widget_ScrollArea* scroll_area)
     {
-        auto item_list_child = dynamic_cast<Widget_ItemList*>(child);
-        if(item_list_child)
+        Widget_ItemList* item_list = nullptr;
+        for(auto child : *scroll_area)
         {
-            item_list = item_list_child;
-            break;
+            auto item_list_child = dynamic_cast<Widget_ItemList*>(child);
+            if(item_list_child)
+            {
+                item_list = item_list_child;
+                break;
+            }
         }
+
+        return item_list;
     }
 
-    return item_list;
-}
 
+    Widget_ItemList* root_list(Widget_ItemBrowser* parent)
+    {
+        Widget_ScrollArea* scroll_area = nullptr;
+        find_children(parent, &scroll_area);
+        if(!scroll_area)
+            return nullptr;
 
-Widget_ItemList* root_list(Widget_ItemBrowser* parent)
-{
-    Widget_ScrollArea* scroll_area = nullptr;
-    find_children(parent, &scroll_area);
-    if(!scroll_area)
-        return nullptr;
+        return root_list(scroll_area);
+    }
 
-    return root_list(scroll_area);
-}
-
+    void on_selected_item_stub(Widget_ItemBrowser*, void*) {}
 }
 
 Widget_ItemBrowser::Widget_ItemBrowser(Widget* parent)
 : Widget(parent)
+, m_on_item_selected(on_selected_item_stub)
 {
     auto wsa = new Widget_ScrollArea(this);
     auto item_list = new Widget_ItemList(wsa);
@@ -222,6 +223,27 @@ void Widget_ItemBrowser::scrollTo(float position)
 }
 
 
+Widget_DataItem* Widget_ItemBrowser::selectedItem() const
+{
+    return m_selected_item;
+}
+
+
+void Widget_ItemBrowser::onItemSelected(void (*callback)(Widget_ItemBrowser* browser, void* data), void* data)
+{
+    if(callback)
+    {
+        m_on_item_selected = callback;
+        m_on_item_selected_data = data;
+    }
+    else
+    {
+        m_on_item_selected = on_selected_item_stub;
+        m_on_item_selected_data = nullptr;
+    }
+}
+
+
 void Widget_ItemBrowser::paintEvent(Widget::PaintEvent* event)
 {
     auto p = event->painter();
@@ -292,6 +314,13 @@ void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
             repaint();
         }
     }
+}
+
+
+void Widget_ItemBrowser::setSelectedItem(Widget_DataItem* item)
+{
+    m_selected_item = item;
+    m_on_item_selected(this, m_on_item_selected_data);
 }
 
 }//namespace r64fx

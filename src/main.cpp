@@ -140,6 +140,10 @@ private:
         ib->addItem(db);
         ib->rearrange();
         ib->show();
+
+        ib->onItemSelected([](Widget_ItemBrowser* browser, void*){
+            cout << "item: " << browser->selectedItem()->text() << "\n";
+        });
     }
 
     virtual void cleanup()

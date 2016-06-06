@@ -5,6 +5,8 @@
 
 namespace r64fx{
 
+class Widget_ItemBrowser;
+
 class Widget_DataItem : public Widget{
     std::string m_text = "";
     Image* m_image = nullptr;
@@ -31,9 +33,15 @@ public:
 
     Widget_DataItem* rootDataItem();
 
+    Widget_ItemBrowser* parentBrowser();
+
     int indent() const;
 
     int indentWidth() const;
+
+    void setSelected(bool yes);
+
+    bool isSelected() const;
 
 protected:
     virtual void paintEvent(PaintEvent* event);
