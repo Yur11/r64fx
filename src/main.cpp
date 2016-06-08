@@ -140,6 +140,7 @@ private:
         auto ib = new Widget_ItemBrowser;
         ib->addItem(db);
         ib->rearrange();
+        ib->setSize({400, 500});
         ib->show();
 
         ib->onItemSelected([](Widget_ItemBrowser* browser, void*){
@@ -152,6 +153,7 @@ private:
 
         auto wt = new Widget_Text("", g_Font);
         wt->setSize({640, 480});
+        wt->setTextWrap(TextWrap::Anywhere);
         wt->show();
     }
 

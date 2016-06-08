@@ -87,6 +87,8 @@ namespace{
     }
 
     void on_selected_item_stub(Widget_ItemBrowser*, void*) {}
+
+    string g_clipboard_message;
 }
 
 Widget_ItemBrowser::Widget_ItemBrowser(Widget* parent)
@@ -349,15 +351,14 @@ void Widget_ItemBrowser::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* ev
 
 void Widget_ItemBrowser::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 {
-    string msg;
-
     auto selected_item = selectedItem();
     if(selected_item)
     {
-        msg = "hello: " + selected_item->caption();
+        g_clipboard_message = "hello: " + selected_item->caption();
     }
 
-    event->transmit((void*)msg.c_str(), msg.size());
+    event->transmit((void*)g_clipboard_message.c_str(), g_clipboard_message.size());
+
 }
 
 

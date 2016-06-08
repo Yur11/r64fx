@@ -203,6 +203,8 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEventDispa
 
             if(data != nullptr && size > 0)
             {
+                string str((const char*)data, size);
+
                 XChangeProperty(
                     g_display,
                     in.requestor,

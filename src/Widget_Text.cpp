@@ -484,6 +484,7 @@ void Widget_Text::paintEvent(PaintEvent* event)
 
 void Widget_Text::focusInEvent()
 {
+    cout << "Widget_Text::focusInEvent()\n";
     startTextInput();
     repaint();
 }
@@ -491,6 +492,7 @@ void Widget_Text::focusInEvent()
 
 void Widget_Text::focusOutEvent()
 {
+    cout << "Widget_Text::focusOutEvent()\n";
     stopTextInput();
     repaint();
 }
@@ -506,6 +508,8 @@ void Widget_Text::resizeEvent(ResizeEvent* event)
 
 void Widget_Text::mousePressEvent(MousePressEvent* event)
 {
+    setFocus();
+
     if(event->button() == MouseButton::Right())
     {
     }
@@ -523,6 +527,7 @@ void Widget_Text::mousePressEvent(MousePressEvent* event)
             requestClipboardMetadata(ClipboardMode::Selection);
         }
     }
+
     repaint();
 }
 
