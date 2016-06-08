@@ -102,7 +102,9 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     void setupEvents();
 
-    void sendSelection(const XSelectionRequestEvent &in, WindowEventDispatcherIface* events);
+    void sendSelection(WindowEventDispatcherIface* events);
+
+    void onSelectionTransmit(void* data, int size);
 
     void recieveSelection(const XSelectionEvent &in, WindowEventDispatcherIface* events);
 
@@ -145,6 +147,9 @@ namespace{
     Window* g_outgoing_drag_object = nullptr;
     int g_drag_anchor_x = 0;
     int g_drag_anchor_y = 0;
+
+    XEvent g_incoming_event;
+    XEvent g_outgoing_event;
 }//namespace
 
 
@@ -424,9 +429,9 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 {
     while(XPending(g_display))
     {
-        XEvent xevent;
-        XNextEvent(g_display, &xevent);
-        auto xwindow = xevent.xany.window;
+        g_incoming_event = XEvent();
+        XNextEvent(g_display, &g_incoming_event);
+        auto xwindow = g_incoming_event.xany.window;
 
         WindowX11* window = getWindowFromXWindow(xwindow);
         if(!window)
@@ -434,12 +439,12 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
             continue;
         }
 
-        if(window->doingTextInput() && XFilterEvent(&xevent, xevent.xany.window))
+        if(window->doingTextInput() && XFilterEvent(&g_incoming_event, g_incoming_event.xany.window))
         {
             continue;
         }
 
-        switch(xevent.type)
+        switch(g_incoming_event.type)
         {
             case KeyPress:
             {
@@ -449,7 +454,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                     char buff[8];
                     KeySym keysym;
                     int nbytes = Xutf8LookupString(
-                        window->inputContext(), &xevent.xkey,
+                        window->inputContext(), &g_incoming_event.xkey,
                         buff, 8, &keysym, &status
                     );
 
@@ -458,34 +463,34 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                     {
                         str = string(buff, nbytes);
                     }
-                    events->textInputEvent(window, str, XLookupKeysym(&xevent.xkey, 0));
+                    events->textInputEvent(window, str, XLookupKeysym(&g_incoming_event.xkey, 0));
                 }
                 else
                 {
-                    events->keyPressEvent(window, XLookupKeysym(&xevent.xkey, 0));
+                    events->keyPressEvent(window, XLookupKeysym(&g_incoming_event.xkey, 0));
                 }
                 break;
             }
 
             case KeyRelease:
             {
-                events->keyReleaseEvent(window, XLookupKeysym(&xevent.xkey, 0));
+                events->keyReleaseEvent(window, XLookupKeysym(&g_incoming_event.xkey, 0));
                 break;
             }
 
             case ButtonPress:
             {
-                unsigned int button = getEventButton(&xevent.xbutton);
+                unsigned int button = getEventButton(&g_incoming_event.xbutton);
                 if(button != R64FX_MOUSE_BUTTON_NONE)
                 {
-                    events->mousePressEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
+                    events->mousePressEvent(window, g_incoming_event.xbutton.x, g_incoming_event.xbutton.y, button);
                 }
                 break;
             }
 
             case ButtonRelease:
             {
-                unsigned int button = getEventButton(&xevent.xbutton);
+                unsigned int button = getEventButton(&g_incoming_event.xbutton);
                 if(button != R64FX_MOUSE_BUTTON_NONE)
                 {
                     if(g_outgoing_drag_object)
@@ -498,7 +503,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                     }
                     else
                     {
-                        events->mouseReleaseEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
+                        events->mouseReleaseEvent(window, g_incoming_event.xbutton.x, g_incoming_event.xbutton.y, button);
                     }
                 }
                 break;
@@ -508,13 +513,13 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
             {
                 if(g_outgoing_drag_object)
                 {
-                    int dnd_obj_x = xevent.xmotion.x + window->x() - g_drag_anchor_x;
-                    int dnd_obj_y = xevent.xmotion.y + window->y() - g_drag_anchor_y;
+                    int dnd_obj_x = g_incoming_event.xmotion.x + window->x() - g_drag_anchor_x;
+                    int dnd_obj_y = g_incoming_event.xmotion.y + window->y() - g_drag_anchor_y;
                     g_outgoing_drag_object->setPosition({dnd_obj_x, dnd_obj_y});
                 }
                 else
                 {
-                    events->mouseMoveEvent(window, xevent.xmotion.x, xevent.xmotion.y);
+                    events->mouseMoveEvent(window, g_incoming_event.xmotion.x, g_incoming_event.xmotion.y);
                 }
                 break;
             }
@@ -533,8 +538,8 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 
             case ConfigureNotify:
             {
-                window->mx = xevent.xconfigure.x;
-                window->my = xevent.xconfigure.y;
+                window->mx = g_incoming_event.xconfigure.x;
+                window->my = g_incoming_event.xconfigure.y;
 
                 int old_w = window->width();
                 int old_h = window->height();
@@ -556,25 +561,25 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 
             case SelectionClear:
             {
-                window->clearSelection(xevent.xselectionclear);
+                window->clearSelection(g_incoming_event.xselectionclear);
                 break;
             }
 
             case SelectionRequest:
             {
-                window->sendSelection(xevent.xselectionrequest, events);
+                window->sendSelection(events);
                 break;
             }
 
             case SelectionNotify:
             {
-                window->recieveSelection(xevent.xselection, events);
+                window->recieveSelection(g_incoming_event.xselection, events);
                 break;
             }
 
             case ClientMessage:
             {
-                auto &msg = xevent.xclient;
+                auto &msg = g_incoming_event.xclient;
 
                 if(msg.message_type == X11_Atom::XdndPosition)
                 {
@@ -596,10 +601,6 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                 {
                     vector<Atom> types;
                     get_dnd_type_list(msg.data.l, types);
-//                     for(auto atom : types)
-//                     {
-//                         cout << atom << " -> " << atom_name(atom) << "\n";
-//                     }
                 }
                 else if(msg.message_type == X11_Atom::XdndLeave)
                 {
@@ -626,7 +627,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
             default:
             {
 #ifdef R64FX_USE_MITSHM
-                if(xevent.type == g_mitsm_completion_event)
+                if(g_incoming_event.type == g_mitsm_completion_event)
                 {
                     cout << "MitShm Completion Event!\n";
                 }

@@ -128,8 +128,11 @@ void WindowX11::requestClipboardMetadata(ClipboardMode mode)
 }
 
 
-void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEventDispatcherIface* events)
+void WindowX11::sendSelection(WindowEventDispatcherIface* events)
 {
+    XSelectionRequestEvent  &in   = g_incoming_event.xselectionrequest;
+    XSelectionEvent         &out  = g_outgoing_event.xselection;
+
     if(in.property == None)
     {
         cout << "property None\n";
@@ -143,8 +146,8 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEventDispa
         return;
     }
 
-    XEvent xevent;
-    auto &out = xevent.xselection;
+    g_outgoing_event = XEvent();
+
     out.type      = SelectionNotify;
     out.display   = in.display;
     out.requestor = in.requestor;
@@ -159,12 +162,6 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEventDispa
         for(auto &type : cb->metadata)
         {
             string type_name(type.name());
-//             if(type_name == "text/plain")
-//             {
-//                 targets.push_back(X11_Atom::UTF8_STRING);
-//                 targets.push_back(X11_Atom::TEXT);
-//             }
-
             targets.push_back(get_extra_atom(type_name));
         }
 
@@ -179,7 +176,7 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEventDispa
             targets.size()
         );
 
-        if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
+        if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &g_outgoing_event))
         {
             cerr << "Failed to send selection event!\n";
         }
@@ -190,37 +187,43 @@ void WindowX11::sendSelection(const XSelectionRequestEvent &in, WindowEventDispa
 
         if(cdt.isGood())
         {
-            void* data = nullptr;
-            int size = 0;
-
             events->clipboardDataTransmitEvent(
                 this,
                 cdt,
-                &data,
-                &size,
-                cb->mode
-            );
-
-            if(data != nullptr && size > 0)
-            {
-                string str((const char*)data, size);
-
-                XChangeProperty(
-                    g_display,
-                    in.requestor,
-                    in.property,
-                    in.target,
-                    8,
-                    PropModeReplace,
-                    (unsigned char*) data,
-                    size
-                );
-
-                if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &xevent))
+                cb->mode,
+                [](Window* window, void* data, int size)
                 {
-                    cerr << "Failed to send selection event!\n";
+                    auto window_x11 = (WindowX11*) window;
+                    window_x11->onSelectionTransmit(data, size);
                 }
-            }
+            );
+        }
+    }
+}
+
+
+void WindowX11::onSelectionTransmit(void* data, int size)
+{
+    XSelectionRequestEvent &in = g_incoming_event.xselectionrequest;
+
+    if(data != nullptr && size > 0)
+    {
+        string str((const char*)data, size);
+
+        XChangeProperty(
+            g_display,
+            in.requestor,
+            in.property,
+            in.target,
+            8,
+            PropModeReplace,
+            (unsigned char*) data,
+            size
+        );
+
+        if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &g_outgoing_event))
+        {
+            cerr << "Failed to send selection event!\n";
         }
     }
 }
@@ -295,8 +298,9 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEventDispatche
         events->clipboardDataRecieveEvent(
             this,
             cdt,
-            (void*)data, (int)nitems,
-            cb->mode
+            cb->mode,
+            (void*)data,
+            (int)nitems
         );
     }
 }

@@ -82,7 +82,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
 
     virtual void clipboardDataRecieveEvent(
-        Window* window, ClipboardDataType type, void* data, int size, ClipboardMode mode
+        Window* window, ClipboardDataType type, ClipboardMode mode, void* data, int size
     )
     {
         auto widget = requestor(mode);
@@ -95,13 +95,14 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
 
     virtual void clipboardDataTransmitEvent(
-        Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode
+        Window* window, ClipboardDataType type, ClipboardMode mode,
+        void (*callback)(Window* window, void* data, int size)
     )
     {
         auto widget = anouncer(mode);
         if(widget)
         {
-            ClipboardDataTransmitEvent event(mode, type, data, size);
+            ClipboardDataTransmitEvent event(mode, type, callback, window);
             widget->clipboardDataTransmitEvent(&event);
         }
     }

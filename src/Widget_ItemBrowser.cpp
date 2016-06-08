@@ -272,6 +272,7 @@ void Widget_ItemBrowser::resizeEvent(ResizeEvent* event)
 
 void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
 {
+    setFocus();
     Widget::mousePressEvent(event);
 
     if(event->button() & MouseButton::Left())
@@ -332,6 +333,7 @@ void Widget_ItemBrowser::keyPressEvent(KeyPressEvent* event)
     {
         if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::C)
         {
+            cout << "Ctrl + C\n";
             anounceClipboardData("text/plain", ClipboardMode::Clipboard);
         }
     }
@@ -351,6 +353,8 @@ void Widget_ItemBrowser::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* ev
 
 void Widget_ItemBrowser::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 {
+    cout << "Widget_ItemBrowser::clipboardDataTransmitEvent()\n";
+
     auto selected_item = selectedItem();
     if(selected_item)
     {

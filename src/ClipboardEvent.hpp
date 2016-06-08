@@ -6,6 +6,7 @@
 namespace r64fx{
 
 class Widget;
+class Window;
 
 class ClipboardEvent{
     ClipboardMode     m_mode = ClipboardMode::Bad;
@@ -51,14 +52,18 @@ public:
 
 
 class ClipboardDataTransmitEvent : public ClipboardDataEvent{
-    void** m_data = nullptr;
-    int*   m_size = nullptr;
+    void (*m_on_transmit)(Window* window, void* data, int size);
+    Window* m_window;
 
 public:
-    ClipboardDataTransmitEvent(ClipboardMode mode, ClipboardDataType type, void** data, int* size)
+    ClipboardDataTransmitEvent(
+        ClipboardMode mode, ClipboardDataType type,
+        void (on_transmit)(Window* window, void* data, int size),
+        Window* window
+    )
     : ClipboardDataEvent(mode, type)
-    , m_data(data)
-    , m_size(size)
+    , m_on_transmit(on_transmit)
+    , m_window(window)
     {}
 
     void transmit(void* data, int size);

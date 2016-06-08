@@ -135,14 +135,21 @@ public:
 
     virtual void textInputEvent    (Window* window, const std::string &text, unsigned int key) = 0;
 
-    virtual void clipboardDataRecieveEvent
-                         (Window* window, ClipboardDataType type, void* data, int size, ClipboardMode mode) = 0;
+    virtual void clipboardDataRecieveEvent(
+        Window* window,
+        ClipboardDataType type, ClipboardMode mode,
+        void* data, int size) = 0;
 
-    virtual void clipboardDataTransmitEvent
-                         (Window* window, ClipboardDataType type, void** data, int* size, ClipboardMode mode) = 0;
+    virtual void clipboardDataTransmitEvent(
+        Window* window,
+        ClipboardDataType type, ClipboardMode mode,
+        void (*on_transmit)(Window* window, void* data, int size)
+    ) = 0;
 
-    virtual void clipboardMetadataRecieveEvent
-                         (Window* window, const ClipboardMetadata &metadata, ClipboardMode mode) = 0;
+    virtual void clipboardMetadataRecieveEvent(
+        Window* window,
+        const ClipboardMetadata &metadata, ClipboardMode mode
+    ) = 0;
 
     virtual void dndEnterEvent    (Window* window, int x, int y) = 0;
     virtual void dndLeaveEvent    (Window* window) = 0;
