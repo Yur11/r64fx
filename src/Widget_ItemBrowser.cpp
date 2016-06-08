@@ -4,6 +4,11 @@
 #include "Widget_ItemList.hpp"
 #include "Painter.hpp"
 #include "WidgetFlags.hpp"
+#include "Keyboard.hpp"
+#include "KeyboardModifiers.hpp"
+#include "KeyEvent.hpp"
+#include "Clipboard.hpp"
+#include "ClipboardEvent.hpp"
 
 #include <iostream>
 
@@ -90,6 +95,7 @@ Widget_ItemBrowser::Widget_ItemBrowser(Widget* parent)
 {
     auto wsa = new Widget_ScrollArea(this);
     auto item_list = new Widget_ItemList(wsa);
+    (void) item_list;
     rearrange();
 }
 
@@ -314,6 +320,50 @@ void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
             repaint();
         }
     }
+}
+
+
+void Widget_ItemBrowser::keyPressEvent(KeyPressEvent* event)
+{
+    auto selected_item = selectedItem();
+    if(selected_item)
+    {
+        if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::C)
+        {
+            anounceClipboardData("text/plain", ClipboardMode::Clipboard);
+        }
+    }
+}
+
+
+void Widget_ItemBrowser::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
+{
+    cout << event->type().name() << "\n";
+    if(event->mode() != ClipboardMode::Bad && event->data() != nullptr && event->size() > 0)
+    {
+        string text((const char*)event->data(), event->size());
+        cout << "text:\n";
+    }
+}
+
+
+void Widget_ItemBrowser::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
+{
+    string msg;
+
+    auto selected_item = selectedItem();
+    if(selected_item)
+    {
+        msg = "hello: " + selected_item->caption();
+    }
+
+    event->transmit((void*)msg.c_str(), msg.size());
+}
+
+
+void Widget_ItemBrowser::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
+{
+
 }
 
 

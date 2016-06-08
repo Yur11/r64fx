@@ -14,6 +14,7 @@
 #include "Widget_Dummy.hpp"
 #include "Widget_DirectoryTree.hpp"
 #include "Widget_ItemBrowser.hpp"
+#include "Widget_Text.hpp"
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
@@ -127,7 +128,7 @@ public:
 private:
     virtual void setup()
     {
-        g_Font = new Font("", 20, 72);
+        g_Font = new Font("", 16, 72);
 
 //         auto mw = new MyWidget();
 //         mw->setSize({600, 600});
@@ -148,6 +149,10 @@ private:
                 cout << "item: " << selected_item->caption() << "\n";
             }
         });
+
+        auto wt = new Widget_Text("", g_Font);
+        wt->setSize({640, 480});
+        wt->show();
     }
 
     virtual void cleanup()
