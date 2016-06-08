@@ -8,8 +8,8 @@ using namespace std;
 
 namespace r64fx{
 
-Widget_ItemTree::Widget_ItemTree(const std::string &text, Widget* parent)
-: Widget_DataItem(text, parent)
+Widget_ItemTree::Widget_ItemTree(const std::string &caption, Widget* parent)
+: Widget_DataItem(caption, parent)
 {
 
 }
@@ -28,9 +28,9 @@ void Widget_ItemTree::addItem(Widget_DataItem* item)
 }
 
 
-void Widget_ItemTree::addItem(const std::string &text)
+void Widget_ItemTree::addItem(const std::string &caption)
 {
-    Widget::add(new Widget_DataItem(text));
+    Widget::add(new Widget_DataItem(caption));
 }
 
 
@@ -130,23 +130,11 @@ bool Widget_ItemTree::isCollapsed()
 }
 
 
-void Widget_ItemTree::paintEvent(PaintEvent* event)
-{
-    auto p = event->painter();
-
-    unsigned char bg[4] = {200, 200, 200, 0};
-
-    p->fillRect({{0, 0}, size()}, bg);
-
-    Widget_DataItem::paintEvent(event);
-}
-
-
 void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
 {
     if(event->y() > lineHeight())
     {
-        Widget::mousePressEvent(event);
+
     }
     else if(event->button() & MouseButton::Left() && event->x() < (lineHeight() * (indent() + 1)))
     {
@@ -159,6 +147,8 @@ void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
             collapse();
         }
     }
+
+    Widget::mousePressEvent(event);
 }
 
 }//namespace

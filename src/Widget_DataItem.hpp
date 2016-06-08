@@ -8,20 +8,20 @@ namespace r64fx{
 class Widget_ItemBrowser;
 
 class Widget_DataItem : public Widget{
-    std::string m_text = "";
+    std::string m_caption = "";
     Image* m_image = nullptr;
     Rect<int> m_visible_rect;
 
 public:
-    Widget_DataItem(const std::string &text, Widget* parent = nullptr);
+    Widget_DataItem(const std::string &caption, Widget* parent = nullptr);
 
     Widget_DataItem(Widget* parent = nullptr);
 
     virtual ~Widget_DataItem();
 
-    void setText(const std::string &text);
+    void setCaption(const std::string &caption);
 
-    std::string text() const;
+    std::string caption() const;
 
     int lineHeight();
 

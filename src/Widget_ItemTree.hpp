@@ -8,13 +8,13 @@ namespace r64fx{
 class Widget_ItemTree : public Widget_DataItem{
 
 public:
-    Widget_ItemTree(const std::string &text, Widget* parent = nullptr);
+    Widget_ItemTree(const std::string &caption, Widget* parent = nullptr);
 
     Widget_ItemTree(Widget* parent = nullptr);
 
     void addItem(Widget_DataItem* item);
 
-    void addItem(const std::string &text);
+    void addItem(const std::string &caption);
 
     virtual void resizeAndReallign(int min_width);
 
@@ -27,8 +27,6 @@ public:
     bool isCollapsed();
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
-
     virtual void mousePressEvent(MousePressEvent* event);
 };
 

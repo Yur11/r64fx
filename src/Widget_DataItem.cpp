@@ -62,9 +62,9 @@ namespace{
 }//namespace
 
 
-Widget_DataItem::Widget_DataItem(const std::string &text, Widget* parent)
+Widget_DataItem::Widget_DataItem(const std::string &caption, Widget* parent)
 : Widget(parent)
-, m_text(text)
+, m_caption(caption)
 {
     init_if_needed();
 }
@@ -92,15 +92,15 @@ Widget_DataItem::~Widget_DataItem()
 }
 
 
-void Widget_DataItem::setText(const std::string &text)
+void Widget_DataItem::setCaption(const std::string &caption)
 {
-    m_text = text;
+    m_caption = caption;
 }
 
 
-std::string Widget_DataItem::text() const
+std::string Widget_DataItem::caption() const
 {
-    return m_text;
+    return m_caption;
 }
 
 
@@ -112,7 +112,7 @@ int Widget_DataItem::lineHeight()
 
 void Widget_DataItem::resizeAndReallign(int min_width)
 {
-    int width = find_text_bbox(m_text, TextWrap::None, g_data_item_font).width() + g_data_item_font->height();
+    int width = find_text_bbox(m_caption, TextWrap::None, g_data_item_font).width() + g_data_item_font->height();
     if(width < min_width)
         width = min_width;
 
@@ -232,7 +232,7 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
     if(!m_image)
     {
         m_image = new Image;
-        text2image(m_text, TextWrap::None, g_data_item_font, m_image);
+        text2image(m_caption, TextWrap::None, g_data_item_font, m_image);
     }
 
     if(m_image)
@@ -311,9 +311,9 @@ void Widget_DataItem::mouseMoveEvent(MouseMoveEvent* event)
     if(event->button() & MouseButton::Left())
     {
         int distance = event->dx() * event->dx() + event->dy() * event->dy();
-        if(distance > 1 && (!text().empty()))
+        if(distance > 1 && (!caption().empty()))
         {
-            auto label = new Widget_Label(text());
+            auto label = new Widget_Label(caption());
             Point<int> anchor(event->x() - indentWidth(), event->y());
             if(anchor.x() < 0 )
                 anchor.setX(0);

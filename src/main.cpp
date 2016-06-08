@@ -142,7 +142,11 @@ private:
         ib->show();
 
         ib->onItemSelected([](Widget_ItemBrowser* browser, void*){
-            cout << "item: " << browser->selectedItem()->text() << "\n";
+            auto selected_item = browser->selectedItem();
+            if(selected_item)
+            {
+                cout << "item: " << selected_item->caption() << "\n";
+            }
         });
     }
 
