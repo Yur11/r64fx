@@ -19,6 +19,8 @@ public:
 
 protected:
     virtual void paintEvent(PaintEvent* event);
+
+    virtual void mousePressEvent(MousePressEvent* event);
 };
 
 }//namespace r64fx

@@ -83,4 +83,10 @@ void Widget_ItemList::paintEvent(PaintEvent* event)
     Widget::paintEvent(event);
 }
 
+
+void Widget_ItemList::mousePressEvent(MousePressEvent* event)
+{
+    Widget::mousePressEvent(event);
+}
+
 }//namespace r64fx

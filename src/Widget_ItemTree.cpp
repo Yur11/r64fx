@@ -132,23 +132,35 @@ bool Widget_ItemTree::isCollapsed()
 
 void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
 {
-    if(event->y() > lineHeight())
+    if(event->button() & MouseButton::Left())
     {
-
-    }
-    else if(event->button() & MouseButton::Left() && event->x() < (lineHeight() * (indent() + 1)))
-    {
-        if(isCollapsed())
+        if(event->y() <= lineHeight())
         {
-            expand();
+            if(event->x() < (lineHeight() * (indent() + 1)))
+            {
+                if(isCollapsed())
+                {
+                    expand();
+                }
+                else
+                {
+                    collapse();
+                }
+            }
+            else
+            {
+                Widget_DataItem::mousePressEvent(event);
+            }
         }
         else
         {
-            collapse();
+            Widget::mousePressEvent(event);
         }
     }
-
-    Widget::mousePressEvent(event);
+    else
+    {
+        Widget::mousePressEvent(event);
+    }
 }
 
 }//namespace
