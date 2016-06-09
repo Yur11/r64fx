@@ -47,4 +47,8 @@
 
 #define R64FX_WIDGET_IS_SELECTED              (1 << 0x13)
 
+#define R64FX_WIDGET_DATA_ITEM_IS_COMPOUND    (1 << 0x14)
+
+#define R64FX_WIDGET_DATA_ITEM_IS_TREE        (1 << 0x15)
+
 #endif//R64FX_WIDGET_FLAGS_HPP

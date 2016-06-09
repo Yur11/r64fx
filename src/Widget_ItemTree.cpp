@@ -9,7 +9,7 @@ using namespace std;
 namespace r64fx{
 
 Widget_ItemTree::Widget_ItemTree(const std::string &caption, Widget* parent)
-: Widget_DataItem(caption, parent)
+: Widget_DataItem(caption, Widget_DataItem::Kind::Tree, parent)
 {
 
 }

@@ -7,7 +7,7 @@ using namespace std;
 namespace r64fx{
 
 Widget_ItemList::Widget_ItemList(Widget* parent)
-: Widget_DataItem(parent)
+: Widget_DataItem("", Widget_DataItem::Kind::List, parent)
 {
 
 }

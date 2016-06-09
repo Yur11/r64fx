@@ -62,11 +62,23 @@ namespace{
 }//namespace
 
 
-Widget_DataItem::Widget_DataItem(const std::string &caption, Widget* parent)
+Widget_DataItem::Widget_DataItem(const std::string &caption, Widget_DataItem::Kind kind, Widget* parent)
 : Widget(parent)
 , m_caption(caption)
 {
     init_if_needed();
+
+    if(kind != Widget_DataItem::Kind::Text)
+    {
+        m_flags |= R64FX_WIDGET_DATA_ITEM_IS_COMPOUND;
+    }
+    else
+    {
+        if(kind == Widget_DataItem::Kind::Tree)
+        {
+            m_flags |= R64FX_WIDGET_DATA_ITEM_IS_TREE;
+        }
+    }
 }
 
 
@@ -101,6 +113,26 @@ void Widget_DataItem::setCaption(const std::string &caption)
 std::string Widget_DataItem::caption() const
 {
     return m_caption;
+}
+
+
+Widget_DataItem::Kind Widget_DataItem::kind()
+{
+    if(m_flags & R64FX_WIDGET_DATA_ITEM_IS_COMPOUND)
+    {
+        if(m_flags & R64FX_WIDGET_DATA_ITEM_IS_TREE)
+        {
+            return Widget_DataItem::Kind::Tree;
+        }
+        else
+        {
+            return Widget_DataItem::Kind::List;
+        }
+    }
+    else
+    {
+        return Widget_DataItem::Kind::Text;
+    }
 }
 
 

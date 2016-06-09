@@ -13,7 +13,13 @@ class Widget_DataItem : public Widget{
     Rect<int> m_visible_rect;
 
 public:
-    Widget_DataItem(const std::string &caption, Widget* parent = nullptr);
+    enum class Kind{
+        Text,
+        List,
+        Tree
+    };
+
+    Widget_DataItem(const std::string &caption, Widget_DataItem::Kind kind = Kind::Text, Widget* parent = nullptr);
 
     Widget_DataItem(Widget* parent = nullptr);
 
@@ -22,6 +28,8 @@ public:
     void setCaption(const std::string &caption);
 
     std::string caption() const;
+
+    Kind kind();
 
     int lineHeight();
 
