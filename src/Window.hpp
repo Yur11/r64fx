@@ -138,7 +138,8 @@ public:
     virtual void clipboardDataRecieveEvent(
         Window* window,
         ClipboardDataType type, ClipboardMode mode,
-        void* data, int size) = 0;
+        void* data, int size
+    ) = 0;
 
     virtual void clipboardDataTransmitEvent(
         Window* window,
