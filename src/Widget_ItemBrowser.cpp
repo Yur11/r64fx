@@ -87,8 +87,6 @@ namespace{
     }
 
     void on_selected_item_stub(Widget_ItemBrowser*, void*) {}
-
-    string g_clipboard_message;
 }
 
 Widget_ItemBrowser::Widget_ItemBrowser(Widget* parent)
@@ -328,13 +326,19 @@ void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
 
 void Widget_ItemBrowser::keyPressEvent(KeyPressEvent* event)
 {
-    auto selected_item = selectedItem();
-    if(selected_item)
+    if(Keyboard::CtrlDown())
     {
-        if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::C)
+        if(event->key() == Keyboard::Key::C)
         {
-            cout << "Ctrl + C\n";
-            anounceClipboardData("text/plain", ClipboardMode::Clipboard);
+            auto selected_item = selectedItem();
+            if(selected_item)
+            {
+                anounceClipboardData({"text/uri-list", "text/plain"}, ClipboardMode::Clipboard);
+            }
+        }
+        else if(event->key() == Keyboard::Key::V)
+        {
+            requestClipboardMetadata(ClipboardMode::Clipboard);
         }
     }
 }
@@ -342,33 +346,62 @@ void Widget_ItemBrowser::keyPressEvent(KeyPressEvent* event)
 
 void Widget_ItemBrowser::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 {
-    cout << event->type().name() << "\n";
-    if(event->mode() != ClipboardMode::Bad && event->data() != nullptr && event->size() > 0)
+    if(event->mode() != ClipboardMode::Clipboard)
+        return;
+
+    if(event->data() == nullptr && event->size() <= 0)
+        return;
+
+    if(event->type() == "text/plain")
     {
         string text((const char*)event->data(), event->size());
-        cout << "text:\n";
+        cout << "text/plain:\n" << text << "\n";
+    }
+    else if(event->type() == "text/uri-list")
+    {
+        string text((const char*)event->data(), event->size());
+        cout << "text/uri-list:\n" << text << "\n";
     }
 }
 
 
 void Widget_ItemBrowser::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
 {
-    cout << "Widget_ItemBrowser::clipboardDataTransmitEvent()\n";
+    string clipboard_message = "";
 
     auto selected_item = selectedItem();
     if(selected_item)
     {
-        g_clipboard_message = "hello: " + selected_item->caption();
+        if(event->type() == "text/plain")
+        {
+            clipboard_message = selected_item->caption();
+        }
+        else if(event->type() == "text/uri-list")
+        {
+            
+        }
     }
 
-    event->transmit((void*)g_clipboard_message.c_str(), g_clipboard_message.size());
-
+    if(!clipboard_message.empty())
+        event->transmit((void*)clipboard_message.c_str(), clipboard_message.size());
 }
 
 
 void Widget_ItemBrowser::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
 {
+    if(event->mode() != ClipboardMode::Clipboard)
+        return;
 
+    static const ClipboardDataType types[2] = {"text/uri-list", "text/plain"};
+
+    for(int i=0; i<2; i++)
+    {
+        if(event->has(types[i]))
+        {
+            requestClipboardData(types[i], event->mode());
+            break;
+        }
+    }
 }
 
 
