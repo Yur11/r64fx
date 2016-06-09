@@ -136,7 +136,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 
             case SelectionClear:
             {
-                window->clearSelection(g_incoming_event.xselectionclear);
+                window->clearSelection();
                 break;
             }
 
@@ -148,7 +148,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 
             case SelectionNotify:
             {
-                window->recieveSelection(g_incoming_event.xselection, events);
+                window->recieveSelection(events);
                 break;
             }
 

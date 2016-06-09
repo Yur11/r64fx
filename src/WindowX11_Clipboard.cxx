@@ -229,8 +229,10 @@ void WindowX11::onSelectionTransmit(void* data, int size)
 }
 
 
-void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEventDispatcherIface* events)
+void WindowX11::recieveSelection(WindowEventDispatcherIface* events)
 {
+    XSelectionEvent &in = g_incoming_event.xselection;
+
     auto cb = clipboard(in.selection);
     if(!cb)
     {
@@ -306,15 +308,13 @@ void WindowX11::recieveSelection(const XSelectionEvent &in, WindowEventDispatche
 }
 
 
-void WindowX11::clearSelection(const XSelectionClearEvent &in)
+void WindowX11::clearSelection()
 {
-    cout << "clearSelection\n";
+    XSelectionClearEvent &in = g_incoming_event.xselectionclear;
 
     auto cb = clipboard(in.selection);
-    if(!cb)
+    if(cb)
     {
-        cerr << "Bad clipboard mode!\n";
-        return;
+        cb->clear();
     }
-    cb->clear();
 }

@@ -164,7 +164,7 @@ void WindowXImage::repaint(Rect<int>* rects, int numrects)
         );
 
         ximage->data = 0; //Lifted this from Qt4 code.
-                            //Apparently you can do this to avoid buffer deallocation.
+                          //Apparently you can do this to avoid buffer deallocation.
         XDestroyImage(ximage);
 
         XSync(g_display, False);

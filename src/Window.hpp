@@ -2,7 +2,6 @@
 #define R64FX_WINDOW_HPP
 
 #include <string>
-#include <vector>
 #include "Rect.hpp"
 #include "Clipboard.hpp"
 

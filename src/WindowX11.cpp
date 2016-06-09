@@ -15,7 +15,6 @@
 #include <GL/glx.h>
 #endif//R64FX_USE_GL
 
-#include <vector>
 #include <map>
 #include <iostream>
 
@@ -106,9 +105,9 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     void onSelectionTransmit(void* data, int size);
 
-    void recieveSelection(const XSelectionEvent &in, WindowEventDispatcherIface* events);
+    void recieveSelection(WindowEventDispatcherIface* events);
 
-    void clearSelection(const XSelectionClearEvent &in);
+    void clearSelection();
 
     void updateAttrs();
 
