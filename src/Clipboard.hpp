@@ -4,7 +4,7 @@
 #include "Point.hpp"
 #include <string>
 #include <vector>
-
+#include <initializer_list>
 
 namespace r64fx{
 
@@ -65,6 +65,10 @@ bool operator==(ClipboardDataType a, ClipboardDataType b);
 class ClipboardMetadata : public std::vector<ClipboardDataType>{
 
 public:
+    ClipboardMetadata(const std::initializer_list<ClipboardDataType> &types)
+    : std::vector<ClipboardDataType>(types)
+    {}
+
     ClipboardMetadata(const std::vector<ClipboardDataType> &types)
     : std::vector<ClipboardDataType>(types)
     {}
