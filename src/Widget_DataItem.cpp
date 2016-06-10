@@ -441,52 +441,60 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
 
-    if(!m_image)
+    if(kind() == Widget_DataItem::Kind::List)
     {
-        m_image = new Image;
-        text2image(m_caption, TextWrap::None, g_data_item_font, m_image);
+        unsigned char bg[4] = {200, 200, 200, 0};
+        p->fillRect({{0, 0}, size()}, bg);
     }
-
-    if(m_image)
+    else
     {
-        auto old_clip_rect = p->clipRect();
-        p->setClipRect(Rect<int>(toRootCoords(m_visible_rect.position()), m_visible_rect.size()));
-
-        int offset = indentWidth();
-
-        unsigned char odd_bg[4]  = {200, 200, 200, 0};
-        unsigned char even_bg[4] = {190, 190, 190, 0};
-        p->fillRect({0, 0, width() + offset, height()}, ((m_flags & R64FX_WIDGET_IS_EVEN) ? even_bg : odd_bg));
-
-        unsigned char normal [4]  = {0, 0, 0, 0};
-        unsigned char hovered[4]  = {0, 127, 0, 0};
-        unsigned char selected[4] = {127, 0, 0, 255};
-
-        unsigned char* colors;
-        if(isSelected())
-            colors = selected;
-        else if(isHovered())
-            colors = hovered;
-        else
-            colors = normal;
-
-        auto item_tree = dynamic_cast<Widget_ItemTree*>(this);
-        if(item_tree)
+        if(!m_image)
         {
-            Image* button_img = nullptr;
-            if(item_tree->isCollapsed())
-                button_img = g_button_img_right;
+            m_image = new Image;
+            text2image(m_caption, TextWrap::None, g_data_item_font, m_image);
+        }
+
+        if(m_image)
+        {
+            auto old_clip_rect = p->clipRect();
+            p->setClipRect(Rect<int>(toRootCoords(m_visible_rect.position()), m_visible_rect.size()));
+
+            int offset = indentWidth();
+
+            unsigned char odd_bg[4]  = {200, 200, 200, 0};
+            unsigned char even_bg[4] = {190, 190, 190, 0};
+            p->fillRect({0, 0, width() + offset, height()}, ((m_flags & R64FX_WIDGET_IS_EVEN) ? even_bg : odd_bg));
+
+            unsigned char normal [4]  = {0, 0, 0, 0};
+            unsigned char hovered[4]  = {0, 127, 0, 0};
+            unsigned char selected[4] = {127, 0, 0, 255};
+
+            unsigned char* colors;
+            if(isSelected())
+                colors = selected;
+            else if(isHovered())
+                colors = hovered;
             else
-                button_img = g_button_img_down;
-            p->blendColors({offset + g_button_img_offset, g_button_img_offset}, &colors, button_img);
-            p->blendColors({offset + m_image->height(), 0}, &colors, m_image);
-        }
-        else
-        {
-            p->blendColors({offset, 0}, &colors, m_image);
-        }
+                colors = normal;
 
-        p->setClipRect(old_clip_rect);
+            auto item_tree = dynamic_cast<Widget_ItemTree*>(this);
+            if(item_tree)
+            {
+                Image* button_img = nullptr;
+                if(item_tree->isCollapsed())
+                    button_img = g_button_img_right;
+                else
+                    button_img = g_button_img_down;
+                p->blendColors({offset + g_button_img_offset, g_button_img_offset}, &colors, button_img);
+                p->blendColors({offset + m_image->height(), 0}, &colors, m_image);
+            }
+            else
+            {
+                p->blendColors({offset, 0}, &colors, m_image);
+            }
+
+            p->setClipRect(old_clip_rect);
+        }
     }
 
     Widget::paintEvent(event);

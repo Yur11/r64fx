@@ -10,8 +10,6 @@ public:
     Widget_ItemList(Widget* parent = nullptr);
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
-
     virtual void mousePressEvent(MousePressEvent* event);
 };
 
