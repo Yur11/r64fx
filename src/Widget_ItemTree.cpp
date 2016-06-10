@@ -16,7 +16,7 @@ Widget_ItemTree::Widget_ItemTree(const std::string &caption, Widget* parent)
 
 
 Widget_ItemTree::Widget_ItemTree(Widget* parent)
-: Widget_DataItem(parent)
+: Widget_DataItem("", Widget_DataItem::Kind::Tree, parent)
 {
 
 }
@@ -91,42 +91,6 @@ int Widget_ItemTree::enumerate(int num)
         }
     }
     return n;
-}
-
-
-void Widget_ItemTree::collapse()
-{
-    m_flags |= R64FX_WIDGET_TREE_IS_COLLAPSED;
-    auto root_item = rootDataItem();
-    auto root_item_parent = root_item->parent();
-    if(root_item_parent)
-    {
-        root_item->resizeAndReallign(root_item_parent->width());
-        root_item->enumerate(0);
-        root_item_parent->clip();
-        root_item_parent->repaint();
-    }
-}
-
-
-void Widget_ItemTree::expand()
-{
-    m_flags &= ~R64FX_WIDGET_TREE_IS_COLLAPSED;
-    auto root_item = rootDataItem();
-    auto root_item_parent = root_item->parent();
-    if(root_item_parent)
-    {
-        root_item->resizeAndReallign(root_item_parent->width());
-        root_item->enumerate(0);
-        root_item_parent->clip();
-        root_item_parent->repaint();
-    }
-}
-
-
-bool Widget_ItemTree::isCollapsed()
-{
-    return m_flags & R64FX_WIDGET_TREE_IS_COLLAPSED;
 }
 
 

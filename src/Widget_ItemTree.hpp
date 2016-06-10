@@ -20,12 +20,6 @@ public:
 
     virtual int enumerate(int num);
 
-    void collapse();
-
-    void expand();
-
-    bool isCollapsed();
-
 protected:
     virtual void mousePressEvent(MousePressEvent* event);
 };

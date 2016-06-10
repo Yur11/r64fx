@@ -71,9 +71,6 @@ Widget_DataItem::Widget_DataItem(const std::string &caption, Widget_DataItem::Ki
     if(kind != Widget_DataItem::Kind::Text)
     {
         m_flags |= R64FX_WIDGET_DATA_ITEM_IS_COMPOUND;
-    }
-    else
-    {
         if(kind == Widget_DataItem::Kind::Tree)
         {
             m_flags |= R64FX_WIDGET_DATA_ITEM_IS_TREE;
@@ -254,6 +251,48 @@ void Widget_DataItem::setSelected(bool yes)
 bool Widget_DataItem::isSelected() const
 {
     return m_flags & R64FX_WIDGET_IS_SELECTED;
+}
+
+
+void Widget_DataItem::collapse()
+{
+    if(kind() != Widget_DataItem::Kind::Tree)
+        return;
+
+    m_flags |= R64FX_WIDGET_TREE_IS_COLLAPSED;
+    auto root_item = rootDataItem();
+    auto root_item_parent = root_item->parent();
+    if(root_item_parent)
+    {
+        root_item->resizeAndReallign(root_item_parent->width());
+        root_item->enumerate(0);
+        root_item_parent->clip();
+        root_item_parent->repaint();
+    }
+}
+
+
+void Widget_DataItem::expand()
+{
+    if(kind() != Widget_DataItem::Kind::Tree)
+        return;
+
+    m_flags &= ~R64FX_WIDGET_TREE_IS_COLLAPSED;
+    auto root_item = rootDataItem();
+    auto root_item_parent = root_item->parent();
+    if(root_item_parent)
+    {
+        root_item->resizeAndReallign(root_item_parent->width());
+        root_item->enumerate(0);
+        root_item_parent->clip();
+        root_item_parent->repaint();
+    }
+}
+
+
+bool Widget_DataItem::isCollapsed()
+{
+    return m_flags & R64FX_WIDGET_TREE_IS_COLLAPSED;
 }
 
 

@@ -51,6 +51,12 @@ public:
 
     bool isSelected() const;
 
+    void collapse();
+
+    void expand();
+
+    bool isCollapsed();
+
 protected:
     virtual void paintEvent(PaintEvent* event);
 
