@@ -230,11 +230,62 @@ void Widget_DataItem::resizeAndReallignTree(int min_width)
 
 int Widget_DataItem::enumerate(int num)
 {
+    switch(kind())
+    {
+        case Widget_DataItem::Kind::Plain:
+        {
+            return enumeratePlain(num);
+        }
+
+        case Widget_DataItem::Kind::List:
+        {
+            return enumerateList(num);
+        }
+
+        case Widget_DataItem::Kind::Tree:
+        {
+            return enumerateTree(num);
+        }
+
+        default:
+        {
+            return num;
+        }
+    }
+}
+
+
+int Widget_DataItem::enumeratePlain(int num)
+{
     if(num & 1)
         m_flags &= ~R64FX_WIDGET_IS_EVEN;
     else
         m_flags |= R64FX_WIDGET_IS_EVEN;
     return num + 1;
+}
+
+
+int Widget_DataItem::enumerateList(int num)
+{
+    for(auto child : *this)
+    {
+        auto data_item = dynamic_cast<Widget_DataItem*>(child);
+        if(data_item)
+        {
+            num = data_item->enumerate(num);
+        }
+    }
+    return num;
+}
+
+
+int Widget_DataItem::enumerateTree(int num)
+{
+    num = enumeratePlain(num);
+    if(isCollapsed())
+        return num;
+
+    return enumerateList(num);
 }
 
 

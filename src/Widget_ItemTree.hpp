@@ -16,8 +16,6 @@ public:
 
     void addItem(const std::string &caption);
 
-    virtual int enumerate(int num);
-
 protected:
     virtual void mousePressEvent(MousePressEvent* event);
 };

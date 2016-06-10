@@ -25,21 +25,6 @@ void Widget_ItemList::addItem(const std::string &text)
 }
 
 
-int Widget_ItemList::enumerate(int num)
-{
-    int n = num;
-    for(auto child : *this)
-    {
-        auto data_item = dynamic_cast<Widget_DataItem*>(child);
-        if(data_item)
-        {
-            n = data_item->enumerate(n);
-        }
-    }
-    return n;
-}
-
-
 void Widget_ItemList::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();

@@ -34,24 +34,6 @@ void Widget_ItemTree::addItem(const std::string &caption)
 }
 
 
-int Widget_ItemTree::enumerate(int num)
-{
-    int n = Widget_DataItem::enumerate(num);
-    if(isCollapsed())
-        return n;
-
-    for(auto child : *this)
-    {
-        auto data_item = dynamic_cast<Widget_DataItem*>(child);
-        if(data_item)
-        {
-            n = data_item->enumerate(n);
-        }
-    }
-    return n;
-}
-
-
 void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
 {
     if(event->button() & MouseButton::Left())

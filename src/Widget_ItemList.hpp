@@ -13,8 +13,6 @@ public:
 
     void addItem(const std::string &text);
 
-    virtual int enumerate(int num);
-
 protected:
     virtual void paintEvent(PaintEvent* event);
 

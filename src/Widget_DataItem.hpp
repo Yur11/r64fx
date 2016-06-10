@@ -43,8 +43,16 @@ private:
     void resizeAndReallignTree(int min_width);
 
 public:
-    virtual int enumerate(int num);
+    int enumerate(int num);
 
+private:
+    int enumeratePlain(int num);
+
+    int enumerateList(int num);
+
+    int enumerateTree(int num);
+
+public:
     Widget_DataItem* parentDataItem();
 
     Widget_DataItem* rootDataItem();
