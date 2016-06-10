@@ -13,8 +13,6 @@ public:
 
     void addItem(const std::string &text);
 
-    virtual void resizeAndReallign(int min_width);
-
     virtual int enumerate(int num);
 
 protected:

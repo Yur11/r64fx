@@ -68,7 +68,7 @@ Widget_DataItem::Widget_DataItem(const std::string &caption, Widget_DataItem::Ki
 {
     init_if_needed();
 
-    if(kind != Widget_DataItem::Kind::Text)
+    if(kind != Widget_DataItem::Kind::Plain)
     {
         m_flags |= R64FX_WIDGET_DATA_ITEM_IS_COMPOUND;
         if(kind == Widget_DataItem::Kind::Tree)
@@ -128,7 +128,7 @@ Widget_DataItem::Kind Widget_DataItem::kind()
     }
     else
     {
-        return Widget_DataItem::Kind::Text;
+        return Widget_DataItem::Kind::Plain;
     }
 }
 
@@ -141,12 +141,114 @@ int Widget_DataItem::lineHeight()
 
 void Widget_DataItem::resizeAndReallign(int min_width)
 {
+    switch(kind())
+    {
+        case Widget_DataItem::Kind::Plain:
+        {
+            resizeAndReallignPlain(min_width);
+            break;
+        }
+
+        case Widget_DataItem::Kind::List:
+        {
+            resizeAndReallignList(min_width);
+            break;
+        }
+
+        case Widget_DataItem::Kind::Tree:
+        {
+            resizeAndReallignTree(min_width);
+            break;
+        }
+
+        default:
+            break;
+    }
+}
+
+
+void Widget_DataItem::resizeAndReallignPlain(int min_width)
+{
     int width = find_text_bbox(m_caption, TextWrap::None, g_data_item_font).width() + g_data_item_font->height();
     if(width < min_width)
         width = min_width;
 
     setWidth(width);
     setHeight(lineHeight());
+}
+
+
+void Widget_DataItem::resizeAndReallignList(int min_width)
+{
+    int max_child_width  = 0;
+    int total_height     = 0;
+
+    for(auto child : *this)
+    {
+        auto data_item = dynamic_cast<Widget_DataItem*>(child);
+        if(data_item)
+        {
+            data_item->resizeAndReallign(min_width);
+        }
+
+        if(child->width() > max_child_width)
+            max_child_width = child->width();
+
+        total_height += child->height();
+    }
+
+    int running_y = 0;
+    for(auto child : *this)
+    {
+        child->setWidth(max_child_width);
+        child->setX(0);
+        child->setY(running_y);
+        running_y += child->height();
+    }
+
+    setSize({max_child_width, total_height});
+}
+
+
+void Widget_DataItem::resizeAndReallignTree(int min_width)
+{
+    static int depth = 0;
+    depth++;
+
+    resizeAndReallignPlain(min_width);
+
+    if(!isCollapsed())
+    {
+        int max_child_width  = width();
+        int total_height     = height();
+
+        for(auto child : *this)
+        {
+            auto data_item = dynamic_cast<Widget_DataItem*>(child);
+            if(data_item)
+            {
+                data_item->resizeAndReallign(min_width);
+            }
+
+            if(child->width() > max_child_width)
+                max_child_width = child->width();
+
+            total_height += child->height();
+        }
+
+        int running_y = height();
+        for(auto child : *this)
+        {
+            child->setWidth(max_child_width);
+            child->setX(0);
+            child->setY(running_y);
+            running_y += child->height();
+        }
+
+        setHeight(total_height);
+    }
+
+    depth--;
 }
 
 

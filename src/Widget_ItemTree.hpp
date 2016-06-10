@@ -16,8 +16,6 @@ public:
 
     void addItem(const std::string &caption);
 
-    virtual void resizeAndReallign(int min_width);
-
     virtual int enumerate(int num);
 
 protected:

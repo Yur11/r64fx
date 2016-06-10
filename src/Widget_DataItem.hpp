@@ -14,12 +14,12 @@ class Widget_DataItem : public Widget{
 
 public:
     enum class Kind{
-        Text,
+        Plain,
         List,
         Tree
     };
 
-    Widget_DataItem(const std::string &caption, Widget_DataItem::Kind kind = Kind::Text, Widget* parent = nullptr);
+    Widget_DataItem(const std::string &caption, Widget_DataItem::Kind kind = Kind::Plain, Widget* parent = nullptr);
 
     Widget_DataItem(Widget* parent = nullptr);
 
@@ -33,8 +33,16 @@ public:
 
     int lineHeight();
 
-    virtual void resizeAndReallign(int min_width);
+    void resizeAndReallign(int min_width);
 
+private:
+    void resizeAndReallignPlain(int min_width);
+
+    void resizeAndReallignList(int min_width);
+
+    void resizeAndReallignTree(int min_width);
+
+public:
     virtual int enumerate(int num);
 
     Widget_DataItem* parentDataItem();
