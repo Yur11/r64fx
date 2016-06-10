@@ -141,6 +141,8 @@ int Widget_DataItem::lineHeight()
 
 void Widget_DataItem::resizeAndReallign(int min_width)
 {
+    setSize({0, 0});
+
     switch(kind())
     {
         case Widget_DataItem::Kind::Plain:
@@ -180,8 +182,8 @@ void Widget_DataItem::resizeAndReallignPlain(int min_width)
 
 void Widget_DataItem::resizeAndReallignList(int min_width)
 {
-    int max_child_width  = 0;
-    int total_height     = 0;
+    int max_child_width  = width();
+    int total_height     = height();
 
     for(auto child : *this)
     {
@@ -197,7 +199,7 @@ void Widget_DataItem::resizeAndReallignList(int min_width)
         total_height += child->height();
     }
 
-    int running_y = 0;
+    int running_y = height();
     for(auto child : *this)
     {
         child->setWidth(max_child_width);
@@ -219,33 +221,7 @@ void Widget_DataItem::resizeAndReallignTree(int min_width)
 
     if(!isCollapsed())
     {
-        int max_child_width  = width();
-        int total_height     = height();
-
-        for(auto child : *this)
-        {
-            auto data_item = dynamic_cast<Widget_DataItem*>(child);
-            if(data_item)
-            {
-                data_item->resizeAndReallign(min_width);
-            }
-
-            if(child->width() > max_child_width)
-                max_child_width = child->width();
-
-            total_height += child->height();
-        }
-
-        int running_y = height();
-        for(auto child : *this)
-        {
-            child->setWidth(max_child_width);
-            child->setX(0);
-            child->setY(running_y);
-            running_y += child->height();
-        }
-
-        setHeight(total_height);
+        resizeAndReallignList(min_width);
     }
 
     depth--;
