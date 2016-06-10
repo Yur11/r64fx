@@ -9,8 +9,6 @@ class Widget_ItemList : public Widget_DataItem{
 public:
     Widget_ItemList(Widget* parent = nullptr);
 
-protected:
-    virtual void mousePressEvent(MousePressEvent* event);
 };
 
 }//namespace r64fx

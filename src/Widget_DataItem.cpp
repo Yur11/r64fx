@@ -509,10 +509,69 @@ void Widget_DataItem::clipEvent(ClipEvent* event)
 
 void Widget_DataItem::mousePressEvent(MousePressEvent* event)
 {
+    switch(kind())
+    {
+        case Widget_DataItem::Kind::Plain:
+        {
+            mousePressEventPlain(event);
+            break;
+        }
+
+        case Widget_DataItem::Kind::Tree:
+        {
+            mousePressEventTree(event);
+            break;
+        }
+
+        default:
+        {
+            Widget::mousePressEvent(event);
+            break;
+        }
+    }
+}
+
+
+void Widget_DataItem::mousePressEventPlain(MousePressEvent* event)
+{
     if(event->button() & MouseButton::Left())
         setSelected(true);
     grabMouse();
     Widget::mousePressEvent(event);
+}
+
+
+void Widget_DataItem::mousePressEventTree(MousePressEvent* event)
+{
+    if(event->button() & MouseButton::Left())
+    {
+        if(event->y() <= lineHeight())
+        {
+            if(event->x() < (lineHeight() * (indent() + 1)))
+            {
+                if(isCollapsed())
+                {
+                    expand();
+                }
+                else
+                {
+                    collapse();
+                }
+            }
+            else
+            {
+                mousePressEventPlain(event);
+            }
+        }
+        else
+        {
+            Widget::mousePressEvent(event);
+        }
+    }
+    else
+    {
+        Widget::mousePressEvent(event);
+    }
 }
 
 

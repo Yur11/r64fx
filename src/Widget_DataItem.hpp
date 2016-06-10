@@ -84,6 +84,12 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent* event);
 
+private:
+    void mousePressEventPlain(MousePressEvent* event);
+
+    void mousePressEventTree(MousePressEvent* event);
+
+protected:
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);

@@ -12,10 +12,4 @@ Widget_ItemList::Widget_ItemList(Widget* parent)
 
 }
 
-
-void Widget_ItemList::mousePressEvent(MousePressEvent* event)
-{
-    Widget::mousePressEvent(event);
-}
-
 }//namespace r64fx

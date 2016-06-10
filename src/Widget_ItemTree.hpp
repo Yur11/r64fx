@@ -11,9 +11,6 @@ public:
     Widget_ItemTree(const std::string &caption, Widget* parent = nullptr);
 
     Widget_ItemTree(Widget* parent = nullptr);
-
-protected:
-    virtual void mousePressEvent(MousePressEvent* event);
 };
 
 }//namespace

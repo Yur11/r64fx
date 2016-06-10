@@ -21,38 +21,4 @@ Widget_ItemTree::Widget_ItemTree(Widget* parent)
 
 }
 
-
-void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
-{
-    if(event->button() & MouseButton::Left())
-    {
-        if(event->y() <= lineHeight())
-        {
-            if(event->x() < (lineHeight() * (indent() + 1)))
-            {
-                if(isCollapsed())
-                {
-                    expand();
-                }
-                else
-                {
-                    collapse();
-                }
-            }
-            else
-            {
-                Widget_DataItem::mousePressEvent(event);
-            }
-        }
-        else
-        {
-            Widget::mousePressEvent(event);
-        }
-    }
-    else
-    {
-        Widget::mousePressEvent(event);
-    }
-}
-
 }//namespace
