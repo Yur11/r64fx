@@ -1,5 +1,4 @@
 #include "Widget_DataItem.hpp"
-#include "Widget_ItemTree.hpp"
 #include "Widget_ItemBrowser.hpp"
 #include "Widget_Label.hpp"
 #include "WidgetFlags.hpp"
@@ -349,7 +348,7 @@ int Widget_DataItem::indent() const
     if(!parent_widget)
         return 0;
 
-    auto parent_tree = dynamic_cast<Widget_ItemTree*>(parent_widget);
+    auto parent_tree = dynamic_cast<Widget_DataItem*>(parent_widget);
     if(!parent_tree)
         return 0;
 
@@ -477,7 +476,7 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
             else
                 colors = normal;
 
-            auto item_tree = dynamic_cast<Widget_ItemTree*>(this);
+            auto item_tree = dynamic_cast<Widget_DataItem*>(this);
             if(item_tree)
             {
                 Image* button_img = nullptr;

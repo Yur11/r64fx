@@ -1,7 +1,7 @@
 #include "Widget_ItemBrowser.hpp"
 #include "Widget_ScrollArea.hpp"
 #include "Widget_ScrollBar.hpp"
-#include "Widget_ItemList.hpp"
+#include "Widget_DataItem.hpp"
 #include "Painter.hpp"
 #include "WidgetFlags.hpp"
 #include "Keyboard.hpp"
@@ -59,12 +59,12 @@ namespace{
     }
 
 
-    Widget_ItemList* root_list(Widget_ScrollArea* scroll_area)
+    Widget_DataItem* root_list(Widget_ScrollArea* scroll_area)
     {
-        Widget_ItemList* item_list = nullptr;
+        Widget_DataItem* item_list = nullptr;
         for(auto child : *scroll_area)
         {
-            auto item_list_child = dynamic_cast<Widget_ItemList*>(child);
+            auto item_list_child = dynamic_cast<Widget_DataItem*>(child);
             if(item_list_child)
             {
                 item_list = item_list_child;
@@ -76,7 +76,7 @@ namespace{
     }
 
 
-    Widget_ItemList* root_list(Widget_ItemBrowser* parent)
+    Widget_DataItem* root_list(Widget_ItemBrowser* parent)
     {
         Widget_ScrollArea* scroll_area = nullptr;
         find_children(parent, &scroll_area);
@@ -94,7 +94,7 @@ Widget_ItemBrowser::Widget_ItemBrowser(Widget* parent)
 , m_on_item_selected(on_selected_item_stub)
 {
     auto wsa = new Widget_ScrollArea(this);
-    auto item_list = new Widget_ItemList(wsa);
+    auto item_list = new Widget_DataItem("", Widget_DataItem::Kind::List, wsa);
     (void) item_list;
     rearrange();
 }
@@ -288,7 +288,7 @@ void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
 
         if(scroll_area)
         {
-            Widget_ItemList* item_list = root_list(scroll_area);
+            Widget_DataItem* item_list = root_list(scroll_area);
 
             int scroll_area_height = scroll_area->height();
             int item_list_height = item_list->height();

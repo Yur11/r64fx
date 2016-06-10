@@ -12,7 +12,7 @@
 #include "Font.hpp"
 #include "Widget_ScrollArea.hpp"
 #include "Widget_Dummy.hpp"
-#include "Widget_DirectoryTree.hpp"
+#include "Widget_DirectoryItem.hpp"
 #include "Widget_ItemBrowser.hpp"
 #include "Widget_Text.hpp"
 #include "KeyEvent.hpp"
@@ -134,7 +134,7 @@ private:
 //         mw->setSize({600, 600});
 //         mw->show();
 
-        auto db = new Widget_DirectoryTree("samples", "/home/yurii/Sound/Samples/freesound/");
+        auto db = new Widget_DirectoryItem("samples", "/home/yurii/Sound/Samples/freesound/", true);
         db->populate();
 
         auto ib = new Widget_ItemBrowser;

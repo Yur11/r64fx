@@ -1,4 +1,4 @@
-#include "Widget_DirectoryTree.hpp"
+#include "Widget_DirectoryItem.hpp"
 #include "WidgetFlags.hpp"
 
 #include <iostream>
@@ -6,21 +6,21 @@ using namespace std;
 
 namespace r64fx{
 
-Widget_DirectoryTree::Widget_DirectoryTree(const std::string &caption, const std::string path, Widget* parent)
-: Widget_ItemTree(caption, parent)
+Widget_DirectoryItem::Widget_DirectoryItem(const std::string &caption, const std::string path, bool is_directory, Widget* parent)
+: Widget_DataItem(caption, (is_directory ? Widget_DirectoryItem::Kind::Plain : Widget_DataItem::Kind::Tree), parent)
 , m_path(path)
 {
 
 }
 
 
-std::string Widget_DirectoryTree::path() const
+std::string Widget_DirectoryItem::path() const
 {
     return m_path;
 }
 
 
-std::string Widget_DirectoryTree::fullPath() const
+std::string Widget_DirectoryItem::fullPath() const
 {
     std::string path = this->path();
     if(!path.empty() && path.back() != '/')
@@ -29,7 +29,7 @@ std::string Widget_DirectoryTree::fullPath() const
     if(!parent())
         return path;
 
-    auto parent_browser = dynamic_cast<Widget_DirectoryTree*>(parent());
+    auto parent_browser = dynamic_cast<Widget_DirectoryItem*>(parent());
     if(!parent_browser)
         return path;
 
@@ -37,7 +37,7 @@ std::string Widget_DirectoryTree::fullPath() const
 }
 
 
-void Widget_DirectoryTree::populate()
+void Widget_DirectoryItem::populate()
 {
     Directory dir(fullPath());
     if(!dir.isOpen())
@@ -47,7 +47,7 @@ void Widget_DirectoryTree::populate()
     }
 
     dir.forEachEntry([](const Directory::Entry* entry, void* arg){
-        auto self = (Widget_DirectoryTree*) arg;
+        auto self = (Widget_DirectoryItem*) arg;
         self->loadEntry(entry);
     }, this);
 
@@ -56,20 +56,20 @@ void Widget_DirectoryTree::populate()
 }
 
 
-void Widget_DirectoryTree::loadEntry(const Directory::Entry* entry)
+void Widget_DirectoryItem::loadEntry(const Directory::Entry* entry)
 {
     if(entry->name()[0] != '.')
     {
         Widget_DataItem* item;
         if(entry->isDirectory())
         {
-            auto dt = new Widget_DirectoryTree(entry->name(), fullPath() + entry->name());
+            auto dt = new Widget_DirectoryItem(entry->name(), entry->name(), true);
             dt->populate();
             item = dt;
         }
         else
         {
-            item = new Widget_DataItem(entry->name());
+            item = new Widget_DirectoryItem(entry->name(), entry->name(), false);
         }
         addItem(item);
     }
