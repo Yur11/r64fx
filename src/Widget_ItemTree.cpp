@@ -22,18 +22,6 @@ Widget_ItemTree::Widget_ItemTree(Widget* parent)
 }
 
 
-void Widget_ItemTree::addItem(Widget_DataItem* item)
-{
-    Widget::add(item);
-}
-
-
-void Widget_ItemTree::addItem(const std::string &caption)
-{
-    Widget::add(new Widget_DataItem(caption));
-}
-
-
 void Widget_ItemTree::mousePressEvent(MousePressEvent* event)
 {
     if(event->button() & MouseButton::Left())

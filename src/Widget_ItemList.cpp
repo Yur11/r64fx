@@ -13,18 +13,6 @@ Widget_ItemList::Widget_ItemList(Widget* parent)
 }
 
 
-void Widget_ItemList::addItem(Widget_DataItem* item)
-{
-    Widget::add(item);
-}
-
-
-void Widget_ItemList::addItem(const std::string &text)
-{
-    Widget::add(new Widget_DataItem(text));
-}
-
-
 void Widget_ItemList::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();

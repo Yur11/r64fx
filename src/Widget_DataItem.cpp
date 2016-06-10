@@ -139,6 +139,18 @@ int Widget_DataItem::lineHeight()
 }
 
 
+void Widget_DataItem::addItem(Widget_DataItem* item)
+{
+    Widget::add(item);
+}
+
+
+void Widget_DataItem::addItem(const std::string &caption)
+{
+    Widget::add(new Widget_DataItem(caption));
+}
+
+
 void Widget_DataItem::resizeAndReallign(int min_width)
 {
     setSize({0, 0});

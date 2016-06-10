@@ -12,10 +12,6 @@ public:
 
     Widget_ItemTree(Widget* parent = nullptr);
 
-    void addItem(Widget_DataItem* item);
-
-    void addItem(const std::string &caption);
-
 protected:
     virtual void mousePressEvent(MousePressEvent* event);
 };

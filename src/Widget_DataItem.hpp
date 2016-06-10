@@ -33,6 +33,10 @@ public:
 
     int lineHeight();
 
+    void addItem(Widget_DataItem* item);
+
+    void addItem(const std::string &caption);
+
     void resizeAndReallign(int min_width);
 
 private:
