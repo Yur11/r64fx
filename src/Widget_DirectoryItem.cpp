@@ -6,17 +6,23 @@ using namespace std;
 
 namespace r64fx{
 
-Widget_DirectoryItem::Widget_DirectoryItem(const std::string &caption, const std::string path, bool is_directory, Widget* parent)
-: Widget_DataItem(caption, (is_directory ? Widget_DirectoryItem::Kind::Tree : Widget_DataItem::Kind::Plain), parent)
+Widget_DirectoryItem::Widget_DirectoryItem(const std::string &caption, const std::string path, Widget* parent)
+: Widget_DataItem(caption, parent)
 , m_path(path)
 {
-    if(is_directory)
+    if(m_path.empty())
+    {
+        m_path = "/";
+    }
+
+    if(m_path.back() == '/')
     {
         m_flags |= R64FX_WIDGET_ITEM_IS_DIRECTORY;
-        if(!m_path.empty() && m_path.back() != '/')
-        {
-            m_path.push_back('/');
-        }
+        setKind(Widget_DataItem::Kind::Tree);
+    }
+    else
+    {
+        setKind(Widget_DataItem::Kind::Plain);
     }
 }
 
@@ -71,15 +77,17 @@ void Widget_DirectoryItem::loadEntry(const Directory::Entry* entry)
 {
     if(entry->name()[0] != '.')
     {
+        string entry_path = entry->name();
+        if(entry->isDirectory() && entry_path.back() != '/')
+        {
+            entry_path.push_back('/');
+        }
+
+        auto dt = new Widget_DirectoryItem(entry->name(), entry_path, this);
+
         if(entry->isDirectory())
         {
-            auto dt = new Widget_DirectoryItem(entry->name(), entry->name(), true, this);
             dt->populate();
-        }
-        else
-        {
-            auto di = new Widget_DirectoryItem(entry->name(), entry->name(), false, this);
-            (void)di;
         }
     }
 }

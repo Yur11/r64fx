@@ -10,7 +10,7 @@ class Widget_DirectoryItem : public Widget_DataItem{
     std::string m_path = "";
 
 public:
-    Widget_DirectoryItem(const std::string &caption, const std::string path, bool is_directory, Widget* parent = nullptr);
+    Widget_DirectoryItem(const std::string &caption, const std::string path, Widget* parent = nullptr);
 
     std::string path() const;
 

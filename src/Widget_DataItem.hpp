@@ -19,7 +19,7 @@ public:
         Tree
     };
 
-    Widget_DataItem(const std::string &caption, Widget_DataItem::Kind kind = Kind::Plain, Widget* parent = nullptr);
+    Widget_DataItem(const std::string &caption, Widget* parent = nullptr);
 
     Widget_DataItem(Widget* parent = nullptr);
 
@@ -29,7 +29,9 @@ public:
 
     std::string caption() const;
 
-    Kind kind();
+    void setKind(Widget_DataItem::Kind kind);
+
+    Widget_DataItem::Kind kind();
 
     int lineHeight();
 

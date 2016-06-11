@@ -134,7 +134,7 @@ private:
 //         mw->setSize({600, 600});
 //         mw->show();
 
-        auto db = new Widget_DirectoryItem("samples", "/home/yurii/Sound/Samples/freesound/", true);
+        auto db = new Widget_DirectoryItem("samples", "/home/yurii/Sound/Samples/freesound/");
         db->populate();
 
         auto ib = new Widget_ItemBrowser;

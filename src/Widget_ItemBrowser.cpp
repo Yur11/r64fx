@@ -94,8 +94,8 @@ Widget_ItemBrowser::Widget_ItemBrowser(Widget* parent)
 , m_on_item_selected(on_selected_item_stub)
 {
     auto wsa = new Widget_ScrollArea(this);
-    auto item_list = new Widget_DataItem("", Widget_DataItem::Kind::List, wsa);
-    (void) item_list;
+    auto item_list = new Widget_DataItem(wsa);
+    item_list->setKind(Widget_DataItem::Kind::List);
     rearrange();
 }
 
