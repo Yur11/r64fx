@@ -233,7 +233,7 @@ void Widget_DataItem::resizeAndReallignTree(int min_width)
 {
     resizeAndReallignPlain(min_width);
 
-    if(!isCollapsed())
+    if(isExpanded())
     {
         resizeAndReallignList(min_width);
     }
@@ -294,7 +294,7 @@ int Widget_DataItem::enumerateList(int num)
 int Widget_DataItem::enumerateTree(int num)
 {
     num = enumeratePlain(num);
-    if(isCollapsed())
+    if(!isExpanded())
         return num;
 
     return enumerateList(num);
@@ -400,7 +400,7 @@ void Widget_DataItem::collapse()
     if(kind() != Widget_DataItem::Kind::Tree)
         return;
 
-    m_flags |= R64FX_WIDGET_TREE_IS_COLLAPSED;
+    m_flags &= ~R64FX_WIDGET_TREE_IS_EXPANDED;
     auto root_item = rootDataItem();
     auto root_item_parent = root_item->parent();
     if(root_item_parent)
@@ -418,7 +418,7 @@ void Widget_DataItem::expand()
     if(kind() != Widget_DataItem::Kind::Tree)
         return;
 
-    m_flags &= ~R64FX_WIDGET_TREE_IS_COLLAPSED;
+    m_flags |= R64FX_WIDGET_TREE_IS_EXPANDED;
     auto root_item = rootDataItem();
     auto root_item_parent = root_item->parent();
     if(root_item_parent)
@@ -431,9 +431,9 @@ void Widget_DataItem::expand()
 }
 
 
-bool Widget_DataItem::isCollapsed()
+bool Widget_DataItem::isExpanded()
 {
-    return m_flags & R64FX_WIDGET_TREE_IS_COLLAPSED;
+    return m_flags & R64FX_WIDGET_TREE_IS_EXPANDED;
 }
 
 
@@ -480,10 +480,10 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
             if(kind() == Widget_DataItem::Kind::Tree)
             {
                 Image* button_img = nullptr;
-                if(isCollapsed())
-                    button_img = g_button_img_right;
-                else
+                if(isExpanded())
                     button_img = g_button_img_down;
+                else
+                    button_img = g_button_img_right;
                 p->blendColors({offset + g_button_img_offset, g_button_img_offset}, &colors, button_img);
                 p->blendColors({offset + m_image->height(), 0}, &colors, m_image);
             }
@@ -548,13 +548,13 @@ void Widget_DataItem::mousePressEventTree(MousePressEvent* event)
         {
             if(event->x() < (lineHeight() * (indent() + 1)))
             {
-                if(isCollapsed())
+                if(isExpanded())
                 {
-                    expand();
+                    collapse();
                 }
                 else
                 {
-                    collapse();
+                    expand();
                 }
             }
             else

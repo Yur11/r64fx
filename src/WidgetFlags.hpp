@@ -39,7 +39,7 @@
 
 #define R64FX_WIDGET_IS_HOVERED               (1 << 0x0F)
 
-#define R64FX_WIDGET_TREE_IS_COLLAPSED        (1 << 0x10)
+#define R64FX_WIDGET_TREE_IS_EXPANDED         (1 << 0x10)
 
 #define R64FX_WIDGET_IS_EVEN                  (1 << 0x11)
 
