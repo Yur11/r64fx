@@ -27,6 +27,15 @@ Widget_DirectoryItem::Widget_DirectoryItem(const std::string &caption, const std
 }
 
 
+Widget_DirectoryItem::~Widget_DirectoryItem()
+{
+    if(isPopulated())
+    {
+        depopulate();
+    }
+}
+
+
 std::string Widget_DirectoryItem::path() const
 {
     return m_path;

@@ -12,6 +12,8 @@ class Widget_DirectoryItem : public Widget_DataItem{
 public:
     Widget_DirectoryItem(const std::string &caption, const std::string path = "", Widget* parent = nullptr);
 
+    virtual ~Widget_DirectoryItem();
+
     std::string path() const;
 
     std::string fullPath() const;
