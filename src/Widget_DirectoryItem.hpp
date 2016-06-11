@@ -16,6 +16,8 @@ public:
 
     std::string fullPath() const;
 
+    bool isDirectory() const;
+
     void populate();
 
 private:

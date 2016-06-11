@@ -225,17 +225,12 @@ void Widget_DataItem::resizeAndReallignList(int min_width)
 
 void Widget_DataItem::resizeAndReallignTree(int min_width)
 {
-    static int depth = 0;
-    depth++;
-
     resizeAndReallignPlain(min_width);
 
     if(!isCollapsed())
     {
         resizeAndReallignList(min_width);
     }
-
-    depth--;
 }
 
 
@@ -348,11 +343,11 @@ int Widget_DataItem::indent() const
     if(!parent_widget)
         return 0;
 
-    auto parent_tree = dynamic_cast<Widget_DataItem*>(parent_widget);
-    if(!parent_tree)
+    auto parent_item = dynamic_cast<Widget_DataItem*>(parent_widget);
+    if(!parent_item || parent_item->kind() != Widget_DataItem::Kind::Tree)
         return 0;
 
-    return parent_tree->indent() + 1;
+    return parent_item->indent() + 1;
 }
 
 
@@ -476,11 +471,10 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
             else
                 colors = normal;
 
-            auto item_tree = dynamic_cast<Widget_DataItem*>(this);
-            if(item_tree)
+            if(kind() == Widget_DataItem::Kind::Tree)
             {
                 Image* button_img = nullptr;
-                if(item_tree->isCollapsed())
+                if(isCollapsed())
                     button_img = g_button_img_right;
                 else
                     button_img = g_button_img_down;

@@ -51,4 +51,6 @@
 
 #define R64FX_WIDGET_DATA_ITEM_IS_TREE        (1 << 0x15)
 
+#define R64FX_WIDGET_ITEM_IS_DIRECTORY        (1 << 0x16)
+
 #endif//R64FX_WIDGET_FLAGS_HPP
