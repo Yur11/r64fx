@@ -10,7 +10,7 @@ class Widget_DirectoryItem : public Widget_DataItem{
     std::string m_path = "";
 
 public:
-    Widget_DirectoryItem(const std::string &caption, const std::string path, Widget* parent = nullptr);
+    Widget_DirectoryItem(const std::string &caption, const std::string path = "", Widget* parent = nullptr);
 
     std::string path() const;
 
@@ -18,9 +18,17 @@ public:
 
     bool isDirectory() const;
 
-    void populate();
+    bool isPopulated() const;
+
+    virtual void collapse();
+
+    virtual void expand();
 
 private:
+    void populate();
+
+    void depopulate();
+
     void loadEntry(const Directory::Entry* entry);
 };
 

@@ -54,8 +54,51 @@ bool Widget_DirectoryItem::isDirectory() const
 }
 
 
+bool Widget_DirectoryItem::isPopulated() const
+{
+    return m_flags & R64FX_WIDGET_DIRECTORY_IS_POPULATED;
+}
+
+
+void Widget_DirectoryItem::collapse()
+{
+    if(isPopulated())
+    {
+        bool has_expanded_child = false;
+        for(auto child : *this)
+        {
+            auto data_item = dynamic_cast<Widget_DataItem*>(child);
+            if(data_item && data_item->isExpanded())
+            {
+                has_expanded_child = true;
+                break;
+            }
+        }
+
+        if(!has_expanded_child)
+        {
+            depopulate();
+        }
+    }
+    Widget_DataItem::collapse();
+}
+
+
+void Widget_DirectoryItem::expand()
+{
+    if(!isPopulated())
+    {
+        populate();
+    }
+    Widget_DataItem::expand();
+}
+
+
 void Widget_DirectoryItem::populate()
 {
+    if(!isDirectory())
+        return;
+
     Directory dir(fullPath());
     if(!dir.isOpen())
     {
@@ -69,7 +112,8 @@ void Widget_DirectoryItem::populate()
     }, this);
 
     resizeAndReallign(0);
-    collapse();
+
+    m_flags |= R64FX_WIDGET_DIRECTORY_IS_POPULATED;
 }
 
 
@@ -84,12 +128,23 @@ void Widget_DirectoryItem::loadEntry(const Directory::Entry* entry)
         }
 
         auto dt = new Widget_DirectoryItem(entry->name(), entry_path, this);
-
-        if(entry->isDirectory())
-        {
-            dt->populate();
-        }
+        (void)dt;
     }
+}
+
+
+void Widget_DirectoryItem::depopulate()
+{
+    for(;;)
+    {
+        auto child = popFirstChild();
+        if(!child)
+            break;
+
+        delete child;
+    }
+
+    m_flags &= ~R64FX_WIDGET_DIRECTORY_IS_POPULATED;
 }
 
 }//namespace r64fx
