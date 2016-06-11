@@ -37,14 +37,6 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent* event);
 
-    virtual void keyPressEvent(KeyPressEvent* event);
-
-    virtual void clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event);
-
-    virtual void clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event);
-
-    virtual void clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event);
-
 private:
     void setSelectedItem(Widget_DataItem* item);
 };

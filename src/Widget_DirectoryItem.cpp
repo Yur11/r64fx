@@ -1,5 +1,10 @@
 #include "Widget_DirectoryItem.hpp"
 #include "WidgetFlags.hpp"
+#include "Keyboard.hpp"
+#include "KeyboardModifiers.hpp"
+#include "KeyEvent.hpp"
+#include "Clipboard.hpp"
+#include "ClipboardEvent.hpp"
 
 #include <iostream>
 using namespace std;
@@ -100,6 +105,84 @@ void Widget_DirectoryItem::expand()
         populate();
     }
     Widget_DataItem::expand();
+}
+
+
+void Widget_DirectoryItem::keyPressEvent(KeyPressEvent* event)
+{
+    if(Keyboard::CtrlDown())
+    {
+        if(event->key() == Keyboard::Key::C)
+        {
+            anounceClipboardData({"text/uri-list", "text/plain"}, ClipboardMode::Clipboard);
+        }
+        else if(event->key() == Keyboard::Key::V)
+        {
+            requestClipboardMetadata(ClipboardMode::Clipboard);
+        }
+    }
+}
+
+
+void Widget_DirectoryItem::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
+{
+    if(event->mode() != ClipboardMode::Clipboard)
+        return;
+
+    if(event->data() == nullptr && event->size() <= 0)
+        return;
+
+    if(event->type() == "text/plain")
+    {
+        string text((const char*)event->data(), event->size());
+        cout << "text/plain:\n" << text << "\n";
+    }
+    else if(event->type() == "text/uri-list")
+    {
+        string text((const char*)event->data(), event->size());
+        cout << "text/uri-list:\n" << text << "\n";
+    }
+}
+
+
+void Widget_DirectoryItem::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event)
+{
+    string clipboard_message = "";
+
+    if(event->type() == "text/plain")
+    {
+        clipboard_message = caption();
+    }
+    else if(event->type() == "text/uri-list")
+    {
+        clipboard_message = "file://" + fullPath();
+        if(clipboard_message.back() == '/')
+        {
+            clipboard_message.pop_back();
+        }
+        clipboard_message.push_back('\n');
+    }
+
+    if(!clipboard_message.empty())
+        event->transmit((void*)clipboard_message.c_str(), clipboard_message.size());
+}
+
+
+void Widget_DirectoryItem::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
+{
+    if(event->mode() != ClipboardMode::Clipboard)
+        return;
+
+    static const ClipboardDataType types[2] = {"text/uri-list", "text/plain"};
+
+    for(int i=0; i<2; i++)
+    {
+        if(event->has(types[i]))
+        {
+            requestClipboardData(types[i], event->mode());
+            break;
+        }
+    }
 }
 
 

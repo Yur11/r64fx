@@ -534,7 +534,10 @@ void Widget_DataItem::mousePressEvent(MousePressEvent* event)
 void Widget_DataItem::mousePressEventPlain(MousePressEvent* event)
 {
     if(event->button() & MouseButton::Left())
+    {
         setSelected(true);
+        setFocus();
+    }
     grabMouse();
     Widget::mousePressEvent(event);
 }

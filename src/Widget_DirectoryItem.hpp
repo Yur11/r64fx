@@ -27,6 +27,15 @@ public:
     virtual void expand();
 
 private:
+    virtual void keyPressEvent(KeyPressEvent* event);
+
+    virtual void clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event);
+
+    virtual void clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event);
+
+    virtual void clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event);
+
+private:
     void populate();
 
     void depopulate();
