@@ -81,11 +81,12 @@ public:
     /* Effectivly calls setParent on the given widget. */
     void add(Widget* child);
 
+    Widget* popFirstChild();
+
     Widget* root() const;
 
     /* Find leaf child at the given position. */
     Widget* leafAt(Point<int> position, Point<int>* offset = nullptr);
-
 
 /* === Geometry. === */
 

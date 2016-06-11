@@ -118,6 +118,15 @@ void Widget::add(Widget* child)
     child->setParent(this);
 }
 
+Widget* Widget::popFirstChild()
+{
+    if(m_children.isEmpty())
+        return nullptr;
+    auto child = m_children.first();
+    child->setParent(nullptr);
+    return child;
+}
+
 
 Widget* Widget::root() const
 {
