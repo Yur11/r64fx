@@ -294,20 +294,23 @@ void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
             int item_list_height = item_list->height();
             int slack_height = item_list_height - scroll_area_height;
 
-            if(event->button() & MouseButton::WheelUp())
+            if(slack_height > 0)
             {
-                scroll_area->setOffset(scroll_area->offset() + Point<int>(0, 20));
-                if(scroll_area->offset().y() > 0)
+                if(event->button() & MouseButton::WheelUp())
                 {
-                    scroll_area->setOffset({0, 0});
+                    scroll_area->setOffset(scroll_area->offset() + Point<int>(0, 20));
+                    if(scroll_area->offset().y() > 0)
+                    {
+                        scroll_area->setOffset({0, 0});
+                    }
                 }
-            }
-            else if(event->button() & MouseButton::WheelDown())
-            {
-                scroll_area->setOffset(scroll_area->offset() - Point<int>(0, 20));
-                if(scroll_area->offset().y() < (-slack_height))
+                else if(event->button() & MouseButton::WheelDown())
                 {
-                    scroll_area->setOffset({0, -slack_height});
+                    scroll_area->setOffset(scroll_area->offset() - Point<int>(0, 20));
+                    if(scroll_area->offset().y() < (-slack_height))
+                    {
+                        scroll_area->setOffset({0, -slack_height});
+                    }
                 }
             }
 
