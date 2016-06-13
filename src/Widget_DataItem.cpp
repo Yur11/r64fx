@@ -531,12 +531,22 @@ void Widget_DataItem::mousePressEvent(MousePressEvent* event)
 }
 
 
+void Widget_DataItem::showContextMenu(Point<int> position)
+{
+
+}
+
+
 void Widget_DataItem::mousePressEventPlain(MousePressEvent* event)
 {
     if(event->button() & MouseButton::Left())
     {
         setSelected(true);
         setFocus();
+    }
+    else if(event->button() & MouseButton::Right())
+    {
+        showContextMenu(event->position());
     }
     grabMouse();
     Widget::mousePressEvent(event);
@@ -545,35 +555,29 @@ void Widget_DataItem::mousePressEventPlain(MousePressEvent* event)
 
 void Widget_DataItem::mousePressEventTree(MousePressEvent* event)
 {
-    if(event->button() & MouseButton::Left())
+    if(event->y() <= lineHeight())
     {
-        if(event->y() <= lineHeight())
+        if((event->button() & MouseButton::Left()) && event->x() < (lineHeight() * (indent() + 1)))
         {
-            if(event->x() < (lineHeight() * (indent() + 1)))
+            if(isExpanded())
             {
-                if(isExpanded())
-                {
-                    collapse();
-                }
-                else
-                {
-                    expand();
-                }
+                collapse();
             }
             else
             {
-                mousePressEventPlain(event);
+                expand();
             }
         }
         else
         {
-            Widget::mousePressEvent(event);
+            mousePressEventPlain(event);
         }
     }
     else
     {
         Widget::mousePressEvent(event);
     }
+
 }
 
 

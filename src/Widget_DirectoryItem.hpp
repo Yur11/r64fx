@@ -26,7 +26,9 @@ public:
 
     virtual void expand();
 
-private:
+protected:
+    virtual void showContextMenu(Point<int> position);
+
     virtual void keyPressEvent(KeyPressEvent* event);
 
     virtual void clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event);

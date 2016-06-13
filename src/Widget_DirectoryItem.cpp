@@ -5,16 +5,75 @@
 #include "KeyEvent.hpp"
 #include "Clipboard.hpp"
 #include "ClipboardEvent.hpp"
+#include "Widget_Menu.hpp"
 
 #include <iostream>
 using namespace std;
 
 namespace r64fx{
 
+namespace{
+    class HelloAction : public Action{
+    public:
+        HelloAction() : Action("Hello") {}
+
+        void exec()
+        {
+            cout << "Hello!\n";
+        }
+    };
+
+    class DoctorAction : public Action{
+    public:
+        DoctorAction() : Action("Doctor") {}
+
+        void exec()
+        {
+            cout << "Doctor!\n";
+        }
+    };
+
+    HelloAction* g_hello_action = nullptr;
+    DoctorAction* g_doctor_action = nullptr;
+
+    Widget_Menu* g_context_menu = nullptr;
+
+    int g_dir_item_count = 0;
+
+    void init()
+    {
+        if(g_dir_item_count == 0)
+        {
+            g_hello_action = new HelloAction;
+            g_doctor_action = new DoctorAction;
+            g_context_menu = new Widget_Menu;
+            g_context_menu->addAction(g_hello_action);
+            g_context_menu->addAction(g_doctor_action);
+            g_context_menu->setOrientation(Orientation::Vertical);
+            g_context_menu->resizeAndReallign();
+        }
+        g_dir_item_count++;
+    }
+
+    void cleanup()
+    {
+        g_dir_item_count--;
+        if(g_dir_item_count == 0)
+        {
+            delete g_context_menu;
+            delete g_hello_action;
+            delete g_doctor_action;
+        }
+    }
+}
+
+
 Widget_DirectoryItem::Widget_DirectoryItem(const std::string &caption, const std::string path, Widget* parent)
 : Widget_DataItem(caption, parent)
 , m_path(path)
 {
+    init();
+
     if(m_path.empty())
     {
         m_path = "/";
@@ -38,6 +97,8 @@ Widget_DirectoryItem::~Widget_DirectoryItem()
     {
         depopulate();
     }
+
+    cleanup();
 }
 
 
@@ -105,6 +166,13 @@ void Widget_DirectoryItem::expand()
         populate();
     }
     Widget_DataItem::expand();
+}
+
+
+void Widget_DirectoryItem::showContextMenu(Point<int> position)
+{
+    cout << "showContextMenu: " << caption() << " -> " << position << "\n";
+    g_context_menu->showAt(position, this);
 }
 
 

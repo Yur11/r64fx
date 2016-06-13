@@ -86,6 +86,8 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent* event);
 
+    virtual void showContextMenu(Point<int> position);
+
 private:
     void mousePressEventPlain(MousePressEvent* event);
 
