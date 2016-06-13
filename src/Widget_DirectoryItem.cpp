@@ -33,10 +33,33 @@ namespace{
         }
     };
 
-    HelloAction* g_hello_action = nullptr;
-    DoctorAction* g_doctor_action = nullptr;
+    class NameAction : public Action{
+    public:
+        NameAction() : Action("Name") {}
+
+        void exec()
+        {
+            cout << "Name!\n";
+        }
+    };
+
+    class ContinueAction : public Action{
+    public:
+        ContinueAction() : Action("Continue") {}
+
+        void exec()
+        {
+            cout << "Continue!\n";
+        }
+    };
+
+    HelloAction*     g_hello_action     = nullptr;
+    DoctorAction*    g_doctor_action    = nullptr;
+    NameAction*      g_name_action      = nullptr;
+    ContinueAction*  g_continue_action  = nullptr;
 
     Widget_Menu* g_context_menu = nullptr;
+    Widget_Menu* g_context_sub_menu = nullptr;
 
     int g_dir_item_count = 0;
 
@@ -44,11 +67,24 @@ namespace{
     {
         if(g_dir_item_count == 0)
         {
-            g_hello_action = new HelloAction;
-            g_doctor_action = new DoctorAction;
-            g_context_menu = new Widget_Menu;
+            g_hello_action      = new HelloAction;
+            g_doctor_action     = new DoctorAction;
+            g_name_action       = new NameAction;
+            g_continue_action   = new ContinueAction;
+
+            g_context_menu      = new Widget_Menu;
+            g_context_sub_menu  = new Widget_Menu;
+
             g_context_menu->addAction(g_hello_action);
             g_context_menu->addAction(g_doctor_action);
+
+            g_context_sub_menu->addAction(g_name_action);
+            g_context_sub_menu->addAction(g_continue_action);
+            g_context_sub_menu->setOrientation(Orientation::Vertical);
+            g_context_sub_menu->resizeAndReallign();
+
+            g_context_menu->addSubMenu(g_context_sub_menu, "Submenu");
+
             g_context_menu->setOrientation(Orientation::Vertical);
             g_context_menu->resizeAndReallign();
         }
