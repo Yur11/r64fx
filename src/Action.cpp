@@ -9,6 +9,12 @@ Action::Action(const std::string &caption)
 }
 
 
+Action::~Action()
+{
+
+}
+
+
 void Action::setCaption(const std::string &caption)
 {
     m_caption = caption;

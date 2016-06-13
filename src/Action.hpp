@@ -11,6 +11,8 @@ class Action{
 public:
     Action(const std::string &caption);
 
+    virtual ~Action();
+
     void setCaption(const std::string &caption);
 
     std::string caption() const;
