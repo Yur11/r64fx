@@ -73,7 +73,10 @@ Widget::Widget(Widget* parent)
 
 Widget::~Widget()
 {
-
+    for(auto child : m_children)
+    {
+        child->setParent(nullptr);
+    }
 }
 
     
