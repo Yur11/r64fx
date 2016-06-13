@@ -271,7 +271,7 @@ void Widget_Menu::showAt(Point<int> position, Widget* parent)
     if(parent_window)
     {
         Size<int> screen_size = parent_window->getScreenSize();
-        Point<int> menu_position = position + parent_window->position();
+        Point<int> menu_position = parent->toRootCoords(position) + parent_window->position();
 
         if(menu_position.x() + width() > screen_size.width())
         {
