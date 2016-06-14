@@ -47,16 +47,17 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
     virtual void mouseEnterEvent(Window* window)
     {
-//         d->widget->mouseEnterEvent();
+        //Just look for the first mouse move event!
     }
 
 
     virtual void mouseLeaveEvent(Window* window)
     {
-        if(g_moused_over_widget)
-        {
-            g_moused_over_widget->initMouseLeaveEvent();
-        }
+//         if(g_moused_over_widget)
+//         {
+//             cout << "Window Leave!\n";
+//             g_moused_over_widget->initMouseLeaveEvent();
+//         }
     }
 
 

@@ -186,9 +186,17 @@ Widget* Widget::initMouseMoveEvent(
         {
             moused_over_widget->initMouseLeaveEvent();
         }
-        dst->initMouseEnterEvent();
+
+        if(dst)
+        {
+            dst->initMouseEnterEvent();
+        }
     }
-    dst->mouseMoveEvent(&event);
+
+    if(dst)
+    {
+        dst->mouseMoveEvent(&event);
+    }
 
     return dst;
 }

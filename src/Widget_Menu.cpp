@@ -481,6 +481,8 @@ void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget_MenuItem::mouseEnterEvent()
 {
+    cout << "enter: " << toRootCoords({0, 0}) << ", " << this << "\n";
+
     auto parent_menu = parentMenu();
     if(!parent_menu)
         return;
@@ -519,6 +521,7 @@ void Widget_MenuItem::mouseEnterEvent()
 
 void Widget_MenuItem::mouseLeaveEvent()
 {
+    cout << "leave: " << toRootCoords({0, 0}) << ", " << this << "\n";
     repaint();
 }
 
