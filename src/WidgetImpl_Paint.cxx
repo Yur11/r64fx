@@ -109,6 +109,11 @@ void Widget::repaint()
 }
 
 
+/* Do a repaint cycle.
+
+   For every widget that has R64FX_WIDGET_WANTS_REPAINT flag set,
+   paintEvent() handler must be called.
+ */
 void WidgetImpl::repaint()
 {
     m_window->makeCurrent();
@@ -122,7 +127,7 @@ void WidgetImpl::repaint()
         m_num_rects = 0;
         m_got_rect = false;
 
-        if(flags & R64FX_WIDGET_WANTS_REPAINT)
+        if(flags & R64FX_WIDGET_WANTS_REPAINT) //The root widget wants repaint.
         {
             //Paint whole window surface.
             Widget::PaintEvent event(this);
@@ -153,12 +158,24 @@ void WidgetImpl::repaint()
 }
 
 
+/* Recursivly paint child widgets.
 
+   If R64FX_CHILD_WANTS_REPAINT flag is set on one of the children,
+   simply does a recursive call of paintChildren().
 
+   If R64FX_WIDGET_WANTS_REPAINT flag is set,
+   calls child's paintEvent().
+   Within it's paintEvent() implementation the child may call base class implementation
+   of paintEvent() that simply calls paintChildren().
 
+   See WidgetFlags.hpp
+
+   Doing this recursivly allows a widget to do some painting, make it's children paint themselves
+   and the do some more painting on top.
+ */
 void WidgetImpl::paintChildren(Widget* parent)
 {
-    bool old_got_rect = m_got_rect;
+    bool parent_got_rect = m_got_rect;
 
     auto &parent_flags = parent->m_flags;
 
@@ -183,11 +200,13 @@ void WidgetImpl::paintChildren(Widget* parent)
 
         if(child_flags & R64FX_WIDGET_WANTS_REPAINT)
         {
+            m_got_rect = true; //The child will read this value as it's parent_got_rect
+                               //and will know not to add any rects of it's own.
+
             Widget::PaintEvent event(this);
             child->paintEvent(&event);
 
-            /* Find portion of the window to update. */
-            if(!m_got_rect)
+            if(!parent_got_rect)
             {
                 //Painter offset is equal to the window coord. of the child widget.
                 Rect<int> rect(m_painter->offset(), child->size());
@@ -196,7 +215,6 @@ void WidgetImpl::paintChildren(Widget* parent)
                     m_rects[m_num_rects] = rect;
                     m_num_rects++;
                 }
-                m_got_rect = true;
             }
         }
         else
@@ -209,7 +227,7 @@ void WidgetImpl::paintChildren(Widget* parent)
         child_flags &= ~R64FX_WIDGET_REPAINT_FLAGS;
     }
 
-    m_got_rect = old_got_rect;
+    m_got_rect = parent_got_rect;
 }
 
 
