@@ -137,6 +137,7 @@ Widget_Menu::Widget_Menu(Widget* parent)
 : Widget(parent)
 {
     init_menu_font_if_needed();
+    wantsMultiGrabs(true);
 }
 
 
@@ -284,9 +285,8 @@ void Widget_Menu::showAt(Point<int> position, Widget* parent)
         }
 
         show(Window::WmType::Menu, Window::Type::Image, parent_window);
-        Widget::window()->setPosition(menu_position);
-        Widget::window()->grabMouse();
-        Widget::grabMouse();
+        window()->setPosition(menu_position);
+        grabMouseMulti();
     }
 }
 
@@ -481,8 +481,6 @@ void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget_MenuItem::mouseEnterEvent()
 {
-    cout << "enter: " << toRootCoords({0, 0}) << ", " << this << "\n";
-
     auto parent_menu = parentMenu();
     if(!parent_menu)
         return;
@@ -521,166 +519,22 @@ void Widget_MenuItem::mouseEnterEvent()
 
 void Widget_MenuItem::mouseLeaveEvent()
 {
-    cout << "leave: " << toRootCoords({0, 0}) << ", " << this << "\n";
     repaint();
 }
 
 
-namespace{
-    bool get_menu_window_and_screen_position(Widget_Menu* menu, Window** window, Point<int> *screen_pos)
-    {
-        Widget* root = nullptr;
-        auto menu_root_pos = menu->toRootCoords(Point<int>(0, 0), &root);
-        if(!root)
-            return false;
-
-        auto menu_window = root->window();
-        if(!menu_window)
-            return false;
-
-        if(window)
-        {
-            window[0] = menu_window;
-        }
-
-        if(screen_pos)
-        {
-            screen_pos[0] = menu_root_pos + menu_window->position();
-        }
-
-        return true;
-    }
-
-
-    Widget_Menu* next_open_menu(Widget_Menu* menu)
-    {
-        if(!menu->activeItem())
-            return nullptr;
-
-        auto menu_item = dynamic_cast<Widget_MenuItem*>(menu->activeItem());
-        if(!menu_item)
-            return nullptr;
-
-        return menu_item->subMenu();
-    }
-
-
-    Widget_Menu* menu_at(Point<int> screen_pos, Widget_Menu* first)
-    {
-        auto menu = first;
-        while(menu)
-        {
-            Point<int> menu_screen_pos;
-            if(!get_menu_window_and_screen_position(menu, nullptr, &menu_screen_pos))
-                return nullptr;
-
-            if(Rect<int>(menu_screen_pos, menu->size()).overlaps(screen_pos))
-            {
-                return menu;
-            }
-            else
-            {
-                menu = next_open_menu(menu);
-            }
-        }
-
-        return nullptr;
-    }
-
-
-    Widget_Menu* menu_at_widget_coords(Point<int> event_pos, Widget_Menu* first, Point<int>* new_event_pos)
-    {
-        Point<int> menu_screen_pos;
-        if(!get_menu_window_and_screen_position(first, nullptr, &menu_screen_pos))
-            return nullptr;
-
-        auto event_screen_pos = event_pos + menu_screen_pos;
-
-        auto dst_menu = menu_at(event_screen_pos, first);
-        if(dst_menu && new_event_pos)
-        {
-            Point<int> dst_menu_screen_pos;
-            if(!get_menu_window_and_screen_position(dst_menu, nullptr, &dst_menu_screen_pos))
-                return nullptr;
-
-            new_event_pos[0] = event_screen_pos - dst_menu_screen_pos;
-        }
-
-        return dst_menu;
-    }
-}//namespace
-
-
 void Widget_Menu::mousePressEvent(MousePressEvent* event)
 {
-    /* Only when mouse is grabbed! */
-
-    Point<int> new_event_pos;
-    auto dst = menu_at_widget_coords(event->position(), this, &new_event_pos);
-    if(dst)
-    {
-        dst->initMousePressEvent(
-            new_event_pos,
-            event->button(),
-            true, true
-        );
-    }
-    else
-    {
-        Window* window = root()->window();
-        if(window)
-        {
-            ungrabMouse();
-            window->ungrabMouse();
-        }
-        closeAll();
-        setActiveItem(nullptr);
-        repaint();
-    }
+    Widget::mousePressEvent(event);
+    ungrabMouseMulti();
+    rootMenu()->closeAll();
 }
 
 
-void Widget_Menu::mouseReleaseEvent(MouseReleaseEvent* event)
+void Widget_Menu::clickedElsewhereEvent()
 {
-    /* Only when mouse is grabbed! */
-
-    Point<int> new_event_pos;
-    auto dst = menu_at_widget_coords(event->position(), this, &new_event_pos);
-    if(dst)
-    {
-        dst->initMouseReleaseEvent(
-            new_event_pos,
-            event->button(),
-            true, true
-        );
-    }
-}
-
-
-void Widget_Menu::mouseMoveEvent(MouseMoveEvent* event)
-{
-    /* Only when mouse is grabbed! */
-
-    Point<int> new_event_pos;
-    auto dst = menu_at_widget_coords(event->position(), this, &new_event_pos);
-    if(dst)
-    {
-        g_moused_over_menu_item = dst->initMouseMoveEvent(
-            new_event_pos,
-            event->delta(),
-            event->button(),
-            g_moused_over_menu_item,
-            true, true
-        );
-    }
-    else
-    {
-        if(g_moused_over_menu_item)
-        {
-            g_moused_over_menu_item->initMouseLeaveEvent();
-            g_moused_over_menu_item = nullptr;
-        }
-    }
+    ungrabMouseMulti();
+    rootMenu()->closeAll();
 }
 
 }//namespace r64fx

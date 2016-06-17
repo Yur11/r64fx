@@ -23,6 +23,7 @@ using namespace std;
 
 namespace r64fx{
 
+LinkedList<Widget> g_windowed_widgets;
 
 constexpr int max_rects = 32;
 

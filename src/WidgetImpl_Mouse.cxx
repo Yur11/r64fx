@@ -14,6 +14,8 @@ Widget* g_moused_over_widget = nullptr;
 /* Widget that currently grabs mouse input. */
 Widget* g_mouse_grabber   = nullptr;
 
+Widget* g_multi_mouse_grabber = nullptr;
+
 }//namespace
 
 
@@ -38,6 +40,50 @@ Widget* Widget::mouseGrabber()
 bool Widget::isMouseGrabber() const
 {
     return (this == g_mouse_grabber);
+}
+
+
+void Widget::grabMouseMulti()
+{
+    auto root_window = rootWindow();
+    if(!root_window)
+        return;
+
+    root_window->grabMouse();
+    g_multi_mouse_grabber = this;
+}
+
+
+void Widget::ungrabMouseMulti()
+{
+    cout << "ungrabMouseMulti()\n";
+    auto root_window = rootWindow();
+    if(!root_window)
+        return;
+
+    root_window->ungrabMouse();
+    g_multi_mouse_grabber = nullptr;
+    cout << "done\n";
+}
+
+
+bool Widget::wantsMultiGrabs(bool yes)
+{
+    if(yes)
+    {
+        m_flags |= R64FX_WIDGET_WANTS_MULTI_GRABS;
+    }
+    else
+    {
+        m_flags &= ~R64FX_WIDGET_WANTS_MULTI_GRABS;
+    }
+    return yes;
+}
+
+
+bool Widget::wantsMultiGrabs()
+{
+    return m_flags & R64FX_WIDGET_WANTS_MULTI_GRABS;
 }
 
 
@@ -237,6 +283,12 @@ void Widget::mouseLeaveEvent()
 bool Widget::isHovered()
 {
     return m_flags & R64FX_WIDGET_IS_HOVERED;
+}
+
+
+void Widget::clickedElsewhereEvent()
+{
+
 }
 
 }//namespace r64fx

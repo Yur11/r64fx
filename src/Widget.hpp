@@ -174,6 +174,16 @@ public:
 
     bool isMouseGrabber() const;
 
+
+    void grabMouseMulti();
+
+    void ungrabMouseMulti();
+
+    bool wantsMultiGrabs(bool yes);
+
+    bool wantsMultiGrabs();
+
+
     static MouseButton pressedButtons();
 
     void initMousePressEvent(
@@ -204,7 +214,6 @@ public:
     void initMouseLeaveEvent();
 
     bool isHovered();
-
 
 /* === Keyboard === */
 
@@ -308,6 +317,8 @@ protected:
     virtual void mouseEnterEvent();
 
     virtual void mouseLeaveEvent();
+
+    virtual void clickedElsewhereEvent();
 
     virtual void focusInEvent();
 

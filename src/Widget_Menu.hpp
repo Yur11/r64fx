@@ -36,13 +36,10 @@ public:
 
     void closeAll();
 
-
-protected:
+public:
     virtual void mousePressEvent(MousePressEvent* event);
 
-    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
-
-    virtual void mouseMoveEvent(MouseMoveEvent* event);
+    virtual void clickedElsewhereEvent();
 };
 
 }//namespace r64fx

@@ -17,8 +17,38 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         g_pressed_buttons |= MouseButton(button);
 
-        auto d = (WidgetImpl*) window->data();
-        d->m_root_widget->initMousePressEvent(Point<int>(x, y), MouseButton(button));
+        if(g_multi_mouse_grabber)
+        {
+            bool got_widget = false;
+            auto mouse_screen_position = Point<int>(x, y) + window->position();
+            for(auto widget : g_windowed_widgets)
+            {
+                if(!widget->wantsMultiGrabs())
+                    continue;
+
+                auto widget_window = widget->window();
+                if(!widget_window)
+                    continue;
+
+                Rect<int> rect(widget_window->position(), widget_window->size());
+                if(rect.overlaps(mouse_screen_position))
+                {
+                    widget->initMousePressEvent(mouse_screen_position - widget_window->position(), MouseButton(button));
+                    got_widget = true;
+                    break;
+                }
+            }
+
+            if(!got_widget)
+            {
+                g_multi_mouse_grabber->clickedElsewhereEvent();
+            }
+        }
+        else
+        {
+            auto d = (WidgetImpl*) window->data();
+            d->m_root_widget->initMousePressEvent(Point<int>(x, y), MouseButton(button));
+        }
 
         g_prev_mouse_position = Point<int>(x, y);
     }
@@ -28,8 +58,31 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         g_pressed_buttons &= ~MouseButton(button);
 
-        auto d = (WidgetImpl*) window->data();
-        d->m_root_widget->initMouseReleaseEvent(Point<int>(x, y), MouseButton(button));
+        if(g_multi_mouse_grabber)
+        {
+            auto mouse_screen_position = Point<int>(x, y) + window->position();
+            for(auto widget : g_windowed_widgets)
+            {
+                if(!widget->wantsMultiGrabs())
+                    continue;
+
+                auto widget_window = widget->window();
+                if(!widget_window)
+                    continue;
+
+                Rect<int> rect(widget_window->position(), widget_window->size());
+                if(rect.overlaps(mouse_screen_position))
+                {
+                    widget->initMouseReleaseEvent(mouse_screen_position - widget_window->position(), MouseButton(button));
+                    break;
+                }
+            }
+        }
+        else
+        {
+            auto d = (WidgetImpl*) window->data();
+            d->m_root_widget->initMouseReleaseEvent(Point<int>(x, y), MouseButton(button));
+        }
     }
 
 
@@ -38,8 +91,35 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         Point<int> position(x, y);
         Point<int> delta = position - g_prev_mouse_position;
 
-        auto d = (WidgetImpl*) window->data();
-        g_moused_over_widget = d->m_root_widget->initMouseMoveEvent(position, delta, g_pressed_buttons, g_moused_over_widget);
+        if(g_multi_mouse_grabber)
+        {
+            auto mouse_screen_position = Point<int>(x, y) + window->position();
+            for(auto widget : g_windowed_widgets)
+            {
+                if(!widget->wantsMultiGrabs())
+                    continue;
+
+                auto widget_window = widget->window();
+                if(!widget_window)
+                    continue;
+
+                Rect<int> rect(widget_window->position(), widget_window->size());
+                if(rect.overlaps(mouse_screen_position))
+                {
+                    g_moused_over_widget = widget->initMouseMoveEvent(
+                        mouse_screen_position - widget_window->position(), delta, g_pressed_buttons, g_moused_over_widget
+                    );
+                    break;
+                }
+            }
+        }
+        else
+        {
+            auto d = (WidgetImpl*) window->data();
+            g_moused_over_widget = d->m_root_widget->initMouseMoveEvent(
+                position, delta, g_pressed_buttons, g_moused_over_widget
+            );
+        }
 
         g_prev_mouse_position = position;
     }
@@ -253,6 +333,8 @@ void Widget::show(
             cerr << "Widget: Failed to create WidgetImpl!\n";
         }
 #endif//R64FX_DEBUG
+
+        g_windowed_widgets.append(this);
     }
     m_parent.window->setSize(size());
     if(modal_parent)
@@ -306,6 +388,8 @@ void Widget::close()
             cerr << "Widget: Window count is less than zero!\n";
         }
 #endif//R64FX_DEBUG
+
+        g_windowed_widgets.remove(this);
     }
 }
 
