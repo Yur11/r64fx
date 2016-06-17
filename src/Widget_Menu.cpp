@@ -485,6 +485,8 @@ void Widget_MenuItem::mouseEnterEvent()
     if(!parent_menu)
         return;
 
+    repaint();
+
     auto active_item = parent_menu->activeItem();
 
     if(active_item == this)
@@ -512,8 +514,6 @@ void Widget_MenuItem::mouseEnterEvent()
     {
         active_item->repaint();
     }
-
-    repaint();
 }
 
 
