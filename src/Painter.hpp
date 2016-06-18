@@ -56,6 +56,9 @@ public:
     /* Blend multiple colors using multi-component alpha mask. */
     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask) = 0;
 
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform) = 0;
+
     /** Make the changes visible.
 
         Update window surface. Swap buffers. etc.

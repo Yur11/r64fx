@@ -72,12 +72,8 @@ void Widget_AudioPlayer::paintEvent(PaintEvent* event)
 
     if(m_waveform)
     {
-        unsigned char green[3] = {0, 255, 0};
-
-        Image img(width(), 40, 3);
-        fill(&img, bg);
-        draw_waveform(&img, green, m_waveform, {0, 0, img.width(), img.height()});
-        p->putImage(&img, {0, height() - 40});
+        unsigned char blue[3] = {0, 0, 255};
+        p->drawWaveform({0, height() - 40, width(), 40}, blue, m_waveform);
     }
 }
 

@@ -83,6 +83,7 @@ struct PainterImplImage : public PainterImpl{
             current_clip_rect,
             {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
         );
+
         if(intersection.width() > 0 && intersection.height() > 0)
         {
             implant(
@@ -102,6 +103,7 @@ struct PainterImplImage : public PainterImpl{
             current_clip_rect,
             {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
         );
+
         if(intersection.width() > 0 && intersection.height() > 0)
         {
             blend(
@@ -114,6 +116,25 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform)
+    {
+        RectIntersection<int> intersection(
+            current_clip_rect, rect
+        );
+
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            draw_waveform(
+                window->image(),
+                color,
+                waveform + intersection.srcOffset().x() * 2,
+                Rect<int>(intersection.dstOffset(), intersection.size())
+            );
+        }
+    }
+
+
     virtual void repaint(Rect<int>* rects, int numrects)
     {
         for(int i=0; i<numrects; i++)
@@ -122,6 +143,7 @@ struct PainterImplImage : public PainterImpl{
         }
         window->repaint(rects, numrects);
     }
+
 
     virtual void adjustForWindowSize()
     {
@@ -194,6 +216,7 @@ struct PainterImplGL : public PainterImpl{
             current_clip_rect,
             {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
         );
+
         if(intersection.width() > 0 && intersection.height() > 0)
         {
             implant(
@@ -213,6 +236,7 @@ struct PainterImplGL : public PainterImpl{
             current_clip_rect,
             {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
         );
+
         if(intersection.width() > 0 && intersection.height() > 0)
         {
             blend(
@@ -225,6 +249,26 @@ struct PainterImplGL : public PainterImpl{
             addToBaseTexture(&base_texture_image, {0, 0});
         }
     }
+
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform)
+    {
+        RectIntersection<int> intersection(
+            current_clip_rect, rect
+        );
+
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            draw_waveform(
+                &base_texture_image,
+                color,
+                waveform + intersection.srcOffset().x() * 2,
+                Rect<int>(intersection.dstOffset(), intersection.size())
+            );
+        }
+        addToBaseTexture(&base_texture_image, {0, 0});
+    }
+
 
     void addToBaseTexture(Image* img, Point<int> pos)
     {
