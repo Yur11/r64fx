@@ -6,8 +6,12 @@
 namespace r64fx{
 
 class Widget_AudioPlayer : public Widget{
+    float* m_waveform = nullptr;
+
 public:
     Widget_AudioPlayer(Widget* parent = nullptr);
+
+    virtual ~Widget_AudioPlayer();
 
 protected:
     virtual void paintEvent(PaintEvent* event);

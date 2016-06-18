@@ -64,6 +64,9 @@ enum class DrawStyle{
  * and fit in a square with the given size. */
 void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right);
 
+
+void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect);
+
 }//namespace r64fx
 
 #endif//R64FX_IMAGE_UTILS_HPP

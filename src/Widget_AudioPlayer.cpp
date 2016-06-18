@@ -7,6 +7,7 @@
 #include "Clipboard.hpp"
 #include "ClipboardEvent.hpp"
 #include "SoundFile.hpp"
+#include "ImageUtils.hpp"
 
 #include <cstring>
 #include <iostream>
@@ -44,6 +45,13 @@ Widget_AudioPlayer::Widget_AudioPlayer(Widget* parent)
 }
 
 
+Widget_AudioPlayer::~Widget_AudioPlayer()
+{
+    if(m_waveform)
+        delete m_waveform;
+}
+
+
 void Widget_AudioPlayer::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
@@ -60,6 +68,16 @@ void Widget_AudioPlayer::paintEvent(PaintEvent* event)
         {
             p->fillRect({40, 0, 2, height() - 40}, fg);
         }
+    }
+
+    if(m_waveform)
+    {
+        unsigned char green[3] = {0, 255, 0};
+
+        Image img(width(), 40, 3);
+        fill(&img, bg);
+        draw_waveform(&img, green, m_waveform, {0, 0, img.width(), img.height()});
+        p->putImage(&img, {0, height() - 40});
     }
 }
 
@@ -99,13 +117,63 @@ void Widget_AudioPlayer::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* ev
         SoundFile file(file_path, SoundFile::Mode::Read);
         if(file.isGood())
         {
+            cout << file_path << "\n";
             cout << file.componentCount() << " " << file.frameCount() << " " << file.sampleRate() << "\n";
+
+            int waveform_size = width();
+            if(waveform_size > 0)
+            {
+                if(!m_waveform)
+                    m_waveform = new float[waveform_size * 2];
+
+                int chunk_size = file.frameCount() / waveform_size;
+                int buffer_size = chunk_size * file.componentCount();
+
+                float* buffer = new float[buffer_size];
+
+                for(int i=0; i<waveform_size; i++)
+                {
+                    for(int j=0; j<buffer_size; j++)
+                    {
+                        buffer[j] = 0.0f;
+                    }
+                    file.readFrames(buffer, chunk_size);
+
+                    float min = 0;
+                    float max = 0;
+
+                    for(int j=0; j<buffer_size; j+=file.componentCount())
+                    {
+                        float val = buffer[j];
+                        if(val < 0)
+                        {
+                            if(val < min)
+                            {
+                                min = val;
+                            }
+                        }
+                        else
+                        {
+                            if(val > max)
+                            {
+                                max = val;
+                            }
+                        }
+                    }
+
+                    m_waveform[i*2] = min;
+                    m_waveform[i*2 + 1] = max;
+                }
+                delete buffer;
+            }
         }
         else
         {
             cerr << "Failed to open: " << file_path << "\n";
         }
     }
+
+    repaint();
 }
 
 

@@ -551,4 +551,39 @@ void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
     }
 }
 
+
+void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect)
+{
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(color != nullptr);
+    assert(rect.left() >= 0);
+    assert(rect.top() >= 0);
+    assert(rect.right() <= dst->width());
+    assert(rect.bottom() <= dst->height());
+#endif//R64FX_DEBUG
+
+    float half_height = rect.height() / 2;
+    float half_height_rcp = 1.0f / half_height;
+
+    for(int y=0; y<rect.height(); y++)
+    {
+        float yy = (y - half_height) * half_height_rcp;
+
+        for(int x=0; x<rect.width(); x++)
+        {
+            unsigned char* dstpx = dst->pixel(x + rect.x(), y + rect.y());
+            float min_value = data[x*2];
+            float max_value = data[x*2 + 1];
+            if(yy > min_value && yy < max_value)
+            {
+                for(auto c=0; c<dst->componentCount(); c++)
+                {
+                    dstpx[c] = color[c];
+                }
+            }
+        }
+    }
+}
+
 }//namespace r64fx
