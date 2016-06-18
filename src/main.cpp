@@ -15,6 +15,7 @@
 #include "Widget_DirectoryItem.hpp"
 #include "Widget_ItemBrowser.hpp"
 #include "Widget_Text.hpp"
+#include "Widget_AudioPlayer.hpp"
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
@@ -31,35 +32,7 @@ class MyWidget : public Widget_ScrollArea{
 public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
-//         srand(time(0));
-//
-//         auto dummy = new Widget_Dummy(this);
-//         dummy->setSize({350, 350});
-//         dummy->setPosition({50, 50});
-//
-//         {
-//             auto subdummy = new Widget_Dummy(dummy);
-//             subdummy->setSize({100, 100});
-//             subdummy->setPosition({50, 50});
-//         }
-//
-//         {
-//             auto subdummy = new Widget_Dummy(dummy);
-//             subdummy->setSize({100, 100});
-//             subdummy->setPosition({200, 50});
-//         }
-//
-//         {
-//             auto subdummy = new Widget_Dummy(dummy);
-//             subdummy->setSize({100, 100});
-//             subdummy->setPosition({50, 200});
-//         }
-//
-//         {
-//             auto subdummy = new Widget_Dummy(dummy);
-//             subdummy->setSize({100, 100});
-//             subdummy->setPosition({200, 200});
-//         }
+
     }
 
     ~MyWidget()
@@ -130,10 +103,6 @@ private:
     {
         g_Font = new Font("", 16, 72);
 
-//         auto mw = new MyWidget();
-//         mw->setSize({600, 600});
-//         mw->show();
-
         auto db = new Widget_DirectoryItem("filesystem", "");
 
         auto ib = new Widget_ItemBrowser;
@@ -155,6 +124,10 @@ private:
         wt->setSize({640, 480});
         wt->setTextWrap(TextWrap::Anywhere);
         wt->show();
+
+        auto ap = new Widget_AudioPlayer;
+        ap->setSize({640, 480});
+        ap->show();
     }
 
     virtual void cleanup()
