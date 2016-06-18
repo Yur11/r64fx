@@ -6,7 +6,9 @@
 #include "KeyEvent.hpp"
 #include "Clipboard.hpp"
 #include "ClipboardEvent.hpp"
+#include "SoundFile.hpp"
 
+#include <cstring>
 #include <iostream>
 using namespace std;
 
@@ -26,7 +28,11 @@ namespace{
                 return "";
         }
 
-        return std::string(uri_list, prefix.size(), uri_list.size() - prefix.size());
+        std::string str(uri_list, prefix.size() - 1, uri_list.size() - prefix.size() + 1);
+        while(!str.empty() && str.back() == '\n')
+            str.pop_back();
+
+        return str;
     }
 
 }//namespace
@@ -89,7 +95,16 @@ void Widget_AudioPlayer::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* ev
     {
         string uri_list((const char*)event->data(), event->size());
         string file_path = extract_file_path_from_uri_list(uri_list);
-        cout << "open file: " << file_path << "\n";
+
+        SoundFile file(file_path, SoundFile::Mode::Read);
+        if(file.isGood())
+        {
+            cout << file.componentCount() << " " << file.frameCount() << " " << file.sampleRate() << "\n";
+        }
+        else
+        {
+            cerr << "Failed to open: " << file_path << "\n";
+        }
     }
 }
 
