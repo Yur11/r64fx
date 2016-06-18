@@ -240,6 +240,9 @@ void WindowX11::recieveSelection(WindowEventDispatcherIface* events)
         return;
     }
 
+    if(in.property == None) //Owner could not convert selection.
+        return;
+
     if(in.target == X11_Atom::TARGETS)
     {
         unsigned long  nitems = 0;
