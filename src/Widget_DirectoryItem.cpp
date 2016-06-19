@@ -6,6 +6,7 @@
 #include "Clipboard.hpp"
 #include "ClipboardEvent.hpp"
 #include "Widget_Menu.hpp"
+#include "StringUtils.hpp"
 
 #include <iostream>
 using namespace std;
@@ -259,12 +260,12 @@ void Widget_DirectoryItem::clipboardDataTransmitEvent(ClipboardDataTransmitEvent
     }
     else if(event->type() == "text/uri-list")
     {
-        clipboard_message = "file://" + fullPath();
-        if(clipboard_message.back() == '/')
+        string file_path = fullPath();
+        if(file_path.back() == '/')
         {
-            clipboard_message.pop_back();
+            file_path.pop_back();
         }
-        clipboard_message.push_back('\n');
+        clipboard_message = full_path_to_uri(file_path) + "\r\n";
     }
 
     if(!clipboard_message.empty())

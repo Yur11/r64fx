@@ -140,4 +140,240 @@ std::string num2str(int num)
     return str;
 }
 
+
+std::string full_path_to_uri(const std::string &full_path)
+{
+    std::string str = "file://";
+    for(auto ch : full_path)
+    {
+        if(ch == ' ')
+            str += "%20";
+        else
+            str.push_back(ch);
+
+    }
+    return str;
+}
+
+
+std::string next_file_path_from_uri_list(std::string::iterator &begin_it, const std::string::iterator &end_it)
+{
+    enum class State{
+        Initial,
+        F, I, L, E, Colon, Slash, SlashSlash, SlashSlashSlash,
+        Path,
+        Percent, Percent2,
+        CR, LF,
+        Comment,
+        Failed
+    };
+
+    State state = State::Initial;
+    std::string result;
+
+
+    auto it = begin_it;
+    while(it != end_it)
+    {
+        char ch = *it;
+
+        switch(state)
+        {
+            case State::Initial:
+            {
+                if(ch == 'f')
+                {
+                    state = State::F;
+                    it++;
+                }
+                else if(ch == '#')
+                {
+                    state = State::Comment;
+                    it++;
+                }
+                else
+                    state = State::Failed;
+                break;
+            }
+
+            case State::F:
+            {
+                if(ch == 'i')
+                {
+                    state = State::I;
+                    it++;
+                }
+                else
+                    state = State::Failed;
+                break;
+            }
+
+            case State::I:
+            {
+                if(ch == 'l')
+                {
+                    state = State::L;
+                    it++;
+                }
+                else
+                    state = State::Failed;
+                break;
+            }
+
+            case State::L:
+            {
+                if(ch == 'e')
+                {
+                    state = State::E;
+                    it++;
+                }
+                else
+                    state = State::Failed;
+                break;
+            }
+
+            case State::E:
+            {
+                if(ch == ':')
+                {
+                    state = State::Colon;
+                    it++;
+                }
+                else
+                    state = State::Failed;
+                break;
+            }
+
+            case State::Colon:
+            {
+                if(ch == '/')
+                {
+                    state = State::Slash;
+                    it++;
+                }
+                else
+                    state = State::Failed;
+                break;
+            }
+
+            case State::Slash:
+            {
+                if(ch == '/')
+                {
+                    state = State::SlashSlash;
+                    it++;
+                }
+                else
+                    state = State::Failed;
+                break;
+            }
+
+            case State::SlashSlash:
+            {
+                if(ch == '/')
+                {
+                    state = State::SlashSlashSlash;
+                    it++;
+                }
+                else
+                    state = State::Failed;
+                break;
+            }
+
+            case State::SlashSlashSlash:
+            {
+                if(ch != '/' && ch != ':')
+                {
+                    result.push_back('/');
+                    result.push_back(ch);
+                    state = State::Path;
+                    it++;
+                }
+                else
+                    state = State::Failed;
+                break;
+            }
+
+            case State::Path:
+            {
+                if(ch == '\r')
+                    state = State::CR;
+                else if(ch == '\n')
+                    state = State::LF;
+                else if(ch == '%')
+                    state = State::Percent;
+                else
+                    result.push_back(ch);
+                it++;
+                break;
+            }
+
+            case State::Percent:
+            {
+                if(ch == '2')
+                {
+                    state = State::Percent2;
+                    it++;
+                }
+                else
+                    state = State::Path;
+                break;
+            }
+
+            case State::Percent2:
+            {
+                if(ch == '0')
+                {
+                    result.push_back(' ');
+                    it++;
+                }
+                state = State::Path;
+                break;
+            }
+
+            case State::CR:
+            {
+                if(ch == '\n')
+                {
+                    state = State::LF;
+                    it++;
+                }
+                else
+                {
+                    state = State::Failed;
+                }
+                break;
+            }
+
+            case State::LF:
+            {
+                state = State::Initial;
+                break;
+            }
+
+            case State::Comment:
+            {
+                if(ch == '\n')
+                    state = State::Initial;
+                it++;
+            }
+
+            default:
+                break;
+        }
+
+        if(state == State::LF)
+            break;
+
+        if(state == State::Failed)
+        {
+            result = "";
+            break;
+        }
+    }
+
+    begin_it = it;
+    return result;
+}
+
 }//namespace r64fx

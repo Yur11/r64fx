@@ -34,6 +34,11 @@ std::string hexstr(int dword);
 
 std::string num2str(int num);
 
+
+std::string full_path_to_uri(const std::string &full_path);
+
+std::string next_file_path_from_uri_list(std::string::iterator &begin_it, const std::string::iterator &end_it);
+
 }//namespace r64fx
 
 #endif//R64FX_STRING_UTILS_HPP
