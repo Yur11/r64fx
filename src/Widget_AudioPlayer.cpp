@@ -35,27 +35,21 @@ void Widget_AudioPlayer::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
 
-    unsigned char bg[4] = {127, 63, 31, 0};
-    unsigned char fg[4] = {199, 99, 49, 0};
+    unsigned char bg[4] = {127, 127, 127, 0};
 
     p->fillRect({0, 0, width(), height()}, bg);
 
-    if(height() >= 40)
-    {
-        p->fillRect({0, height() - 40, width(), 2}, fg);
-    }
-
     if(m_waveform)
     {
-        unsigned char blue[3] = {0, 0, 255};
-        p->drawWaveform({0, height() - 40, width(), 40}, blue, m_waveform);
+        unsigned char fg[3] = {63, 63, 63};
+        p->drawWaveform({0, 0, width(), height()}, fg, m_waveform);
     }
 }
 
 
 void Widget_AudioPlayer::resizeEvent(ResizeEvent* event)
 {
-    cout << "resize: " << event->size() << "\n";
+    reload();
     clip();
     repaint();
 }
@@ -98,65 +92,10 @@ void Widget_AudioPlayer::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* ev
             if(file_path.empty())
                 break;
 
-            cout << file_path << "\n";
-            continue;
-
-            SoundFile file(file_path, SoundFile::Mode::Read);
-            if(file.isGood())
-            {
-                cout << file.componentCount() << " " << file.frameCount() << " " << file.sampleRate() << "\n";
-
-                int waveform_size = width();
-                if(waveform_size > 0)
-                {
-                    if(!m_waveform)
-                        m_waveform = new float[waveform_size * 2];
-
-                    int chunk_size = file.frameCount() / waveform_size;
-                    int buffer_size = chunk_size * file.componentCount();
-
-                    float* buffer = new float[buffer_size];
-
-                    for(int i=0; i<waveform_size; i++)
-                    {
-                        for(int j=0; j<buffer_size; j++)
-                        {
-                            buffer[j] = 0.0f;
-                        }
-                        file.readFrames(buffer, chunk_size);
-
-                        float min = 0;
-                        float max = 0;
-
-                        for(int j=0; j<buffer_size; j+=file.componentCount())
-                        {
-                            float val = buffer[j];
-                            if(val < 0)
-                            {
-                                if(val < min)
-                                {
-                                    min = val;
-                                }
-                            }
-                            else
-                            {
-                                if(val > max)
-                                {
-                                    max = val;
-                                }
-                            }
-                        }
-
-                        m_waveform[i*2] = min;
-                        m_waveform[i*2 + 1] = max;
-                    }
-                    delete buffer;
-                }
-            }
-            else
-            {
-                cerr << "Failed to open: " << file_path << "\n";
-            }
+            m_file_path = file_path;
+            reload();
+            if(m_waveform)
+                break;
         }
     }
 
@@ -178,6 +117,73 @@ void Widget_AudioPlayer::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveE
     if(event->has("text/uri-list"))
     {
         requestClipboardData("text/uri-list", event->mode());
+    }
+}
+
+
+void Widget_AudioPlayer::reload()
+{
+    if(m_waveform)
+    {
+        delete m_waveform;
+        m_waveform = nullptr;
+    }
+
+    if(m_file_path.empty())
+        return;
+
+    SoundFile file(m_file_path, SoundFile::Mode::Read);
+    if(file.isGood())
+    {
+        int waveform_size = width();
+        if(waveform_size > 0)
+        {
+            m_waveform = new float[waveform_size * 2];
+
+            int chunk_size = file.frameCount() / waveform_size;
+            int buffer_size = chunk_size * file.componentCount();
+
+            float* buffer = new float[buffer_size];
+
+            for(int i=0; i<waveform_size; i++)
+            {
+                for(int j=0; j<buffer_size; j++)
+                {
+                    buffer[j] = 0.0f;
+                }
+                file.readFrames(buffer, chunk_size);
+
+                float min = 0;
+                float max = 0;
+
+                for(int j=0; j<buffer_size; j+=file.componentCount())
+                {
+                    float val = buffer[j];
+                    if(val < 0)
+                    {
+                        if(val < min)
+                        {
+                            min = val;
+                        }
+                    }
+                    else
+                    {
+                        if(val > max)
+                        {
+                            max = val;
+                        }
+                    }
+                }
+
+                m_waveform[i*2] = min;
+                m_waveform[i*2 + 1] = max;
+            }
+            delete buffer;
+        }
+    }
+    else
+    {
+        cerr << "Failed to open: " << m_file_path << "\n";
     }
 }
 

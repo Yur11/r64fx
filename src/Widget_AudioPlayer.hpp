@@ -7,6 +7,7 @@ namespace r64fx{
 
 class Widget_AudioPlayer : public Widget{
     float* m_waveform = nullptr;
+    std::string m_file_path = "";
 
 public:
     Widget_AudioPlayer(Widget* parent = nullptr);
@@ -27,6 +28,9 @@ protected:
     virtual void clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event);
 
     virtual void clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event);
+
+private:
+    void reload();
 };
 
 }//namespace r64fx
