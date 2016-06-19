@@ -102,15 +102,15 @@ public:
 
     int y() const;
     
-    void setSize(Size<int> size);
+    void setSize(Size<int> size, bool send_event = true);
 
     Size<int> size() const;
 
-    void setWidth(int width);
+    void setWidth(int width, bool send_event = true);
 
     int width() const;
 
-    void setHeight(int height);
+    void setHeight(int height, bool send_event = true);
 
     int height() const;
 

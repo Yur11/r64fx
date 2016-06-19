@@ -43,10 +43,6 @@ void Widget_AudioPlayer::paintEvent(PaintEvent* event)
     if(height() >= 40)
     {
         p->fillRect({0, height() - 40, width(), 2}, fg);
-        if(width() >= 120)
-        {
-            p->fillRect({40, 0, 2, height() - 40}, fg);
-        }
     }
 
     if(m_waveform)
@@ -54,6 +50,14 @@ void Widget_AudioPlayer::paintEvent(PaintEvent* event)
         unsigned char blue[3] = {0, 0, 255};
         p->drawWaveform({0, height() - 40, width(), 40}, blue, m_waveform);
     }
+}
+
+
+void Widget_AudioPlayer::resizeEvent(ResizeEvent* event)
+{
+    cout << "resize: " << event->size() << "\n";
+    clip();
+    repaint();
 }
 
 
@@ -96,14 +100,6 @@ void Widget_AudioPlayer::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* ev
 
             cout << file_path << "\n";
             continue;
-
-            for(int i=0; i<(int)file_path.size(); i++)
-            {
-                if(file_path[i] == '%')
-                {
-                    cout << "Got %\n";
-                }
-            }
 
             SoundFile file(file_path, SoundFile::Mode::Read);
             if(file.isGood())

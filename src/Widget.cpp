@@ -211,15 +211,19 @@ int Widget::y() const
 }
 
 
-void Widget::setSize(Size<int> size)
+void Widget::setSize(Size<int> size, bool send_event)
 {
     m_size = size;
     if(isWindow() && size != m_parent.window->size())
     {
         m_parent.window->setSize(size);
     }
-    ResizeEvent event(size);
-    resizeEvent(&event);
+
+    if(send_event)
+    {
+        ResizeEvent event(size);
+        resizeEvent(&event);
+    }
 }
 
 
@@ -229,9 +233,9 @@ Size<int> Widget::size() const
 }
 
 
-void Widget::setWidth(int width)
+void Widget::setWidth(int width, bool send_event)
 {
-    m_size.setWidth(width);
+    setSize({width, height()}, send_event);
 }
 
 
@@ -241,9 +245,9 @@ int Widget::width() const
 }
 
 
-void Widget::setHeight(int height)
+void Widget::setHeight(int height, bool send_event)
 {
-    m_size.setHeight(height);
+    setSize({width(), height}, send_event);
 }
 
 

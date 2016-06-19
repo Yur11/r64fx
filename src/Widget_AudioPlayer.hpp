@@ -16,6 +16,8 @@ public:
 protected:
     virtual void paintEvent(PaintEvent* event);
 
+    virtual void resizeEvent(ResizeEvent* event);
+
     virtual void mousePressEvent(MousePressEvent* event);
 
     virtual void keyPressEvent(KeyPressEvent* event);
