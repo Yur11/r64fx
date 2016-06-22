@@ -88,6 +88,8 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual void startDrag(Window* drag_object, int anchor_x, int anchor_y);
 
+    void dndMove(int eventx, int eventy);
+
 
     inline ::Window xWindow() const { return m_xwindow; }
 
@@ -122,8 +124,13 @@ namespace{
 
     bool g_got_x_error = false;
 
+    bool g_ignore_bad_window = false;
+
     int x_error_handler(Display* display, XErrorEvent* event)
     {
+        if(g_ignore_bad_window && event->error_code == BadWindow)
+            return 0;
+
         g_got_x_error = true;
 
         cerr << "Got X Error!\nmajor: " << int(event->request_code) << ", minor: " << int(event->minor_code) << "\n";
@@ -143,7 +150,7 @@ namespace{
 
     bool g_incoming_drag = false;
 
-    Window* g_outgoing_drag_object = nullptr;
+    WindowX11* g_outgoing_drag_object = nullptr;
     int g_drag_anchor_x = 0;
     int g_drag_anchor_y = 0;
 

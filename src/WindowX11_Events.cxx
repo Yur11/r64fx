@@ -88,9 +88,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
             {
                 if(g_outgoing_drag_object)
                 {
-                    int dnd_obj_x = g_incoming_event.xmotion.x + window->x() - g_drag_anchor_x;
-                    int dnd_obj_y = g_incoming_event.xmotion.y + window->y() - g_drag_anchor_y;
-                    g_outgoing_drag_object->setPosition({dnd_obj_x, dnd_obj_y});
+                    window->dndMove(g_incoming_event.xmotion.x, g_incoming_event.xmotion.y);
                 }
                 else
                 {
@@ -230,7 +228,7 @@ void WindowX11::setupEvents()
         StructureNotifyMask
     );
 
-    unsigned int dnd_version = 5;
+    Atom dnd_version = 5;
     XChangeProperty(
         g_display,
         m_xwindow,

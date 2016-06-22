@@ -96,15 +96,153 @@ void send_dnd_finished(::Window drag_target, ::Window drag_source, bool accept)
     }
 }
 
+
+int find_xdnd_version(::Window window)
+{
+    Atom actual_type           = None;
+    int actual_format          = 0;
+    unsigned long nitems       = 0;
+    unsigned long bytes_after  = 0;
+    unsigned char* prop_data   = nullptr;
+
+    XGetWindowProperty(
+        g_display,
+        window,
+        X11_Atom::XdndAware,
+        0, 1, False,
+        AnyPropertyType,
+        &actual_type,
+        &actual_format,
+        &nitems,
+        &bytes_after,
+        &prop_data
+    );
+
+    int xdnd_version = -1;
+
+    if(prop_data)
+    {
+        if(actual_format == 32 && actual_type == XA_ATOM && nitems == 1)
+        {
+            Atom* ptr = (Atom*) prop_data;
+            xdnd_version = ptr[0];
+        }
+        XFree(prop_data);
+    }
+
+    return xdnd_version;
+}
+
+
+void find_dnd_target(::Window parent, int x, int y, ::Window* out_target, int* out_xdnd_version)
+{
+    ::Window  root_stub    = None;
+    ::Window  parent_stub  = None;
+    ::Window* children  = nullptr;
+    unsigned int children_count = 0;
+
+    if(XQueryTree(
+        g_display, parent,
+        &root_stub, &parent_stub,
+        &children, &children_count
+    ))
+    {
+        for(int i=(children_count - 1); i>=0; i--)
+        {
+            ::Window window = children[i];
+
+            if(g_outgoing_drag_object && window == g_outgoing_drag_object->xWindow())
+            {
+                continue;
+            }
+
+            XWindowAttributes attrs;
+            g_ignore_bad_window = true;
+            Status status = XGetWindowAttributes(g_display, window, &attrs);
+            g_ignore_bad_window = false;
+            if(!status)
+            {
+                continue;
+            }
+
+            if((x >= attrs.x) && (x < (attrs.x + attrs.width)) && (y >= attrs.y) && (y < (attrs.y + attrs.height)))
+            {
+                if(attrs.map_state == IsViewable)
+                {
+                    int window_xdnd_version = find_xdnd_version(window);
+                    if(window_xdnd_version >= 0)
+                    {
+                        out_target[0] = window;
+                        out_xdnd_version[0] = window_xdnd_version;
+                        return;
+                    }
+
+                    ::Window child = None;
+                    int child_xdnd_version = -1;
+                    find_dnd_target(window, x - attrs.x, y - attrs.y, &child, &child_xdnd_version);
+                    if(child != None)
+                    {
+                        out_target[0] = child;
+                        out_xdnd_version[0] = child_xdnd_version;
+                        return;
+                    }
+                }
+            }
+        }//for every child
+    }
+
+    out_xdnd_version[0] = -1;
+}
+
 }//namespace
 
 void WindowX11::startDrag(Window* drag_object, int anchor_x, int anchor_y)
 {
-    if(g_outgoing_drag_object)
+    if(!drag_object || g_outgoing_drag_object)
         return;
 
-    g_outgoing_drag_object = drag_object;
+    g_outgoing_drag_object = dynamic_cast<WindowX11*>(drag_object);
+    if(!g_outgoing_drag_object)
+        return;
+
     g_drag_anchor_x = anchor_x;
     g_drag_anchor_y = anchor_y;
     grabMouse();
+}
+
+
+void WindowX11::dndMove(int eventx, int eventy)
+{
+    cout << "dndMove: " << eventx << ", " << eventy << "\n";
+
+    int screen_x = eventx + x();
+    int screen_y = eventy + y();
+    int dnd_obj_x = screen_x - g_drag_anchor_x;
+    int dnd_obj_y = screen_y - g_drag_anchor_y;
+    g_outgoing_drag_object->setPosition({dnd_obj_x, dnd_obj_y});
+
+    ::Window  root      = None;
+    ::Window  parent    = None;
+    ::Window* children  = nullptr;
+    unsigned int children_count = 0;
+
+    if(XQueryTree(
+        g_display, xWindow(),
+        &root, &parent,
+        &children, &children_count
+    ))
+    {
+        ::Window xdnd_target = None;
+        int target_xdnd_version = -1;
+
+        find_dnd_target(root, screen_x, screen_y, &xdnd_target, &target_xdnd_version);
+
+        Window* target_window = nullptr;
+        if(xdnd_target)
+        {
+            target_window = getWindowFromXWindow(xdnd_target);
+        }
+
+        cout << xdnd_target << " -> " << target_xdnd_version << " --> " << target_window << "\n";
+    }
 }
