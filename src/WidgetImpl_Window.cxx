@@ -218,10 +218,10 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     }
 
 
-    virtual void dndMoveEvent(Window* window, int x, int y)
+    virtual void dndMoveEvent(Window* window, int x, int y, bool &accept)
     {
         auto d = (WidgetImpl*) window->data();
-        DndMoveEvent event;
+        DndMoveEvent event(x, y, accept);
         d->m_root_widget->dndMoveEvent(&event);
     }
 

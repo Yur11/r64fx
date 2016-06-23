@@ -40,6 +40,11 @@ namespace X11_Atom{
     Atom XdndDrop;
     Atom XdndFinished;
     Atom XdndSelection;
+    Atom XdndActionCopy;
+    Atom XdndActionMove;
+    Atom XdndActionLink;
+    Atom XdndActionAsk;
+    Atom XdndActionPrivate;
 }
 
 
@@ -88,15 +93,20 @@ void init_atoms()
 
         R64FX_INTERN_ATOM( _R64FX_CLIPBOARD, false );
 
-        R64FX_INTERN_ATOM( XdndAware,     false );
-        R64FX_INTERN_ATOM( XdndEnter,     false );
-        R64FX_INTERN_ATOM( XdndLeave,     false );
-        R64FX_INTERN_ATOM( XdndTypeList,  false );
-        R64FX_INTERN_ATOM( XdndPosition,  false );
-        R64FX_INTERN_ATOM( XdndStatus,    false );
-        R64FX_INTERN_ATOM( XdndDrop,      false );
-        R64FX_INTERN_ATOM( XdndFinished,  false );
-        R64FX_INTERN_ATOM( XdndSelection, false );
+        R64FX_INTERN_ATOM( XdndAware,          false );
+        R64FX_INTERN_ATOM( XdndEnter,          false );
+        R64FX_INTERN_ATOM( XdndLeave,          false );
+        R64FX_INTERN_ATOM( XdndTypeList,       false );
+        R64FX_INTERN_ATOM( XdndPosition,       false );
+        R64FX_INTERN_ATOM( XdndStatus,         false );
+        R64FX_INTERN_ATOM( XdndDrop,           false );
+        R64FX_INTERN_ATOM( XdndFinished,       false );
+        R64FX_INTERN_ATOM( XdndSelection,      false );
+        R64FX_INTERN_ATOM( XdndActionCopy,     false );
+        R64FX_INTERN_ATOM( XdndActionMove,     false );
+        R64FX_INTERN_ATOM( XdndActionLink,     false );
+        R64FX_INTERN_ATOM( XdndActionAsk,      false );
+        R64FX_INTERN_ATOM( XdndActionPrivate,  false );
 
 #undef R64FX_INTERN_ATOM
 }

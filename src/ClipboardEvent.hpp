@@ -99,7 +99,29 @@ class DndLeaveEvent{
 
 
 class DndMoveEvent{
+    int mx = 0;
+    int my = 0;
+    bool &m_accept;
 
+public:
+    DndMoveEvent(int x, int y, bool &accept)
+    : mx(x)
+    , my(y)
+    , m_accept(accept)
+    {}
+
+    inline int x() const { return mx; }
+    inline int y() const { return my; }
+
+    void accept()
+    {
+        m_accept = true;
+    }
+
+    void reject()
+    {
+        m_accept = false;
+    }
 };
 
 

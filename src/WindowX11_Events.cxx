@@ -160,19 +160,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 
                 if(msg.message_type == X11_Atom::XdndPosition)
                 {
-                    int x, y;
-                    get_dnd_position(msg.data.l, x, y);
-                    if(!g_incoming_drag)
-                    {
-                        g_incoming_drag = true;
-                        window->updateAttrs();
-                        request_all_dnd_positions(xwindow, dnd_source(msg.data.l));
-                        events->dndEnterEvent(window, x - window->x(), y - window->y());
-                    }
-                    else
-                    {
-                        events->dndMoveEvent(window, x - window->x(), y - window->y());
-                    }
+                    window->xdndPositionEvent();
                 }
                 else if(msg.message_type == X11_Atom::XdndEnter)
                 {
@@ -180,8 +168,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                 }
                 else if(msg.message_type == X11_Atom::XdndLeave)
                 {
-                    g_incoming_drag = false;
-                    events->dndLeaveEvent(window);
+                    window->xdndLeaveEvent();
                 }
                 else if(msg.message_type == X11_Atom::XdndDrop)
                 {

@@ -102,6 +102,10 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     void xdndEnterEvent();
 
+    void xdndLeaveEvent();
+
+    void xdndPositionEvent();
+
     void xdndDropEvent();
 
 
