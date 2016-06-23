@@ -103,13 +103,15 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     void setupEvents();
 
-    void sendSelection(WindowEventDispatcherIface* events);
 
-    void onSelectionTransmit(void* data, int size);
+    void selectionClearEvent();
 
-    void recieveSelection(WindowEventDispatcherIface* events);
+    void selectionRequestEvent(WindowEventDispatcherIface* events);
 
-    void clearSelection();
+    void transmitRequestedSelection(void* data, int size);
+
+    void selectionNotifyEvent(WindowEventDispatcherIface* events);
+
 
     void updateAttrs();
 
@@ -154,8 +156,8 @@ namespace{
     int g_drag_anchor_x = 0;
     int g_drag_anchor_y = 0;
 
-    XEvent g_incoming_event;
-    XEvent g_outgoing_event;
+    XEvent* g_incoming_event = nullptr;
+    XEvent* g_outgoing_event = nullptr;
 }//namespace
 
 

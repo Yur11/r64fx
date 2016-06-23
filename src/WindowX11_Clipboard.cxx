@@ -128,10 +128,25 @@ void WindowX11::requestClipboardMetadata(ClipboardMode mode)
 }
 
 
-void WindowX11::sendSelection(WindowEventDispatcherIface* events)
+void WindowX11::selectionClearEvent()
 {
-    XSelectionRequestEvent  &in   = g_incoming_event.xselectionrequest;
-    XSelectionEvent         &out  = g_outgoing_event.xselection;
+    XSelectionClearEvent &in = g_incoming_event->xselectionclear;
+
+    auto cb = clipboard(in.selection);
+    if(cb)
+    {
+        cb->clear();
+    }
+}
+
+
+void WindowX11::selectionRequestEvent(WindowEventDispatcherIface* events)
+{
+    XSelectionRequestEvent  &in   = g_incoming_event->xselectionrequest;
+
+    XEvent xevent;
+    g_outgoing_event = &xevent;
+    XSelectionEvent &out = xevent.xselection;
 
     if(in.property == None)
     {
@@ -145,8 +160,6 @@ void WindowX11::sendSelection(WindowEventDispatcherIface* events)
         cerr << "Bad clipboard mode!\n";
         return;
     }
-
-    g_outgoing_event = XEvent();
 
     out.type      = SelectionNotify;
     out.display   = in.display;
@@ -176,7 +189,7 @@ void WindowX11::sendSelection(WindowEventDispatcherIface* events)
             targets.size()
         );
 
-        if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &g_outgoing_event))
+        if(!XSendEvent(g_display, in.requestor, False, NoEventMask, g_outgoing_event))
         {
             cerr << "Failed to send selection event!\n";
         }
@@ -194,17 +207,19 @@ void WindowX11::sendSelection(WindowEventDispatcherIface* events)
                 [](Window* window, void* data, int size)
                 {
                     auto window_x11 = (WindowX11*) window;
-                    window_x11->onSelectionTransmit(data, size);
+                    window_x11->transmitRequestedSelection(data, size);
                 }
             );
         }
     }
+
+    g_outgoing_event = nullptr;
 }
 
 
-void WindowX11::onSelectionTransmit(void* data, int size)
+void WindowX11::transmitRequestedSelection(void* data, int size)
 {
-    XSelectionRequestEvent &in = g_incoming_event.xselectionrequest;
+    XSelectionRequestEvent &in = g_incoming_event->xselectionrequest;
 
     if(data != nullptr && size > 0)
     {
@@ -221,7 +236,7 @@ void WindowX11::onSelectionTransmit(void* data, int size)
             size
         );
 
-        if(!XSendEvent(g_display, in.requestor, False, NoEventMask, &g_outgoing_event))
+        if(!XSendEvent(g_display, in.requestor, False, NoEventMask, g_outgoing_event))
         {
             cerr << "Failed to send selection event!\n";
         }
@@ -229,9 +244,9 @@ void WindowX11::onSelectionTransmit(void* data, int size)
 }
 
 
-void WindowX11::recieveSelection(WindowEventDispatcherIface* events)
+void WindowX11::selectionNotifyEvent(WindowEventDispatcherIface* events)
 {
-    XSelectionEvent &in = g_incoming_event.xselection;
+    XSelectionEvent &in = g_incoming_event->xselection;
 
     auto cb = clipboard(in.selection);
     if(!cb)
@@ -307,17 +322,5 @@ void WindowX11::recieveSelection(WindowEventDispatcherIface* events)
             (void*)data,
             (int)nitems
         );
-    }
-}
-
-
-void WindowX11::clearSelection()
-{
-    XSelectionClearEvent &in = g_incoming_event.xselectionclear;
-
-    auto cb = clipboard(in.selection);
-    if(cb)
-    {
-        cb->clear();
     }
 }

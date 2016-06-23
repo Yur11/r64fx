@@ -4,9 +4,11 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 {
     while(XPending(g_display))
     {
-        g_incoming_event = XEvent();
-        XNextEvent(g_display, &g_incoming_event);
-        auto xwindow = g_incoming_event.xany.window;
+        XEvent xevent;
+        g_incoming_event = &xevent;
+
+        XNextEvent(g_display, &xevent);
+        auto xwindow = xevent.xany.window;
 
         WindowX11* window = getWindowFromXWindow(xwindow);
         if(!window)
@@ -14,12 +16,12 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
             continue;
         }
 
-        if(window->doingTextInput() && XFilterEvent(&g_incoming_event, g_incoming_event.xany.window))
+        if(window->doingTextInput() && XFilterEvent(&xevent, xevent.xany.window))
         {
             continue;
         }
 
-        switch(g_incoming_event.type)
+        switch(xevent.type)
         {
             case KeyPress:
             {
@@ -29,7 +31,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                     char buff[8];
                     KeySym keysym;
                     int nbytes = Xutf8LookupString(
-                        window->inputContext(), &g_incoming_event.xkey,
+                        window->inputContext(), &xevent.xkey,
                         buff, 8, &keysym, &status
                     );
 
@@ -38,34 +40,34 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                     {
                         str = string(buff, nbytes);
                     }
-                    events->textInputEvent(window, str, XLookupKeysym(&g_incoming_event.xkey, 0));
+                    events->textInputEvent(window, str, XLookupKeysym(&xevent.xkey, 0));
                 }
                 else
                 {
-                    events->keyPressEvent(window, XLookupKeysym(&g_incoming_event.xkey, 0));
+                    events->keyPressEvent(window, XLookupKeysym(&xevent.xkey, 0));
                 }
                 break;
             }
 
             case KeyRelease:
             {
-                events->keyReleaseEvent(window, XLookupKeysym(&g_incoming_event.xkey, 0));
+                events->keyReleaseEvent(window, XLookupKeysym(&xevent.xkey, 0));
                 break;
             }
 
             case ButtonPress:
             {
-                unsigned int button = getEventButton(&g_incoming_event.xbutton);
+                unsigned int button = getEventButton(&xevent.xbutton);
                 if(button != R64FX_MOUSE_BUTTON_NONE)
                 {
-                    events->mousePressEvent(window, g_incoming_event.xbutton.x, g_incoming_event.xbutton.y, button);
+                    events->mousePressEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
                 }
                 break;
             }
 
             case ButtonRelease:
             {
-                unsigned int button = getEventButton(&g_incoming_event.xbutton);
+                unsigned int button = getEventButton(&xevent.xbutton);
                 if(button != R64FX_MOUSE_BUTTON_NONE)
                 {
                     if(g_outgoing_drag_object)
@@ -78,7 +80,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                     }
                     else
                     {
-                        events->mouseReleaseEvent(window, g_incoming_event.xbutton.x, g_incoming_event.xbutton.y, button);
+                        events->mouseReleaseEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
                     }
                 }
                 break;
@@ -88,11 +90,11 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
             {
                 if(g_outgoing_drag_object)
                 {
-                    window->dndMove(g_incoming_event.xmotion.x, g_incoming_event.xmotion.y);
+                    window->dndMove(xevent.xmotion.x, xevent.xmotion.y);
                 }
                 else
                 {
-                    events->mouseMoveEvent(window, g_incoming_event.xmotion.x, g_incoming_event.xmotion.y);
+                    events->mouseMoveEvent(window, xevent.xmotion.x, xevent.xmotion.y);
                 }
                 break;
             }
@@ -111,8 +113,8 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 
             case ConfigureNotify:
             {
-                window->mx = g_incoming_event.xconfigure.x;
-                window->my = g_incoming_event.xconfigure.y;
+                window->mx = xevent.xconfigure.x;
+                window->my = xevent.xconfigure.y;
 
                 int old_w = window->width();
                 int old_h = window->height();
@@ -134,25 +136,25 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 
             case SelectionClear:
             {
-                window->clearSelection();
+                window->selectionClearEvent();
                 break;
             }
 
             case SelectionRequest:
             {
-                window->sendSelection(events);
+                window->selectionRequestEvent(events);
                 break;
             }
 
             case SelectionNotify:
             {
-                window->recieveSelection(events);
+                window->selectionNotifyEvent(events);
                 break;
             }
 
             case ClientMessage:
             {
-                auto &msg = g_incoming_event.xclient;
+                auto &msg = xevent.xclient;
 
                 if(msg.message_type == X11_Atom::XdndPosition)
                 {
@@ -200,7 +202,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
             default:
             {
 #ifdef R64FX_USE_MITSHM
-                if(g_incoming_event.type == g_mitsm_completion_event)
+                if(xevent.type == g_mitsm_completion_event)
                 {
                     cout << "MitShm Completion Event!\n";
                 }
@@ -211,8 +213,10 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                 }
                 break;
             }
-        }
-    }
+        }//switch
+
+        g_incoming_event = nullptr;
+    }//while
 }
 
 
