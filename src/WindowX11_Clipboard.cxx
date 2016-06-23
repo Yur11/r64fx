@@ -110,6 +110,14 @@ void WindowX11::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
 
 void WindowX11::requestClipboardMetadata(ClipboardMode mode)
 {
+    cout << "WindowX11::requestClipboardMetadata()\n";
+    if(mode == ClipboardMode::DragAndDrop)
+    {
+        cout << "DragAndDrop\n";
+        g_events->clipboardMetadataRecieveEvent(this, g_dnd_metadata, ClipboardMode::DragAndDrop);
+        return;
+    }
+
     auto cb = clipboard(mode);
     if(!cb)
     {
@@ -140,7 +148,7 @@ void WindowX11::selectionClearEvent()
 }
 
 
-void WindowX11::selectionRequestEvent(WindowEventDispatcherIface* events)
+void WindowX11::selectionRequestEvent()
 {
     XSelectionRequestEvent  &in   = g_incoming_event->xselectionrequest;
 
@@ -200,7 +208,7 @@ void WindowX11::selectionRequestEvent(WindowEventDispatcherIface* events)
 
         if(cdt.isGood())
         {
-            events->clipboardDataTransmitEvent(
+            g_events->clipboardDataTransmitEvent(
                 this,
                 cdt,
                 cb->mode,
@@ -244,7 +252,7 @@ void WindowX11::transmitRequestedSelection(void* data, int size)
 }
 
 
-void WindowX11::selectionNotifyEvent(WindowEventDispatcherIface* events)
+void WindowX11::selectionNotifyEvent()
 {
     XSelectionEvent &in = g_incoming_event->xselection;
 
@@ -285,7 +293,7 @@ void WindowX11::selectionNotifyEvent(WindowEventDispatcherIface* events)
                 metadata.push_back(name);
             }
 
-            events->clipboardMetadataRecieveEvent(
+            g_events->clipboardMetadataRecieveEvent(
                 this, metadata, cb->mode
             );
         }
@@ -315,7 +323,7 @@ void WindowX11::selectionNotifyEvent(WindowEventDispatcherIface* events)
             cdt = atom_name(in.target);
         }
 
-        events->clipboardDataRecieveEvent(
+        g_events->clipboardDataRecieveEvent(
             this,
             cdt,
             cb->mode,

@@ -85,10 +85,29 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     virtual void requestClipboardMetadata(ClipboardMode mode);
 
+    void selectionClearEvent();
+
+    void selectionRequestEvent();
+
+    void transmitRequestedSelection(void* data, int size);
+
+    void selectionNotifyEvent();
+
+
+    void setupDnd();
 
     virtual void startDrag(Window* drag_object, int anchor_x, int anchor_y);
 
     void dndMove(int eventx, int eventy);
+
+    void xdndEnterEvent();
+
+    void xdndDropEvent();
+
+
+    static void processSomeEvents(WindowEventDispatcherIface* events);
+
+    void setupEvents();
 
 
     inline ::Window xWindow() const { return m_xwindow; }
@@ -98,20 +117,6 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     static WindowX11* getWindowFromXWindow(::Window xwindow);
 
     static unsigned int getEventButton(XButtonEvent* event);
-
-    static void processSomeEvents(WindowEventDispatcherIface* events);
-
-    void setupEvents();
-
-
-    void selectionClearEvent();
-
-    void selectionRequestEvent(WindowEventDispatcherIface* events);
-
-    void transmitRequestedSelection(void* data, int size);
-
-    void selectionNotifyEvent(WindowEventDispatcherIface* events);
-
 
     void updateAttrs();
 
@@ -158,6 +163,10 @@ namespace{
 
     XEvent* g_incoming_event = nullptr;
     XEvent* g_outgoing_event = nullptr;
+
+    WindowEventDispatcherIface* g_events = nullptr;
+
+    ClipboardMetadata g_dnd_metadata;
 }//namespace
 
 
@@ -519,6 +528,7 @@ Window* Window::newInstance(
         window->setup(width, height);
         window->setWmType(wm_type);
         window->setTitle("r64fx");
+        window->setupDnd();
         g_all_windows.append(window);
     }
 

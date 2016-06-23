@@ -342,6 +342,8 @@ protected:
 
     virtual void dndMoveEvent(DndMoveEvent* event);
 
+    virtual void dndDropEvent(DndDropEvent* event);
+
     virtual void dndFinishedEvent(DndFinishedEvent* event);
 
     virtual void closeEvent();

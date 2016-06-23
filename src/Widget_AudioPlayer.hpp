@@ -29,6 +29,14 @@ protected:
 
     virtual void clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event);
 
+    virtual void dndEnterEvent(DndEnterEvent* event);
+
+    virtual void dndLeaveEvent(DndLeaveEvent* event);
+
+    virtual void dndMoveEvent(DndMoveEvent* event);
+
+    virtual void dndDropEvent(DndDropEvent* event);
+
 private:
     void reload();
 };

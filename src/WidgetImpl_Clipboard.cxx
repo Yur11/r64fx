@@ -10,6 +10,8 @@ Widget* g_requestor_clipboard      = nullptr;
 Widget* g_requestor_selection      = nullptr;
 Widget* g_requestor_drag_and_drop  = nullptr;
 
+Widget* g_requestor_anouncer_stub  = nullptr;
+
 Widget* g_dnd_target = nullptr;
 Widget* g_dnd_object = nullptr;
 Widget* g_dnd_source = nullptr;
@@ -23,8 +25,10 @@ inline Widget* &anouncer(ClipboardMode mode)
             return g_anouncer_clipboard;
         case ClipboardMode::Selection:
             return g_anouncer_selection;
-        default:
+        case ClipboardMode::DragAndDrop:
             return g_anouncer_drag_and_drop;
+        default:
+            return g_requestor_anouncer_stub;
     }
 }
 
@@ -37,8 +41,10 @@ inline Widget* &requestor(ClipboardMode mode)
             return g_requestor_clipboard;
         case ClipboardMode::Selection:
             return g_requestor_selection;
-        default:
+        case ClipboardMode::DragAndDrop:
             return g_requestor_drag_and_drop;
+        default:
+            return g_requestor_anouncer_stub;
     }
 }
 
@@ -65,8 +71,8 @@ void Widget::requestClipboardMetadata(ClipboardMode mode)
     auto win = rootWindow();
     if(win)
     {
-        win->requestClipboardMetadata(mode);
         requestor(mode) = this;
+        win->requestClipboardMetadata(mode);
     }
 }
 

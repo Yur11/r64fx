@@ -2,40 +2,9 @@
 
 namespace{
 
-
 ::Window dnd_source(const long* msg_data)
 {
     return (::Window) msg_data[0];
-}
-
-
-void get_dnd_type_list(const long* msg_data, vector<Atom> &types)
-{
-//     if(msg_data[1] & 1)
-//     {
-//         bool ok = get_window_atom_list_property(
-//             dnd_source(msg_data),
-//             X11_Atom::XdndTypeList,
-//             XA_ATOM,
-//             false,
-//             types
-//         );
-//
-//         if(!ok)
-//         {
-//             cerr << "Failed to fetch dnd source types!\n";
-//         }
-//     }
-//     else
-//     {
-//         for(int i=2; i<5; i++)
-//         {
-//             if(msg_data[i] != None)
-//             {
-//                 types.push_back(msg_data[i]);
-//             }
-//         }
-//     }
 }
 
 
@@ -64,31 +33,6 @@ void request_all_dnd_positions(::Window drag_target, ::Window drag_source)
     msg_data[2] = 0;
     msg_data[3] = 0;
     msg_data[4] = None;
-
-    if(!XSendEvent(g_display, drag_source, False, NoEventMask, &xevent))
-    {
-        cerr << "Failed to XdndStatus event!\n";
-    }
-}
-
-
-void send_dnd_finished(::Window drag_target, ::Window drag_source, bool accept)
-{
-    XEvent xevent;
-    auto &out = xevent.xclient;
-    auto &msg_data = out.data.l;
-
-    out.type         = ClientMessage;
-    out.display      = g_display;
-    out.window       = drag_source;
-    out.format       = 32;
-    out.message_type = X11_Atom::XdndFinished;
-
-    msg_data[0] = drag_target;
-    msg_data[1] = 0;
-    msg_data[2] = 0;
-    msg_data[3] = 0;
-    msg_data[4] = 0;
 
     if(!XSendEvent(g_display, drag_source, False, NoEventMask, &xevent))
     {
@@ -196,6 +140,23 @@ void find_dnd_target(::Window parent, int x, int y, ::Window* out_target, int* o
 
 }//namespace
 
+
+void WindowX11::setupDnd()
+{
+    Atom dnd_version = 5;
+    XChangeProperty(
+        g_display,
+        m_xwindow,
+        X11_Atom::XdndAware,
+        XA_ATOM,
+        32,
+        PropModeReplace,
+        (unsigned char*)&dnd_version,
+        1
+    );
+}
+
+
 void WindowX11::startDrag(Window* drag_object, int anchor_x, int anchor_y)
 {
     if(!drag_object || g_outgoing_drag_object)
@@ -245,4 +206,77 @@ void WindowX11::dndMove(int eventx, int eventy)
 
         cout << xdnd_target << " -> " << target_xdnd_version << " --> " << target_window << "\n";
     }
+}
+
+
+void WindowX11::xdndEnterEvent()
+{
+    cout << "WindowX11::xdndEnterEvent()\n";
+
+    const XClientMessageEvent &in = g_incoming_event->xclient;
+    const long int* dnd_enter_data = in.data.l;
+
+    if(dnd_enter_data[1] & 1)
+    {
+        cout << "More types!\n";
+//         bool ok = get_window_atom_list_property(
+//             dnd_source(msg_data),
+//             X11_Atom::XdndTypeList,
+//             XA_ATOM,
+//             false,
+//             types
+//         );
+//
+//         if(!ok)
+//         {
+//             cerr << "Failed to fetch dnd source types!\n";
+//         }
+    }
+    else
+    {
+        cout << "Less types!\n";
+
+        g_dnd_metadata.clear();
+        for(int i=2; i<5; i++)
+        {
+            if(dnd_enter_data[i] != None)
+            {
+                string name = atom_name(dnd_enter_data[i]);
+                g_dnd_metadata.push_back(name);
+            }
+        }
+    }
+}
+
+
+void WindowX11::xdndDropEvent()
+{
+    const XClientMessageEvent &in = g_incoming_event->xclient;
+
+    ::Window drag_target = m_xwindow;
+    ::Window drag_source = dnd_source(in.data.l);
+
+    XEvent xevent;
+    auto &out = xevent.xclient;
+    auto &msg_data = out.data.l;
+    out.type         = ClientMessage;
+    out.display      = g_display;
+    out.window       = drag_source;
+    out.format       = 32;
+    out.message_type = X11_Atom::XdndFinished;
+
+    msg_data[0] = drag_target;
+    msg_data[1] = 0;
+    msg_data[2] = 0;
+    msg_data[3] = 0;
+    msg_data[4] = 0;
+
+    if(!XSendEvent(g_display, drag_source, False, NoEventMask, &xevent))
+    {
+        cerr << "Failed to XdndStatus event!\n";
+    }
+
+    g_events->dndDropEvent(this);
+
+    g_incoming_drag = false;
 }

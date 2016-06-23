@@ -470,6 +470,12 @@ void Widget::dndMoveEvent(DndMoveEvent* event)
 }
 
 
+void Widget::dndDropEvent(DndDropEvent* event)
+{
+
+}
+
+
 void Widget::dndFinishedEvent(DndFinishedEvent* event)
 {
 

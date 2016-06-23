@@ -76,7 +76,7 @@ void Widget_AudioPlayer::keyPressEvent(KeyPressEvent* event)
 
 void Widget_AudioPlayer::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 {
-    if(event->mode() != ClipboardMode::Clipboard)
+    if(event->mode() != ClipboardMode::Clipboard && event->mode() != ClipboardMode::DragAndDrop)
         return;
 
     if(event->data() == nullptr && event->size() <= 0)
@@ -111,13 +111,37 @@ void Widget_AudioPlayer::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* 
 
 void Widget_AudioPlayer::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
 {
-    if(event->mode() != ClipboardMode::Clipboard)
+    if(event->mode() != ClipboardMode::Clipboard && event->mode() != ClipboardMode::DragAndDrop)
         return;
 
     if(event->has("text/uri-list"))
     {
         requestClipboardData("text/uri-list", event->mode());
     }
+}
+
+
+void Widget_AudioPlayer::dndEnterEvent(DndEnterEvent* event)
+{
+    cout << "Widget_AudioPlayer::dndEnterEvent()\n";
+}
+
+
+void Widget_AudioPlayer::dndLeaveEvent(DndLeaveEvent* event)
+{
+    cout << "Widget_AudioPlayer::dndLeaveEvent()\n";
+}
+
+
+void Widget_AudioPlayer::dndMoveEvent(DndMoveEvent* event)
+{
+    cout << "Widget_AudioPlayer::dndMoveEvent()\n";
+}
+
+
+void Widget_AudioPlayer::dndDropEvent(DndDropEvent* event)
+{
+    cout << "Widget_AudioPlayer::dndDropEvent()\n";
 }
 
 

@@ -204,25 +204,33 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
     virtual void dndEnterEvent(Window* window, int x, int y)
     {
-        cout << "dnd enter: " << x << ", " << y << "\n";
+        auto d = (WidgetImpl*) window->data();
+        DndEnterEvent event;
+        d->m_root_widget->dndEnterEvent(&event);
     }
 
 
     virtual void dndLeaveEvent(Window* window)
     {
-
+        auto d = (WidgetImpl*) window->data();
+        DndLeaveEvent event;
+        d->m_root_widget->dndLeaveEvent(&event);
     }
 
 
     virtual void dndMoveEvent(Window* window, int x, int y)
     {
-        cout << "dnd move:  " << x << ", " << y << "\n";
+        auto d = (WidgetImpl*) window->data();
+        DndMoveEvent event;
+        d->m_root_widget->dndMoveEvent(&event);
     }
 
 
     virtual void dndDropEvent(Window* window)
     {
-        cout << "drop\n";
+        auto d = (WidgetImpl*) window->data();
+        DndDropEvent event;
+        d->m_root_widget->dndDropEvent(&event);
     }
 
     virtual void dndFinished()

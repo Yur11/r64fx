@@ -2,6 +2,8 @@
 
 void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 {
+    g_events = events;
+
     while(XPending(g_display))
     {
         XEvent xevent;
@@ -142,13 +144,13 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 
             case SelectionRequest:
             {
-                window->selectionRequestEvent(events);
+                window->selectionRequestEvent();
                 break;
             }
 
             case SelectionNotify:
             {
-                window->selectionNotifyEvent(events);
+                window->selectionNotifyEvent();
                 break;
             }
 
@@ -174,8 +176,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                 }
                 else if(msg.message_type == X11_Atom::XdndEnter)
                 {
-                    vector<Atom> types;
-                    get_dnd_type_list(msg.data.l, types);
+                    window->xdndEnterEvent();
                 }
                 else if(msg.message_type == X11_Atom::XdndLeave)
                 {
@@ -184,9 +185,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                 }
                 else if(msg.message_type == X11_Atom::XdndDrop)
                 {
-                    send_dnd_finished(xwindow, dnd_source(msg.data.l), false);
-                    g_incoming_drag = false;
-                    events->dndDropEvent(window);
+                    window->xdndDropEvent();
                 }
                 else if(msg.message_type == X11_Atom::XdndFinished)
                 {
@@ -217,6 +216,8 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
 
         g_incoming_event = nullptr;
     }//while
+
+    g_events = nullptr;
 }
 
 
@@ -230,17 +231,5 @@ void WindowX11::setupEvents()
         ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
         EnterWindowMask | LeaveWindowMask |
         StructureNotifyMask
-    );
-
-    Atom dnd_version = 5;
-    XChangeProperty(
-        g_display,
-        m_xwindow,
-        X11_Atom::XdndAware,
-        XA_ATOM,
-        32,
-        PropModeReplace,
-        (unsigned char*)&dnd_version,
-        1
     );
 }
