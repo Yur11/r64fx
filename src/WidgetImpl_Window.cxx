@@ -202,23 +202,20 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     }
 
 
-    virtual void dndMoveEvent(Window* window, int x, int y, const ClipboardMetadata& metadata, bool &accept)
+    virtual void dndMoveEvent(Window* window, int x, int y, const ClipboardMetadata& metadata, bool &accepted)
     {
         auto d = (WidgetImpl*) window->data();
-        DndMoveEvent event(x, y, metadata, accept);
-        d->m_root_widget->dndMoveEvent(&event);
+        d->m_root_widget->initDndMoveEvent(x, y, metadata, accepted);
     }
 
 
     virtual void dndDropEvent(Window* window, const ClipboardMetadata& metadata, ClipboardDataType &data_type, bool &accepted)
     {
-        auto d = (WidgetImpl*) window->data();
-        DndDropEvent event(metadata, data_type, accepted);
-        d->m_root_widget->dndDropEvent(&event);
-        if(accepted)
+        if(g_dnd_target)
         {
-            requestor(ClipboardMode::DragAndDrop) = d->m_root_widget;
+            g_dnd_target->initDndDropEvent(metadata, data_type, accepted);
         }
+        g_dnd_target = nullptr;
     }
 
 
@@ -227,6 +224,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         auto d = (WidgetImpl*) window->data();
         DndLeaveEvent event;
         d->m_root_widget->dndLeaveEvent(&event);
+        g_dnd_target = nullptr;
     }
 
 

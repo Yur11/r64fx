@@ -151,7 +151,7 @@ public:
         const ClipboardMetadata &metadata, ClipboardMode mode
     ) = 0;
 
-    virtual void dndMoveEvent     (Window* window, int x, int y, const ClipboardMetadata& metadata, bool &accepted) = 0;
+    virtual void dndMoveEvent     (Window* window, int x, int y, const ClipboardMetadata& metadata, bool &out_accepted) = 0;
     virtual void dndDropEvent     (Window* window, const ClipboardMetadata& metadata, ClipboardDataType &out_data_type, bool &out_accepted) = 0;
     virtual void dndLeaveEvent    (Window* window) = 0;
     virtual void dndFinishedEvent () = 0;

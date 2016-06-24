@@ -109,20 +109,20 @@ public:
 
 
 class DndMoveEvent : public DndMetadataEvent{
-    int mx = 0;
-    int my = 0;
+    Point<int> &m_position;
     bool &m_accepted;
 
 public:
-    DndMoveEvent(int x, int y, const ClipboardMetadata &metadata, bool &accepted)
+    DndMoveEvent(Point<int> position, const ClipboardMetadata &metadata, bool &accepted)
     : DndMetadataEvent(metadata)
-    , mx(x)
-    , my(y)
+    , m_position(position)
     , m_accepted(accepted)
     {}
 
-    inline int x() const { return mx; }
-    inline int y() const { return my; }
+    inline Point<int> position() const
+    {
+        return m_position;
+    }
 
     inline void accept()
     {

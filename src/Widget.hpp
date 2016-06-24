@@ -25,10 +25,9 @@ class ClipboardMetadata;
 class ClipboardDataRecieveEvent;
 class ClipboardDataTransmitEvent;
 class ClipboardMetadataRecieveEvent;
-class DndEnterEvent;
-class DndLeaveEvent;
 class DndMoveEvent;
 class DndDropEvent;
+class DndLeaveEvent;
 class DndFinishedEvent;
 
 typedef LinkedList<Widget>::Iterator WidgetIterator;
@@ -247,6 +246,10 @@ public:
     void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 
     void startDrag(Widget* dnd_object, Point<int> anchor);
+
+    void initDndMoveEvent(int x, int y, const ClipboardMetadata& metadata, bool &accepted);
+
+    void initDndDropEvent(const ClipboardMetadata& metadata, ClipboardDataType &out_data_type, bool &out_accepted);
 
 /* === Paint cycle === */
 

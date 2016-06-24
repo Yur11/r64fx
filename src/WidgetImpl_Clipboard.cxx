@@ -109,4 +109,31 @@ void Widget::startDrag(Widget* dnd_object, Point<int> anchor)
     }
 }
 
+
+void Widget::initDndMoveEvent(int x, int y, const ClipboardMetadata& metadata, bool &accepted)
+{
+    Point<int> event_position(x, y);
+    Point<int> leaf_offset = {0, 0};
+    Widget* dst = leafAt(event_position, &leaf_offset);
+    event_position -= leaf_offset;
+
+    if(dst)
+    {
+        g_dnd_target = dst;
+        DndMoveEvent event(event_position, metadata, accepted);
+        dst->dndMoveEvent(&event);
+    }
+}
+
+
+void Widget::initDndDropEvent(const ClipboardMetadata& metadata, ClipboardDataType &data_type, bool &accepted)
+{
+    DndDropEvent event(metadata, data_type, accepted);
+    dndDropEvent(&event);
+    if(accepted)
+    {
+        requestor(ClipboardMode::DragAndDrop) = this;
+    }
+}
+
 }//namespace r64fx

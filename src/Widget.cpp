@@ -64,7 +64,6 @@ struct WidgetImpl{
 
 Timer* g_gui_timer = nullptr;
 
-
 Widget::Widget(Widget* parent)
 {
     setParent(parent);
