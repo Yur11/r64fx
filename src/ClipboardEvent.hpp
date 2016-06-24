@@ -88,6 +88,21 @@ public:
 };
 
 
+class DndMetadataEvent{
+    const ClipboardMetadata &m_metadata;
+
+public:
+    DndMetadataEvent(const ClipboardMetadata &metadata)
+    : m_metadata(metadata)
+    {}
+
+    const ClipboardMetadata& metadata() const
+    {
+        return m_metadata;
+    }
+};
+
+
 class DndEnterEvent{
 
 };
@@ -98,27 +113,21 @@ class DndLeaveEvent{
 };
 
 
-class DndMoveEvent{
+class DndMoveEvent : public DndMetadataEvent{
     int mx = 0;
     int my = 0;
-    const ClipboardMetadata &m_metadata;
     bool &m_accept;
 
 public:
     DndMoveEvent(int x, int y, const ClipboardMetadata &metadata, bool &accept)
-    : mx(x)
+    : DndMetadataEvent(metadata)
+    , mx(x)
     , my(y)
-    , m_metadata(metadata)
     , m_accept(accept)
     {}
 
     inline int x() const { return mx; }
     inline int y() const { return my; }
-
-    const ClipboardMetadata& metadata() const
-    {
-        return m_metadata;
-    }
 
     void accept()
     {
@@ -132,8 +141,9 @@ public:
 };
 
 
-class DndDropEvent{
-
+class DndDropEvent : public DndMetadataEvent{
+public:
+    using DndMetadataEvent::DndMetadataEvent;
 };
 
 

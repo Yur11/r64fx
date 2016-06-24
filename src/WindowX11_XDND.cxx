@@ -2,31 +2,6 @@
 
 namespace{
 
-void request_all_dnd_positions(::Window drag_target, ::Window drag_source)
-{
-    XEvent xevent;
-    auto &out = xevent.xclient;
-    auto &msg_data = out.data.l;
-
-    out.type         = ClientMessage;
-    out.display      = g_display;
-    out.window       = drag_source;
-    out.format       = 32;
-    out.message_type = X11_Atom::XdndStatus;
-
-    msg_data[0] = drag_target;
-    msg_data[1] = 3;
-    msg_data[2] = 0;
-    msg_data[3] = 0;
-    msg_data[4] = None;
-
-    if(!XSendEvent(g_display, drag_source, False, NoEventMask, &xevent))
-    {
-        cerr << "Failed to XdndStatus event!\n";
-    }
-}
-
-
 int find_xdnd_version(::Window window)
 {
     Atom actual_type           = None;
@@ -258,8 +233,8 @@ void WindowX11::xdndPositionEvent()
     bool accept = false;
     g_events->dndMoveEvent(this, x - this->x(), y - this->y(), g_dnd_metadata, accept);
 
-    XEvent xevent;
-    XClientMessageEvent &out = xevent.xclient;
+    XEvent out_xevent;
+    XClientMessageEvent &out = out_xevent.xclient;
     long int* dnd_status_data = out.data.l;
     out.type           = ClientMessage;
     out.display        = g_display;
@@ -272,7 +247,7 @@ void WindowX11::xdndPositionEvent()
     dnd_status_data[3] = 0;
     dnd_status_data[4] = (accept ? action : None);
 
-    if(!XSendEvent(g_display, drag_source, False, NoEventMask, &xevent))
+    if(!XSendEvent(g_display, drag_source, False, NoEventMask, &out_xevent))
     {
         cerr << "Failed to send XdndStatus event!\n";
     }
@@ -287,10 +262,10 @@ void WindowX11::xdndDropEvent()
     ::Window drag_source = (::Window) dnd_drop_data[0];
     ::Window drag_target = m_xwindow;
 
-    g_events->dndDropEvent(this);
+    g_events->dndDropEvent(this, g_dnd_metadata);
 
-    XEvent xevent;
-    XClientMessageEvent &out = xevent.xclient;
+    XEvent out_xevent;
+    XClientMessageEvent &out = out_xevent.xclient;
     long int* dnd_status_data = out.data.l;
     out.type           = ClientMessage;
     out.display        = g_display;
@@ -303,7 +278,7 @@ void WindowX11::xdndDropEvent()
     dnd_status_data[3] = 0;
     dnd_status_data[4] = 0;
 
-    if(!XSendEvent(g_display, drag_source, False, NoEventMask, &xevent))
+    if(!XSendEvent(g_display, drag_source, False, NoEventMask, &out_xevent))
     {
         cerr << "Failed to send XdndStatus event!\n";
     }

@@ -123,31 +123,36 @@ void Widget_AudioPlayer::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveE
 
 void Widget_AudioPlayer::dndEnterEvent(DndEnterEvent* event)
 {
-    cout << "Widget_AudioPlayer::dndEnterEvent()\n";
+
 }
 
 
 void Widget_AudioPlayer::dndLeaveEvent(DndLeaveEvent* event)
 {
-    cout << "Widget_AudioPlayer::dndLeaveEvent()\n";
+
 }
 
 
 void Widget_AudioPlayer::dndMoveEvent(DndMoveEvent* event)
 {
-    cout << "Widget_AudioPlayer::dndMoveEvent(" << event->x() << ", " << event->y() << ")\n";
-    for(auto &type : event->metadata())
+    if(event->metadata().has("text/uri-list"))
     {
-        cout << "    " << type.name() << "\n";
+        event->accept();
     }
-
-    event->reject();
+    else
+    {
+        event->reject();
+    }
 }
 
 
 void Widget_AudioPlayer::dndDropEvent(DndDropEvent* event)
 {
     cout << "Widget_AudioPlayer::dndDropEvent()\n";
+    for(auto &type : event->metadata())
+    {
+        cout << "    " << type.name() << "\n";
+    }
 }
 
 

@@ -69,6 +69,11 @@ ClipboardImpl* clipboard(Atom selection)
 void WindowX11::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode)
 {
     cout << "anounceClipboardData: " << mode << "\n";
+    if(mode == ClipboardMode::DragAndDrop)
+    {
+        cerr << "Refusing to anounce DragAndDrop clipboard data!\n";
+        return;
+    }
 
     auto cb = clipboard(mode);
     if(!cb)

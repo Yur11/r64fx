@@ -226,10 +226,10 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     }
 
 
-    virtual void dndDropEvent(Window* window)
+    virtual void dndDropEvent(Window* window, const ClipboardMetadata& metadata)
     {
         auto d = (WidgetImpl*) window->data();
-        DndDropEvent event;
+        DndDropEvent event(metadata);
         d->m_root_widget->dndDropEvent(&event);
     }
 
