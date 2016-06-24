@@ -172,30 +172,71 @@ void WindowX11::dndMove(int eventx, int eventy)
 
 void WindowX11::xdndEnterEvent()
 {
+    g_dnd_metadata.clear();
+
     const XClientMessageEvent &in = g_incoming_event->xclient;
     const long int* dnd_enter_data = in.data.l;
 
+    ::Window dnd_source_window = dnd_enter_data[0];
+    if(dnd_source_window == None)
+        return;
+
     if(dnd_enter_data[1] & 1)
     {
-        cout << "More types!\n";
-//         bool ok = get_window_atom_list_property(
-//             dnd_source(msg_data),
-//             X11_Atom::XdndTypeList,
-//             XA_ATOM,
-//             false,
-//             types
-//         );
-//
-//         if(!ok)
-//         {
-//             cerr << "Failed to fetch dnd source types!\n";
-//         }
+        Atom type;
+        int format = 0;
+        unsigned long nitems = 0;
+        unsigned long bytes_after = 0;
+        unsigned char* data = nullptr;
+
+        auto result = XGetWindowProperty(
+            g_display,
+            dnd_source_window,
+            X11_Atom::XdndTypeList,
+            0, 0, False,
+            XA_ATOM, &type, &format,
+            &nitems, &bytes_after,
+            &data
+        );
+
+        if(result == Success)
+        {
+            unsigned int items_to_read = (bytes_after >> 2);
+            if(items_to_read)
+            {
+                format = 0;
+                nitems = 0;
+                bytes_after = 0;
+                data = nullptr;
+
+                auto result = XGetWindowProperty(
+                    g_display,
+                    dnd_source_window,
+                    X11_Atom::XdndTypeList,
+                    0, items_to_read, False,
+                    XA_ATOM, &type, &format,
+                    &nitems, &bytes_after,
+                    &data
+                );
+
+                if(result == Success && nitems > 0)
+                {
+                    if(type == XA_ATOM && format == 32 && nitems == items_to_read)
+                    {
+                        Atom* atoms = (Atom*) data;
+                        for(unsigned int i=0; i<nitems; i++)
+                        {
+                            string name = atom_name(atoms[i]);
+                            g_dnd_metadata.push_back(name);
+                        }
+                    }
+                    XFree(data);
+                }
+            }
+        }
     }
     else
     {
-        cout << "Less types!\n";
-
-        g_dnd_metadata.clear();
         for(int i=2; i<5; i++)
         {
             if(dnd_enter_data[i] != None)
