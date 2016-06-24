@@ -202,22 +202,6 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     }
 
 
-    virtual void dndEnterEvent(Window* window, int x, int y)
-    {
-        auto d = (WidgetImpl*) window->data();
-        DndEnterEvent event;
-        d->m_root_widget->dndEnterEvent(&event);
-    }
-
-
-    virtual void dndLeaveEvent(Window* window)
-    {
-        auto d = (WidgetImpl*) window->data();
-        DndLeaveEvent event;
-        d->m_root_widget->dndLeaveEvent(&event);
-    }
-
-
     virtual void dndMoveEvent(Window* window, int x, int y, const ClipboardMetadata& metadata, bool &accept)
     {
         auto d = (WidgetImpl*) window->data();
@@ -233,7 +217,16 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         d->m_root_widget->dndDropEvent(&event);
     }
 
-    virtual void dndFinished()
+
+    virtual void dndLeaveEvent(Window* window)
+    {
+        auto d = (WidgetImpl*) window->data();
+        DndLeaveEvent event;
+        d->m_root_widget->dndLeaveEvent(&event);
+    }
+    
+
+    virtual void dndFinishedEvent()
     {
         g_pressed_buttons = MouseButton::None();
         Widget::ungrabMouse();

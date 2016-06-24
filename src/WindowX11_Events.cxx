@@ -75,7 +75,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                     if(g_outgoing_drag_object)
                     {
                         window->ungrabMouse();
-                        events->dndFinished();
+                        events->dndFinishedEvent();
                         g_outgoing_drag_object = nullptr;
                         g_drag_anchor_x = 0;
                         g_drag_anchor_y = 0;

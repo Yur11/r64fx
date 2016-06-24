@@ -121,11 +121,6 @@ void Widget_AudioPlayer::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveE
 }
 
 
-void Widget_AudioPlayer::dndEnterEvent(DndEnterEvent* event)
-{
-
-}
-
 
 void Widget_AudioPlayer::dndLeaveEvent(DndLeaveEvent* event)
 {

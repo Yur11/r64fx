@@ -452,18 +452,6 @@ void Widget::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
 }
 
 
-void Widget::dndEnterEvent(DndEnterEvent* event)
-{
-
-}
-
-
-void Widget::dndLeaveEvent(DndLeaveEvent* event)
-{
-
-}
-
-
 void Widget::dndMoveEvent(DndMoveEvent* event)
 {
 
@@ -471,6 +459,12 @@ void Widget::dndMoveEvent(DndMoveEvent* event)
 
 
 void Widget::dndDropEvent(DndDropEvent* event)
+{
+
+}
+
+
+void Widget::dndLeaveEvent(DndLeaveEvent* event)
 {
 
 }
