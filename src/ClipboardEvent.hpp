@@ -96,9 +96,14 @@ public:
     : m_metadata(metadata)
     {}
 
-    const ClipboardMetadata& metadata() const
+    inline const ClipboardMetadata& metadata() const
     {
         return m_metadata;
+    }
+
+    inline bool has(const ClipboardDataType &type) const
+    {
+        return m_metadata.has(type);
     }
 };
 
@@ -129,12 +134,12 @@ public:
     inline int x() const { return mx; }
     inline int y() const { return my; }
 
-    void accept()
+    inline void accept()
     {
         m_accept = true;
     }
 
-    void reject()
+    inline void reject()
     {
         m_accept = false;
     }

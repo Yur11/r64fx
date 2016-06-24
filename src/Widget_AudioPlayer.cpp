@@ -76,6 +76,8 @@ void Widget_AudioPlayer::keyPressEvent(KeyPressEvent* event)
 
 void Widget_AudioPlayer::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
 {
+    cout << "Widget_AudioPlayer::clipboardDataRecieveEvent()\n";
+
     if(event->mode() != ClipboardMode::Clipboard && event->mode() != ClipboardMode::DragAndDrop)
         return;
 
@@ -84,6 +86,8 @@ void Widget_AudioPlayer::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* ev
 
     if(event->type() == "text/uri-list")
     {
+        cout << "Got uri list!\n";
+
         string uri_list((const char*)event->data(), event->size());
         auto it = uri_list.begin();
         for(;;)
@@ -111,11 +115,12 @@ void Widget_AudioPlayer::clipboardDataTransmitEvent(ClipboardDataTransmitEvent* 
 
 void Widget_AudioPlayer::clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event)
 {
-    if(event->mode() != ClipboardMode::Clipboard && event->mode() != ClipboardMode::DragAndDrop)
+    if(event->mode() != ClipboardMode::Clipboard)
         return;
 
     if(event->has("text/uri-list"))
     {
+        cout << "Widget_AudioPlayer request data\n";
         requestClipboardData("text/uri-list", event->mode());
     }
 }
@@ -147,6 +152,11 @@ void Widget_AudioPlayer::dndDropEvent(DndDropEvent* event)
     for(auto &type : event->metadata())
     {
         cout << "    " << type.name() << "\n";
+    }
+
+    if(event->has("text/uri-list"))
+    {
+        requestClipboardData("text/uri-list", ClipboardMode::DragAndDrop);
     }
 }
 

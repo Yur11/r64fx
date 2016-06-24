@@ -108,6 +108,8 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     void xdndDropEvent();
 
+    void sendDndFinished();
+
 
     static void processSomeEvents(WindowEventDispatcherIface* events);
 
@@ -165,12 +167,15 @@ namespace{
     int g_drag_anchor_x = 0;
     int g_drag_anchor_y = 0;
 
+    ClipboardMetadata g_dnd_metadata;
+
+    ::Window g_incoming_drop_source = None;
+    ::Window g_incoming_drop_target = None;
+
     XEvent* g_incoming_event = nullptr;
     XEvent* g_outgoing_event = nullptr;
 
     WindowEventDispatcherIface* g_events = nullptr;
-
-    ClipboardMetadata g_dnd_metadata;
 }//namespace
 
 

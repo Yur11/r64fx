@@ -286,7 +286,6 @@ void WindowX11::selectionNotifyEvent()
             format
         );
 
-
         if(format == 32 && nitems > 0)
         {
             ClipboardMetadata metadata;
@@ -302,6 +301,8 @@ void WindowX11::selectionNotifyEvent()
                 this, metadata, cb->mode
             );
         }
+
+        XFree(data);
     }
     else if(in.target == cb->requested_clipboard_type)
     {
@@ -335,5 +336,12 @@ void WindowX11::selectionNotifyEvent()
             (void*)data,
             (int)nitems
         );
+
+        XFree(data);
+    }
+
+    if(cb == &g_dnd)
+    {
+        sendDndFinished();
     }
 }
