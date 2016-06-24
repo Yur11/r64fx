@@ -256,7 +256,7 @@ void WindowX11::xdndPositionEvent()
     g_incoming_drag = true;
     updateAttrs();
     bool accept = false;
-    g_events->dndMoveEvent(this, x - this->x(), y - this->y(), accept);
+    g_events->dndMoveEvent(this, x - this->x(), y - this->y(), g_dnd_metadata, accept);
 
     XEvent xevent;
     XClientMessageEvent &out = xevent.xclient;
@@ -282,31 +282,31 @@ void WindowX11::xdndPositionEvent()
 void WindowX11::xdndDropEvent()
 {
     const XClientMessageEvent &in = g_incoming_event->xclient;
+    const long int* dnd_drop_data = in.data.l;
 
+    ::Window drag_source = (::Window) dnd_drop_data[0];
     ::Window drag_target = m_xwindow;
-    ::Window drag_source = (::Window) in.data.l[0];
+
+    g_events->dndDropEvent(this);
 
     XEvent xevent;
-    auto &out = xevent.xclient;
-    auto &msg_data = out.data.l;
-    out.type         = ClientMessage;
-    out.display      = g_display;
-    out.window       = drag_source;
-    out.format       = 32;
-    out.message_type = X11_Atom::XdndFinished;
-
-    msg_data[0] = drag_target;
-    msg_data[1] = 0;
-    msg_data[2] = 0;
-    msg_data[3] = 0;
-    msg_data[4] = 0;
+    XClientMessageEvent &out = xevent.xclient;
+    long int* dnd_status_data = out.data.l;
+    out.type           = ClientMessage;
+    out.display        = g_display;
+    out.window         = drag_source;
+    out.format         = 32;
+    out.message_type   = X11_Atom::XdndFinished;
+    dnd_status_data[0] = drag_target;
+    dnd_status_data[1] = 0;
+    dnd_status_data[2] = 0;
+    dnd_status_data[3] = 0;
+    dnd_status_data[4] = 0;
 
     if(!XSendEvent(g_display, drag_source, False, NoEventMask, &xevent))
     {
         cerr << "Failed to send XdndStatus event!\n";
     }
-
-    g_events->dndDropEvent(this);
 
     g_incoming_drag = false;
 }

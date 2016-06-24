@@ -218,10 +218,10 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     }
 
 
-    virtual void dndMoveEvent(Window* window, int x, int y, bool &accept)
+    virtual void dndMoveEvent(Window* window, int x, int y, const ClipboardMetadata& metadata, bool &accept)
     {
         auto d = (WidgetImpl*) window->data();
-        DndMoveEvent event(x, y, accept);
+        DndMoveEvent event(x, y, metadata, accept);
         d->m_root_widget->dndMoveEvent(&event);
     }
 

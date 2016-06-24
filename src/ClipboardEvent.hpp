@@ -101,17 +101,24 @@ class DndLeaveEvent{
 class DndMoveEvent{
     int mx = 0;
     int my = 0;
+    const ClipboardMetadata &m_metadata;
     bool &m_accept;
 
 public:
-    DndMoveEvent(int x, int y, bool &accept)
+    DndMoveEvent(int x, int y, const ClipboardMetadata &metadata, bool &accept)
     : mx(x)
     , my(y)
+    , m_metadata(metadata)
     , m_accept(accept)
     {}
 
     inline int x() const { return mx; }
     inline int y() const { return my; }
+
+    const ClipboardMetadata& metadata() const
+    {
+        return m_metadata;
+    }
 
     void accept()
     {

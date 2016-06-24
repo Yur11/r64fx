@@ -135,7 +135,11 @@ void Widget_AudioPlayer::dndLeaveEvent(DndLeaveEvent* event)
 
 void Widget_AudioPlayer::dndMoveEvent(DndMoveEvent* event)
 {
-    cout << "Widget_AudioPlayer::dndMoveEvent()\n";
+    cout << "Widget_AudioPlayer::dndMoveEvent(" << event->x() << ", " << event->y() << ")\n";
+    for(auto &type : event->metadata())
+    {
+        cout << "    " << type.name() << "\n";
+    }
 
     event->reject();
 }
