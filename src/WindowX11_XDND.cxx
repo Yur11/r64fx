@@ -303,7 +303,15 @@ void WindowX11::xdndDropEvent()
     g_incoming_drop_source = (::Window) dnd_drop_data[0];
     g_incoming_drop_target = m_xwindow;
 
-    g_events->dndDropEvent(this, g_dnd_metadata);
+    ClipboardDataType data_type;
+    bool accepted = false;
+    g_events->dndDropEvent(this, g_dnd_metadata, data_type, accepted);
+
+    if(accepted)
+    {
+        cout << "accepted: " << data_type.name() << "\n";
+        requestClipboardData(data_type, ClipboardMode::DragAndDrop);
+    }
 }
 
 

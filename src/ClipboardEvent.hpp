@@ -108,27 +108,17 @@ public:
 };
 
 
-class DndEnterEvent{
-
-};
-
-
-class DndLeaveEvent{
-
-};
-
-
 class DndMoveEvent : public DndMetadataEvent{
     int mx = 0;
     int my = 0;
-    bool &m_accept;
+    bool &m_accepted;
 
 public:
-    DndMoveEvent(int x, int y, const ClipboardMetadata &metadata, bool &accept)
+    DndMoveEvent(int x, int y, const ClipboardMetadata &metadata, bool &accepted)
     : DndMetadataEvent(metadata)
     , mx(x)
     , my(y)
-    , m_accept(accept)
+    , m_accepted(accepted)
     {}
 
     inline int x() const { return mx; }
@@ -136,19 +126,42 @@ public:
 
     inline void accept()
     {
-        m_accept = true;
+        m_accepted = true;
     }
 
     inline void reject()
     {
-        m_accept = false;
+        m_accepted = false;
     }
 };
 
 
 class DndDropEvent : public DndMetadataEvent{
+    ClipboardDataType &m_data_type;
+    bool &m_accepted;
+
 public:
-    using DndMetadataEvent::DndMetadataEvent;
+    DndDropEvent(const ClipboardMetadata &metadata, ClipboardDataType &out_data_type, bool &out_accepted)
+    : DndMetadataEvent(metadata)
+    , m_data_type(out_data_type)
+    , m_accepted(out_accepted)
+    {}
+
+    inline void accept(const ClipboardDataType &data_type)
+    {
+        m_data_type = data_type;
+        m_accepted = true;
+    }
+
+    inline void reject()
+    {
+        m_accepted = false;
+    }
+};
+
+
+class DndLeaveEvent{
+
 };
 
 

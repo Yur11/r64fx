@@ -210,11 +210,15 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     }
 
 
-    virtual void dndDropEvent(Window* window, const ClipboardMetadata& metadata)
+    virtual void dndDropEvent(Window* window, const ClipboardMetadata& metadata, ClipboardDataType &data_type, bool &accepted)
     {
         auto d = (WidgetImpl*) window->data();
-        DndDropEvent event(metadata);
+        DndDropEvent event(metadata, data_type, accepted);
         d->m_root_widget->dndDropEvent(&event);
+        if(accepted)
+        {
+            requestor(ClipboardMode::DragAndDrop) = d->m_root_widget;
+        }
     }
 
 
@@ -224,7 +228,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         DndLeaveEvent event;
         d->m_root_widget->dndLeaveEvent(&event);
     }
-    
+
 
     virtual void dndFinishedEvent()
     {

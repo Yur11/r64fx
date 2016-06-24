@@ -135,7 +135,7 @@ void Widget_AudioPlayer::dndLeaveEvent(DndLeaveEvent* event)
 
 void Widget_AudioPlayer::dndMoveEvent(DndMoveEvent* event)
 {
-    if(event->metadata().has("text/uri-list"))
+    if(event->has("text/uri-list"))
     {
         event->accept();
     }
@@ -148,15 +148,13 @@ void Widget_AudioPlayer::dndMoveEvent(DndMoveEvent* event)
 
 void Widget_AudioPlayer::dndDropEvent(DndDropEvent* event)
 {
-    cout << "Widget_AudioPlayer::dndDropEvent()\n";
-    for(auto &type : event->metadata())
-    {
-        cout << "    " << type.name() << "\n";
-    }
-
     if(event->has("text/uri-list"))
     {
-        requestClipboardData("text/uri-list", ClipboardMode::DragAndDrop);
+        event->accept("text/uri-list");
+    }
+    else
+    {
+        event->reject();
     }
 }
 
