@@ -125,8 +125,6 @@ struct WidgetImpl{
     void repaint();
 
     void paintChildren(Widget* parent);
-
-    void mouseMoveEvent(Point<int> event_position, Point<int> event_delta, MouseButton pressed_buttons);
 };
 
 
@@ -259,12 +257,13 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
     virtual void mouseMoveEvent(Window* window, int x, int y)
     {
-        Point<int> position(x, y);
-        Point<int> delta = position - g_prev_mouse_position;
+        Widget* root_dst = nullptr;
+        Point<int> event_position(x, y);
+        Point<int> event_delta = event_position - g_prev_mouse_position;
 
         if(g_multi_mouse_grabber)
         {
-            auto mouse_screen_position = Point<int>(x, y) + window->position();
+            auto mouse_screen_position = event_position + window->position();
             for(auto widget : g_windowed_widgets)
             {
                 if(!widget->wantsMultiGrabs())
@@ -277,9 +276,8 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
                 Rect<int> rect(widget_window->position(), widget_window->size());
                 if(rect.overlaps(mouse_screen_position))
                 {
-                    g_moused_over_widget = widget->initMouseMoveEvent(
-                        mouse_screen_position - widget_window->position(), delta, g_pressed_buttons, g_moused_over_widget
-                    );
+                    root_dst = widget;
+                    event_position = mouse_screen_position - widget_window->position();
                     break;
                 }
             }
@@ -287,12 +285,48 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         else
         {
             auto d = (WidgetImpl*) window->data();
-            g_moused_over_widget = d->m_root_widget->initMouseMoveEvent(
-                position, delta, g_pressed_buttons, g_moused_over_widget
-            );
+            root_dst = d->m_root_widget;
         }
 
-        g_prev_mouse_position = position;
+        if(root_dst)
+        {
+            auto dst = g_mouse_grabber;
+            if(dst)
+            {
+                event_position -= dst->toRootCoords(Point<int>(0, 0));
+            }
+            else
+            {
+                Point<int> leaf_offset = {0, 0};
+                dst = root_dst->leafAt(event_position, &leaf_offset);
+                event_position -= leaf_offset;
+            }
+
+
+            MouseMoveEvent event(event_position, event_delta, g_pressed_buttons);
+            if(dst != g_moused_over_widget)
+            {
+                if(g_moused_over_widget)
+                {
+                    g_moused_over_widget->m_flags &= ~R64FX_WIDGET_IS_HOVERED;
+                    g_moused_over_widget->mouseLeaveEvent();
+                }
+
+                if(dst)
+                {
+                    dst->m_flags |= R64FX_WIDGET_IS_HOVERED;
+                    dst->mouseEnterEvent();
+                }
+            }
+
+            if(dst)
+            {
+                g_moused_over_widget = dst;
+                dst->mouseMoveEvent(&event);
+            }
+        }
+
+        g_prev_mouse_position = event_position;
     }
 
 
@@ -1013,14 +1047,12 @@ void Widget::grabMouseMulti()
 
 void Widget::ungrabMouseMulti()
 {
-    cout << "ungrabMouseMulti()\n";
     auto root_window = rootWindow();
     if(!root_window)
         return;
 
     root_window->ungrabMouse();
     g_multi_mouse_grabber = nullptr;
-    cout << "done\n";
 }
 
 
@@ -1047,104 +1079,6 @@ bool Widget::wantsMultiGrabs()
 MouseButton Widget::pressedButtons()
 {
     return g_pressed_buttons;
-}
-
-
-Widget* Widget::initMouseMoveEvent(
-    Point<int> event_position,
-    Point<int> event_delta,
-    MouseButton pressed_buttons,
-    Widget* moused_over_widget,
-    bool ignore_grabs,
-    bool ignore_self
-)
-{
-    auto dst = Widget::mouseGrabber();
-    if(dst && !ignore_grabs)
-    {
-        event_position -= dst->toRootCoords(Point<int>(0, 0));
-    }
-    else
-    {
-        Point<int> leaf_offset = {0, 0};
-        dst = leafAt(event_position, &leaf_offset);
-        event_position -= leaf_offset;
-    }
-
-    if(ignore_self && dst == this)
-        return dst;
-
-    MouseMoveEvent event(event_position, event_delta, pressed_buttons);
-    if(dst != moused_over_widget)
-    {
-        if(moused_over_widget)
-        {
-            moused_over_widget->initMouseLeaveEvent();
-        }
-
-        if(dst)
-        {
-            dst->initMouseEnterEvent();
-        }
-    }
-
-    if(dst)
-    {
-        dst->mouseMoveEvent(&event);
-    }
-
-    return dst;
-}
-
-
-void WidgetImpl::mouseMoveEvent(Point<int> event_position, Point<int> event_delta, MouseButton pressed_buttons)
-{
-    auto dst = Widget::mouseGrabber();
-    if(dst)
-    {
-        event_position -= dst->toRootCoords(Point<int>(0, 0));
-    }
-    else
-    {
-        Point<int> leaf_offset = {0, 0};
-        dst = m_root_widget->leafAt(event_position, &leaf_offset);
-        event_position -= leaf_offset;
-    }
-
-    MouseMoveEvent event(event_position, event_delta, pressed_buttons);
-    if(dst != g_moused_over_widget)
-    {
-        if(g_moused_over_widget)
-        {
-            g_moused_over_widget->m_flags &= ~R64FX_WIDGET_IS_HOVERED;
-            g_moused_over_widget->mouseLeaveEvent();
-        }
-
-        if(dst)
-        {
-            dst->m_flags |= R64FX_WIDGET_IS_HOVERED;
-            dst->mouseEnterEvent();
-        }
-    }
-
-    if(dst)
-    {
-        dst->mouseMoveEvent(&event);
-    }
-}
-
-
-void Widget::initMouseEnterEvent()
-{
-    m_flags |= R64FX_WIDGET_IS_HOVERED;
-    mouseEnterEvent();
-}
-
-
-void Widget::initMouseLeaveEvent()
-{
-    m_flags &= ~R64FX_WIDGET_IS_HOVERED;
-    mouseLeaveEvent();
 }
 
 

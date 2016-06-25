@@ -188,19 +188,6 @@ public:
 
     static MouseButton pressedButtons();
 
-    Widget* initMouseMoveEvent(
-        Point<int> event_position,
-        Point<int> event_delta,
-        MouseButton pressed_buttons,
-        Widget* moused_over_widget,
-        bool ignore_grabs = false,
-        bool ignore_self  = false
-    );
-
-    void initMouseEnterEvent();
-
-    void initMouseLeaveEvent();
-
     bool isHovered();
 
     void setFocus();
