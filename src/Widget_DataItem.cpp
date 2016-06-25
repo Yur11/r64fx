@@ -543,12 +543,12 @@ void Widget_DataItem::mousePressEventPlain(MousePressEvent* event)
     {
         setSelected(true);
         setFocus();
+        grabMouse();
     }
     else if(event->button() & MouseButton::Right())
     {
         showContextMenu(event->position());
     }
-    grabMouse();
     Widget::mousePressEvent(event);
 }
 
@@ -583,7 +583,7 @@ void Widget_DataItem::mousePressEventTree(MousePressEvent* event)
 
 void Widget_DataItem::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    if(isMouseGrabber())
+    if(isMouseGrabber() && (event->button() & MouseButton::Left()))
     {
         ungrabMouse();
     }
@@ -593,7 +593,7 @@ void Widget_DataItem::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget_DataItem::mouseMoveEvent(MouseMoveEvent* event)
 {
-    if(event->button() & MouseButton::Left())
+    if(isMouseGrabber() && (event->button() & MouseButton::Left()))
     {
         int distance = event->dx() * event->dx() + event->dy() * event->dy();
         if(distance > 1 && (!caption().empty()))

@@ -208,7 +208,6 @@ void Widget_DirectoryItem::expand()
 
 void Widget_DirectoryItem::showContextMenu(Point<int> position)
 {
-    cout << "showContextMenu: " << caption() << " -> " << position << "\n";
     g_context_menu->showAt(position, this);
 }
 
