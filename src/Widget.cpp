@@ -269,22 +269,52 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
     virtual void keyPressEvent(Window* window, unsigned int key)
     {
-        auto d = (WidgetImpl*) window->data();
-        d->m_root_widget->initKeyPressEvent(key);
+        Keyboard::trackModifierPress(key);
+
+        KeyPressEvent event(key);
+        if(g_focus_owner)
+        {
+            g_focus_owner->keyPressEvent(&event);
+        }
+        else
+        {
+            auto d = (WidgetImpl*) window->data();
+            d->m_root_widget->keyPressEvent(&event);
+        }
     }
 
 
     virtual void keyReleaseEvent(Window* window, unsigned int key)
     {
-        auto d = (WidgetImpl*) window->data();
-        d->m_root_widget->initKeyReleaseEvent(key);
+        Keyboard::trackModifierRelease(key);
+
+        KeyReleaseEvent event(key);
+        if(g_focus_owner)
+        {
+            g_focus_owner->keyReleaseEvent(&event);
+        }
+        else
+        {
+            auto d = (WidgetImpl*) window->data();
+            d->m_root_widget->keyReleaseEvent(&event);
+        }
     }
 
 
     virtual void textInputEvent(Window* window, const std::string &text, unsigned int key)
     {
-        auto d = (WidgetImpl*) window->data();
-        d->m_root_widget->initTextInputEvent(text, key);
+        Keyboard::trackModifierPress(key);
+
+        TextInputEvent event(text, key);
+        if(g_focus_owner)
+        {
+            g_focus_owner->textInputEvent(&event);
+        }
+        else
+        {
+            auto d = (WidgetImpl*) window->data();
+            d->m_root_widget->textInputEvent(&event);
+        }
     }
 
 
@@ -1165,54 +1195,6 @@ bool Widget::doingTextInput()
     else
     {
         return false;
-    }
-}
-
-
-void Widget::initKeyPressEvent(unsigned int key)
-{
-    Keyboard::trackModifierPress(key);
-
-    KeyPressEvent event(key);
-    if(g_focus_owner)
-    {
-        g_focus_owner->keyPressEvent(&event);
-    }
-    else
-    {
-        keyPressEvent(&event);
-    }
-}
-
-
-void Widget::initKeyReleaseEvent(unsigned int key)
-{
-    Keyboard::trackModifierRelease(key);
-
-    KeyReleaseEvent event(key);
-    if(g_focus_owner)
-    {
-        g_focus_owner->keyReleaseEvent(&event);
-    }
-    else
-    {
-        keyReleaseEvent(&event);
-    }
-}
-
-
-void Widget::initTextInputEvent(const std::string &text, unsigned int key)
-{
-    Keyboard::trackModifierPress(key);
-
-    TextInputEvent event(text, key);
-    if(g_focus_owner)
-    {
-        g_focus_owner->textInputEvent(&event);
-    }
-    else
-    {
-        textInputEvent(&event);
     }
 }
 

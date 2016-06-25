@@ -231,12 +231,6 @@ public:
 
     bool doingTextInput();
 
-    void initKeyPressEvent(unsigned int key);
-
-    void initKeyReleaseEvent(unsigned int key);
-
-    void initTextInputEvent(const std::string &text, unsigned int key);
-
     void anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode);
 
     void requestClipboardMetadata(ClipboardMode mode);
