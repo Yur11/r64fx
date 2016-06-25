@@ -126,10 +126,6 @@ struct WidgetImpl{
 
     void paintChildren(Widget* parent);
 
-    void mousePressEvent(Point<int> event_position, MouseButton button);
-
-    void mouseReleaseEvent(Point<int> event_position, MouseButton button);
-
     void mouseMoveEvent(Point<int> event_position, Point<int> event_delta, MouseButton pressed_buttons);
 };
 
@@ -165,7 +161,10 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
                 Rect<int> rect(widget_window->position(), widget_window->size());
                 if(rect.overlaps(mouse_screen_position))
                 {
-                    widget->initMousePressEvent(mouse_screen_position - widget_window->position(), MouseButton(button));
+                    Point<int> event_position = mouse_screen_position - widget_window->position();
+
+                    MousePressEvent event(event_position, {0, 0}, MouseButton(button));
+                    widget->mousePressEvent(&event);
                     got_widget = true;
                     break;
                 }
@@ -178,8 +177,21 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         }
         else
         {
-            auto d = (WidgetImpl*) window->data();
-            d->m_root_widget->initMousePressEvent(Point<int>(x, y), MouseButton(button));
+            Point<int> event_position(x, y);
+
+            auto dst = g_mouse_grabber;
+            if(dst)
+            {
+                event_position -= dst->toRootCoords(Point<int>(0, 0));
+            }
+            else
+            {
+                auto d = (WidgetImpl*) window->data();
+                dst = d->m_root_widget;
+            }
+
+            MousePressEvent event(event_position, {0, 0}, MouseButton(button));
+            dst->mousePressEvent(&event);
         }
 
         g_prev_mouse_position = Point<int>(x, y);
@@ -205,15 +217,42 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
                 Rect<int> rect(widget_window->position(), widget_window->size());
                 if(rect.overlaps(mouse_screen_position))
                 {
-                    widget->initMouseReleaseEvent(mouse_screen_position - widget_window->position(), MouseButton(button));
+                    Point<int> event_position = mouse_screen_position - widget_window->position();
+
+                    auto dst = g_mouse_grabber;
+                    if(dst)
+                    {
+                        event_position -= dst->toRootCoords(Point<int>(0, 0));
+                    }
+                    else
+                    {
+                        dst = widget;
+                    }
+
+                    MouseReleaseEvent event(event_position, {0, 0}, MouseButton(button));
+                    dst->mouseReleaseEvent(&event);
+
                     break;
                 }
             }
         }
         else
         {
-            auto d = (WidgetImpl*) window->data();
-            d->m_root_widget->initMouseReleaseEvent(Point<int>(x, y), MouseButton(button));
+            Point<int> event_position(x, y);
+
+            auto dst = g_mouse_grabber;
+            if(dst)
+            {
+                event_position -= dst->toRootCoords(Point<int>(0, 0));
+            }
+            else
+            {
+                auto d = (WidgetImpl*) window->data();
+                dst = d->m_root_widget;
+            }
+
+            MouseReleaseEvent event(event_position, {0, 0}, MouseButton(button));
+            dst->mouseReleaseEvent(&event);
         }
     }
 
@@ -1011,66 +1050,6 @@ MouseButton Widget::pressedButtons()
 }
 
 
-void Widget::initMousePressEvent(
-    Point<int> event_position,
-    MouseButton button,
-    bool ignore_grabs,
-    bool ignore_self
-)
-{
-    auto dst = mouseGrabber();
-    if(dst && !ignore_grabs)
-    {
-        event_position -= dst->toRootCoords(Point<int>(0, 0));
-    }
-    else
-    {
-        dst = this;
-    }
-
-    MousePressEvent event(event_position, {0, 0}, button);
-
-    if(ignore_self && dst == this)
-    {
-        dst->childrenMousePressEvent(&event);
-    }
-    else
-    {
-        dst->mousePressEvent(&event);
-    }
-}
-
-
-void Widget::initMouseReleaseEvent(
-    Point<int> event_position,
-    MouseButton button,
-    bool ignore_grabs,
-    bool ignore_self
-)
-{
-    auto dst = mouseGrabber();
-    if(dst && !ignore_grabs)
-    {
-        event_position -= dst->toRootCoords(Point<int>(0, 0));
-    }
-    else
-    {
-        dst = this;
-    }
-
-    MouseReleaseEvent event(event_position, {0, 0}, button);
-
-    if(ignore_self && dst == this)
-    {
-        dst->childrenMouseReleaseEvent(&event);
-    }
-    else
-    {
-        dst->mouseReleaseEvent(&event);
-    }
-}
-
-
 Widget* Widget::initMouseMoveEvent(
     Point<int> event_position,
     Point<int> event_delta,
@@ -1115,40 +1094,6 @@ Widget* Widget::initMouseMoveEvent(
     }
 
     return dst;
-}
-
-
-void WidgetImpl::mousePressEvent(Point<int> event_position, MouseButton button)
-{
-    auto dst = Widget::mouseGrabber();
-    if(dst)
-    {
-        event_position -= dst->toRootCoords(Point<int>(0, 0));
-    }
-    else
-    {
-        dst = m_root_widget;
-    }
-
-    MousePressEvent event(event_position, {0, 0}, button);
-    dst->mousePressEvent(&event);
-}
-
-
-void WidgetImpl::mouseReleaseEvent(Point<int> event_position, MouseButton button)
-{
-    auto dst = Widget::mouseGrabber();
-    if(dst)
-    {
-        event_position -= dst->toRootCoords(Point<int>(0, 0));
-    }
-    else
-    {
-        dst = m_root_widget;
-    }
-
-    MouseReleaseEvent event(event_position, {0, 0}, button);
-    dst->mouseReleaseEvent(&event);
 }
 
 

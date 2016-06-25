@@ -188,20 +188,6 @@ public:
 
     static MouseButton pressedButtons();
 
-    void initMousePressEvent(
-        Point<int> event_position,
-        MouseButton button,
-        bool ignore_grabs = false,
-        bool ignore_self  = false
-    );
-
-    void initMouseReleaseEvent(
-        Point<int> event_position,
-        MouseButton button,
-        bool ignore_grabs = false,
-        bool ignore_self  = false
-    );
-
     Widget* initMouseMoveEvent(
         Point<int> event_position,
         Point<int> event_delta,
