@@ -32,6 +32,7 @@ class DndFinishedEvent;
 
 typedef LinkedList<Widget>::Iterator WidgetIterator;
 
+
 class Widget : public LinkedList<Widget>::Node{
     friend class WidgetImpl;
     friend class WindowEventDispatcher;
@@ -52,13 +53,6 @@ class Widget : public LinkedList<Widget>::Node{
     /* A linked list of child widgets. */
     LinkedList<Widget> m_children;
 
-public:
-    /* Child iterators. */
-
-    inline WidgetIterator begin() const { return m_children.begin(); }
-
-    inline WidgetIterator end() const { return nullptr; }
-
 protected:
     /* Bit-packed bool flags.
      * These can be used by the base class as well as by derived classes. Hence protected access.
@@ -75,22 +69,27 @@ public:
      * of the given parent. */
     void setParent(Widget* parent);
     
+    /* Parent widget or nullptr if this widget has no parent or is a window. */
     Widget* parent() const;
     
-    /* Effectivly calls setParent on the given widget. */
+    /* Effectivly calls setParent on the given child widget. */
     void add(Widget* child);
 
+    /* Iterator pointing to the first child. */
+    WidgetIterator begin() const;
+
+    /* Iterator pointing past the last child. */
+    WidgetIterator end() const;
+
+    /* Remove the first child and return it. */
     Widget* popFirstChild();
 
+    /* The root parent widget in a tree that this widget belongs to. */
     Widget* root() const;
-
-    /* Find leaf child at the given position. */
-    Widget* leafAt(Point<int> position, Point<int>* offset = nullptr);
-
-/* === Geometry. === */
 
     void setPosition(Point<int> pos);
 
+    /* Position of this widget in the coordinate system of the parent widget. */
     Point<int> position() const;
 
     void setX(int x);
@@ -113,20 +112,38 @@ public:
 
     int height() const;
 
+    /* Find leaf child at a given position.
+     * The optional offset parameter is used to return the leaf position
+     * in the coordinate system of this widget. */
+    Widget* leafAt(Point<int> position, Point<int>* offset = nullptr);
+
+    /* Convert a point from the coordinate system of this widget
+     * to the coordinate system of the root widget.
+     * The optional root parameter is used to obtain the root widget. */
     Point<int> toRootCoords(Point<int> point, Widget** root = nullptr);
 
+    /* Iterate over the children and find whether they are visible inside the given clip_rect.
+     * The clip_rect is used in the coordinate system of this widget with contentOffset() applied. */
     void recomputeChildrenVisibility(const Rect<int> &clip_rect);
 
+    /* Calls recomputeChildrenVisibility() with clip_rect = {0, 0, width(), height()}. */
     void recomputeChildrenVisibility();
 
+    /* Visiblity flag updated by calling recomputeChildrenVisibility() on the parent widget. */
     bool isVisible() const;
 
+    /* Offset added to positions of child widgets
+     * when processing them in geometry algorithms.
+     * Used to implement scrolling. */
     virtual Point<int> contentOffset();
 
+    /* A rectangle that encloses all the children of this widget.
+     * Without contentOffset() applied. */
     Rect<int> childrenBoundingRect() const;
 
+    void setOrientation(Orientation orientation);
 
-/* === Window === */
+    Orientation orientation() const;
 
     /* Show this widget in a window. */
     void show(
@@ -141,8 +158,10 @@ public:
     /* Close the window. */
     void close();
 
+    /* The window that this widget is shown in or nullptr. */
     Window* window() const;
 
+    /* The window that the root widget is show in or nullptr. */
     Window* rootWindow() const;
 
     bool isWindow() const;
@@ -150,20 +169,6 @@ public:
     void setWindowTitle(std::string title);
 
     std::string windowTitle() const;
-
-
-/* === Extra Flags === */
-
-    void setOrientation(Orientation orientation);
-
-    Orientation orientation() const;
-
-    void setPinned(bool yes);
-
-    bool isPinned() const;
-
-
-/* === Mouse === */
 
     void grabMouse();
 
@@ -173,7 +178,6 @@ public:
 
     bool isMouseGrabber() const;
 
-
     void grabMouseMulti();
 
     void ungrabMouseMulti();
@@ -181,7 +185,6 @@ public:
     bool wantsMultiGrabs(bool yes);
 
     bool wantsMultiGrabs();
-
 
     static MouseButton pressedButtons();
 
@@ -214,8 +217,6 @@ public:
 
     bool isHovered();
 
-/* === Keyboard === */
-
     void setFocus();
 
     static void removeFocus();
@@ -235,9 +236,6 @@ public:
     void initKeyReleaseEvent(unsigned int key);
 
     void initTextInputEvent(const std::string &text, unsigned int key);
-
-
-/* === Clipboard, Selections, Drag and Drop === */
 
     void anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode);
 
@@ -313,8 +311,16 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent* event);
 
+private:
+    bool childrenMousePressEvent(MousePressEvent* event);
+
+protected:
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
+private:
+    bool childrenMouseReleaseEvent(MouseReleaseEvent* event);
+
+protected:
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 
     virtual void mouseEnterEvent();
@@ -348,11 +354,6 @@ protected:
     virtual void dndFinishedEvent(DndFinishedEvent* event);
 
     virtual void closeEvent();
-
-private:
-    bool childrenMousePressEvent(MousePressEvent* event);
-
-    bool childrenMouseReleaseEvent(MouseReleaseEvent* event);
 };
     
 }//namespace r64fx
