@@ -125,6 +125,12 @@ struct WidgetImpl{
     void repaint();
 
     void paintChildren(Widget* parent);
+
+    void mousePressEvent(Point<int> event_position, MouseButton button);
+
+    void mouseReleaseEvent(Point<int> event_position, MouseButton button);
+
+    void mouseMoveEvent(Point<int> event_position, Point<int> event_delta, MouseButton pressed_buttons);
 };
 
 
@@ -1109,6 +1115,77 @@ Widget* Widget::initMouseMoveEvent(
     }
 
     return dst;
+}
+
+
+void WidgetImpl::mousePressEvent(Point<int> event_position, MouseButton button)
+{
+    auto dst = Widget::mouseGrabber();
+    if(dst)
+    {
+        event_position -= dst->toRootCoords(Point<int>(0, 0));
+    }
+    else
+    {
+        dst = m_root_widget;
+    }
+
+    MousePressEvent event(event_position, {0, 0}, button);
+    dst->mousePressEvent(&event);
+}
+
+
+void WidgetImpl::mouseReleaseEvent(Point<int> event_position, MouseButton button)
+{
+    auto dst = Widget::mouseGrabber();
+    if(dst)
+    {
+        event_position -= dst->toRootCoords(Point<int>(0, 0));
+    }
+    else
+    {
+        dst = m_root_widget;
+    }
+
+    MouseReleaseEvent event(event_position, {0, 0}, button);
+    dst->mouseReleaseEvent(&event);
+}
+
+
+void WidgetImpl::mouseMoveEvent(Point<int> event_position, Point<int> event_delta, MouseButton pressed_buttons)
+{
+    auto dst = Widget::mouseGrabber();
+    if(dst)
+    {
+        event_position -= dst->toRootCoords(Point<int>(0, 0));
+    }
+    else
+    {
+        Point<int> leaf_offset = {0, 0};
+        dst = m_root_widget->leafAt(event_position, &leaf_offset);
+        event_position -= leaf_offset;
+    }
+
+    MouseMoveEvent event(event_position, event_delta, pressed_buttons);
+    if(dst != g_moused_over_widget)
+    {
+        if(g_moused_over_widget)
+        {
+            g_moused_over_widget->m_flags &= ~R64FX_WIDGET_IS_HOVERED;
+            g_moused_over_widget->mouseLeaveEvent();
+        }
+
+        if(dst)
+        {
+            dst->m_flags |= R64FX_WIDGET_IS_HOVERED;
+            dst->mouseEnterEvent();
+        }
+    }
+
+    if(dst)
+    {
+        dst->mouseMoveEvent(&event);
+    }
 }
 
 
