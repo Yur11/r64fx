@@ -245,12 +245,6 @@ public:
 
     void startDrag(Widget* dnd_object, Point<int> anchor);
 
-    void initDndMoveEvent(int x, int y, const ClipboardMetadata& metadata, bool &accepted);
-
-    void initDndDropEvent(const ClipboardMetadata& metadata, ClipboardDataType &out_data_type, bool &out_accepted);
-
-/* === Paint cycle === */
-
     /* Request a clipping for this widget and it's children. */
     void clip();
 

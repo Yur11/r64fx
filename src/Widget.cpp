@@ -331,7 +331,18 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     virtual void dndMoveEvent(Window* window, int x, int y, const ClipboardMetadata& metadata, bool &accepted)
     {
         auto d = (WidgetImpl*) window->data();
-        d->m_root_widget->initDndMoveEvent(x, y, metadata, accepted);
+
+        Point<int> event_position(x, y);
+        Point<int> leaf_offset = {0, 0};
+        Widget* dst = d->m_root_widget->leafAt(event_position, &leaf_offset);
+        event_position -= leaf_offset;
+
+        if(dst)
+        {
+            g_dnd_target = dst;
+            DndMoveEvent event(event_position, metadata, accepted);
+            dst->dndMoveEvent(&event);
+        }
     }
 
 
@@ -339,7 +350,12 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         if(g_dnd_target)
         {
-            g_dnd_target->initDndDropEvent(metadata, data_type, accepted);
+            DndDropEvent event(metadata, data_type, accepted);
+            g_dnd_target->dndDropEvent(&event);
+            if(accepted)
+            {
+                requestor(ClipboardMode::DragAndDrop) = g_dnd_target;
+            }
         }
         g_dnd_target = nullptr;
     }
@@ -1258,33 +1274,6 @@ void Widget::startDrag(Widget* dnd_object, Point<int> anchor)
             dnd_object->show(Window::WmType::DND, Window::Type::Image);
         }
         root_window->startDrag(dnd_object->window(), anchor.x(), anchor.y());
-    }
-}
-
-
-void Widget::initDndMoveEvent(int x, int y, const ClipboardMetadata& metadata, bool &accepted)
-{
-    Point<int> event_position(x, y);
-    Point<int> leaf_offset = {0, 0};
-    Widget* dst = leafAt(event_position, &leaf_offset);
-    event_position -= leaf_offset;
-
-    if(dst)
-    {
-        g_dnd_target = dst;
-        DndMoveEvent event(event_position, metadata, accepted);
-        dst->dndMoveEvent(&event);
-    }
-}
-
-
-void Widget::initDndDropEvent(const ClipboardMetadata& metadata, ClipboardDataType &data_type, bool &accepted)
-{
-    DndDropEvent event(metadata, data_type, accepted);
-    dndDropEvent(&event);
-    if(accepted)
-    {
-        requestor(ClipboardMode::DragAndDrop) = this;
     }
 }
 
