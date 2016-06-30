@@ -103,6 +103,8 @@ protected:
     virtual void mouseLeaveEvent();
 
     virtual void dndFinishedEvent(DndFinishedEvent* event);
+
+    virtual void getClipboardMetadata(ClipboardMetadata &metadata);
 };
 
 }//namespace

@@ -118,14 +118,19 @@ void WindowX11::setupDnd()
 }
 
 
-void WindowX11::startDrag(Window* drag_object, int anchor_x, int anchor_y)
+void WindowX11::startDrag(const ClipboardMetadata &metadata, Window* drag_object, int anchor_x, int anchor_y)
 {
+    if(metadata.empty())
+        return;
+
     if(!drag_object || g_outgoing_drag_object)
         return;
 
     g_outgoing_drag_object = dynamic_cast<WindowX11*>(drag_object);
     if(!g_outgoing_drag_object)
         return;
+
+    g_dnd_metadata = metadata;
 
     g_drag_anchor_x = anchor_x;
     g_drag_anchor_y = anchor_y;
@@ -135,8 +140,6 @@ void WindowX11::startDrag(Window* drag_object, int anchor_x, int anchor_y)
 
 void WindowX11::dndMove(int eventx, int eventy)
 {
-    cout << "dndMove: " << eventx << ", " << eventy << "\n";
-
     int screen_x = eventx + x();
     int screen_y = eventy + y();
     int dnd_obj_x = screen_x - g_drag_anchor_x;
@@ -155,17 +158,31 @@ void WindowX11::dndMove(int eventx, int eventy)
     ))
     {
         ::Window xdnd_target = None;
-        int target_xdnd_version = -1;
+        g_target_xdnd_version = -1;
 
-        find_dnd_target(root, screen_x, screen_y, &xdnd_target, &target_xdnd_version);
+        find_dnd_target(root, screen_x, screen_y, &xdnd_target, &g_target_xdnd_version);
 
-        Window* target_window = nullptr;
         if(xdnd_target)
         {
-            target_window = getWindowFromXWindow(xdnd_target);
-        }
+//             Window* target_window = nullptr;
+//             target_window = getWindowFromXWindow(xdnd_target);
 
-        cout << xdnd_target << " -> " << target_xdnd_version << " --> " << target_window << "\n";
+            if(xdnd_target != g_outgoing_drop_target)
+            {
+                if(g_outgoing_drop_target != None)
+                {
+                    sendDndLeave(g_outgoing_drop_target);
+                }
+
+                if(xdnd_target)
+                {
+                    sendDndEnter(xdnd_target);
+                }
+            }
+            g_outgoing_drop_target = xdnd_target;
+
+            sendDndPosition(xdnd_target, screen_x, screen_y);
+        }
     }
 }
 
@@ -276,17 +293,17 @@ void WindowX11::xdndPositionEvent()
 
     XEvent out_xevent;
     XClientMessageEvent &out = out_xevent.xclient;
-    long int* dnd_status_data = out.data.l;
+    long int* msg_data = out.data.l;
     out.type           = ClientMessage;
     out.display        = g_display;
     out.window         = drag_source;
     out.format         = 32;
     out.message_type   = X11_Atom::XdndStatus;
-    dnd_status_data[0] = drag_target;
-    dnd_status_data[1] = (accept ? 1 : 0);
-    dnd_status_data[2] = 0;
-    dnd_status_data[3] = 0;
-    dnd_status_data[4] = (accept ? action : None);
+    msg_data[0] = drag_target;
+    msg_data[1] = (accept ? 1 : 0);
+    msg_data[2] = 0;
+    msg_data[3] = 0;
+    msg_data[4] = (accept ? action : None);
 
     if(!XSendEvent(g_display, drag_source, False, NoEventMask, &out_xevent))
     {
@@ -315,27 +332,124 @@ void WindowX11::xdndDropEvent()
 }
 
 
-void WindowX11::sendDndFinished()
+void WindowX11::sendDndEnter(::Window target_xwindow)
 {
-    cout << "sendDndFinished()\n";
+    if(g_dnd_metadata.empty())
+        return;
 
     XEvent out_xevent;
     XClientMessageEvent &out = out_xevent.xclient;
-    long int* dnd_status_data = out.data.l;
+    long int* msg_data = out.data.l;
+    out.type           = ClientMessage;
+    out.display        = g_display;
+    out.window         = g_incoming_drop_source;
+    out.format         = 32;
+    out.message_type   = X11_Atom::XdndEnter;
+    msg_data[0] = m_xwindow;
+    msg_data[1] = (min(g_target_xdnd_version, 5) << 24);
+    if(g_dnd_metadata.size() <= 3)
+    {
+        for(int i=0; i<(int)g_dnd_metadata.size(); i++)
+        {
+            msg_data[i+2] = get_extra_atom(g_dnd_metadata[i].name());
+        }
+    }
+
+    if(!XSendEvent(g_display, g_incoming_drop_source, False, NoEventMask, &out_xevent))
+    {
+        cerr << "Failed to send XdndEnter event!\n";
+    }
+}
+
+
+void WindowX11::sendDndPosition(::Window target_xwindow, short x, short y)
+{
+    XEvent out_xevent;
+    XClientMessageEvent &out = out_xevent.xclient;
+    long int* msg_data = out.data.l;
+    out.type           = ClientMessage;
+    out.display        = g_display;
+    out.window         = g_incoming_drop_source;
+    out.format         = 32;
+    out.message_type   = X11_Atom::XdndPosition;
+    msg_data[0] = m_xwindow;
+    msg_data[1] = 0;
+    msg_data[2] = (int(x) << 16) | int(y);
+    msg_data[3] = CurrentTime;
+    msg_data[4] = X11_Atom::XdndActionCopy;
+
+    if(!XSendEvent(g_display, g_incoming_drop_source, False, NoEventMask, &out_xevent))
+    {
+        cerr << "Failed to send XdndPosition event!\n";
+    }
+}
+
+
+void WindowX11::sendDndDrop(::Window target_xwindow)
+{
+    XEvent out_xevent;
+    XClientMessageEvent &out = out_xevent.xclient;
+    long int* msg_data = out.data.l;
+    out.type           = ClientMessage;
+    out.display        = g_display;
+    out.window         = g_incoming_drop_source;
+    out.format         = 32;
+    out.message_type   = X11_Atom::XdndDrop;
+    msg_data[0] = m_xwindow;
+    msg_data[1] = 0;
+    msg_data[2] = CurrentTime;
+    msg_data[3] = 0;
+    msg_data[4] = 0;
+
+    if(!XSendEvent(g_display, g_incoming_drop_source, False, NoEventMask, &out_xevent))
+    {
+        cerr << "Failed to send XdndLeave event!\n";
+    }
+}
+
+
+void WindowX11::sendDndLeave(::Window target_xwindow)
+{
+    XEvent out_xevent;
+    XClientMessageEvent &out = out_xevent.xclient;
+    long int* msg_data = out.data.l;
+    out.type           = ClientMessage;
+    out.display        = g_display;
+    out.window         = g_incoming_drop_source;
+    out.format         = 32;
+    out.message_type   = X11_Atom::XdndLeave;
+    msg_data[0] = m_xwindow;
+    msg_data[1] = 0;
+    msg_data[2] = 0;
+    msg_data[3] = 0;
+    msg_data[4] = 0;
+
+    if(!XSendEvent(g_display, g_incoming_drop_source, False, NoEventMask, &out_xevent))
+    {
+        cerr << "Failed to send XdndLeave event!\n";
+    }
+}
+
+
+void WindowX11::sendDndFinished()
+{
+    XEvent out_xevent;
+    XClientMessageEvent &out = out_xevent.xclient;
+    long int* msg_data = out.data.l;
     out.type           = ClientMessage;
     out.display        = g_display;
     out.window         = g_incoming_drop_source;
     out.format         = 32;
     out.message_type   = X11_Atom::XdndFinished;
-    dnd_status_data[0] = g_incoming_drop_target;
-    dnd_status_data[1] = 0;
-    dnd_status_data[2] = 0;
-    dnd_status_data[3] = 0;
-    dnd_status_data[4] = 0;
+    msg_data[0] = g_incoming_drop_target;
+    msg_data[1] = 0;
+    msg_data[2] = 0;
+    msg_data[3] = 0;
+    msg_data[4] = 0;
 
     if(!XSendEvent(g_display, g_incoming_drop_source, False, NoEventMask, &out_xevent))
     {
-        cerr << "Failed to send XdndStatus event!\n";
+        cerr << "Failed to send XdndFinished event!\n";
     }
 
     g_incoming_drag = false;

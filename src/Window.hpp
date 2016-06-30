@@ -101,7 +101,7 @@ public:
     virtual void requestClipboardMetadata(ClipboardMode mode) = 0;
 
 
-    virtual void startDrag(Window* drag_object, int anchor_x, int anchor_y) = 0;
+    virtual void startDrag(const ClipboardMetadata &metadata, Window* drag_object, int anchor_x, int anchor_y) = 0;
 
 
     static Window* newInstance(

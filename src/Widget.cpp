@@ -1197,7 +1197,7 @@ void Widget::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
 }
 
 
-void Widget::startDrag(Widget* dnd_object, Point<int> anchor)
+void Widget::startDrag(const ClipboardMetadata &metadata, Widget* dnd_object, Point<int> anchor)
 {
     if(g_dnd_object)
         return;
@@ -1211,7 +1211,7 @@ void Widget::startDrag(Widget* dnd_object, Point<int> anchor)
         {
             dnd_object->show(Window::WmType::DND, Window::Type::Image);
         }
-        root_window->startDrag(dnd_object->window(), anchor.x(), anchor.y());
+        root_window->startDrag(metadata, dnd_object->window(), anchor.x(), anchor.y());
     }
 }
 

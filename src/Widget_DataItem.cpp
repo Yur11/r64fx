@@ -604,7 +604,13 @@ void Widget_DataItem::mouseMoveEvent(MouseMoveEvent* event)
                 anchor.setX(0);
             else if(anchor.x() > label->width())
                 anchor.setX(label->width() - 1);
-            startDrag(label, anchor);
+
+            ClipboardMetadata metadata;
+            getClipboardMetadata(metadata);
+            if(!metadata.empty())
+            {
+                startDrag(metadata, label, anchor);
+            }
         }
     }
 }
@@ -629,6 +635,12 @@ void Widget_DataItem::dndFinishedEvent(DndFinishedEvent* event)
     {
         delete dnd_object;
     }
+}
+
+
+void Widget_DataItem::getClipboardMetadata(ClipboardMetadata &metadata)
+{
+    (void)metadata;
 }
 
 }//namespace

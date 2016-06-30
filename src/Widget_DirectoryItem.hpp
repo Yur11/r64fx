@@ -37,6 +37,8 @@ protected:
 
     virtual void clipboardMetadataRecieveEvent(ClipboardMetadataRecieveEvent* event);
 
+    virtual void getClipboardMetadata(ClipboardMetadata &metadata);
+
 private:
     void populate();
 

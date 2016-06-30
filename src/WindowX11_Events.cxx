@@ -162,6 +162,10 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                 {
                     window->xdndPositionEvent();
                 }
+                else if(msg.message_type == X11_Atom::XdndStatus)
+                {
+                    cout << "XdndStatus\n";
+                }
                 else if(msg.message_type == X11_Atom::XdndEnter)
                 {
                     window->xdndEnterEvent();

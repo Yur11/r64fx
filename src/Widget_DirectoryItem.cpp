@@ -290,6 +290,12 @@ void Widget_DirectoryItem::clipboardMetadataRecieveEvent(ClipboardMetadataReciev
 }
 
 
+void Widget_DirectoryItem::getClipboardMetadata(ClipboardMetadata &metadata)
+{
+    metadata = {"text/plain"};
+}
+
+
 void Widget_DirectoryItem::populate()
 {
     if(!isDirectory())

@@ -210,7 +210,7 @@ public:
 
     void requestClipboardData(ClipboardDataType type, ClipboardMode mode);
 
-    void startDrag(Widget* dnd_object, Point<int> anchor);
+    void startDrag(const ClipboardMetadata &metadata, Widget* dnd_object, Point<int> anchor);
 
     /* Request a clipping for this widget and it's children. */
     void clip();

@@ -96,7 +96,7 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     void setupDnd();
 
-    virtual void startDrag(Window* drag_object, int anchor_x, int anchor_y);
+    virtual void startDrag(const ClipboardMetadata &metadata, Window* drag_object, int anchor_x, int anchor_y);
 
     void dndMove(int eventx, int eventy);
 
@@ -108,8 +108,15 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     void xdndDropEvent();
 
-    void sendDndFinished();
+    void sendDndEnter(::Window target_xwindow);
 
+    void sendDndPosition(::Window target_xwindow, short x, short y);
+
+    void sendDndDrop(::Window target_xwindow);
+
+    void sendDndLeave(::Window target_xwindow);
+
+    void sendDndFinished();
 
     static void processSomeEvents(WindowEventDispatcherIface* events);
 
@@ -161,6 +168,8 @@ namespace{
 
     WindowX11* g_text_input_grabber = nullptr;
 
+    int g_target_xdnd_version = 0;
+
     bool g_incoming_drag = false;
 
     WindowX11* g_outgoing_drag_object = nullptr;
@@ -171,6 +180,8 @@ namespace{
 
     ::Window g_incoming_drop_source = None;
     ::Window g_incoming_drop_target = None;
+
+    ::Window g_outgoing_drop_target = None;
 
     XEvent* g_incoming_event = nullptr;
     XEvent* g_outgoing_event = nullptr;
