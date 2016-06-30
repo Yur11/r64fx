@@ -324,7 +324,28 @@ void WindowX11::sendDndPosition(::Window target_xwindow, short x, short y)
 
 void WindowX11::xdndStatusEvent()
 {
+    const XClientMessageEvent &in = g_incoming_event->xclient;
+    const long int* msg_data = in.data.l;
+
     cout << "xdndStatusEvent\n";
+    ::Window target_xwindow = (::Window) msg_data[0];
+    bool dnd_accepted = (msg_data[1] & 0x1);
+    bool target_wants_more_events = (msg_data[1] & 0x2);
+    int x = ((msg_data[2] >> 16) & 0xFF);
+    int y = (msg_data[2] & 0xFF);
+    int w = ((msg_data[3] >> 16) & 0xFF);
+    int h = (msg_data[3] & 0xFF);
+    Atom xdnd_action = (Atom) msg_data[4];
+
+    cout << "target:   " << (target_xwindow == m_xwindow) << "\n";
+    cout << "accepted: " << dnd_accepted << "\n";
+    cout << "rect:     " << x << ", " << y << ", " << w << ", " << h << " -> " << target_wants_more_events << "\n";
+    cout << "action:   " << xdnd_action;
+    if(xdnd_action != None)
+    {
+        cout << " -> " << atom_name(xdnd_action);
+    }
+    cout << "\n";
 }
 
 
