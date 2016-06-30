@@ -187,6 +187,39 @@ void WindowX11::dndMove(int eventx, int eventy)
 }
 
 
+void WindowX11::sendDndEnter(::Window target_xwindow)
+{
+    if(g_dnd_metadata.empty())
+        return;
+
+    XEvent out_xevent;
+    XClientMessageEvent &out = out_xevent.xclient;
+    long int* msg_data = out.data.l;
+    out.type           = ClientMessage;
+    out.display        = g_display;
+    out.window         = target_xwindow;
+    out.format         = 32;
+    out.message_type   = X11_Atom::XdndEnter;
+    msg_data[0] = m_xwindow;
+    msg_data[1] = (min(g_target_xdnd_version, 5) << 24);
+    msg_data[2] = 0;
+    msg_data[3] = 0;
+    msg_data[4] = 0;
+    if(g_dnd_metadata.size() <= 3)
+    {
+        for(int i=0; i<(int)g_dnd_metadata.size(); i++)
+        {
+            msg_data[i+2] = get_extra_atom(g_dnd_metadata[i].name());
+        }
+    }
+
+    if(!XSendEvent(g_display, target_xwindow, False, NoEventMask, &out_xevent))
+    {
+        cerr << "Failed to send XdndEnter event!\n";
+    }
+}
+
+
 void WindowX11::xdndEnterEvent()
 {
     g_dnd_metadata.clear();
@@ -266,10 +299,32 @@ void WindowX11::xdndEnterEvent()
 }
 
 
-void WindowX11::xdndLeaveEvent()
+void WindowX11::sendDndPosition(::Window target_xwindow, short x, short y)
 {
-    g_incoming_drag = false;
-    g_events->dndLeaveEvent(this);
+    XEvent out_xevent;
+    XClientMessageEvent &out = out_xevent.xclient;
+    long int* msg_data = out.data.l;
+    out.type           = ClientMessage;
+    out.display        = g_display;
+    out.window         = target_xwindow;
+    out.format         = 32;
+    out.message_type   = X11_Atom::XdndPosition;
+    msg_data[0] = m_xwindow;
+    msg_data[1] = 0;
+    msg_data[2] = (int(x) << 16) | int(y);
+    msg_data[3] = CurrentTime;
+    msg_data[4] = X11_Atom::XdndActionCopy;
+
+    if(!XSendEvent(g_display, target_xwindow, False, NoEventMask, &out_xevent))
+    {
+        cerr << "Failed to send XdndPosition event!\n";
+    }
+}
+
+
+void WindowX11::xdndStatusEvent()
+{
+    cout << "xdndStatusEvent\n";
 }
 
 
@@ -312,6 +367,59 @@ void WindowX11::xdndPositionEvent()
 }
 
 
+void WindowX11::sendDndLeave(::Window target_xwindow)
+{
+    XEvent out_xevent;
+    XClientMessageEvent &out = out_xevent.xclient;
+    long int* msg_data = out.data.l;
+    out.type           = ClientMessage;
+    out.display        = g_display;
+    out.window         = target_xwindow;
+    out.format         = 32;
+    out.message_type   = X11_Atom::XdndLeave;
+    msg_data[0] = m_xwindow;
+    msg_data[1] = 0;
+    msg_data[2] = 0;
+    msg_data[3] = 0;
+    msg_data[4] = 0;
+
+    if(!XSendEvent(g_display, target_xwindow, False, NoEventMask, &out_xevent))
+    {
+        cerr << "Failed to send XdndLeave event!\n";
+    }
+}
+
+
+void WindowX11::xdndLeaveEvent()
+{
+    g_incoming_drag = false;
+    g_events->dndLeaveEvent(this);
+}
+
+
+void WindowX11::sendDndDrop(::Window target_xwindow)
+{
+    XEvent out_xevent;
+    XClientMessageEvent &out = out_xevent.xclient;
+    long int* msg_data = out.data.l;
+    out.type           = ClientMessage;
+    out.display        = g_display;
+    out.window         = target_xwindow;
+    out.format         = 32;
+    out.message_type   = X11_Atom::XdndDrop;
+    msg_data[0] = m_xwindow;
+    msg_data[1] = 0;
+    msg_data[2] = CurrentTime;
+    msg_data[3] = 0;
+    msg_data[4] = 0;
+
+    if(!XSendEvent(g_display, target_xwindow, False, NoEventMask, &out_xevent))
+    {
+        cerr << "Failed to send XdndDrop event!\n";
+    }
+}
+
+
 void WindowX11::xdndDropEvent()
 {
     const XClientMessageEvent &in = g_incoming_event->xclient;
@@ -328,105 +436,6 @@ void WindowX11::xdndDropEvent()
     {
         cout << "accepted: " << data_type.name() << "\n";
         requestClipboardData(data_type, ClipboardMode::DragAndDrop);
-    }
-}
-
-
-void WindowX11::sendDndEnter(::Window target_xwindow)
-{
-    if(g_dnd_metadata.empty())
-        return;
-
-    XEvent out_xevent;
-    XClientMessageEvent &out = out_xevent.xclient;
-    long int* msg_data = out.data.l;
-    out.type           = ClientMessage;
-    out.display        = g_display;
-    out.window         = g_incoming_drop_source;
-    out.format         = 32;
-    out.message_type   = X11_Atom::XdndEnter;
-    msg_data[0] = m_xwindow;
-    msg_data[1] = (min(g_target_xdnd_version, 5) << 24);
-    if(g_dnd_metadata.size() <= 3)
-    {
-        for(int i=0; i<(int)g_dnd_metadata.size(); i++)
-        {
-            msg_data[i+2] = get_extra_atom(g_dnd_metadata[i].name());
-        }
-    }
-
-    if(!XSendEvent(g_display, g_incoming_drop_source, False, NoEventMask, &out_xevent))
-    {
-        cerr << "Failed to send XdndEnter event!\n";
-    }
-}
-
-
-void WindowX11::sendDndPosition(::Window target_xwindow, short x, short y)
-{
-    XEvent out_xevent;
-    XClientMessageEvent &out = out_xevent.xclient;
-    long int* msg_data = out.data.l;
-    out.type           = ClientMessage;
-    out.display        = g_display;
-    out.window         = g_incoming_drop_source;
-    out.format         = 32;
-    out.message_type   = X11_Atom::XdndPosition;
-    msg_data[0] = m_xwindow;
-    msg_data[1] = 0;
-    msg_data[2] = (int(x) << 16) | int(y);
-    msg_data[3] = CurrentTime;
-    msg_data[4] = X11_Atom::XdndActionCopy;
-
-    if(!XSendEvent(g_display, g_incoming_drop_source, False, NoEventMask, &out_xevent))
-    {
-        cerr << "Failed to send XdndPosition event!\n";
-    }
-}
-
-
-void WindowX11::sendDndDrop(::Window target_xwindow)
-{
-    XEvent out_xevent;
-    XClientMessageEvent &out = out_xevent.xclient;
-    long int* msg_data = out.data.l;
-    out.type           = ClientMessage;
-    out.display        = g_display;
-    out.window         = g_incoming_drop_source;
-    out.format         = 32;
-    out.message_type   = X11_Atom::XdndDrop;
-    msg_data[0] = m_xwindow;
-    msg_data[1] = 0;
-    msg_data[2] = CurrentTime;
-    msg_data[3] = 0;
-    msg_data[4] = 0;
-
-    if(!XSendEvent(g_display, g_incoming_drop_source, False, NoEventMask, &out_xevent))
-    {
-        cerr << "Failed to send XdndLeave event!\n";
-    }
-}
-
-
-void WindowX11::sendDndLeave(::Window target_xwindow)
-{
-    XEvent out_xevent;
-    XClientMessageEvent &out = out_xevent.xclient;
-    long int* msg_data = out.data.l;
-    out.type           = ClientMessage;
-    out.display        = g_display;
-    out.window         = g_incoming_drop_source;
-    out.format         = 32;
-    out.message_type   = X11_Atom::XdndLeave;
-    msg_data[0] = m_xwindow;
-    msg_data[1] = 0;
-    msg_data[2] = 0;
-    msg_data[3] = 0;
-    msg_data[4] = 0;
-
-    if(!XSendEvent(g_display, g_incoming_drop_source, False, NoEventMask, &out_xevent))
-    {
-        cerr << "Failed to send XdndLeave event!\n";
     }
 }
 

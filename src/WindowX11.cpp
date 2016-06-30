@@ -100,21 +100,23 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     void dndMove(int eventx, int eventy);
 
-    void xdndEnterEvent();
-
-    void xdndLeaveEvent();
-
-    void xdndPositionEvent();
-
-    void xdndDropEvent();
-
     void sendDndEnter(::Window target_xwindow);
+
+    void xdndEnterEvent();
 
     void sendDndPosition(::Window target_xwindow, short x, short y);
 
-    void sendDndDrop(::Window target_xwindow);
+    void xdndStatusEvent();
+
+    void xdndPositionEvent();
 
     void sendDndLeave(::Window target_xwindow);
+
+    void xdndLeaveEvent();
+
+    void sendDndDrop(::Window target_xwindow);
+
+    void xdndDropEvent();
 
     void sendDndFinished();
 
