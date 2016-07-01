@@ -39,8 +39,27 @@ public:
         IBeam,
         Cross,
         PointingHand,
+        OpenHand,
+        ClosedHand,
         DndDrop,
         DndNoDrop,
+        ResizeNS,
+        ResizeWE,
+        ResizeDiag1,
+        ResizeDiag2,
+        Fleur,
+        LeftSide,
+        RightSide,
+        TopSide,
+        BottomSide,
+        CornerTopLeft,
+        CornerTopRight,
+        CornerBottomLeft,
+        CornerBottomRight,
+        Pencil,
+        Forbidden,
+        Skull,
+        X
     };
 
     inline void setData(void* data) { m_data = data; }

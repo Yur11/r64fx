@@ -64,11 +64,11 @@ void Widget_AudioPlayer::mousePressEvent(MousePressEvent* event)
     {
         if(yes)
         {
-            root_window->setCursorType(Window::CursorType::DndDrop);
+            root_window->setCursorType(Window::CursorType::OpenHand);
         }
         else
         {
-            root_window->setCursorType(Window::CursorType::DndNoDrop);
+            root_window->setCursorType(Window::CursorType::ClosedHand);
         }
     }
 

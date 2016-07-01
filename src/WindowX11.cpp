@@ -207,8 +207,27 @@ namespace{
     ::Cursor g_ibeam_cursor = None;
     ::Cursor g_cross_cursor = None;
     ::Cursor g_poiting_hand_cursor = None;
+    ::Cursor g_open_hand_cursor = None;
+    ::Cursor g_closed_hand_cursor = None;
     ::Cursor g_dnd_drop_cursor = None;
     ::Cursor g_dnd_no_drop_cursor = None;
+    ::Cursor g_resize_ns_cursor = None;
+    ::Cursor g_resize_we_cursor = None;
+    ::Cursor g_resize_diag1_cursor = None;
+    ::Cursor g_resize_diag2_cursor = None;
+    ::Cursor g_fleur_cursor = None;
+    ::Cursor g_left_side_cursor = None;
+    ::Cursor g_right_side_cursor = None;
+    ::Cursor g_top_side_cursor = None;
+    ::Cursor g_bottom_side_cursor = None;
+    ::Cursor g_corner_top_left_cursor = None;
+    ::Cursor g_corner_top_right_cursor = None;
+    ::Cursor g_corner_bottom_left_cursor = None;
+    ::Cursor g_corner_bottom_right_cursor = None;
+    ::Cursor g_pencil_cursor = None;
+    ::Cursor g_forbidden_cursor = None;
+    ::Cursor g_skull_cursor = None;
+    ::Cursor g_x_cursor = None;
 
     ::Cursor type2cursor(Window::CursorType cursor_type)
     {
@@ -232,11 +251,68 @@ namespace{
             case Window::CursorType::PointingHand:
                 return g_poiting_hand_cursor;
 
+            case Window::CursorType::OpenHand:
+                return g_open_hand_cursor;
+
+            case Window::CursorType::ClosedHand:
+                return g_closed_hand_cursor;
+
             case Window::CursorType::DndDrop:
                 return g_dnd_drop_cursor;
 
             case Window::CursorType::DndNoDrop:
                 return g_dnd_no_drop_cursor;
+
+            case Window::CursorType::ResizeNS:
+                return g_resize_ns_cursor;
+
+            case Window::CursorType::ResizeWE:
+                return g_resize_we_cursor;
+
+            case Window::CursorType::ResizeDiag1:
+                return g_resize_diag1_cursor;
+
+            case Window::CursorType::ResizeDiag2:
+                return g_resize_diag2_cursor;
+
+            case Window::CursorType::Fleur:
+                return g_fleur_cursor;
+
+            case Window::CursorType::LeftSide:
+                return g_left_side_cursor;
+
+            case Window::CursorType::RightSide:
+                return g_right_side_cursor;
+
+            case Window::CursorType::TopSide:
+                return g_top_side_cursor;
+
+            case Window::CursorType::BottomSide:
+                return g_bottom_side_cursor;
+
+            case Window::CursorType::CornerTopLeft:
+                return g_corner_top_left_cursor;
+
+            case Window::CursorType::CornerTopRight:
+                return g_corner_top_right_cursor;
+
+            case Window::CursorType::CornerBottomLeft:
+                return g_corner_bottom_left_cursor;
+
+            case Window::CursorType::CornerBottomRight:
+                return g_corner_bottom_right_cursor;
+
+            case Window::CursorType::Pencil:
+                return g_pencil_cursor;
+
+            case Window::CursorType::Forbidden:
+                return g_forbidden_cursor;
+
+            case Window::CursorType::Skull:
+                return g_skull_cursor;
+
+            case Window::CursorType::X:
+                return g_x_cursor;
 
             default:
                 return g_arrow_cursor;
@@ -300,7 +376,24 @@ namespace{
 
         g_ibeam_cursor         = XCreateFontCursor(g_display, XC_xterm);
         g_cross_cursor         = XCreateFontCursor(g_display, XC_crosshair);
+
         g_poiting_hand_cursor  = XCreateFontCursor(g_display, XC_hand2);
+
+#ifdef R64FX_USE_XCURSOR
+        g_open_hand_cursor = XcursorLibraryLoadCursor(g_display, "openhand");
+#endif//R64FX_USE_XCURSOR
+        if(g_open_hand_cursor == None)
+        {
+            g_open_hand_cursor = XCreateFontCursor(g_display, XC_left_ptr);
+        }
+
+#ifdef R64FX_USE_XCURSOR
+        g_closed_hand_cursor = XcursorLibraryLoadCursor(g_display, "closedhand");
+#endif//R64FX_USE_XCURSOR
+        if(g_closed_hand_cursor == None)
+        {
+            g_closed_hand_cursor = XCreateFontCursor(g_display, XC_left_ptr);
+        }
 
 #ifdef R64FX_USE_XCURSOR
         g_dnd_drop_cursor      = XcursorLibraryLoadCursor(g_display, "dnd-copy");
@@ -317,6 +410,44 @@ namespace{
         {
             g_dnd_no_drop_cursor   = XCreateFontCursor(g_display, XC_left_ptr);
         }
+
+        g_resize_ns_cursor = XCreateFontCursor(g_display, XC_sb_v_double_arrow);
+        g_resize_we_cursor = XCreateFontCursor(g_display, XC_sb_h_double_arrow);
+
+#ifdef R64FX_USE_XCURSOR
+        g_resize_diag1_cursor = XcursorLibraryLoadCursor(g_display, "size_bdiag");
+#endif//R64FX_USE_XCURSOR
+        if(g_resize_diag1_cursor == None)
+        {
+            g_resize_diag1_cursor = XCreateFontCursor(g_display, XC_left_ptr);
+        }
+
+#ifdef R64FX_USE_XCURSOR
+        g_resize_diag2_cursor = XcursorLibraryLoadCursor(g_display, "size_fdiag");
+#endif//R64FX_USE_XCURSOR
+        if(g_resize_diag2_cursor == None)
+        {
+            g_resize_diag2_cursor = XCreateFontCursor(g_display, XC_left_ptr);
+        }
+
+        g_fleur_cursor = XCreateFontCursor(g_display, XC_fleur);
+
+        g_left_side_cursor            = XCreateFontCursor(g_display, XC_left_side);
+        g_right_side_cursor           = XCreateFontCursor(g_display, XC_right_side);
+        g_top_side_cursor             = XCreateFontCursor(g_display, XC_top_side);
+        g_bottom_side_cursor          = XCreateFontCursor(g_display, XC_bottom_side);
+        g_corner_top_left_cursor      = XCreateFontCursor(g_display, XC_top_left_corner);
+        g_corner_top_right_cursor     = XCreateFontCursor(g_display, XC_top_right_corner);
+        g_corner_bottom_left_cursor   = XCreateFontCursor(g_display, XC_bottom_left_corner);
+        g_corner_bottom_right_cursor  = XCreateFontCursor(g_display, XC_bottom_right_corner);
+
+        g_pencil_cursor = XCreateFontCursor(g_display, XC_pencil);
+
+        g_forbidden_cursor = XCreateFontCursor(g_display, XC_circle);
+
+        g_skull_cursor = XCreateFontCursor(g_display, XC_pirate);
+
+        g_x_cursor = XCreateFontCursor(g_display, XC_X_cursor);
     }
 
     void cleanup_cursors()
@@ -328,8 +459,27 @@ namespace{
         R64FX_X_FREE_CURSOR(g_ibeam_cursor);
         R64FX_X_FREE_CURSOR(g_cross_cursor);
         R64FX_X_FREE_CURSOR(g_poiting_hand_cursor);
+        R64FX_X_FREE_CURSOR(g_open_hand_cursor);
+        R64FX_X_FREE_CURSOR(g_closed_hand_cursor);
         R64FX_X_FREE_CURSOR(g_dnd_drop_cursor);
         R64FX_X_FREE_CURSOR(g_dnd_no_drop_cursor);
+        R64FX_X_FREE_CURSOR(g_resize_ns_cursor);
+        R64FX_X_FREE_CURSOR(g_resize_we_cursor);
+        R64FX_X_FREE_CURSOR(g_resize_diag1_cursor);
+        R64FX_X_FREE_CURSOR(g_resize_diag2_cursor);
+        R64FX_X_FREE_CURSOR(g_fleur_cursor);
+        R64FX_X_FREE_CURSOR(g_left_side_cursor);
+        R64FX_X_FREE_CURSOR(g_right_side_cursor);
+        R64FX_X_FREE_CURSOR(g_top_side_cursor);
+        R64FX_X_FREE_CURSOR(g_bottom_side_cursor);
+        R64FX_X_FREE_CURSOR(g_corner_top_left_cursor);
+        R64FX_X_FREE_CURSOR(g_corner_top_right_cursor);
+        R64FX_X_FREE_CURSOR(g_corner_bottom_left_cursor);
+        R64FX_X_FREE_CURSOR(g_corner_bottom_right_cursor);
+        R64FX_X_FREE_CURSOR(g_pencil_cursor);
+        R64FX_X_FREE_CURSOR(g_forbidden_cursor);
+        R64FX_X_FREE_CURSOR(g_skull_cursor);
+        R64FX_X_FREE_CURSOR(g_x_cursor);
 #undef R64FX_X_FREE_CURSOR
     }
 
