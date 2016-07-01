@@ -187,6 +187,12 @@ void WindowX11::dndMove(int eventx, int eventy)
 }
 
 
+void WindowX11::dndRelease()
+{
+    setCursorType(Window::CursorType::Arrow);
+}
+
+
 void WindowX11::sendDndEnter(::Window target_xwindow)
 {
     if(g_dnd_metadata.empty())

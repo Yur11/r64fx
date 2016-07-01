@@ -75,6 +75,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                 {
                     if(g_outgoing_drag_object)
                     {
+                        window->dndRelease();
                         window->ungrabMouse();
                         events->dndFinishedEvent();
                         g_outgoing_drag_object = nullptr;

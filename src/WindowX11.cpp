@@ -107,6 +107,8 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
 
     void dndMove(int eventx, int eventy);
 
+    void dndRelease();
+
     void sendDndEnter(::Window target_xwindow);
 
     void xdndEnterEvent();
@@ -287,21 +289,34 @@ namespace{
     {
         g_arrow_cursor         = XCreateFontCursor(g_display, XC_left_ptr);
         g_busy_cursor          = XCreateFontCursor(g_display, XC_watch);
+
 #ifdef R64FX_USE_XCURSOR
         g_busy_arrow_cursor    = XcursorLibraryLoadCursor(g_display, "left_ptr_watch");
-#else
-        g_busy_arrow_cursor    = XCreateFontCursor(g_display, XC_left_ptr);
 #endif//R64FX_USE_XCURSOR
+        if(g_busy_arrow_cursor == None)
+        {
+            g_busy_arrow_cursor    = XCreateFontCursor(g_display, XC_watch);
+        }
+
         g_ibeam_cursor         = XCreateFontCursor(g_display, XC_xterm);
         g_cross_cursor         = XCreateFontCursor(g_display, XC_crosshair);
         g_poiting_hand_cursor  = XCreateFontCursor(g_display, XC_hand2);
+
 #ifdef R64FX_USE_XCURSOR
         g_dnd_drop_cursor      = XcursorLibraryLoadCursor(g_display, "dnd-copy");
-        g_dnd_no_drop_cursor   = XcursorLibraryLoadCursor(g_display, "forbidden");
-#else
-        g_dnd_drop_cursor      = XCreateFontCursor(g_display, XC_left_ptr);
-        g_dnd_no_drop_cursor   = XCreateFontCursor(g_display, XC_left_ptr);
 #endif//R64FX_USE_XCURSOR
+        if(g_dnd_drop_cursor == None)
+        {
+            g_dnd_drop_cursor      = XCreateFontCursor(g_display, XC_circle);
+        }
+
+#ifdef R64FX_USE_XCURSOR
+        g_dnd_no_drop_cursor   = XcursorLibraryLoadCursor(g_display, "forbidden");
+#endif//R64FX_USE_XCURSOR
+        if(g_dnd_no_drop_cursor == None)
+        {
+            g_dnd_no_drop_cursor   = XCreateFontCursor(g_display, XC_left_ptr);
+        }
     }
 
     void cleanup_cursors()
