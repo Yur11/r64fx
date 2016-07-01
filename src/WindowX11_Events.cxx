@@ -62,6 +62,7 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                 unsigned int button = getEventButton(&xevent.xbutton);
                 if(button != R64FX_MOUSE_BUTTON_NONE)
                 {
+//                     window->debugCursor();
                     events->mousePressEvent(window, xevent.xbutton.x, xevent.xbutton.y, button);
                 }
                 break;

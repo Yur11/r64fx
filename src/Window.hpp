@@ -32,6 +32,17 @@ public:
 #endif//R64FX_USE_GL
     };
 
+    enum class CursorType{
+        Arrow,
+        Busy,
+        BusyArrow,
+        IBeam,
+        Cross,
+        PointingHand,
+        DndDrop,
+        DndNoDrop,
+    };
+
     inline void setData(void* data) { m_data = data; }
     inline void* data() const { return m_data; }
 
@@ -80,6 +91,9 @@ public:
     virtual void showDecorations(bool yes) = 0;
 
     virtual void setModalTo(Window* window) = 0;
+
+
+    virtual void setCursorType(CursorType shape) = 0;
 
 
     virtual void grabMouse() = 0;

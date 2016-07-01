@@ -5,6 +5,10 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
+#include <X11/cursorfont.h>
+#ifdef R64FX_USE_XCURSOR
+#include <X11/Xcursor/Xcursor.h>
+#endif//R64FX_USE_XCURSOR
 
 #ifdef R64FX_USE_MITSHM
 #include <X11/extensions/XShm.h>
@@ -65,6 +69,9 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     virtual void showDecorations(bool yes);
 
     virtual void setModalTo(Window* window);
+
+
+    virtual void setCursorType(CursorType cursor_type);
 
 
     virtual void grabMouse();
@@ -136,6 +143,8 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     void updateAttrs();
 
     void setupInputContext();
+
+    void debugCursor();
 };
 
 
@@ -189,8 +198,78 @@ namespace{
     XEvent* g_outgoing_event = nullptr;
 
     WindowEventDispatcherIface* g_events = nullptr;
+
+    ::Cursor g_arrow_cursor = None;
+    ::Cursor g_busy_cursor = None;
+    ::Cursor g_busy_arrow_cursor = None;
+    ::Cursor g_ibeam_cursor = None;
+    ::Cursor g_cross_cursor = None;
+    ::Cursor g_poiting_hand_cursor = None;
+    ::Cursor g_dnd_drop_cursor = None;
+    ::Cursor g_dnd_no_drop_cursor = None;
+
+    ::Cursor type2cursor(Window::CursorType cursor_type)
+    {
+        switch(cursor_type)
+        {
+            case Window::CursorType::Arrow:
+                return g_arrow_cursor;
+
+            case Window::CursorType::Busy:
+                return g_busy_cursor;
+
+            case Window::CursorType::BusyArrow:
+                return g_busy_arrow_cursor;
+
+            case Window::CursorType::IBeam:
+                return g_ibeam_cursor;
+
+            case Window::CursorType::Cross:
+                return g_cross_cursor;
+
+            case Window::CursorType::PointingHand:
+                return g_poiting_hand_cursor;
+
+            case Window::CursorType::DndDrop:
+                return g_dnd_drop_cursor;
+
+            case Window::CursorType::DndNoDrop:
+                return g_dnd_no_drop_cursor;
+
+            default:
+                return g_arrow_cursor;
+        }
+    }
+
+    int g_debug_cursor_num = 0;
+    ::Cursor g_debug_cursor = None;
 }//namespace
 
+
+void WindowX11::debugCursor()
+{
+    auto old_cursor = g_debug_cursor;
+
+    g_debug_cursor = XCreateFontCursor(g_display, g_debug_cursor_num);
+    if(g_debug_cursor)
+    {
+        cerr << "g_debug_cursor: " << g_debug_cursor_num << "\n";
+        XDefineCursor(g_display, m_xwindow, g_debug_cursor);
+        g_debug_cursor_num += 1;
+        if(g_debug_cursor_num > 152)
+            g_debug_cursor_num = 0;
+
+        if(old_cursor)
+        {
+            XFreeCursor(g_display, old_cursor);
+            g_debug_cursor = None;
+        }
+    }
+    else
+    {
+        cerr << "Failed to create debug cursor " << g_debug_cursor_num << " !\n";
+    }
+}
 
 #include "WindowX11_Atoms.cxx"
 #include "WindowX11_Properties.cxx"
@@ -204,6 +283,42 @@ namespace{
 
 
 namespace{
+    void init_cursors()
+    {
+        g_arrow_cursor         = XCreateFontCursor(g_display, XC_left_ptr);
+        g_busy_cursor          = XCreateFontCursor(g_display, XC_watch);
+#ifdef R64FX_USE_XCURSOR
+        g_busy_arrow_cursor    = XcursorLibraryLoadCursor(g_display, "left_ptr_watch");
+#else
+        g_busy_arrow_cursor    = XCreateFontCursor(g_display, XC_left_ptr);
+#endif//R64FX_USE_XCURSOR
+        g_ibeam_cursor         = XCreateFontCursor(g_display, XC_xterm);
+        g_cross_cursor         = XCreateFontCursor(g_display, XC_crosshair);
+        g_poiting_hand_cursor  = XCreateFontCursor(g_display, XC_hand2);
+#ifdef R64FX_USE_XCURSOR
+        g_dnd_drop_cursor      = XcursorLibraryLoadCursor(g_display, "dnd-copy");
+        g_dnd_no_drop_cursor   = XcursorLibraryLoadCursor(g_display, "forbidden");
+#else
+        g_dnd_drop_cursor      = XCreateFontCursor(g_display, XC_left_ptr);
+        g_dnd_no_drop_cursor   = XCreateFontCursor(g_display, XC_left_ptr);
+#endif//R64FX_USE_XCURSOR
+    }
+
+    void cleanup_cursors()
+    {
+#define R64FX_X_FREE_CURSOR(var) if(var != None){ XFreeCursor(g_display, var); var = None; }
+        R64FX_X_FREE_CURSOR(g_arrow_cursor);
+        R64FX_X_FREE_CURSOR(g_busy_cursor);
+        R64FX_X_FREE_CURSOR(g_busy_arrow_cursor);
+        R64FX_X_FREE_CURSOR(g_ibeam_cursor);
+        R64FX_X_FREE_CURSOR(g_cross_cursor);
+        R64FX_X_FREE_CURSOR(g_poiting_hand_cursor);
+        R64FX_X_FREE_CURSOR(g_dnd_drop_cursor);
+        R64FX_X_FREE_CURSOR(g_dnd_no_drop_cursor);
+#undef R64FX_X_FREE_CURSOR
+    }
+
+
     void init_x_if_needed()
     {
         if(!g_display)
@@ -229,6 +344,7 @@ namespace{
 #ifdef R64FX_USE_MITSHM
             init_mitshm();
 #endif//R64FX_USE_MITSHM
+            init_cursors();
         }
     }
 
@@ -239,6 +355,8 @@ namespace{
 
         if(g_all_windows.isEmpty())
         {
+            cleanup_cursors();
+
             if(g_input_method)
             {
                 XCloseIM(g_input_method);
@@ -416,6 +534,16 @@ void WindowX11::setModalTo(Window* window)
         (unsigned char*)&(window_x11->m_xwindow),
         1
     );
+}
+
+
+void WindowX11::setCursorType(CursorType type)
+{
+    ::Cursor cursor = type2cursor(type);
+    if(cursor != None)
+    {
+        XDefineCursor(g_display, m_xwindow, cursor);
+    }
 }
 
 

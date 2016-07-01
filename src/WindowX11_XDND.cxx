@@ -329,7 +329,7 @@ void WindowX11::xdndStatusEvent()
 
     cout << "xdndStatusEvent\n";
     ::Window target_xwindow = (::Window) msg_data[0];
-    bool dnd_accepted = (msg_data[1] & 0x1);
+    bool drop_accepted = (msg_data[1] & 0x1);
     bool target_wants_more_events = (msg_data[1] & 0x2);
     int x = ((msg_data[2] >> 16) & 0xFF);
     int y = (msg_data[2] & 0xFF);
@@ -338,7 +338,7 @@ void WindowX11::xdndStatusEvent()
     Atom xdnd_action = (Atom) msg_data[4];
 
     cout << "target:   " << (target_xwindow == m_xwindow) << "\n";
-    cout << "accepted: " << dnd_accepted << "\n";
+    cout << "accepted: " << drop_accepted << "\n";
     cout << "rect:     " << x << ", " << y << ", " << w << ", " << h << " -> " << target_wants_more_events << "\n";
     cout << "action:   " << xdnd_action;
     if(xdnd_action != None)
@@ -346,6 +346,15 @@ void WindowX11::xdndStatusEvent()
         cout << " -> " << atom_name(xdnd_action);
     }
     cout << "\n";
+
+    if(drop_accepted)
+    {
+        setCursorType(Window::CursorType::DndDrop);
+    }
+    else
+    {
+        setCursorType(Window::CursorType::DndNoDrop);
+    }
 }
 
 
