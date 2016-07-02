@@ -46,57 +46,68 @@ void find_dnd_target(::Window parent, int x, int y, ::Window* out_target, int* o
     ::Window* children  = nullptr;
     unsigned int children_count = 0;
 
+    ::Window dnd_target = None;
+
     if(XQueryTree(
         g_display, parent,
         &root_stub, &parent_stub,
         &children, &children_count
     ))
     {
-        for(int i=(children_count - 1); i>=0; i--)
+        if(children)
         {
-            ::Window window = children[i];
-
-            if(g_outgoing_drag_object && window == g_outgoing_drag_object->xWindow())
+            for(int i=(children_count - 1); i>=0; i--)
             {
-                continue;
-            }
+                ::Window window = children[i];
 
-            XWindowAttributes attrs;
-            g_ignore_bad_window = true;
-            Status status = XGetWindowAttributes(g_display, window, &attrs);
-            g_ignore_bad_window = false;
-            if(!status)
-            {
-                continue;
-            }
-
-            if((x >= attrs.x) && (x < (attrs.x + attrs.width)) && (y >= attrs.y) && (y < (attrs.y + attrs.height)))
-            {
-                if(attrs.map_state == IsViewable)
+                if(g_outgoing_drag_object && window == g_outgoing_drag_object->xWindow())
                 {
-                    int window_xdnd_version = find_xdnd_version(window);
-                    if(window_xdnd_version >= 0)
-                    {
-                        out_target[0] = window;
-                        out_xdnd_version[0] = window_xdnd_version;
-                        return;
-                    }
+                    continue;
+                }
 
-                    ::Window child = None;
-                    int child_xdnd_version = -1;
-                    find_dnd_target(window, x - attrs.x, y - attrs.y, &child, &child_xdnd_version);
-                    if(child != None)
+                XWindowAttributes attrs;
+                auto old_ignore_bad_window = g_ignore_bad_window;
+                g_ignore_bad_window = true;
+                Status status = XGetWindowAttributes(g_display, window, &attrs);
+                g_ignore_bad_window = old_ignore_bad_window;
+                if(!status)
+                {
+                    continue;
+                }
+
+                if((x >= attrs.x) && (x < (attrs.x + attrs.width)) && (y >= attrs.y) && (y < (attrs.y + attrs.height)))
+                {
+                    if(attrs.map_state == IsViewable)
                     {
-                        out_target[0] = child;
-                        out_xdnd_version[0] = child_xdnd_version;
-                        return;
+                        int window_xdnd_version = find_xdnd_version(window);
+                        if(window_xdnd_version >= 0)
+                        {
+                            out_target[0] = window;
+                            out_xdnd_version[0] = window_xdnd_version;
+                            break;
+                        }
+
+                        ::Window child = None;
+                        int child_xdnd_version = -1;
+                        find_dnd_target(window, x - attrs.x, y - attrs.y, &child, &child_xdnd_version);
+                        if(child != None)
+                        {
+                            out_target[0] = child;
+                            out_xdnd_version[0] = child_xdnd_version;
+                            break;
+                        }
                     }
                 }
-            }
-        }//for every child
+            }//for every child
+
+            XFree(children);
+        }
     }
 
-    out_xdnd_version[0] = -1;
+    if(out_target[0] == None)
+    {
+        out_xdnd_version[0] = -1;
+    }
 }
 
 }//namespace
@@ -180,6 +191,11 @@ void WindowX11::dndMove(int eventx, int eventy)
             g_outgoing_drop_target = xdnd_target;
 
             sendDndPosition(xdnd_target, screen_x, screen_y);
+        }
+
+        if(children)
+        {
+            XFree(children);
         }
     }
 }
@@ -280,6 +296,10 @@ void WindowX11::xdndEnterEvent()
                 format = 0;
                 nitems = 0;
                 bytes_after = 0;
+                if(data)
+                {
+                    XFree(data);
+                }
                 data = nullptr;
 
                 auto result = XGetWindowProperty(

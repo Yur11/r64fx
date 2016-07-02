@@ -733,7 +733,10 @@ bool WindowX11::doingTextInput()
 
 void WindowX11::updateAttrs()
 {
+    auto old_ignore_bad_window = g_ignore_bad_window;
+    g_ignore_bad_window = true;
     XGetWindowAttributes(g_display, m_xwindow, &m_attrs);
+    g_ignore_bad_window = old_ignore_bad_window;
 }
 
 

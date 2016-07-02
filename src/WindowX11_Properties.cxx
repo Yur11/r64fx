@@ -29,6 +29,11 @@ bool get_window_property(
         return false;
     }
 
+    if(out_data)
+    {
+        XFree(out_data);
+    }
+
     if(bytes_after > 0)
     {
         int size = bytes_after;
