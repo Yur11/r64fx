@@ -130,6 +130,7 @@ void WindowX11::startDrag(const ClipboardMetadata &metadata, Window* drag_object
     if(!g_outgoing_drag_object)
         return;
 
+    XSetSelectionOwner(g_display, X11_Atom::XdndSelection, m_xwindow, CurrentTime);
     g_dnd_metadata = metadata;
 
     g_drag_anchor_x = anchor_x;
@@ -164,9 +165,6 @@ void WindowX11::dndMove(int eventx, int eventy)
 
         if(xdnd_target)
         {
-//             Window* target_window = nullptr;
-//             target_window = getWindowFromXWindow(xdnd_target);
-
             if(xdnd_target != g_outgoing_drop_target)
             {
                 if(g_outgoing_drop_target != None)
@@ -189,7 +187,26 @@ void WindowX11::dndMove(int eventx, int eventy)
 
 void WindowX11::dndRelease()
 {
+    if(g_outgoing_drop_target)
+    {
+        if(g_outgoing_drop_accepted)
+        {
+            sendDndDrop(g_outgoing_drop_target);
+        }
+        else
+        {
+            sendDndLeave(g_outgoing_drop_target);
+        }
+    }
+
     setCursorType(Window::CursorType::Arrow);
+    ungrabMouse();
+    g_events->dndFinishedEvent();
+    g_outgoing_drag_object = nullptr;
+    g_drag_anchor_x = 0;
+    g_drag_anchor_y = 0;
+    g_outgoing_drop_target = None;
+    g_outgoing_drop_accepted = false;
 }
 
 
@@ -333,7 +350,6 @@ void WindowX11::xdndStatusEvent()
     const XClientMessageEvent &in = g_incoming_event->xclient;
     const long int* msg_data = in.data.l;
 
-    cout << "xdndStatusEvent\n";
     ::Window target_xwindow = (::Window) msg_data[0];
     bool drop_accepted = (msg_data[1] & 0x1);
     bool target_wants_more_events = (msg_data[1] & 0x2);
@@ -343,16 +359,6 @@ void WindowX11::xdndStatusEvent()
     int h = (msg_data[3] & 0xFF);
     Atom xdnd_action = (Atom) msg_data[4];
 
-    cout << "target:   " << (target_xwindow == m_xwindow) << "\n";
-    cout << "accepted: " << drop_accepted << "\n";
-    cout << "rect:     " << x << ", " << y << ", " << w << ", " << h << " -> " << target_wants_more_events << "\n";
-    cout << "action:   " << xdnd_action;
-    if(xdnd_action != None)
-    {
-        cout << " -> " << atom_name(xdnd_action);
-    }
-    cout << "\n";
-
     if(drop_accepted)
     {
         setCursorType(Window::CursorType::DndDrop);
@@ -361,6 +367,7 @@ void WindowX11::xdndStatusEvent()
     {
         setCursorType(Window::CursorType::DndNoDrop);
     }
+    g_outgoing_drop_accepted = drop_accepted;
 }
 
 
@@ -435,6 +442,8 @@ void WindowX11::xdndLeaveEvent()
 
 void WindowX11::sendDndDrop(::Window target_xwindow)
 {
+    cout << "sendDndDrop\n";
+
     XEvent out_xevent;
     XClientMessageEvent &out = out_xevent.xclient;
     long int* msg_data = out.data.l;

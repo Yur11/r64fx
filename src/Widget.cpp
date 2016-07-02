@@ -1212,6 +1212,7 @@ void Widget::startDrag(const ClipboardMetadata &metadata, Widget* dnd_object, Po
             dnd_object->show(Window::WmType::DND, Window::Type::Image);
         }
         root_window->startDrag(metadata, dnd_object->window(), anchor.x(), anchor.y());
+        anouncer(ClipboardMode::DragAndDrop) = this;
     }
 }
 

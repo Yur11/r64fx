@@ -292,7 +292,7 @@ void Widget_DirectoryItem::clipboardMetadataRecieveEvent(ClipboardMetadataReciev
 
 void Widget_DirectoryItem::getClipboardMetadata(ClipboardMetadata &metadata)
 {
-    metadata = {"text/plain"};
+    metadata = {"text/uri-list", "text/plain"};
 }
 
 

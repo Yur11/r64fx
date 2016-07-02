@@ -57,23 +57,6 @@ void Widget_AudioPlayer::resizeEvent(ResizeEvent* event)
 
 void Widget_AudioPlayer::mousePressEvent(MousePressEvent* event)
 {
-    static bool yes = true;
-
-    auto root_window = rootWindow();
-    if(root_window)
-    {
-        if(yes)
-        {
-            root_window->setCursorType(Window::CursorType::OpenHand);
-        }
-        else
-        {
-            root_window->setCursorType(Window::CursorType::ClosedHand);
-        }
-    }
-
-    yes = !yes;
-
     setFocus();
     repaint();
 }

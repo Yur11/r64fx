@@ -155,6 +155,8 @@ void WindowX11::selectionClearEvent()
 
 void WindowX11::selectionRequestEvent()
 {
+    cout << "WindowX11::selectionRequestEvent()\n";
+
     XSelectionRequestEvent  &in   = g_incoming_event->xselectionrequest;
 
     XEvent xevent;
@@ -163,7 +165,6 @@ void WindowX11::selectionRequestEvent()
 
     if(in.property == None)
     {
-        cout << "property None\n";
         return;
     }
 
@@ -184,6 +185,7 @@ void WindowX11::selectionRequestEvent()
 
     if(in.target == X11_Atom::TARGETS)
     {
+        cout << "TARGETS\n";
         vector<Atom> targets = {X11_Atom::TARGETS};
         for(auto &type : cb->metadata)
         {
@@ -209,10 +211,13 @@ void WindowX11::selectionRequestEvent()
     }
     else
     {
+        cout << "NOT TARGETS\n";
+
         ClipboardDataType cdt(atom_name(in.target));
 
         if(cdt.isGood())
         {
+            cout << "cdt.isGood()\n";
             g_events->clipboardDataTransmitEvent(
                 this,
                 cdt,
@@ -223,6 +228,10 @@ void WindowX11::selectionRequestEvent()
                     window_x11->transmitRequestedSelection(data, size);
                 }
             );
+        }
+        else
+        {
+            cout << "ctd not good!\n";
         }
     }
 

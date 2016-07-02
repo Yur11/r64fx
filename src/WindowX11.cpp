@@ -193,8 +193,9 @@ namespace{
 
     ::Window g_incoming_drop_source = None;
     ::Window g_incoming_drop_target = None;
-
     ::Window g_outgoing_drop_target = None;
+
+    bool g_outgoing_drop_accepted = false;
 
     XEvent* g_incoming_event = nullptr;
     XEvent* g_outgoing_event = nullptr;
