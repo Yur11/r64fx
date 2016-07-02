@@ -158,7 +158,7 @@ void Widget_AudioPlayer::reload()
 {
     if(m_waveform)
     {
-        delete m_waveform;
+        delete[] m_waveform;
         m_waveform = nullptr;
     }
 

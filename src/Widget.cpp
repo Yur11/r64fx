@@ -94,29 +94,27 @@ inline Widget* &requestor(ClipboardMode mode)
 constexpr int max_rects = 32;
 
 struct WidgetImpl{
-    Window* m_window = nullptr;
+    Window* window = nullptr;
 
     /* Root widget shown in the window that
      * this context is attached to. */
-    Widget*  m_root_widget = nullptr;
+    Widget*  root_widget = nullptr;
 
     /* Painter serving the window. */
-    Painter* m_painter = nullptr;
-
-    inline Painter* painter() const { return m_painter; }
+    Painter* painter = nullptr;
 
     /* List of rectangles to be repainted after update cycle. */
-    Rect<int> m_rects[max_rects];
+    Rect<int> rects[max_rects];
 
     /* Number of rectangles that must be repainted. */
-    int m_num_rects = 0;
+    int num_rects = 0;
 
     /* Used in paint logic. */
-    bool m_got_rect = false;
+    bool got_rect = false;
 
-    Point<int> m_parent_global_position = {0, 0};
+    Point<int> parent_global_position = {0, 0};
 
-    Rect<int> m_visible_rect = {0, 0};
+    Rect<int> visible_rect = {0, 0};
 
     void clip();
 
@@ -133,9 +131,9 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     virtual void resizeEvent(Window* window, int width, int height)
     {
         auto d = (WidgetImpl*) window->data();
-        d->m_root_widget->setSize({width, height});
-        d->m_root_widget->clip();
-        d->m_root_widget->repaint();
+        d->root_widget->setSize({width, height});
+        d->root_widget->clip();
+        d->root_widget->repaint();
     }
 
 
@@ -185,7 +183,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
             else
             {
                 auto d = (WidgetImpl*) window->data();
-                dst = d->m_root_widget;
+                dst = d->root_widget;
             }
 
             MousePressEvent event(event_position, {0, 0}, MouseButton(button));
@@ -246,7 +244,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
             else
             {
                 auto d = (WidgetImpl*) window->data();
-                dst = d->m_root_widget;
+                dst = d->root_widget;
             }
 
             MouseReleaseEvent event(event_position, {0, 0}, MouseButton(button));
@@ -285,7 +283,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         else
         {
             auto d = (WidgetImpl*) window->data();
-            root_dst = d->m_root_widget;
+            root_dst = d->root_widget;
         }
 
         if(root_dst)
@@ -358,7 +356,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         else
         {
             auto d = (WidgetImpl*) window->data();
-            d->m_root_widget->keyPressEvent(&event);
+            d->root_widget->keyPressEvent(&event);
         }
     }
 
@@ -375,7 +373,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         else
         {
             auto d = (WidgetImpl*) window->data();
-            d->m_root_widget->keyReleaseEvent(&event);
+            d->root_widget->keyReleaseEvent(&event);
         }
     }
 
@@ -392,7 +390,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         else
         {
             auto d = (WidgetImpl*) window->data();
-            d->m_root_widget->textInputEvent(&event);
+            d->root_widget->textInputEvent(&event);
         }
     }
 
@@ -443,7 +441,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
         Point<int> event_position(x, y);
         Point<int> leaf_offset = {0, 0};
-        Widget* dst = d->m_root_widget->leafAt(event_position, &leaf_offset);
+        Widget* dst = d->root_widget->leafAt(event_position, &leaf_offset);
         event_position -= leaf_offset;
 
         if(dst)
@@ -474,7 +472,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         auto d = (WidgetImpl*) window->data();
         DndLeaveEvent event;
-        d->m_root_widget->dndLeaveEvent(&event);
+        d->root_widget->dndLeaveEvent(&event);
         g_dnd_target = nullptr;
     }
 
@@ -496,7 +494,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     virtual void closeEvent(Window* window)
     {
         auto d = (WidgetImpl*) window->data();
-        d->m_root_widget->closeEvent();
+        d->root_widget->closeEvent();
     }
 };
 
@@ -867,9 +865,9 @@ void Widget::show(
         auto d = new(std::nothrow) WidgetImpl;
         if(d)
         {
-            d->m_window = window;
-            d->m_root_widget = this;
-            d->m_painter = painter;
+            d->window = window;
+            d->root_widget = this;
+            d->painter = painter;
 
             window->setData(d);
 
@@ -938,6 +936,11 @@ void Widget::close()
 {
     if(isWindow())
     {
+        auto d = (WidgetImpl*) m_parent.window->data();
+        auto painter = d->painter;
+        Painter::deleteInstance(painter);
+        delete d;
+
         m_parent.window->hide();
         Window::deleteInstance(m_parent.window);
         m_parent.window = nullptr;
@@ -1225,7 +1228,7 @@ WidgetImpl* Widget::PaintEvent::impl() const
 
 Painter* Widget::PaintEvent::painter() const
 {
-    return m_impl->painter();
+    return m_impl->painter;
 }
 
 
@@ -1243,13 +1246,13 @@ void Widget::clip()
 
 void WidgetImpl::clip()
 {
-    if(m_root_widget->m_flags & R64FX_WIDGET_CLIP_FLAGS)
+    if(root_widget->m_flags & R64FX_WIDGET_CLIP_FLAGS)
     {
-        m_parent_global_position = {0, 0};
-        m_visible_rect = Rect<int>({0, 0}, m_root_widget->size());
-        clipChildren(m_root_widget);
+        parent_global_position = {0, 0};
+        visible_rect = Rect<int>({0, 0}, root_widget->size());
+        clipChildren(root_widget);
     }
-    m_root_widget->m_flags &= ~R64FX_WIDGET_CLIP_FLAGS;
+    root_widget->m_flags &= ~R64FX_WIDGET_CLIP_FLAGS;
 }
 
 
@@ -1265,13 +1268,13 @@ void WidgetImpl::clipChildren(Widget* parent)
         if(!(child->m_flags & R64FX_WIDGET_CLIP_FLAGS))
             continue;
 
-        Point<int> old_parent_global_position = m_parent_global_position;
-        Rect<int> old_visible_rect = m_visible_rect;
+        Point<int> old_parent_global_position = parent_global_position;
+        Rect<int> old_visible_rect = visible_rect;
 
-        Point<int> child_global_position = m_parent_global_position + offset + child->position();
+        Point<int> child_global_position = parent_global_position + offset + child->position();
 
         Rect<int> child_global_rect(child_global_position, child->size());
-        Rect<int> rect = intersection(child_global_rect, m_visible_rect);
+        Rect<int> rect = intersection(child_global_rect, visible_rect);
 
         if(child->m_flags & R64FX_WIDGET_WANTS_CLIPPING)
         {
@@ -1282,8 +1285,8 @@ void WidgetImpl::clipChildren(Widget* parent)
             {
                 child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
 
-                m_parent_global_position = child_global_position;
-                m_visible_rect = rect;
+                parent_global_position = child_global_position;
+                visible_rect = rect;
                 clipChildren(child);
             }
             else
@@ -1293,13 +1296,13 @@ void WidgetImpl::clipChildren(Widget* parent)
         }
         else
         {
-            m_parent_global_position = child_global_position;
-            m_visible_rect = rect;
+            parent_global_position = child_global_position;
+            visible_rect = rect;
             clipChildren(child);
         }
 
-        m_parent_global_position = old_parent_global_position;
-        m_visible_rect = old_visible_rect;
+        parent_global_position = old_parent_global_position;
+        visible_rect = old_visible_rect;
 
         child->m_flags &= ~R64FX_WIDGET_CLIP_FLAGS;
     }
@@ -1325,39 +1328,39 @@ void Widget::repaint()
  */
 void WidgetImpl::repaint()
 {
-    m_window->makeCurrent();
+    window->makeCurrent();
 
-    auto &flags = m_root_widget->m_flags;
+    auto &flags = root_widget->m_flags;
 
     if(flags & R64FX_WIDGET_REPAINT_FLAGS)
     {
-        m_painter->adjustForWindowSize();
+        painter->adjustForWindowSize();
 
-        m_num_rects = 0;
-        m_got_rect = false;
+        num_rects = 0;
+        got_rect = false;
 
         if(flags & R64FX_WIDGET_WANTS_REPAINT) //The root widget wants repaint.
         {
             //Paint whole window surface.
             Widget::PaintEvent event(this);
-            m_root_widget->paintEvent(&event);
-            m_painter->repaint();
+            root_widget->paintEvent(&event);
+            painter->repaint();
         }
         else
         {
             //Paint only certain parts of the window surface.
-            paintChildren(m_root_widget);
-            if(m_num_rects > 0)
+            paintChildren(root_widget);
+            if(num_rects > 0)
             {
-                for(int i=0; i<m_num_rects; i++)
+                for(int i=0; i<num_rects; i++)
                 {
-                    auto rect = m_rects[i];
-                    rect = intersection(rect, {0, 0, m_window->width(), m_window->height()});
+                    auto rect = rects[i];
+                    rect = intersection(rect, {0, 0, window->width(), window->height()});
                 }
 
-                m_painter->repaint(
-                    m_rects,
-                    m_num_rects
+                painter->repaint(
+                    rects,
+                    num_rects
                 );
             }
         }
@@ -1384,7 +1387,7 @@ void WidgetImpl::repaint()
  */
 void WidgetImpl::paintChildren(Widget* parent)
 {
-    bool parent_got_rect = m_got_rect;
+    bool parent_got_rect = got_rect;
 
     auto &parent_flags = parent->m_flags;
 
@@ -1404,12 +1407,12 @@ void WidgetImpl::paintChildren(Widget* parent)
         auto &child_flags = child->m_flags;
 
         /* Children should use painter in their local coord. system. */
-        auto old_offset = m_painter->offset();
-        m_painter->setOffset(old_offset + child->position() + parent->contentOffset());
+        auto old_offset = painter->offset();
+        painter->setOffset(old_offset + child->position() + parent->contentOffset());
 
         if(child_flags & R64FX_WIDGET_WANTS_REPAINT)
         {
-            m_got_rect = true; //The child will read this value as it's parent_got_rect
+            got_rect = true; //The child will read this value as it's parent_got_rect
                                //and will know not to add any rects of it's own.
 
             Widget::PaintEvent event(this);
@@ -1418,11 +1421,11 @@ void WidgetImpl::paintChildren(Widget* parent)
             if(!parent_got_rect)
             {
                 //Painter offset is equal to the window coord. of the child widget.
-                Rect<int> rect(m_painter->offset(), child->size());
-                if(m_num_rects < max_rects)
+                Rect<int> rect(painter->offset(), child->size());
+                if(num_rects < max_rects)
                 {
-                    m_rects[m_num_rects] = rect;
-                    m_num_rects++;
+                    rects[num_rects] = rect;
+                    num_rects++;
                 }
             }
         }
@@ -1431,12 +1434,12 @@ void WidgetImpl::paintChildren(Widget* parent)
             paintChildren(child);
         }
 
-        m_painter->setOffset(old_offset);
+        painter->setOffset(old_offset);
 
         child_flags &= ~R64FX_WIDGET_REPAINT_FLAGS;
     }
 
-    m_got_rect = parent_got_rect;
+    got_rect = parent_got_rect;
 }
 
 

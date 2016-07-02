@@ -22,6 +22,8 @@ public:
 
     void setText(const std::string &text);
 
+    void clear();
+
     Image* image() const;
 
     bool ownsImage();

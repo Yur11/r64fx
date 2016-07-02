@@ -59,11 +59,7 @@ Widget_Label::Widget_Label(const std::string &text, Widget* parent)
 
 Widget_Label::~Widget_Label()
 {
-    if(m_image && ownsImage())
-    {
-        delete m_image;
-        m_image = nullptr;
-    }
+    clear();
 
     g_label_count--;
     if(g_label_count == 0)
@@ -75,19 +71,15 @@ Widget_Label::~Widget_Label()
 
 void Widget_Label::setImage(Image* image, bool copy)
 {
+    clear();
+
     if(copy)
     {
-        if(!m_image)
-            m_image = new Image;
-
-        m_image->load(image->width(), image->height(), image->componentCount(), image->data(), true);
+        m_image = new Image(image->width(), image->height(), image->componentCount(), image->data(), true);
         m_flags |= R64FX_WIDGET_LABEL_OWNS_IMAGE;
     }
     else
     {
-        if(ownsImage())
-            delete m_image;
-
         m_image = image;
         m_flags &= ~R64FX_WIDGET_LABEL_OWNS_IMAGE;
     }
@@ -101,8 +93,24 @@ void Widget_Label::setImage(Image* image, bool copy)
 
 void Widget_Label::setText(const std::string &text)
 {
-    Image* img = text2image(text, TextWrap::None, g_label_font);
-    setImage(img, false);
+    clear();
+
+    m_image = text2image(text, TextWrap::None, g_label_font);
+    if(m_image)
+    {
+        m_flags |= R64FX_WIDGET_LABEL_OWNS_IMAGE;
+        setSize({m_image->width(), m_image->height()});
+    }
+}
+
+
+void Widget_Label::clear()
+{
+    if(m_image && ownsImage())
+    {
+        delete m_image;
+    }
+    m_image = nullptr;
 }
 
 
