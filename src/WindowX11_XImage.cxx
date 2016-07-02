@@ -81,6 +81,7 @@ void WindowXImage::setup(int width, int height)
 
 void WindowXImage::cleanup()
 {
+    XFreeGC(g_display, m_gc);
     destroyImage();
 }
 

@@ -560,6 +560,7 @@ void WindowX11::setTitle(string title)
     if(status)
     {
         XSetTextProperty(g_display, m_xwindow, &xtp, XA_WM_NAME);
+        XFree(xtp.value);
         m_title = title;
     }
 }

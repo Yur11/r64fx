@@ -396,6 +396,7 @@ struct PainterImplGL : public PainterImpl{
 
     void cleanupGLStuff()
     {
+        deleteBaseTextureIfNeeded();
         gl::DeleteVertexArrays(1, &base_vao);
         gl::DeleteBuffers(1, &base_vbo);
     }
