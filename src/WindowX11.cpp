@@ -319,36 +319,8 @@ namespace{
                 return g_arrow_cursor;
         }
     }
-
-    int g_debug_cursor_num = 0;
-    ::Cursor g_debug_cursor = None;
 }//namespace
 
-
-void WindowX11::debugCursor()
-{
-    auto old_cursor = g_debug_cursor;
-
-    g_debug_cursor = XCreateFontCursor(g_display, g_debug_cursor_num);
-    if(g_debug_cursor)
-    {
-        cerr << "g_debug_cursor: " << g_debug_cursor_num << "\n";
-        XDefineCursor(g_display, m_xwindow, g_debug_cursor);
-        g_debug_cursor_num += 1;
-        if(g_debug_cursor_num > 152)
-            g_debug_cursor_num = 0;
-
-        if(old_cursor)
-        {
-            XFreeCursor(g_display, old_cursor);
-            g_debug_cursor = None;
-        }
-    }
-    else
-    {
-        cerr << "Failed to create debug cursor " << g_debug_cursor_num << " !\n";
-    }
-}
 
 #include "WindowX11_Atoms.cxx"
 #include "WindowX11_Properties.cxx"
