@@ -19,6 +19,7 @@
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
+#include "Player.hpp"
 #include "sleep.hpp"
 
 
@@ -94,6 +95,7 @@ public:
 
 
 class MyProgram : public Program{
+    Player* m_player = nullptr;
 
 public:
     MyProgram(int argc, char* argv[]) : Program(argc, argv) {}
@@ -120,14 +122,16 @@ private:
             }
         });
 
-        auto wt = new Widget_Text("", g_Font);
-        wt->setSize({640, 480});
-        wt->setTextWrap(TextWrap::Anywhere);
-        wt->show();
+        m_player = new Player;
 
-        auto ap = new Widget_AudioPlayer;
-        ap->setSize({640, 480});
-        ap->show();
+//         auto wt = new Widget_Text("", g_Font);
+//         wt->setSize({640, 480});
+//         wt->setTextWrap(TextWrap::Anywhere);
+//         wt->show();
+//
+//         auto ap = new Widget_AudioPlayer;
+//         ap->setSize({640, 480});
+//         ap->show();
     }
 
     virtual void cleanup()
@@ -136,6 +140,9 @@ private:
 
         if(g_Font)
             delete g_Font;
+
+        if(m_player)
+            delete m_player;
     }
 };
 

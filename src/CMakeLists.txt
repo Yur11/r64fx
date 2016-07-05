@@ -37,6 +37,8 @@ set(SRC
     Mouse.cpp
     Mutex.cpp
     Painter.cpp
+    Player.cpp
+    PlayerView.cpp
     Program.cpp
     SignalData.cpp
     SignalGraph.cpp
