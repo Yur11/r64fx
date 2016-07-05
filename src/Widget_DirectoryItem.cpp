@@ -16,53 +16,25 @@ using namespace std;
 namespace r64fx{
 
 namespace{
-    class HelloAction : public Action{
+    Widget_DirectoryItem* g_context_menu_requestor = nullptr;
+
+    class CopyAction : public Action{
     public:
-        HelloAction() : Action("Hello") {}
+        CopyAction() : Action("Copy") {}
 
         void exec()
         {
-            cout << "Hello!\n";
+            if(g_context_menu_requestor)
+            {
+                g_context_menu_requestor->copyToClipboard();
+            }
+            g_context_menu_requestor = nullptr;
         }
     };
 
-    class DoctorAction : public Action{
-    public:
-        DoctorAction() : Action("Doctor") {}
-
-        void exec()
-        {
-            cout << "Doctor!\n";
-        }
-    };
-
-    class NameAction : public Action{
-    public:
-        NameAction() : Action("Name") {}
-
-        void exec()
-        {
-            cout << "Name!\n";
-        }
-    };
-
-    class ContinueAction : public Action{
-    public:
-        ContinueAction() : Action("Continue") {}
-
-        void exec()
-        {
-            cout << "Continue!\n";
-        }
-    };
-
-    HelloAction*     g_hello_action     = nullptr;
-    DoctorAction*    g_doctor_action    = nullptr;
-    NameAction*      g_name_action      = nullptr;
-    ContinueAction*  g_continue_action  = nullptr;
+    CopyAction* g_copy_action = nullptr;
 
     Widget_Menu* g_context_menu = nullptr;
-    Widget_Menu* g_context_sub_menu = nullptr;
 
     int g_dir_item_count = 0;
 
@@ -70,24 +42,9 @@ namespace{
     {
         if(g_dir_item_count == 0)
         {
-            g_hello_action      = new HelloAction;
-            g_doctor_action     = new DoctorAction;
-            g_name_action       = new NameAction;
-            g_continue_action   = new ContinueAction;
-
-            g_context_menu      = new Widget_Menu;
-            g_context_sub_menu  = new Widget_Menu;
-
-            g_context_menu->addAction(g_hello_action);
-            g_context_menu->addAction(g_doctor_action);
-
-            g_context_sub_menu->addAction(g_name_action);
-            g_context_sub_menu->addAction(g_continue_action);
-            g_context_sub_menu->setOrientation(Orientation::Vertical);
-            g_context_sub_menu->resizeAndReallign();
-
-            g_context_menu->addSubMenu(g_context_sub_menu, "Submenu");
-
+            g_copy_action = new CopyAction;
+            g_context_menu = new Widget_Menu;
+            g_context_menu->addAction(g_copy_action);
             g_context_menu->setOrientation(Orientation::Vertical);
             g_context_menu->resizeAndReallign();
         }
@@ -100,8 +57,7 @@ namespace{
         if(g_dir_item_count == 0)
         {
             delete g_context_menu;
-            delete g_hello_action;
-            delete g_doctor_action;
+            delete g_copy_action;
         }
     }
 }
@@ -208,8 +164,15 @@ void Widget_DirectoryItem::expand()
 }
 
 
+void Widget_DirectoryItem::copyToClipboard()
+{
+    anounceClipboardData({"text/uri-list", "text/plain"}, ClipboardMode::Clipboard);
+}
+
+
 void Widget_DirectoryItem::showContextMenu(Point<int> position)
 {
+    g_context_menu_requestor = this;
     g_context_menu->showAt(position, this);
 }
 
@@ -220,7 +183,7 @@ void Widget_DirectoryItem::keyPressEvent(KeyPressEvent* event)
     {
         if(event->key() == Keyboard::Key::C)
         {
-            anounceClipboardData({"text/uri-list", "text/plain"}, ClipboardMode::Clipboard);
+            copyToClipboard();
         }
         else if(event->key() == Keyboard::Key::V)
         {

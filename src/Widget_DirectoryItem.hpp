@@ -26,6 +26,8 @@ public:
 
     virtual void expand();
 
+    void copyToClipboard();
+
 protected:
     virtual void showContextMenu(Point<int> position);
 
