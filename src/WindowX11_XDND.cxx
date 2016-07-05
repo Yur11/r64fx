@@ -462,8 +462,6 @@ void WindowX11::xdndLeaveEvent()
 
 void WindowX11::sendDndDrop(::Window target_xwindow)
 {
-    cout << "sendDndDrop\n";
-
     XEvent out_xevent;
     XClientMessageEvent &out = out_xevent.xclient;
     long int* msg_data = out.data.l;
@@ -499,7 +497,6 @@ void WindowX11::xdndDropEvent()
 
     if(accepted)
     {
-        cout << "accepted: " << data_type.name() << "\n";
         requestClipboardData(data_type, ClipboardMode::DragAndDrop);
     }
 }

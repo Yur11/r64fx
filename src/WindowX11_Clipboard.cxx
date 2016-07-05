@@ -68,7 +68,6 @@ ClipboardImpl* clipboard(Atom selection)
 
 void WindowX11::anounceClipboardData(const ClipboardMetadata &metadata, ClipboardMode mode)
 {
-    cout << "anounceClipboardData: " << mode << "\n";
     if(mode == ClipboardMode::DragAndDrop)
     {
         cerr << "Refusing to anounce DragAndDrop clipboard data!\n";
@@ -89,8 +88,6 @@ void WindowX11::anounceClipboardData(const ClipboardMetadata &metadata, Clipboar
 
 void WindowX11::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
 {
-    cout << "requestClipboardData: " << mode << "\n";
-
     auto cb = clipboard(mode);
     if(!cb)
     {
@@ -115,10 +112,8 @@ void WindowX11::requestClipboardData(ClipboardDataType type, ClipboardMode mode)
 
 void WindowX11::requestClipboardMetadata(ClipboardMode mode)
 {
-    cout << "WindowX11::requestClipboardMetadata()\n";
     if(mode == ClipboardMode::DragAndDrop)
     {
-        cout << "DragAndDrop\n";
         g_events->clipboardMetadataRecieveEvent(this, g_dnd_metadata, ClipboardMode::DragAndDrop);
         return;
     }
@@ -155,8 +150,6 @@ void WindowX11::selectionClearEvent()
 
 void WindowX11::selectionRequestEvent()
 {
-    cout << "WindowX11::selectionRequestEvent()\n";
-
     XSelectionRequestEvent  &in   = g_incoming_event->xselectionrequest;
 
     XEvent xevent;
@@ -185,7 +178,6 @@ void WindowX11::selectionRequestEvent()
 
     if(in.target == X11_Atom::TARGETS)
     {
-        cout << "TARGETS\n";
         vector<Atom> targets = {X11_Atom::TARGETS};
         for(auto &type : cb->metadata)
         {
@@ -211,13 +203,10 @@ void WindowX11::selectionRequestEvent()
     }
     else
     {
-        cout << "NOT TARGETS\n";
-
         ClipboardDataType cdt(atom_name(in.target));
 
         if(cdt.isGood())
         {
-            cout << "cdt.isGood()\n";
             g_events->clipboardDataTransmitEvent(
                 this,
                 cdt,
@@ -228,10 +217,6 @@ void WindowX11::selectionRequestEvent()
                     window_x11->transmitRequestedSelection(data, size);
                 }
             );
-        }
-        else
-        {
-            cout << "ctd not good!\n";
         }
     }
 
