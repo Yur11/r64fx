@@ -22,14 +22,10 @@ void init_menu_font_if_needed()
 }
 
 
-Widget* g_moused_over_menu_item = nullptr;
-
-
 class Widget_MenuItem : public Widget{
     Image*        m_image     = nullptr;
     Action*       m_action    = nullptr;
     Widget_Menu*  m_sub_menu  = nullptr;
-    bool          m_got_press = false;
 
     Image* createCaptionImage(const std::string &caption_text)
     {
@@ -375,6 +371,11 @@ bool Widget_MenuItem::showSubMenu()
 
 void Widget_Menu::closeAll()
 {
+    if(this == rootMenu())
+    {
+        ungrabMouseMulti();
+    }
+
     if(m_active_item)
     {
         auto active_menu_item = dynamic_cast<Widget_MenuItem*>(m_active_item);
@@ -433,49 +434,27 @@ void Widget_MenuItem::paintEvent(PaintEvent* event)
 
 void Widget_MenuItem::mousePressEvent(MousePressEvent*)
 {
-    m_got_press = true;
+    auto parent_menu = parentMenu();
+    if(!parent_menu)
+        return;
+
+    if(m_action)
+    {
+        auto root_menu = parent_menu->rootMenu();
+        root_menu->closeAll();
+        root_menu->repaint();
+        m_action->exec();
+    }
+    else if(m_sub_menu && parent_menu->activeItem() != this && showSubMenu())
+    {
+        parent_menu->setActiveItem(this);
+    }
 }
 
 
 void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    auto parent_menu = parentMenu();
-    if(!parent_menu)
-        return;
 
-    if(m_got_press)
-    {
-        auto parent_menu = parentMenu();
-
-        if(m_action)
-        {
-            auto root_menu = parent_menu->rootMenu();
-
-            Window* window = root_menu->root()->window();
-            if(window)
-            {
-                ungrabMouse();
-                window->ungrabMouse();
-            }
-
-            root_menu->closeAll();
-            root_menu->repaint();
-            m_action->exec();
-        }
-        else if(m_sub_menu && parent_menu->activeItem() != this && showSubMenu())
-        {
-            parent_menu->setActiveItem(this);
-
-            auto window = parent_menu->root()->window();
-            if(window)
-            {
-                parent_menu->grabMouse();
-                window->grabMouse();
-            }
-        }
-
-        m_got_press = false;
-    }
 }
 
 
@@ -526,14 +505,11 @@ void Widget_MenuItem::mouseLeaveEvent()
 void Widget_Menu::mousePressEvent(MousePressEvent* event)
 {
     Widget::mousePressEvent(event);
-    ungrabMouseMulti();
-    rootMenu()->closeAll();
 }
 
 
 void Widget_Menu::clickedElsewhereEvent()
 {
-    ungrabMouseMulti();
     rootMenu()->closeAll();
 }
 
