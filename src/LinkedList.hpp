@@ -18,19 +18,31 @@ public:
         LinkedList<T>::Node* prev_node = nullptr;
         LinkedList<T>::Node* next_node = nullptr;
 
-        void insert(T* node)
+        void linkPrevious(T* node)
+        {
+            node->next_node = this;
+            if(prev_node)
+            {
+                prev_node->next_node = node;
+                node->prev_node = prev_node;
+            }
+            prev_node = node;
+        }
+
+
+        void linkNext(T* node)
         {
             node->prev_node = this;
             if(next_node)
             {
                 next_node->prev_node = node;
-                node->next_node = this->next_node;
+                node->next_node = next_node;
             }
-            this->next_node = node;
+            next_node = node;
         }
 
 
-        void remove()
+        void unlink()
         {
             if(prev_node)
                 prev_node->next_node = this->next_node;
@@ -129,6 +141,36 @@ public:
     LinkedList<T>::Iterator end() const { return last_node ? last_node->next() : nullptr; }
     
 
+    T* preppend(T* node)
+    {
+#ifdef R64FX_DEBUG
+        assert(node != nullptr);
+        assert(node->next() == nullptr);
+        assert(node->prev() == nullptr);
+        assert(node != first_node);
+        assert(node != last_node);
+#endif//R64FX_DEBUG
+
+        if(first_node == nullptr)
+        {
+#ifdef R64FX_DEBUG
+            assert(last_node == nullptr);
+#endif//R64FX_DEBUG
+            first_node = last_node = node;
+        }
+        else
+        {
+#ifdef R64FX_DEBUG
+            assert(first_node != nullptr);
+#endif//R64FX_DEBUG
+            first_node->linkPrevious(node);
+            first_node = node;
+        }
+
+        return node;
+    }
+
+
     T* append(T* node)
     {
 #ifdef R64FX_DEBUG
@@ -151,7 +193,7 @@ public:
 #ifdef R64FX_DEBUG
             assert(first_node != nullptr);
 #endif//R64FX_DEBUG
-            last_node->insert(node);
+            last_node->linkNext(node);
             last_node = node;
         }
 
@@ -159,7 +201,7 @@ public:
     }
 
 
-    T* insert(T* existing_node, T* node)
+    T* insertAfter(T* existing_node, T* node)
     {
 #ifdef R64FX_DEBUG
         assert(node != nullptr);
@@ -170,10 +212,31 @@ public:
         assert(existing_node != node);
 #endif//R64FX_DEBUG
 
-        existing_node->insert(node);
+        existing_node->linkNext(node);
         if(existing_node == last_node)
         {
             last_node = node;
+        }
+
+        return node;
+    }
+
+
+    T* insertBefore(T* existing_node, T* node)
+    {
+#ifdef R64FX_DEBUG
+        assert(node != nullptr);
+        assert(node->next() == nullptr);
+        assert(node->prev() == nullptr);
+        assert(first_node != nullptr);
+        assert(existing_node != nullptr);
+        assert(existing_node != node);
+#endif//R64FX_DEBUG
+
+        existing_node->linkPrevious(node);
+        if(existing_node == first_node)
+        {
+            first_node = node;
         }
 
         return node;
@@ -198,7 +261,7 @@ public:
             last_node = node->prev();
         }
 
-        node->remove();
+        node->unlink();
 
         return node;
     }

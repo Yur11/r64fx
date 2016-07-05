@@ -8,6 +8,8 @@
 #include "Widget_Menu.hpp"
 #include "StringUtils.hpp"
 
+#include <algorithm>
+
 #include <iostream>
 using namespace std;
 
@@ -329,8 +331,44 @@ void Widget_DirectoryItem::loadEntry(const Directory::Entry* entry)
             entry_path.push_back('/');
         }
 
-        auto dt = new Widget_DirectoryItem(entry->name(), entry_path, this);
-        (void)dt;
+        auto new_item_name = entry->name();
+        auto new_item = new Widget_DirectoryItem(entry->name(), entry_path);
+
+        Widget* existing_child = nullptr;
+
+        for(Widget* child : *this)
+        {
+            auto item = dynamic_cast<Widget_DirectoryItem*>(child);
+            if(!item)
+                continue;
+
+            if(new_item->isDirectory() && (!item->isDirectory()))
+            {
+                break;
+            }
+
+            if(new_item->isDirectory() == item->isDirectory())
+            {
+                auto item_name = item->caption();
+                if(std::lexicographical_compare(
+                    new_item_name.begin(), new_item_name.end(), item_name.begin(), item_name.end())
+                )
+                {
+                    break;
+                }
+            }
+
+            existing_child = child;
+        }
+
+        if(existing_child)
+        {
+            insertAfter(existing_child, new_item);
+        }
+        else
+        {
+            preppend(new_item);
+        }
     }
 }
 

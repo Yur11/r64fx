@@ -515,13 +515,14 @@ Widget::~Widget()
 }
 
     
-void Widget::setParent(Widget* parent)
+void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child)
 {
     if(isWindow())
     {
 #ifdef R64FX_DEBUG
         cerr << "WARNING: Widget::setParent()\nTrying to set parent on a window!\n";
 #endif//R64FX_DEBUG
+        abort();
         return;
     }
 
@@ -532,7 +533,20 @@ void Widget::setParent(Widget* parent)
 
     if(parent)
     {
-        parent->m_children.append(this);
+        if(existing_child && existing_child->parent() == parent)
+        {
+            if(insert_after)
+                parent->m_children.insertAfter(existing_child, this);
+            else
+                parent->m_children.insertBefore(existing_child, this);
+        }
+        else
+        {
+            if(insert_after)
+                parent->m_children.append(this);
+            else
+                parent->m_children.preppend(this);
+        }
     }
     m_parent.widget = parent;
 }
@@ -544,16 +558,39 @@ Widget* Widget::parent() const
 }
 
 
-void Widget::add(Widget* child)
+void Widget::preppend(Widget* child)
 {
     if(!child)
-    {
-#ifdef R64FX_DEBUG
-        cerr << "WARNING: Widget::add(nullptr)\n";
-#endif//R64FX_DEBUG
         return;
-    }
-    child->setParent(this);
+
+    child->setParent(this, false);
+}
+
+
+void Widget::append(Widget* child)
+{
+    if(!child)
+        return;
+
+    child->setParent(this, true);
+}
+
+
+void Widget::insertBefore(Widget* existing_child, Widget* child)
+{
+    if(!child || !existing_child || existing_child->parent() != this)
+        return;
+
+    child->setParent(this, false, existing_child);
+}
+
+
+void Widget::insertAfter(Widget* existing_child, Widget* child)
+{
+    if(!child || !existing_child || existing_child->parent() != this)
+        return;
+
+    child->setParent(this, true, existing_child);
 }
 
 
@@ -566,6 +603,12 @@ WidgetIterator Widget::begin() const
 WidgetIterator Widget::end() const
 {
     return m_children.end();
+}
+
+
+bool Widget::hasChildren() const
+{
+    return m_children.isEmpty();
 }
 
 

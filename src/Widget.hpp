@@ -64,22 +64,38 @@ public:
     
     virtual ~Widget();
 
-    /* Set parent for this widget.
-     * This widget is added to the list of children
-     * of the given parent. */
-    void setParent(Widget* parent);
+    void setParent(Widget* parent, bool insert_after = true, Widget* existing_child = nullptr);
     
     /* Parent widget or nullptr if this widget has no parent or is a window. */
     Widget* parent() const;
+
+    /* Adds a widget to the beginning of the children list.
+       Same as calling child->setParent(this, false);
+     */
+    void preppend(Widget* child);
     
-    /* Effectivly calls setParent on the given child widget. */
-    void add(Widget* child);
+    /* Adds a widget to the end of the children list.
+       Same as calling child->setParent(this, true);
+     */
+    void append(Widget* child);
+
+    /* Adds a widget before an existing child.
+       Same as calling child->setParent(this, false, existing_child);
+     */
+    void insertBefore(Widget* existing_child, Widget* child);
+
+    /* Adds a widget after an existing child.
+       Same as calling child->setParent(this, true, existing_child);
+     */
+    void insertAfter(Widget* existing_child, Widget* child);
 
     /* Iterator pointing to the first child. */
     WidgetIterator begin() const;
 
     /* Iterator pointing past the last child. */
     WidgetIterator end() const;
+
+    bool hasChildren() const;
 
     /* Remove the first child and return it. */
     Widget* popFirstChild();

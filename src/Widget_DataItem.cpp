@@ -146,13 +146,13 @@ int Widget_DataItem::lineHeight()
 
 void Widget_DataItem::addItem(Widget_DataItem* item)
 {
-    Widget::add(item);
+    Widget::append(item);
 }
 
 
 void Widget_DataItem::addItem(const std::string &caption)
 {
-    Widget::add(new Widget_DataItem(caption));
+    Widget::append(new Widget_DataItem(caption));
 }
 
 

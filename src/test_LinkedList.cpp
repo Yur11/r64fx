@@ -69,11 +69,23 @@ int main()
     items.remove(&item4);
     test(8, items, "AC");
 
-    items.insert(&item1, &item4);
+    items.insertAfter(&item1, &item4);
     test(9, items, "ADC");
 
-    items.insert(&item3, &item2);
+    items.insertAfter(&item3, &item2);
     test(10, items, "ADCB");
+
+    items.remove(&item4);
+    test(11, items, "ACB");
+
+    items.insertBefore(&item3, &item4);
+    test(12, items, "ADCB");
+
+    items.remove(&item4);
+    test(13, items, "ACB");
+
+    items.preppend(&item4);
+    test(14, items, "DACB");
 
     return (sucess ? 0 : 1);
 }
