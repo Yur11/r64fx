@@ -10,6 +10,10 @@ public:
     PlayerView(Widget* parent = nullptr);
 
 protected:
+    virtual void paintEvent(PaintEvent* event);
+
+    virtual void resizeEvent(ResizeEvent* event);
+
     virtual void clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event);
 
     virtual void clipboardDataTransmitEvent(ClipboardDataTransmitEvent* event);

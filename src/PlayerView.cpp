@@ -1,4 +1,5 @@
 #include "PlayerView.hpp"
+#include "Painter.hpp"
 #include "Clipboard.hpp"
 #include "ClipboardEvent.hpp"
 #include "StringUtils.hpp"
@@ -13,6 +14,21 @@ namespace r64fx{
 PlayerView::PlayerView(Widget* parent)
 {
     setSize({800, 240});
+}
+
+
+void PlayerView::paintEvent(PaintEvent* event)
+{
+    auto p = event->painter();
+    unsigned char bg[4] = {190, 190, 190, 0};
+    p->fillRect({0, 0, width(), height()}, bg);
+}
+
+
+void PlayerView::resizeEvent(ResizeEvent* event)
+{
+    clip();
+    repaint();
 }
 
 
