@@ -483,9 +483,9 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         Widget::ungrabMouse();
         if(g_dnd_object && g_dnd_source)
         {
+            g_dnd_object->close();
             DndFinishedEvent event(g_dnd_object);
             g_dnd_source->dndFinishedEvent(&event);
-            g_dnd_object->close();
             g_dnd_object = nullptr;
             g_dnd_source = nullptr;
         }
