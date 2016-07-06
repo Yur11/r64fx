@@ -11,9 +11,16 @@ using namespace std;
 
 namespace r64fx{
 
-PlayerView::PlayerView(Widget* parent)
+PlayerView::PlayerView(PlayerViewFeedbackIface* feedback, Widget* parent)
+: m_feedback(feedback)
 {
     setSize({800, 240});
+}
+
+
+PlayerView::~PlayerView()
+{
+
 }
 
 
@@ -47,10 +54,10 @@ void PlayerView::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
         for(;;)
         {
             auto file_path = next_file_path_from_uri_list(it, uri_list.end());
-            if(file_path.empty())
+            if(file_path.empty() || m_feedback->loadAudioFile(file_path))
+            {
                 break;
-
-            cout << file_path << "\n";
+            }
         }
     }
 }

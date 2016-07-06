@@ -5,9 +5,15 @@
 
 namespace r64fx{
 
+class PlayerViewFeedbackIface;
+
 class PlayerView : public Widget{
+    PlayerViewFeedbackIface* m_feedback;
+
 public:
-    PlayerView(Widget* parent = nullptr);
+    PlayerView(PlayerViewFeedbackIface* feedback, Widget* parent = nullptr);
+
+    virtual ~PlayerView();
 
 protected:
     virtual void paintEvent(PaintEvent* event);
@@ -25,6 +31,12 @@ protected:
     virtual void dndDropEvent(DndDropEvent* event);
 
     virtual void dndLeaveEvent(DndLeaveEvent* event);
+};
+
+
+class PlayerViewFeedbackIface{
+public:
+    virtual bool loadAudioFile(const std::string &path) = 0;
 };
 
 }//namespace r64fx
