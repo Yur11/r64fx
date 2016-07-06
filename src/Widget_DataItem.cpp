@@ -643,4 +643,32 @@ void Widget_DataItem::getClipboardMetadata(ClipboardMetadata &metadata)
     (void)metadata;
 }
 
+
+void Widget_DataItem::depopulate()
+{
+    for(;;)
+    {
+        auto child = popFirstChild();
+        if(!child)
+            break;
+
+        auto data_item = dynamic_cast<Widget_DataItem*>(child);
+        if(data_item)
+        {
+            if(data_item->isSelected())
+            {
+                auto item_browser = parentBrowser();
+                if(item_browser)
+                {
+                    item_browser->setSelectedItem(nullptr);
+                }
+            }
+        }
+
+        delete child;
+    }
+
+    m_flags &= ~R64FX_WIDGET_DIRECTORY_IS_POPULATED;
+}
+
 }//namespace

@@ -44,8 +44,6 @@ protected:
 private:
     void populate();
 
-    void depopulate();
-
     void loadEntry(const Directory::Entry* entry);
 };
 

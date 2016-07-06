@@ -105,6 +105,8 @@ protected:
     virtual void dndFinishedEvent(DndFinishedEvent* event);
 
     virtual void getClipboardMetadata(ClipboardMetadata &metadata);
+
+    void depopulate();
 };
 
 }//namespace

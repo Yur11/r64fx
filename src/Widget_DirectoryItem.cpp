@@ -335,19 +335,4 @@ void Widget_DirectoryItem::loadEntry(const Directory::Entry* entry)
     }
 }
 
-
-void Widget_DirectoryItem::depopulate()
-{
-    for(;;)
-    {
-        auto child = popFirstChild();
-        if(!child)
-            break;
-
-        delete child;
-    }
-
-    m_flags &= ~R64FX_WIDGET_DIRECTORY_IS_POPULATED;
-}
-
 }//namespace r64fx

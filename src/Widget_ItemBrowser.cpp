@@ -324,7 +324,10 @@ void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
 void Widget_ItemBrowser::setSelectedItem(Widget_DataItem* item)
 {
     m_selected_item = item;
-    m_on_item_selected(this, m_on_item_selected_data);
+    if(m_selected_item)
+    {
+        m_on_item_selected(this, m_on_item_selected_data);
+    }
 }
 
 }//namespace r64fx

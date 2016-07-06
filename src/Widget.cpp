@@ -508,6 +508,9 @@ Widget::Widget(Widget* parent)
 
 Widget::~Widget()
 {
+    if(hasFocus())
+        removeFocus();
+
     for(auto child : m_children)
     {
         child->setParent(nullptr);
