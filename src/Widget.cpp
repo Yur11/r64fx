@@ -46,17 +46,15 @@ Widget* g_focus_owner = nullptr;
 
 Widget* g_anouncer_clipboard       = nullptr;
 Widget* g_anouncer_selection       = nullptr;
-Widget* g_anouncer_drag_and_drop   = nullptr;
+Widget* g_dnd_source = nullptr;
 
 Widget* g_requestor_clipboard      = nullptr;
 Widget* g_requestor_selection      = nullptr;
-Widget* g_requestor_drag_and_drop  = nullptr;
+Widget* g_dnd_target = nullptr;
 
 Widget* g_requestor_anouncer_stub  = nullptr;
 
-Widget* g_dnd_target = nullptr;
 Widget* g_dnd_object = nullptr;
-Widget* g_dnd_source = nullptr;
 
 
 inline Widget* &anouncer(ClipboardMode mode)
@@ -68,7 +66,7 @@ inline Widget* &anouncer(ClipboardMode mode)
         case ClipboardMode::Selection:
             return g_anouncer_selection;
         case ClipboardMode::DragAndDrop:
-            return g_anouncer_drag_and_drop;
+            return g_dnd_source;
         default:
             return g_requestor_anouncer_stub;
     }
@@ -84,7 +82,7 @@ inline Widget* &requestor(ClipboardMode mode)
         case ClipboardMode::Selection:
             return g_requestor_selection;
         case ClipboardMode::DragAndDrop:
-            return g_requestor_drag_and_drop;
+            return g_dnd_target;
         default:
             return g_requestor_anouncer_stub;
     }
@@ -508,8 +506,36 @@ Widget::Widget(Widget* parent)
 
 Widget::~Widget()
 {
-    if(hasFocus())
-        removeFocus();
+    if(this == g_moused_over_widget)
+        g_moused_over_widget = nullptr;
+
+    if(this == g_mouse_grabber)
+        g_mouse_grabber = nullptr;
+
+    if(this == g_multi_mouse_grabber)
+        g_multi_mouse_grabber = nullptr;
+
+    if(this == g_focus_owner)
+        g_focus_owner = nullptr;
+
+    if(this == g_anouncer_clipboard)
+        g_anouncer_clipboard = nullptr;
+
+    if(this == g_anouncer_selection)
+        g_anouncer_selection = nullptr;
+
+    if(this == g_dnd_source)
+        g_dnd_source = nullptr;
+
+    if(this == g_requestor_clipboard)
+        g_requestor_clipboard = nullptr;
+
+    if(this == g_requestor_selection)
+        g_requestor_selection = nullptr;
+
+    if(this == g_dnd_target)
+        g_dnd_target = nullptr;
+
 
     for(auto child : m_children)
     {
