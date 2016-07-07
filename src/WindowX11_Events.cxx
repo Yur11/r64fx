@@ -177,7 +177,8 @@ void WindowX11::processSomeEvents(WindowEventDispatcherIface* events)
                 }
                 else if(msg.message_type == X11_Atom::XdndFinished)
                 {
-                    cout << "XdndFinished\n";
+                    events->dndFinishedEvent();
+                    g_dnd_metadata.clear();
                 }
                 else if(msg.message_type == X11_Atom::WM_PROTOCOLS)
                 {

@@ -457,12 +457,11 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         {
             DndDropEvent event(metadata, data_type, accepted);
             g_dnd_target->dndDropEvent(&event);
-            if(accepted)
+            if(!accepted)
             {
-                requestor(ClipboardMode::DragAndDrop) = g_dnd_target;
+                g_dnd_target = nullptr;
             }
         }
-        g_dnd_target = nullptr;
     }
 
 
@@ -475,18 +474,25 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     }
 
 
-    virtual void dndFinishedEvent()
+    virtual void dndReleaseEvent()
     {
-        g_pressed_buttons = MouseButton::None();
+        g_pressed_buttons = MouseButton::None();//?
         Widget::ungrabMouse();
         if(g_dnd_object && g_dnd_source)
         {
             g_dnd_object->close();
-            DndFinishedEvent event(g_dnd_object);
-            g_dnd_source->dndFinishedEvent(&event);
+            DndReleaseEvent event(g_dnd_object);
+            g_dnd_source->dndReleaseEvent(&event);
             g_dnd_object = nullptr;
-            g_dnd_source = nullptr;
+
         }
+    }
+
+
+    virtual void dndFinishedEvent()
+    {
+        g_dnd_source = nullptr;
+        g_dnd_target = nullptr;
     }
 
     virtual void closeEvent(Window* window)
@@ -1287,7 +1293,6 @@ void Widget::startDrag(const ClipboardMetadata &metadata, Widget* dnd_object, Po
             dnd_object->show(Window::WmType::DND, Window::Type::Image);
         }
         root_window->startDrag(metadata, dnd_object->window(), anchor.x(), anchor.y());
-        anouncer(ClipboardMode::DragAndDrop) = this;
     }
 }
 
@@ -1666,6 +1671,12 @@ void Widget::dndDropEvent(DndDropEvent* event)
 
 
 void Widget::dndLeaveEvent(DndLeaveEvent* event)
+{
+
+}
+
+
+void Widget::dndReleaseEvent(DndReleaseEvent* event)
 {
 
 }

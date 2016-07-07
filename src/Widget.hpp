@@ -28,6 +28,7 @@ class ClipboardMetadataRecieveEvent;
 class DndMoveEvent;
 class DndDropEvent;
 class DndLeaveEvent;
+class DndReleaseEvent;
 class DndFinishedEvent;
 
 typedef LinkedList<Widget>::Iterator WidgetIterator;
@@ -327,6 +328,8 @@ protected:
     virtual void dndDropEvent(DndDropEvent* event);
 
     virtual void dndLeaveEvent(DndLeaveEvent* event);
+
+    virtual void dndReleaseEvent(DndReleaseEvent* event);
 
     virtual void dndFinishedEvent(DndFinishedEvent* event);
 

@@ -165,11 +165,11 @@ class DndLeaveEvent{
 };
 
 
-class DndFinishedEvent{
+class DndReleaseEvent{
     Widget* m_dnd_object = nullptr;
 
 public:
-    DndFinishedEvent(Widget* dnd_object)
+    DndReleaseEvent(Widget* dnd_object)
     : m_dnd_object(dnd_object)
     {}
 

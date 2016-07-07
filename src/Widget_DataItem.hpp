@@ -102,6 +102,8 @@ protected:
 
     virtual void mouseLeaveEvent();
 
+    virtual void dndReleaseEvent(DndReleaseEvent* event);
+
     virtual void dndFinishedEvent(DndFinishedEvent* event);
 
     virtual void getClipboardMetadata(ClipboardMetadata &metadata);

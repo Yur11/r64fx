@@ -46,8 +46,6 @@ void find_dnd_target(::Window parent, int x, int y, ::Window* out_target, int* o
     ::Window* children  = nullptr;
     unsigned int children_count = 0;
 
-    ::Window dnd_target = None;
-
     if(XQueryTree(
         g_display, parent,
         &root_stub, &parent_stub,
@@ -217,12 +215,12 @@ void WindowX11::dndRelease()
 
     setCursorType(Window::CursorType::Arrow);
     ungrabMouse();
-    g_events->dndFinishedEvent();
-    g_outgoing_drag_object = nullptr;
+    g_events->dndReleaseEvent();
     g_drag_anchor_x = 0;
     g_drag_anchor_y = 0;
     g_outgoing_drop_target = None;
     g_outgoing_drop_accepted = false;
+    g_outgoing_drag_object = nullptr;
 }
 
 
@@ -367,6 +365,11 @@ void WindowX11::sendDndPosition(::Window target_xwindow, short x, short y)
 
 void WindowX11::xdndStatusEvent()
 {
+    if(!g_outgoing_drag_object)
+    {
+        return;
+    }
+
     const XClientMessageEvent &in = g_incoming_event->xclient;
     const long int* msg_data = in.data.l;
 

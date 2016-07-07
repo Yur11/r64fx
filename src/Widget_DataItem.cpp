@@ -628,13 +628,19 @@ void Widget_DataItem::mouseLeaveEvent()
 }
 
 
-void Widget_DataItem::dndFinishedEvent(DndFinishedEvent* event)
+void Widget_DataItem::dndReleaseEvent(DndReleaseEvent* event)
 {
     auto dnd_object = event->dndObject();
     if(dnd_object)
     {
         delete dnd_object;
     }
+}
+
+
+void Widget_DataItem::dndFinishedEvent(DndFinishedEvent* event)
+{
+
 }
 
 
