@@ -24,6 +24,19 @@ PlayerView::~PlayerView()
 }
 
 
+void PlayerView::notifySpecs(const std::string &path, float samplerate, float channels, float frames)
+{
+    cout << "File: " << path << "\n";
+    cout << "    " << samplerate << ", " << channels << ", " << frames << "\n";
+}
+
+
+void PlayerView::notifyFailedToLoad()
+{
+    cout << "Failed to load!\n";
+}
+
+
 void PlayerView::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
@@ -35,6 +48,12 @@ void PlayerView::paintEvent(PaintEvent* event)
 void PlayerView::resizeEvent(ResizeEvent* event)
 {
     clip();
+    repaint();
+}
+
+
+void PlayerView::mousePressEvent(MousePressEvent* event)
+{
     repaint();
 }
 

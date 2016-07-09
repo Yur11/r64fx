@@ -129,9 +129,9 @@ private:
 //         wt->setTextWrap(TextWrap::Anywhere);
 //         wt->show();
 //
-        auto ap = new Widget_AudioPlayer;
-        ap->setSize({640, 480});
-        ap->show();
+//         auto ap = new Widget_AudioPlayer;
+//         ap->setSize({640, 480});
+//         ap->show();
     }
 
     virtual void cleanup()

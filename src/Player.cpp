@@ -35,13 +35,53 @@ Player::~Player()
         }
         delete m_view;
     }
+
+    m_sf.close();
+
+    if(m_data)
+    {
+        delete[] m_data;
+        m_data = nullptr;
+    }
 }
 
 
 bool Player::loadAudioFile(const std::string &path)
 {
-    cout << "load: " << path << "\n";
-    return false;
+    if(path.empty())
+        return false;
+
+    if(!m_view)
+        return false;
+
+    m_sf.open(path, SoundFile::Mode::Read);
+    if(!m_sf.isGood())
+        return false;
+
+    m_path = path;
+    m_view->notifySpecs(m_path, m_sf.sampleRate(), m_sf.componentCount(), m_sf.frameCount());
+
+    if(m_data)
+    {
+        delete[] m_data;
+        m_data = nullptr;
+    }
+
+    int data_size = m_sf.componentCount() * m_sf.frameCount();
+    m_data = new(std::nothrow) float[data_size];
+    if(!m_data)
+    {
+        cerr << "Failed to allocate memory!\n";
+        return false;
+    }
+
+    if(m_sf.readFrames(m_data, m_sf.frameCount()) != m_sf.frameCount())
+    {
+        cerr << "Failed to read file!\n";
+        return false;
+    }
+
+    return true;
 }
 
 }//namespace r64fx
