@@ -5,22 +5,21 @@
 
 namespace r64fx{
 
+class Player;
 class PlayerViewFeedbackIface;
 
 class PlayerView : public Widget{
+    friend class Player;
+
     PlayerViewFeedbackIface* m_player;
     float* m_waveform = nullptr;
 
-public:
     PlayerView(PlayerViewFeedbackIface* feedback, Widget* parent = nullptr);
 
     virtual ~PlayerView();
 
-    void notifySpecs(const std::string &path, float samplerate, int channels, int frames);
+    void notifyLoad(bool success);
 
-    void notifyFailedToLoad();
-
-protected:
     virtual void paintEvent(PaintEvent* event);
 
     virtual void resizeEvent(ResizeEvent* event);
@@ -50,6 +49,8 @@ public:
     virtual bool loadAudioFile(const std::string &path) = 0;
 
     virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out) = 0;
+
+    virtual bool hasData() = 0;
 };
 
 }//namespace r64fx

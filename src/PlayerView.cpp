@@ -24,10 +24,13 @@ PlayerView::~PlayerView()
 }
 
 
-void PlayerView::notifySpecs(const std::string &path, float samplerate, int channels, int frames)
+void PlayerView::notifyLoad(bool success)
 {
-    cout << "File: " << path << "\n";
-    cout << "    " << samplerate << ", " << channels << ", " << frames << "\n";
+    if(!success)
+    {
+        cerr << "Failed to load file!\n";
+        return;
+    }
 
     if(m_waveform)
     {
@@ -35,22 +38,18 @@ void PlayerView::notifySpecs(const std::string &path, float samplerate, int chan
         m_waveform = nullptr;
     }
 
-    m_waveform = new(std::nothrow) float[channels * frames * 2];
+    int component_count = m_player->componentCount();
+    int frame_count = m_player->frameCount();
+
+    m_waveform = new(std::nothrow) float[component_count * frame_count * 2];
     if(!m_waveform)
         return;
 
-    for(int c=0; c<channels; c++)
+    for(int c=0; c<component_count; c++)
     {
-        m_player->loadWaveform(0, frames, c, width(), m_waveform + (c * frames));
-        cout << "--> " << c << "\n";
+        m_player->loadWaveform(0, frame_count, c, width(), m_waveform + (c * frame_count));
     }
     repaint();
-}
-
-
-void PlayerView::notifyFailedToLoad()
-{
-    cout << "Failed to load!\n";
 }
 
 
@@ -60,13 +59,14 @@ void PlayerView::paintEvent(PaintEvent* event)
     unsigned char bg[4] = {190, 190, 190, 0};
     p->fillRect({0, 0, width(), height()}, bg);
 
+    int component_count = m_player->componentCount();
+
     if(m_waveform)
     {
-        int waveform_height = height() / m_player->componentCount();
+        int waveform_height = height() / component_count;
         int waveform_y = 0;
-        for(int c=0; c<m_player->componentCount(); c++)
+        for(int c=0; c<component_count; c++)
         {
-            cout << "->> " << waveform_y << "\n";
             unsigned char fg[3] = {63, 63, 63};
             p->drawWaveform({0, waveform_y, width(), waveform_height}, fg, m_waveform + (c * m_player->frameCount()));
             waveform_y += waveform_height;

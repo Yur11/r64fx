@@ -58,6 +58,12 @@ int Player::componentCount()
 }
 
 
+bool Player::hasData()
+{
+    return m_data != nullptr;
+}
+
+
 bool Player::loadAudioFile(const std::string &path)
 {
     if(path.empty())
@@ -91,7 +97,7 @@ bool Player::loadAudioFile(const std::string &path)
     }
 
     m_path = path;
-    m_view->notifySpecs(m_path, m_sf.sampleRate(), m_sf.componentCount(), m_sf.frameCount());
+    m_view->notifyLoad(true);
 
     return true;
 }

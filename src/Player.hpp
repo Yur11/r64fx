@@ -22,6 +22,8 @@ private:
 
     virtual int componentCount();
 
+    virtual bool hasData();
+
     virtual bool loadAudioFile(const std::string &path);
 
     virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out);
