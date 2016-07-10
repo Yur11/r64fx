@@ -8,14 +8,15 @@ namespace r64fx{
 class PlayerViewFeedbackIface;
 
 class PlayerView : public Widget{
-    PlayerViewFeedbackIface* m_feedback;
+    PlayerViewFeedbackIface* m_player;
+    float* m_waveform = nullptr;
 
 public:
     PlayerView(PlayerViewFeedbackIface* feedback, Widget* parent = nullptr);
 
     virtual ~PlayerView();
 
-    void notifySpecs(const std::string &path, float samplerate, float channels, float frames);
+    void notifySpecs(const std::string &path, float samplerate, int channels, int frames);
 
     void notifyFailedToLoad();
 
@@ -42,9 +43,13 @@ protected:
 
 class PlayerViewFeedbackIface{
 public:
+    virtual int frameCount() = 0;
+
+    virtual int componentCount() = 0;
+
     virtual bool loadAudioFile(const std::string &path) = 0;
 
-//     virtual void loadWaveform(float samples_per_pixel, );
+    virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out) = 0;
 };
 
 }//namespace r64fx

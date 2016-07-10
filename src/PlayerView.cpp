@@ -11,8 +11,8 @@ using namespace std;
 
 namespace r64fx{
 
-PlayerView::PlayerView(PlayerViewFeedbackIface* feedback, Widget* parent)
-: m_feedback(feedback)
+PlayerView::PlayerView(PlayerViewFeedbackIface* player, Widget* parent)
+: m_player(player)
 {
     setSize({800, 240});
 }
@@ -24,10 +24,27 @@ PlayerView::~PlayerView()
 }
 
 
-void PlayerView::notifySpecs(const std::string &path, float samplerate, float channels, float frames)
+void PlayerView::notifySpecs(const std::string &path, float samplerate, int channels, int frames)
 {
     cout << "File: " << path << "\n";
     cout << "    " << samplerate << ", " << channels << ", " << frames << "\n";
+
+    if(m_waveform)
+    {
+        delete[] m_waveform;
+        m_waveform = nullptr;
+    }
+
+    m_waveform = new(std::nothrow) float[channels * frames * 2];
+    if(!m_waveform)
+        return;
+
+    for(int c=0; c<channels; c++)
+    {
+        m_player->loadWaveform(0, frames, c, width(), m_waveform + (c * frames));
+        cout << "--> " << c << "\n";
+    }
+    repaint();
 }
 
 
@@ -42,6 +59,19 @@ void PlayerView::paintEvent(PaintEvent* event)
     auto p = event->painter();
     unsigned char bg[4] = {190, 190, 190, 0};
     p->fillRect({0, 0, width(), height()}, bg);
+
+    if(m_waveform)
+    {
+        int waveform_height = height() / m_player->componentCount();
+        int waveform_y = 0;
+        for(int c=0; c<m_player->componentCount(); c++)
+        {
+            cout << "->> " << waveform_y << "\n";
+            unsigned char fg[3] = {63, 63, 63};
+            p->drawWaveform({0, waveform_y, width(), waveform_height}, fg, m_waveform + (c * m_player->frameCount()));
+            waveform_y += waveform_height;
+        }
+    }
 }
 
 
@@ -73,7 +103,7 @@ void PlayerView::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
         for(;;)
         {
             auto file_path = next_file_path_from_uri_list(it, uri_list.end());
-            if(file_path.empty() || m_feedback->loadAudioFile(file_path))
+            if(file_path.empty() || m_player->loadAudioFile(file_path))
             {
                 break;
             }

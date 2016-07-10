@@ -18,7 +18,13 @@ public:
     virtual ~Player();
 
 private:
+    virtual int frameCount();
+
+    virtual int componentCount();
+
     virtual bool loadAudioFile(const std::string &path);
+
+    virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out);
 };
 
 }//namespace r64fx

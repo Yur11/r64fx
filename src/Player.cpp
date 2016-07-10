@@ -46,6 +46,18 @@ Player::~Player()
 }
 
 
+int Player::frameCount()
+{
+    return m_sf.frameCount();
+}
+
+
+int Player::componentCount()
+{
+    return m_sf.componentCount();
+}
+
+
 bool Player::loadAudioFile(const std::string &path)
 {
     if(path.empty())
@@ -57,9 +69,6 @@ bool Player::loadAudioFile(const std::string &path)
     m_sf.open(path, SoundFile::Mode::Read);
     if(!m_sf.isGood())
         return false;
-
-    m_path = path;
-    m_view->notifySpecs(m_path, m_sf.sampleRate(), m_sf.componentCount(), m_sf.frameCount());
 
     if(m_data)
     {
@@ -81,7 +90,52 @@ bool Player::loadAudioFile(const std::string &path)
         return false;
     }
 
+    m_path = path;
+    m_view->notifySpecs(m_path, m_sf.sampleRate(), m_sf.componentCount(), m_sf.frameCount());
+
     return true;
+}
+
+
+void Player::loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out)
+{
+    if(!m_data)
+        return;
+
+    int range_size = end_idx - begin_idx;
+    if(range_size < pixel_count)
+        return;
+
+    if(component >= m_sf.componentCount())
+        return;
+
+    int frames_per_pixel = range_size / pixel_count;
+
+    int f = begin_idx;
+    for(auto p=0; p<pixel_count; p++)
+    {
+        float min = 0.0f;
+        float max = 0.0f;
+
+        int i = 0;
+        while(i < frames_per_pixel)
+        {
+            float val = m_data[f + i*m_sf.componentCount() + component];
+            if(val < min)
+            {
+                min = val;
+            }
+            else if(val > max)
+            {
+                max = val;
+            }
+            i++;
+        }
+        out[p * 2] = min;
+        out[p * 2 + 1] = max;
+
+        f += frames_per_pixel;
+    }
 }
 
 }//namespace r64fx
