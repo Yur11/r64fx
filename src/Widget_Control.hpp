@@ -28,6 +28,10 @@ public:
 
     Size<int> size() const;
 
+    int width() const;
+
+    int height() const;
+
     virtual void paint(ControlAnimationState state, Painter* painter);
 
     virtual ControlAnimationState mousePress(ControlAnimationState state, Point<int> position);
@@ -74,33 +78,27 @@ protected:
 };
 
 
+class ControlAnimation_Knob : public ControlAnimation{
+protected:
+    unsigned char* m_data = nullptr;
 
-struct ControlAnimation_Knob : public ControlAnimation{
-    ImageAnimation imgainim;
+    static int state2frame(ControlAnimationState state);
 
-    virtual void repaint(int position, Painter* painter);
+    static ControlAnimationState frame2state(int frame);
+
+public:
+    virtual ~ControlAnimation_Knob();
+
+private:
+    virtual void paint(ControlAnimationState state, Painter* painter);
+
+    virtual ControlAnimationState mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta);
 };
 
 
 struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
     ControlAnimation_Knob_UnipolarLarge(int size);
 };
-
-
-struct ControlAnimation_Knob_BipolarLarge : public ControlAnimation_Knob{
-    ControlAnimation_Knob_BipolarLarge(int size);
-};
-
-
-struct ControlAnimation_Knob_UnipolarSector : public ControlAnimation_Knob{
-    ControlAnimation_Knob_UnipolarSector(int size);
-};
-
-
-struct ControlAnimation_Knob_BipolarSector : public ControlAnimation_Knob{
-    ControlAnimation_Knob_BipolarSector(int size);
-};
-
 
 }//namespace r64fx
 

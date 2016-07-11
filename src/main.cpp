@@ -11,6 +11,7 @@
 #include "Painter.hpp"
 #include "Font.hpp"
 #include "Widget_ScrollArea.hpp"
+#include "Widget_Control.hpp"
 #include "Widget_Dummy.hpp"
 #include "Widget_DirectoryItem.hpp"
 #include "Widget_ItemBrowser.hpp"
@@ -28,17 +29,31 @@ using namespace r64fx;
 
 Font* g_Font = nullptr;
 
+ControlAnimation* g_anim = nullptr;
+
 class MyWidget : public Widget_ScrollArea{
 
 public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
+        setSize({640, 480});
 
+        if(!g_anim)
+        {
+            g_anim = new ControlAnimation_Knob_UnipolarLarge(48);
+        }
+
+        auto c1 = new Widget_Control(g_anim, this);
+        c1->setPosition({100, 100});
+        c1->setSize({100, 100});
     }
 
     ~MyWidget()
     {
-
+        if(g_anim)
+        {
+            delete g_anim;
+        }
     }
 
     virtual void paintEvent(PaintEvent* event)
@@ -50,18 +65,31 @@ public:
 
         p->fillRect({0, 0, width(), height()}, grey);
         p->fillRect({offset(), {10, 10}}, black);
-        Widget_ScrollArea::paintEvent(event);
+        Widget::paintEvent(event);
     }
 
     virtual void mousePressEvent(MousePressEvent* event)
     {
-        if(event->button() == MouseButton::Right())
+        if(event->button() == MouseButton::Left())
+        {
+            grabMouse();
+        }
+        else if(event->button() == MouseButton::Right())
         {
 
         }
         else
         {
-            repaint();
+
+        }
+        repaint();
+    }
+
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event)
+    {
+        if(isMouseGrabber() && event->button() == MouseButton::Left())
+        {
+            ungrabMouse();
         }
     }
 
@@ -123,6 +151,9 @@ private:
         });
 
         m_player = new Player;
+
+        auto mw = new MyWidget;
+        mw->show();
 
 //         auto wt = new Widget_Text("", g_Font);
 //         wt->setSize({640, 480});

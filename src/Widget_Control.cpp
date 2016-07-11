@@ -40,6 +40,17 @@ Size<int> ControlAnimation::size() const
 }
 
 
+int ControlAnimation::width() const
+{
+    return m_size.width();
+}
+
+
+int ControlAnimation::height() const
+{
+    return m_size.height();
+}
+
 
 void ControlAnimation::paint(ControlAnimationState state, Painter* painter)
 {
@@ -224,184 +235,71 @@ float normalize_angle(float angle)
 }
 
 
-void ControlAnimation_Knob::repaint(int position, Painter* painter)
+int ControlAnimation_Knob::state2frame(ControlAnimationState state)
 {
-    unsigned char a[4] = {1, 96, 242, 0};
-    unsigned char b[4] = {242, 96, 1, 0};
-    unsigned char* colors[2] = {a, b};
+    int frame = (state.bits >> 4);
+    if(frame < 0)
+        frame = 0;
+    else if(frame > 63)
+        frame = 63;
+    return frame;
+}
 
-    if(imgainim.isGood())
+
+ControlAnimationState ControlAnimation_Knob::frame2state(int frame)
+{
+    ControlAnimationState state;
+    state.bits = frame;
+    state.bits <<= 4;
+    return state;
+}
+
+
+ControlAnimation_Knob::~ControlAnimation_Knob()
+{
+    if(m_data)
     {
-//         imgainim.pickFrame(position - minPosition());
-        painter->blendColors({0, 0}, colors, &imgainim);
+        delete[] m_data;
     }
+}
+
+
+void ControlAnimation_Knob::paint(ControlAnimationState state, Painter* painter)
+{
+    unsigned char bg[4] = {255, 0, 0, 0};
+    painter->fillRect({{0, 0}, size()}, bg);
+
+    if(m_data)
+    {
+        int frame = state2frame(state);
+        Image img(width(), height(), 1, m_data + (frame * width() * height()));
+
+        unsigned char fg[4] = {0, 0, 0, 0};
+        unsigned char* colors[1] = {fg};
+        painter->blendColors({0, 0}, colors, &img);
+    }
+}
+
+
+ControlAnimationState ControlAnimation_Knob::mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta)
+{
+    int frame = state2frame(state);
 }
 
 
 ControlAnimation_Knob_UnipolarLarge::ControlAnimation_Knob_UnipolarLarge(int size)
 {
-//     setMinValue(0.0f);
-//     setMaxValue(1.0f);
+    setSize({size, size});
 
-//     unsigned char a[2] = {255, 0};
-//     unsigned char b[2] = {0, 255};
-//     unsigned char o[2] = {0, 0};
-//
-//     int hs = (size / 2);
-//     int radius = hs - 1;
-//     int thickness = 2;
+    int data_size = size * size * 64;
+    m_data = new(std::nothrow) unsigned char[data_size];
+    if(!m_data)
+        return;
 
-//     imgainim.resize(size, size, 2, positionRange());
-//     for(int i=0; i<positionRange(); i++)
-//     {
-//         imgainim.pickFrame(i);
-//         fill(&imgainim, o);
-//
-//         float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
-//
-//         if(i > 0)
-//             draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle, thickness);
-//
-//         if(i < (positionRange()-1))
-//             draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle, M_PI * 0.25f, thickness);
-//
-//         draw_radius(
-//             &imgainim, (i>0 ? b : a),
-//             {float(hs), float(hs)}, angle, radius, 0, thickness + 1
-//         );
-//     }
-}
-
-
-ControlAnimation_Knob_BipolarLarge::ControlAnimation_Knob_BipolarLarge(int size)
-{
-//     setMinValue(-1.0f);
-//     setMaxValue(+1.0f);
-
-//     unsigned char a[2] = {255, 0};
-//     unsigned char b[2] = {0, 255};
-//     unsigned char o[2] = {0, 0};
-//
-//     int hs = (size / 2);
-//     int radius = hs - 1;
-//     int thickness = 2;
-//
-//     imgainim.resize(size, size, 2, positionRange());
-//     for(int i=0; i<positionRange(); i++)
-//     {
-//         imgainim.pickFrame(i);
-//         fill(&imgainim, o);
-//
-//         float angle = normalize_angle((float(i) / (positionRange() - 1)) * 1.5f * M_PI + 0.75f * M_PI);
-//
-//         if(i == positionRange()/2)
-//         {
-//             draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, M_PI * 0.25f, thickness);
-//             draw_radius(
-//                 &imgainim, a,
-//                 {float(hs), float(hs)}, angle, radius, 0, thickness + 1
-//             );
-//         }
-//         else
-//         {
-//             if(i < positionRange()/2)
-//             {
-//                 draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, angle,        thickness);
-//                 draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, angle,        M_PI * 0.25f, thickness);
-//                 draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f,  M_PI * 0.25f, thickness);
-//             }
-//             else
-//             {
-//                 draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.75f, M_PI * 1.5f,  thickness);
-//                 draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f,  angle,        thickness);
-//                 draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle,        M_PI * 0.25f, thickness);
-//             }
-//
-//             draw_radius(
-//                 &imgainim, b,
-//                 {float(hs), float(hs)}, angle, radius, 0, thickness + 1
-//             );
-//         }
-//     }
-}
-
-
-ControlAnimation_Knob_UnipolarSector::ControlAnimation_Knob_UnipolarSector(int size)
-{
-//     setMinValue(0.0f);
-//     setMaxValue(1.0f);
-
-//     imgainim.resize(size, size, 2, positionRange());
-//     for(int i=0; i<positionRange(); i++)
-//     {
-//         unsigned char a[2] = {255, 0};
-//         unsigned char b[2] = {0, 255};
-//         unsigned char o[2] = {0, 0};
-//
-//         int hs = (size / 2);
-//         int radius = hs - 1;
-//         int thickness = radius - 1;
-//
-//         imgainim.pickFrame(i);
-//         fill(&imgainim, o);
-//
-//         float angle = normalize_angle((float(i) / (positionRange() - 1)) * 2.0f * M_PI + 0.5f * M_PI);
-//
-//         if(i == 0)
-//         {
-//             draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
-//         }
-//         else if(i == (positionRange() - 1))
-//         {
-//             draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
-//         }
-//         else
-//         {
-//             draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, angle, thickness);
-//             draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle, M_PI * 0.5f, thickness);
-//         }
-//     }
-}
-
-
-ControlAnimation_Knob_BipolarSector::ControlAnimation_Knob_BipolarSector(int size)
-{
-//     setMinValue(-1.0f);
-//     setMaxValue(+1.0f);
-
-//     imgainim.resize(size, size, 2, positionRange());
-//     for(int i=0; i<positionRange(); i++)
-//     {
-//         unsigned char a[2] = {255, 0};
-//         unsigned char b[2] = {0, 255};
-//         unsigned char o[2] = {0, 0};
-//
-//         int hs = (size / 2);
-//         int radius = hs - 1;
-//         int thickness = radius - 1;
-//
-//         imgainim.pickFrame(i);
-//         fill(&imgainim, o);
-//
-//         float angle = normalize_angle((float(i) / (positionRange() - 1)) * 2.0f * M_PI + 0.5f * M_PI);
-//
-//         if(i == (positionRange()/2))
-//         {
-//             draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, 0.0f, M_PI * 2.0f,  thickness);
-//         }
-//         else if(i < (positionRange()/2))
-//         {
-//             draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, angle,       thickness);
-//             draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, angle,       M_PI * 1.5f, thickness);
-//             draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f, M_PI * 0.5f, thickness);
-//         }
-//         else
-//         {
-//             draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, M_PI * 0.5f, M_PI * 1.5f, thickness);
-//             draw_arc(&imgainim, b, {float(hs), float(hs)}, radius - 1, M_PI * 1.5f, angle,       thickness);
-//             draw_arc(&imgainim, a, {float(hs), float(hs)}, radius - 1, angle,       M_PI * 0.5f, thickness);
-//         }
-//     }
+    for(int i=0; i<data_size; i++)
+    {
+        m_data[i] = (unsigned char) (rand() % 255);
+    }
 }
 
 }//namespace r64fx
