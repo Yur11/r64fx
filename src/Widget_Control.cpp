@@ -105,6 +105,26 @@ float normalize_angle(float angle)
 }
 
 
+ControlAnimation_Knob::ControlAnimation_Knob(int size)
+{
+    setSize({size, size});
+
+    int frame_size = size * size;
+    int data_size = frame_size * 128;
+    m_data = new(std::nothrow) unsigned char[data_size];
+    if(!m_data)
+        return;
+
+    for(int f=0; f<128; f++)
+    {
+        for(int i=0; i<frame_size; i++)
+        {
+            m_data[f * frame_size + i] = (unsigned char) (f << 1);
+        }
+    }
+}
+
+
 ControlAnimation_Knob::~ControlAnimation_Knob()
 {
     if(m_data)
@@ -116,16 +136,15 @@ ControlAnimation_Knob::~ControlAnimation_Knob()
 
 void ControlAnimation_Knob::paint(ControlAnimationState state, Painter* painter)
 {
-    unsigned char bg[4] = {0, 255, 0, 0};
+    unsigned char bg[4] = {255, 0, 0, 0};
     painter->fillRect({{0, 0}, size()}, bg);
 
     if(m_data)
     {
         int frame = (state.bits & 0x7F);
-        cout << "paint: " << frame << "\n";
         Image img(width(), height(), 1, m_data + (frame * width() * height()));
 
-        unsigned char fg[4] = {0, 0, 255, 0};
+        unsigned char fg[4] = {0, 255, 0, 0};
         unsigned char* colors[1] = {fg};
         painter->blendColors({0, 0}, colors, &img);
     }
@@ -140,26 +159,6 @@ ControlAnimationState ControlAnimation_Knob::mouseMove(ControlAnimationState sta
     else if(frame > 127)
         frame = 127;
     return ControlAnimationState(frame);
-}
-
-
-ControlAnimation_Knob_UnipolarLarge::ControlAnimation_Knob_UnipolarLarge(int size)
-{
-    setSize({size, size});
-
-    int frame_size = size * size;
-    int data_size = frame_size * 128;
-    m_data = new(std::nothrow) unsigned char[data_size];
-    if(!m_data)
-        return;
-
-    for(int f=0; f<128; f++)
-    {
-        for(int i=0; i<frame_size; i++)
-        {
-            m_data[f * frame_size + i] = (unsigned char) f;
-        }
-    }
 }
 
 

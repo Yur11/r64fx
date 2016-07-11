@@ -51,17 +51,14 @@ protected:
     unsigned char* m_data = nullptr;
 
 public:
+    ControlAnimation_Knob(int size);
+
     virtual ~ControlAnimation_Knob();
 
 private:
     virtual void paint(ControlAnimationState state, Painter* painter);
 
     virtual ControlAnimationState mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta);
-};
-
-
-struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
-    ControlAnimation_Knob_UnipolarLarge(int size);
 };
 
 

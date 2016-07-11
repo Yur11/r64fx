@@ -40,7 +40,7 @@ public:
 
         if(!g_anim)
         {
-            g_anim = new ControlAnimation_Knob_UnipolarLarge(48);
+            g_anim = new ControlAnimation_Knob(48);
         }
 
         auto c1 = new Widget_Control(g_anim, this);
