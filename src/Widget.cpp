@@ -255,6 +255,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         Widget* root_dst = nullptr;
         Point<int> event_position(x, y);
+        Point<int> event_root_position(x, y);
         Point<int> event_delta = event_position - g_prev_mouse_position;
 
         if(g_multi_mouse_grabber)
@@ -298,7 +299,6 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
                 event_position -= leaf_offset;
             }
 
-
             MouseMoveEvent event(event_position, event_delta, g_pressed_buttons);
             if(dst != g_moused_over_widget)
             {
@@ -322,7 +322,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
             }
         }
 
-        g_prev_mouse_position = event_position;
+        g_prev_mouse_position = event_root_position;
     }
 
 
