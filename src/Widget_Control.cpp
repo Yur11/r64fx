@@ -93,6 +93,76 @@ namespace{
 }
 
 
+float normalize_angle(float angle)
+{
+    while(angle > (2.0f * M_PI))
+        angle -= (2.0f * M_PI);
+
+    while(angle < 0.0f)
+        angle += (2.0f * M_PI);
+
+    return angle;
+}
+
+
+ControlAnimation_Knob::~ControlAnimation_Knob()
+{
+    if(m_data)
+    {
+        delete[] m_data;
+    }
+}
+
+
+void ControlAnimation_Knob::paint(ControlAnimationState state, Painter* painter)
+{
+    unsigned char bg[4] = {0, 255, 0, 0};
+    painter->fillRect({{0, 0}, size()}, bg);
+
+    if(m_data)
+    {
+        int frame = (state.bits & 0x7F);
+        cout << "paint: " << frame << "\n";
+        Image img(width(), height(), 1, m_data + (frame * width() * height()));
+
+        unsigned char fg[4] = {0, 0, 255, 0};
+        unsigned char* colors[1] = {fg};
+        painter->blendColors({0, 0}, colors, &img);
+    }
+}
+
+
+ControlAnimationState ControlAnimation_Knob::mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta)
+{
+    int frame = int(state.bits & 0x7F) - delta.y();
+    if(frame < 0)
+        frame = 0;
+    else if(frame > 127)
+        frame = 127;
+    return ControlAnimationState(frame);
+}
+
+
+ControlAnimation_Knob_UnipolarLarge::ControlAnimation_Knob_UnipolarLarge(int size)
+{
+    setSize({size, size});
+
+    int frame_size = size * size;
+    int data_size = frame_size * 128;
+    m_data = new(std::nothrow) unsigned char[data_size];
+    if(!m_data)
+        return;
+
+    for(int f=0; f<128; f++)
+    {
+        for(int i=0; i<frame_size; i++)
+        {
+            m_data[f * frame_size + i] = (unsigned char) f;
+        }
+    }
+}
+
+
 Widget_Control::Widget_Control(ControlAnimation* animation, Widget* parent)
 : Widget(parent)
 , m_animation(animation)
@@ -158,6 +228,8 @@ void Widget_Control::mousePressEvent(MousePressEvent* event)
     if(!m_animation)
         return;
 
+    grabMouse();
+
     auto new_state = m_animation->mousePress(m_state, event->position());
     if(new_state != m_state)
     {
@@ -171,6 +243,9 @@ void Widget_Control::mouseReleaseEvent(MouseReleaseEvent* event)
 {
     if(!m_animation)
         return;
+
+    if(isMouseGrabber())
+        ungrabMouse();
 
     auto new_state = m_animation->mouseRelease(m_state, event->position());
     if(new_state != m_state)
@@ -186,11 +261,14 @@ void Widget_Control::mouseMoveEvent(MouseMoveEvent* event)
     if(!m_animation)
         return;
 
-    auto new_state = m_animation->mouseMove(m_state, event->position(), event->delta());
-    if(new_state != m_state)
+    if(event->button() & MouseButton::Left())
     {
-        m_state = new_state;
-        repaint();
+        auto new_state = m_animation->mouseMove(m_state, event->position(), event->delta());
+        if(new_state != m_state)
+        {
+            m_state = new_state;
+            repaint();
+        }
     }
 }
 
@@ -219,86 +297,6 @@ void Widget_Control::mouseLeaveEvent()
     {
         m_state = new_state;
         repaint();
-    }
-}
-
-
-float normalize_angle(float angle)
-{
-    while(angle > (2.0f * M_PI))
-        angle -= (2.0f * M_PI);
-
-    while(angle < 0.0f)
-        angle += (2.0f * M_PI);
-
-    return angle;
-}
-
-
-int ControlAnimation_Knob::state2frame(ControlAnimationState state)
-{
-    int frame = (state.bits >> 4);
-    if(frame < 0)
-        frame = 0;
-    else if(frame > 63)
-        frame = 63;
-    return frame;
-}
-
-
-ControlAnimationState ControlAnimation_Knob::frame2state(int frame)
-{
-    ControlAnimationState state;
-    state.bits = frame;
-    state.bits <<= 4;
-    return state;
-}
-
-
-ControlAnimation_Knob::~ControlAnimation_Knob()
-{
-    if(m_data)
-    {
-        delete[] m_data;
-    }
-}
-
-
-void ControlAnimation_Knob::paint(ControlAnimationState state, Painter* painter)
-{
-    unsigned char bg[4] = {255, 0, 0, 0};
-    painter->fillRect({{0, 0}, size()}, bg);
-
-    if(m_data)
-    {
-        int frame = state2frame(state);
-        Image img(width(), height(), 1, m_data + (frame * width() * height()));
-
-        unsigned char fg[4] = {0, 0, 0, 0};
-        unsigned char* colors[1] = {fg};
-        painter->blendColors({0, 0}, colors, &img);
-    }
-}
-
-
-ControlAnimationState ControlAnimation_Knob::mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta)
-{
-    int frame = state2frame(state);
-}
-
-
-ControlAnimation_Knob_UnipolarLarge::ControlAnimation_Knob_UnipolarLarge(int size)
-{
-    setSize({size, size});
-
-    int data_size = size * size * 64;
-    m_data = new(std::nothrow) unsigned char[data_size];
-    if(!m_data)
-        return;
-
-    for(int i=0; i<data_size; i++)
-    {
-        m_data[i] = (unsigned char) (rand() % 255);
     }
 }
 

@@ -46,6 +46,25 @@ public:
 };
 
 
+class ControlAnimation_Knob : public ControlAnimation{
+protected:
+    unsigned char* m_data = nullptr;
+
+public:
+    virtual ~ControlAnimation_Knob();
+
+private:
+    virtual void paint(ControlAnimationState state, Painter* painter);
+
+    virtual ControlAnimationState mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta);
+};
+
+
+struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
+    ControlAnimation_Knob_UnipolarLarge(int size);
+};
+
+
 class Widget_Control : public Widget{
     ControlAnimation*      m_animation = nullptr;
     ControlAnimationState  m_state;
@@ -75,29 +94,6 @@ protected:
     virtual void mouseEnterEvent();
 
     virtual void mouseLeaveEvent();
-};
-
-
-class ControlAnimation_Knob : public ControlAnimation{
-protected:
-    unsigned char* m_data = nullptr;
-
-    static int state2frame(ControlAnimationState state);
-
-    static ControlAnimationState frame2state(int frame);
-
-public:
-    virtual ~ControlAnimation_Knob();
-
-private:
-    virtual void paint(ControlAnimationState state, Painter* painter);
-
-    virtual ControlAnimationState mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta);
-};
-
-
-struct ControlAnimation_Knob_UnipolarLarge : public ControlAnimation_Knob{
-    ControlAnimation_Knob_UnipolarLarge(int size);
 };
 
 }//namespace r64fx

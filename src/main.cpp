@@ -70,19 +70,21 @@ public:
 
     virtual void mousePressEvent(MousePressEvent* event)
     {
-        if(event->button() == MouseButton::Left())
-        {
-            grabMouse();
-        }
-        else if(event->button() == MouseButton::Right())
-        {
+        Widget::mousePressEvent(event);
 
-        }
-        else
-        {
-
-        }
-        repaint();
+//         if(event->button() == MouseButton::Left())
+//         {
+//             grabMouse();
+//         }
+//         else if(event->button() == MouseButton::Right())
+//         {
+//
+//         }
+//         else
+//         {
+//
+//         }
+//         repaint();
     }
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event)
