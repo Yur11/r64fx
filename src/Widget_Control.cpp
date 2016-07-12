@@ -93,9 +93,9 @@ namespace{
 }
 
 
-ControlAnimation_Knob::ControlAnimation_Knob(int size)
+ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius)
 {
-    setSize({size, size});
+    setSize({knob_radius, knob_radius});
 
     int frame_size = width() * height();
     int frame_count = 128;
@@ -110,14 +110,15 @@ ControlAnimation_Knob::ControlAnimation_Knob(int size)
     unsigned char color1[2] = {255, 0};
     unsigned char color2[2] = {0, 255};
 
-    float thickness = size / 20;
+    float thickness = knob_radius / 20;
+    float radius = (width() >> 1);
 
     float rotation = M_PI * 0.75f;
     float full_arc = M_PI * 1.5f;
     float frame_count_rcp = 1.0f / float(frame_count);
 
     Image circle_mask_img(width(), height(), 1);
-    draw_circle(&circle_mask_img, color0, Point<int>(cx, cy), (width() >> 1) - 1);
+    draw_circle(&circle_mask_img, color0, Point<int>(cx, cy), radius - 1);
     invert_image(&circle_mask_img, &circle_mask_img);
 
     Image radius_img(width(), height(), 1);
@@ -131,7 +132,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int size)
         if(frame > 0)
         {
             draw_arc(
-                &img, color2, {cx, cy}, (width() >> 1) - 2,
+                &img, color2, {cx, cy}, radius - 2,
                 normalize_angle(rotation),
                 normalize_angle(rotation + full_arc * percent),
                 thickness
@@ -141,7 +142,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int size)
         if(frame < (frame_count - 1))
         {
             draw_arc(
-                &img, color1, {cx, cy}, (width() >> 1)  - 2,
+                &img, color1, {cx, cy}, radius  - 2,
                 normalize_angle(rotation + full_arc * percent),
                 normalize_angle(rotation + full_arc),
                 thickness
@@ -205,6 +206,66 @@ ControlAnimationState ControlAnimation_Knob::mouseMove(ControlAnimationState sta
         frame = 0;
     else if(frame > 127)
         frame = 127;
+    return ControlAnimationState(frame);
+}
+
+
+ControlAnimation_Button::ControlAnimation_Button(Image* template_img, unsigned char** colors, int color_count)
+{
+#ifdef R64FX_DEBUG
+    assert(template_img->componentCount() == 1);
+#endif//R64FX_DEBUG
+
+    setSize({template_img->width(), template_img->height()});
+
+    int frame_size = width() * height() * 4;
+    m_frames = new(std::nothrow) unsigned char[frame_size * color_count];
+    if(!m_frames)
+        return;
+
+    unsigned char bg[4] = {0, 0, 0, 0};
+
+    for(int c=0; c<color_count; c++)
+    {
+        Image img(width(), height(), 4, m_frames + (frame_size * c));
+        fill(&img, bg);
+        blend(&img, Point<int>(0, 0), colors+c, template_img);
+    }
+
+    m_frame_count = color_count;
+    m_owns_frames = true;
+}
+
+
+ControlAnimation_Button::~ControlAnimation_Button()
+{
+    if(m_frames && m_frame_count && m_owns_frames)
+    {
+        delete m_frames;
+    }
+}
+
+
+void ControlAnimation_Button::paint(ControlAnimationState state, Painter* painter)
+{
+    int frame_size = width() * height() * 4;
+    int frame = state.bits;
+    if(m_frames && frame < m_frame_count && frame >= 0)
+    {
+        Image img(width(), height(), 4, m_frames + (frame_size * frame));
+        painter->putImage(&img, {0, 0});
+    }
+}
+
+
+ControlAnimationState ControlAnimation_Button::mousePress(ControlAnimationState state, Point<int> position)
+{
+    int frame = state.bits;
+    frame++;
+    if(frame >= m_frame_count)
+    {
+        frame = 0;
+    }
     return ControlAnimationState(frame);
 }
 

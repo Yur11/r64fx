@@ -51,7 +51,7 @@ protected:
     unsigned char* m_data = nullptr;
 
 public:
-    ControlAnimation_Knob(int size);
+    ControlAnimation_Knob(int knob_radius);
 
     virtual ~ControlAnimation_Knob();
 
@@ -59,6 +59,23 @@ private:
     virtual void paint(ControlAnimationState state, Painter* painter);
 
     virtual ControlAnimationState mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta);
+};
+
+
+class ControlAnimation_Button : public ControlAnimation{
+    unsigned char* m_frames = nullptr;
+    int m_frame_count = 0;
+    bool m_owns_frames = false;
+
+public:
+    ControlAnimation_Button(Image* template_img, unsigned char** colors, int color_count);
+
+    virtual ~ControlAnimation_Button();
+
+private:
+    virtual void paint(ControlAnimationState state, Painter* painter);
+
+    virtual ControlAnimationState mousePress(ControlAnimationState state, Point<int> position);
 };
 
 

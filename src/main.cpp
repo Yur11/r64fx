@@ -29,7 +29,8 @@ using namespace r64fx;
 
 Font* g_Font = nullptr;
 
-ControlAnimation* g_anim = nullptr;
+ControlAnimation* g_anim_knob = nullptr;
+ControlAnimation* g_anim_button = nullptr;
 
 class MyWidget : public Widget_ScrollArea{
 
@@ -38,21 +39,34 @@ public:
     {
         setSize({640, 480});
 
-        if(!g_anim)
+        if(!g_anim_knob)
         {
-            g_anim = new ControlAnimation_Knob(48);
+            g_anim_knob = new ControlAnimation_Knob(48);
         }
 
-        auto c1 = new Widget_Control(g_anim, this);
+        auto c1 = new Widget_Control(g_anim_knob, this);
         c1->setPosition({100, 100});
-        c1->setSize({100, 100});
+
+        Image button_img(48, 48, 1);
+        fill(&button_img, (unsigned char)255);
+        unsigned char red    [4] = {50, 50, 50, 0};
+        unsigned char green  [4] = {200, 200, 200, 0};
+        unsigned char* colors[2] = {red, green};
+
+        if(!g_anim_button)
+        {
+            g_anim_button = new ControlAnimation_Button(&button_img, colors, 2);
+        }
+
+        auto b1 = new Widget_Control(g_anim_button, this);
+        b1->setPosition({200, 100});
     }
 
     ~MyWidget()
     {
-        if(g_anim)
+        if(g_anim_knob)
         {
-            delete g_anim;
+            delete g_anim_knob;
         }
     }
 
