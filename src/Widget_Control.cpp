@@ -106,12 +106,21 @@ ControlAnimation_Knob::ControlAnimation_Knob(int size)
 
     float cx = width() >> 1;
     float cy = height() >> 1;
+    unsigned char color0[1] = {255};
     unsigned char color1[2] = {255, 0};
     unsigned char color2[2] = {0, 255};
+
+    float thickness = size / 20;
 
     float rotation = M_PI * 0.75f;
     float full_arc = M_PI * 1.5f;
     float frame_count_rcp = 1.0f / float(frame_count);
+
+    Image circle_mask_img(width(), height(), 1);
+    draw_circle(&circle_mask_img, color0, Point<int>(cx, cy), (width() >> 1) - 1);
+    invert_image(&circle_mask_img, &circle_mask_img);
+
+    Image radius_img(width(), height(), 1);
 
     for(int frame=0; frame<frame_count; frame++)
     {
@@ -125,25 +134,39 @@ ControlAnimation_Knob::ControlAnimation_Knob(int size)
                 &img, color2, {cx, cy}, (width() >> 1) - 2,
                 normalize_angle(rotation),
                 normalize_angle(rotation + full_arc * percent),
-                5
+                thickness
             );
         }
 
         if(frame < (frame_count - 1))
         {
             draw_arc(
-                &img, color1, {cx, cy}, (width() >> 1) - 2,
+                &img, color1, {cx, cy}, (width() >> 1)  - 2,
                 normalize_angle(rotation + full_arc * percent),
                 normalize_angle(rotation + full_arc),
-                5
+                thickness
             );
         }
 
-        draw_radius(
-            &img, (frame == 0 ? color1 : color2), {cx, cy},
-            normalize_angle(rotation + full_arc * percent),
-            (width() >> 1) - 1, 0, 5
-        );
+        {
+            fill(&radius_img, (unsigned char)0);
+            draw_radius(
+                &radius_img, color0, {cx, cy},
+                normalize_angle(rotation + full_arc * percent),
+                (width() * 2) - 1, 0, thickness + 1
+            );
+            subtract_image(&radius_img, {0, 0}, &circle_mask_img);
+            {
+                unsigned char* colors[1] = {color2};
+                if(frame > 0)
+                    colors[0] = color2;
+                else
+                    colors[0] = color1;
+                blend(
+                    &img, Point<int>(0, 0), colors, &radius_img
+                );
+            }
+        }
     }
 }
 

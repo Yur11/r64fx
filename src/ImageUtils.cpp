@@ -451,10 +451,7 @@ void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b,
     t.translate(0.0f, -int(float(thickness) * 0.5));
 
     Rect<int> r = {
-        min_x - int(thickness) + 1,
-        min_y - int(thickness) + 1,
-        int(abs(dx)) + int(thickness)*2,
-        int(abs(dy)) + int(thickness)*2
+        0, 0, dst->width(), dst->height()
     };
 
     implant(dst, t, &src, r);
@@ -652,6 +649,27 @@ void subtract_image(Image* dst, Point<int> pos, Image* src)
                 if(newval < 0)
                     newval = 0;
                 dstpx[c] = (unsigned char)newval;
+            }
+        }
+    }
+}
+
+
+void invert_image(Image* dst, Image* src)
+{
+#ifdef R64FX_DEBUG
+    assert(dst->width() == src->width());
+    assert(dst->height() == src->height());
+    assert(dst->componentCount() == src->componentCount());
+#endif//R64FX_DEBUG
+
+    for(int y=0; y<dst->height(); y++)
+    {
+        for(int x=0; x<dst->width(); x++)
+        {
+            for(int c=0; c<dst->componentCount(); c++)
+            {
+                dst->pixel(x, y)[c] = 255 - src->pixel(x, y)[c];
             }
         }
     }

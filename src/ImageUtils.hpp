@@ -78,6 +78,9 @@ void draw_circle(Image* dst, unsigned char* color, Point<int> center, float radi
 
 void subtract_image(Image* dst, Point<int> pos, Image* src);
 
+
+void invert_image(Image* dst, Image* src);
+
 }//namespace r64fx
 
 #endif//R64FX_IMAGE_UTILS_HPP
