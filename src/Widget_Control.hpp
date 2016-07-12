@@ -68,14 +68,24 @@ class ControlAnimation_Button : public ControlAnimation{
     bool m_owns_frames = false;
 
 public:
-    ControlAnimation_Button(Image* template_img, unsigned char** colors, int color_count);
-
     virtual ~ControlAnimation_Button();
+
+    void loadFrames(Size<int> size, unsigned char* frame_data, int frame_count, bool own_data = false);
+
+    void loadColors(Image* template_img, unsigned char** colors, int color_count);
+
+    void clear();
 
 private:
     virtual void paint(ControlAnimationState state, Painter* painter);
 
     virtual ControlAnimationState mousePress(ControlAnimationState state, Point<int> position);
+};
+
+
+class ControlAnimation_PlayPauseButton : public ControlAnimation_Button{
+public:
+    ControlAnimation_PlayPauseButton();
 };
 
 

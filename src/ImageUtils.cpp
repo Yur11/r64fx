@@ -437,8 +437,8 @@ void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b,
     float cosang = dx * length_rcp;
     float sinang = dy * length_rcp;
 
-    int min_x = min(a.x(), b.x());
-    int min_y = min(a.y(), b.y());
+//     int min_x = min(a.x(), b.x());
+//     int min_y = min(a.y(), b.y());
 
     Image src(max(1, int(length)), max(1, int(thickness)), dst->componentCount());
     {
@@ -631,7 +631,7 @@ void subtract_image(Image* dst, Point<int> pos, Image* src)
 
     MatchedRects mr(
         Rect<int>(0, 0, dst->width(), dst->height()),
-        Rect<int>(0, 0, src->width(), src->height())
+        Rect<int>(pos.x(), pos.y(), src->width(), src->height())
     );
 
     for(int y=0; y<mr.size.height(); y++)
@@ -673,6 +673,75 @@ void invert_image(Image* dst, Image* src)
             }
         }
     }
+}
+
+
+void flip_vertically(Image* img)
+{
+    int hh = img->height() / 2;
+
+    for(int y=0; y<hh; y++)
+    {
+        for(int x=0; x<img->width(); x++)
+        {
+            auto px1 = img->pixel(x, y);
+            auto px2 = img->pixel(x, img->height() - y - 1);
+            for(int c=0; c<img->componentCount(); c++)
+            {
+                unsigned char tmp = px1[c];
+                px1[c] = px2[c];
+                px2[c] = tmp;
+            }
+        }
+    }
+}
+
+
+void flip_horizontally(Image* img)
+{
+    int hw = img->width() / 2;
+
+    for(int y=0; y<img->height(); y++)
+    {
+        for(int x=0; x<hw; x++)
+        {
+            auto px1 = img->pixel(x, y);
+            auto px2 = img->pixel(img->width() - x - 1, y);
+            for(int c=0; c<img->componentCount(); c++)
+            {
+                unsigned char tmp = px1[c];
+                px1[c] = px2[c];
+                px2[c] = tmp;
+            }
+        }
+    }
+}
+
+
+void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int corner_radius)
+{
+    Image mask(rect.width(), rect.height(), 1);
+    {
+        unsigned char c = 255;
+        fill(&mask, &c);
+
+        Image arc(corner_radius, corner_radius);
+        draw_circle(&arc, &c, {corner_radius - 1, corner_radius - 1}, corner_radius);
+        invert_image(&arc, &arc);
+        subtract_image(&mask, {0, 0}, &arc);
+
+        flip_vertically(&arc);
+        subtract_image(&mask, {0, mask.height() - corner_radius}, &arc);
+
+        flip_horizontally(&arc);
+        subtract_image(&mask, {mask.width() - arc.width(), mask.height() - arc.height()}, &arc);
+
+        flip_vertically(&arc);
+        subtract_image(&mask, {mask.width() - arc.width(), 0}, &arc);
+    }
+
+    unsigned char* colors[1] = {color};
+    blend(dst, rect.position(), colors, &mask);
 }
 
 }//namespace r64fx

@@ -210,8 +210,25 @@ ControlAnimationState ControlAnimation_Knob::mouseMove(ControlAnimationState sta
 }
 
 
-ControlAnimation_Button::ControlAnimation_Button(Image* template_img, unsigned char** colors, int color_count)
+ControlAnimation_Button::~ControlAnimation_Button()
 {
+    clear();
+}
+
+
+void ControlAnimation_Button::loadFrames(Size<int> size, unsigned char* frame_data, int frame_count, bool own_data)
+{
+    setSize(size);
+    m_frames = frame_data;
+    m_frame_count = frame_count;
+    m_owns_frames = own_data;
+}
+
+
+void ControlAnimation_Button::loadColors(Image* template_img, unsigned char** colors, int color_count)
+{
+    clear();
+
 #ifdef R64FX_DEBUG
     assert(template_img->componentCount() == 1);
 #endif//R64FX_DEBUG
@@ -237,11 +254,17 @@ ControlAnimation_Button::ControlAnimation_Button(Image* template_img, unsigned c
 }
 
 
-ControlAnimation_Button::~ControlAnimation_Button()
+void ControlAnimation_Button::clear()
 {
-    if(m_frames && m_frame_count && m_owns_frames)
+    if(m_frames && m_frame_count)
     {
-        delete m_frames;
+        if(m_owns_frames)
+        {
+            delete m_frames;
+        }
+        m_frames = nullptr;
+        m_frame_count = 0;
+        m_owns_frames = false;
     }
 }
 
@@ -267,6 +290,74 @@ ControlAnimationState ControlAnimation_Button::mousePress(ControlAnimationState 
         frame = 0;
     }
     return ControlAnimationState(frame);
+}
+
+
+ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton()
+{
+    Size<int> size(48, 48);
+    setSize(size);
+
+    int frame_size = width() * height() * 4;
+    unsigned char* frames = new(std::nothrow) unsigned char[frame_size * 2];
+    if(!frames)
+        return;
+
+    unsigned char bb[4] = {0, 0, 0, 0};
+    unsigned char c0[4] = {127, 127, 127, 0};
+    unsigned char bg[4] = {200, 200, 200, 0};
+    unsigned char fg[4] = {100, 100, 100, 0};
+    unsigned char* bb_colors[1] = {bb};
+    unsigned char* bg_colors[1] = {bg};
+    unsigned char* fg_colors[1] = {fg};
+
+    Image bg_mask(width(), height(), 1);
+    {
+        fill(&bg_mask, (unsigned char)0);
+        unsigned char color = 255;
+        fill_rounded_rect(&bg_mask, &color, {0, 0, width(), height()}, 4);
+    }
+
+    Image inset_mask(width(), height(), 1);
+    {
+        fill(&inset_mask, (unsigned char)0);
+        unsigned char color = 255;
+        fill_rounded_rect(&inset_mask, &color, {1, 1, width() - 2, height() - 2}, 4);
+    }
+
+    {
+        Image img(width(), height(), 4, frames);
+        fill(&img, c0);
+        blend(&img, Point<int>(0, 0), bb_colors, &bg_mask);
+        blend(&img, Point<int>(0, 0), bg_colors, &inset_mask);
+
+        Image triangle(25, 25, 1);
+        draw_triangles(25, nullptr, nullptr, nullptr, &triangle);
+
+        blend(&img, Point<int>(10, 12), fg_colors, &triangle);
+    }
+
+    {
+        Image img(width(), height(), 4, frames + frame_size);
+        fill(&img, c0);
+        blend(&img, Point<int>(0, 0), bb_colors, &bg_mask);
+        blend(&img, Point<int>(0, 0), bg_colors, &inset_mask);
+
+        Image bars(25, 25, 1);
+        fill(&bars, (unsigned char)0);
+        int w = bars.width() / 3;
+        int h = bars.height();
+        fill(&bars, 0, 255, {0,   0, w, h});
+        fill(&bars, 0, 0,   {w,   0, w, h});
+        fill(&bars, 0, 255, {w*2, 0, w, h});
+
+        blend(&img, Point<int>(
+            img.width() / 2 - bars.width() / 2,
+            img.height() / 2 - bars.height() / 2
+        ), fg_colors, &bars);
+    }
+
+    loadFrames(size, frames, 2, true);
 }
 
 

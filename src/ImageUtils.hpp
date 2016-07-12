@@ -81,6 +81,15 @@ void subtract_image(Image* dst, Point<int> pos, Image* src);
 
 void invert_image(Image* dst, Image* src);
 
+
+void flip_vertically(Image* img);
+
+
+void flip_horizontally(Image* img);
+
+
+void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int corner_radius);
+
 }//namespace r64fx
 
 #endif//R64FX_IMAGE_UTILS_HPP
