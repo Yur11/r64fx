@@ -106,9 +106,6 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius)
 
     float cx = width() >> 1;
     float cy = height() >> 1;
-    unsigned char color0[1] = {255};
-    unsigned char color1[2] = {255, 0};
-    unsigned char color2[2] = {0, 255};
 
     float thickness = knob_radius / 20;
     float radius = (width() >> 1);
@@ -118,7 +115,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius)
     float frame_count_rcp = 1.0f / float(frame_count);
 
     Image circle_mask_img(width(), height(), 1);
-    draw_circle(&circle_mask_img, color0, Point<int>(cx, cy), radius - 1);
+    draw_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
     invert_image(&circle_mask_img, &circle_mask_img);
 
     Image radius_img(width(), height(), 1);
@@ -132,7 +129,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius)
         if(frame > 0)
         {
             draw_arc(
-                &img, color2, {cx, cy}, radius - 2,
+                &img, Color(0, 255), {cx, cy}, radius - 2,
                 normalize_angle(rotation),
                 normalize_angle(rotation + full_arc * percent),
                 thickness
@@ -142,7 +139,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius)
         if(frame < (frame_count - 1))
         {
             draw_arc(
-                &img, color1, {cx, cy}, radius  - 2,
+                &img, Color(255, 0), {cx, cy}, radius  - 2,
                 normalize_angle(rotation + full_arc * percent),
                 normalize_angle(rotation + full_arc),
                 thickness
@@ -150,19 +147,19 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius)
         }
 
         {
-            fill(&radius_img, (unsigned char)0);
+            fill(&radius_img, Color(0));
             draw_radius(
-                &radius_img, color0, {cx, cy},
+                &radius_img, Color(255), {cx, cy},
                 normalize_angle(rotation + full_arc * percent),
                 (width() * 2) - 1, 0, thickness + 1
             );
             subtract_image(&radius_img, {0, 0}, &circle_mask_img);
             {
-                unsigned char* colors[1] = {color2};
+                unsigned char* colors[1] = {Color(0, 255)};
                 if(frame > 0)
-                    colors[0] = color2;
+                    colors[0] = Color(0, 255);
                 else
-                    colors[0] = color1;
+                    colors[0] = Color(255, 0);
                 blend(
                     &img, Point<int>(0, 0), colors, &radius_img
                 );
@@ -313,16 +310,14 @@ ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton()
 
     Image bg_mask(width(), height(), 1);
     {
-        fill(&bg_mask, (unsigned char)0);
-        unsigned char color = 255;
-        fill_rounded_rect(&bg_mask, &color, {0, 0, width(), height()}, 4);
+        fill(&bg_mask, Color(0));
+        fill_rounded_rect(&bg_mask, Color(255), {0, 0, width(), height()}, 4);
     }
 
     Image inset_mask(width(), height(), 1);
     {
-        fill(&inset_mask, (unsigned char)0);
-        unsigned char color = 255;
-        fill_rounded_rect(&inset_mask, &color, {1, 1, width() - 2, height() - 2}, 4);
+        fill(&inset_mask, Color(0));
+        fill_rounded_rect(&inset_mask, Color(255), {1, 1, width() - 2, height() - 2}, 4);
     }
 
     {
@@ -339,12 +334,12 @@ ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton()
 
     {
         Image img(width(), height(), 4, frames + frame_size);
-        fill(&img, c0);
+        fill(&img, Color(127, 127, 127, 127));
         blend(&img, Point<int>(0, 0), bb_colors, &bg_mask);
         blend(&img, Point<int>(0, 0), bg_colors, &inset_mask);
 
         Image bars(25, 25, 1);
-        fill(&bars, (unsigned char)0);
+        fill(&bars, Color(0));
         int w = bars.width() / 3;
         int h = bars.height();
         fill(&bars, 0, 255, {0,   0, w, h});

@@ -460,7 +460,7 @@ void TextPainter::paint(Image* image, Point<int> offset)
 }
 
 
-void TextPainter::paintText(Image* image, Color<unsigned char> fg, Color<unsigned char> bg, Point<int> offset)
+void TextPainter::paintText(Image* image, unsigned char* fg, unsigned char* bg, Point<int> offset)
 {
     for(int l=0; l<(int)m_lines.size(); l++)
     {
@@ -477,7 +477,7 @@ void TextPainter::paintText(Image* image, Color<unsigned char> fg, Color<unsigne
                     offset.y() - glyph->bearing_y() + (l*font->height()) + font->ascender()
                 };
 
-                blend(image, p, fg.vec, glyph->image());
+                blend(image, p, fg, glyph->image());
             }
             x += glyph->advance();
         }
@@ -485,13 +485,13 @@ void TextPainter::paintText(Image* image, Color<unsigned char> fg, Color<unsigne
 }
 
 
-void TextPainter::paintSelectionBackground(Image* image, Color<unsigned char> color, Point<int> offset)
+void TextPainter::paintSelectionBackground(Image* image, unsigned char* color, Point<int> offset)
 {
     for(auto rect : m_selection_rects)
     {
         rect += offset;
         rect = intersection(rect, {0, 0, image->width(), image->height()});
-        fill(image, color.vec, rect);
+        fill(image, color, rect);
     }
 }
 

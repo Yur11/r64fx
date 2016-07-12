@@ -1,7 +1,6 @@
 #ifndef R64FX_PAINTER_HPP
 #define R64FX_PAINTER_HPP
 
-#include "Color.hpp"
 #include "Rect.hpp"
 #include "Offset.hpp"
 #include "Orientation.hpp"

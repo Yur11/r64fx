@@ -52,8 +52,11 @@ public:
             g_anim_button = new ControlAnimation_PlayPauseButton;
         }
 
-        auto b1 = new Widget_Control(g_anim_button, this);
-        b1->setPosition({200, 100});
+        for(int i=0; i<8; i++)
+        {
+            auto b1 = new Widget_Control(g_anim_button, this);
+            b1->setPosition({200 + i * 50, 100});
+        }
     }
 
     ~MyWidget()
@@ -165,11 +168,11 @@ private:
         auto mw = new MyWidget;
         mw->show();
 
-//         auto wt = new Widget_Text("", g_Font);
-//         wt->setSize({640, 480});
-//         wt->setTextWrap(TextWrap::Anywhere);
-//         wt->show();
-//
+        auto wt = new Widget_Text("", g_Font);
+        wt->setSize({640, 480});
+        wt->setTextWrap(TextWrap::Anywhere);
+        wt->show();
+
 //         auto ap = new Widget_AudioPlayer;
 //         ap->setSize({640, 480});
 //         ap->show();

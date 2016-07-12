@@ -2,7 +2,6 @@
 #define R64FX_WIDGET_DUMMY_HPP
 
 #include "Widget.hpp"
-#include "Color.hpp"
 
 namespace r64fx{
 

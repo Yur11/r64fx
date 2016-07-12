@@ -73,17 +73,6 @@ void fill(Image* dst, unsigned char* components)
 }
 
 
-void fill(Image* dst, unsigned char value)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(dst->componentCount() == 1);
-#endif//R64FX_DEBUG
-
-    fill(dst, &value);
-}
-
-
 void fill(Image* dst, int component, unsigned char value, Rect<int> rect)
 {
 #ifdef R64FX_DEBUG

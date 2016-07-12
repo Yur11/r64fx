@@ -33,7 +33,6 @@ set(SRC
     Font.cpp
     Image.cpp
     ImageAnimation.cpp
-    ImagePainter.cpp
     ImageUtils.cpp
     Keyboard.cpp
     KeyboardModifiers.cpp

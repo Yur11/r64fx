@@ -448,11 +448,11 @@ void Widget_Text::paintEvent(PaintEvent* event)
     }
 
     m_text_painter->paintSelectionBackground(
-        m_image, {148, 202, 239}, {paddingLeft(), paddingTop()}
+        m_image, Color(148, 202, 239), {paddingLeft(), paddingTop()}
     );
 
     m_text_painter->paintText(
-        m_image, {0, 0, 0}, {0, 0, 0}, {paddingLeft(), paddingTop()}
+        m_image, Color(0, 0, 0), Color(0, 0, 0), {paddingLeft(), paddingTop()}
     );
 
 //     draw_rect(
