@@ -40,6 +40,17 @@ void blend(Image* dst, Point<int> pos, unsigned char* color, Image* mask);
 void blend(Image* dst, const RectIntersection<int> &intersection, unsigned char* color, Image* mask);
 
 
+inline float normalize_angle(float angle)
+{
+    while(angle > (2.0f * M_PI))
+        angle -= (2.0f * M_PI);
+
+    while(angle < 0.0f)
+        angle += (2.0f * M_PI);
+
+    return angle;
+}
+
 void draw_arc(
     Image* dst, unsigned char* color, Point<float> center, float radius, float arca, float arcb, float thickness, Rect<int> rect
 );
@@ -53,12 +64,6 @@ void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b,
 void draw_radius(Image* dst, unsigned char* color, Point<float> center, float angle, float outer, float inner, float thickness);
 
 
-enum class DrawStyle{
-    Aliased,
-    Stroke,
-    Fill
-};
-
 
 /* Draw a bunch of triangles that point in four different directions
  * and fit in a square with the given size. */
@@ -66,6 +71,12 @@ void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
 
 
 void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect);
+
+
+void draw_circle(Image* dst, unsigned char* color, Point<int> center, float radius);
+
+
+void subtract_image(Image* dst, Point<int> pos, Image* src);
 
 }//namespace r64fx
 

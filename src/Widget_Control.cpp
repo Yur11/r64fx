@@ -93,34 +93,57 @@ namespace{
 }
 
 
-float normalize_angle(float angle)
-{
-    while(angle > (2.0f * M_PI))
-        angle -= (2.0f * M_PI);
-
-    while(angle < 0.0f)
-        angle += (2.0f * M_PI);
-
-    return angle;
-}
-
-
 ControlAnimation_Knob::ControlAnimation_Knob(int size)
 {
     setSize({size, size});
 
-    int frame_size = size * size;
-    int data_size = frame_size * 128;
+    int frame_size = width() * height();
+    int frame_count = 128;
+    int data_size = frame_size * frame_count * 2;
     m_data = new(std::nothrow) unsigned char[data_size];
     if(!m_data)
         return;
 
-    for(int f=0; f<128; f++)
+    float cx = width() >> 1;
+    float cy = height() >> 1;
+    unsigned char color1[2] = {255, 0};
+    unsigned char color2[2] = {0, 255};
+
+    float rotation = M_PI * 0.75f;
+    float full_arc = M_PI * 1.5f;
+    float frame_count_rcp = 1.0f / float(frame_count);
+
+    for(int frame=0; frame<frame_count; frame++)
     {
-        for(int i=0; i<frame_size; i++)
+        float percent = float(frame) * frame_count_rcp;
+
+        Image img(width(), height(), 2, m_data + (frame * width() * height() * 2));
+
+        if(frame > 0)
         {
-            m_data[f * frame_size + i] = (unsigned char) (f << 1);
+            draw_arc(
+                &img, color2, {cx, cy}, (width() >> 1) - 2,
+                normalize_angle(rotation),
+                normalize_angle(rotation + full_arc * percent),
+                5
+            );
         }
+
+        if(frame < (frame_count - 1))
+        {
+            draw_arc(
+                &img, color1, {cx, cy}, (width() >> 1) - 2,
+                normalize_angle(rotation + full_arc * percent),
+                normalize_angle(rotation + full_arc),
+                5
+            );
+        }
+
+        draw_radius(
+            &img, (frame == 0 ? color1 : color2), {cx, cy},
+            normalize_angle(rotation + full_arc * percent),
+            (width() >> 1) - 1, 0, 5
+        );
     }
 }
 
@@ -136,16 +159,17 @@ ControlAnimation_Knob::~ControlAnimation_Knob()
 
 void ControlAnimation_Knob::paint(ControlAnimationState state, Painter* painter)
 {
-    unsigned char bg[4] = {255, 0, 0, 0};
-    painter->fillRect({{0, 0}, size()}, bg);
+    unsigned char bg[4] = {127, 127, 127, 0};
+    painter->fillRect({0, 0, width(), height()}, bg);
 
     if(m_data)
     {
         int frame = (state.bits & 0x7F);
-        Image img(width(), height(), 1, m_data + (frame * width() * height()));
+        Image img(width(), height(), 2, m_data + (frame * width() * height() * 2));
 
-        unsigned char fg[4] = {0, 255, 0, 0};
-        unsigned char* colors[1] = {fg};
+        unsigned char fg1[4] = {0, 0, 0, 0};
+        unsigned char fg2[4] = {200, 200, 200, 0};
+        unsigned char* colors[2] = {fg1, fg2};
         painter->blendColors({0, 0}, colors, &img);
     }
 }

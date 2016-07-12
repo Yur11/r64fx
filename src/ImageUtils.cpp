@@ -586,4 +586,75 @@ void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect
     }
 }
 
+
+void draw_circle(Image* dst, unsigned char* color, Point<int> center, float radius)
+{
+    Rect<int> rect(center.x() - radius - 1, center.y() - radius - 1, radius * 2 + 1, radius * 2 + 1);
+
+    for(int y=0; y<rect.height(); y++)
+    {
+        float yy = y + rect.y();
+        if(yy >= dst->height())
+            break;
+        if(yy < 0)
+            continue;
+
+        for(int x=0; x<rect.width(); x++)
+        {
+            float xx = x + rect.x();
+            if(xx >= dst->width())
+                break;
+
+            if(xx < 0)
+                continue;
+
+            float dx = xx - center.x();
+            float dy = yy - center.y();
+            float rr = sqrt(dx*dx + dy*dy);
+            float dd = radius - rr;
+            if(dd < 0.0f)
+                dd = 0.0f;
+            else if(dd > 1.0f)
+                dd = 1.0f;
+
+            for(int c=0; c<dst->componentCount(); c++)
+            {
+                dst->pixel(xx, yy)[c] = (unsigned char)(float(color[c]) * dd);
+            }
+        }
+    }
+}
+
+
+void subtract_image(Image* dst, Point<int> pos, Image* src)
+{
+#ifdef R64FX_DEBUG
+    assert(dst->componentCount() == src->componentCount());
+#endif//R64FX_DEBUG
+
+    MatchedRects mr(
+        Rect<int>(0, 0, dst->width(), dst->height()),
+        Rect<int>(0, 0, src->width(), src->height())
+    );
+
+    for(int y=0; y<mr.size.height(); y++)
+    {
+        for(int x=0; x<mr.size.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + mr.dst_offset.x(), y + mr.dst_offset.y());
+            auto srcpx = src->pixel(x + mr.src_offset.x(), y + mr.src_offset.y());
+
+            for(int c=0; c<dst->componentCount(); c++)
+            {
+                int dstval = dstpx[c];
+                int srcval = srcpx[c];
+                int newval = dstval - srcval;
+                if(newval < 0)
+                    newval = 0;
+                dstpx[c] = (unsigned char)newval;
+            }
+        }
+    }
+}
+
 }//namespace r64fx
