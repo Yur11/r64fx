@@ -213,10 +213,9 @@ ControlAnimationState ControlAnimation_Knob::mouseMove(ControlAnimationState sta
 }
 
 
-ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton()
+ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton(int size)
 {
-    Size<int> size(48, 48);
-    setSize(size);
+    setSize({size, size});
 
     int frame_size = width() * height() * 4;
     int frame_count = 4;
@@ -250,10 +249,10 @@ ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton()
         fill_rounded_rect(&inset_mask_pressed, Color(255), {2, 2, width() - 4, height() - 4}, 4);
     }
 
-    Image triangle(25, 25, 1);
-    draw_triangles(25, nullptr, nullptr, nullptr, &triangle);
+    Image triangle(width()/2 + 1, height()/2 + 1, 1);
+    draw_triangles(width()/2 + 1, nullptr, nullptr, nullptr, &triangle);
 
-    Image bars(25, 25, 1);
+    Image bars(width()/2 + 1 , height()/2 + 1, 1);
     {
         fill(&bars, Color(0));
         int w = bars.width() / 3;
@@ -269,7 +268,7 @@ ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton()
         fill(&img, c0);
         blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
         blend(&img, Point<int>(0, 0), Colors(bg_depressed), &inset_mask_depressed);
-        blend(&img, Point<int>(10, 12), Colors(fg_depressed), &triangle);
+        blend(&img, Point<int>(width()/4 - width()/20, height()/4), Colors(fg_depressed), &triangle);
     }
 
     /* 1 Play Pressed */
@@ -278,7 +277,7 @@ ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton()
         fill(&img, c0);
         blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
         blend(&img, Point<int>(0, 0), Colors(bg_pressed), &inset_mask_pressed);
-        blend(&img, Point<int>(10, 12), Colors(fg_pressed), &triangle);
+        blend(&img, Point<int>(width()/4 - width()/20, height()/4), Colors(fg_pressed), &triangle);
     }
 
     /* 2 Pause Depressed */

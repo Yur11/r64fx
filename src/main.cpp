@@ -49,7 +49,7 @@ public:
 
         if(!g_anim_button)
         {
-            g_anim_button = new ControlAnimation_PlayPauseButton;
+            g_anim_button = new ControlAnimation_PlayPauseButton(48);
         }
 
         for(int i=0; i<8; i++)

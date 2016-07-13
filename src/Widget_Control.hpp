@@ -66,7 +66,7 @@ class ControlAnimation_PlayPauseButton : public ControlAnimation{
     unsigned char* m_frames = nullptr;
 
 public:
-    ControlAnimation_PlayPauseButton();
+    ControlAnimation_PlayPauseButton(int size);
 
     virtual ~ControlAnimation_PlayPauseButton();
 
