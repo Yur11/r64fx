@@ -62,30 +62,20 @@ private:
 };
 
 
-class ControlAnimation_Button : public ControlAnimation{
+class ControlAnimation_PlayPauseButton : public ControlAnimation{
     unsigned char* m_frames = nullptr;
-    int m_frame_count = 0;
-    bool m_owns_frames = false;
 
 public:
-    virtual ~ControlAnimation_Button();
+    ControlAnimation_PlayPauseButton();
 
-    void loadFrames(Size<int> size, unsigned char* frame_data, int frame_count, bool own_data = false);
-
-    void loadColors(Image* template_img, unsigned char** colors, int color_count);
-
-    void clear();
+    virtual ~ControlAnimation_PlayPauseButton();
 
 private:
     virtual void paint(ControlAnimationState state, Painter* painter);
 
     virtual ControlAnimationState mousePress(ControlAnimationState state, Point<int> position);
-};
 
-
-class ControlAnimation_PlayPauseButton : public ControlAnimation_Button{
-public:
-    ControlAnimation_PlayPauseButton();
+    virtual ControlAnimationState mouseRelease(ControlAnimationState state, Point<int> position);
 };
 
 
