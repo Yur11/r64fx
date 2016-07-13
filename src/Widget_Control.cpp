@@ -213,6 +213,14 @@ ControlAnimationState ControlAnimation_Knob::mouseMove(ControlAnimationState sta
 }
 
 
+float ControlAnimation_Knob::value(ControlAnimationState state, float minval, float maxval)
+{
+    float range = (maxval - minval);
+    float step = range / 127.0f;
+    return float(state.bits) * step;
+}
+
+
 ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton(int size)
 {
     setSize({size, size});
@@ -342,6 +350,12 @@ ControlAnimationState ControlAnimation_PlayPauseButton::mouseRelease(ControlAnim
 }
 
 
+float ControlAnimation_PlayPauseButton::value(ControlAnimationState state, float minval, float maxval)
+{
+    return (state.bits & 2) ? maxval : minval;
+}
+
+
 Widget_Control::Widget_Control(ControlAnimation* animation, Widget* parent)
 : Widget(parent)
 , m_animation(animation)
@@ -414,6 +428,7 @@ void Widget_Control::mousePressEvent(MousePressEvent* event)
     {
         m_state = new_state;
         repaint();
+        stateChanged();
     }
 }
 
@@ -431,6 +446,7 @@ void Widget_Control::mouseReleaseEvent(MouseReleaseEvent* event)
     {
         m_state = new_state;
         repaint();
+        stateChanged();
     }
 }
 
@@ -447,6 +463,7 @@ void Widget_Control::mouseMoveEvent(MouseMoveEvent* event)
         {
             m_state = new_state;
             repaint();
+            stateChanged();
         }
     }
 }
@@ -462,6 +479,7 @@ void Widget_Control::mouseEnterEvent()
     {
         m_state = new_state;
         repaint();
+        stateChanged();
     }
 }
 
@@ -476,7 +494,14 @@ void Widget_Control::mouseLeaveEvent()
     {
         m_state = new_state;
         repaint();
+        stateChanged();
     }
+}
+
+
+void Widget_Control::stateChanged()
+{
+    cout << ">> " << m_animation->value(m_state, 0.0f, 1.0f) << "\n";
 }
 
 }//namespace r64fx

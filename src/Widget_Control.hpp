@@ -43,6 +43,8 @@ public:
     virtual ControlAnimationState mouseEnter(ControlAnimationState state);
 
     virtual ControlAnimationState mouseLeave(ControlAnimationState state);
+
+    virtual float value(ControlAnimationState state, float minval, float maxval) = 0;
 };
 
 
@@ -59,6 +61,8 @@ private:
     virtual void paint(ControlAnimationState state, Painter* painter);
 
     virtual ControlAnimationState mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta);
+
+    virtual float value(ControlAnimationState state, float minval, float maxval);
 };
 
 
@@ -76,6 +80,8 @@ private:
     virtual ControlAnimationState mousePress(ControlAnimationState state, Point<int> position);
 
     virtual ControlAnimationState mouseRelease(ControlAnimationState state, Point<int> position);
+
+    virtual float value(ControlAnimationState state, float minval, float maxval);
 };
 
 
@@ -108,6 +114,8 @@ protected:
     virtual void mouseEnterEvent();
 
     virtual void mouseLeaveEvent();
+
+    virtual void stateChanged();
 };
 
 }//namespace r64fx

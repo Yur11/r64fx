@@ -168,10 +168,10 @@ private:
         auto mw = new MyWidget;
         mw->show();
 
-        auto wt = new Widget_Text("", g_Font);
-        wt->setSize({640, 480});
-        wt->setTextWrap(TextWrap::Anywhere);
-        wt->show();
+//         auto wt = new Widget_Text("", g_Font);
+//         wt->setSize({640, 480});
+//         wt->setTextWrap(TextWrap::Anywhere);
+//         wt->show();
 
 //         auto ap = new Widget_AudioPlayer;
 //         ap->setSize({640, 480});
