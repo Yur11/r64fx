@@ -88,8 +88,34 @@ ControlAnimationState ControlAnimation::mouseLeave(ControlAnimationState state)
 }
 
 
-namespace{
-    void on_value_changed_stub(Widget_Control*, void*) {}
+ControlAnimation_Value::ControlAnimation_Value()
+{
+
+}
+
+
+ControlAnimation_Value::~ControlAnimation_Value()
+{
+
+}
+
+
+void ControlAnimation_Value::paint(ControlAnimationState state, Painter* painter)
+{
+    string text = "0.0000";
+
+}
+
+
+ControlAnimationState ControlAnimation_Value::mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta)
+{
+    return state;
+}
+
+
+float ControlAnimation_Value::value(ControlAnimationState state, float minval, float maxval)
+{
+    return 0.0f;
 }
 
 
@@ -359,7 +385,6 @@ float ControlAnimation_PlayPauseButton::value(ControlAnimationState state, float
 Widget_Control::Widget_Control(ControlAnimation* animation, Widget* parent)
 : Widget(parent)
 , m_animation(animation)
-, m_on_value_changed(on_value_changed_stub)
 {
     setSize(m_animation->size());
 }
@@ -371,37 +396,6 @@ Widget_Control::~Widget_Control()
     {
         delete m_animation;
     }
-}
-
-
-void Widget_Control::setValue(float value)
-{
-    if(!m_animation)
-        return;
-
-//     auto anim = (ControlAnimation*) m_animation;
-//     m_position = anim->boundPosition(anim->valueToPosition(value));
-}
-
-
-float Widget_Control::value() const
-{
-    if(!m_animation)
-        return 0.0f;
-
-//     auto anim = (ControlAnimation*) m_animation;
-//     return anim->positionToValue(m_position);
-    return 0.0f;
-}
-
-
-void Widget_Control::onValueChanged(void (*callback)(Widget_Control*, void*), void* data)
-{
-    if(callback)
-        m_on_value_changed = callback;
-    else
-        m_on_value_changed = on_value_changed_stub;
-    m_on_value_changed_data = data;
 }
 
 

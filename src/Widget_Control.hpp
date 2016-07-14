@@ -48,6 +48,21 @@ public:
 };
 
 
+class ControlAnimation_Value{
+public:
+    ControlAnimation_Value();
+
+    virtual ~ControlAnimation_Value();
+
+private:
+    virtual void paint(ControlAnimationState state, Painter* painter);
+
+    virtual ControlAnimationState mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta);
+
+    virtual float value(ControlAnimationState state, float minval, float maxval);
+};
+
+
 class ControlAnimation_Knob : public ControlAnimation{
 protected:
     unsigned char* m_data = nullptr;
@@ -88,19 +103,11 @@ private:
 class Widget_Control : public Widget{
     ControlAnimation*      m_animation = nullptr;
     ControlAnimationState  m_state;
-    void                 (*m_on_value_changed)(Widget_Control*, void*);
-    void*                  m_on_value_changed_data = nullptr;
 
 public:
     Widget_Control(ControlAnimation* animation, Widget* parent = nullptr);
 
     ~Widget_Control();
-
-    void setValue(float value);
-
-    float value() const;
-
-    void onValueChanged(void (*callback)(Widget_Control*, void*), void* data = nullptr);
 
 protected:
     virtual void paintEvent(PaintEvent* event);
