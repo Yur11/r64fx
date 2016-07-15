@@ -103,7 +103,6 @@ ControlAnimation_Value::~ControlAnimation_Value()
 void ControlAnimation_Value::paint(ControlAnimationState state, Painter* painter)
 {
     string text = "0.0000";
-
 }
 
 
@@ -495,7 +494,15 @@ void Widget_Control::mouseLeaveEvent()
 
 void Widget_Control::stateChanged()
 {
-    cout << ">> " << m_animation->value(m_state, 0.0f, 1.0f) << "\n";
+    float val = m_animation->value(m_state, 0.0f, 1.0f);
+    cout << ">> " << val << "\n";
+    static char buff[128];
+    int string_size = 0;
+    string_size = sprintf(buff, "%f", val);
+    if(string_size > 0)
+    {
+        cout << ((char*) buff) << "\n";
+    }
 }
 
 }//namespace r64fx
