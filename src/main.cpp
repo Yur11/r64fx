@@ -31,6 +31,7 @@ Font* g_Font = nullptr;
 
 ControlAnimation_Knob* g_anim_knob = nullptr;
 ControlAnimation_PlayPauseButton* g_anim_button = nullptr;
+ControlAnimation_Value* g_anim_value = nullptr;
 
 class MyWidget : public Widget_ScrollArea{
 
@@ -55,8 +56,16 @@ public:
         for(int i=0; i<8; i++)
         {
             auto b1 = new Widget_Control(g_anim_button, this);
-            b1->setPosition({200 + i * 50, 100});
+            b1->setPosition({300 + i * 50, 100});
         }
+
+        if(!g_anim_value)
+        {
+            g_anim_value = new ControlAnimation_Value(12, g_Font);
+        }
+
+        auto v1 = new Widget_Control(g_anim_value, this);
+        v1->setPosition({170, 100});
     }
 
     ~MyWidget()
@@ -64,6 +73,16 @@ public:
         if(g_anim_knob)
         {
             delete g_anim_knob;
+        }
+
+        if(g_anim_button)
+        {
+            delete g_anim_button;
+        }
+
+        if(g_anim_value)
+        {
+            delete g_anim_value;
         }
     }
 

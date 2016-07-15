@@ -88,9 +88,17 @@ ControlAnimationState ControlAnimation::mouseLeave(ControlAnimationState state)
 }
 
 
-ControlAnimation_Value::ControlAnimation_Value()
+ControlAnimation_Value::ControlAnimation_Value(int char_count, Font* font)
+: m_font(font)
 {
+    if(!font)
+        return;
 
+    auto glyph = m_font->fetchGlyph("0");
+    if(!glyph)
+        return;
+
+    setSize({char_count * glyph->width() + 4, m_font->height() + 4});
 }
 
 
@@ -102,7 +110,15 @@ ControlAnimation_Value::~ControlAnimation_Value()
 
 void ControlAnimation_Value::paint(ControlAnimationState state, Painter* painter)
 {
-    string text = "0.0000";
+    unsigned char bg[4] = {200, 200, 200, 0};
+    unsigned char fg[4] = {0, 0, 0, 0};
+    painter->fillRect({0, 0, width(), height()}, bg);
+    if(m_font)
+    {
+        Image img(width() - 2, height() - 2, 1);
+        text2image(text, TextWrap::None, m_font, &img);
+        painter->blendColors({2, 2}, Colors(fg), &img);
+    }
 }
 
 

@@ -48,9 +48,11 @@ public:
 };
 
 
-class ControlAnimation_Value{
+class ControlAnimation_Value : public ControlAnimation{
+    Font* m_font = nullptr;
+
 public:
-    ControlAnimation_Value();
+    ControlAnimation_Value(int char_count, Font* font);
 
     virtual ~ControlAnimation_Value();
 
