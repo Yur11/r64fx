@@ -30,7 +30,7 @@ using namespace r64fx;
 Font* g_Font = nullptr;
 
 ControlAnimation_Knob* g_anim_knob = nullptr;
-ControlAnimation_PlayPauseButton* g_anim_button = nullptr;
+// ControlAnimation_PlayPauseButton* g_anim_button = nullptr;
 
 class MyWidget : public Widget_ScrollArea{
 
@@ -43,24 +43,27 @@ public:
         {
             g_anim_knob = new ControlAnimation_Knob(48, 128);
         }
+//
+//         auto c1 = new Widget_Control(g_anim_knob, this);
+//         c1->setPosition({100, 100});
 
-        auto c1 = new Widget_Control(g_anim_knob, this);
-        c1->setPosition({100, 100});
-
-        if(!g_anim_button)
-        {
-            g_anim_button = new ControlAnimation_PlayPauseButton(48);
-        }
+//         if(!g_anim_button)
+//         {
+//             g_anim_button = new ControlAnimation_PlayPauseButton(48);
+//         }
+//
+//         for(int i=0; i<8; i++)
+//         {
+//             auto b1 = new Widget_Control(g_anim_button, this);
+//             b1->setPosition({300 + i * 50, 100});
+//         }
 
         for(int i=0; i<8; i++)
         {
-            auto b1 = new Widget_Control(g_anim_button, this);
-            b1->setPosition({300 + i * 50, 100});
+            auto c = new Widget_ValueControl(12, g_Font, this);
+            c->setPosition({100 + i * 60, 100});
+            c->setAnimation(g_anim_knob);
         }
-
-        auto v2 = new Widget_ValueControl(12, g_Font, this);
-        v2->setPosition({170, 150});
-        v2->setAnimation(g_anim_knob);
     }
 
     ~MyWidget()
@@ -70,10 +73,10 @@ public:
             delete g_anim_knob;
         }
 
-        if(g_anim_button)
-        {
-            delete g_anim_button;
-        }
+//         if(g_anim_button)
+//         {
+//             delete g_anim_button;
+//         }
     }
 
     virtual void paintEvent(PaintEvent* event)
