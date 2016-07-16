@@ -53,9 +53,10 @@ protected:
 
     void pickFrame(int frame, Image* img);
 
-private:
+public:
     virtual void paint(int frame, Painter* painter);
 
+private:
     ControlAnimation_Image::FrameFormat m_frame_format;
 };
 
@@ -70,28 +71,24 @@ class ControlAnimation_Button : public ControlAnimation_Image{
 
 public:
     ControlAnimation_Button(Size<int> size, int frame_count);
+
+    virtual int mousePress(int current_frame) = 0;
+
+    virtual int mouseRelease(int current_frame) = 0;
 };
 
 
-// class ControlAnimation_PlayPauseButton : public ControlAnimation{
-//     unsigned char* m_frames = nullptr;
-//
-// public:
-//     ControlAnimation_PlayPauseButton(int size);
-//
-//     virtual ~ControlAnimation_PlayPauseButton();
-//
-// private:
-//     virtual void paint(ControlAnimationState state, Painter* painter);
-//
-//     virtual ControlAnimationState mousePress(ControlAnimationState state, Point<int> position);
-//
-//     virtual ControlAnimationState mouseRelease(ControlAnimationState state, Point<int> position);
-//
-//     virtual float value(ControlAnimationState state, float minval, float maxval);
-//
-//     virtual int frameCount();
-// };
+class ControlAnimation_PlayPauseButton : public ControlAnimation_Button{
+    unsigned char* m_frames = nullptr;
+
+public:
+    ControlAnimation_PlayPauseButton(int size);
+
+private:
+    virtual int mousePress(int current_frame);
+
+    virtual int mouseRelease(int current_frame);
+};
 
 
 class Widget_ValueControl : public Widget{
@@ -143,6 +140,24 @@ protected:
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
+};
+
+
+class Widget_ButtonControl : public Widget{
+    ControlAnimation_Button* m_animation = nullptr;
+    int m_frame = 0;
+
+public:
+    Widget_ButtonControl(ControlAnimation_Button* animation, Widget* parent = nullptr);
+
+    void setAnimation(ControlAnimation_Button* animation);
+
+protected:
+    virtual void paintEvent(PaintEvent* event);
+
+    virtual void mousePressEvent(MousePressEvent* event);
+
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 };
 
 }//namespace r64fx

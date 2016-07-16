@@ -169,7 +169,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
 
         Image img;
         pickFrame(frame, &img);
-        
+
         if(frame > 0)
         {
             draw_arc(
@@ -220,145 +220,125 @@ ControlAnimation_Button::ControlAnimation_Button(Size<int> size, int frame_count
 }
 
 
-// ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton(int size)
-// {
-//     setSize({size, size});
-//
-//     int frame_size = width() * height() * 4;
-//     int frame_count = 4;
-//     m_frames = new(std::nothrow) unsigned char[frame_size * frame_count];
-//     if(!m_frames)
-//         return;
-//
-//     unsigned char black[4] = {0, 0, 0, 0};
-//     unsigned char c0[4] = {127, 127, 127, 0};
-//
-//     unsigned char bg_depressed [4] = {200, 200, 200, 0};
-//     unsigned char bg_pressed   [4] = {150, 150, 150, 0};
-//     unsigned char fg_depressed [4] = {100, 100, 100, 0};
-//     unsigned char fg_pressed   [4] = { 50,  50,  50, 0};
-//
-//     Image bg_mask(width(), height(), 1);
-//     {
-//         fill(&bg_mask, Color(0));
-//         fill_rounded_rect(&bg_mask, Color(255), {0, 0, width(), height()}, 4);
-//     }
-//
-//     Image inset_mask_depressed(width(), height(), 1);
-//     {
-//         fill(&inset_mask_depressed, Color(0));
-//         fill_rounded_rect(&inset_mask_depressed, Color(255), {1, 1, width() - 2, height() - 2}, 4);
-//     }
-//
-//     Image inset_mask_pressed(width(), height(), 1);
-//     {
-//         fill(&inset_mask_pressed, Color(0));
-//         fill_rounded_rect(&inset_mask_pressed, Color(255), {2, 2, width() - 4, height() - 4}, 4);
-//     }
-//
-//     Image triangle(width()/2 + 1, height()/2 + 1, 1);
-//     draw_triangles(width()/2 + 1, nullptr, nullptr, nullptr, &triangle);
-//
-//     Image bars(width()/2 + 1 , height()/2 + 1, 1);
-//     {
-//         fill(&bars, Color(0));
-//         int w = bars.width() / 3;
-//         int h = bars.height();
-//         fill(&bars, 0, 255, {0,   0, w, h});
-//         fill(&bars, 0, 0,   {w,   0, w, h});
-//         fill(&bars, 0, 255, {w*2, 0, w, h});
-//     }
-//
-//     /* 0 Play Depressed */
-//     {
-//         Image img(width(), height(), 4, m_frames);
-//         fill(&img, c0);
-//         blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
-//         blend(&img, Point<int>(0, 0), Colors(bg_depressed), &inset_mask_depressed);
-//         blend(&img, Point<int>(width()/4 - width()/20, height()/4), Colors(fg_depressed), &triangle);
-//     }
-//
-//     /* 1 Play Pressed */
-//     {
-//         Image img(width(), height(), 4, m_frames + frame_size);
-//         fill(&img, c0);
-//         blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
-//         blend(&img, Point<int>(0, 0), Colors(bg_pressed), &inset_mask_pressed);
-//         blend(&img, Point<int>(width()/4 - width()/20, height()/4), Colors(fg_pressed), &triangle);
-//     }
-//
-//     /* 2 Pause Depressed */
-//     {
-//         Image img(width(), height(), 4, m_frames + frame_size*2);
-//         fill(&img, Color(127, 127, 127, 127));
-//         blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
-//         blend(&img, Point<int>(0, 0), Colors(bg_depressed), &inset_mask_depressed);
-//         blend(&img, Point<int>(
-//             img.width() / 2 - bars.width() / 2,
-//             img.height() / 2 - bars.height() / 2
-//         ), Colors(fg_depressed), &bars);
-//     }
-//
-//     /* 3 Pause Pressed */
-//     {
-//         Image img(width(), height(), 4, m_frames + frame_size*3);
-//         fill(&img, Color(127, 127, 127, 127));
-//         blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
-//         blend(&img, Point<int>(0, 0), Colors(bg_pressed), &inset_mask_pressed);
-//         blend(&img, Point<int>(
-//             img.width() / 2 - bars.width() / 2,
-//             img.height() / 2 - bars.height() / 2
-//         ), Colors(fg_pressed), &bars);
-//     }
-// }
-//
-//
-// ControlAnimation_PlayPauseButton::~ControlAnimation_PlayPauseButton()
-// {
-//     if(m_frames)
-//     {
-//         delete m_frames;
-//         m_frames = nullptr;
-//     }
-// }
-//
-//
-// void ControlAnimation_PlayPauseButton::paint(ControlAnimationState state, Painter* painter)
-// {
-//     int frame_size = width() * height() * 4;
-//     int frame = state.bits;
-//     if(m_frames)
-//     {
-//         Image img(width(), height(), 4, m_frames + (frame_size * frame));
-//         painter->putImage(&img, {0, 0});
-//     }
-// }
-//
-//
-// ControlAnimationState ControlAnimation_PlayPauseButton::mousePress(ControlAnimationState state, Point<int> position)
-// {
-//     state.bits |= 1;
-//     return state;
-// }
-//
-//
-// ControlAnimationState ControlAnimation_PlayPauseButton::mouseRelease(ControlAnimationState state, Point<int> position)
-// {
-//     state.bits = (state.bits ^ 2) & 2;
-//     return state;
-// }
-//
-//
-// float ControlAnimation_PlayPauseButton::value(ControlAnimationState state, float minval, float maxval)
-// {
-//     return (state.bits & 2) ? maxval : minval;
-// }
-//
-//
-// int ControlAnimation_PlayPauseButton::frameCount()
-// {
-//     return 0;
-// }
+enum PlayPauseStates{
+    PlayDepressed   = 0,
+    PlayPressed     = 1,
+    PauseDepressed  = 2,
+    PausePressed    = 3
+};
+
+
+ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton(int size)
+: ControlAnimation_Button({size, size}, 4)
+{
+    if(!data())
+        return;
+
+    unsigned char black[4] = {0, 0, 0, 0};
+    unsigned char c0[4] = {127, 127, 127, 0};
+
+    unsigned char bg_depressed [4] = {200, 200, 200, 0};
+    unsigned char bg_pressed   [4] = {150, 150, 150, 0};
+    unsigned char fg_depressed [4] = {100, 100, 100, 0};
+    unsigned char fg_pressed   [4] = { 50,  50,  50, 0};
+
+    Image bg_mask(width(), height(), 1);
+    {
+        fill(&bg_mask, Color(0));
+        fill_rounded_rect(&bg_mask, Color(255), {0, 0, width(), height()}, 4);
+    }
+
+    Image inset_mask_depressed(width(), height(), 1);
+    {
+        fill(&inset_mask_depressed, Color(0));
+        fill_rounded_rect(&inset_mask_depressed, Color(255), {1, 1, width() - 2, height() - 2}, 4);
+    }
+
+    Image inset_mask_pressed(width(), height(), 1);
+    {
+        fill(&inset_mask_pressed, Color(0));
+        fill_rounded_rect(&inset_mask_pressed, Color(255), {2, 2, width() - 4, height() - 4}, 4);
+    }
+
+    Image triangle(width()/2 + 1, height()/2 + 1, 1);
+    draw_triangles(width()/2 + 1, nullptr, nullptr, nullptr, &triangle);
+
+    Image bars(width()/2 + 1 , height()/2 + 1, 1);
+    {
+        fill(&bars, Color(0));
+        int w = bars.width() / 3;
+        int h = bars.height();
+        fill(&bars, 0, 255, {0,   0, w, h});
+        fill(&bars, 0, 0,   {w,   0, w, h});
+        fill(&bars, 0, 255, {w*2, 0, w, h});
+    }
+
+    /* 0 Play Depressed */
+    {
+        Image img;
+        pickFrame(PlayDepressed, &img);
+        fill(&img, c0);
+        blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
+        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &inset_mask_depressed);
+        blend(&img, Point<int>(width()/4 - width()/20, height()/4), Colors(fg_depressed), &triangle);
+    }
+
+    /* 1 Play Pressed */
+    {
+        Image img;
+        pickFrame(PlayPressed, &img);
+        fill(&img, c0);
+        blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
+        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &inset_mask_pressed);
+        blend(&img, Point<int>(width()/4 - width()/20, height()/4), Colors(fg_pressed), &triangle);
+    }
+
+    /* 2 Pause Depressed */
+    {
+        Image img;
+        pickFrame(PauseDepressed, &img);
+        fill(&img, Color(127, 127, 127, 127));
+        blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
+        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &inset_mask_depressed);
+        blend(&img, Point<int>(
+            img.width() / 2 - bars.width() / 2,
+            img.height() / 2 - bars.height() / 2
+        ), Colors(fg_depressed), &bars);
+    }
+
+    /* 3 Pause Pressed */
+    {
+        Image img;
+        pickFrame(PausePressed, &img);
+        fill(&img, Color(127, 127, 127, 127));
+        blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
+        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &inset_mask_pressed);
+        blend(&img, Point<int>(
+            img.width() / 2 - bars.width() / 2,
+            img.height() / 2 - bars.height() / 2
+        ), Colors(fg_pressed), &bars);
+    }
+}
+
+
+int ControlAnimation_PlayPauseButton::mousePress(int current_frame)
+{
+    if(current_frame == PlayDepressed)
+        return PlayPressed;
+    if(current_frame == PauseDepressed)
+        return PausePressed;
+    return 0;
+}
+
+
+int ControlAnimation_PlayPauseButton::mouseRelease(int current_frame)
+{
+    if(current_frame == PlayPressed)
+        return PauseDepressed;
+    if(current_frame == PausePressed)
+        return PlayDepressed;
+    return 0;
+}
 
 
 
@@ -535,6 +515,60 @@ void Widget_ValueControl::mouseMoveEvent(MouseMoveEvent* event)
         setValue(old_val + diff);
         if(value() != old_val)
         {
+            repaint();
+        }
+    }
+}
+
+
+Widget_ButtonControl::Widget_ButtonControl(ControlAnimation_Button* animation, Widget* parent)
+: Widget(parent)
+{
+    setAnimation(animation);
+}
+
+
+void Widget_ButtonControl::setAnimation(ControlAnimation_Button* animation)
+{
+    m_animation = animation;
+    if(m_animation)
+    {
+        setSize(animation->size());
+    }
+}
+
+
+void Widget_ButtonControl::paintEvent(PaintEvent* event)
+{
+    if(m_animation)
+    {
+        m_animation->paint(m_frame, event->painter());
+    }
+}
+
+
+void Widget_ButtonControl::mousePressEvent(MousePressEvent* event)
+{
+    if(event->button() == MouseButton::Left())
+    {
+        grabMouse();
+        if(m_animation)
+        {
+            m_frame = m_animation->mousePress(m_frame);
+            repaint();
+        }
+    }
+}
+
+
+void Widget_ButtonControl::mouseReleaseEvent(MouseReleaseEvent* event)
+{
+    if(event->button() == MouseButton::Left() && isMouseGrabber())
+    {
+        ungrabMouse();
+        if(m_animation)
+        {
+            m_frame = m_animation->mouseRelease(m_frame);
             repaint();
         }
     }

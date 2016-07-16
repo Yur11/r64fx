@@ -30,7 +30,7 @@ using namespace r64fx;
 Font* g_Font = nullptr;
 
 ControlAnimation_Knob* g_anim_knob = nullptr;
-// ControlAnimation_PlayPauseButton* g_anim_button = nullptr;
+ControlAnimation_PlayPauseButton* g_anim_button = nullptr;
 
 class MyWidget : public Widget_ScrollArea{
 
@@ -43,20 +43,20 @@ public:
         {
             g_anim_knob = new ControlAnimation_Knob(48, 128);
         }
-//
-//         auto c1 = new Widget_Control(g_anim_knob, this);
-//         c1->setPosition({100, 100});
 
-//         if(!g_anim_button)
-//         {
-//             g_anim_button = new ControlAnimation_PlayPauseButton(48);
-//         }
-//
-//         for(int i=0; i<8; i++)
-//         {
-//             auto b1 = new Widget_Control(g_anim_button, this);
-//             b1->setPosition({300 + i * 50, 100});
-//         }
+        if(!g_anim_button)
+        {
+            g_anim_button = new ControlAnimation_PlayPauseButton(48);
+        }
+
+        for(int y=0; y<8; y++)
+        {
+            for(int x=0; x<8; x++)
+            {
+                auto b1 = new Widget_ButtonControl(g_anim_button, this);
+                b1->setPosition({100 + x * 50, 200 + y * 50});
+            }
+        }
 
         for(int i=0; i<8; i++)
         {
@@ -73,10 +73,10 @@ public:
             delete g_anim_knob;
         }
 
-//         if(g_anim_button)
-//         {
-//             delete g_anim_button;
-//         }
+        if(g_anim_button)
+        {
+            delete g_anim_button;
+        }
     }
 
     virtual void paintEvent(PaintEvent* event)
