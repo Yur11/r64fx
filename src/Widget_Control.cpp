@@ -88,59 +88,12 @@ ControlAnimationState ControlAnimation::mouseLeave(ControlAnimationState state)
 }
 
 
-ControlAnimation_Value::ControlAnimation_Value(int char_count, Font* font)
-: m_font(font)
-{
-    if(!font)
-        return;
-
-    auto glyph = m_font->fetchGlyph("0");
-    if(!glyph)
-        return;
-
-    setSize({char_count * glyph->width() + 4, m_font->height() + 4});
-}
-
-
-ControlAnimation_Value::~ControlAnimation_Value()
-{
-
-}
-
-
-void ControlAnimation_Value::paint(ControlAnimationState state, Painter* painter)
-{
-    unsigned char bg[4] = {200, 200, 200, 0};
-    unsigned char fg[4] = {0, 0, 0, 0};
-    string text = "1234.01\n";
-    painter->fillRect({0, 0, width(), height()}, bg);
-    if(m_font)
-    {
-        Image img(width() - 2, height() - 2, 1);
-        text2image(text, TextWrap::None, m_font, &img);
-        painter->blendColors({2, 2}, Colors(fg), &img);
-    }
-}
-
-
-ControlAnimationState ControlAnimation_Value::mouseMove(ControlAnimationState state, Point<int> position, Point<int> delta)
-{
-    return state;
-}
-
-
-float ControlAnimation_Value::value(ControlAnimationState state, float minval, float maxval)
-{
-    return 0.0f;
-}
-
-
-ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius)
+ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
 {
     setSize({knob_radius, knob_radius});
+    m_frame_count = frame_count;
 
     int frame_size = width() * height();
-    int frame_count = 128;
     int data_size = frame_size * frame_count * 2;
     m_data = new(std::nothrow) unsigned char[data_size];
     if(!m_data)
@@ -249,8 +202,8 @@ ControlAnimationState ControlAnimation_Knob::mouseMove(ControlAnimationState sta
     int frame = int(state.bits & 0x7F) - delta.y();
     if(frame < 0)
         frame = 0;
-    else if(frame > 127)
-        frame = 127;
+    else if(frame > (m_frame_count - 1))
+        frame = (m_frame_count - 1);
     return ControlAnimationState(frame);
 }
 
@@ -260,6 +213,12 @@ float ControlAnimation_Knob::value(ControlAnimationState state, float minval, fl
     float range = (maxval - minval);
     float step = range / 127.0f;
     return float(state.bits) * step;
+}
+
+
+int ControlAnimation_Knob::frameCount()
+{
+    return m_frame_count;
 }
 
 
@@ -395,6 +354,12 @@ ControlAnimationState ControlAnimation_PlayPauseButton::mouseRelease(ControlAnim
 float ControlAnimation_PlayPauseButton::value(ControlAnimationState state, float minval, float maxval)
 {
     return (state.bits & 2) ? maxval : minval;
+}
+
+
+int ControlAnimation_PlayPauseButton::frameCount()
+{
+    return 0;
 }
 
 
@@ -538,6 +503,13 @@ Widget_ValueControl::Widget_ValueControl(int char_count, Font* font, Widget* par
 }
 
 
+Widget_ValueControl::Widget_ValueControl(ControlAnimation* animation, Widget* parent)
+: Widget(parent)
+{
+    setAnimation(animation);
+}
+
+
 Widget_ValueControl::~Widget_ValueControl()
 {
 
@@ -590,19 +562,68 @@ float Widget_ValueControl::value() const
 }
 
 
+void Widget_ValueControl::setValueStep(float step)
+{
+    m_value_step = step;
+}
+
+
+float Widget_ValueControl::valueStep() const
+{
+    return m_value_step;
+}
+
+
+void Widget_ValueControl::setFont(Font* font)
+{
+    m_font = font;
+}
+
+
+Font* Widget_ValueControl::font() const
+{
+    return m_font;
+}
+
+
+void Widget_ValueControl::setAnimation(ControlAnimation* animation)
+{
+    m_animation = animation;
+    if(m_animation)
+    {
+        setSize(m_animation->size());
+    }
+}
+
+
+ControlAnimation* Widget_ValueControl::animation() const
+{
+    return m_animation;
+}
+
+
 void Widget_ValueControl::paintEvent(PaintEvent* event)
 {
     auto painter = event->painter();
-    unsigned char bg[4] = {200, 200, 200, 0};
-    unsigned char fg[4] = {0, 0, 0, 0};
-    painter->fillRect({0, 0, width(), height()}, bg);
-    char str[128];
-    int nchars = sprintf(str, "%f", value());
-    if(m_font && nchars > 0)
+
+    if(m_animation)
     {
-        Image img(width() - 2, height() - 2, 1);
-        text2image(str, TextWrap::None, m_font, &img);
-        painter->blendColors({2, 2}, Colors(fg), &img);
+        int frame_num = int((m_value / (m_max_value - m_min_value)) * (m_animation->frameCount() - 1));
+        m_animation->paint(ControlAnimationState(frame_num), painter);
+    }
+    else if(m_font)
+    {
+        unsigned char bg[4] = {200, 200, 200, 0};
+        unsigned char fg[4] = {0, 0, 0, 0};
+        painter->fillRect({0, 0, width(), height()}, bg);
+        char str[128];
+        int nchars = sprintf(str, "%f", value());
+        if(m_font && nchars > 0)
+        {
+            Image img(width() - 2, height() - 2, 1);
+            text2image(str, TextWrap::None, m_font, &img);
+            painter->blendColors({2, 2}, Colors(fg), &img);
+        }
     }
 }
 
@@ -629,7 +650,7 @@ void Widget_ValueControl::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(event->button() & MouseButton::Left() && isMouseGrabber())
     {
-        float diff = -0.005 * float(event->delta().y());
+        float diff = -0.007 * float(event->delta().y());
         float old_val = value();
         setValue(old_val + diff);
         if(value() != old_val)
