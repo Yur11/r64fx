@@ -30,28 +30,43 @@ public:
 };
 
 
-class ControlAnimation_RGBA : public ControlAnimation{
+class ControlAnimation_Image : public ControlAnimation{
     unsigned char* m_data = nullptr;
 
 protected:
-    ControlAnimation_RGBA(Size<int> size, int frame_count);
+    enum class FrameFormat{
+        FullRGBA,
+        BlendedRG
+    };
 
-    virtual ~ControlAnimation_RGBA();
+    ControlAnimation_Image(FrameFormat ff, Size<int> size, int frame_count);
+
+    virtual ~ControlAnimation_Image();
+
+    FrameFormat frameFormat() const;
+
+    int frameComponentCount() const;
+
+    int frameSize() const;
 
     unsigned char* data() const;
 
+    void pickFrame(int frame, Image* img);
+
 private:
     virtual void paint(int frame, Painter* painter);
+
+    ControlAnimation_Image::FrameFormat m_frame_format;
 };
 
 
-class ControlAnimation_Knob : public ControlAnimation_RGBA{
+class ControlAnimation_Knob : public ControlAnimation_Image{
 public:
     ControlAnimation_Knob(int size, int frame_count);
 };
 
 
-class ControlAnimation_Button : public ControlAnimation_RGBA{
+class ControlAnimation_Button : public ControlAnimation_Image{
 
 public:
     ControlAnimation_Button(Size<int> size, int frame_count);

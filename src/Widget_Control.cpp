@@ -48,19 +48,19 @@ int ControlAnimation::frameCount() const
 }
 
 
-ControlAnimation_RGBA::ControlAnimation_RGBA(Size<int> size, int frame_count)
+ControlAnimation_Image::ControlAnimation_Image(FrameFormat ff, Size<int> size, int frame_count)
 : ControlAnimation(size, frame_count)
+, m_frame_format(ff)
 {
-    if(width() <= 0 || height() <= 0 || frameCount() <=0)
+    if(frameSize() <= 0 || frameCount() <=0)
         return;
 
-    int frame_size = width() * height();
-    int data_size = frame_size * frameCount() * 2;
+    int data_size = frameSize() * frameCount();
     m_data = new(std::nothrow) unsigned char[data_size];
 }
 
 
-ControlAnimation_RGBA::~ControlAnimation_RGBA()
+ControlAnimation_Image::~ControlAnimation_Image()
 {
     if(m_data)
     {
@@ -69,34 +69,77 @@ ControlAnimation_RGBA::~ControlAnimation_RGBA()
 }
 
 
-unsigned char* ControlAnimation_RGBA::data() const
+ControlAnimation_Image::FrameFormat ControlAnimation_Image::frameFormat() const
+{
+    return m_frame_format;
+}
+
+
+int ControlAnimation_Image::frameComponentCount() const
+{
+    switch(m_frame_format)
+    {
+        case ControlAnimation_Image::FrameFormat::FullRGBA:
+            return 4;
+
+        case ControlAnimation_Image::FrameFormat::BlendedRG:
+            return 2;
+
+        default:
+            return 0;
+    }
+}
+
+
+int ControlAnimation_Image::frameSize() const
+{
+    return width() * height() * frameComponentCount();
+}
+
+
+unsigned char* ControlAnimation_Image::data() const
 {
     return m_data;
 }
 
 
-void ControlAnimation_RGBA::paint(int frame, Painter* painter)
+void ControlAnimation_Image::pickFrame(int frame, Image* img)
+{
+    img->load(width(), height(), frameComponentCount(), m_data + (frameSize() * frame), false);
+}
+
+
+void ControlAnimation_Image::paint(int frame, Painter* painter)
 {
     unsigned char bg[4] = {127, 127, 127, 0};
     painter->fillRect({0, 0, width(), height()}, bg);
 
     if(m_data && frame < frameCount())
     {
-        Image img(width(), height(), 2, m_data + (frame * width() * height() * 2));
-        painter->blendColors(
-            {0, 0},
-            Colors(
-                Color(0, 0, 0, 0),
-                Color(200, 200, 200, 0)
-            ),
-            &img
-        );
+        Image img;
+        pickFrame(frame, &img);
+
+        if(frameFormat() == ControlAnimation_Image::FrameFormat::FullRGBA)
+        {
+            painter->putImage(&img, {0, 0});
+        }
+        else if(frameFormat() == ControlAnimation_Image::FrameFormat::BlendedRG)
+        {
+            painter->blendColors(
+                {0, 0},
+                Colors(
+                    Color(0, 0, 0, 0),
+                    Color(200, 200, 200, 0)
+                ),
+                &img
+            );
+        }
     }
 }
 
 
 ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
-: ControlAnimation_RGBA({knob_radius, knob_radius}, frame_count)
+: ControlAnimation_Image(ControlAnimation_Image::FrameFormat::BlendedRG, {knob_radius, knob_radius}, frame_count)
 {
     if(!data())
         return;
@@ -124,8 +167,9 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
     {
         float percent = float(frame) * frame_count_rcp;
 
-        Image img(width(), height(), 2, data() + (frame * width() * height() * 2));
-
+        Image img;
+        pickFrame(frame, &img);
+        
         if(frame > 0)
         {
             draw_arc(
@@ -170,7 +214,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
 
 
 ControlAnimation_Button::ControlAnimation_Button(Size<int> size, int frame_count)
-: ControlAnimation_RGBA(size, frame_count)
+: ControlAnimation_Image(ControlAnimation_Image::FrameFormat::FullRGBA, size, frame_count)
 {
 
 }
