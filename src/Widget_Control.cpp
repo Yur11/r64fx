@@ -544,17 +544,64 @@ Widget_ValueControl::~Widget_ValueControl()
 }
 
 
+void Widget_ValueControl::setMinValue(float val)
+{
+    m_min_value = val;
+    if(m_min_value > m_max_value)
+        m_min_value = m_max_value;
+    setValue(m_value);
+}
+
+
+float Widget_ValueControl::minValue() const
+{
+    return m_min_value;
+}
+
+
+void Widget_ValueControl::setMaxValue(float val)
+{
+    m_max_value = val;
+    if(m_max_value < m_min_value)
+        m_max_value = m_min_value;
+    setValue(m_value);
+}
+
+
+float Widget_ValueControl::maxValue() const
+{
+    return m_max_value;
+}
+
+
+void Widget_ValueControl::setValue(float val)
+{
+    m_value = val;
+    if(m_value > m_max_value)
+        m_value = m_max_value;
+    else if(m_value < m_min_value)
+        m_value = m_min_value;
+}
+
+
+float Widget_ValueControl::value() const
+{
+    return m_value;
+}
+
+
 void Widget_ValueControl::paintEvent(PaintEvent* event)
 {
     auto painter = event->painter();
     unsigned char bg[4] = {200, 200, 200, 0};
     unsigned char fg[4] = {0, 0, 0, 0};
     painter->fillRect({0, 0, width(), height()}, bg);
-    string text = "345.987";
-    if(m_font)
+    char str[128];
+    int nchars = sprintf(str, "%f", value());
+    if(m_font && nchars > 0)
     {
         Image img(width() - 2, height() - 2, 1);
-        text2image(text, TextWrap::None, m_font, &img);
+        text2image(str, TextWrap::None, m_font, &img);
         painter->blendColors({2, 2}, Colors(fg), &img);
     }
 }
@@ -562,19 +609,34 @@ void Widget_ValueControl::paintEvent(PaintEvent* event)
 
 void Widget_ValueControl::mousePressEvent(MousePressEvent* event)
 {
-
+    if(event->button() == MouseButton::Left())
+    {
+        grabMouse();
+    }
 }
 
 
 void Widget_ValueControl::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-
+    if(event->button() == MouseButton::Left() && isMouseGrabber())
+    {
+        ungrabMouse();
+    }
 }
 
 
 void Widget_ValueControl::mouseMoveEvent(MouseMoveEvent* event)
 {
-
+    if(event->button() & MouseButton::Left() && isMouseGrabber())
+    {
+        float diff = -0.005 * float(event->delta().y());
+        float old_val = value();
+        setValue(old_val + diff);
+        if(value() != old_val)
+        {
+            repaint();
+        }
+    }
 }
 
 }//namespace r64fx

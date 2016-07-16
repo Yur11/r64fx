@@ -130,11 +130,26 @@ protected:
 
 class Widget_ValueControl : public Widget{
     Font* m_font = nullptr;
+    float m_min_value = 0.0f;
+    float m_max_value = 1.0f;
+    float m_value = 0.0f;
 
 public:
     Widget_ValueControl(int char_count, Font* font, Widget* parent = nullptr);
 
     virtual ~Widget_ValueControl();
+
+    void setMinValue(float val);
+
+    float minValue() const;
+
+    void setMaxValue(float val);
+
+    float maxValue() const;
+
+    void setValue(float val);
+
+    float value() const;
 
 protected:
     virtual void paintEvent(PaintEvent* event);
