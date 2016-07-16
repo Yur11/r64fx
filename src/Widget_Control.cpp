@@ -24,12 +24,6 @@ ControlAnimation::~ControlAnimation()
 }
 
 
-void ControlAnimation::setSize(Size<int> size)
-{
-    m_size = size;
-}
-
-
 Size<int> ControlAnimation::size() const
 {
     return m_size;
@@ -54,8 +48,8 @@ int ControlAnimation::frameCount() const
 }
 
 
-ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
-: ControlAnimation({knob_radius, knob_radius}, frame_count)
+ControlAnimation_RGBA::ControlAnimation_RGBA(Size<int> size, int frame_count)
+: ControlAnimation(size, frame_count)
 {
     if(width() <= 0 || height() <= 0 || frameCount() <=0)
         return;
@@ -63,7 +57,48 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
     int frame_size = width() * height();
     int data_size = frame_size * frameCount() * 2;
     m_data = new(std::nothrow) unsigned char[data_size];
-    if(!m_data)
+}
+
+
+ControlAnimation_RGBA::~ControlAnimation_RGBA()
+{
+    if(m_data)
+    {
+        delete[] m_data;
+    }
+}
+
+
+unsigned char* ControlAnimation_RGBA::data() const
+{
+    return m_data;
+}
+
+
+void ControlAnimation_RGBA::paint(int frame, Painter* painter)
+{
+    unsigned char bg[4] = {127, 127, 127, 0};
+    painter->fillRect({0, 0, width(), height()}, bg);
+
+    if(m_data && frame < frameCount())
+    {
+        Image img(width(), height(), 2, m_data + (frame * width() * height() * 2));
+        painter->blendColors(
+            {0, 0},
+            Colors(
+                Color(0, 0, 0, 0),
+                Color(200, 200, 200, 0)
+            ),
+            &img
+        );
+    }
+}
+
+
+ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
+: ControlAnimation_RGBA({knob_radius, knob_radius}, frame_count)
+{
+    if(!data())
         return;
 
     unsigned char color1[2] = {0, 255};
@@ -89,7 +124,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
     {
         float percent = float(frame) * frame_count_rcp;
 
-        Image img(width(), height(), 2, m_data + (frame * width() * height() * 2));
+        Image img(width(), height(), 2, data() + (frame * width() * height() * 2));
 
         if(frame > 0)
         {
@@ -134,32 +169,10 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
 }
 
 
-ControlAnimation_Knob::~ControlAnimation_Knob()
+ControlAnimation_Button::ControlAnimation_Button(Size<int> size, int frame_count)
+: ControlAnimation_RGBA(size, frame_count)
 {
-    if(m_data)
-    {
-        delete[] m_data;
-    }
-}
 
-
-void ControlAnimation_Knob::paint(int frame, Painter* painter)
-{
-    unsigned char bg[4] = {127, 127, 127, 0};
-    painter->fillRect({0, 0, width(), height()}, bg);
-
-    if(m_data && frame < frameCount())
-    {
-        Image img(width(), height(), 2, m_data + (frame * width() * height() * 2));
-        painter->blendColors(
-            {0, 0},
-            Colors(
-                Color(0, 0, 0, 0),
-                Color(200, 200, 200, 0)
-            ),
-            &img
-        );
-    }
 }
 
 

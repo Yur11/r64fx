@@ -18,8 +18,6 @@ public:
 
     virtual ~ControlAnimation();
 
-    void setSize(Size<int> size);
-
     Size<int> size() const;
 
     int width() const;
@@ -32,16 +30,31 @@ public:
 };
 
 
-class ControlAnimation_Knob : public ControlAnimation{
+class ControlAnimation_RGBA : public ControlAnimation{
     unsigned char* m_data = nullptr;
 
-public:
-    ControlAnimation_Knob(int size, int frame_count);
+protected:
+    ControlAnimation_RGBA(Size<int> size, int frame_count);
 
-    virtual ~ControlAnimation_Knob();
+    virtual ~ControlAnimation_RGBA();
+
+    unsigned char* data() const;
 
 private:
     virtual void paint(int frame, Painter* painter);
+};
+
+
+class ControlAnimation_Knob : public ControlAnimation_RGBA{
+public:
+    ControlAnimation_Knob(int size, int frame_count);
+};
+
+
+class ControlAnimation_Button : public ControlAnimation_RGBA{
+
+public:
+    ControlAnimation_Button(Size<int> size, int frame_count);
 };
 
 
