@@ -127,6 +127,25 @@ protected:
     virtual void stateChanged();
 };
 
+
+class Widget_ValueControl : public Widget{
+    Font* m_font = nullptr;
+
+public:
+    Widget_ValueControl(int char_count, Font* font, Widget* parent = nullptr);
+
+    virtual ~Widget_ValueControl();
+
+protected:
+    virtual void paintEvent(PaintEvent* event);
+
+    virtual void mousePressEvent(MousePressEvent* event);
+
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
+
+    virtual void mouseMoveEvent(MouseMoveEvent* event);
+};
+
 }//namespace r64fx
 
 #endif//R64FX_WIDGET_CONTROL_HPP

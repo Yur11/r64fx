@@ -66,6 +66,9 @@ public:
 
         auto v1 = new Widget_Control(g_anim_value, this);
         v1->setPosition({170, 100});
+
+        auto v2 = new Widget_ValueControl(12, g_Font, this);
+        v2->setPosition({170, 150});
     }
 
     ~MyWidget()

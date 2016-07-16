@@ -112,6 +112,7 @@ void ControlAnimation_Value::paint(ControlAnimationState state, Painter* painter
 {
     unsigned char bg[4] = {200, 200, 200, 0};
     unsigned char fg[4] = {0, 0, 0, 0};
+    string text = "1234.01\n";
     painter->fillRect({0, 0, width(), height()}, bg);
     if(m_font)
     {
@@ -519,6 +520,61 @@ void Widget_Control::stateChanged()
     {
         cout << ((char*) buff) << "\n";
     }
+}
+
+
+Widget_ValueControl::Widget_ValueControl(int char_count, Font* font, Widget* parent)
+: Widget(parent)
+, m_font(font)
+{
+    if(!font)
+        return;
+
+    auto glyph = m_font->fetchGlyph("0");
+    if(!glyph)
+        return;
+
+    setSize({char_count * glyph->width() + 4, m_font->height() + 4});
+}
+
+
+Widget_ValueControl::~Widget_ValueControl()
+{
+
+}
+
+
+void Widget_ValueControl::paintEvent(PaintEvent* event)
+{
+    auto painter = event->painter();
+    unsigned char bg[4] = {200, 200, 200, 0};
+    unsigned char fg[4] = {0, 0, 0, 0};
+    painter->fillRect({0, 0, width(), height()}, bg);
+    string text = "345.987";
+    if(m_font)
+    {
+        Image img(width() - 2, height() - 2, 1);
+        text2image(text, TextWrap::None, m_font, &img);
+        painter->blendColors({2, 2}, Colors(fg), &img);
+    }
+}
+
+
+void Widget_ValueControl::mousePressEvent(MousePressEvent* event)
+{
+
+}
+
+
+void Widget_ValueControl::mouseReleaseEvent(MouseReleaseEvent* event)
+{
+
+}
+
+
+void Widget_ValueControl::mouseMoveEvent(MouseMoveEvent* event)
+{
+
 }
 
 }//namespace r64fx
