@@ -546,6 +546,12 @@ float Widget_ValueControl::maxValue() const
 }
 
 
+float Widget_ValueControl::valueRange() const
+{
+    return m_max_value - m_min_value;
+}
+
+
 void Widget_ValueControl::setValue(float val)
 {
     m_value = val;
@@ -608,7 +614,7 @@ void Widget_ValueControl::paintEvent(PaintEvent* event)
 
     if(m_animation)
     {
-        int frame_num = int((m_value / (m_max_value - m_min_value)) * (m_animation->frameCount() - 1));
+        int frame_num = int((m_value / valueRange()) * (m_animation->frameCount() - 1));
         m_animation->paint(ControlAnimationState(frame_num), painter);
     }
     else if(m_font)

@@ -141,6 +141,8 @@ public:
 
     float maxValue() const;
 
+    float valueRange() const;
+
     void setValueStep(float step);
 
     float valueStep() const;
