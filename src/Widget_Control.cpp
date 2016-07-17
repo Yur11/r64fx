@@ -291,6 +291,28 @@ ControlAnimation_Button::ControlAnimation_Button(Size<int> size, int frame_count
 }
 
 
+void ControlAnimation_Button::generateMasks(Image* bg, Image* depressed, Image* pressed)
+{
+    bg->load(width(), height(), 1);
+    {
+        fill(bg, Color(0));
+        fill_rounded_rect(bg, Color(255), {0, 0, width(), height()}, 4);
+    }
+
+    depressed->load(width(), height(), 1);
+    {
+        fill(depressed, Color(0));
+        fill_rounded_rect(depressed, Color(255), {1, 1, width() - 2, height() - 2}, 4);
+    }
+
+    pressed->load(width(), height(), 1);
+    {
+        fill(pressed, Color(0));
+        fill_rounded_rect(pressed, Color(255), {2, 2, width() - 4, height() - 4}, 4);
+    }
+}
+
+
 ControlAnimation_ColouredButton::ControlAnimation_ColouredButton(int size, unsigned char** rgbas, int num_rgbas)
 : ControlAnimation_Button({size, size}, num_rgbas * 2)
 {
@@ -299,23 +321,8 @@ ControlAnimation_ColouredButton::ControlAnimation_ColouredButton(int size, unsig
 
     unsigned char black[4] = {0, 0, 0, 0};
 
-    Image bg_mask(width(), height(), 1);
-    {
-        fill(&bg_mask, Color(0));
-        fill_rounded_rect(&bg_mask, Color(255), {0, 0, width(), height()}, 4);
-    }
-
-    Image inset_mask_depressed(width(), height(), 1);
-    {
-        fill(&inset_mask_depressed, Color(0));
-        fill_rounded_rect(&inset_mask_depressed, Color(255), {1, 1, width() - 2, height() - 2}, 4);
-    }
-
-    Image inset_mask_pressed(width(), height(), 1);
-    {
-        fill(&inset_mask_pressed, Color(0));
-        fill_rounded_rect(&inset_mask_pressed, Color(255), {2, 2, width() - 4, height() - 4}, 4);
-    }
+    Image bg, depressed, pressed;
+    generateMasks(&bg, &depressed, &pressed);
 
     for(int i=0; i<frameCount()/2; i++)
     {
@@ -323,16 +330,16 @@ ControlAnimation_ColouredButton::ControlAnimation_ColouredButton(int size, unsig
         {
             Image img;
             pickFrame(i*2, &img);
-            blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
-            blend(&img, Point<int>(0, 0), rgbas + i, &inset_mask_depressed);
+            blend(&img, Point<int>(0, 0), Colors(black), &bg);
+            blend(&img, Point<int>(0, 0), rgbas + i, &depressed);
         }
 
         /* Pressed */
         {
             Image img;
             pickFrame(i*2 + 1, &img);
-            blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
-            blend(&img, Point<int>(0, 0), rgbas + i, &inset_mask_pressed);
+            blend(&img, Point<int>(0, 0), Colors(black), &bg);
+            blend(&img, Point<int>(0, 0), rgbas + i, &pressed);
         }
     }
 }
@@ -378,23 +385,8 @@ ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton(int size)
     unsigned char fg_depressed [4] = {100, 100, 100, 0};
     unsigned char fg_pressed   [4] = { 50,  50,  50, 0};
 
-    Image bg_mask(width(), height(), 1);
-    {
-        fill(&bg_mask, Color(0));
-        fill_rounded_rect(&bg_mask, Color(255), {0, 0, width(), height()}, 4);
-    }
-
-    Image inset_mask_depressed(width(), height(), 1);
-    {
-        fill(&inset_mask_depressed, Color(0));
-        fill_rounded_rect(&inset_mask_depressed, Color(255), {1, 1, width() - 2, height() - 2}, 4);
-    }
-
-    Image inset_mask_pressed(width(), height(), 1);
-    {
-        fill(&inset_mask_pressed, Color(0));
-        fill_rounded_rect(&inset_mask_pressed, Color(255), {2, 2, width() - 4, height() - 4}, 4);
-    }
+    Image bg, depressed, pressed;
+    generateMasks(&bg, &depressed, &pressed);
 
     Image triangle(width()/2 + 1, height()/2 + 1, 1);
     draw_triangles(width()/2 + 1, nullptr, nullptr, nullptr, &triangle);
@@ -414,8 +406,8 @@ ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton(int size)
         Image img;
         pickFrame(PlayDepressed, &img);
         fill(&img, c0);
-        blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
-        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &inset_mask_depressed);
+        blend(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
         blend(&img, Point<int>(width()/4 - width()/20, height()/4), Colors(fg_depressed), &triangle);
     }
 
@@ -424,8 +416,8 @@ ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton(int size)
         Image img;
         pickFrame(PlayPressed, &img);
         fill(&img, c0);
-        blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
-        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &inset_mask_pressed);
+        blend(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
         blend(&img, Point<int>(width()/4 - width()/20, height()/4), Colors(fg_pressed), &triangle);
     }
 
@@ -434,8 +426,8 @@ ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton(int size)
         Image img;
         pickFrame(PauseDepressed, &img);
         fill(&img, Color(127, 127, 127, 127));
-        blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
-        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &inset_mask_depressed);
+        blend(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
         blend(&img, Point<int>(
             img.width() / 2 - bars.width() / 2,
             img.height() / 2 - bars.height() / 2
@@ -447,8 +439,8 @@ ControlAnimation_PlayPauseButton::ControlAnimation_PlayPauseButton(int size)
         Image img;
         pickFrame(PausePressed, &img);
         fill(&img, Color(127, 127, 127, 127));
-        blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
-        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &inset_mask_pressed);
+        blend(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
         blend(&img, Point<int>(
             img.width() / 2 - bars.width() / 2,
             img.height() / 2 - bars.height() / 2

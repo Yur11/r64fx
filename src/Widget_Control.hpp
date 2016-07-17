@@ -80,6 +80,9 @@ public:
     virtual int mousePress(int current_frame) = 0;
 
     virtual int mouseRelease(int current_frame) = 0;
+
+protected:
+    void generateMasks(Image* bg, Image* depressed, Image* pressed);
 };
 
 

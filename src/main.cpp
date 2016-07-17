@@ -30,7 +30,8 @@ using namespace r64fx;
 Font* g_Font = nullptr;
 
 ControlAnimation_Knob* g_anim_knob = nullptr;
-ControlAnimation_ColouredButton* g_anim_button = nullptr;
+ControlAnimation_ColouredButton* g_anim_colored_button = nullptr;
+ControlAnimation_PlayPauseButton* g_anim_play_pause_button = nullptr;
 
 class MyWidget : public Widget_ScrollArea{
 
@@ -44,7 +45,14 @@ public:
             g_anim_knob = new ControlAnimation_Knob(48, 128, KnobType::Bipolar);
         }
 
-        if(!g_anim_button)
+        for(int i=0; i<8; i++)
+        {
+            auto c = new Widget_ValueControl(12, g_Font, this);
+            c->setPosition({100 + i * 60, 100});
+            c->setAnimation(g_anim_knob);
+        }
+
+        if(!g_anim_colored_button)
         {
             unsigned char c1[4] = {200, 127, 127, 0};
             unsigned char c2[4] = {200, 200, 127, 0};
@@ -56,24 +64,25 @@ public:
             unsigned char c8[4] = {127, 127, 127, 0};
             unsigned char* colors[8] = {c1, c2, c3, c4, c5, c6, c7, c8};
 
-            g_anim_button = new ControlAnimation_ColouredButton(48, colors, 8);
+            g_anim_colored_button = new ControlAnimation_ColouredButton(48, colors, 8);
         }
 
         for(int y=0; y<8; y++)
         {
             for(int x=0; x<8; x++)
             {
-                auto b1 = new Widget_ButtonControl(g_anim_button, this);
+                auto b1 = new Widget_ButtonControl(g_anim_colored_button, this);
                 b1->setPosition({100 + x * 50, 200 + y * 50});
             }
         }
 
-        for(int i=0; i<8; i++)
+        if(!g_anim_play_pause_button)
         {
-            auto c = new Widget_ValueControl(12, g_Font, this);
-            c->setPosition({100 + i * 60, 100});
-            c->setAnimation(g_anim_knob);
+            g_anim_play_pause_button = new ControlAnimation_PlayPauseButton(48);
         }
+
+        auto ppb = new Widget_ButtonControl(g_anim_play_pause_button, this);
+        ppb->setPosition({550, 200});
     }
 
     ~MyWidget()
@@ -83,9 +92,14 @@ public:
             delete g_anim_knob;
         }
 
-        if(g_anim_button)
+        if(g_anim_colored_button)
         {
-            delete g_anim_button;
+            delete g_anim_colored_button;
+        }
+
+        if(g_anim_play_pause_button)
+        {
+            delete g_anim_play_pause_button;
         }
     }
 
