@@ -83,9 +83,18 @@ public:
 };
 
 
-class ControlAnimation_PlayPauseButton : public ControlAnimation_Button{
-    unsigned char* m_frames = nullptr;
+class ControlAnimation_ColouredButton : public ControlAnimation_Button{
+public:
+    ControlAnimation_ColouredButton(int size, unsigned char** rgbas, int num_rgbas);
 
+private:
+    virtual int mousePress(int current_frame);
+
+    virtual int mouseRelease(int current_frame);
+};
+
+
+class ControlAnimation_PlayPauseButton : public ControlAnimation_Button{
 public:
     ControlAnimation_PlayPauseButton(int size);
 

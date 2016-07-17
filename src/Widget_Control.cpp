@@ -291,6 +291,71 @@ ControlAnimation_Button::ControlAnimation_Button(Size<int> size, int frame_count
 }
 
 
+ControlAnimation_ColouredButton::ControlAnimation_ColouredButton(int size, unsigned char** rgbas, int num_rgbas)
+: ControlAnimation_Button({size, size}, num_rgbas * 2)
+{
+    if(!data())
+        return;
+
+    unsigned char black[4] = {0, 0, 0, 0};
+
+    Image bg_mask(width(), height(), 1);
+    {
+        fill(&bg_mask, Color(0));
+        fill_rounded_rect(&bg_mask, Color(255), {0, 0, width(), height()}, 4);
+    }
+
+    Image inset_mask_depressed(width(), height(), 1);
+    {
+        fill(&inset_mask_depressed, Color(0));
+        fill_rounded_rect(&inset_mask_depressed, Color(255), {1, 1, width() - 2, height() - 2}, 4);
+    }
+
+    Image inset_mask_pressed(width(), height(), 1);
+    {
+        fill(&inset_mask_pressed, Color(0));
+        fill_rounded_rect(&inset_mask_pressed, Color(255), {2, 2, width() - 4, height() - 4}, 4);
+    }
+
+    for(int i=0; i<frameCount()/2; i++)
+    {
+        /* Depressed */
+        {
+            Image img;
+            pickFrame(i*2, &img);
+            blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
+            blend(&img, Point<int>(0, 0), rgbas + i, &inset_mask_depressed);
+        }
+
+        /* Pressed */
+        {
+            Image img;
+            pickFrame(i*2 + 1, &img);
+            blend(&img, Point<int>(0, 0), Colors(black), &bg_mask);
+            blend(&img, Point<int>(0, 0), rgbas + i, &inset_mask_pressed);
+        }
+    }
+}
+
+
+int ControlAnimation_ColouredButton::mousePress(int current_frame)
+{
+    current_frame++;
+    if(current_frame >= frameCount())
+        current_frame = 0;
+    return current_frame;
+}
+
+
+int ControlAnimation_ColouredButton::mouseRelease(int current_frame)
+{
+    current_frame++;
+    if(current_frame >= frameCount())
+        current_frame = 0;
+    return current_frame;
+}
+
+
 enum PlayPauseStates{
     PlayDepressed   = 0,
     PlayPressed     = 1,

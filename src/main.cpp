@@ -30,7 +30,7 @@ using namespace r64fx;
 Font* g_Font = nullptr;
 
 ControlAnimation_Knob* g_anim_knob = nullptr;
-ControlAnimation_PlayPauseButton* g_anim_button = nullptr;
+ControlAnimation_ColouredButton* g_anim_button = nullptr;
 
 class MyWidget : public Widget_ScrollArea{
 
@@ -46,7 +46,17 @@ public:
 
         if(!g_anim_button)
         {
-            g_anim_button = new ControlAnimation_PlayPauseButton(48);
+            unsigned char c1[4] = {200, 127, 127, 0};
+            unsigned char c2[4] = {200, 200, 127, 0};
+            unsigned char c3[4] = {127, 200, 200, 0};
+            unsigned char c4[4] = {127, 127, 200, 0};
+            unsigned char c5[4] = {200, 127, 200, 0};
+            unsigned char c6[4] = {200, 200, 200, 0};
+            unsigned char c7[4] = {127, 200, 127, 0};
+            unsigned char c8[4] = {127, 127, 127, 0};
+            unsigned char* colors[8] = {c1, c2, c3, c4, c5, c6, c7, c8};
+
+            g_anim_button = new ControlAnimation_ColouredButton(48, colors, 8);
         }
 
         for(int y=0; y<8; y++)
