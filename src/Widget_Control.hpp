@@ -61,9 +61,14 @@ private:
 };
 
 
+enum class KnobType{
+    Unipolar,
+    Bipolar
+};
+
 class ControlAnimation_Knob : public ControlAnimation_Image{
 public:
-    ControlAnimation_Knob(int size, int frame_count);
+    ControlAnimation_Knob(int size, int frame_count, KnobType kt = KnobType::Unipolar);
 };
 
 

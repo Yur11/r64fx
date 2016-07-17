@@ -41,7 +41,7 @@ public:
 
         if(!g_anim_knob)
         {
-            g_anim_knob = new ControlAnimation_Knob(48, 128);
+            g_anim_knob = new ControlAnimation_Knob(48, 128, KnobType::Bipolar);
         }
 
         if(!g_anim_button)

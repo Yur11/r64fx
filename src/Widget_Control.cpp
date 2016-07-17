@@ -138,14 +138,14 @@ void ControlAnimation_Image::paint(int frame, Painter* painter)
 }
 
 
-ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
+ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count, KnobType kt)
 : ControlAnimation_Image(ControlAnimation_Image::FrameFormat::BlendedRG, {knob_radius, knob_radius}, frame_count)
 {
     if(!data())
         return;
 
-    unsigned char color1[2] = {0, 255};
-    unsigned char color2[2] = {255, 0};
+    unsigned char color1[2] = {255, 0};
+    unsigned char color2[2] = {0, 255};
 
     float cx = width() >> 1;
     float cy = height() >> 1;
@@ -170,24 +170,85 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
         Image img;
         pickFrame(frame, &img);
 
-        if(frame > 0)
+        if(kt == KnobType::Unipolar)
         {
-            draw_arc(
-                &img, color1, {cx, cy}, radius - 2,
-                normalize_angle(rotation),
-                normalize_angle(rotation + full_arc * percent),
-                thickness
-            );
-        }
+            if(frame > 0)
+            {
+                draw_arc(
+                    &img, color2, {cx, cy}, radius - 2,
+                    normalize_angle(rotation),
+                    normalize_angle(rotation + full_arc * percent),
+                    thickness
+                );
+            }
 
-        if(frame < (frameCount() - 1))
+            if(frame < (frameCount() - 1))
+            {
+                draw_arc(
+                    &img, color1, {cx, cy}, radius  - 2,
+                    normalize_angle(rotation + full_arc * percent),
+                    normalize_angle(rotation + full_arc),
+                    thickness
+                );
+            }
+        }
+        else if(kt == KnobType::Bipolar)
         {
-            draw_arc(
-                &img, color2, {cx, cy}, radius  - 2,
-                normalize_angle(rotation + full_arc * percent),
-                normalize_angle(rotation + full_arc),
-                thickness
-            );
+            if(frame < (frameCount()/2))
+            {
+                draw_arc(
+                    &img, color1, {cx, cy}, radius  - 2,
+                    normalize_angle(rotation),
+                    normalize_angle(rotation + full_arc * percent),
+                    thickness
+                );
+
+                draw_arc(
+                    &img, color2, {cx, cy}, radius  - 2,
+                    normalize_angle(rotation + full_arc * percent),
+                    normalize_angle(rotation + full_arc * 0.5),
+                    thickness
+                );
+
+                draw_arc(
+                    &img, color1, {cx, cy}, radius  - 2,
+                    normalize_angle(rotation + full_arc * 0.5),
+                    normalize_angle(rotation + full_arc),
+                    thickness
+                );
+            }
+            else if(frame == (frameCount()/2 - 1))
+            {
+                draw_arc(
+                    &img, color1, {cx, cy}, radius  - 2,
+                    normalize_angle(rotation),
+                    normalize_angle(rotation + full_arc),
+                    thickness
+                );
+            }
+            else
+            {
+                draw_arc(
+                    &img, color1, {cx, cy}, radius  - 2,
+                    normalize_angle(rotation),
+                    normalize_angle(rotation + full_arc * 0.5),
+                    thickness
+                );
+
+                draw_arc(
+                    &img, color2, {cx, cy}, radius  - 2,
+                    normalize_angle(rotation + full_arc * 0.5),
+                    normalize_angle(rotation + full_arc * percent),
+                    thickness
+                );
+
+                draw_arc(
+                    &img, color1, {cx, cy}, radius  - 2,
+                    normalize_angle(rotation + full_arc * percent),
+                    normalize_angle(rotation + full_arc),
+                    thickness
+                );
+            }
         }
 
         {
@@ -200,10 +261,20 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count)
             subtract_image(&radius_img, {0, 0}, &circle_mask_img);
             {
                 unsigned char* colors[1];
-                if(frame > 0)
-                    colors[0] = color1;
+                if(kt == KnobType::Unipolar)
+                {
+                    if(frame > 0)
+                        colors[0] = color1;
+                    else
+                        colors[0] = color2;
+                }
                 else
-                    colors[0] = color2;
+                {
+                    if(frame == (frameCount()/2 - 1))
+                        colors[0] = color1;
+                    else
+                        colors[0] = color2;
+                }
                 blend(
                     &img, Point<int>(0, 0), colors, &radius_img
                 );
