@@ -156,7 +156,7 @@ void Widget_DataItem::addItem(const std::string &caption)
 }
 
 
-void Widget_DataItem::resizeAndReallign(int min_width)
+void Widget_DataItem::resizeAndRealign(int min_width)
 {
     setSize({0, 0});
 
@@ -164,19 +164,19 @@ void Widget_DataItem::resizeAndReallign(int min_width)
     {
         case Widget_DataItem::Kind::Plain:
         {
-            resizeAndReallignPlain(min_width);
+            resizeAndRealignPlain(min_width);
             break;
         }
 
         case Widget_DataItem::Kind::List:
         {
-            resizeAndReallignList(min_width);
+            resizeAndRealignList(min_width);
             break;
         }
 
         case Widget_DataItem::Kind::Tree:
         {
-            resizeAndReallignTree(min_width);
+            resizeAndRealignTree(min_width);
             break;
         }
 
@@ -186,7 +186,7 @@ void Widget_DataItem::resizeAndReallign(int min_width)
 }
 
 
-void Widget_DataItem::resizeAndReallignPlain(int min_width)
+void Widget_DataItem::resizeAndRealignPlain(int min_width)
 {
     int width = find_text_bbox(m_caption, TextWrap::None, g_data_item_font).width() + g_data_item_font->height();
     if(width < min_width)
@@ -197,7 +197,7 @@ void Widget_DataItem::resizeAndReallignPlain(int min_width)
 }
 
 
-void Widget_DataItem::resizeAndReallignList(int min_width)
+void Widget_DataItem::resizeAndRealignList(int min_width)
 {
     int max_child_width  = width();
     int total_height     = height();
@@ -207,7 +207,7 @@ void Widget_DataItem::resizeAndReallignList(int min_width)
         auto data_item = dynamic_cast<Widget_DataItem*>(child);
         if(data_item)
         {
-            data_item->resizeAndReallign(min_width);
+            data_item->resizeAndRealign(min_width);
         }
 
         if(child->width() > max_child_width)
@@ -229,13 +229,13 @@ void Widget_DataItem::resizeAndReallignList(int min_width)
 }
 
 
-void Widget_DataItem::resizeAndReallignTree(int min_width)
+void Widget_DataItem::resizeAndRealignTree(int min_width)
 {
-    resizeAndReallignPlain(min_width);
+    resizeAndRealignPlain(min_width);
 
     if(isExpanded())
     {
-        resizeAndReallignList(min_width);
+        resizeAndRealignList(min_width);
     }
 }
 
@@ -405,7 +405,7 @@ void Widget_DataItem::collapse()
     auto root_item_parent = root_item->parent();
     if(root_item_parent)
     {
-        root_item->resizeAndReallign(root_item_parent->width());
+        root_item->resizeAndRealign(root_item_parent->width());
         root_item->enumerate(0);
         root_item_parent->clip();
         root_item_parent->repaint();
@@ -423,7 +423,7 @@ void Widget_DataItem::expand()
     auto root_item_parent = root_item->parent();
     if(root_item_parent)
     {
-        root_item->resizeAndReallign(root_item_parent->width());
+        root_item->resizeAndRealign(root_item_parent->width());
         root_item->enumerate(0);
         root_item_parent->clip();
         root_item_parent->repaint();

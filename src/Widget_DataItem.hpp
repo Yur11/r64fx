@@ -39,14 +39,14 @@ public:
 
     void addItem(const std::string &caption);
 
-    void resizeAndReallign(int min_width);
+    void resizeAndRealign(int min_width);
 
 private:
-    void resizeAndReallignPlain(int min_width);
+    void resizeAndRealignPlain(int min_width);
 
-    void resizeAndReallignList(int min_width);
+    void resizeAndRealignList(int min_width);
 
-    void resizeAndReallignTree(int min_width);
+    void resizeAndRealignTree(int min_width);
 
 public:
     int enumerate(int num);

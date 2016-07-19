@@ -13,11 +13,11 @@ namespace r64fx{
     
 void* alloc_pages_raw(int npages);
 
-void* alloc_alligned_raw(int alignment, int nbytes);
+void* alloc_aligned_raw(int alignment, int nbytes);
     
 template<typename T> T alloc_pages(int npages) { return (T) alloc_pages_raw(npages); }
 
-template<typename T> T alloc_alligned(int alignment, int nbytes) { return (T) alloc_alligned_raw(alignment, nbytes); }
+template<typename T> T alloc_aligned(int alignment, int nbytes) { return (T) alloc_aligned_raw(alignment, nbytes); }
 
 
 /* Immediate operands. */

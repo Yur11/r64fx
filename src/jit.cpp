@@ -17,7 +17,7 @@ void* alloc_pages_raw(int npages)
 }
 
 
-void* alloc_alligned_raw(int alignment, int nbytes)
+void* alloc_aligned_raw(int alignment, int nbytes)
 {
     return memalign(alignment, nbytes);
 }

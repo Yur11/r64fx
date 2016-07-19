@@ -305,7 +305,7 @@ int line_width(const GlyphLine &line, const std::vector<GlyphEntry> &glyphs)
 }
 
 
-void TextPainter::reallign()
+void TextPainter::realign()
 {
     for(auto &line : m_lines)
     {

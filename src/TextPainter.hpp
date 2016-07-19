@@ -216,7 +216,7 @@ public:
     void reflow();
 
     /* Allign text using current text alignment setting. */
-    void reallign();
+    void realign();
 
     /* Update selection geometry data based on selection start and end positions. */
     void updateSelection();

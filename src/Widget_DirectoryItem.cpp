@@ -46,7 +46,7 @@ namespace{
             g_context_menu = new Widget_Menu;
             g_context_menu->addAction(g_copy_action);
             g_context_menu->setOrientation(Orientation::Vertical);
-            g_context_menu->resizeAndReallign();
+            g_context_menu->resizeAndRealign();
         }
         g_dir_item_count++;
     }
@@ -278,7 +278,7 @@ void Widget_DirectoryItem::populate()
         self->loadEntry(entry);
     }, this);
 
-    resizeAndReallign(0);
+    resizeAndRealign(0);
 
     m_flags |= R64FX_WIDGET_DIRECTORY_IS_POPULATED;
 }

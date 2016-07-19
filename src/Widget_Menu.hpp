@@ -29,7 +29,7 @@ public:
 
     void addSubMenu(Widget_Menu* menu, const std::string &caption);
 
-    void resizeAndReallign();
+    void resizeAndRealign();
 
     
     void showAt(Point<int> position, Widget* parent);

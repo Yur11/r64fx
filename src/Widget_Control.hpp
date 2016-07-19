@@ -149,6 +149,10 @@ public:
 
     ControlAnimation* animation() const;
 
+    bool showsText(bool yes);
+
+    bool showsText() const;
+
 protected:
     virtual void paintEvent(PaintEvent* event);
 
@@ -157,6 +161,9 @@ protected:
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
+
+private:
+    void resizeAndRealign();
 };
 
 

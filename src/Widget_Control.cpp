@@ -1,4 +1,5 @@
 #include "Widget_Control.hpp"
+#include "WidgetFlags.hpp"
 #include "Mouse.hpp"
 #include "Painter.hpp"
 #include "ImageUtils.hpp"
@@ -587,6 +588,22 @@ void Widget_ValueControl::setAnimation(ControlAnimation* animation)
 ControlAnimation* Widget_ValueControl::animation() const
 {
     return m_animation;
+}
+
+
+bool Widget_ValueControl::showsText(bool yes)
+{
+    if(yes)
+        m_flags |= R64FX_WIDGET_CONTROL_SHOWS_TEXT;
+    else
+        m_flags &= ~R64FX_WIDGET_CONTROL_SHOWS_TEXT;
+    return yes;
+}
+
+
+bool Widget_ValueControl::showsText() const
+{
+    return m_flags & R64FX_WIDGET_CONTROL_SHOWS_TEXT;
 }
 
 

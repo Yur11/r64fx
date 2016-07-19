@@ -193,7 +193,7 @@ void Widget_ItemBrowser::rearrange()
 
     if(item_list)
     {
-        item_list->resizeAndReallign(scroll_area->width());
+        item_list->resizeAndRealign(scroll_area->width());
     }
 }
 

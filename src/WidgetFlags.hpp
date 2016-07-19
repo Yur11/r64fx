@@ -57,4 +57,6 @@
 
 #define R64FX_WIDGET_WANTS_MULTI_GRABS        (1 << 0x18)
 
+#define R64FX_WIDGET_CONTROL_SHOWS_TEXT       (1 << 0x19)
+
 #endif//R64FX_WIDGET_FLAGS_HPP

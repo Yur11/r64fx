@@ -502,7 +502,7 @@ void Widget_Text::resizeEvent(ResizeEvent* event)
 {
     m_text_painter->setReflowWidth(event->width() - paddingLeft() - paddingRight());
     m_text_painter->reflow();
-    m_text_painter->reallign();
+    m_text_painter->realign();
 }
 
 

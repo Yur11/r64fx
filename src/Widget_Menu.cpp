@@ -195,7 +195,7 @@ void Widget_Menu::addSubMenu(Widget_Menu* menu, const std::string &caption)
 }
 
 
-void Widget_Menu::resizeAndReallign()
+void Widget_Menu::resizeAndRealign()
 {
     /* Resize each menu item. */
     if(orientation() == Orientation::Vertical)
