@@ -217,7 +217,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count, K
                     thickness
                 );
             }
-            else if(frame == (frameCount()/2 - 1))
+            else if(frame == (frameCount()/2))
             {
                 draw_arc(
                     &img, color1, {cx, cy}, radius  - 2,
@@ -270,7 +270,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count, K
                 }
                 else
                 {
-                    if(frame == (frameCount()/2 - 1))
+                    if(frame == (frameCount()/2))
                         colors[0] = color1;
                     else
                         colors[0] = color2;
