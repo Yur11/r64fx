@@ -117,9 +117,7 @@ class Widget_ValueControl : public Widget{
     ControlAnimation* m_animation = nullptr;
 
 public:
-    Widget_ValueControl(int char_count, Font* font, Widget* parent = nullptr);
-
-    Widget_ValueControl(ControlAnimation* animation, Widget* parent = nullptr);
+    Widget_ValueControl(Widget* parent = nullptr);
 
     virtual ~Widget_ValueControl();
 
@@ -153,17 +151,28 @@ public:
 
     bool showsText() const;
 
+    void resizeAndRealign();
+
+    int textWidth() const;
+
+    int textHeight() const;
+
+    int animationWidth() const;
+
+    int animationHeight() const;
+
 protected:
     virtual void paintEvent(PaintEvent* event);
+
+    void paintAnimation(Painter* painter, Point<int> position);
+
+    void paintText(Painter* painter, Point<int> position);
 
     virtual void mousePressEvent(MousePressEvent* event);
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
-
-private:
-    void resizeAndRealign();
 };
 
 

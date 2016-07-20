@@ -47,9 +47,14 @@ public:
 
         for(int i=0; i<8; i++)
         {
-            auto c = new Widget_ValueControl(12, g_Font, this);
-            c->setPosition({100 + i * 60, 100});
+            auto c = new Widget_ValueControl(this);
+            c->setPosition({100 + i * 80, 100});
+            c->setMinValue(-1.0f);
+            c->setMaxValue(+1.0f);
             c->setAnimation(g_anim_knob);
+            c->setFont(g_Font);
+            c->showsText(true);
+            c->resizeAndRealign();
         }
 
         if(!g_anim_colored_button)
@@ -180,7 +185,7 @@ public:
 private:
     virtual void setup()
     {
-        g_Font = new Font("", 16, 72);
+        g_Font = new Font("", 12, 72);
 
         auto db = new Widget_DirectoryItem("filesystem", "");
 

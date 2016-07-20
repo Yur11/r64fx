@@ -471,25 +471,10 @@ int ControlAnimation_PlayPauseButton::mouseRelease(int current_frame)
 
 
 
-Widget_ValueControl::Widget_ValueControl(int char_count, Font* font, Widget* parent)
-: Widget(parent)
-, m_font(font)
-{
-    if(!font)
-        return;
-
-    auto glyph = m_font->fetchGlyph("0");
-    if(!glyph)
-        return;
-
-    setSize({char_count * glyph->width() + 4, m_font->height() + 4});
-}
-
-
-Widget_ValueControl::Widget_ValueControl(ControlAnimation* animation, Widget* parent)
+Widget_ValueControl::Widget_ValueControl(Widget* parent)
 : Widget(parent)
 {
-    setAnimation(animation);
+
 }
 
 
@@ -607,29 +592,113 @@ bool Widget_ValueControl::showsText() const
 }
 
 
+void Widget_ValueControl::resizeAndRealign()
+{
+    int text_width = textWidth();
+    int anim_width = animationWidth();
+    setSize({max(text_width, anim_width), textHeight() + animationHeight()});
+}
+
+
+int Widget_ValueControl::textWidth() const
+{
+    if(!showsText())
+        return 0;
+
+    if(!m_font)
+        return 0;
+
+    auto glyph = m_font->fetchGlyph("0");
+    if(!glyph)
+        return 0;
+
+    return glyph->width() * 9;
+}
+
+
+int Widget_ValueControl::textHeight() const
+{
+    if(!m_font)
+        return 0;
+    return m_font->height();
+}
+
+
+int Widget_ValueControl::animationWidth() const
+{
+    if(!m_animation)
+        return 0;
+
+    return m_animation->width();
+}
+
+
+int Widget_ValueControl::animationHeight() const
+{
+    if(!m_animation)
+        return 0;
+
+    return m_animation->height();
+}
+
+
 void Widget_ValueControl::paintEvent(PaintEvent* event)
 {
     auto painter = event->painter();
 
     if(m_animation)
     {
-        int frame_num = int((m_value / valueRange()) * (m_animation->frameCount() - 1));
-        m_animation->paint(frame_num, painter);
+        paintAnimation(painter, {0, 0});
     }
-    else if(m_font)
+
+    if(m_font && showsText())
     {
-        unsigned char bg[4] = {200, 200, 200, 0};
-        unsigned char fg[4] = {0, 0, 0, 0};
-        painter->fillRect({0, 0, width(), height()}, bg);
-        char str[128];
-        int nchars = sprintf(str, "%f", value());
-        if(m_font && nchars > 0)
+        int y = 0;
+        if(m_animation)
         {
-            Image img(width() - 2, height() - 2, 1);
-            text2image(str, TextWrap::None, m_font, &img);
-            painter->blendColors({2, 2}, Colors(fg), &img);
+            y = animationHeight();
+            paintText(painter, {0, y});
         }
     }
+}
+
+
+void Widget_ValueControl::paintAnimation(Painter* painter, Point<int> position)
+{
+    auto old_offset = painter->offset();
+    painter->setOffset(old_offset + position);
+
+    int frame_num = int(((m_value - minValue()) / valueRange()) * (m_animation->frameCount() - 1));
+    m_animation->paint(frame_num, painter);
+
+    painter->setOffset(old_offset);
+}
+
+
+void Widget_ValueControl::paintText(Painter* painter, Point<int> position)
+{
+    auto old_offset = painter->offset();
+    painter->setOffset(old_offset + position);
+
+    unsigned char fg[4] = {0, 0, 0, 0};
+    char str[32];
+    int nchars = sprintf(str, "%f", value());
+    if(m_font && nchars > 0)
+    {
+        if(nchars > 3)
+        {
+            str[nchars - 3] = '\0';
+        }
+
+        Image* img = text2image(str, TextWrap::None, m_font);
+
+        unsigned char bg[4] = {127, 127, 127, 0};
+        painter->fillRect({0, 0, img->width() + 10, img->height()}, bg);
+
+        painter->blendColors({2, 2}, Colors(fg), img);
+    }
+
+    painter->setOffset(old_offset);
 }
 
 
