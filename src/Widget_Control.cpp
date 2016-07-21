@@ -724,7 +724,7 @@ void Widget_ValueControl::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(event->button() & MouseButton::Left() && isMouseGrabber())
     {
-        float diff = -0.007 * float(event->delta().y());
+        float diff = -valueStep() * float(event->delta().y());
         float old_val = value();
         setValue(old_val + diff);
         if(value() != old_val)

@@ -51,6 +51,7 @@ public:
             c->setPosition({100 + i * 80, 100});
             c->setMinValue(-1.0f);
             c->setMaxValue(+1.0f);
+            c->setValueStep(0.005);
             c->setAnimation(g_anim_knob);
             c->setFont(g_Font);
             c->showsText(true);
