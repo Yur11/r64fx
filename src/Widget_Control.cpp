@@ -143,7 +143,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count, K
 : ControlAnimation_Image(
     ControlAnimation_Image::FrameFormat::BlendedRG,
     {knob_radius, knob_radius},
-    frame_count + (knob_type == KnobType::Bipolar && (frame_count & 1) ? 1 : 0)
+    frame_count + (knob_type == KnobType::Unipolar || (frame_count & 1) ? 0 : 1)
 )
 , m_type(knob_type)
 {
@@ -689,6 +689,7 @@ void Widget_ValueControl::paintAnimation(Painter* painter, Point<int> position)
     m_animation->paint(frame_num, painter);
 
     painter->setOffset(old_offset);
+    cout << frame_num << " -> ";
 }
 
 
@@ -713,6 +714,8 @@ void Widget_ValueControl::paintText(Painter* painter, Point<int> position)
         painter->fillRect({0, 0, img->width() + 10, img->height()}, bg);
 
         painter->blendColors({2, 2}, Colors(fg), img);
+
+        cout << str << "\n";
     }
 
     painter->setOffset(old_offset);
