@@ -67,8 +67,14 @@ enum class KnobType{
 };
 
 class ControlAnimation_Knob : public ControlAnimation_Image{
+    KnobType m_type;
+
 public:
-    ControlAnimation_Knob(int size, int frame_count, KnobType kt = KnobType::Unipolar);
+    ControlAnimation_Knob(int size, int frame_count, KnobType type = KnobType::Unipolar);
+
+    void setType(KnobType type);
+
+    KnobType type() const;
 };
 
 

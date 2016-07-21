@@ -139,8 +139,13 @@ void ControlAnimation_Image::paint(int frame, Painter* painter)
 }
 
 
-ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count, KnobType kt)
-: ControlAnimation_Image(ControlAnimation_Image::FrameFormat::BlendedRG, {knob_radius, knob_radius}, frame_count)
+ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count, KnobType knob_type)
+: ControlAnimation_Image(
+    ControlAnimation_Image::FrameFormat::BlendedRG,
+    {knob_radius, knob_radius},
+    frame_count + (knob_type == KnobType::Bipolar && (frame_count & 1) ? 1 : 0)
+)
+, m_type(knob_type)
 {
     if(!data())
         return;
@@ -171,7 +176,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count, K
         Image img;
         pickFrame(frame, &img);
 
-        if(kt == KnobType::Unipolar)
+        if(knob_type == KnobType::Unipolar)
         {
             if(frame > 0)
             {
@@ -193,7 +198,7 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count, K
                 );
             }
         }
-        else if(kt == KnobType::Bipolar)
+        else if(knob_type == KnobType::Bipolar)
         {
             if(frame < (frameCount()/2))
             {
@@ -262,9 +267,9 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count, K
             subtract_image(&radius_img, {0, 0}, &circle_mask_img);
             {
                 unsigned char* colors[1];
-                if(kt == KnobType::Unipolar)
+                if(knob_type == KnobType::Unipolar)
                 {
-                    if(frame > 0)
+                    if(frame == 0)
                         colors[0] = color1;
                     else
                         colors[0] = color2;
@@ -282,6 +287,18 @@ ControlAnimation_Knob::ControlAnimation_Knob(int knob_radius, int frame_count, K
             }
         }
     }
+}
+
+
+void ControlAnimation_Knob::setType(KnobType type)
+{
+    m_type = type;
+}
+
+
+KnobType ControlAnimation_Knob::type() const
+{
+    return m_type;
 }
 
 

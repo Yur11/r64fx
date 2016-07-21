@@ -29,7 +29,8 @@ using namespace r64fx;
 
 Font* g_Font = nullptr;
 
-ControlAnimation_Knob* g_anim_knob = nullptr;
+ControlAnimation_Knob* g_anim_knob_unipolar = nullptr;
+ControlAnimation_Knob* g_anim_knob_bipolar = nullptr;
 ControlAnimation_ColouredButton* g_anim_colored_button = nullptr;
 ControlAnimation_PlayPauseButton* g_anim_play_pause_button = nullptr;
 
@@ -40,19 +41,33 @@ public:
     {
         setSize({640, 480});
 
-        if(!g_anim_knob)
+        if(!g_anim_knob_unipolar)
         {
-            g_anim_knob = new ControlAnimation_Knob(48, 128, KnobType::Bipolar);
+            g_anim_knob_unipolar = new ControlAnimation_Knob(48, 128, KnobType::Unipolar);
+        }
+
+        if(!g_anim_knob_bipolar)
+        {
+            g_anim_knob_bipolar = new ControlAnimation_Knob(48, 128, KnobType::Bipolar);
         }
 
         for(int i=0; i<8; i++)
         {
             auto c = new Widget_ValueControl(this);
             c->setPosition({100 + i * 80, 100});
-            c->setMinValue(-1.0f);
-            c->setMaxValue(+1.0f);
+            if(i<4)
+            {
+                c->setAnimation(g_anim_knob_unipolar);
+                c->setMinValue(0.0f);
+                c->setMaxValue(+1.0f);
+            }
+            else
+            {
+                c->setAnimation(g_anim_knob_bipolar);
+                c->setMinValue(-1.0f);
+                c->setMaxValue(+1.0f);
+            }
             c->setValueStep(0.005);
-            c->setAnimation(g_anim_knob);
             c->setFont(g_Font);
             c->showsText(true);
             c->resizeAndRealign();
@@ -93,9 +108,14 @@ public:
 
     ~MyWidget()
     {
-        if(g_anim_knob)
+        if(g_anim_knob_unipolar)
         {
-            delete g_anim_knob;
+            delete g_anim_knob_unipolar;
+        }
+
+        if(g_anim_knob_bipolar)
+        {
+            delete g_anim_knob_bipolar;
         }
 
         if(g_anim_colored_button)

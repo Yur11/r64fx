@@ -59,4 +59,6 @@
 
 #define R64FX_WIDGET_CONTROL_SHOWS_TEXT       (1 << 0x19)
 
+#define R64FX_KNOB_CENTER_CLICK               (1 << 0x1A)
+
 #endif//R64FX_WIDGET_FLAGS_HPP
