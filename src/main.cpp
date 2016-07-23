@@ -107,10 +107,10 @@ public:
         ppb->setPosition({550, 200});
 
         auto k1 = new Widget_UnipolarKnob(this);
-        k1->setPosition({100, 50});
+        k1->setPosition({100, 30});
 
         auto k2 = new Widget_BipolarKnob(this);
-        k2->setPosition({150, 50});
+        k2->setPosition({200, 30});
     }
 
     ~MyWidget()

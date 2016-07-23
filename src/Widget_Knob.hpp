@@ -8,11 +8,11 @@ namespace r64fx{
 class KnobAnimation;
 
 class Widget_Knob : public Widget{
+protected:
     float m_min_value = 0.0f;
     float m_max_value = 1.0f;
-    float m_value_step = 0.05f;
-
-protected:
+    float m_value_step = 0.005f;
+    float m_value = 0.0f;
     KnobAnimation* m_animation = nullptr;
 
 public:
@@ -33,6 +33,8 @@ public:
     void setValueStep(float step);
 
     float valueStep() const;
+
+    float valueRange() const;
 
 protected:
     void paintAnimation(Painter* painter, int frame_num);
@@ -63,6 +65,14 @@ public:
     Widget_BipolarKnob(Widget* parent = nullptr);
 
     virtual void setValue(float value);
+
+    void setMidValue(float value);
+
+    float midValue() const;
+
+    float lowerRange() const;
+
+    float upperRange() const;
 
 protected:
     virtual void paintEvent(PaintEvent* event);

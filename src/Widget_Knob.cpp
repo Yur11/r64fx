@@ -78,7 +78,7 @@ public:
 
         float rotation = M_PI * 0.75f;
         float full_arc = M_PI * 1.5f;
-        float frame_count_rcp = 1.0f / float(frameCount());
+        float frame_count_rcp = 1.0f / float(frameCount() - 1);
 
         Image circle_mask_img(width(), height(), 1);
         draw_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
@@ -149,7 +149,7 @@ public:
 
         float rotation = M_PI * 0.75f;
         float full_arc = M_PI * 1.5f;
-        float frame_count_rcp = 1.0f / float(frameCount());
+        float frame_count_rcp = 1.0f / float(frameCount() - 1);
 
         Image circle_mask_img(width(), height(), 1);
         draw_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
@@ -259,7 +259,7 @@ Widget_Knob::Widget_Knob(Widget* parent)
 
 float Widget_Knob::value() const
 {
-    return 0.0f;
+    return m_value;
 }
 
 
@@ -299,6 +299,12 @@ float Widget_Knob::valueStep() const
 }
 
 
+float Widget_Knob::valueRange() const
+{
+    return maxValue() - minValue();
+}
+
+
 void Widget_Knob::paintAnimation(Painter* painter, int frame_num)
 {
     static unsigned char bg[4] = {127, 127, 127, 0};
@@ -316,19 +322,27 @@ void Widget_Knob::paintAnimation(Painter* painter, int frame_num)
 
 void Widget_Knob::mousePressEvent(MousePressEvent* event)
 {
-
+    if(event->button() == MouseButton::Left())
+    {
+        grabMouse();
+    }
 }
 
 
 void Widget_Knob::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-
+    if(event->button() == MouseButton::Left() && isMouseGrabber())
+        ungrabMouse();
 }
 
 
 void Widget_Knob::mouseMoveEvent(MouseMoveEvent* event)
 {
-
+    if(event->button() == MouseButton::Left())
+    {
+        setValue(value() + valueStep() * -event->delta().y());
+        repaint();
+    }
 }
 
 
@@ -338,7 +352,7 @@ Widget_UnipolarKnob::Widget_UnipolarKnob(Widget* parent)
     if(!g_unipolar_animation)
     {
         g_unipolar_animation = new KnobAnimation;
-        g_unipolar_animation->allocFrames({50, 50}, 127);
+        g_unipolar_animation->allocFrames({50, 50}, 128);
         g_unipolar_animation->genUnipolar();
     }
 
@@ -349,7 +363,11 @@ Widget_UnipolarKnob::Widget_UnipolarKnob(Widget* parent)
 
 void Widget_UnipolarKnob::setValue(float value)
 {
-
+    m_value = value;
+    if(m_value < m_min_value)
+        m_value = m_min_value;
+    else if(m_value > m_max_value)
+        m_value = m_max_value;
 }
 
 
@@ -357,7 +375,8 @@ void Widget_UnipolarKnob::paintEvent(PaintEvent* event)
 {
     if(m_animation)
     {
-        paintAnimation(event->painter(), m_animation->frameCount() / 3);
+        int frame_num = ((value() - minValue()) / valueRange()) * (m_animation->frameCount() - 1);
+        paintAnimation(event->painter(), frame_num);
     }
 }
 
@@ -369,18 +388,53 @@ Widget_BipolarKnob::Widget_BipolarKnob(Widget* parent)
     if(!g_bipolar_animation)
     {
         g_bipolar_animation = new KnobAnimation;
-        g_bipolar_animation->allocFrames({50, 50}, 128);
+        g_bipolar_animation->allocFrames({50, 50}, 127);
         g_bipolar_animation->genBipolar();
     }
 
     setSize(g_bipolar_animation->size());
     m_animation = g_bipolar_animation;
+
+    setMinValue(-1.0f);
+    setMidValue(0.0f);
+    setMaxValue(1.0f);
+    setValueStep(0.01);
 }
 
 
 void Widget_BipolarKnob::setValue(float value)
 {
+    m_value = value;
+    if(abs(m_value - m_mid_value) < m_value_step)
+        m_value = m_mid_value;
+    else if(m_value < m_min_value)
+        m_value = m_min_value;
+    else if(m_value > m_max_value)
+        m_value = m_max_value;
+}
 
+
+void Widget_BipolarKnob::setMidValue(float value)
+{
+    m_mid_value = value;
+}
+
+
+float Widget_BipolarKnob::midValue() const
+{
+    return m_mid_value;
+}
+
+
+float Widget_BipolarKnob::lowerRange() const
+{
+    return midValue() - minValue();
+}
+
+
+float Widget_BipolarKnob::upperRange() const
+{
+    return maxValue() - midValue();
 }
 
 
@@ -388,7 +442,21 @@ void Widget_BipolarKnob::paintEvent(PaintEvent* event)
 {
     if(m_animation)
     {
-        paintAnimation(event->painter(), m_animation->frameCount() / 3);
+        int frame_num = 0;
+        if(value() == midValue())
+        {
+            frame_num = m_animation->frameCount()/2;
+        }
+        else if(value() < midValue())
+        {
+            frame_num = ((value() - minValue()) / lowerRange()) * (m_animation->frameCount()/2 - 1);
+        }
+        else
+        {
+            frame_num = ((value() - midValue()) / upperRange()) * (m_animation->frameCount()/2 - 1) + m_animation->frameCount()/2 + 1;
+        }
+        cout << "frame: " << frame_num << " -> " << value() << "\n";
+        paintAnimation(event->painter(), frame_num);
     }
 }
 
