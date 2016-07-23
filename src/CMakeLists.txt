@@ -72,6 +72,7 @@ set(SRC
     Widget_DataItem.cpp
     Widget_DirectoryItem.cpp
     Widget_Dummy.cpp
+    Widget_Knob.cpp
     Widget_Label.cpp
     Widget_Menu.cpp
     Widget_ScrollArea.cpp

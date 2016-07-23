@@ -17,6 +17,7 @@
 #include "Widget_ItemBrowser.hpp"
 #include "Widget_Text.hpp"
 #include "Widget_AudioPlayer.hpp"
+#include "Widget_Knob.hpp"
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
@@ -104,6 +105,12 @@ public:
 
         auto ppb = new Widget_ButtonControl(g_anim_play_pause_button, this);
         ppb->setPosition({550, 200});
+
+        auto k1 = new Widget_UnipolarKnob(this);
+        k1->setPosition({100, 50});
+
+        auto k2 = new Widget_BipolarKnob(this);
+        k2->setPosition({150, 50});
     }
 
     ~MyWidget()
