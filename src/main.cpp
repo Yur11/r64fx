@@ -19,6 +19,7 @@
 #include "Widget_AudioPlayer.hpp"
 #include "Widget_Knob.hpp"
 #include "Widget_Button.hpp"
+#include "Widget_Slider.hpp"
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
@@ -71,6 +72,12 @@ public:
 
         auto b2 = new Widget_Button(ButtonAnimation::Text({48, 48}, "CUE", g_LargeFont), this);
         b2->setPosition({350, 100});
+
+        auto s1 = new Widget_Slider(150, Orientation::Vertical, this);
+        s1->setPosition({50, 100});
+
+        auto s2 = new Widget_Slider(150, Orientation::Horizontal, this);
+        s2->setPosition({400, 50});
     }
 
     ~MyWidget()
