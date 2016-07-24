@@ -6,6 +6,7 @@
 namespace r64fx{
 
 class ButtonAnimation;
+class Font;
 
 class Widget_Button : public Widget{
     ButtonAnimation* m_animation = nullptr;
@@ -50,6 +51,12 @@ public:
     bool isGood() const;
 
     void pickFrame(Image* img, int frame_num);
+
+    static ButtonAnimation* CenteredImageMask(Size<int> size, Image* mask);
+
+    static ButtonAnimation* Text(const std::string &text, Font* font);
+
+    static ButtonAnimation* Text(Size<int> size, const std::string &text, Font* font);
 
     static ButtonAnimation* Colored(Size<int> size, unsigned char** rgbas, int num_rgbas);
 

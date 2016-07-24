@@ -144,6 +144,89 @@ void generate_masks(Size<int> size, Image* bg, Image* depressed, Image* pressed)
 }
 
 
+ButtonAnimation* ButtonAnimation::CenteredImageMask(Size<int> size, Image* mask)
+{
+    ButtonAnimation* anim = new(std::nothrow) ButtonAnimation(size, 2);
+    if(!anim)
+    {
+        return nullptr;
+    }
+
+    if(!anim->isGood())
+    {
+        delete anim;
+        return nullptr;
+    }
+
+    Image bg, depressed, pressed;
+    generate_masks(size, &bg, &depressed, &pressed);
+
+    unsigned char black[4] = {0, 0, 0, 0};
+    unsigned char c0[4] = {127, 127, 127, 0};
+
+    unsigned char bg_depressed [4] = {200, 200, 200, 0};
+    unsigned char bg_pressed   [4] = {150, 150, 150, 0};
+    unsigned char fg_depressed [4] = {100, 100, 100, 0};
+    unsigned char fg_pressed   [4] = { 50,  50,  50, 0};
+
+    /* Depressed */
+    {
+        Image img;
+        anim->pickFrame(&img, 0);
+        fill(&img, c0);
+        blend(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
+        blend(
+            &img,
+            Point<int>(img.width()/2 - mask->width()/2, img.height()/2 - mask->height()/2),
+            Colors(fg_depressed),
+            mask
+        );
+    }
+
+    /* Pressed */
+    {
+        Image img;
+        anim->pickFrame(&img, 1);
+        fill(&img, c0);
+        blend(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
+        blend(
+            &img,
+            Point<int>(img.width()/2 - mask->width()/2, img.height()/2 - mask->height()/2),
+            Colors(fg_pressed),
+            mask
+        );
+    }
+
+    return anim;
+}
+
+
+ButtonAnimation* ButtonAnimation::Text(const std::string &text, Font* font)
+{
+    if(text.empty())
+        return nullptr;
+
+    Image textimg;
+    text2image(text, TextWrap::None, font, &textimg);
+
+    return ButtonAnimation::CenteredImageMask({textimg.width() + 4, textimg.height() + 4}, &textimg);
+}
+
+
+ButtonAnimation* ButtonAnimation::Text(Size<int> size, const std::string &text, Font* font)
+{
+    if(text.empty())
+        return nullptr;
+
+    Image textimg;
+    text2image(text, TextWrap::None, font, &textimg);
+
+    return ButtonAnimation::CenteredImageMask(size, &textimg);
+}
+
+
 ButtonAnimation* ButtonAnimation::Colored(Size<int> size, unsigned char** rgbas, int num_rgbas)
 {
     ButtonAnimation* anim = new(std::nothrow) ButtonAnimation(size, num_rgbas * 2);

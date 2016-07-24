@@ -30,9 +30,7 @@ using namespace std;
 using namespace r64fx;
 
 Font* g_Font = nullptr;
-
-ControlAnimation_ColouredButton* g_anim_colored_button = nullptr;
-ControlAnimation_PlayPauseButton* g_anim_play_pause_button = nullptr;
+Font* g_LargeFont = nullptr;
 
 class MyWidget : public Widget_ScrollArea{
 
@@ -62,14 +60,6 @@ public:
             }
         }
 
-        if(!g_anim_play_pause_button)
-        {
-            g_anim_play_pause_button = new ControlAnimation_PlayPauseButton(48);
-        }
-
-        auto ppb = new Widget_ButtonControl(g_anim_play_pause_button, this);
-        ppb->setPosition({550, 200});
-
         auto k1 = new Widget_UnipolarKnob(this);
         k1->setPosition({100, 100});
 
@@ -78,19 +68,14 @@ public:
 
         auto b1 = new Widget_Button(ButtonAnimation::PlayPause({48, 48}), this);
         b1->setPosition({300, 100});
+
+        auto b2 = new Widget_Button(ButtonAnimation::Text({48, 48}, "CUE", g_LargeFont), this);
+        b2->setPosition({350, 100});
     }
 
     ~MyWidget()
     {
-        if(g_anim_colored_button)
-        {
-            delete g_anim_colored_button;
-        }
 
-        if(g_anim_play_pause_button)
-        {
-            delete g_anim_play_pause_button;
-        }
     }
 
     virtual void paintEvent(PaintEvent* event)
@@ -172,6 +157,8 @@ private:
     {
         g_Font = new Font("", 12, 72);
 
+        g_LargeFont = new Font("", 18, 72);
+
         auto db = new Widget_DirectoryItem("filesystem", "");
 
         auto ib = new Widget_ItemBrowser;
@@ -210,6 +197,9 @@ private:
 
         if(g_Font)
             delete g_Font;
+
+        if(g_LargeFont)
+            delete g_LargeFont;
 
         if(m_player)
             delete m_player;
