@@ -27,7 +27,13 @@ public:
 
     void setValue(float value);
 
+    void setValue(Point<int> position);
+
     float value() const;
+
+    int barLength() const;
+
+    int barOffset() const;
 
 protected:
     virtual void paintEvent(PaintEvent* event);

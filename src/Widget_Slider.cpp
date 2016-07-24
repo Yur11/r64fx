@@ -107,6 +107,19 @@ float Widget_Slider::valueRange() const
 void Widget_Slider::setValue(float value)
 {
     m_value = value;
+    if(value < m_min_value)
+        m_value = m_min_value;
+    else if(value > m_max_value)
+        m_value = m_max_value;
+}
+
+
+void Widget_Slider::setValue(Point<int> position)
+{
+    int pos = (orientation() == Orientation::Vertical ? position.y() : position.x()) - barOffset();
+    float new_value = (float(pos)/float(barLength() - 1)) * valueRange() + minValue();
+    setValue(new_value);
+    repaint();
 }
 
 
@@ -114,6 +127,33 @@ float Widget_Slider::value() const
 {
     return m_value;
 }
+
+
+int Widget_Slider::barLength() const
+{
+    if(orientation() == Orientation::Vertical)
+    {
+        return height() - img_triangle_left->height();
+    }
+    else
+    {
+        return width() - img_triangle_down->width();
+    }
+}
+
+
+int Widget_Slider::barOffset() const
+{
+    if(orientation() == Orientation::Vertical)
+    {
+        return img_triangle_left->height() >> 1;
+    }
+    else
+    {
+        return img_triangle_down->width() >> 1;
+    }
+}
+
 
 
 void Widget_Slider::paintEvent(PaintEvent* event)
@@ -126,22 +166,15 @@ void Widget_Slider::paintEvent(PaintEvent* event)
 
     p->fillRect({0, 0, width(), height()}, bg);
 
+    int pos = ((value() - minValue()) / valueRange()) * (barLength() - 1);
     if(orientation() == Orientation::Vertical)
     {
-        int offset = img_triangle_left->height()/2;
-        int length = height() - img_triangle_left->height();
-        int pos = ((value() - minValue()) / valueRange()) * length - offset;
-
-        p->fillRect({0, offset, 2, length}, black);
+        p->fillRect({0, barOffset(), 2, barLength()}, black);
         p->blendColors({3, pos}, colors, img_triangle_left);
     }
     else
     {
-        int offset = img_triangle_down->width()/2;
-        int length = width() - img_triangle_down->width();
-        int pos = ((value() - minValue()) / valueRange()) * length - offset;
-
-        p->fillRect({offset, img_triangle_down->height(), length, 2}, black);
+        p->fillRect({barOffset(), img_triangle_down->height(), barLength(), 2}, black);
         p->blendColors({pos, 0}, colors, img_triangle_down);
     }
 }
@@ -152,6 +185,7 @@ void Widget_Slider::mousePressEvent(MousePressEvent* event)
     if(event->button() == MouseButton::Left())
     {
         grabMouse();
+        setValue(event->position());
     }
 }
 
@@ -172,22 +206,7 @@ void Widget_Slider::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        int pos;
-        int length;
-        if(orientation() == Orientation::Vertical)
-        {
-            pos = event->y();
-            length = height() - img_triangle_down->height();
-        }
-        else
-        {
-            pos = event->x();
-            length = width() - img_triangle_left->width();
-        }
-
-        float new_value = (float(pos)/float(length)) * (valueRange()) + minValue();
-        setValue(new_value);
-        repaint();
+        setValue(event->position());
     }
 }
 
