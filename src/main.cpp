@@ -18,6 +18,7 @@
 #include "Widget_Text.hpp"
 #include "Widget_AudioPlayer.hpp"
 #include "Widget_Knob.hpp"
+#include "Widget_Button.hpp"
 #include "KeyEvent.hpp"
 #include "Timer.hpp"
 #include "Thread.hpp"
@@ -30,8 +31,6 @@ using namespace r64fx;
 
 Font* g_Font = nullptr;
 
-ControlAnimation_Knob* g_anim_knob_unipolar = nullptr;
-ControlAnimation_Knob* g_anim_knob_bipolar = nullptr;
 ControlAnimation_ColouredButton* g_anim_colored_button = nullptr;
 ControlAnimation_PlayPauseButton* g_anim_play_pause_button = nullptr;
 
@@ -40,41 +39,8 @@ class MyWidget : public Widget_ScrollArea{
 public:
     MyWidget(Widget* parent = nullptr) : Widget_ScrollArea(parent)
     {
-        setSize({640, 480});
+        setSize({640, 640});
 
-        if(!g_anim_knob_unipolar)
-        {
-            g_anim_knob_unipolar = new ControlAnimation_Knob(48, 128, KnobType::Unipolar);
-        }
-
-        if(!g_anim_knob_bipolar)
-        {
-            g_anim_knob_bipolar = new ControlAnimation_Knob(48, 128, KnobType::Bipolar);
-        }
-
-        for(int i=0; i<8; i++)
-        {
-            auto c = new Widget_ValueControl(this);
-            c->setPosition({100 + i * 80, 100});
-            if(i<4)
-            {
-                c->setAnimation(g_anim_knob_unipolar);
-                c->setMinValue(0.0f);
-                c->setMaxValue(+1.0f);
-            }
-            else
-            {
-                c->setAnimation(g_anim_knob_bipolar);
-                c->setMinValue(-1.0f);
-                c->setMaxValue(+1.0f);
-            }
-            c->setValueStep(0.005);
-            c->setFont(g_Font);
-            c->showsText(true);
-            c->resizeAndRealign();
-        }
-
-        if(!g_anim_colored_button)
         {
             unsigned char c1[4] = {200, 127, 127, 0};
             unsigned char c2[4] = {200, 200, 127, 0};
@@ -86,15 +52,13 @@ public:
             unsigned char c8[4] = {127, 127, 127, 0};
             unsigned char* colors[8] = {c1, c2, c3, c4, c5, c6, c7, c8};
 
-            g_anim_colored_button = new ControlAnimation_ColouredButton(48, colors, 8);
-        }
-
-        for(int y=0; y<8; y++)
-        {
-            for(int x=0; x<8; x++)
+            for(int y=0; y<8; y++)
             {
-                auto b1 = new Widget_ButtonControl(g_anim_colored_button, this);
-                b1->setPosition({100 + x * 50, 200 + y * 50});
+                for(int x=0; x<8; x++)
+                {
+                    auto b1 = new Widget_Button(ButtonAnimation::Colored({48, 48}, colors, 8), this);
+                    b1->setPosition({100 + x * 50, 200 + y * 50});
+                }
             }
         }
 
@@ -107,24 +71,17 @@ public:
         ppb->setPosition({550, 200});
 
         auto k1 = new Widget_UnipolarKnob(this);
-        k1->setPosition({100, 30});
+        k1->setPosition({100, 100});
 
         auto k2 = new Widget_BipolarKnob(this);
-        k2->setPosition({200, 30});
+        k2->setPosition({200, 100});
+
+        auto b1 = new Widget_Button(ButtonAnimation::PlayPause({48, 48}), this);
+        b1->setPosition({300, 100});
     }
 
     ~MyWidget()
     {
-        if(g_anim_knob_unipolar)
-        {
-            delete g_anim_knob_unipolar;
-        }
-
-        if(g_anim_knob_bipolar)
-        {
-            delete g_anim_knob_bipolar;
-        }
-
         if(g_anim_colored_button)
         {
             delete g_anim_colored_button;

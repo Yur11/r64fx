@@ -11,124 +11,274 @@ using namespace std;
 
 namespace r64fx{
 
-namespace{
-    void on_click_stub(Widget_Button*, void*) {}
-}
-
-
-Widget_Button::Widget_Button(Widget* parent)
+Widget_Button::Widget_Button(ButtonAnimation* animation, Widget* parent)
 : Widget(parent)
-, m_on_click(on_click_stub)
+, m_animation(animation)
 {
-    setSize({10, 10});
-}
-
-
-Widget_Button::Widget_Button(std::string text, std::string font_name, Widget* parent)
-: Widget(parent)
-, m_on_click(on_click_stub)
-{
-    m_animation = new ImageAnimation;
-
-    Font font(font_name);
-    text2image(text, TextWrap::None, &font, m_animation);
-    m_flags |= R64FX_WIDGET_OWNS_DATA;
-
-    if(m_animation)
-    {
-        setSize({m_animation->width(), m_animation->height()});
-        setState(0);
-    }
-}
-
-
-Widget_Button::Widget_Button(ImageAnimation* animation, Widget* parent)
-: Widget(parent)
-{
-    if(!animation)
-        return;
-
-    m_animation = animation;
-    m_flags &= ~R64FX_WIDGET_OWNS_DATA;
-    setSize({m_animation->width(), m_animation->height()});
+    setSize(m_animation->size());
+    m_animation->user_count++;
 }
 
 
 Widget_Button::~Widget_Button()
 {
-    if(m_flags & R64FX_WIDGET_OWNS_DATA && m_animation)
-    {
+    m_animation->user_count--;
+    if(m_animation->user_count == 0)
         delete m_animation;
-    }
 }
 
 
-void Widget_Button::onClick(void (*callback)(Widget_Button* button, void* data), void* data)
+ButtonAnimation* Widget_Button::animation() const
 {
-    if(callback)
-        m_on_click = callback;
-    else
-        m_on_click = on_click_stub;
-    m_on_click_data = data;
-}
-
-
-void Widget_Button::setState(int state)
-{
-    if(state >= 0 && state < m_animation->frameCount())
-    {
-        m_state = state;
-        m_animation->pickFrame(state);
-    }
-}
-
-
-int Widget_Button::state()
-{
-    return m_state;
-}
-
-
-void Widget_Button::pickNextState()
-{
-    if(!m_animation)
-        return;
-
-    m_state++;
-    if(m_state >= m_animation->frameCount())
-        m_state = 0;
-    m_animation->pickFrame(m_state);
+    return m_animation;
 }
 
 
 void Widget_Button::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
-    if(m_animation)
-    {
-        p->putImage(m_animation, {0, 0});
-    }
-    Widget::paintEvent(event);
+    Image frame;
+    m_animation->pickFrame(&frame, m_state);
+    p->putImage(&frame, {0, 0});
 }
 
 
 void Widget_Button::mousePressEvent(MousePressEvent* event)
 {
-    m_on_click(this, m_on_click_data);
-    Widget::mousePressEvent(event);
+    if(event->button() == MouseButton::Left())
+    {
+        grabMouse();
+        m_state++;
+        repaint();
+    }
 }
 
 
-ImageAnimation* new_button_animation(int width, int height, unsigned char** colors, int nframes)
+void Widget_Button::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    auto animation = new ImageAnimation(width, height, 4, nframes);
-    for(int i=0; i<nframes; i++)
+    if(event->button() == MouseButton::Left())
     {
-        animation->pickFrame(i);
-        fill(animation, colors[i]);
+        if(isMouseGrabber())
+            ungrabMouse();
+
+        m_state++;
+        if(m_state >= m_animation->frameCount())
+            m_state = 0;
+        repaint();
     }
-    animation->pickFrame(0);
-    return animation;
+}
+
+
+ButtonAnimation::ButtonAnimation(Size<int> size, int frame_count)
+: m_size(size)
+, m_frame_count(frame_count)
+{
+    m_data = new(std::nothrow) unsigned char[frame_count * size.width() * size.height() * 4];
+}
+
+
+ButtonAnimation::~ButtonAnimation()
+{
+    if(m_data)
+    {
+        delete[] m_data;
+    }
+}
+
+
+Size<int> ButtonAnimation::size() const
+{
+    return m_size;
+}
+
+
+int ButtonAnimation::width() const
+{
+    return m_size.width();
+}
+
+
+int ButtonAnimation::height() const
+{
+    return m_size.height();
+}
+
+
+int ButtonAnimation::frameCount() const
+{
+    return m_frame_count;
+}
+
+
+bool ButtonAnimation::isGood() const
+{
+    return m_data != nullptr;
+}
+
+
+void ButtonAnimation::pickFrame(Image* img, int frame_num)
+{
+    img->load(width(), height(), 4, m_data + (frame_num * width() * height() * 4));
+}
+
+
+void generate_masks(Size<int> size, Image* bg, Image* depressed, Image* pressed)
+{
+    bg->load(size.width(), size.height(), 1);
+    {
+        fill(bg, Color(0));
+        fill_rounded_rect(bg, Color(255), {0, 0, size.width(), size.height()}, 4);
+    }
+
+    depressed->load(size.width(), size.height(), 1);
+    {
+        fill(depressed, Color(0));
+        fill_rounded_rect(depressed, Color(255), {1, 1, size.width() - 2, size.height() - 2}, 4);
+    }
+
+    pressed->load(size.width(), size.height(), 1);
+    {
+        fill(pressed, Color(0));
+        fill_rounded_rect(pressed, Color(255), {2, 2, size.width() - 4, size.height() - 4}, 4);
+    }
+}
+
+
+ButtonAnimation* ButtonAnimation::Colored(Size<int> size, unsigned char** rgbas, int num_rgbas)
+{
+    ButtonAnimation* anim = new(std::nothrow) ButtonAnimation(size, num_rgbas * 2);
+    if(!anim)
+    {
+        return nullptr;
+    }
+
+    if(!anim->isGood())
+    {
+        delete anim;
+        return nullptr;
+    }
+
+    unsigned char black[4] = {0, 0, 0, 0};
+
+    Image bg, depressed, pressed;
+    generate_masks(size, &bg, &depressed, &pressed);
+
+    for(int i=0; i<anim->frameCount()/2; i++)
+    {
+        /* Depressed */
+        {
+            Image img;
+            anim->pickFrame(&img, i*2);
+            blend(&img, Point<int>(0, 0), Colors(black), &bg);
+            blend(&img, Point<int>(0, 0), rgbas + i, &depressed);
+        }
+
+        /* Pressed */
+        {
+            Image img;
+            anim->pickFrame(&img, i*2 + 1);
+            blend(&img, Point<int>(0, 0), Colors(black), &bg);
+            blend(&img, Point<int>(0, 0), rgbas + i, &pressed);
+        }
+    }
+
+    return anim;
+}
+
+
+enum PlayPauseStates{
+    PlayDepressed   = 0,
+    PlayPressed     = 1,
+    PauseDepressed  = 2,
+    PausePressed    = 3
+};
+
+
+ButtonAnimation* ButtonAnimation::PlayPause(Size<int> size)
+{
+    ButtonAnimation* anim = new(std::nothrow) ButtonAnimation(size, 4);
+    if(!anim)
+    {
+        return nullptr;
+    }
+
+    if(!anim->isGood())
+    {
+        delete anim;
+        return nullptr;
+    }
+
+    unsigned char black[4] = {0, 0, 0, 0};
+    unsigned char c0[4] = {127, 127, 127, 0};
+
+    unsigned char bg_depressed [4] = {200, 200, 200, 0};
+    unsigned char bg_pressed   [4] = {150, 150, 150, 0};
+    unsigned char fg_depressed [4] = {100, 100, 100, 0};
+    unsigned char fg_pressed   [4] = { 50,  50,  50, 0};
+
+    Image bg, depressed, pressed;
+    generate_masks(size, &bg, &depressed, &pressed);
+
+    Image triangle(size.width()/2 + 1, size.height()/2 + 1, 1);
+    draw_triangles(size.width()/2 + 1, nullptr, nullptr, nullptr, &triangle);
+
+    Image bars(size.width()/2 + 1 , size.height()/2 + 1, 1);
+    {
+        fill(&bars, Color(0));
+        int w = bars.width() / 3;
+        int h = bars.height();
+        fill(&bars, 0, 255, {0,   0, w, h});
+        fill(&bars, 0, 0,   {w,   0, w, h});
+        fill(&bars, 0, 255, {w*2, 0, w, h});
+    }
+
+    /* 0 Play Depressed */
+    {
+        Image img;
+        anim->pickFrame(&img, PlayDepressed);
+        fill(&img, c0);
+        blend(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
+        blend(&img, Point<int>(size.width()/4 - size.width()/20, size.height()/4), Colors(fg_depressed), &triangle);
+    }
+
+    /* 1 Play Pressed */
+    {
+        Image img;
+        anim->pickFrame(&img, PlayPressed);
+        fill(&img, c0);
+        blend(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
+        blend(&img, Point<int>(size.width()/4 - size.width()/20, size.height()/4), Colors(fg_pressed), &triangle);
+    }
+
+    /* 2 Pause Depressed */
+    {
+        Image img;
+        anim->pickFrame(&img, PauseDepressed);
+        fill(&img, Color(127, 127, 127, 0));
+        blend(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
+        blend(&img, Point<int>(
+            img.width() / 2 - bars.width() / 2,
+            img.height() / 2 - bars.height() / 2
+        ), Colors(fg_depressed), &bars);
+    }
+
+    /* 3 Pause Pressed */
+    {
+        Image img;
+        anim->pickFrame(&img, PausePressed);
+        fill(&img, Color(127, 127, 127, 0));
+        blend(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
+        blend(&img, Point<int>(
+            img.width() / 2 - bars.width() / 2,
+            img.height() / 2 - bars.height() / 2
+        ), Colors(fg_pressed), &bars);
+    }
+
+    return anim;
 }
 
 }//namespace r64fx
