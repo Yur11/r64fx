@@ -53,7 +53,7 @@ public:
             {
                 for(int x=0; x<8; x++)
                 {
-                    auto b1 = new Widget_Button(ButtonAnimation::Colored({48, 48}, colors, 8), this);
+                    auto b1 = new Widget_Button(ButtonAnimation::Colored({48, 48}, colors, 8), true, this);
                     b1->setPosition({100 + x * 50, 200 + y * 50});
                 }
             }
@@ -65,10 +65,10 @@ public:
         auto k2 = new Widget_BipolarKnob(this);
         k2->setPosition({200, 100});
 
-        auto b1 = new Widget_Button(ButtonAnimation::PlayPause({48, 48}), this);
+        auto b1 = new Widget_Button(ButtonAnimation::PlayPause({48, 48}), true, this);
         b1->setPosition({300, 100});
 
-        auto b2 = new Widget_Button(ButtonAnimation::Text({48, 48}, "CUE", g_LargeFont), this);
+        auto b2 = new Widget_Button(ButtonAnimation::Text({48, 48}, "CUE", g_LargeFont), true, this);
         b2->setPosition({350, 100});
 
         auto s1 = new Widget_Slider(150, Orientation::Vertical, this);

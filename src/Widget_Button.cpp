@@ -16,14 +16,24 @@ Widget_Button::Widget_Button(ButtonAnimation* animation, Widget* parent)
 , m_animation(animation)
 {
     setSize(m_animation->size());
-    m_animation->user_count++;
+}
+
+
+Widget_Button::Widget_Button(ButtonAnimation* animation, bool own_animation, Widget* parent)
+: Widget(parent)
+, m_animation(animation)
+{
+    setSize(m_animation->size());
+    if(own_animation)
+        m_flags |= R64FX_WIDGET_OWNS_ANIMATION;
+    else
+        m_flags &= ~R64FX_WIDGET_OWNS_ANIMATION;
 }
 
 
 Widget_Button::~Widget_Button()
 {
-    m_animation->user_count--;
-    if(m_animation->user_count == 0)
+    if(ownsAnimation())
         delete m_animation;
 }
 
@@ -31,6 +41,12 @@ Widget_Button::~Widget_Button()
 ButtonAnimation* Widget_Button::animation() const
 {
     return m_animation;
+}
+
+
+bool Widget_Button::ownsAnimation() const
+{
+    return m_flags & R64FX_WIDGET_OWNS_ANIMATION;
 }
 
 

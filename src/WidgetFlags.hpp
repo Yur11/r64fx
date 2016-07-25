@@ -59,4 +59,6 @@
 
 #define R64FX_WIDGET_SHOWS_TEXT               (1 << 0x19)
 
+#define R64FX_WIDGET_OWNS_ANIMATION           (1 << 0x1A)
+
 #endif//R64FX_WIDGET_FLAGS_HPP

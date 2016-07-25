@@ -15,9 +15,13 @@ class Widget_Button : public Widget{
 public:
     Widget_Button(ButtonAnimation* animation, Widget* parent = nullptr);
 
+    Widget_Button(ButtonAnimation* animation, bool own_animation, Widget* parent = nullptr);
+
     virtual ~Widget_Button();
 
     ButtonAnimation* animation() const;
+
+    bool ownsAnimation() const;
 
 public:
     virtual void paintEvent(PaintEvent* event);
@@ -28,12 +32,11 @@ public:
 };
 
 
-class ButtonAnimation{
+class ButtonAnimation : public LinkedList<ButtonAnimation>::Node{
     friend class Widget_Button;
-    unsigned int user_count = 0;
-    Size<int> m_size = {0, 0};
-    int m_frame_count = 0;
-    unsigned char* m_data = nullptr;
+    Size<int>       m_size         = {0, 0};
+    int             m_frame_count  = 0;
+    unsigned char*  m_data         = nullptr;
 
 public:
     ButtonAnimation(Size<int> size, int frame_count);
