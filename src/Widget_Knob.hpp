@@ -51,6 +51,8 @@ public:
 
     void onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob* knob, float new_value), void* arg = nullptr);
 
+    virtual bool isBipolar() = 0;
+
 protected:
     void paintAnimation(Painter* painter, int frame_num);
 
@@ -69,6 +71,8 @@ public:
     Widget_UnipolarKnob(Widget* parent = nullptr);
 
     virtual void setValue(float value, bool notify = false);
+
+    virtual bool isBipolar();
 
 protected:
     virtual void paintEvent(PaintEvent* event);
@@ -90,6 +94,8 @@ public:
     float lowerRange() const;
 
     float upperRange() const;
+
+    virtual bool isBipolar();
 
 protected:
     virtual void paintEvent(PaintEvent* event);

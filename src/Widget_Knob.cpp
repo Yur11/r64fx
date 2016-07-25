@@ -283,6 +283,14 @@ void on_value_changed_stub(void* arg, Widget_Knob* knob, float new_value)
         str.pop_back();
         str.pop_back();
         str.pop_back();
+        if(knob->isBipolar() && knob->minValue() < 0)
+        {
+            str.pop_back();
+            if(knob->value() > 0)
+            {
+                str = "+" + str;
+            }
+        }
         knob->setText(str);
     }
 }
@@ -463,7 +471,8 @@ Widget_UnipolarKnob::Widget_UnipolarKnob(Widget* parent)
         g_unipolar_animation->genUnipolar();
     }
 
-    setSize(g_unipolar_animation->size());
+    setWidth(g_unipolar_animation->width());
+    setHeight(g_unipolar_animation->height() + g_knob_font->height() + 2);
     m_animation = g_unipolar_animation;
 }
 
@@ -481,12 +490,23 @@ void Widget_UnipolarKnob::setValue(float value, bool notify)
 }
 
 
+bool Widget_UnipolarKnob::isBipolar()
+{
+    return false;
+}
+
+
 void Widget_UnipolarKnob::paintEvent(PaintEvent* event)
 {
     if(m_animation)
     {
         int frame_num = ((value() - minValue()) / valueRange()) * (m_animation->frameCount() - 1);
         paintAnimation(event->painter(), frame_num);
+    }
+
+    if(g_knob_font && !text().empty())
+    {
+        paintText(event->painter());
     }
 }
 
@@ -549,6 +569,12 @@ float Widget_BipolarKnob::lowerRange() const
 float Widget_BipolarKnob::upperRange() const
 {
     return maxValue() - midValue();
+}
+
+
+bool Widget_BipolarKnob::isBipolar()
+{
+    return true;
 }
 
 
