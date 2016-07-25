@@ -3,6 +3,7 @@
 #include "TextPainter.hpp"
 #include "ImageUtils.hpp"
 #include "WidgetFlags.hpp"
+#include "LinkedList.hpp"
 #include <cmath>
 
 #include <iostream>
@@ -12,12 +13,15 @@ namespace r64fx{
 
 Font* g_knob_font = nullptr;
 
-class KnobAnimation{
+class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     Size<int> m_size = {0, 0};
     int m_frame_count = 0;
     unsigned char* m_data = nullptr;
+    bool m_is_bipolar = false;
 
 public:
+    unsigned long user_count = 0;
+
     Size<int> size() const
     {
         return m_size;
@@ -136,6 +140,8 @@ public:
                 }
             }
         }
+
+        m_is_bipolar = false;
     }
 
 
@@ -245,55 +251,97 @@ public:
                 }
             }
         }
+
+        m_is_bipolar = true;
+    }
+
+
+    bool isBipolar() const
+    {
+        return m_is_bipolar;
     }
 };
 
 
-KnobAnimation* g_unipolar_animation = nullptr;
-KnobAnimation* g_bipolar_animation = nullptr;
+namespace{
+    LinkedList<KnobAnimation> g_animations;
 
-
-void init()
-{
-    if(!g_knob_font)
-        g_knob_font = new Font("", 14, 72);
-}
-
-
-void cleanup()
-{
-    if(g_knob_font)
+    KnobAnimation* get_animation(Size<int> size, bool bipolar)
     {
-        delete g_knob_font;
-        g_knob_font = nullptr;
-    }
-}
-
-
-unsigned long g_knob_count = 0;
-
-
-void on_value_changed_stub(void* arg, Widget_Knob* knob, float new_value)
-{
-    char buff[32];
-    int nchars = sprintf(buff, "%f", new_value);
-    if(nchars > 0)
-    {
-        string str(buff);
-        str.pop_back();
-        str.pop_back();
-        str.pop_back();
-        if(knob->isBipolar() && knob->minValue() < 0)
+        KnobAnimation* out_anim = nullptr;
+        for(auto anim : g_animations)
         {
-            str.pop_back();
-            if(knob->value() > 0)
+            if(anim->size() == size && anim->isBipolar() == bipolar)
             {
-                str = "+" + str;
+                out_anim = anim;
+                break;
             }
         }
-        knob->setText(str);
+
+        if(!out_anim)
+        {
+            out_anim = new KnobAnimation;
+            out_anim->allocFrames(size, bipolar ? 127 : 128);
+            if(bipolar)
+                out_anim->genBipolar();
+            else
+                out_anim->genUnipolar();
+            g_animations.append(out_anim);
+        }
+
+        return out_anim;
     }
-}
+
+
+    void free_animation(KnobAnimation* anim)
+    {
+        g_animations.remove(anim);
+        delete anim;
+    }
+
+
+    void init()
+    {
+        if(!g_knob_font)
+            g_knob_font = new Font("", 14, 72);
+    }
+
+
+    void cleanup()
+    {
+        if(g_knob_font)
+        {
+            delete g_knob_font;
+            g_knob_font = nullptr;
+        }
+    }
+
+
+    unsigned long g_knob_count = 0;
+
+
+    void on_value_changed_stub(void* arg, Widget_Knob* knob, float new_value)
+    {
+        char buff[32];
+        int nchars = sprintf(buff, "%f", new_value);
+        if(nchars > 0)
+        {
+            string str(buff);
+            str.pop_back();
+            str.pop_back();
+            str.pop_back();
+            if(knob->isBipolar() && knob->minValue() < 0)
+            {
+                str.pop_back();
+                if(knob->value() > 0)
+                {
+                    str = "+" + str;
+                }
+            }
+            knob->setText(str);
+        }
+    }
+}//namespace
 
 
 Widget_Knob::Widget_Knob(Widget* parent)
@@ -311,6 +359,16 @@ Widget_Knob::Widget_Knob(Widget* parent)
 
 Widget_Knob::~Widget_Knob()
 {
+    if(m_animation)
+    {
+        m_animation->user_count--;
+        if(m_animation->user_count == 0)
+        {
+            free_animation(m_animation);
+            m_animation = nullptr;
+        }
+    }
+
     g_knob_count--;
     if(g_knob_count == 0)
     {
@@ -409,6 +467,25 @@ void Widget_Knob::onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob
 }
 
 
+void Widget_Knob::resizeAndRealign()
+{
+    if(m_animation)
+    {
+        setWidth(m_animation->width());
+        setHeight(m_animation->height() + (showsText() ? g_knob_font->height() + 2 : 0));
+    }
+
+
+}
+
+
+void Widget_Knob::setAnimation(KnobAnimation* animation)
+{
+    m_animation = animation;
+    m_animation->user_count++;
+}
+
+
 void Widget_Knob::paintAnimation(Painter* painter, int frame_num)
 {
     static unsigned char bg[4] = {127, 127, 127, 0};
@@ -464,28 +541,24 @@ void Widget_Knob::mouseMoveEvent(MouseMoveEvent* event)
 Widget_UnipolarKnob::Widget_UnipolarKnob(Widget* parent)
 : Widget_Knob(parent)
 {
-    if(!g_unipolar_animation)
-    {
-        g_unipolar_animation = new KnobAnimation;
-        g_unipolar_animation->allocFrames({50, 50}, 128);
-        g_unipolar_animation->genUnipolar();
-    }
-
-    setWidth(g_unipolar_animation->width());
-    setHeight(g_unipolar_animation->height() + g_knob_font->height() + 2);
-    m_animation = g_unipolar_animation;
+    setAnimation(get_animation({50, 50}, false));
+    setMinValue(0.0f);
+    setMaxValue(1.0f);
+    setValueStep(0.005f);
+    setValue(0.0f, true);
+    showsText(true);
+    resizeAndRealign();
 }
 
 
 void Widget_UnipolarKnob::setValue(float value, bool notify)
 {
-    float old_value = m_value;
     m_value = value;
     if(m_value < m_min_value)
         m_value = m_min_value;
     else if(m_value > m_max_value)
         m_value = m_max_value;
-    if(notify && m_value != old_value)
+    if(notify)
         m_on_value_changed(m_on_value_changed_arg, this, m_value);
 }
 
@@ -504,7 +577,7 @@ void Widget_UnipolarKnob::paintEvent(PaintEvent* event)
         paintAnimation(event->painter(), frame_num);
     }
 
-    if(g_knob_font && !text().empty())
+    if(showsText() && g_knob_font && !text().empty())
     {
         paintText(event->painter());
     }
@@ -515,27 +588,19 @@ void Widget_UnipolarKnob::paintEvent(PaintEvent* event)
 Widget_BipolarKnob::Widget_BipolarKnob(Widget* parent)
 : Widget_Knob(parent)
 {
-    if(!g_bipolar_animation)
-    {
-        g_bipolar_animation = new KnobAnimation;
-        g_bipolar_animation->allocFrames({50, 50}, 127);
-        g_bipolar_animation->genBipolar();
-    }
-
-    setWidth(g_bipolar_animation->width());
-    setHeight(g_bipolar_animation->height() + g_knob_font->height() + 2);
-    m_animation = g_bipolar_animation;
-
+    setAnimation(get_animation({50, 50}, true));
     setMinValue(-1.0f);
     setMidValue(0.0f);
     setMaxValue(1.0f);
     setValueStep(0.01);
+    setValue(0.0f, true);
+    showsText(true);
+    resizeAndRealign();
 }
 
 
 void Widget_BipolarKnob::setValue(float value, bool notify)
 {
-    float old_value = m_value;
     m_value = value;
     if(abs(m_value - m_mid_value) < m_value_step)
         m_value = m_mid_value;
@@ -543,7 +608,7 @@ void Widget_BipolarKnob::setValue(float value, bool notify)
         m_value = m_min_value;
     else if(m_value > m_max_value)
         m_value = m_max_value;
-    if(notify && m_value != old_value)
+    if(notify)
         m_on_value_changed(m_on_value_changed_arg, this, m_value);
 }
 
@@ -598,9 +663,23 @@ void Widget_BipolarKnob::paintEvent(PaintEvent* event)
         paintAnimation(event->painter(), frame_num);
     }
 
-    if(g_knob_font && !text().empty())
+    if(showsText() && g_knob_font && !text().empty())
     {
         paintText(event->painter());
+    }
+}
+
+
+void Widget_BipolarKnob::mousePressEvent(MousePressEvent* event)
+{
+    if(event->button() == MouseButton::Middle())
+    {
+        setValue(midValue(), true);
+        repaint();
+    }
+    else
+    {
+        Widget_Knob::mousePressEvent(event);
     }
 }
 

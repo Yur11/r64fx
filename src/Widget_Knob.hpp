@@ -53,7 +53,11 @@ public:
 
     virtual bool isBipolar() = 0;
 
+    void resizeAndRealign();
+
 protected:
+    void setAnimation(KnobAnimation* animation);
+
     void paintAnimation(Painter* painter, int frame_num);
 
     void paintText(Painter* painter);
@@ -99,6 +103,8 @@ public:
 
 protected:
     virtual void paintEvent(PaintEvent* event);
+
+    virtual void mousePressEvent(MousePressEvent* event);
 };
 
 }//namespace r64fx
