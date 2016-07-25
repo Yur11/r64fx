@@ -14,11 +14,16 @@ protected:
     float m_value_step = 0.005f;
     float m_value = 0.0f;
     KnobAnimation* m_animation = nullptr;
+    std::string m_text = "";
+    void (*m_on_value_changed)(void* arg, Widget_Knob* knob, float new_value) = nullptr;
+    void* m_on_value_changed_arg = nullptr;
 
 public:
     Widget_Knob(Widget* parent = nullptr);
 
-    virtual void setValue(float value) = 0;
+    virtual ~Widget_Knob();
+
+    virtual void setValue(float value, bool notify = false) = 0;
 
     float value() const;
 
@@ -36,8 +41,20 @@ public:
 
     float valueRange() const;
 
+    bool showsText(bool yes);
+
+    bool showsText() const;
+
+    void setText(const std::string &text);
+
+    std::string text() const;
+
+    void onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob* knob, float new_value), void* arg = nullptr);
+
 protected:
     void paintAnimation(Painter* painter, int frame_num);
+
+    void paintText(Painter* painter);
 
     virtual void mousePressEvent(MousePressEvent* event);
 
@@ -51,7 +68,7 @@ class Widget_UnipolarKnob : public Widget_Knob{
 public:
     Widget_UnipolarKnob(Widget* parent = nullptr);
 
-    virtual void setValue(float value);
+    virtual void setValue(float value, bool notify = false);
 
 protected:
     virtual void paintEvent(PaintEvent* event);
@@ -64,7 +81,7 @@ class Widget_BipolarKnob : public Widget_Knob{
 public:
     Widget_BipolarKnob(Widget* parent = nullptr);
 
-    virtual void setValue(float value);
+    virtual void setValue(float value, bool notify = false);
 
     void setMidValue(float value);
 

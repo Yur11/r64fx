@@ -595,17 +595,17 @@ ControlAnimation* Widget_ValueControl::animation() const
 
 bool Widget_ValueControl::showsText(bool yes)
 {
-    if(yes)
-        m_flags |= R64FX_WIDGET_CONTROL_SHOWS_TEXT;
-    else
-        m_flags &= ~R64FX_WIDGET_CONTROL_SHOWS_TEXT;
+//     if(yes)
+//         m_flags |= R64FX_WIDGET_CONTROL_SHOWS_TEXT;
+//     else
+//         m_flags &= ~R64FX_WIDGET_CONTROL_SHOWS_TEXT;
     return yes;
 }
 
 
 bool Widget_ValueControl::showsText() const
 {
-    return m_flags & R64FX_WIDGET_CONTROL_SHOWS_TEXT;
+    return false;
 }
 
 

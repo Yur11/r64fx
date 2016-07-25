@@ -57,8 +57,6 @@
 
 #define R64FX_WIDGET_WANTS_MULTI_GRABS        (1 << 0x18)
 
-#define R64FX_WIDGET_CONTROL_SHOWS_TEXT       (1 << 0x19)
-
-#define R64FX_KNOB_CENTER_CLICK               (1 << 0x1A)
+#define R64FX_WIDGET_SHOWS_TEXT               (1 << 0x19)
 
 #endif//R64FX_WIDGET_FLAGS_HPP
