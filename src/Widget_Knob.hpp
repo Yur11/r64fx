@@ -47,6 +47,8 @@ public:
 
     void setText(const std::string &text);
 
+    void setText(float value, std::string prefix = "", std::string suffix = "");
+
     std::string text() const;
 
     void onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob* knob, float new_value), void* arg = nullptr);

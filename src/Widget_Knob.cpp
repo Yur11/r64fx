@@ -322,24 +322,7 @@ namespace{
 
     void on_value_changed_stub(void* arg, Widget_Knob* knob, float new_value)
     {
-        char buff[32];
-        int nchars = sprintf(buff, "%f", new_value);
-        if(nchars > 0)
-        {
-            string str(buff);
-            str.pop_back();
-            str.pop_back();
-            str.pop_back();
-            if(knob->isBipolar() && knob->minValue() < 0)
-            {
-                str.pop_back();
-                if(knob->value() > 0)
-                {
-                    str = "+" + str;
-                }
-            }
-            knob->setText(str);
-        }
+        knob->setText(new_value);
     }
 }//namespace
 
@@ -444,6 +427,22 @@ bool Widget_Knob::showsText() const
 void Widget_Knob::setText(const std::string &text)
 {
     m_text = text;
+}
+
+
+void Widget_Knob::setText(float value, std::string prefix, std::string suffix)
+{
+    char buff[32];
+    int nchars = sprintf(buff, "%f", value);
+    if(nchars > 0)
+    {
+        string str(buff);
+        str.pop_back();
+        str.pop_back();
+        str.pop_back();
+        str = prefix + str + suffix;
+        setText(str);
+    }
 }
 
 
