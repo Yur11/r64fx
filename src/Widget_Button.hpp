@@ -10,7 +10,9 @@ class Font;
 
 class Widget_Button : public Widget{
     ButtonAnimation* m_animation = nullptr;
-    int m_state = 0;
+    unsigned long m_state = 0;
+    void (*m_on_state_changed)(void* arg, Widget_Button* button, unsigned long state) = nullptr;
+    void* m_on_state_changed_arg = nullptr;
 
 public:
     Widget_Button(ButtonAnimation* animation, Widget* parent = nullptr);
@@ -22,6 +24,8 @@ public:
     ButtonAnimation* animation() const;
 
     bool ownsAnimation() const;
+
+    void onStateChanged(void (*on_state_changed)(void* arg, Widget_Button* button, unsigned long state), void* arg = nullptr);
 
 public:
     virtual void paintEvent(PaintEvent* event);
@@ -35,7 +39,7 @@ public:
 class ButtonAnimation : public LinkedList<ButtonAnimation>::Node{
     friend class Widget_Button;
     Size<int>       m_size         = {0, 0};
-    int             m_frame_count  = 0;
+    unsigned long   m_frame_count  = 0;
     unsigned char*  m_data         = nullptr;
 
 public:
@@ -49,7 +53,7 @@ public:
 
     int height() const;
 
-    int frameCount() const;
+    unsigned long frameCount() const;
 
     bool isGood() const;
 

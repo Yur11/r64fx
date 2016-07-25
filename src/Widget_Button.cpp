@@ -11,11 +11,17 @@ using namespace std;
 
 namespace r64fx{
 
+namespace{
+    void on_state_changed_stub(void* arg, Widget_Button* button, unsigned long state) {}
+}//namespace
+
+
 Widget_Button::Widget_Button(ButtonAnimation* animation, Widget* parent)
 : Widget(parent)
 , m_animation(animation)
 {
     setSize(m_animation->size());
+    onStateChanged(nullptr);
 }
 
 
@@ -28,6 +34,7 @@ Widget_Button::Widget_Button(ButtonAnimation* animation, bool own_animation, Wid
         m_flags |= R64FX_WIDGET_OWNS_ANIMATION;
     else
         m_flags &= ~R64FX_WIDGET_OWNS_ANIMATION;
+    onStateChanged(nullptr);
 }
 
 
@@ -50,6 +57,20 @@ bool Widget_Button::ownsAnimation() const
 }
 
 
+void Widget_Button::onStateChanged(void (*on_state_changed)(void* arg, Widget_Button* button, unsigned long state), void* arg)
+{
+    if(on_state_changed)
+    {
+        m_on_state_changed = on_state_changed;
+    }
+    else
+    {
+        m_on_state_changed = on_state_changed_stub;
+    }
+    m_on_state_changed_arg = arg;
+}
+
+
 void Widget_Button::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
@@ -64,7 +85,8 @@ void Widget_Button::mousePressEvent(MousePressEvent* event)
     if(event->button() == MouseButton::Left())
     {
         grabMouse();
-        m_state++;
+        m_state |= 1;
+        m_on_state_changed(m_on_state_changed_arg, this, m_state);
         repaint();
     }
 }
@@ -76,10 +98,8 @@ void Widget_Button::mouseReleaseEvent(MouseReleaseEvent* event)
     {
         if(isMouseGrabber())
             ungrabMouse();
-
-        m_state++;
-        if(m_state >= m_animation->frameCount())
-            m_state = 0;
+        m_state &= ~1;
+        m_on_state_changed(m_on_state_changed_arg, this, m_state);
         repaint();
     }
 }
@@ -120,7 +140,7 @@ int ButtonAnimation::height() const
 }
 
 
-int ButtonAnimation::frameCount() const
+unsigned long ButtonAnimation::frameCount() const
 {
     return m_frame_count;
 }
@@ -262,7 +282,7 @@ ButtonAnimation* ButtonAnimation::Colored(Size<int> size, unsigned char** rgbas,
     Image bg, depressed, pressed;
     generate_masks(size, &bg, &depressed, &pressed);
 
-    for(int i=0; i<anim->frameCount()/2; i++)
+    for(unsigned long i=0; i<anim->frameCount()/2; i++)
     {
         /* Depressed */
         {
