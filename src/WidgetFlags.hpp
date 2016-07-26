@@ -61,4 +61,10 @@
 
 #define R64FX_WIDGET_OWNS_ANIMATION           (1 << 0x1A)
 
+#define R64FX_SLIDER_BAR_VISIBLE              (1 << 0x1B)
+
+#define R64FX_WIDGET_IS_FLIPPED               (1 << 0x1C)
+
+#define R64FX_WIDGET_IS_REVERSED              (1 << 0x1D)
+
 #endif//R64FX_WIDGET_FLAGS_HPP

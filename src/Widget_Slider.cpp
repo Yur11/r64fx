@@ -1,10 +1,16 @@
 #include "Widget_Slider.hpp"
 #include "Painter.hpp"
 #include "ImageUtils.hpp"
+#include "WidgetFlags.hpp"
+
+#include <iostream>
+using namespace std;
 
 namespace r64fx{
 
 namespace{
+    constexpr int g_handle_size = 15;
+
     Image* img_triangle_up     = nullptr;
     Image* img_triangle_down   = nullptr;
     Image* img_triangle_left   = nullptr;
@@ -17,7 +23,7 @@ namespace{
         img_triangle_left   = new Image;
         img_triangle_right  = new Image;
 
-        draw_triangles(15, img_triangle_up, img_triangle_down, img_triangle_left, img_triangle_right);
+        draw_triangles(g_handle_size, img_triangle_up, img_triangle_down, img_triangle_left, img_triangle_right);
     }
 
     void cleanup()
@@ -38,6 +44,8 @@ namespace{
     }
 
     int g_slider_count = 0;
+
+    void on_value_changed_stub(void* arg, Widget_Slider* slider, float value) { cout << value << "\n"; }
 }//namespace
 
 
@@ -53,14 +61,17 @@ Widget_Slider::Widget_Slider(int length, Orientation orientation, Widget* parent
     setOrientation(orientation);
     if(orientation == Orientation::Vertical)
     {
-        setWidth(img_triangle_left->width() + 2);
+        setWidth(g_handle_size + 2);
         setHeight(length);
     }
     else
     {
         setWidth(length);
-        setHeight(img_triangle_down->height() + 2);
+        setHeight(g_handle_size + 2);
     }
+
+    onValueChanged(nullptr);
+    barVisible(true);
 }
 
 
@@ -116,7 +127,21 @@ void Widget_Slider::setValue(float value)
 
 void Widget_Slider::setValue(Point<int> position)
 {
-    int pos = (orientation() == Orientation::Vertical ? position.y() : position.x()) - barOffset();
+    int pos;
+    if(orientation() == Orientation::Vertical)
+    {
+        pos = barLength() - (position.y()- barOffset());
+    }
+    else
+    {
+        pos = position.x() - barOffset();
+    }
+
+    if(isReversed())
+    {
+        pos = barLength() - pos;
+    }
+
     float new_value = (float(pos)/float(barLength() - 1)) * valueRange() + minValue();
     setValue(new_value);
     repaint();
@@ -133,27 +158,81 @@ int Widget_Slider::barLength() const
 {
     if(orientation() == Orientation::Vertical)
     {
-        return height() - img_triangle_left->height();
+        return height() - g_handle_size;
     }
     else
     {
-        return width() - img_triangle_down->width();
+        return width() - g_handle_size;
     }
 }
 
 
 int Widget_Slider::barOffset() const
 {
-    if(orientation() == Orientation::Vertical)
+    return g_handle_size >> 1;
+}
+
+
+bool Widget_Slider::barVisible(bool yes)
+{
+    if(yes)
+        m_flags |= R64FX_SLIDER_BAR_VISIBLE;
+    else
+        m_flags &= ~R64FX_SLIDER_BAR_VISIBLE;
+    return yes;
+}
+
+
+bool Widget_Slider::barVisible() const
+{
+    return m_flags & R64FX_SLIDER_BAR_VISIBLE;
+}
+
+
+bool Widget_Slider::isFlipped(bool yes)
+{
+    if(yes)
+        m_flags |= R64FX_WIDGET_IS_FLIPPED;
+    else
+        m_flags &= ~R64FX_WIDGET_IS_FLIPPED;
+    return yes;
+}
+
+
+bool Widget_Slider::isFlipped() const
+{
+    return m_flags & R64FX_WIDGET_IS_FLIPPED;
+}
+
+
+bool Widget_Slider::isReversed(bool yes)
+{
+    if(yes)
+        m_flags |= R64FX_WIDGET_IS_REVERSED;
+    else
+        m_flags &= ~R64FX_WIDGET_IS_REVERSED;
+    return yes;
+}
+
+
+bool Widget_Slider::isReversed() const
+{
+    return m_flags & R64FX_WIDGET_IS_REVERSED;
+}
+
+
+void Widget_Slider::onValueChanged(void (on_value_changed)(void* arg, Widget_Slider* slider, float value), void* arg)
+{
+    if(on_value_changed)
     {
-        return img_triangle_left->height() >> 1;
+        m_on_value_changed = on_value_changed;
     }
     else
     {
-        return img_triangle_down->width() >> 1;
+        m_on_value_changed = on_value_changed_stub;
     }
+    m_on_value_changed_arg = arg;
 }
-
 
 
 void Widget_Slider::paintEvent(PaintEvent* event)
@@ -167,15 +246,54 @@ void Widget_Slider::paintEvent(PaintEvent* event)
     p->fillRect({0, 0, width(), height()}, bg);
 
     int pos = ((value() - minValue()) / valueRange()) * (barLength() - 1);
+
     if(orientation() == Orientation::Vertical)
     {
-        p->fillRect({0, barOffset(), 2, barLength()}, black);
-        p->blendColors({3, pos}, colors, img_triangle_left);
+        if(!isReversed())
+            pos = barLength() - pos - 1;
+
+        int bar_x;
+        int handle_x;
+        Image* handle_img;
+        if(isFlipped())
+        {
+            bar_x = g_handle_size;
+            handle_x = 0;
+            handle_img = img_triangle_right;
+        }
+        else
+        {
+            bar_x = 0;
+            handle_x = 3;
+            handle_img = img_triangle_left;
+        }
+
+        p->fillRect({bar_x, barOffset(), 2, barLength()}, black);
+        p->blendColors({handle_x, pos}, colors, handle_img);
     }
     else
     {
-        p->fillRect({barOffset(), img_triangle_down->height(), barLength(), 2}, black);
-        p->blendColors({pos, 0}, colors, img_triangle_down);
+        if(isReversed())
+            pos = barLength() - pos - 1;
+
+        int bar_y;
+        int handle_y;
+        Image* handle_img;
+        if(isFlipped())
+        {
+            bar_y = 0;
+            handle_y = 2;
+            handle_img = img_triangle_up;
+        }
+        else
+        {
+            bar_y = g_handle_size;
+            handle_y = 0;
+            handle_img = img_triangle_down;
+        }
+
+        p->fillRect({barOffset(), bar_y, barLength(), 2}, black);
+        p->blendColors({pos, handle_y}, colors, handle_img);
     }
 }
 
@@ -207,6 +325,7 @@ void Widget_Slider::mouseMoveEvent(MouseMoveEvent* event)
     if(event->button() == MouseButton::Left())
     {
         setValue(event->position());
+        m_on_value_changed(m_on_value_changed_arg, this, value());
     }
 }
 

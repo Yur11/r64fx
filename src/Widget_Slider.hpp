@@ -9,6 +9,8 @@ class Widget_Slider : public Widget{
     float m_min_value = 0.0f;
     float m_max_value = 1.0f;
     float m_value = 0.0f;
+    void (*m_on_value_changed)(void* arg, Widget_Slider* slider, float value) = nullptr;
+    void* m_on_value_changed_arg = nullptr;
 
 public:
     Widget_Slider(int length, Orientation orientation, Widget* parent = nullptr);
@@ -34,6 +36,20 @@ public:
     int barLength() const;
 
     int barOffset() const;
+
+    bool barVisible(bool yes);
+
+    bool barVisible() const;
+
+    bool isFlipped(bool yes);
+
+    bool isFlipped() const;
+
+    bool isReversed(bool yes);
+
+    bool isReversed() const;
+
+    void onValueChanged(void (on_value_changed)(void* arg, Widget_Slider* slider, float value), void* arg = nullptr);
 
 protected:
     virtual void paintEvent(PaintEvent* event);
