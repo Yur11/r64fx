@@ -45,7 +45,7 @@ namespace{
 
     int g_slider_count = 0;
 
-    void on_value_changed_stub(void* arg, Widget_Slider* slider, float value) { cout << value << "\n"; }
+    void on_value_changed_stub(void* arg, Widget_Slider* slider, float value) {}
 }//namespace
 
 
@@ -268,7 +268,10 @@ void Widget_Slider::paintEvent(PaintEvent* event)
             handle_img = img_triangle_left;
         }
 
-        p->fillRect({bar_x, barOffset(), 2, barLength()}, black);
+        if(barVisible())
+        {
+            p->fillRect({bar_x, barOffset(), 2, barLength()}, black);
+        }
         p->blendColors({handle_x, pos}, colors, handle_img);
     }
     else
@@ -292,7 +295,10 @@ void Widget_Slider::paintEvent(PaintEvent* event)
             handle_img = img_triangle_down;
         }
 
-        p->fillRect({barOffset(), bar_y, barLength(), 2}, black);
+        if(barVisible())
+        {
+            p->fillRect({barOffset(), bar_y, barLength(), 2}, black);
+        }
         p->blendColors({pos, handle_y}, colors, handle_img);
     }
 }
