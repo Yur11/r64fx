@@ -1,9 +1,14 @@
 #include "PlayerView.hpp"
 #include "Painter.hpp"
+#include "TextPainter.hpp"
 #include "Clipboard.hpp"
 #include "ClipboardEvent.hpp"
 #include "StringUtils.hpp"
 #include <string>
+#include "Font.hpp"
+#include "Widget_Button.hpp"
+#include "Widget_Knob.hpp"
+#include "Widget_Slider.hpp"
 
 #include <iostream>
 
@@ -11,10 +16,29 @@ using namespace std;
 
 namespace r64fx{
 
+extern Font* g_LargeFont;
+
 PlayerView::PlayerView(PlayerViewFeedbackIface* player, Widget* parent)
 : m_player(player)
 {
     setSize({800, 240});
+
+    auto button_play = new Widget_Button(ButtonAnimation::PlayPause({48, 48}), true, this);
+    button_play->setPosition({5, height() - 55});
+
+    auto button_cue = new Widget_Button(ButtonAnimation::Text({48, 48}, "CUE", g_LargeFont), true, this);
+    button_cue->setPosition({5, height() - 105});
+
+    auto knob_gain = new Widget_BipolarKnob(this);
+    knob_gain->setPosition({5, height() - 175});
+    knob_gain->setMinValue(0.0f);
+    knob_gain->setMidValue(1.0f);
+    knob_gain->setMaxValue(2.0f);
+    knob_gain->setValue(knob_gain->midValue());
+
+    auto slider_pitch = new Widget_Slider(150, Orientation::Vertical, this);
+    slider_pitch->setPosition({width() - 20, 10});
+    slider_pitch->setHeight(height() - 20);
 }
 
 
@@ -56,7 +80,7 @@ void PlayerView::notifyLoad(bool success)
 void PlayerView::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
-    unsigned char bg[4] = {190, 190, 190, 0};
+    unsigned char bg[4] = {127, 127, 127, 0};
     p->fillRect({0, 0, width(), height()}, bg);
 
     int component_count = m_player->componentCount();
@@ -67,11 +91,23 @@ void PlayerView::paintEvent(PaintEvent* event)
         int waveform_y = 0;
         for(int c=0; c<component_count; c++)
         {
-            unsigned char fg[3] = {63, 63, 63};
-            p->drawWaveform({0, waveform_y, width(), waveform_height}, fg, m_waveform + (c * m_player->frameCount()));
+            unsigned char fg[4] = {63, 63, 63, 0};
+            p->drawWaveform({60, waveform_y, width() - 85, waveform_height}, fg, m_waveform + (c * m_player->frameCount()));
             waveform_y += waveform_height;
         }
     }
+    else
+    {
+        Image textimg;
+        text2image("Drop samples here!", TextWrap::None, g_LargeFont, &textimg);
+        unsigned char fg[4] = {0, 0, 0, 0};
+        unsigned char* colors[1] = {fg};
+        p->blendColors(
+            {width()/2 - textimg.width()/2, height()/2 - textimg.height()/2}, colors, &textimg
+        );
+    }
+
+    Widget::paintEvent(event);
 }
 
 
@@ -84,6 +120,7 @@ void PlayerView::resizeEvent(ResizeEvent* event)
 
 void PlayerView::mousePressEvent(MousePressEvent* event)
 {
+    Widget::mousePressEvent(event);
     repaint();
 }
 

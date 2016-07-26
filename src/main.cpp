@@ -28,8 +28,10 @@
 using namespace std;
 using namespace r64fx;
 
-Font* g_Font = nullptr;
-Font* g_LargeFont = nullptr;
+namespace r64fx{
+    Font* g_Font = nullptr;
+    Font* g_LargeFont = nullptr;
+}
 
 class MyWidget : public Widget_ScrollArea{
 
