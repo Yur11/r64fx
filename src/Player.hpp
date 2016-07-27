@@ -17,6 +17,8 @@ public:
 
     virtual ~Player();
 
+    void showView();
+
 private:
     virtual int frameCount();
 

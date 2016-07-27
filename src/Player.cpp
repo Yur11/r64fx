@@ -46,6 +46,15 @@ Player::~Player()
 }
 
 
+void Player::showView()
+{
+    if(m_view)
+    {
+        m_view->show();
+    }
+}
+
+
 int Player::frameCount()
 {
     return m_sf.frameCount();

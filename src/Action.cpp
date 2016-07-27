@@ -32,4 +32,10 @@ void Action::exec()
 
 }
 
+
+void CallbackAction::exec()
+{
+    m_callback(m_arg, this);
+}
+
 }//namespace r64fx

@@ -21,7 +21,7 @@ Font* g_LargeFont;
 PlayerView::PlayerView(PlayerViewFeedbackIface* player, Widget* parent)
 : m_player(player)
 {
-    if(g_LargeFont)
+    if(!g_LargeFont)
     {
         g_LargeFont = new Font("", 15, 72);
     }

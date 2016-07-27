@@ -3,6 +3,8 @@
 #include "Timer.hpp"
 #include "sleep.hpp"
 
+#include "Player.hpp"
+
 namespace r64fx{
 
 int Host::exec()
@@ -28,9 +30,22 @@ void Host::exit()
 }
 
 
-void Host::exitRequest()
+void Host::requestExit()
 {
     exit();
+}
+
+
+void Host::openPlayer()
+{
+    if(!m_player)
+    {
+        m_player = new Player;
+    }
+    else
+    {
+        m_player->showView();
+    }
 }
 
 }//namespace r64fx

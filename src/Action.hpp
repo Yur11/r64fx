@@ -20,6 +20,23 @@ public:
     virtual void exec();
 };
 
+
+class CallbackAction : public Action{
+    void (*m_callback)(void* arg, CallbackAction* action) = nullptr;
+    void* m_arg = nullptr;
+
+public:
+    CallbackAction(const std::string &caption, void (*callback)(void* arg, CallbackAction* action), void* arg)
+    : Action(caption)
+    , m_callback(callback)
+    , m_arg(arg)
+    {
+
+    }
+
+    virtual void exec();
+};
+
 }//namespace r64fx
 
 #endif//R64FX_ACTION_HPP
