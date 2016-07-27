@@ -16,11 +16,16 @@ using namespace std;
 
 namespace r64fx{
 
-extern Font* g_LargeFont;
+Font* g_LargeFont;
 
 PlayerView::PlayerView(PlayerViewFeedbackIface* player, Widget* parent)
 : m_player(player)
 {
+    if(g_LargeFont)
+    {
+        g_LargeFont = new Font("", 15, 72);
+    }
+
     setSize({800, 240});
 
     auto button_play = new Widget_Button(ButtonAnimation::PlayPause({48, 48}), true, this);
@@ -39,6 +44,7 @@ PlayerView::PlayerView(PlayerViewFeedbackIface* player, Widget* parent)
     auto slider_pitch = new Widget_Slider(150, Orientation::Vertical, this);
     slider_pitch->setPosition({width() - 20, 10});
     slider_pitch->setHeight(height() - 20);
+    slider_pitch->setValue(0.5f);
 }
 
 

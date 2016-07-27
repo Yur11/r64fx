@@ -7,7 +7,6 @@
 #include "Clipboard.hpp"
 #include "ClipboardEvent.hpp"
 #include "Painter.hpp"
-#include "Program.hpp"
 #include "Timer.hpp"
 
 #include <limits>
@@ -1690,7 +1689,7 @@ void Widget::dndFinishedEvent(DndFinishedEvent* event)
 
 void Widget::closeEvent()
 {
-    Program::quit();
+    
 }
 
 }//namespace r64fx

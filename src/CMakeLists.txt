@@ -31,6 +31,8 @@ set(SRC
     ClipboardEvent.cpp
     Directory.cpp
     Font.cpp
+    Host.cpp
+    HostView.cpp
     Image.cpp
     ImageAnimation.cpp
     ImageUtils.cpp
@@ -44,7 +46,6 @@ set(SRC
     Painter.cpp
     Player.cpp
     PlayerView.cpp
-    Program.cpp
     SignalData.cpp
     SignalGraph.cpp
     SignalNode.cpp

@@ -8,7 +8,6 @@
 #include "KeyEvent.hpp"
 #include "ClipboardEvent.hpp"
 #include "Mouse.hpp"
-#include "Program.hpp"
 #include "TextPainter.hpp"
 #include "UndoRedoChain.hpp"
 #include "Window.hpp"
