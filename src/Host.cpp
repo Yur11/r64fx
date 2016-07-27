@@ -10,6 +10,7 @@ namespace r64fx{
 int Host::exec()
 {
     m_view = new HostView(this);
+    openPlayer();
 
     while(m_is_running)
     {
