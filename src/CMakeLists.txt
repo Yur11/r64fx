@@ -32,6 +32,7 @@ set(SRC
     Directory.cpp
     Font.cpp
     Host.cpp
+    HostModel.cpp
     HostView.cpp
     Image.cpp
     ImageAnimation.cpp

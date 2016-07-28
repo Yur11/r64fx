@@ -1,6 +1,7 @@
 #ifndef R64FX_HOST_HPP
 #define R64FX_HOST_HPP
 
+#include "HostModel.hpp"
 #include "HostView.hpp"
 
 namespace r64fx{
@@ -9,7 +10,8 @@ class Player;
 
 /* Main host controller. */
 class Host : private HostViewControllerIface{
-    HostView* m_view = nullptr;
+    HostModel*  m_model  = nullptr;
+    HostView*   m_view   = nullptr;
 
     bool m_is_running = true;
 

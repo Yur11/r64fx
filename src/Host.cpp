@@ -9,7 +9,9 @@ namespace r64fx{
 
 int Host::exec()
 {
-    m_view = new HostView(this);
+    m_model = new HostModel;
+    m_view  = new HostView(this);
+
     openPlayer();
 
     while(m_is_running)
@@ -20,7 +22,9 @@ int Host::exec()
         sleep_microseconds(sleep_time);
     }
 
+    delete m_model;
     delete m_view;
+
     return 0;
 }
 
