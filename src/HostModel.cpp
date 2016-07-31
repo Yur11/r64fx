@@ -14,181 +14,343 @@ namespace r64fx{
 
 namespace{
 
+/* GUI <-> Processor cross-thread communication protocol. */
+
 constexpr unsigned long PickDestination  = 0;
+
 constexpr unsigned long Terminate        = 1;
 constexpr unsigned long DeployMachine    = 2;
-constexpr unsigned long RemoveMachine    = 3;
+constexpr unsigned long DetachMachine    = 3;
 
 }//namespace
 
-struct ProcessorThread : public Thread{
-    CircularBuffer<ProcessorMessage>* m_input_buffer = nullptr;
-    CircularBuffer<ProcessorMessage>* m_output_buffer = nullptr;
 
-    bool m_this_picked = false;
+class HostModelPrivate{
+    HostModel* m_model = nullptr;
 
+    /* Cross-Thread communication buffers. */
+    CircularBuffer<ProcessorMessage>* m_gui2processor = nullptr;
+    CircularBuffer<ProcessorMessage>* m_processor2gui = nullptr;
+    
+    /* Processor thread. */
+    Thread* m_thread = nullptr;
+
+    /* GUI thread timer to read and dispatch messages from processor thread. */
+    Timer* m_timer = nullptr;
+    
+    /* MachineProcessor to send messages to via m_gui2processor buffer. */
+    MachineProcessor* m_dst_processor = nullptr;
+    
+    /* MachineModel to dispatch incoming messages from m_processor2gui buffer. */
+    MachineModel* m_dst_model = nullptr;
+    
 public:
-    ProcessorThread()
+    HostModelPrivate(HostModel* model);
+    
+    ~HostModelPrivate();
+    
+    inline CircularBuffer<ProcessorMessage>* gui2processor() const
     {
-        m_input_buffer  = new CircularBuffer<ProcessorMessage>(32);
-        m_output_buffer = new CircularBuffer<ProcessorMessage>(32);
-
-        run([](void* arg) -> void* {
-            auto self = (ProcessorThread*)arg;
-            self->exec();
-            return nullptr;
-        }, this);
+        return m_gui2processor;
     }
-
-
-    virtual ~ProcessorThread()
+    
+    inline CircularBuffer<ProcessorMessage>* processor2gui() const
     {
-        if(!m_this_picked)
-            pickDestination(this);
-        sendMessage(Terminate);
-        join();
-        delete m_input_buffer;
-        delete m_output_buffer;
+        return m_processor2gui;
     }
+    
+    void startProcessorThread();
+    
+    void stopProcessorThread();
+    
+    void startDispatchTimer();
+    
+    void stopDispatchTimer();
 
+    void sendMessage(const ProcessorMessage &msg);
+    
+    void sendMessage(MachineProcessor* dst, const ProcessorMessage &msg);
+    
+    void pickDestination(MachineProcessor* dst);
 
-    inline void sendMessage(unsigned long type, unsigned long param)
-    {
-        sendMessage(ProcessorMessage(type, param));
-    }
-
-
-    inline void sendMessage(const ProcessorMessage &msg)
-    {
-        if(!m_input_buffer->write(&msg, 1))
-        {
-            cerr << "Failed to write message!\n";
-        }
-    }
-
-
-    inline bool readMessage(ProcessorMessage &msg)
-    {
-        return m_output_buffer->read(&msg, 1) == 1;
-    }
-
-
-    inline void pickDestination(void* dst)
-    {
-        m_this_picked = (dst == this ? true : false);
-        sendMessage(PickDestination, (unsigned long)dst);
-    }
-
-
-    inline void deployMachine(MachineProcessor* machine_processor)
-    {
-        if(!m_this_picked)
-            pickDestination(this);
-        sendMessage(DeployMachine, (unsigned long)machine_processor);
-    }
-
-
-    inline void removeMachine(MachineProcessor* machine_processor)
-    {
-        if(!m_this_picked)
-            pickDestination(this);
-        sendMessage(RemoveMachine, (unsigned long)machine_processor);
-    }
-
-private:
-    void exec();
+    void dispatchMessages();
+    
+    void deployMachine(MachineModel* machine);
+    
+    void detachMachine(MachineModel* machine);
 };
 
 
-class HostModelPrivate{
+class HostProcessorPrivate{
+    /* Cross-Thread communication buffers. */
+    CircularBuffer<ProcessorMessage>* m_gui2processor = nullptr;
+    CircularBuffer<ProcessorMessage>* m_processor2gui = nullptr;
     
+    /* MachineProcessor to dispatch incoming messages to.*/
+    MachineProcessor* m_dst_processor = nullptr;
+    
+    /* MachineModel to send messages to. */
+    MachineModel* m_dst_model = nullptr;
+    
+    bool m_running = true;
+    
+public:
+    HostProcessorPrivate(CircularBuffer<ProcessorMessage>* gui2processor, CircularBuffer<ProcessorMessage>* processor2gui)
+    : m_gui2processor(gui2processor)
+    , m_processor2gui(processor2gui)
+    {}
+    
+    void run();
+
+    void sendMessage(const ProcessorMessage &msg);
+
+    void sendMessage(MachineModel* dst, const ProcessorMessage &msg);
+    
+    void pickDestination(MachineModel* dst);
+    
+    void dispatchMessages();
 };
 
 
 HostModel::HostModel()
 {
-    m_processor_thread = new ProcessorThread;
+    m = new HostModelPrivate(this);
 }
 
 
 HostModel::~HostModel()
 {
-    delete m_processor_thread;
+    if(m)
+        delete m;
 }
 
 
 void HostModel::deployMachine(MachineModel* machine)
 {
-    m_processor_thread->deployMachine(machine->processor());
+    m->deployMachine(machine);
 }
 
 
-void HostModel::removeMachine(MachineModel* machine)
+HostModelPrivate::HostModelPrivate(HostModel* model)
+: m_model(model)
 {
-    m_processor_thread->removeMachine(machine->processor());
+    m_gui2processor = new CircularBuffer<ProcessorMessage>(32);
+    m_processor2gui = new CircularBuffer<ProcessorMessage>(32);
+    
+    m_thread = new Thread;
+    
+    m_timer = new Timer;
+    m_timer->setInterval(500);
+    
+    startDispatchTimer();
+    startProcessorThread();
+}
+    
+    
+HostModelPrivate::~HostModelPrivate()
+{
+    stopDispatchTimer();
+    stopProcessorThread();
+    
+    delete m_timer;
+    delete m_thread;
+    delete m_gui2processor;
+    delete m_processor2gui;
 }
 
 
-void HostModel::pickMachine(MachineModel* machine)
+void HostModelPrivate::startProcessorThread()
 {
-    m_processor_thread->pickDestination(machine->processor());
+    m_thread->run([](void* arg) -> void* {
+        auto m = (HostModelPrivate*) arg;
+        auto p = new HostProcessorPrivate(m->gui2processor(), m->processor2gui());
+        p->run();
+        delete p;
+        return nullptr;
+    }, this);
 }
 
 
-void ProcessorThread::exec()
+void HostModelPrivate::stopProcessorThread()
 {
-    ProcessorThreadContext* ctx = new ProcessorThreadContext;
+    ProcessorMessage msg(Terminate, 0);
+    sendMessage(nullptr, msg);
+    m_thread->join();
+}
 
-    void* message_destination = nullptr;
 
-    bool running = true;
-    while(running)
+void HostModelPrivate::startDispatchTimer()
+{
+    m_timer->onTimeout([](Timer* timer, void* arg){
+        auto m = (HostModelPrivate*) arg;
+        m->dispatchMessages();
+    }, this);
+    m_timer->start();
+}
+    
+    
+void HostModelPrivate::stopDispatchTimer()
+{
+    m_timer->stop();
+}
+
+
+void HostModelPrivate::sendMessage(const ProcessorMessage &msg)
+{
+    m_gui2processor->write(&msg, 1);
+}
+
+
+
+void HostModelPrivate::sendMessage(MachineProcessor* dst, const ProcessorMessage &msg)
+{
+    if(m_dst_processor != dst)
+        pickDestination(dst);
+    sendMessage(msg);
+}
+
+
+void HostModelPrivate::pickDestination(MachineProcessor* dst)
+{
+    ProcessorMessage msg(PickDestination, (unsigned long)dst);
+    sendMessage(msg);
+    m_dst_processor = dst;
+}
+
+
+void HostModelPrivate::dispatchMessages()
+{
+    ProcessorMessage msg;
+    while(m_gui2processor->read(&msg, 1))
     {
-        ProcessorMessage msg;
-        while(m_input_buffer->read(&msg, 1) == 1)
+        if(msg.header == PickDestination)
         {
-            if(msg.type == PickDestination)
+            if(msg.header == 0)
             {
-                message_destination = (void*) msg.param;
-                continue;
+                m_dst_model = nullptr;
+                m_dst_processor = nullptr;
             }
-
-            if(message_destination == this)
+            else
             {
-                if(msg.type == Terminate)
-                {
-                    running = false;
-                }
-                else if(msg.type == DeployMachine)
-                {
-                    auto machine_processor = (MachineProcessor*) msg.param;
-                    ctx->machines.append(machine_processor);
-                    machine_processor->deploy(ctx);
-                }
-                else if(msg.type == RemoveMachine)
-                {
-                    auto machine_processor = (MachineProcessor*) msg.param;
-                    machine_processor->remove(ctx);
-                    ctx->machines.remove(machine_processor);
-                }
-            }
-            else if(message_destination)
-            {
-                auto machine_processor = (MachineProcessor*) message_destination;
-                machine_processor->dispatchMessage(ctx, msg);
+                m_dst_model = (MachineModel*) msg.value;
+                m_dst_processor = m_dst_model->processor();
             }
         }
-
-        sleep_microseconds(500);
+        else
+        {
+            if(m_dst_model == nullptr)
+            {
+                
+            }
+            else
+            {
+                m_dst_model->dispatchMessage(msg);
+            }
+        }
     }
-
-    delete ctx;
 }
 
 
-void HostModel::dispatchMessage(ProcessorMessage msg)
+void HostModelPrivate::deployMachine(MachineModel* machine)
 {
-    
+    ProcessorMessage msg(DeployMachine, (unsigned long) machine->processor());
+    sendMessage(nullptr, msg);
 }
 
+
+void HostModelPrivate::detachMachine(MachineModel* machine)
+{
+    ProcessorMessage msg(DetachMachine, (unsigned long) machine->processor());
+    sendMessage(nullptr, msg);
+}
+
+
+void MachineModel::detach()
+{
+    m_parent_host->detachMachine(this);
+}
+
+
+void MachineModel::sendMessage(const ProcessorMessage &msg)
+{
+    m_parent_host->sendMessage(processor(), msg);
+}
+
+
+void HostProcessorPrivate::run()
+{
+    while(m_running)
+    {
+        dispatchMessages();
+    }
+    
+    cout << "Thread Exit!\n";
+}
+
+
+void HostProcessorPrivate::sendMessage(const ProcessorMessage &msg)
+{
+    m_processor2gui->write(&msg, 1);
+}
+
+
+void HostProcessorPrivate::sendMessage(MachineModel* dst, const ProcessorMessage &msg)
+{
+    if(m_dst_model != dst)
+        pickDestination(dst);
+    sendMessage(msg);
+}
+
+
+void HostProcessorPrivate::pickDestination(MachineModel* dst)
+{
+    ProcessorMessage msg(PickDestination, (unsigned long)dst);
+    sendMessage(msg);
+    m_dst_model = dst;
+}
+
+
+void HostProcessorPrivate::dispatchMessages()
+{
+    ProcessorMessage msg;
+    while(m_gui2processor->read(&msg, 1))
+    {        
+        if(msg.header == PickDestination)
+        {
+            if(msg.value == 0)
+            {
+                m_dst_processor = nullptr;
+                m_dst_model = nullptr;
+            }
+            else
+            {
+                m_dst_processor = (MachineProcessor*) msg.value;
+                m_dst_model = m_dst_processor->model();
+            }
+        }
+        else
+        {
+            if(m_dst_processor == nullptr)
+            {
+                if(msg.header == Terminate)
+                {
+                    m_running = false;
+                }
+                else if(msg.header == DeployMachine)
+                {
+                    
+                }
+                else if(msg.header == DetachMachine)
+                {
+                    
+                }
+            }
+            else
+            {
+                m_dst_processor->dispatchMessage(msg);
+            }
+        }
+    }
+}
+    
 }//namespace r64fx

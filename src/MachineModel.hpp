@@ -1,24 +1,32 @@
 #ifndef R64FX_MACHINE_MODEL_HPP
 #define R64FX_MACHINE_MODEL_HPP
 
-#include "ProcessorMessage.hpp"
-
 namespace r64fx{
 
-class HostModel;
+class ProcessorMessage;
+class HostModelPrivate;
 class MachineProcessor;
 
 class MachineModel{
-    HostModel* m_host = nullptr;
-
-public:
-    MachineModel(HostModel* host);
-
-    virtual MachineProcessor* processor() = 0;
-
-    virtual void dispatchMessage(ProcessorMessage msg) = 0;
+    friend class HostModelPrivate;
     
-    void sendMessageToProcessor(ProcessorMessage msg);
+    HostModelPrivate* m_parent_host = nullptr;
+    
+    inline void setParentHost(HostModelPrivate* host)
+    {
+        m_parent_host = host;
+    }
+    
+public:
+    void detach();
+    
+protected:
+    void sendMessage(const ProcessorMessage &msg);
+    
+private:
+    virtual void dispatchMessage(const ProcessorMessage &msg) = 0;
+    
+    virtual MachineProcessor* processor() = 0;
 };
 
 }//namespace r64fx

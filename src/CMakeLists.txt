@@ -40,7 +40,6 @@ set(SRC
     Keyboard.cpp
     KeyboardModifiers.cpp
     LayoutUtils.cpp
-    MachineModel.cpp
     Midi.cpp
     MidiDispatcher.cpp
     Mouse.cpp

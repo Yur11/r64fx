@@ -4,12 +4,12 @@
 namespace r64fx{
 
 struct ProcessorMessage{
-    unsigned long type = 0;
-    unsigned long param = 0;
+    unsigned long header = 0;
+    unsigned long value = 0;
 
-    ProcessorMessage(unsigned long type, unsigned long param = 0)
-    : type(type)
-    , param(param)
+    ProcessorMessage(unsigned long header, unsigned long value)
+    : header(header)
+    , value(value)
     {}
 
     ProcessorMessage() {}

@@ -13,7 +13,7 @@ public:
 
     ~Timer();
 
-    void setInterval(long interval); //in micoseconds
+    void setInterval(long interval); //in microseconds
 
     long interval() const;
 
