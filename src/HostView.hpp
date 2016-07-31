@@ -21,6 +21,8 @@ public:
     virtual void requestExit() = 0;
 
     virtual void openPlayer() = 0;
+    
+    virtual void ping() = 0;
 };
 
 }//namespace r64fx

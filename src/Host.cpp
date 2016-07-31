@@ -53,4 +53,10 @@ void Host::openPlayer()
     }
 }
 
+
+void Host::ping()
+{
+    m_model->ping(125);
+}
+
 }//namespace r64fx

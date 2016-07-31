@@ -9,6 +9,7 @@ class HostViewPrivate : public Widget{
     HostViewControllerIface* m_controller_iface = nullptr;
 
     CallbackAction*  m_action_open_player  = nullptr;
+    CallbackAction*  m_action_ping         = nullptr;
     CallbackAction*  m_action_exit         = nullptr;
 
     Widget_Menu* m_main_menu = nullptr;
@@ -56,6 +57,11 @@ HostViewPrivate::HostViewPrivate(HostViewControllerIface* controller_iface)
         controller->openPlayer();
     }, m_controller_iface);
 
+    m_action_ping = new CallbackAction("Ping", [](void* arg, CallbackAction* act){
+        auto controller = (HostViewControllerIface*) arg;
+        controller->ping();
+    }, m_controller_iface);
+    
     m_action_exit = new CallbackAction("Exit", [](void* arg, CallbackAction* act){
         auto controller = (HostViewControllerIface*) arg;
         controller->requestExit();
@@ -68,6 +74,7 @@ HostViewPrivate::HostViewPrivate(HostViewControllerIface* controller_iface)
     m_menu_menu = new Widget_Menu;
     m_menu_menu->setOrientation(Orientation::Vertical);
     m_menu_menu->addAction(m_action_open_player);
+    m_menu_menu->addAction(m_action_ping);
     m_menu_menu->addAction(m_action_exit);
     m_menu_menu->resizeAndRealign();
 

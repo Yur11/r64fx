@@ -22,6 +22,8 @@ constexpr unsigned long Terminate        = 1;
 constexpr unsigned long DeployMachine    = 2;
 constexpr unsigned long DetachMachine    = 3;
 
+constexpr unsigned long Ping             = 4;
+
 }//namespace
 
 
@@ -78,6 +80,8 @@ public:
     void deployMachine(MachineModel* machine);
     
     void detachMachine(MachineModel* machine);
+    
+    void ping(int num);
 };
 
 
@@ -128,6 +132,12 @@ HostModel::~HostModel()
 void HostModel::deployMachine(MachineModel* machine)
 {
     m->deployMachine(machine);
+}
+
+
+void HostModel::ping(int num)
+{
+    m->ping(num);
 }
 
 
@@ -221,7 +231,7 @@ void HostModelPrivate::pickDestination(MachineProcessor* dst)
 void HostModelPrivate::dispatchMessages()
 {
     ProcessorMessage msg;
-    while(m_gui2processor->read(&msg, 1))
+    while(m_processor2gui->read(&msg, 1))
     {
         if(msg.header == PickDestination)
         {
@@ -240,7 +250,11 @@ void HostModelPrivate::dispatchMessages()
         {
             if(m_dst_model == nullptr)
             {
-                
+                if(msg.header == Ping)
+                {
+                    int num = msg.value;
+                    cout << "Ping " << num << "\n";
+                }
             }
             else
             {
@@ -268,6 +282,13 @@ void HostModelPrivate::detachMachine(MachineModel* machine)
 void MachineModel::detach()
 {
     m_parent_host->detachMachine(this);
+}
+
+
+void HostModelPrivate::ping(int num)
+{
+    ProcessorMessage msg(Ping, num);
+    sendMessage(nullptr, msg);
 }
 
 
@@ -343,6 +364,15 @@ void HostProcessorPrivate::dispatchMessages()
                 else if(msg.header == DetachMachine)
                 {
                     
+                }
+                else if(msg.header == Ping)
+                {
+                    int num = msg.value;
+                    cout << "Ping " << num << "\n";
+                    {
+                        ProcessorMessage msgg(Ping, num + 3);
+                        sendMessage(nullptr, msgg);
+                    }
                 }
             }
             else

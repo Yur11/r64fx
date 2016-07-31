@@ -25,6 +25,8 @@ public:
     virtual void requestExit();
 
     virtual void openPlayer();
+    
+    virtual void ping();
 };
 
 }//namespace

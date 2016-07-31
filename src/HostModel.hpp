@@ -15,6 +15,8 @@ public:
     ~HostModel();
 
     void deployMachine(MachineModel* machine);
+    
+    void ping(int num);
 };
 
 }//namespace r64fx
