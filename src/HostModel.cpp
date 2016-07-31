@@ -1,5 +1,8 @@
 #include "HostModel.hpp"
+#include "MachineModel.hpp"
+#include "MachineProcessor.hpp"
 #include "Thread.hpp"
+#include "Timer.hpp"
 #include "CircularBuffer.hpp"
 #include "sleep.hpp"
 #include "ProcessorMessage.hpp"
@@ -77,23 +80,28 @@ public:
     }
 
 
-    inline void deployMachine(MachineModel* machine)
+    inline void deployMachine(MachineProcessor* machine_processor)
     {
         if(!m_this_picked)
             pickDestination(this);
-        sendMessage(DeployMachine, (unsigned long)machine);
+        sendMessage(DeployMachine, (unsigned long)machine_processor);
     }
 
 
-    inline void removeMachine(MachineModel* machine)
+    inline void removeMachine(MachineProcessor* machine_processor)
     {
         if(!m_this_picked)
             pickDestination(this);
-        sendMessage(RemoveMachine, (unsigned long)machine);
+        sendMessage(RemoveMachine, (unsigned long)machine_processor);
     }
 
 private:
     void exec();
+};
+
+
+class HostModelPrivate{
+    
 };
 
 
@@ -111,24 +119,26 @@ HostModel::~HostModel()
 
 void HostModel::deployMachine(MachineModel* machine)
 {
-    m_processor_thread->deployMachine(machine);
+    m_processor_thread->deployMachine(machine->processor());
 }
 
 
 void HostModel::removeMachine(MachineModel* machine)
 {
-    m_processor_thread->removeMachine(machine);
+    m_processor_thread->removeMachine(machine->processor());
 }
 
 
 void HostModel::pickMachine(MachineModel* machine)
 {
-    m_processor_thread->pickDestination(machine);
+    m_processor_thread->pickDestination(machine->processor());
 }
 
 
 void ProcessorThread::exec()
 {
+    ProcessorThreadContext* ctx = new ProcessorThreadContext;
+
     void* message_destination = nullptr;
 
     bool running = true;
@@ -149,11 +159,36 @@ void ProcessorThread::exec()
                 {
                     running = false;
                 }
+                else if(msg.type == DeployMachine)
+                {
+                    auto machine_processor = (MachineProcessor*) msg.param;
+                    ctx->machines.append(machine_processor);
+                    machine_processor->deploy(ctx);
+                }
+                else if(msg.type == RemoveMachine)
+                {
+                    auto machine_processor = (MachineProcessor*) msg.param;
+                    machine_processor->remove(ctx);
+                    ctx->machines.remove(machine_processor);
+                }
+            }
+            else if(message_destination)
+            {
+                auto machine_processor = (MachineProcessor*) message_destination;
+                machine_processor->dispatchMessage(ctx, msg);
             }
         }
 
         sleep_microseconds(500);
     }
+
+    delete ctx;
+}
+
+
+void HostModel::dispatchMessage(ProcessorMessage msg)
+{
+    
 }
 
 }//namespace r64fx

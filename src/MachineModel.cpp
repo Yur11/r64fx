@@ -8,4 +8,10 @@ MachineModel::MachineModel(HostModel* host)
 
 }
 
+
+void sendMessageToProcessor(ProcessorMessage msg)
+{
+    
+}
+
 }//namespace r64fx
