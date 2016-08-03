@@ -267,6 +267,8 @@ void HostModelPrivate::dispatchMessages()
 
 void HostModelPrivate::deployMachine(MachineModel* machine)
 {
+    machine->setParentHost(this);
+    
     ProcessorMessage msg(DeployMachine, (unsigned long) machine->processor());
     sendMessage(nullptr, msg);
 }
@@ -274,6 +276,8 @@ void HostModelPrivate::deployMachine(MachineModel* machine)
 
 void HostModelPrivate::detachMachine(MachineModel* machine)
 {
+    machine->setParentHost(nullptr);
+    
     ProcessorMessage msg(DetachMachine, (unsigned long) machine->processor());
     sendMessage(nullptr, msg);
 }
@@ -359,11 +363,13 @@ void HostProcessorPrivate::dispatchMessages()
                 }
                 else if(msg.header == DeployMachine)
                 {
-                    
+                    cout << "msg DeployMachine\n";
+                    auto processor = (MachineProcessor*) msg.value;
+                    processor->deploy();
                 }
                 else if(msg.header == DetachMachine)
                 {
-                    
+                    cout << "msg DetachMachine\n";
                 }
                 else if(msg.header == Ping)
                 {

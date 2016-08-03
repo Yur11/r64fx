@@ -18,7 +18,7 @@ namespace r64fx{
 
 Font* g_LargeFont;
 
-PlayerView::PlayerView(PlayerViewFeedbackIface* player, Widget* parent)
+PlayerView::PlayerView(PlayerViewIface* player, Widget* parent)
 : m_player(player)
 {
     if(!g_LargeFont)

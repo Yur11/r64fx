@@ -6,6 +6,7 @@ namespace r64fx{
 class ProcessorMessage;
 class HostModelPrivate;
 class MachineProcessor;
+class MachineModelIface;
 
 class MachineModel{
     friend class HostModelPrivate;
@@ -23,9 +24,9 @@ public:
 protected:
     void sendMessage(const ProcessorMessage &msg);
     
-private:
     virtual void dispatchMessage(const ProcessorMessage &msg) = 0;
     
+private:
     virtual MachineProcessor* processor() = 0;
 };
 

@@ -6,8 +6,11 @@ using namespace std;
 
 namespace r64fx{
 
-Player::Player(Widget* parent_view)
+Player::Player(HostModel* host_model, Widget* parent_view)
 {
+    m_model = new PlayerModel;
+    host_model->deployMachine(m_model);
+    
     auto player_view = new PlayerView(this);
     if(parent_view)
     {
@@ -23,6 +26,11 @@ Player::Player(Widget* parent_view)
 
 Player::~Player()
 {
+    if(m_model)
+    {
+        delete m_model;
+    }
+    
     if(m_view)
     {
         if(m_view->isWindow())

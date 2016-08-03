@@ -1,19 +1,22 @@
 #ifndef R64FX_PLAYER_HPP
 #define R64FX_PLAYER_HPP
 
+#include "HostModel.hpp"
+#include "PlayerModel.hpp"
 #include "PlayerView.hpp"
 #include "SoundFile.hpp"
 
 namespace r64fx{
 
-class Player : private PlayerViewFeedbackIface{
+class Player : private PlayerViewIface{
+    PlayerModel* m_model = nullptr;
     PlayerView*  m_view = nullptr;
     SoundFile    m_sf;
     std::string  m_path = "";
     float*       m_data = nullptr;
 
 public:
-    Player(Widget* parent_view = nullptr);
+    Player(HostModel* host_model, Widget* parent_view = nullptr);
 
     virtual ~Player();
 

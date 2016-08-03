@@ -45,7 +45,7 @@ void Host::openPlayer()
 {
     if(!m_player)
     {
-        m_player = new Player;
+        m_player = new Player(m_model);
     }
     else
     {

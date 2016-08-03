@@ -13,6 +13,8 @@ public:
     : m_model(model)
     {}
     
+    virtual ~MachineProcessor(){}
+    
     inline MachineModel* model() const
     {
         return m_model;

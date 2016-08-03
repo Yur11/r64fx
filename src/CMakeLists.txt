@@ -46,6 +46,7 @@ set(SRC
     Mutex.cpp
     Painter.cpp
     Player.cpp
+    PlayerModel.cpp
     PlayerView.cpp
     SignalData.cpp
     SignalGraph.cpp

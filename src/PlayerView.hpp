@@ -6,15 +6,15 @@
 namespace r64fx{
 
 class Player;
-class PlayerViewFeedbackIface;
+class PlayerViewIface;
 
 class PlayerView : public Widget{
     friend class Player;
 
-    PlayerViewFeedbackIface* m_player;
+    PlayerViewIface* m_player;
     float* m_waveform = nullptr;
 
-    PlayerView(PlayerViewFeedbackIface* feedback, Widget* parent = nullptr);
+    PlayerView(PlayerViewIface* feedback, Widget* parent = nullptr);
 
     virtual ~PlayerView();
 
@@ -40,7 +40,7 @@ class PlayerView : public Widget{
 };
 
 
-class PlayerViewFeedbackIface{
+class PlayerViewIface{
 public:
     virtual int frameCount() = 0;
 
