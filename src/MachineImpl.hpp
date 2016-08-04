@@ -3,18 +3,21 @@
 
 #include "MachineMessage.hpp"
 
+
 namespace r64fx{
     
 class MachineManagerImpl;
+class MachineGlobalContext;
     
 class MachineImpl{
     friend MachineManagerImpl;
     
     MachineManagerImpl* m_manager_impl = nullptr;
     Machine* m_iface = nullptr;
+    MachineGlobalContext* m_ctx = nullptr;
     
 public:
-    MachineImpl(MachineManagerImpl* manager_impl, Machine* iface);
+    MachineImpl(MachineManagerImpl* manager_impl, Machine* iface, MachineGlobalContext* ctx);
     
     virtual ~MachineImpl();
     

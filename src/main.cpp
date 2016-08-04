@@ -1,10 +1,18 @@
-// #include "Host.hpp"
+#include "Timer.hpp"
+#include "sleep.hpp"
+#include "MachineManager.hpp"
 
-// using namespace r64fx;
+using namespace r64fx;
 
 int main(int argc, char* argv[])
 {
-//     Host host;
-//     return host.exec();
+    MachineManager mm;
+    
+    while(true)
+    {
+        Timer::runTimers();
+        sleep_microseconds(500);
+    }
+
     return 0;
 }

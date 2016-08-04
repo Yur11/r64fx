@@ -4,6 +4,11 @@
 #include "Thread.hpp"
 #include "Timer.hpp"
 #include "CircularBuffer.hpp"
+#include "MachineGlobalContext.hpp"
+#include "sleep.hpp"
+
+#include <iostream>
+using namespace std;
 
 namespace r64fx{
 
@@ -15,12 +20,6 @@ namespace{
     constexpr unsigned long Withdraw        = 3;
 }//namespace
     
-
-void impl_thread(void* arg)
-{
-    
-}
-
     
 class MachineManagerPrivate{
     Thread*  m_thread = nullptr;
@@ -121,17 +120,19 @@ class MachineManagerImpl{
     
     bool m_running = true;
     
+    MachineGlobalContext* m_ctx = nullptr;
+    
 public:
     MachineManagerImpl(CircularBuffer<MachineMessage>* to_impl, CircularBuffer<MachineMessage>* from_impl)
     : m_to_impl(to_impl)
     , m_from_impl(from_impl)
     {
-        
+        m_ctx = new MachineGlobalContext;
     }
     
     virtual ~MachineManagerImpl()
     {
-        
+        delete m_ctx;
     }
     
     void sendMessages(const MachineMessage* msgs, int nmsgs)
@@ -184,6 +185,8 @@ public:
         while(m_running)
         {
             dispatchMessages();
+            m_ctx->process();
+            sleep_microseconds(500);
         }
     }
 };
@@ -245,9 +248,10 @@ void Machine::sendMessages(const MachineMessage* msgs, int nmsgs)
     
     
 
-MachineImpl::MachineImpl(MachineManagerImpl* manager_impl, Machine* iface)
+MachineImpl::MachineImpl(MachineManagerImpl* manager_impl, Machine* iface, MachineGlobalContext* ctx)
 : m_manager_impl(manager_impl)
 , m_iface(iface)
+, m_ctx(ctx)
 {
     
 }
@@ -268,6 +272,18 @@ void MachineImpl::sendMessage(const MachineMessage &msg)
 void MachineImpl::sendMessages(const MachineMessage* msgs, int nmsgs)
 {
     m_manager_impl->sendMessages(this->iface(), msgs, nmsgs);
+}
+
+
+MachineManager::MachineManager()
+{
+    m = new MachineManagerPrivate;
+}
+    
+
+MachineManager::~MachineManager()
+{
+    delete m;
 }
 
 }//namespace r64fx
