@@ -1,9 +1,10 @@
-#include "Host.hpp"
+// #include "Host.hpp"
 
-using namespace r64fx;
+// using namespace r64fx;
 
 int main(int argc, char* argv[])
 {
-    Host host;
-    return host.exec();
+//     Host host;
+//     return host.exec();
+    return 0;
 }

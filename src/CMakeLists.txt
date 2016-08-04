@@ -31,8 +31,6 @@ set(SRC
     ClipboardEvent.cpp
     Directory.cpp
     Font.cpp
-    Host.cpp
-    HostModel.cpp
     HostView.cpp
     Image.cpp
     ImageAnimation.cpp
@@ -40,13 +38,12 @@ set(SRC
     Keyboard.cpp
     KeyboardModifiers.cpp
     LayoutUtils.cpp
+    Machine.cpp
     Midi.cpp
     MidiDispatcher.cpp
     Mouse.cpp
     Mutex.cpp
     Painter.cpp
-    Player.cpp
-    PlayerModel.cpp
     PlayerView.cpp
     SignalData.cpp
     SignalGraph.cpp
