@@ -17,7 +17,7 @@ public:
 
     long interval() const;
 
-    void onTimeout(void (*callback)(Timer* timer, void* data), void* data);
+    void onTimeout(void (*callback)(Timer* timer, void* arg), void* arg);
 
     void start();
 

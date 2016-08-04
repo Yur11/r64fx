@@ -10,15 +10,15 @@ class MachineManagerImpl;
 class MachineImpl{
     friend MachineManagerImpl;
     
-    MachineManagerImpl* m_manger_impl = nullptr;
-    Machine* m_machine = nullptr;
+    MachineManagerImpl* m_manager_impl = nullptr;
+    Machine* m_iface = nullptr;
     
 public:
-    MachineImpl(MachineManagerImpl* manager_impl, Machine* machine);
+    MachineImpl(MachineManagerImpl* manager_impl, Machine* iface);
     
     virtual ~MachineImpl();
     
-    inline Machine* machine() const { return m_machine; }
+    inline Machine* iface() const { return m_iface; }
     
 protected:
     void sendMessage(const MachineMessage &msg);

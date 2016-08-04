@@ -6,25 +6,36 @@
 namespace r64fx{
     
 class MachineManager;
+class MachineManagerPrivate;
 class MachineImpl;
     
 class Machine{
     friend class MachineManager;
     friend class MachineManagerPrivate;
     
-    MachineManager* m_manager = nullptr;
+    MachineManagerPrivate* m_manager_private = nullptr;
+    MachineImpl* m_impl = nullptr;
     
 public:
     Machine(MachineManager* manager);
     
     virtual ~Machine();
     
-    virtual MachineImpl* impl() = 0;
     
 protected:
+    inline void setImpl(MachineImpl* impl)
+    {
+        m_impl = impl;
+    }
+    
+    inline MachineImpl* impl() const
+    {
+        return m_impl;
+    }
+    
     void sendMessage(const MachineMessage &msg);
     
-    void sendMessages(MachineMessage* msgs, int nmsgs);
+    void sendMessages(const MachineMessage* msgs, int nmsgs);
     
     virtual void dispatchMessage(const MachineMessage &msg) = 0;
 };
