@@ -13,13 +13,13 @@ class Machine{
     friend class MachinePool;
     friend class MachinePoolPrivate;
     
-    MachinePoolPrivate* m_manager_private = nullptr;
+    MachinePoolPrivate* m_pool_private = nullptr;
     MachineImpl* m_impl = nullptr;
     
     bool m_is_deployed = false;
     
 public:
-    Machine(MachinePool* manager);
+    Machine(MachinePool* pool);
     
     virtual ~Machine();
     

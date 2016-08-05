@@ -110,7 +110,7 @@ public:
 };
 
 
-class MachinePoolImpl{
+class MachineThread{
     friend class MachineImpl;
     
     CircularBuffer<MachineMessage>* m_to_impl;
@@ -126,14 +126,14 @@ class MachinePoolImpl{
     LinkedList<MachineImpl> m_machines;
     
 public:
-    MachinePoolImpl(CircularBuffer<MachineMessage>* to_impl, CircularBuffer<MachineMessage>* from_impl)
+    MachineThread(CircularBuffer<MachineMessage>* to_impl, CircularBuffer<MachineMessage>* from_impl)
     : m_to_impl(to_impl)
     , m_from_impl(from_impl)
     {
         m_ctx = new MachineGlobalContext;
     }
     
-    virtual ~MachinePoolImpl()
+    virtual ~MachineThread()
     {
         delete m_ctx;
     }
@@ -260,10 +260,10 @@ void MachinePoolPrivate::startImplThread()
     
     m_thread->run([](void* arg) -> void* {
         auto args = (Args*) arg;
-        auto impl = new MachinePoolImpl(args->to_impl, args->from_impl);
+        auto mt = new MachineThread(args->to_impl, args->from_impl);
         delete args;
-        impl->run();
-        delete impl;
+        mt->run();
+        delete mt;
         return nullptr;
     }, args);
 }
@@ -277,8 +277,8 @@ void MachinePoolPrivate::stopImplThread()
 }
 
 
-Machine::Machine(MachinePool* manager)
-: m_manager_private(manager->m)
+Machine::Machine(MachinePool* pool)
+: m_pool_private(pool->m)
 {
     
 }
@@ -295,7 +295,7 @@ void Machine::deploy()
     if(!m_is_deployed)
     {
         MachineMessage msg(Deploy, (unsigned long)impl());
-        m_manager_private->sendMessages(nullptr, &msg, 1);
+        m_pool_private->sendMessages(nullptr, &msg, 1);
         m_is_deployed = true;
     }
 }
@@ -306,7 +306,7 @@ void Machine::withdraw()
     if(m_is_deployed)
     {
         MachineMessage msg(Withdraw, (unsigned long)impl());
-        m_manager_private->sendMessages(nullptr, &msg, 1);
+        m_pool_private->sendMessages(nullptr, &msg, 1);
         m_is_deployed = false;
     }
 }
@@ -338,7 +338,7 @@ void Machine::sendMessage(const MachineMessage &msg)
     
 void Machine::sendMessages(const MachineMessage* msgs, int nmsgs)
 {
-    m_manager_private->sendMessages(this->impl(), msgs, nmsgs);
+    m_pool_private->sendMessages(this->impl(), msgs, nmsgs);
 }
     
     
