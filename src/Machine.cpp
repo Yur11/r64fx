@@ -18,6 +18,7 @@ namespace{
     constexpr unsigned long Terminate       = 1;
     constexpr unsigned long Deploy          = 2;
     constexpr unsigned long Withdraw        = 3;
+    constexpr unsigned long WithdrawAll     = 4;
 }//namespace
     
     
@@ -183,6 +184,10 @@ public:
                         auto machine_impl = (MachineImpl*) msg.value;
                         withdrawMachine(machine_impl);
                     }
+                    else if(msg.opcode == WithdrawAll)
+                    {
+                        withdrawAll();
+                    }
                 }
                 else
                 {
@@ -206,10 +211,10 @@ public:
     {
         if(machine_impl)
         {
-            if(machine_impl->managerImpl() == nullptr)
+            if(machine_impl->poolImpl() == nullptr)
             {
                 m_machines.append(machine_impl);
-                machine_impl->setManagerImpl(this);
+                machine_impl->setPoolImpl(this);
                 machine_impl->setContext(m_ctx);
                 machine_impl->deploy();
             }
@@ -220,13 +225,23 @@ public:
     {
         if(machine_impl)
         {
-            if(machine_impl->managerImpl() == this)
+            if(machine_impl->poolImpl() == this)
             {
                 machine_impl->withdraw();
-                machine_impl->setManagerImpl(nullptr);
+                machine_impl->setPoolImpl(nullptr);
                 machine_impl->setContext(nullptr);
                 m_machines.remove(machine_impl);
             }
+        }
+    }
+    
+    void withdrawAll()
+    {
+        auto machine_impl = m_machines.first();
+        while(machine_impl)
+        {
+            withdrawMachine(machine_impl);
+            machine_impl = m_machines.first();
         }
     }
 };
@@ -355,7 +370,7 @@ void MachineImpl::sendMessage(const MachineMessage &msg)
     
 void MachineImpl::sendMessages(const MachineMessage* msgs, int nmsgs)
 {
-    m_manager_impl->sendMessages(this->iface(), msgs, nmsgs);
+    m_pool_impl->sendMessages(this->iface(), msgs, nmsgs);
 }
 
 
@@ -368,6 +383,13 @@ MachinePool::MachinePool()
 MachinePool::~MachinePool()
 {
     delete m;
+}
+
+
+void MachinePool::withdrawAll()
+{
+    MachineMessage msg(WithdrawAll, 0);
+    m->sendMessages(nullptr, &msg, 1);
 }
 
 }//namespace r64fx

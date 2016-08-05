@@ -12,13 +12,13 @@ class MachineGlobalContext;
 class MachineImpl : public LinkedList<MachineImpl>::Node{
     friend MachinePoolImpl;
     
-    MachinePoolImpl* m_manager_impl = nullptr;
+    MachinePoolImpl* m_pool_impl = nullptr;
     Machine* m_iface = nullptr;
     MachineGlobalContext* m_ctx = nullptr;
     
-    inline void setManagerImpl(MachinePoolImpl* manager)
+    inline void setPoolImpl(MachinePoolImpl* manager)
     {
-        m_manager_impl = manager;
+        m_pool_impl = manager;
     }
     
     inline void setContext(MachineGlobalContext* ctx)
@@ -31,9 +31,9 @@ public:
     
     virtual ~MachineImpl();
     
-    inline MachinePoolImpl* managerImpl() const
+    inline MachinePoolImpl* poolImpl() const
     {
-        return m_manager_impl;
+        return m_pool_impl;
     }
 
     inline Machine* iface() const 

@@ -16,6 +16,8 @@ public:
     MachinePool();
     
     virtual ~MachinePool();
+    
+    void withdrawAll();
 };
     
 }//namespace r64fx
