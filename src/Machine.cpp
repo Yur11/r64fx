@@ -1,6 +1,6 @@
 #include "Machine.hpp"
 #include "MachineImpl.hpp"
-#include "MachineManager.hpp"
+#include "MachinePool.hpp"
 #include "Thread.hpp"
 #include "Timer.hpp"
 #include "CircularBuffer.hpp"
@@ -21,7 +21,7 @@ namespace{
 }//namespace
     
     
-class MachineManagerPrivate{
+class MachinePoolPrivate{
     Thread*  m_thread = nullptr;
     Timer*   m_timer  = nullptr;
     
@@ -32,7 +32,7 @@ class MachineManagerPrivate{
     Machine*     m_dst_iface = nullptr;
     
 public:
-    MachineManagerPrivate()
+    MachinePoolPrivate()
     {
         m_thread     = new Thread;
         m_timer      = new Timer;
@@ -42,14 +42,14 @@ public:
         startImplThread();
         
         m_timer->onTimeout([](Timer* timer, void* arg){
-            auto self = (MachineManagerPrivate*) arg;
+            auto self = (MachinePoolPrivate*) arg;
             self->dispatchMessages();
         }, this);
         m_timer->setInterval(500);
         m_timer->start();
     }
     
-    ~MachineManagerPrivate()
+    ~MachinePoolPrivate()
     {
         m_timer->stop();
         
@@ -109,7 +109,7 @@ public:
 };
 
 
-class MachineManagerImpl{
+class MachinePoolImpl{
     friend class MachineImpl;
     
     CircularBuffer<MachineMessage>* m_to_impl;
@@ -125,14 +125,14 @@ class MachineManagerImpl{
     LinkedList<MachineImpl> m_machines;
     
 public:
-    MachineManagerImpl(CircularBuffer<MachineMessage>* to_impl, CircularBuffer<MachineMessage>* from_impl)
+    MachinePoolImpl(CircularBuffer<MachineMessage>* to_impl, CircularBuffer<MachineMessage>* from_impl)
     : m_to_impl(to_impl)
     , m_from_impl(from_impl)
     {
         m_ctx = new MachineGlobalContext;
     }
     
-    virtual ~MachineManagerImpl()
+    virtual ~MachinePoolImpl()
     {
         delete m_ctx;
     }
@@ -232,7 +232,7 @@ public:
 };
     
 
-void MachineManagerPrivate::startImplThread()
+void MachinePoolPrivate::startImplThread()
 {
     struct Args{
         CircularBuffer<MachineMessage>* to_impl;
@@ -245,7 +245,7 @@ void MachineManagerPrivate::startImplThread()
     
     m_thread->run([](void* arg) -> void* {
         auto args = (Args*) arg;
-        auto impl = new MachineManagerImpl(args->to_impl, args->from_impl);
+        auto impl = new MachinePoolImpl(args->to_impl, args->from_impl);
         delete args;
         impl->run();
         delete impl;
@@ -254,7 +254,7 @@ void MachineManagerPrivate::startImplThread()
 }
 
 
-void MachineManagerPrivate::stopImplThread()
+void MachinePoolPrivate::stopImplThread()
 {
     MachineMessage msg(Terminate, 0);
     sendMessages(nullptr, &msg, 1);
@@ -262,7 +262,7 @@ void MachineManagerPrivate::stopImplThread()
 }
 
 
-Machine::Machine(MachineManager* manager)
+Machine::Machine(MachinePool* manager)
 : m_manager_private(manager->m)
 {
     
@@ -359,13 +359,13 @@ void MachineImpl::sendMessages(const MachineMessage* msgs, int nmsgs)
 }
 
 
-MachineManager::MachineManager()
+MachinePool::MachinePool()
 {
-    m = new MachineManagerPrivate;
+    m = new MachinePoolPrivate;
 }
     
 
-MachineManager::~MachineManager()
+MachinePool::~MachinePool()
 {
     delete m;
 }

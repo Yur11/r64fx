@@ -7,7 +7,7 @@ namespace r64fx{
     
 class DummyMachine : public Machine{
 public:
-    DummyMachine(MachineManager* manager);
+    DummyMachine(MachinePool* manager);
     
     ~DummyMachine();
     

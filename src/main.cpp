@@ -1,13 +1,13 @@
 #include "Timer.hpp"
 #include "sleep.hpp"
-#include "MachineManager.hpp"
+#include "MachinePool.hpp"
 #include "DummyMachine.hpp"
 
 using namespace r64fx;
 
 int main(int argc, char* argv[])
 {
-    MachineManager mm;
+    MachinePool mm;
     DummyMachine dm(&mm);
     dm.deploy();
     dm.sayHello();

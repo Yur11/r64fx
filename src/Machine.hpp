@@ -5,21 +5,21 @@
 
 namespace r64fx{
     
-class MachineManager;
-class MachineManagerPrivate;
+class MachinePool;
+class MachinePoolPrivate;
 class MachineImpl;
     
 class Machine{
-    friend class MachineManager;
-    friend class MachineManagerPrivate;
+    friend class MachinePool;
+    friend class MachinePoolPrivate;
     
-    MachineManagerPrivate* m_manager_private = nullptr;
+    MachinePoolPrivate* m_manager_private = nullptr;
     MachineImpl* m_impl = nullptr;
     
     bool m_is_deployed = false;
     
 public:
-    Machine(MachineManager* manager);
+    Machine(MachinePool* manager);
     
     virtual ~Machine();
     

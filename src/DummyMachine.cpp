@@ -56,7 +56,7 @@ private:
 };
     
     
-DummyMachine::DummyMachine(MachineManager* manager)
+DummyMachine::DummyMachine(MachinePool* manager)
 : Machine(manager)
 {
     auto impl = new DummyMachineImpl(this);

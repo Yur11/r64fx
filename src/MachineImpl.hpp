@@ -6,17 +6,17 @@
 
 namespace r64fx{
     
-class MachineManagerImpl;
+class MachinePoolImpl;
 class MachineGlobalContext;
     
 class MachineImpl : public LinkedList<MachineImpl>::Node{
-    friend MachineManagerImpl;
+    friend MachinePoolImpl;
     
-    MachineManagerImpl* m_manager_impl = nullptr;
+    MachinePoolImpl* m_manager_impl = nullptr;
     Machine* m_iface = nullptr;
     MachineGlobalContext* m_ctx = nullptr;
     
-    inline void setManagerImpl(MachineManagerImpl* manager)
+    inline void setManagerImpl(MachinePoolImpl* manager)
     {
         m_manager_impl = manager;
     }
@@ -31,7 +31,7 @@ public:
     
     virtual ~MachineImpl();
     
-    inline MachineManagerImpl* managerImpl() const
+    inline MachinePoolImpl* managerImpl() const
     {
         return m_manager_impl;
     }
