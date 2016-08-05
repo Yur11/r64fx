@@ -171,6 +171,16 @@ public:
                     {
                         m_running = false;
                     }
+                    else if(msg.opcode == Deploy)
+                    {
+                        auto machine_impl = (MachineImpl*) msg.value;
+                        machine_impl->deploy();
+                    }
+                    else if(msg.opcode == Withdraw)
+                    {
+                        auto machine_impl = (MachineImpl*) msg.value;
+                        machine_impl->withdraw();
+                    }
                 }
                 else
                 {
@@ -235,6 +245,40 @@ Machine::~Machine()
 }
 
 
+void Machine::deploy()
+{
+    if(!m_is_deployed)
+    {
+        MachineMessage msg(Deploy, (unsigned long)impl());
+        m_manager_private->sendMessages(nullptr, &msg, 1);
+        m_is_deployed = true;
+    }
+}
+    
+    
+void Machine::withdraw()
+{
+    if(m_is_deployed)
+    {
+        MachineMessage msg(Withdraw, (unsigned long)impl());
+        m_manager_private->sendMessages(nullptr, &msg, 1);
+        m_is_deployed = false;
+    }
+}
+
+
+void Machine::setImpl(MachineImpl* impl)
+{
+    m_impl = impl;
+}
+    
+    
+MachineImpl* Machine::impl() const
+{
+    return m_impl;
+}
+
+
 void Machine::sendMessage(const MachineMessage &msg)
 {
     sendMessages(&msg, 1);
@@ -248,12 +292,10 @@ void Machine::sendMessages(const MachineMessage* msgs, int nmsgs)
     
     
 
-MachineImpl::MachineImpl(MachineManagerImpl* manager_impl, Machine* iface, MachineGlobalContext* ctx)
-: m_manager_impl(manager_impl)
-, m_iface(iface)
-, m_ctx(ctx)
+MachineImpl::MachineImpl(Machine* iface)
+: m_iface(iface)
 {
-    
+   
 }
   
   

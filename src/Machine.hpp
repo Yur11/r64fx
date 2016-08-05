@@ -16,22 +16,23 @@ class Machine{
     MachineManagerPrivate* m_manager_private = nullptr;
     MachineImpl* m_impl = nullptr;
     
+    bool m_is_deployed = false;
+    
 public:
     Machine(MachineManager* manager);
     
     virtual ~Machine();
     
+    void deploy();
+    
+    void withdraw();
+    
+    inline bool isDeployed() const { return m_is_deployed; }
     
 protected:
-    inline void setImpl(MachineImpl* impl)
-    {
-        m_impl = impl;
-    }
+    void setImpl(MachineImpl* impl);
     
-    inline MachineImpl* impl() const
-    {
-        return m_impl;
-    }
+    MachineImpl* impl() const;
     
     void sendMessage(const MachineMessage &msg);
     

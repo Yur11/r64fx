@@ -17,16 +17,25 @@ class MachineImpl{
     MachineGlobalContext* m_ctx = nullptr;
     
 public:
-    MachineImpl(MachineManagerImpl* manager_impl, Machine* iface, MachineGlobalContext* ctx);
+    MachineImpl(Machine* iface);
     
     virtual ~MachineImpl();
     
     inline Machine* iface() const { return m_iface; }
     
+    inline MachineGlobalContext* ctx() const
+    {
+        return m_ctx;
+    }
+    
 protected:
     void sendMessage(const MachineMessage &msg);
     
     void sendMessages(const MachineMessage* msgs, int nmsgs);
+
+    virtual void deploy() = 0;
+    
+    virtual void withdraw() = 0;
     
     virtual void dispatchMessage(const MachineMessage &msg) = 0;
 };
