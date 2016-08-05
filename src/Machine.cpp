@@ -122,6 +122,8 @@ class MachineManagerImpl{
     
     MachineGlobalContext* m_ctx = nullptr;
     
+    LinkedList<MachineImpl> m_machines;
+    
 public:
     MachineManagerImpl(CircularBuffer<MachineMessage>* to_impl, CircularBuffer<MachineMessage>* from_impl)
     : m_to_impl(to_impl)
@@ -174,12 +176,12 @@ public:
                     else if(msg.opcode == Deploy)
                     {
                         auto machine_impl = (MachineImpl*) msg.value;
-                        machine_impl->deploy();
+                        deployMachine(machine_impl);
                     }
                     else if(msg.opcode == Withdraw)
                     {
                         auto machine_impl = (MachineImpl*) msg.value;
-                        machine_impl->withdraw();
+                        withdrawMachine(machine_impl);
                     }
                 }
                 else
@@ -197,6 +199,34 @@ public:
             dispatchMessages();
             m_ctx->process();
             sleep_microseconds(500);
+        }
+    }
+    
+    void deployMachine(MachineImpl* machine_impl)
+    {
+        if(machine_impl)
+        {
+            if(machine_impl->managerImpl() == nullptr)
+            {
+                m_machines.append(machine_impl);
+                machine_impl->setManagerImpl(this);
+                machine_impl->setContext(m_ctx);
+                machine_impl->deploy();
+            }
+        }
+    }
+    
+    void withdrawMachine(MachineImpl* machine_impl)
+    {
+        if(machine_impl)
+        {
+            if(machine_impl->managerImpl() == this)
+            {
+                machine_impl->withdraw();
+                machine_impl->setManagerImpl(nullptr);
+                machine_impl->setContext(nullptr);
+                m_machines.remove(machine_impl);
+            }
         }
     }
 };
@@ -279,6 +309,12 @@ MachineImpl* Machine::impl() const
 }
 
 
+void Machine::sendMessage(unsigned long opcode, unsigned long value)
+{
+    sendMessage(MachineMessage(opcode, value));
+}
+
+
 void Machine::sendMessage(const MachineMessage &msg)
 {
     sendMessages(&msg, 1);
@@ -302,6 +338,12 @@ MachineImpl::MachineImpl(Machine* iface)
 MachineImpl::~MachineImpl()
 {
     
+}
+
+
+void MachineImpl::sendMessage(unsigned long opcode, unsigned long value)
+{
+    sendMessage(MachineMessage(opcode, value));
 }
 
 

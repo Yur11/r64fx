@@ -34,6 +34,8 @@ protected:
     
     MachineImpl* impl() const;
     
+    void sendMessage(unsigned long opcode, unsigned long value);
+    
     void sendMessage(const MachineMessage &msg);
     
     void sendMessages(const MachineMessage* msgs, int nmsgs);

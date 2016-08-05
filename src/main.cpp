@@ -10,10 +10,7 @@ int main(int argc, char* argv[])
     MachineManager mm;
     DummyMachine dm(&mm);
     dm.deploy();
-    dm.deploy();
-    dm.deploy();
-    dm.withdraw();
-    dm.deploy();
+    dm.sayHello();
     
     while(true)
     {

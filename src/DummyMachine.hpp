@@ -11,6 +11,8 @@ public:
     
     ~DummyMachine();
     
+    void sayHello();
+    
 protected:
     virtual void dispatchMessage(const MachineMessage &msg);
 };
