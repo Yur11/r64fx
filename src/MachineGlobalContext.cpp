@@ -9,23 +9,41 @@ namespace r64fx{
     
 MachineGlobalContext::MachineGlobalContext()
 {
-//     m_sound_driver = SoundDriver::newInstance();
-//     m_signal_graph = new SignalGraph(m_sound_driver);
-//     m_sound_driver->enable();
+
 }
     
 
 MachineGlobalContext::~MachineGlobalContext()
 {
-//     m_sound_driver->disable();
-//     delete m_signal_graph;
-//     SoundDriver::deleteInstance(m_sound_driver);
+    
 }
     
     
 long MachineGlobalContext::process()
 {
-//     if(m_signal_graph->process())
+    static SoundDriverIOStatusPort* status_port = nullptr;
+    static int count = 0;
+    if(m_sound_driver)
+    {
+        if(status_port)
+        {
+            SoundDriverIOStatus status;
+            if(status_port->readStatus(&status, 1))
+            {
+                long diff = status.end_time - status.begin_time;
+                cout << "process: " << count << "\n";
+                count = 0;
+            }
+            else
+            {
+                count++;
+            }
+        }
+        else
+        {
+            status_port = m_sound_driver->newStatusPort();
+        }
+    }
     
     return 0;
 }

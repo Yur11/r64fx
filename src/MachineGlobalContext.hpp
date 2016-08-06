@@ -15,9 +15,19 @@ public:
     
     ~MachineGlobalContext();
     
+    inline void setSoundDriver(SoundDriver* sd)
+    {
+        m_sound_driver = sd;
+    }
+    
     inline SoundDriver* soundDriver() const
     {
         return m_sound_driver;
+    }
+
+    inline void setSignalGraph(SignalGraph* sg)
+    {
+        m_signal_graph = sg;
     }
     
     inline SignalGraph* signalGraph() const

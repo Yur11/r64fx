@@ -60,6 +60,7 @@ set(SRC
     Shader_rgba.cpp
     Shader_rgba_tex.cpp
     SoundDriver.cpp
+    SoundDriverMachine.cpp
     SoundFile.cpp
     StringUtils.cpp
     TextPainter.cpp
