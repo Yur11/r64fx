@@ -211,12 +211,15 @@ struct SoundDriver_Jack : public SoundDriver{
 
     LinkedList<SoundDriverIOPort_Jack> m_ports;
     CircularBuffer<SoundDriverIOPort_Jack*> m_new_ports;
+    CircularBuffer<SoundDriverIOPort_Jack*> m_deleted_ports;
+    int m_port_count = 0;
 
     LinkedList<SoundDriverIOStatusPort_Jack> m_status_ports;
     CircularBuffer<SoundDriverIOStatusPort_Jack*> m_new_status_ports;
 
     SoundDriver_Jack()
     : m_new_ports(16)
+    , m_deleted_ports(16)
     , m_new_status_ports(2)
     {
         m_jack_client = jack_client_open("r64fx", JackNullOption, nullptr);
@@ -242,9 +245,8 @@ struct SoundDriver_Jack : public SoundDriver{
         SoundDriverIOStatus status;
         status.begin_time = current_time();
 
-        int new_port_count = 0;
         SoundDriverIOPort_Jack* new_port = nullptr;
-        while(m_new_ports.read(&new_port, 1) && new_port_count < 16)
+        while(m_new_ports.read(&new_port, 1))
         {
             if(new_port)
             {
@@ -253,6 +255,17 @@ struct SoundDriver_Jack : public SoundDriver{
             new_port = nullptr;
         }
 
+        
+        SoundDriverIOPort_Jack* deleted_port = nullptr;
+        while(m_deleted_ports.read(&deleted_port, 1))
+        {
+            if(deleted_port)
+            {
+                m_ports.remove(deleted_port);
+            }
+            deleted_port = nullptr;
+        }
+        
 
         for(auto port : m_ports)
         {
@@ -289,7 +302,23 @@ struct SoundDriver_Jack : public SoundDriver{
                 }
                 else
                 {
-
+                    jack_midi_clear_buffer(port_buffer);
+                    
+                    auto midi_out_port = (SoundDriverIOPort_MidiOutput_Jack*)(port->iface);
+                    
+                    MidiEvent midi_event;
+                    while(midi_out_port->buffer.read(&midi_event, 1))
+                    {
+                        if(midi_event.message().byteCount() > 0)
+                        {
+                            cout << jack_midi_event_write(
+                                port_buffer, 
+                                midi_event.time(), 
+                                midi_event.message().bytes(), 
+                                midi_event.message().byteCount()
+                            );
+                        }
+                    }
                 }
             }
         }
@@ -396,11 +425,12 @@ struct SoundDriver_Jack : public SoundDriver{
         port_impl->is_audio = is_audio;
 
         m_new_ports.write(port_impl);
-
+        m_port_count++;
+        
         return port_iface;
     }
 
-
+    
     virtual SoundDriverIOPort_AudioInput* newAudioInput(const std::string &name)
     {
         return newPort<SoundDriverIOPort_AudioInput_Jack>(name, bufferSize() * 2);
@@ -424,10 +454,25 @@ struct SoundDriver_Jack : public SoundDriver{
         return newPort<SoundDriverIOPort_MidiOutput_Jack>(name, 32);
     }
 
+    
+    virtual SoundDriverIOPort* findPort(const std::string &name)
+    {
+        for(auto port : m_ports)
+        {
+            if(port->name() == name)
+                return port->iface;
+        }
+        return nullptr;
+    }
+    
 
     virtual void deletePort(SoundDriverIOPort* port)
     {
-
+        auto jack_port = dynamic_cast<SoundDriverIOPort_Jack*>(port);
+        if(jack_port)
+        {
+            m_deleted_ports.write(&jack_port, 1);
+        }
     }
 
     

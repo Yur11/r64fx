@@ -12,6 +12,12 @@ MidiMessage::MidiMessage(unsigned char* bytes, unsigned char nbytes)
 }
 
 
+MidiMessage::MidiMessage(unsigned int bits)
+{
+    m_bits = bits;
+}
+
+
 MidiMessage::Type chan_mode(const unsigned char* bytes)
 {
     switch(bytes[1])
@@ -148,6 +154,64 @@ MidiMessage::Type MidiMessage::type() const
 }
 
 
+int MidiMessage::byteCount() const
+{
+    switch(type())
+    {
+        case MidiMessage::Type::NoteOff:
+        case MidiMessage::Type::NoteOn:
+        case MidiMessage::Type::PolyAft:
+        case MidiMessage::Type::ControlChange:
+            return 3;
+            
+        case MidiMessage::Type::ProgramChange:
+        case MidiMessage::Type::ChanAft:
+            return 2;
+            
+        case MidiMessage::Type::PitchBend:
+        case MidiMessage::Type::AllSoundOff:
+        case MidiMessage::Type::ResetAllCtrls:
+        case MidiMessage::Type::LocalControlOff:
+        case MidiMessage::Type::LocalControlOn:
+        case MidiMessage::Type::AllNotesOff:
+        case MidiMessage::Type::OmniOff:
+        case MidiMessage::Type::OmniOn:
+        case MidiMessage::Type::MonoMode:
+        case MidiMessage::Type::PolyMode:
+        case MidiMessage::Type::SysEx:
+            return 3;
+            
+        case MidiMessage::Type::TimeCode:
+            return 2;
+            
+        case MidiMessage::Type::SongPosition:
+            return 3;
+            
+        case MidiMessage::Type::SongSelect:
+            return 2;
+            
+        case MidiMessage::Type::TuneRequest:
+        case MidiMessage::Type::SysExEnd:
+        case MidiMessage::Type::Clock:
+        case MidiMessage::Type::Start:
+        case MidiMessage::Type::Continue:
+        case MidiMessage::Type::Stop:
+        case MidiMessage::Type::ActiveSensing:
+        case MidiMessage::Type::Reset:
+            return 1;
+        
+        default:
+            return -1;
+    }
+}
+
+
+unsigned char* MidiMessage::bytes()
+{
+    return m_bytes;
+}
+
+
 int MidiMessage::channel() const
 {
     return (m_bytes[0] & 0x0F);
@@ -209,6 +273,26 @@ int MidiMessage::songPosition() const
     int l = m_bytes[1];
     int m = m_bytes[2];
     return l | (m<<7);
+}
+
+
+MidiMessage MidiMessage::NoteOn(int channel, int note, int velocity)
+{
+    MidiMessage msg;
+    msg.bytes()[0] = 0x80 + channel - 1;
+    msg.bytes()[1] = note;
+    msg.bytes()[2] = velocity;
+    return msg;
+}
+    
+    
+MidiMessage MidiMessage::NoteOff(int channel, int note, int velocity)
+{
+    MidiMessage msg;
+    msg.bytes()[0] = 0x90 + channel - 1;
+    msg.bytes()[1] = note;
+    msg.bytes()[2] = velocity;
+    return msg;
 }
 
 }//namespace r64fx

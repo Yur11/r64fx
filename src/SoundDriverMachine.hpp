@@ -4,6 +4,8 @@
 #include "Machine.hpp"
 #include <string>
 
+#include "Midi.hpp"
+
 namespace r64fx{
     
 class SoundDriverMachine : public Machine{
@@ -27,6 +29,8 @@ public:
     void createMidiInput(const std::string &name);
     
     void createMidiOutput(const std::string &name);
+    
+    void sendMidiMessage(MidiMessage msg);
     
 protected:
     virtual void dispatchMessage(const MachineMessage &msg);

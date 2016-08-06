@@ -18,6 +18,7 @@ namespace{
     constexpr unsigned long CreateMidiInput    = 7;
     constexpr unsigned long CreateMidiOutput   = 8;
     constexpr unsigned long FreeString         = 9;
+    constexpr unsigned long SendMidiMessage    = 10;
 }//namespace
     
 int g_SoundDriverMachineImpl_count = 0;
@@ -100,6 +101,20 @@ protected:
             sd->newMidiOutput(*name);
             sendMessage(FreeString, msg.value);
         }
+        else if(msg.opcode == SendMidiMessage)
+        {
+            SoundDriverIOPort* port = sd->findPort("midi_out");
+            if(port)
+            {
+                auto midi_port = dynamic_cast<SoundDriverIOPort_MidiOutput*>(port);
+                if(midi_port)
+                {
+                    MidiMessage midi_msg(msg.value);
+                    MidiEvent event(midi_msg, 0);
+                    midi_port->writeEvents(&event, 1);
+                }
+            }
+        }
     }
 };
     
@@ -163,6 +178,12 @@ void SoundDriverMachine::createMidiInput(const std::string &name)
 void SoundDriverMachine::createMidiOutput(const std::string &name)
 {
     sendMessage(CreateMidiOutput, (unsigned long) new std::string(name));
+}
+    
+    
+void SoundDriverMachine::sendMidiMessage(MidiMessage msg)
+{
+    sendMessage(SendMidiMessage, (unsigned long)msg);
 }
     
     

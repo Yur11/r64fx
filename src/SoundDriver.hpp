@@ -104,6 +104,8 @@ public:
 
     virtual SoundDriverIOPort_MidiOutput* newMidiOutput(const std::string &name = "") = 0;
     
+    virtual SoundDriverIOPort* findPort(const std::string &name) = 0;
+    
     virtual void deletePort(SoundDriverIOPort* port) = 0;
 
     virtual SoundDriverIOStatusPort* newStatusPort() = 0;

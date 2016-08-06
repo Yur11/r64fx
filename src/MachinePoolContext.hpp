@@ -1,15 +1,16 @@
 #ifndef R64FX_MACHINE_POOL_CONTEXT_HPP
 #define R64FX_MACHINE_POOL_CONTEXT_HPP
 
+#include "LinkedList.hpp"
+#include "SoundDriver.hpp"
+#include "SignalGraph.hpp"
+
 namespace r64fx{
-    
-class SoundDriver;
-class SignalGraph;
     
 struct MachinePoolContext{
     SoundDriver* sound_driver = nullptr;
     SignalGraph* signal_graph = nullptr;
-            
+    
     long process();
 };
     

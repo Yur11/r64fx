@@ -1,6 +1,4 @@
 #include "MachinePoolContext.hpp"
-#include "SoundDriver.hpp"
-#include "SignalGraph.hpp"
 
 #include <iostream>
 using namespace std;

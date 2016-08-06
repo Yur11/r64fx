@@ -3,9 +3,10 @@
 
 namespace r64fx{
 
-class MidiMessage{
+union MidiMessage{
     unsigned char m_bytes[4] = {0, 0, 0, 0};
-
+    unsigned int  m_bits;
+    
 public:
     enum class Type{
         Bad,
@@ -43,9 +44,17 @@ public:
     MidiMessage() {}
 
     MidiMessage(unsigned char* bytes, unsigned char nbytes);
+    
+    MidiMessage(unsigned int bits);
 
     MidiMessage::Type type() const;
 
+    int byteCount() const;
+
+    unsigned char* bytes();
+    
+    inline operator unsigned int() { return m_bits; }
+    
     int channel() const;
 
     int noteNumber() const;
@@ -65,6 +74,10 @@ public:
     int pitchBend() const;
 
     int songPosition() const;
+    
+    static MidiMessage NoteOn(int channel, int note, int velocity);
+    
+    static MidiMessage NoteOff(int channel, int note, int velocity);
 };
 
 
@@ -82,7 +95,7 @@ public:
 
     }
 
-    inline const MidiMessage &message() const { return m_message; }
+    inline MidiMessage message() const { return m_message; }
 
     inline int time() const { return m_time; }
 };

@@ -18,6 +18,25 @@ int main(int argc, char* argv[])
     sdm.createMidiInput("midi_in");
     sdm.createMidiOutput("midi_out");
     
+    Timer timer;
+    timer.onTimeout([](Timer* timer, void* arg){
+        static bool on = true;
+        
+        auto sdm = (SoundDriverMachine*) arg;
+        if(on)
+        {
+            sdm->sendMidiMessage(MidiMessage::NoteOn(1, 69, 127));
+            on = false;
+        }
+        else
+        {
+            sdm->sendMidiMessage(MidiMessage::NoteOff(1, 69, 127));
+            on = true;
+        }
+    }, &sdm);
+    timer.setInterval(1000000);
+    timer.start();
+    
     while(true)
     {
         Timer::runTimers();
