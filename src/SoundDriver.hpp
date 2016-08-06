@@ -56,7 +56,8 @@ public:
 };
 
 class SoundDriverIOPort_MidiOutput   : public SoundDriverIOPort_Midi{
-
+public:
+    virtual int writeEvents(MidiEvent* events, int nevents) = 0;
 };
 
 
@@ -101,6 +102,8 @@ public:
 
     virtual SoundDriverIOPort_MidiInput* newMidiInput(const std::string &name = "") = 0;
 
+    virtual SoundDriverIOPort_MidiOutput* newMidiOutput(const std::string &name = "") = 0;
+    
     virtual void deletePort(SoundDriverIOPort* port) = 0;
 
     virtual SoundDriverIOStatusPort* newStatusPort() = 0;

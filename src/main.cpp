@@ -16,6 +16,7 @@ int main(int argc, char* argv[])
     sdm.createAudioInput("in");
     sdm.createAudioOutput("out");
     sdm.createMidiInput("midi_in");
+    sdm.createMidiOutput("midi_out");
     
     while(true)
     {

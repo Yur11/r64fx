@@ -155,8 +155,8 @@ struct SoundDriverIOPort_MidiOutput_Jack : public SoundDriverIOPort_MidiOutput{
     SoundDriverIOPort_Jack* impl = nullptr;
     CircularBuffer<MidiEvent> buffer;
 
-    SoundDriverIOPort_MidiOutput_Jack()
-    : buffer(32)
+    SoundDriverIOPort_MidiOutput_Jack(int buffer_size)
+    : buffer(buffer_size)
     {
 
     }
@@ -179,6 +179,11 @@ struct SoundDriverIOPort_MidiOutput_Jack : public SoundDriverIOPort_MidiOutput{
     virtual std::string name()
     {
         return impl->name();
+    }
+    
+    virtual int writeEvents(MidiEvent* events, int nevents)
+    {
+        return buffer.write(events, nevents);
     }
 };
 
@@ -411,6 +416,12 @@ struct SoundDriver_Jack : public SoundDriver{
     virtual SoundDriverIOPort_MidiInput* newMidiInput(const std::string &name)
     {
         return newPort<SoundDriverIOPort_MidiInput_Jack>(name, 32);
+    }
+    
+    
+    virtual SoundDriverIOPort_MidiOutput* newMidiOutput(const std::string &name)
+    {
+        return newPort<SoundDriverIOPort_MidiOutput_Jack>(name, 32);
     }
 
 

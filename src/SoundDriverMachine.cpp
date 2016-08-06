@@ -96,8 +96,8 @@ protected:
         }
         else if(msg.opcode == CreateMidiOutput)
         {
-//             auto name = (std::string*) msg.value;
-//             sd->newMidiOutput(*name);
+            auto name = (std::string*) msg.value;
+            sd->newMidiOutput(*name);
             sendMessage(FreeString, msg.value);
         }
     }
