@@ -2,6 +2,7 @@
 #define R64FX_SOUND_DRIVER_MACHINE_HPP
 
 #include "Machine.hpp"
+#include <string>
 
 namespace r64fx{
     
@@ -18,6 +19,14 @@ public:
     void setSampleRate(int sample_rate);
     
     void setBufferSize(int buffer_size);
+    
+    void createAudioInput(const std::string &name);
+    
+    void createAudioOutput(const std::string &name);
+    
+    void createMidiInput(const std::string &name);
+    
+    void createMidiOutput(const std::string &name);
     
 protected:
     virtual void dispatchMessage(const MachineMessage &msg);

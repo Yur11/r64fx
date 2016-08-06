@@ -13,6 +13,9 @@ int main(int argc, char* argv[])
     SoundDriverMachine sdm(&mm);
     sdm.deploy();
     sdm.enable();
+    sdm.createAudioInput("in");
+    sdm.createAudioOutput("out");
+    sdm.createMidiInput("midi_in");
     
     while(true)
     {
