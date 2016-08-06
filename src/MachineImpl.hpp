@@ -7,21 +7,21 @@
 namespace r64fx{
     
 class MachineThread;
-class MachineGlobalContext;
+class MachinePoolContext;
     
 class MachineImpl : public LinkedList<MachineImpl>::Node{
     friend MachineThread;
     
     MachineThread* m_pool_impl = nullptr;
     Machine* m_iface = nullptr;
-    MachineGlobalContext* m_ctx = nullptr;
+    MachinePoolContext* m_ctx = nullptr;
     
     inline void setPoolImpl(MachineThread* manager)
     {
         m_pool_impl = manager;
     }
     
-    inline void setContext(MachineGlobalContext* ctx)
+    inline void setContext(MachinePoolContext* ctx)
     {
         m_ctx = ctx;
     }
@@ -41,7 +41,7 @@ public:
         return m_iface; 
     }
     
-    inline MachineGlobalContext* ctx() const
+    inline MachinePoolContext* ctx() const
     {
         return m_ctx;
     }

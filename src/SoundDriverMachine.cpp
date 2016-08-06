@@ -1,6 +1,6 @@
 #include "SoundDriverMachine.hpp"
 #include "MachineImpl.hpp"
-#include "MachineGlobalContext.hpp"
+#include "MachinePoolContext.hpp"
 #include "SoundDriver.hpp"
 
 #include <iostream>

@@ -4,7 +4,7 @@
 #include "Thread.hpp"
 #include "Timer.hpp"
 #include "CircularBuffer.hpp"
-#include "MachineGlobalContext.hpp"
+#include "MachinePoolContext.hpp"
 #include "sleep.hpp"
 
 #include <iostream>
@@ -121,7 +121,7 @@ class MachineThread{
     
     bool m_running = true;
     
-    MachineGlobalContext* m_ctx = nullptr;
+    MachinePoolContext* m_ctx = nullptr;
     
     LinkedList<MachineImpl> m_machines;
     
@@ -130,7 +130,7 @@ public:
     : m_to_impl(to_impl)
     , m_from_impl(from_impl)
     {
-        m_ctx = new MachineGlobalContext;
+        m_ctx = new MachinePoolContext;
     }
     
     virtual ~MachineThread()

@@ -1,12 +1,12 @@
-#ifndef R64FX_MACHINE_GLOBAL_CONTEXT_HPP
-#define R64FX_MACHINE_GLOBAL_CONTEXT_HPP
+#ifndef R64FX_MACHINE_POOL_CONTEXT_HPP
+#define R64FX_MACHINE_POOL_CONTEXT_HPP
 
 namespace r64fx{
     
 class SoundDriver;
 class SignalGraph;
     
-struct MachineGlobalContext{
+struct MachinePoolContext{
     SoundDriver* sound_driver = nullptr;
     SignalGraph* signal_graph = nullptr;
             
@@ -15,4 +15,4 @@ struct MachineGlobalContext{
     
 }//namespace r64fx
 
-#endif//R64FX_MACHINE_GLOBAL_CONTEXT_HPP
+#endif//R64FX_MACHINE_POOL_CONTEXT_HPP

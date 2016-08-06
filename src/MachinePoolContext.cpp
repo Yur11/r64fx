@@ -1,4 +1,4 @@
-#include "MachineGlobalContext.hpp"
+#include "MachinePoolContext.hpp"
 #include "SoundDriver.hpp"
 #include "SignalGraph.hpp"
 
@@ -7,7 +7,7 @@ using namespace std;
 
 namespace r64fx{
         
-long MachineGlobalContext::process()
+long MachinePoolContext::process()
 {
     static SoundDriverIOStatusPort* status_port = nullptr;
 //     static int count = 0;
