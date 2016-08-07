@@ -3,7 +3,6 @@
 
 #include "LinkedList.hpp"
 
-
 namespace r64fx{
 
 class SignalNode;
