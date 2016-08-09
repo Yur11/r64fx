@@ -2,8 +2,19 @@
 
 namespace r64fx{
     
+void SignalGraphProcessable::prepare()
+{
     
-void SignalConnection::prepare()
+}
+
+
+void SignalGraphProcessable::processSample(int i)
+{
+    
+}
+
+
+void SignalGraphProcessable::finish()
 {
     
 }
@@ -15,11 +26,17 @@ void SignalConnection::processSample(int i)
 }
 
 
-void SignalConnection::finish()
+void SignalGraph::addNode(SignalNode* node)
 {
-    
+    m_single_nodes.append(node);
 }
     
+    
+void SignalGraph::addConnection(SignalConnection* connection)
+{
+    m_connections.append(connection);
+}
+
 
 void SignalGraph::prepare()
 {

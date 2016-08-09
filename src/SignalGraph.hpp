@@ -9,13 +9,13 @@ namespace r64fx{
 class SignalGraphProcessable : public LinkedList<SignalGraphProcessable>::Node{
 public:
     /* Called at the beginning of a cycle. */
-    virtual void prepare() = 0;
+    virtual void prepare();
     
     /* Called for each sample during a cycle. */
-    virtual void processSample(int i) = 0;
+    virtual void processSample(int i);
     
     /* Called at the end of a cycle. */
-    virtual void finish() = 0;
+    virtual void finish();
 };
 
 
@@ -41,7 +41,7 @@ public:
 };
 
 
-class SignalSink : public SignalSource{
+class SignalSink : public SignalPort{
 public:
     using SignalPort::SignalPort;    
 };
@@ -61,11 +61,7 @@ public:
     
     inline SignalSink sink() const { return m_sink; }
     
-    virtual void prepare();
-    
     virtual void processSample(int i);
-    
-    virtual void finish();
 };
 
 
@@ -86,11 +82,15 @@ class SignalGraph : public SignalGraphProcessable{
     LinkedList<SignalGraphProcessable> m_subgraphs;
     
 public:
-    virtual void prepare() = 0;
+    void addNode(SignalNode* node);
     
-    virtual void processSample(int i) = 0;
+    void addConnection(SignalConnection* connection);
     
-    virtual void finish() = 0;
+    virtual void prepare();
+    
+    virtual void processSample(int i);
+    
+    virtual void finish();
 };
 
 }//namespace r64fx

@@ -17,6 +17,8 @@ int main(int argc, char* argv[])
     sdm.createAudioOutput("out");
     sdm.createMidiInput("midi_in");
     sdm.createMidiOutput("midi_out");
+    sleep_microseconds(500000);
+    sdm.routeThrough("out", "in");
     
     Timer timer;
     timer.onTimeout([](Timer* timer, void* arg){
@@ -35,7 +37,7 @@ int main(int argc, char* argv[])
         }
     }, &sdm);
     timer.setInterval(1000000);
-    timer.start();
+//     timer.start();
     
     while(true)
     {

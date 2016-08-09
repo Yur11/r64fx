@@ -8,7 +8,6 @@ namespace r64fx{
 long MachinePoolContext::process()
 {
     static SoundDriverIOStatusPort* status_port = nullptr;
-//     static int count = 0;
     if(sound_driver)
     {
         if(status_port)
@@ -16,13 +15,18 @@ long MachinePoolContext::process()
             SoundDriverIOStatus status;
             if(status_port->readStatus(&status, 1))
             {
-//                 long diff = status.end_time - status.begin_time;
-//                 cout << "process: " << count << "\n";
-//                 count = 0;
+                if(signal_graph)
+                {
+                    signal_graph->prepare();
+                    for(int i=0; i<sound_driver->bufferSize(); i++)
+                    {
+                        signal_graph->processSample(i);
+                    }
+                    signal_graph->finish();
+                }
             }
             else
             {
-//                 count++;
             }
         }
         else

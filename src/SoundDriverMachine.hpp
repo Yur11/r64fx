@@ -32,6 +32,8 @@ public:
     
     void sendMidiMessage(MidiMessage msg);
     
+    void routeThrough(const std::string &output, const std::string &input);
+    
 protected:
     virtual void dispatchMessage(const MachineMessage &msg);
 };

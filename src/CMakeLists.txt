@@ -49,6 +49,7 @@ set(SRC
     PlayerView.cpp
     SignalData.cpp
     SignalGraph.cpp
+    SignalNode_BufferIO.cpp
     Shader.cpp
     Shader_rgba.cpp
     Shader_rgba_tex.cpp
