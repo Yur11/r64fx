@@ -13,7 +13,7 @@ class SignalNode_BufferReader : public SignalNode{
     SignalSource m_source;
     
 public:
-    SignalNode_BufferReader(SoundDriverIOPort_AudioInput* input, int buffer_size);
+    SignalNode_BufferReader(SoundDriverIOPort_AudioInput* input, int buffer_size, SignalGraph* graph);
     
     virtual ~SignalNode_BufferReader();
     
@@ -32,7 +32,7 @@ class SignalNode_BufferWriter : public SignalNode{
     SignalSink m_sink;
     
 public:
-    SignalNode_BufferWriter(SoundDriverIOPort_AudioOutput* output, int buffer_size);
+    SignalNode_BufferWriter(SoundDriverIOPort_AudioOutput* output, int buffer_size, SignalGraph* graph);
     
     virtual ~SignalNode_BufferWriter();
     

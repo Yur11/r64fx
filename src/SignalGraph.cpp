@@ -1,6 +1,12 @@
 #include "SignalGraph.hpp"
 
 namespace r64fx{
+
+SignalGraphProcessable::~SignalGraphProcessable()
+{
+    
+}
+    
     
 void SignalGraphProcessable::prepare()
 {
@@ -29,6 +35,12 @@ void SignalConnection::processSample(int i)
 void SignalGraph::addNode(SignalNode* node)
 {
     m_single_nodes.append(node);
+}
+
+
+void SignalGraph::removeNode(SignalNode* node)
+{
+    m_single_nodes.remove(node);
 }
     
     

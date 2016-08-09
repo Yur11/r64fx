@@ -2,12 +2,14 @@
 
 namespace r64fx{
     
-SignalNode_BufferReader::SignalNode_BufferReader(SoundDriverIOPort_AudioInput* input, int buffer_size)
+SignalNode_BufferReader::SignalNode_BufferReader(SoundDriverIOPort_AudioInput* input, int buffer_size, SignalGraph* graph)
 {
     m_input = input;
     m_buffer = new float[buffer_size];
     m_buffer_size = buffer_size;
     m_source = SignalSource(new float);
+    setGraph(graph);
+    graph->addNode(this);
 }
 
 
@@ -15,6 +17,7 @@ SignalNode_BufferReader::~SignalNode_BufferReader()
 {
     delete[] m_buffer;
     delete m_source.addr();
+    graph()->removeNode(this);
 }
     
     
@@ -35,12 +38,14 @@ void SignalNode_BufferReader::processSample(int i)
 
 
 
-SignalNode_BufferWriter::SignalNode_BufferWriter(SoundDriverIOPort_AudioOutput* output, int buffer_size)
+SignalNode_BufferWriter::SignalNode_BufferWriter(SoundDriverIOPort_AudioOutput* output, int buffer_size, SignalGraph* graph)
 {
     m_output = output;
     m_buffer = new float[buffer_size];
     m_buffer_size = buffer_size;
     m_sink = SignalSink(new float);
+    setGraph(graph);
+    graph->addNode(this);
 }
     
     
@@ -48,6 +53,7 @@ SignalNode_BufferWriter::~SignalNode_BufferWriter()
 {
     delete[] m_buffer;
     delete m_sink.addr();
+    graph()->removeNode(this);
 }
 
 

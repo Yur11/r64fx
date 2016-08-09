@@ -21,11 +21,9 @@ namespace{
     constexpr unsigned long CreateAudioOutput  = 6;
     constexpr unsigned long CreateMidiInput    = 7;
     constexpr unsigned long CreateMidiOutput   = 8;
-    constexpr unsigned long SendMidiMessage    = 9;
-    constexpr unsigned long RouteThrough       = 10;
-    constexpr unsigned long FreeString         = 11;
-    constexpr unsigned long FreeStringPair     = 12;
-    
+    constexpr unsigned long FreeString         = 9;
+    constexpr unsigned long PortCreated        = 10;
+    constexpr unsigned long RemovePort         = 11;
 }//namespace
     
 int g_SoundDriverMachineImpl_count = 0;
@@ -88,73 +86,43 @@ protected:
         else if(msg.opcode == CreateAudioInput)
         {
             auto name = (std::string*) msg.value;
-            sd->newAudioInput(*name);
+            auto port = sd->newAudioInput(*name);
+            if(port)
+            {
+                auto reader = new SignalNode_BufferReader(port, sd->bufferSize(), sg);
+                sendMessage(PortCreated, (unsigned long)reader);
+            }
             sendMessage(FreeString, msg.value);
         }
         else if(msg.opcode == CreateAudioOutput)
         {
             auto name = (std::string*) msg.value;
-            sd->newAudioOutput(*name);
+            auto port = sd->newAudioOutput(*name);
+            if(port)
+            {
+                auto writer = new SignalNode_BufferWriter(port, sd->bufferSize(), sg);
+                sendMessage(PortCreated, (unsigned long)writer);
+            }
             sendMessage(FreeString, msg.value);
         }
         else if(msg.opcode == CreateMidiInput)
         {
-            auto name = (std::string*) msg.value;
-            sd->newMidiInput(*name);
-            sendMessage(FreeString, msg.value);
+//             auto name = (std::string*) msg.value;
+//             auto port = sd->newMidiInput(*name);
+//             sendMessage(PortCreated, (unsigned long)port);
+//             sendMessage(FreeString, msg.value);
         }
         else if(msg.opcode == CreateMidiOutput)
         {
-            auto name = (std::string*) msg.value;
-            sd->newMidiOutput(*name);
-            sendMessage(FreeString, msg.value);
+//             auto name = (std::string*) msg.value;
+//             auto port = sd->newMidiOutput(*name);
+//             sendMessage(PortCreated, (unsigned long)port);
+//             sendMessage(FreeString, msg.value);
         }
-        else if(msg.opcode == SendMidiMessage)
+        else if(msg.opcode == RemovePort)
         {
-            SoundDriverIOPort* port = sd->findPort("midi_out");
-            if(port)
-            {
-                auto midi_port = dynamic_cast<SoundDriverIOPort_MidiOutput*>(port);
-                if(midi_port)
-                {
-                    MidiMessage midi_msg(msg.value);
-                    MidiEvent event(midi_msg, 0);
-                    midi_port->writeEvents(&event, 1);
-                }
-            }
-        }
-        else if(msg.opcode == RouteThrough)
-        {
-            if(!sg)
-            {
-                sg = new SignalGraph;
-            }
-            
-            auto p = (pair<std::string, std::string>*) msg.value;
-            auto &output = p->first;
-            auto &input = p->second;
-            
-            SoundDriverIOPort* output_port = sd->findPort(output);
-            SoundDriverIOPort* input_port = sd->findPort(input);
-            if(output_port && input_port)
-            {
-                auto audio_output = dynamic_cast<SoundDriverIOPort_AudioOutput*>(output_port);
-                auto audio_input = dynamic_cast<SoundDriverIOPort_AudioInput*>(input_port);
-                if(audio_output && audio_input)
-                {
-                    cout << sd->bufferSize() << "\n";
-                    auto reader = new SignalNode_BufferReader(audio_input, sd->bufferSize());
-                    auto writer = new SignalNode_BufferWriter(audio_output, sd->bufferSize());
-                    cout << reader->source().addr() << ", " << writer->sink().addr() << "\n";
-                    auto connection = new SignalConnection(reader->source(), writer->sink());
-
-                    sg->addNode(reader);
-                    sg->addNode(writer);
-                    sg->addConnection(connection);
-                }
-            }
-            
-            sendMessage(FreeStringPair, (unsigned long)p);
+//             auto port = (SoundDriverIOPort*) msg.value;
+//             delete port;
         }
     }
 };
@@ -170,7 +138,16 @@ SoundDriverMachine::SoundDriverMachine(MachinePool* pool)
     
 SoundDriverMachine::~SoundDriverMachine()
 {
-    
+    clear();
+}
+
+
+void SoundDriverMachine::forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg)
+{
+    for(auto port : m_ports)
+    {
+        fun(port, this, arg);
+    }
 }
     
     
@@ -201,39 +178,39 @@ void SoundDriverMachine::setBufferSize(int buffer_size)
 void SoundDriverMachine::createAudioInput(const std::string &name)
 {
     sendMessage(CreateAudioInput, (unsigned long) new std::string(name));
+    m_ports.append(new MachinePort(name, true, true));
 }
     
     
 void SoundDriverMachine::createAudioOutput(const std::string &name)
 {
     sendMessage(CreateAudioOutput, (unsigned long) new std::string(name));
+    m_ports.append(new MachinePort(name, false, true));
 }
 
 
 void SoundDriverMachine::createMidiInput(const std::string &name)
 {
     sendMessage(CreateMidiInput, (unsigned long) new std::string(name));
+    m_ports.append(new MachinePort(name, true, false));
 }
 
 
 void SoundDriverMachine::createMidiOutput(const std::string &name)
 {
     sendMessage(CreateMidiOutput, (unsigned long) new std::string(name));
-}
-    
-    
-void SoundDriverMachine::sendMidiMessage(MidiMessage msg)
-{
-    sendMessage(SendMidiMessage, (unsigned long)msg);
+    m_ports.append(new MachinePort(name, false, false));
 }
 
 
-void SoundDriverMachine::routeThrough(const std::string &output, const std::string &input)
+void SoundDriverMachine::clear()
 {
-    auto p = new pair<std::string, std::string>(output, input);
-    sendMessage(RouteThrough, (unsigned long)p);
+    for(auto port : m_ports)
+    {
+        sendMessage(RemovePort, (unsigned long) port->handle());
+    }
 }
-    
+      
     
 void SoundDriverMachine::dispatchMessage(const MachineMessage &msg)
 {
@@ -242,10 +219,17 @@ void SoundDriverMachine::dispatchMessage(const MachineMessage &msg)
         auto str = (std::string*) msg.value;
         delete str;
     }
-    else if(msg.opcode == FreeStringPair)
+    else if(msg.opcode == PortCreated)
     {
-        auto p = (pair<std::string, std::string>*) msg.value;
-        delete p;
+        auto handle = (void*)msg.value;
+        for(auto port : m_ports)
+        {
+            if(!port->handle())
+            {
+                port->setHandle(handle);
+                break;
+            }
+        }
     }
 }
 

@@ -9,10 +9,14 @@
 namespace r64fx{
     
 class SoundDriverMachine : public Machine{
+    LinkedList<MachinePort> m_ports;
+    
 public:
     SoundDriverMachine(MachinePool* pool);
     
     virtual ~SoundDriverMachine();
+    
+    virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg);
     
     void enable();
     
@@ -30,10 +34,8 @@ public:
     
     void createMidiOutput(const std::string &name);
     
-    void sendMidiMessage(MidiMessage msg);
-    
-    void routeThrough(const std::string &output, const std::string &input);
-    
+    void clear();
+        
 protected:
     virtual void dispatchMessage(const MachineMessage &msg);
 };

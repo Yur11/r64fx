@@ -30,7 +30,6 @@ set(SRC
     Clipboard.cpp
     ClipboardEvent.cpp
     Directory.cpp
-    DummyMachine.cpp
     Font.cpp
     HostView.cpp
     Image.cpp

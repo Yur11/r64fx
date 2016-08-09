@@ -1,7 +1,9 @@
 #ifndef R64FX_MACHINE_HPP
 #define R64FX_MACHINE_HPP
 
+#include <string>
 #include "MachineMessage.hpp"
+#include "MachinePort.hpp"
 
 namespace r64fx{
     
@@ -18,6 +20,8 @@ class Machine{
     
     bool m_is_deployed = false;
     
+    std::string m_name = "";
+    
 public:
     Machine(MachinePool* pool);
     
@@ -28,6 +32,18 @@ public:
     void withdraw();
     
     inline bool isDeployed() const { return m_is_deployed; }
+    
+    inline void setName(const std::string &name)
+    {
+        m_name = name;
+    }
+    
+    inline std::string name() const
+    {
+        return m_name;
+    }
+    
+    virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg) = 0;
     
 protected:
     void setImpl(MachineImpl* impl);

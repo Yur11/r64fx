@@ -4,10 +4,20 @@
 #include "LinkedList.hpp"
 
 namespace r64fx{
+    
+class SignalGraph;
 
 /* Any item that can be processed inside a SignalGraph. */
 class SignalGraphProcessable : public LinkedList<SignalGraphProcessable>::Node{
-public:
+    SignalGraph* m_graph = nullptr;
+    
+public:    
+    virtual ~SignalGraphProcessable();
+    
+    inline void setGraph(SignalGraph* graph) { m_graph = graph; }
+    
+    inline SignalGraph* graph() const { return m_graph; }
+    
     /* Called at the beginning of a cycle. */
     virtual void prepare();
     
@@ -83,6 +93,8 @@ class SignalGraph : public SignalGraphProcessable{
     
 public:
     void addNode(SignalNode* node);
+    
+    void removeNode(SignalNode* node);
     
     void addConnection(SignalConnection* connection);
     
