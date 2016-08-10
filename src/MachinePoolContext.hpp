@@ -11,6 +11,10 @@ struct MachinePoolContext{
     SoundDriver* sound_driver = nullptr;
     SignalGraph* signal_graph = nullptr;
     
+    MachinePoolContext();
+    
+    ~MachinePoolContext();
+    
     long process();
 };
     

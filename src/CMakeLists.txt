@@ -40,6 +40,7 @@ set(SRC
     LayoutUtils.cpp
     Machine.cpp
     MachinePoolContext.cpp
+    MachinePort.cpp
     Midi.cpp
     MidiDispatcher.cpp
     Mouse.cpp
@@ -49,6 +50,7 @@ set(SRC
     SignalData.cpp
     SignalGraph.cpp
     SignalNode_BufferIO.cpp
+    RouterMachine.cpp
     Shader.cpp
     Shader_rgba.cpp
     Shader_rgba_tex.cpp

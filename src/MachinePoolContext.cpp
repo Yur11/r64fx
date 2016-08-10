@@ -4,6 +4,22 @@
 using namespace std;
 
 namespace r64fx{
+    
+    
+MachinePoolContext::MachinePoolContext()
+{
+    signal_graph = new SignalGraph;
+}
+    
+    
+MachinePoolContext::~MachinePoolContext()
+{
+    if(signal_graph)
+    {
+        delete signal_graph;
+    }
+}
+    
         
 long MachinePoolContext::process()
 {

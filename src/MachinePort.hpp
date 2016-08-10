@@ -6,87 +6,63 @@
 
 namespace r64fx{
     
+class Machine;
+    
 class MachinePort : public LinkedList<MachinePort>::Node{
+    Machine* m_machine = nullptr;
     void* m_handle = 0;
     std::string m_name = "";
-    unsigned long m_flags = 0;
     
 public:
-    MachinePort(const std::string &name, bool is_input, bool is_signal)
-    {
-        setName(name);
-        isInput(is_input);
-        isSignalPort(is_signal);
-    }
+    MachinePort(Machine* machine, const std::string &name);
     
-    inline void setHandle(void* handle)
-    {
-        m_handle = handle;
-    }
+    Machine* machine() const;
     
-    inline void* handle() const
-    {
-        return m_handle;
-    }
+    void setHandle(void* handle);
     
-    inline void setName(const std::string &name)
-    {
-        m_name = name;
-    }
+    void* handle() const;
     
-    inline std::string name() const
-    {
-        return m_name;
-    }
+    void setName(const std::string &name);
     
-    inline bool isInput(bool yes)
-    {
-        if(yes)
-            m_flags |= 1;
-        else
-            m_flags &= ~1;
-        return yes;
-    }
-    
-    inline bool isInput() const
-    {
-        return m_flags & 1;
-    }
-    
-    inline bool isOutput(bool yes)
-    {
-        return isInput(!yes);
-    }
-    
-    inline bool isOutput() const
-    {
-        return !isInput();
-    }
-    
-    inline bool isSignalPort(bool yes)
-    {
-        if(yes)
-            m_flags |= 2;
-        else
-            m_flags &= ~2;
-        return yes;
-    }
-    
-    inline bool isSignalPort() const
-    {
-        return m_flags & 2;
-    }
-    
-    inline bool isSequncerPort(bool yes)
-    {
-        return isSignalPort(!yes);
-    }
-    
-    inline bool isSequncerPort() const
-    {
-        return !isSequncerPort();
-    }
+    std::string name() const;
 };
+
+
+class MachineSignalPort : public MachinePort{
+public:
+    using MachinePort::MachinePort;
+};
+
+
+class MachineSequencerPort : public MachinePort{
+public:
+    using MachinePort::MachinePort;    
+};
+
+
+class MachineSignalSink : public MachineSignalPort{
+public:
+    using MachineSignalPort::MachineSignalPort;
+};
+
+
+class MachineSignalSource : public MachineSignalPort{
+public:
+    using MachineSignalPort::MachineSignalPort;    
+};
+
+
+class MachineSequencerSink : public MachineSequencerPort{
+public:
+    using MachineSequencerPort::MachineSequencerPort;
+};
+
+
+class MachineSequencerSource : public MachineSequencerPort{
+public:
+    using MachineSequencerPort::MachineSequencerPort;    
+};
+
     
 }//namespace r64fx
 

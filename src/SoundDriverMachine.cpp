@@ -175,31 +175,35 @@ void SoundDriverMachine::setBufferSize(int buffer_size)
 }
 
 
-void SoundDriverMachine::createAudioInput(const std::string &name)
+MachineSignalSource* SoundDriverMachine::createAudioInput(const std::string &name)
 {
     sendMessage(CreateAudioInput, (unsigned long) new std::string(name));
-    m_ports.append(new MachinePort(name, true, true));
+    auto input = new MachineSignalSource(this, name);
+    m_ports.append(input);
+    return input;
 }
     
     
-void SoundDriverMachine::createAudioOutput(const std::string &name)
+MachineSignalSink* SoundDriverMachine::createAudioOutput(const std::string &name)
 {
     sendMessage(CreateAudioOutput, (unsigned long) new std::string(name));
-    m_ports.append(new MachinePort(name, false, true));
+    auto output = new MachineSignalSink(this, name);
+    m_ports.append(output);
+    return output;
 }
 
 
 void SoundDriverMachine::createMidiInput(const std::string &name)
 {
     sendMessage(CreateMidiInput, (unsigned long) new std::string(name));
-    m_ports.append(new MachinePort(name, true, false));
+//     m_ports.append(new MachinePort(this, name, true, false));
 }
 
 
 void SoundDriverMachine::createMidiOutput(const std::string &name)
 {
     sendMessage(CreateMidiOutput, (unsigned long) new std::string(name));
-    m_ports.append(new MachinePort(name, false, false));
+//     m_ports.append(new MachinePort(this, name, false, false));
 }
 
 

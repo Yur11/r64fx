@@ -26,9 +26,9 @@ public:
     
     void setBufferSize(int buffer_size);
     
-    void createAudioInput(const std::string &name);
+    MachineSignalSource* createAudioInput(const std::string &name);
     
-    void createAudioOutput(const std::string &name);
+    MachineSignalSink* createAudioOutput(const std::string &name);
     
     void createMidiInput(const std::string &name);
     
