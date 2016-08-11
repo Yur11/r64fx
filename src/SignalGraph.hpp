@@ -58,18 +58,18 @@ public:
 
 
 class SignalConnection : public SignalGraphProcessable{
-    SignalSource m_source;
-    SignalSink   m_sink;
+    SignalSource* m_source;
+    SignalSink*   m_sink;
     
 public:
-    SignalConnection(SignalSource source, SignalSink sink)
+    SignalConnection(SignalSource* source, SignalSink* sink)
     : m_source(source)
     , m_sink(sink)
     {}
     
-    inline SignalSource source() const { return m_source; }
+    inline SignalSource* source() const { return m_source; }
     
-    inline SignalSink sink() const { return m_sink; }
+    inline SignalSink* sink() const { return m_sink; }
     
     virtual void processSample(int i);
 };

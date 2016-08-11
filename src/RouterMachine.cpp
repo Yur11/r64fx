@@ -1,5 +1,10 @@
 #include "RouterMachine.hpp"
 #include "MachineImpl.hpp"
+#include "MachinePoolContext.hpp"
+#include "SignalNode_BufferIO.hpp"
+
+#include <iostream>
+using namespace std;
 
 namespace r64fx{
     
@@ -14,7 +19,7 @@ class RouterMachineImpl : public MachineImpl{
     void* src = nullptr;
     void* dst = nullptr;
     
-public:
+public:    
     virtual void deploy()
     {
         
@@ -27,7 +32,10 @@ public:
     
     void makeSignalConnection(void* src, void* dst)
     {
-        
+        auto source = (SignalSource*) src;
+        auto sink = (SignalSink*) dst;
+        auto connection = new SignalConnection(source, sink);
+        ctx()->signal_graph->addConnection(connection);
     }
     
     void makeSequencerConnection(void* src, void* dst)
@@ -47,6 +55,7 @@ public:
         }
         else if(msg.opcode == MakeSignalConnection)
         {
+            cout << "MakeSignalConnection\n";
             if(src || dst)
             {
                 makeSignalConnection(src, dst);
@@ -74,7 +83,7 @@ MachineConnection::MachineConnection(MachineSignalSource* src_port, MachineSigna
 RouterMachine::RouterMachine(MachinePool* pool)
 : Machine(pool)
 {
-    
+    setImpl(new RouterMachineImpl);
 }
     
     

@@ -28,7 +28,7 @@ void SignalGraphProcessable::finish()
     
 void SignalConnection::processSample(int i)
 {
-    m_sink[0] = m_source[0];
+    m_sink[0][0] = m_source[0][0];
 }
 
 

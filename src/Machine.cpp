@@ -241,10 +241,10 @@ public:
     {
         if(machine_impl)
         {
-            if(machine_impl->poolImpl() == nullptr)
+            if(machine_impl->thread() == nullptr)
             {
                 m_machines.append(machine_impl);
-                machine_impl->setPoolImpl(this);
+                machine_impl->setThread(this);
                 machine_impl->setContext(m_ctx);
                 machine_impl->deploy();
             }
@@ -255,10 +255,10 @@ public:
     {
         if(machine_impl)
         {
-            if(machine_impl->poolImpl() == this)
+            if(machine_impl->thread() == this)
             {
                 machine_impl->withdraw();
-                machine_impl->setPoolImpl(nullptr);
+                machine_impl->setThread(nullptr);
                 machine_impl->setContext(nullptr);
                 m_machines.remove(machine_impl);
             }
@@ -351,6 +351,7 @@ void Machine::withdraw()
 void Machine::setImpl(MachineImpl* impl)
 {
     m_impl = impl;
+    m_impl->setIface(this);
 }
     
     
@@ -377,21 +378,7 @@ void Machine::sendMessages(const MachineMessage* msgs, int nmsgs)
     m_pool_private->sendMessages(this->impl(), msgs, nmsgs);
 }
     
-    
-
-MachineImpl::MachineImpl(Machine* iface)
-: m_iface(iface)
-{
-   
-}
-  
-  
-MachineImpl::~MachineImpl()
-{
-    
-}
-
-
+      
 void MachineImpl::sendMessage(unsigned long opcode, unsigned long value)
 {
     sendMessage(MachineMessage(opcode, value));

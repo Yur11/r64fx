@@ -18,18 +18,21 @@ int main(int argc, char* argv[])
     sdm.setName("Sound Driver");
     sdm.deploy();
     sdm.enable();
-    sdm.createAudioInput("in");
-    sdm.createAudioOutput("out");
+    auto in = sdm.createAudioInput("in");
+    auto out = sdm.createAudioOutput("out");
     sdm.createMidiInput("midi_in");
     sdm.createMidiOutput("midi_out");
 
+    for(int i=0; i<10; i++)
+    {
+        Timer::runTimers();
+        sleep_microseconds(5000);
+    }
+    
     RouterMachine rm(&mp);
     rm.setName("Router");
-    
-    for(auto machine : mp)
-    {
-        cout << machine->name() << "\n";
-    }
+    rm.deploy();
+    auto c = rm.makeConnection(in, out);
     
     while(true)
     {

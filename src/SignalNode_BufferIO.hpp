@@ -21,7 +21,7 @@ public:
     
     virtual void processSample(int i);
     
-    inline SignalSource source() const { return m_source; }
+    inline SignalSource* source() { return &m_source; }
 };
 
 
@@ -40,7 +40,7 @@ public:
     
     virtual void finish();
     
-    inline SignalSink sink() const { return m_sink; }
+    inline SignalSink* sink() { return &m_sink; }
 };
     
 };

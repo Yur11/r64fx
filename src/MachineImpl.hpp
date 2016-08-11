@@ -10,15 +10,21 @@ class MachineThread;
 class MachinePoolContext;
     
 class MachineImpl : public LinkedList<MachineImpl>::Node{
-    friend MachineThread;
+    friend class MachineThread;
+    friend class Machine;
     
     MachineThread* m_pool_impl = nullptr;
     Machine* m_iface = nullptr;
     MachinePoolContext* m_ctx = nullptr;
     
-    inline void setPoolImpl(MachineThread* manager)
+    inline void setThread(MachineThread* manager)
     {
         m_pool_impl = manager;
+    }
+    
+    inline void setIface(Machine* machine)
+    {
+        m_iface = machine;
     }
     
     inline void setContext(MachinePoolContext* ctx)
@@ -27,11 +33,7 @@ class MachineImpl : public LinkedList<MachineImpl>::Node{
     }
     
 public:
-    MachineImpl(Machine* iface);
-    
-    virtual ~MachineImpl();
-    
-    inline MachineThread* poolImpl() const
+    inline MachineThread* thread() const
     {
         return m_pool_impl;
     }

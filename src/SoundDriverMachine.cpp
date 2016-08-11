@@ -28,13 +28,7 @@ namespace{
     
     
 class SoundDriverMachineImpl : public MachineImpl{
-public:
-    SoundDriverMachineImpl(Machine* iface)
-    : MachineImpl(iface)
-    {
-        
-    }
-    
+public:    
     virtual ~SoundDriverMachineImpl()
     {
         
@@ -77,7 +71,7 @@ protected:
             if(port)
             {
                 auto reader = new SignalNode_BufferReader(port, sd->bufferSize(), sg);
-                sendMessage(PortCreated, (unsigned long)reader);
+                sendMessage(PortCreated, (unsigned long)reader->source());
             }
             sendMessage(FreeString, msg.value);
         }
@@ -88,7 +82,7 @@ protected:
             if(port)
             {
                 auto writer = new SignalNode_BufferWriter(port, sd->bufferSize(), sg);
-                sendMessage(PortCreated, (unsigned long)writer);
+                sendMessage(PortCreated, (unsigned long)writer->sink());
             }
             sendMessage(FreeString, msg.value);
         }
@@ -118,8 +112,7 @@ protected:
 SoundDriverMachine::SoundDriverMachine(MachinePool* pool)
 : Machine(pool)
 {
-    auto impl = new SoundDriverMachineImpl(this);
-    setImpl(impl);
+    setImpl(new SoundDriverMachineImpl);
 }
     
     
