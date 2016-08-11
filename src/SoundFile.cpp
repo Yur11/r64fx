@@ -56,13 +56,20 @@ void SoundFile::open(const std::string &path, SoundFile::Mode mode)
     }
 
     m = sf_open(path.c_str(), sndfilemode, &sfinfo);
-    if(!m)
-        return;
-
-    m_mode = mode;
-    m_component_count = sfinfo.channels;
-    m_frame_count     = sfinfo.frames;
-    m_sample_rate     = sfinfo.samplerate;
+    if(m)
+    {
+        m_mode = mode;
+        m_component_count = sfinfo.channels;
+        m_frame_count     = sfinfo.frames;
+        m_sample_rate     = sfinfo.samplerate;
+    }
+    else
+    {
+        m_mode = Mode::Bad;
+        m_component_count = 0;
+        m_frame_count = 0;
+        m_sample_rate = 0;
+    }
 }
 
 

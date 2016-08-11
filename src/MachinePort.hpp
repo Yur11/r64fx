@@ -7,24 +7,37 @@
 namespace r64fx{
     
 class Machine;
+class MachineSourceImpl;
+class MachineSinkImpl;
+class SignalSourceConnectionRecord;
+class SignalSinkConnectionRecord;
     
 class MachinePort : public LinkedList<MachinePort>::Node{
     Machine* m_machine = nullptr;
-    void* m_handle = 0;
     std::string m_name = "";
+    int m_component_count = 0;
+    
+protected:
+    unsigned int m_flags = 0;
     
 public:
-    MachinePort(Machine* machine, const std::string &name);
+    MachinePort(Machine* machine, const std::string &name, int component_count = 1);
     
     Machine* machine() const;
-    
-    void setHandle(void* handle);
-    
-    void* handle() const;
     
     void setName(const std::string &name);
     
     std::string name() const;
+    
+    int componentCount() const;
+    
+    bool isSignalPort() const;
+    
+    bool isSequencerPort() const;
+    
+    bool isSink() const;
+    
+    bool isSource() const;
 };
 
 
@@ -41,14 +54,44 @@ public:
 
 
 class MachineSignalSink : public MachineSignalPort{
+    friend class MachineConnectionDatabase;
+    
+    SignalSinkConnectionRecord* connection_record = nullptr;
+    MachineSinkImpl* m_impl = nullptr;
+    
 public:
     using MachineSignalPort::MachineSignalPort;
+    
+    inline void setImpl(MachineSinkImpl* impl)
+    {
+        m_impl = impl;
+    }
+    
+    inline MachineSinkImpl* impl() const
+    {
+        return m_impl;
+    }
 };
 
 
 class MachineSignalSource : public MachineSignalPort{
+    friend class MachineConnectionDatabase;
+    
+    SignalSourceConnectionRecord* connection_record = nullptr;
+    MachineSourceImpl* m_impl = nullptr;
+    
 public:
-    using MachineSignalPort::MachineSignalPort;    
+    using MachineSignalPort::MachineSignalPort;
+    
+    inline void setImpl(MachineSourceImpl* impl)
+    {
+        m_impl = impl;
+    }
+    
+    inline MachineSourceImpl* impl() const
+    {
+        return m_impl;
+    }
 };
 
 

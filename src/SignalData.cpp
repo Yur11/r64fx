@@ -9,25 +9,25 @@
 
 namespace r64fx{
 
-SignalData::SignalData(int frame_count, int channel_count, float* data, bool copy_data)
+SignalData::SignalData(int frame_count, int component_count, float* data, bool copy_data)
 {
-
+    load(frame_count, component_count, data, copy_data);
 }
 
 
 SignalData::~SignalData()
 {
-
+    free();
 }
 
 
-void SignalData::load(int frame_count, int channel_count, float* data, bool copy_data)
+void SignalData::load(int frame_count, int component_count, float* data, bool copy_data)
 {
     free();
 
-    if(frame_count > 0 && channel_count > 0)
+    if(frame_count > 0 && component_count > 0)
     {
-        int size = frame_count * channel_count;
+        int size = frame_count + 1 * component_count;
         if(data)
         {
             if(copy_data)
@@ -51,7 +51,7 @@ void SignalData::load(int frame_count, int channel_count, float* data, bool copy
             m_flags |= R64FX_OWNS_DATA;
         }
         m_frame_count = frame_count;
-        m_component_count = channel_count;
+        m_component_count = component_count;
     }
 }
 
@@ -112,6 +112,12 @@ void SignalData::setSampleRate(int rate)
 int SignalData::sampleRate() const
 {
     return m_sample_rate;
+}
+
+
+bool SignalData::isGood() const
+{
+    return m_data && m_frame_count > 0 && m_component_count > 0;
 }
 
 }//namespace r64fx

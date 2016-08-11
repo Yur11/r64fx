@@ -13,13 +13,13 @@ class MachineImpl : public LinkedList<MachineImpl>::Node{
     friend class MachineThread;
     friend class Machine;
     
-    MachineThread* m_pool_impl = nullptr;
+    MachineThread* m_thread = nullptr;
     Machine* m_iface = nullptr;
     MachinePoolContext* m_ctx = nullptr;
     
     inline void setThread(MachineThread* manager)
     {
-        m_pool_impl = manager;
+        m_thread = manager;
     }
     
     inline void setIface(Machine* machine)
@@ -35,7 +35,7 @@ class MachineImpl : public LinkedList<MachineImpl>::Node{
 public:
     inline MachineThread* thread() const
     {
-        return m_pool_impl;
+        return m_thread;
     }
 
     inline Machine* iface() const 
@@ -54,7 +54,7 @@ protected:
     void sendMessage(const MachineMessage &msg);
     
     void sendMessages(const MachineMessage* msgs, int nmsgs);
-
+    
     virtual void deploy() = 0;
     
     virtual void withdraw() = 0;

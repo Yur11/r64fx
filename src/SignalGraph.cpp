@@ -1,10 +1,34 @@
 #include "SignalGraph.hpp"
 
+#include <iostream>
+using namespace std;
+
 namespace r64fx{
 
 SignalGraphProcessable::~SignalGraphProcessable()
 {
+    removeFromGraph();
+}
+
+
+void SignalGraphProcessable::addedToGraph(SignalGraph* graph)
+{
     
+}
+
+
+void SignalGraphProcessable::aboutToBeRemovedFromGraph(SignalGraph* graph)
+{
+    
+}
+
+
+void SignalGraphProcessable::removeFromGraph()
+{
+    if(m_graph)
+    {
+        m_graph->removeItem(this);
+    }
 }
     
     
@@ -24,50 +48,125 @@ void SignalGraphProcessable::finish()
 {
     
 }
+
+
+SignalConnection::SignalConnection(SignalSource* source, SignalSink* sink)
+: m_source(source)
+, m_sink(sink)
+{
+    
+}
+
+
+void SignalConnection::setSource(SignalSource* source)
+{
+    m_source = source;
+}
+    
+    
+SignalSource* SignalConnection::source() const
+{
+    return m_source;
+}
+
+
+void SignalConnection::setSink(SignalSink* sink)
+{
+    m_sink = sink;
+}
+
+
+SignalSink* SignalConnection::sink() const
+{
+    return m_sink;
+}
     
     
 void SignalConnection::processSample(int i)
 {
+//     cout << i << " connection\n";
     m_sink[0][0] = m_source[0][0];
 }
 
 
-void SignalGraph::addNode(SignalNode* node)
+void SignalGraph::addItem(SignalGraphProcessable* item)
 {
-    m_single_nodes.append(node);
-}
-
-
-void SignalGraph::removeNode(SignalNode* node)
-{
-    m_single_nodes.remove(node);
+    if(item->graph() != this)
+    {
+        m_items.append(item);
+        item->setGraph(this);
+        item->addedToGraph(this);
+    }
 }
     
     
-void SignalGraph::addConnection(SignalConnection* connection)
+void SignalGraph::removeItem(SignalGraphProcessable* item)
 {
-    m_connections.append(connection);
+    if(item->graph() == this)
+    {
+        item->aboutToBeRemovedFromGraph(this);
+        item->setGraph(nullptr);
+        m_items.remove(item);
+    }
+}
+
+
+void SignalGraph::clear()
+{
+    while(m_items.last())
+        removeItem(m_items.last());
+}
+
+
+void SignalGraph::replaceSource(SignalSource* old_source, SignalSource* new_source)
+{
+    for(auto item : m_items)
+    {
+        auto signal_connection = dynamic_cast<SignalConnection*>(item);
+        if(signal_connection)
+        {
+            if(signal_connection->source() == old_source)
+            {
+                signal_connection->setSource(new_source);
+            }
+        }
+        else
+        {
+            auto signal_graph = dynamic_cast<SignalGraph*>(item);
+            {
+                signal_graph->replaceSource(old_source, new_source);
+            }
+        }
+    }
+}
+
+
+void SignalGraph::replaceSink(SignalSink* old_sink, SignalSink* new_sink)
+{
+    for(auto item : m_items)
+    {
+        auto signal_connection = dynamic_cast<SignalConnection*>(item);
+        if(signal_connection)
+        {
+            if(signal_connection->sink() == old_sink)
+            {
+                signal_connection->setSink(new_sink);
+            }
+        }
+        else
+        {
+            auto signal_graph = dynamic_cast<SignalGraph*>(item);
+            {
+                signal_graph->replaceSink(old_sink, new_sink);
+            }
+        }
+    }
 }
 
 
 void SignalGraph::prepare()
 {
-    for(auto item : m_single_nodes)
-    {
-        item->prepare();
-    }
-    
-    for(auto item : m_node_classes)
-    {
-        item->prepare();
-    }
-    
-    for(auto item : m_connections)
-    {
-        item->prepare();
-    }
-    
-    for(auto item : m_subgraphs)
+    for(auto item : m_items)
     {
         item->prepare();
     }
@@ -76,22 +175,7 @@ void SignalGraph::prepare()
     
 void SignalGraph::processSample(int i)
 {
-    for(auto item : m_single_nodes)
-    {
-        item->processSample(i);
-    }
-    
-    for(auto item : m_node_classes)
-    {
-        item->processSample(i);
-    }
-    
-    for(auto item : m_connections)
-    {
-        item->processSample(i);
-    }
-    
-    for(auto item : m_subgraphs)
+    for(auto item : m_items)
     {
         item->processSample(i);
     }
@@ -100,22 +184,7 @@ void SignalGraph::processSample(int i)
 
 void SignalGraph::finish()
 {
-    for(auto item : m_single_nodes)
-    {
-        item->finish();
-    }
-    
-    for(auto item : m_node_classes)
-    {
-        item->finish();
-    }
-    
-    for(auto item : m_connections)
-    {
-        item->finish();
-    }
-    
-    for(auto item : m_subgraphs)
+    for(auto item : m_items)
     {
         item->finish();
     }

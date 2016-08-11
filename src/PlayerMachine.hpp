@@ -2,20 +2,26 @@
 #define R64FX_PLAYER_MACHINE_HPP
 
 #include "Machine.hpp"
+#include "SignalData.hpp"
 
 namespace r64fx{
     
 class PlayerMachine : public Machine{
-    MachineSignalSource m_signal_source;
+    MachineSignalSource m_output;
+    SignalData* m_data = nullptr;
     
 public:
     PlayerMachine(MachinePool* pool);
     
     virtual ~PlayerMachine();
     
-    void playData(float* data, int frame_count, int component_count);
+    void setData(SignalData* data);
     
-    MachineSignalSource* signalSource();
+    void play();
+    
+    void stop();
+    
+    MachineSignalSource* output();
     
     virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg);
     

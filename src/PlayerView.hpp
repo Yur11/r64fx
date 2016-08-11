@@ -5,16 +5,14 @@
 
 namespace r64fx{
 
-class Player;
-class PlayerViewIface;
+class PlayerViewEventIface;
 
 class PlayerView : public Widget{
-    friend class Player;
-
-    PlayerViewIface* m_player;
+    PlayerViewEventIface* m_event_iface;
     float* m_waveform = nullptr;
 
-    PlayerView(PlayerViewIface* feedback, Widget* parent = nullptr);
+public:
+    PlayerView(PlayerViewEventIface* feedback, Widget* parent = nullptr);
 
     virtual ~PlayerView();
 
@@ -37,11 +35,13 @@ class PlayerView : public Widget{
     virtual void dndDropEvent(DndDropEvent* event);
 
     virtual void dndLeaveEvent(DndLeaveEvent* event);
+    
+    virtual void closeEvent();
 };
 
 
-class PlayerViewIface{
-public:
+class PlayerViewEventIface{
+public:    
     virtual int frameCount() = 0;
 
     virtual int componentCount() = 0;
@@ -51,6 +51,8 @@ public:
     virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out) = 0;
 
     virtual bool hasData() = 0;
+    
+    virtual void close() = 0;
 };
 
 }//namespace r64fx

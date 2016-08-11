@@ -18,8 +18,8 @@ namespace r64fx{
 
 Font* g_LargeFont;
 
-PlayerView::PlayerView(PlayerViewIface* player, Widget* parent)
-: m_player(player)
+PlayerView::PlayerView(PlayerViewEventIface* event_iface, Widget* parent)
+: m_event_iface(event_iface)
 {
     if(!g_LargeFont)
     {
@@ -68,16 +68,17 @@ void PlayerView::notifyLoad(bool success)
         m_waveform = nullptr;
     }
 
-    int component_count = m_player->componentCount();
-    int frame_count = m_player->frameCount();
-
+    int component_count = m_event_iface->componentCount();
+    int frame_count = m_event_iface->frameCount();
+    
+    
     m_waveform = new(std::nothrow) float[component_count * frame_count * 2];
     if(!m_waveform)
         return;
 
     for(int c=0; c<component_count; c++)
     {
-        m_player->loadWaveform(0, frame_count, c, width(), m_waveform + (c * frame_count));
+        m_event_iface->loadWaveform(0, frame_count, c, width(), m_waveform + (c * frame_count));
     }
     repaint();
 }
@@ -89,16 +90,16 @@ void PlayerView::paintEvent(PaintEvent* event)
     unsigned char bg[4] = {127, 127, 127, 0};
     p->fillRect({0, 0, width(), height()}, bg);
 
-    int component_count = m_player->componentCount();
+    int component_count = m_event_iface->componentCount();
 
-    if(m_waveform)
+    if(m_waveform && component_count > 0)
     {
         int waveform_height = height() / component_count;
         int waveform_y = 0;
         for(int c=0; c<component_count; c++)
         {
             unsigned char fg[4] = {63, 63, 63, 0};
-            p->drawWaveform({60, waveform_y, width() - 85, waveform_height}, fg, m_waveform + (c * m_player->frameCount()));
+            p->drawWaveform({60, waveform_y, width() - 85, waveform_height}, fg, m_waveform + (c * m_event_iface->frameCount()));
             waveform_y += waveform_height;
         }
     }
@@ -142,14 +143,24 @@ void PlayerView::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
     if(event->type() == "text/uri-list")
     {
         string uri_list((const char*)event->data(), event->size());
-        auto it = uri_list.begin();
-        for(;;)
         {
-            auto file_path = next_file_path_from_uri_list(it, uri_list.end());
-            if(file_path.empty() || m_player->loadAudioFile(file_path))
+            cout << "uri-list:\n";
+            auto it = uri_list.begin();
+            for(;;)
             {
-                break;
+                if(it == uri_list.end())
+                    break;
+                
+                auto file_path = next_file_path_from_uri_list(it, uri_list.end());
+                cout << "    " << file_path << "\n";
             }
+        }
+        
+        
+        {
+            auto it = uri_list.begin();
+            auto file_path = next_file_path_from_uri_list(it, uri_list.end());
+            m_event_iface->loadAudioFile(file_path);
         }
     }
 }
@@ -202,6 +213,12 @@ void PlayerView::dndDropEvent(DndDropEvent* event)
 void PlayerView::dndLeaveEvent(DndLeaveEvent* event)
 {
 
+}
+
+
+void PlayerView::closeEvent()
+{
+    m_event_iface->close();
 }
 
 }//namespace r64fx

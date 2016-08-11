@@ -1,9 +1,11 @@
 #include "SoundDriverMachine.hpp"
 #include "MachineImpl.hpp"
+#include "MachinePortImpl.hpp"
 #include "MachinePoolContext.hpp"
 #include "SoundDriver.hpp"
 #include "SignalGraph.hpp"
 #include "SignalNode_BufferIO.hpp"
+#include "StringUtils.hpp"
 
 #include <utility>
 
@@ -21,10 +23,32 @@ namespace{
     constexpr unsigned long CreateAudioOutput  = 6;
     constexpr unsigned long CreateMidiInput    = 7;
     constexpr unsigned long CreateMidiOutput   = 8;
-    constexpr unsigned long FreeString         = 9;
-    constexpr unsigned long PortCreated        = 10;
-    constexpr unsigned long RemovePort         = 11;
+    constexpr unsigned long DestroyAudioInput  = 9;
+    constexpr unsigned long DestroyAudioOutput = 10;
+    constexpr unsigned long DestroyMidiInput   = 11;
+    constexpr unsigned long DestroyMidiOutput  = 12;
+    
+    constexpr unsigned long SignalSourceCreated   = 13;
+    constexpr unsigned long SignalSinkCreated     = 14;
+    
+    struct CreatePortSpec{
+        std::string port_name  = "";
+        unsigned long component_count = 0;
+        
+        void* impl = nullptr;
+        void* port = nullptr;
+    };
 }//namespace
+    
+    
+class SoundDriverSignalSource : public SignalSource{
+    
+};
+
+
+class SoundDriverSignalSink : public SignalSink{
+    
+};
     
     
 class SoundDriverMachineImpl : public MachineImpl{
@@ -45,16 +69,15 @@ protected:
     
     virtual void dispatchMessage(const MachineMessage &msg)
     {
-        SoundDriver* &sd = ctx()->sound_driver;
-        SignalGraph* &sg = ctx()->signal_graph;
+        auto sound_driver  = ctx()->sound_driver;
         
         if(msg.opcode == Enable)
         {
-            sd->enable();
+            sound_driver->enable();
         }
         else if(msg.opcode == Disable)
         {
-            sd->disable();
+            sound_driver->disable();
         }
         else if(msg.opcode == SetSampleRate)
         {
@@ -66,44 +89,85 @@ protected:
         }
         else if(msg.opcode == CreateAudioInput)
         {
-            auto name = (std::string*) msg.value;
-            auto port = sd->newAudioInput(*name);
-            if(port)
+            auto spec = (CreatePortSpec*) msg.value;
+            
+            auto source_impl = new MachineSourceImpl(spec->component_count);
+            for(unsigned long i=0; i<spec->component_count; i++)
             {
-                auto reader = new SignalNode_BufferReader(port, sd->bufferSize(), sg);
-                sendMessage(PortCreated, (unsigned long)reader->source());
+                string name = spec->port_name;
+                if(spec->component_count > 1)
+                {
+                    name += "_" + num2str(i + 1);
+                }
+
+                auto input = sound_driver->newAudioInput(name);
+                auto node =  new SignalNode_BufferReader(input, sound_driver->bufferSize());
+                ctx()->input_subgraph->addItem(node);
+                source_impl->at(i) = node->source();
             }
-            sendMessage(FreeString, msg.value);
+            
+            spec->impl = source_impl;
+            sendMessage(SignalSourceCreated, (unsigned long)spec);
         }
         else if(msg.opcode == CreateAudioOutput)
         {
-            auto name = (std::string*) msg.value;
-            auto port = sd->newAudioOutput(*name);
-            if(port)
+            auto spec = (CreatePortSpec*) msg.value;
+            
+            auto sink_impl = new MachineSinkImpl(spec->component_count);
+            for(unsigned long i=0; i<spec->component_count; i++)
             {
-                auto writer = new SignalNode_BufferWriter(port, sd->bufferSize(), sg);
-                sendMessage(PortCreated, (unsigned long)writer->sink());
+                string name = spec->port_name;
+                if(spec->component_count > 1)
+                {
+                    name += "_" + num2str(i + 1);
+                }
+
+                auto output = sound_driver->newAudioOutput(name);
+                auto node =  new SignalNode_BufferWriter(output, sound_driver->bufferSize());
+                ctx()->output_subgraph->addItem(node);
+                sink_impl->at(i) = node->sink();
             }
-            sendMessage(FreeString, msg.value);
+            
+            spec->impl = sink_impl;
+            sendMessage(SignalSourceCreated, (unsigned long)spec);
         }
         else if(msg.opcode == CreateMidiInput)
         {
-//             auto name = (std::string*) msg.value;
-//             auto port = sd->newMidiInput(*name);
-//             sendMessage(PortCreated, (unsigned long)port);
-//             sendMessage(FreeString, msg.value);
         }
         else if(msg.opcode == CreateMidiOutput)
         {
-//             auto name = (std::string*) msg.value;
-//             auto port = sd->newMidiOutput(*name);
-//             sendMessage(PortCreated, (unsigned long)port);
-//             sendMessage(FreeString, msg.value);
         }
-        else if(msg.opcode == RemovePort)
+        else if(msg.opcode == DestroyAudioInput)
         {
-//             auto port = (SoundDriverIOPort*) msg.value;
-//             delete port;
+            auto source_impl = (MachineSourceImpl*) msg.value;
+            for(unsigned long i=0; source_impl->size(); i++)
+            {
+                auto source = (BufferReaderSignalSource*) source_impl->at(i);
+                auto node = source->parentReader();
+                ctx()->input_subgraph->removeItem(node);
+                sound_driver->deletePort(node->input());
+                delete node;
+            }
+            delete source_impl;
+        }
+        else if(msg.opcode == DestroyAudioOutput)
+        {
+            auto sink_impl = (MachineSinkImpl*) msg.value;
+            for(unsigned long i=0; i<sink_impl->size(); i++)
+            {
+                auto sink = (BufferWriterSignalSink*) sink_impl->at(i);
+                auto node = sink->parentWriter();
+                ctx()->output_subgraph->removeItem(node);
+                sound_driver->deletePort(node->output());
+                delete node;
+            }
+            delete sink_impl;
+        }
+        else if(msg.opcode == DestroyMidiInput)
+        {
+        }
+        else if(msg.opcode == DestroyMidiOutput)
+        {
         }
     }
 };
@@ -155,35 +219,75 @@ void SoundDriverMachine::setBufferSize(int buffer_size)
 }
 
 
-MachineSignalSource* SoundDriverMachine::createAudioInput(const std::string &name)
+MachineSignalSource* SoundDriverMachine::createAudioInput(const std::string &name, int component_count)
 {
-    sendMessage(CreateAudioInput, (unsigned long) new std::string(name));
-    auto input = new MachineSignalSource(this, name);
-    m_ports.append(input);
-    return input;
+    auto source = new MachineSignalSource(this, name, component_count);
+    
+    auto spec = new CreatePortSpec;
+    spec->port = source;
+    spec->port_name = name;
+    spec->component_count = component_count;
+    sendMessage(CreateAudioInput, (unsigned long)spec);
+    
+    m_ports.append(source);
+    return source;
 }
     
     
-MachineSignalSink* SoundDriverMachine::createAudioOutput(const std::string &name)
+MachineSignalSink* SoundDriverMachine::createAudioOutput(const std::string &name, int component_count)
 {
-    sendMessage(CreateAudioOutput, (unsigned long) new std::string(name));
-    auto output = new MachineSignalSink(this, name);
-    m_ports.append(output);
-    return output;
+    auto sink = new MachineSignalSink(this, name, component_count);
+    
+    auto spec = new CreatePortSpec;
+    spec->port = sink;
+    spec->port_name = name;
+    spec->component_count = component_count;
+    sendMessage(CreateAudioOutput, (unsigned long)spec);
+    
+    m_ports.append(sink);
+    return sink;
 }
 
 
 void SoundDriverMachine::createMidiInput(const std::string &name)
 {
-    sendMessage(CreateMidiInput, (unsigned long) new std::string(name));
+//     sendMessage(CreateMidiInput, (unsigned long) new std::string(name));
 //     m_ports.append(new MachinePort(this, name, true, false));
 }
 
 
 void SoundDriverMachine::createMidiOutput(const std::string &name)
 {
-    sendMessage(CreateMidiOutput, (unsigned long) new std::string(name));
+//     sendMessage(CreateMidiOutput, (unsigned long) new std::string(name));
 //     m_ports.append(new MachinePort(this, name, false, false));
+}
+
+
+void SoundDriverMachine::destroyPort(MachinePort* port)
+{
+    if(port->isSignalPort())
+    {
+        if(port->isSource())
+        {
+            auto source = (MachineSignalSource*)port;
+            if(source->impl())
+            {
+                sendMessage(DestroyAudioInput, (unsigned long)source->impl());
+            }
+        }
+        else if(port->isSink())
+        {
+            auto sink = (MachineSignalSink*)port;
+            if(sink->impl())
+            {
+                sendMessage(DestroyAudioOutput, (unsigned long)sink->impl());
+            }
+        }
+    }
+    else if(port->isSequencerPort())
+    {
+        
+    }
 }
 
 
@@ -191,29 +295,28 @@ void SoundDriverMachine::clear()
 {
     for(auto port : m_ports)
     {
-        sendMessage(RemovePort, (unsigned long) port->handle());
+        destroyPort(port);
     }
 }
       
     
 void SoundDriverMachine::dispatchMessage(const MachineMessage &msg)
 {
-    if(msg.opcode == FreeString)
+    if(msg.opcode == SignalSourceCreated)
     {
-        auto str = (std::string*) msg.value;
-        delete str;
+        auto spec = (CreatePortSpec*) msg.value;
+        auto source = (MachineSignalSource*) spec->port;
+        auto impl = (MachineSourceImpl*) spec->impl;
+        source->setImpl(impl);
+        delete spec;
     }
-    else if(msg.opcode == PortCreated)
+    else if(msg.opcode == SignalSinkCreated)
     {
-        auto handle = (void*)msg.value;
-        for(auto port : m_ports)
-        {
-            if(!port->handle())
-            {
-                port->setHandle(handle);
-                break;
-            }
-        }
+        auto spec = (CreatePortSpec*) msg.value;
+        auto sink = (MachineSignalSink*) spec->port;
+        auto impl = (MachineSinkImpl*) spec->impl;
+        sink->setImpl(impl);
+        delete spec;
     }
 }
 

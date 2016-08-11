@@ -4,8 +4,8 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 
 ### Pick one of these!
 # set(CMAKE_CXX_FLAGS "-Wall -O2")
-set(CMAKE_CXX_FLAGS "-Wall -O0 -g")
-# set(CMAKE_CXX_FLAGS "-Wall -O0 -g -fsanitize=address -fno-omit-frame-pointer")
+# set(CMAKE_CXX_FLAGS "-Wall -O0 -g")
+set(CMAKE_CXX_FLAGS "-Wall -O0 -g -fsanitize=address -fno-omit-frame-pointer")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_DEBUG")
 
@@ -39,20 +39,23 @@ set(SRC
     KeyboardModifiers.cpp
     LayoutUtils.cpp
     Machine.cpp
+    MachineConnection.cpp
+    MachineConnectionDatabase.cpp
     MachinePoolContext.cpp
     MachinePort.cpp
+    MachinePortImpl.cpp
     Midi.cpp
     MidiDispatcher.cpp
     Mouse.cpp
     Mutex.cpp
     Painter.cpp
+    PlayerController.cpp
     PlayerMachine.cpp
     PlayerView.cpp
     SignalData.cpp
     SignalGraph.cpp
     SignalNode_BufferIO.cpp
     SignalNode_Sampler.cpp
-    RouterMachine.cpp
     Shader.cpp
     Shader_rgba.cpp
     Shader_rgba_tex.cpp

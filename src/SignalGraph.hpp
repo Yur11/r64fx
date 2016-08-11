@@ -9,14 +9,25 @@ class SignalGraph;
 
 /* Any item that can be processed inside a SignalGraph. */
 class SignalGraphProcessable : public LinkedList<SignalGraphProcessable>::Node{
+    friend class SignalGraph;
+    
     SignalGraph* m_graph = nullptr;
+
+    inline void setGraph(SignalGraph* graph) { m_graph = graph; }
     
 public:    
     virtual ~SignalGraphProcessable();
     
-    inline void setGraph(SignalGraph* graph) { m_graph = graph; }
+    void removeFromGraph();
     
     inline SignalGraph* graph() const { return m_graph; }
+    
+private:
+    /* Called after this node has been added to a graph. */
+    virtual void addedToGraph(SignalGraph* graph);
+    
+    /* Called before this node is removed from its graph. */
+    virtual void aboutToBeRemovedFromGraph(SignalGraph* graph);
     
     /* Called at the beginning of a cycle. */
     virtual void prepare();
@@ -60,18 +71,21 @@ public:
 
 
 class SignalConnection : public SignalGraphProcessable{
-    SignalSource* m_source;
-    SignalSink*   m_sink;
+    SignalSource* m_source = nullptr;
+    SignalSink*   m_sink = nullptr;
     
 public:
-    SignalConnection(SignalSource* source, SignalSink* sink)
-    : m_source(source)
-    , m_sink(sink)
-    {}
+    SignalConnection(SignalSource* source, SignalSink* sink);
     
-    inline SignalSource* source() const { return m_source; }
+    void update(SignalSource* source, SignalSink* sink);
     
-    inline SignalSink* sink() const { return m_sink; }
+    void setSource(SignalSource* source);
+    
+    SignalSource* source() const;
+    
+    void setSink(SignalSink* sink);
+    
+    SignalSink* sink() const;
     
     virtual void processSample(int i);
 };
@@ -88,17 +102,18 @@ class SignalNodeClass : public SignalGraphProcessable{
 
 
 class SignalGraph : public SignalGraphProcessable{
-    LinkedList<SignalGraphProcessable> m_single_nodes;
-    LinkedList<SignalGraphProcessable> m_node_classes;
-    LinkedList<SignalGraphProcessable> m_connections;
-    LinkedList<SignalGraphProcessable> m_subgraphs;
+    LinkedList<SignalGraphProcessable> m_items;
     
 public:
-    void addNode(SignalNode* node);
+    void addItem(SignalGraphProcessable* item);
     
-    void removeNode(SignalNode* node);
+    void removeItem(SignalGraphProcessable* item);
     
-    void addConnection(SignalConnection* connection);
+    void clear();
+    
+    void replaceSource(SignalSource* old_source, SignalSource* new_source);
+    
+    void replaceSink(SignalSink* old_sink, SignalSink* new_sink);
     
     virtual void prepare();
     

@@ -11,11 +11,11 @@ class SignalData{
     int    m_sample_rate     = 0.0f;
 
 public:
-    SignalData(int frame_count = 0, int channel_count = 1, float* data = nullptr, bool copy_data = false);
+    SignalData(int frame_count = 0, int component_count = 1, float* data = nullptr, bool copy_data = false);
 
     ~SignalData();
 
-    void load(int frame_count = 0, int channel_count = 1, float* data = nullptr, bool copy_data = false);
+    void load(int frame_count = 0, int component_count = 1, float* data = nullptr, bool copy_data = false);
 
     void free();
 
@@ -32,6 +32,8 @@ public:
     void setSampleRate(int rate);
 
     int sampleRate() const;
+    
+    bool isGood() const;
 };
 
 }//namespace r64fx

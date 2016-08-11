@@ -2,6 +2,7 @@
 #define R64FX_MACHINE_POOL_HPP
 
 #include "Machine.hpp"
+#include "MachineConnection.hpp"
 
 namespace r64fx{
 
@@ -22,6 +23,16 @@ public:
     LinkedList<Machine>::Iterator end() const;
     
     void withdrawAll();
+    
+    MachineConnection* makeConnection(
+        MachineSignalSource*  src_port, 
+        MachineSignalSink*    dst_port, 
+        MachineConnection::Mapping mapping = MachineConnection::Mapping::Default
+    );
+    
+    void breakConnection(MachineConnection* connection);
+    
+    void updateConnection(MachineConnection* connection);
 };
     
 }//namespace r64fx

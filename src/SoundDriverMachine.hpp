@@ -4,8 +4,6 @@
 #include "Machine.hpp"
 #include <string>
 
-#include "Midi.hpp"
-
 namespace r64fx{
     
 class SoundDriverMachine : public Machine{
@@ -26,13 +24,15 @@ public:
     
     void setBufferSize(int buffer_size);
     
-    MachineSignalSource* createAudioInput(const std::string &name);
+    MachineSignalSource* createAudioInput(const std::string &name, int component_count);
     
-    MachineSignalSink* createAudioOutput(const std::string &name);
+    MachineSignalSink* createAudioOutput(const std::string &name, int component_count);
     
     void createMidiInput(const std::string &name);
     
     void createMidiOutput(const std::string &name);
+    
+    void destroyPort(MachinePort* port);
     
     void clear();
         

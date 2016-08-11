@@ -18,9 +18,10 @@ class Machine : public LinkedList<Machine>::Node{
     MachinePoolPrivate* m_pool_private = nullptr;
     MachineImpl* m_impl = nullptr;
     
-    bool m_is_deployed = false;
-    
     std::string m_name = "";
+
+protected:
+    unsigned long m_flags = 0;
     
 public:
     Machine(MachinePool* pool);
@@ -33,17 +34,17 @@ public:
     
     void withdraw();
     
-    inline bool isDeployed() const { return m_is_deployed; }
+    bool isDeployed() const;
     
-    inline void setName(const std::string &name)
-    {
-        m_name = name;
-    }
+    bool deploymentPending() const;
     
-    inline std::string name() const
-    {
-        return m_name;
-    }
+    bool withdrawalPending() const;
+    
+    void setName(const std::string &name);
+    
+    std::string name() const;
+    
+    bool isReady() const;
     
     virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg) = 0;
     
@@ -58,7 +59,33 @@ protected:
     
     void sendMessages(const MachineMessage* msgs, int nmsgs);
     
+    void packMessage(unsigned long opcode, unsigned long value);
+    
+    void packMessage(const MachineMessage &msg);
+    
+    void packMessages(const MachineMessage* msgs, int nmsgs);
+    
+    void sendPack();
+    
+    void clearPack();
+    
+    int packSize() const;
+    
+    void packConnectionUpdatesFor(MachineSignalSource* source);
+    
+    void packConnectionUpdatesFor(MachineSignalSink* sink);
+    
     virtual void dispatchMessage(const MachineMessage &msg) = 0;
+    
+    static void block();
+};
+
+
+class MachineEventIface{
+public:
+    virtual void machineDeployed() = 0;
+    
+    virtual void machineWithdrawn() = 0;
 };
     
 }//namespace r64fx
