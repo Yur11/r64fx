@@ -6,10 +6,16 @@
 namespace r64fx{
     
 class PlayerMachine : public Machine{
+    MachineSignalSource m_signal_source;
+    
 public:
     PlayerMachine(MachinePool* pool);
     
     virtual ~PlayerMachine();
+    
+    void playData(float* data, int frame_count, int component_count);
+    
+    MachineSignalSource* signalSource();
     
     virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg);
     

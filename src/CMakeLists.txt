@@ -51,6 +51,7 @@ set(SRC
     SignalData.cpp
     SignalGraph.cpp
     SignalNode_BufferIO.cpp
+    SignalNode_Sampler.cpp
     RouterMachine.cpp
     Shader.cpp
     Shader_rgba.cpp

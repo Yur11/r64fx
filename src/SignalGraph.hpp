@@ -37,6 +37,8 @@ public:
     
     SignalPort() {}
     
+    inline void setAddr(float* addr) { m_addr = addr; }
+    
     inline float* addr() const { return m_addr; }
     
     inline float &operator[](int i) { return m_addr[i]; }
