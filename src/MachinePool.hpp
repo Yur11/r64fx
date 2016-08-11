@@ -17,6 +17,10 @@ public:
     
     virtual ~MachinePool();
     
+    LinkedList<Machine>::Iterator begin() const;
+    
+    LinkedList<Machine>::Iterator end() const;
+    
     void withdrawAll();
 };
     

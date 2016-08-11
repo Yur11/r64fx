@@ -11,7 +11,7 @@ class MachinePool;
 class MachinePoolPrivate;
 class MachineImpl;
     
-class Machine{
+class Machine : public LinkedList<Machine>::Node{
     friend class MachinePool;
     friend class MachinePoolPrivate;
     
@@ -26,6 +26,8 @@ public:
     Machine(MachinePool* pool);
     
     virtual ~Machine();
+    
+    MachinePool* pool() const;
     
     void deploy();
     

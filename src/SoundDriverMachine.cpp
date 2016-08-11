@@ -26,7 +26,6 @@ namespace{
     constexpr unsigned long RemovePort         = 11;
 }//namespace
     
-int g_SoundDriverMachineImpl_count = 0;
     
 class SoundDriverMachineImpl : public MachineImpl{
 public:
@@ -44,22 +43,10 @@ public:
 protected:
     virtual void deploy()
     {
-        if(!ctx()->sound_driver)
-        {
-            SoundDriver* sd = SoundDriver::newInstance();
-            ctx()->sound_driver = sd;
-        }
-        g_SoundDriverMachineImpl_count++;
     }
     
     virtual void withdraw()
     {
-        g_SoundDriverMachineImpl_count--;
-        if(g_SoundDriverMachineImpl_count == 0 && ctx()->sound_driver)
-        {
-            SoundDriver::deleteInstance(ctx()->sound_driver);
-            ctx()->sound_driver = nullptr;
-        }
     }
     
     virtual void dispatchMessage(const MachineMessage &msg)

@@ -1,13 +1,12 @@
 #include "MachinePoolContext.hpp"
 
-#include <iostream>
-using namespace std;
-
 namespace r64fx{
     
     
 MachinePoolContext::MachinePoolContext()
 {
+    sound_driver = SoundDriver::newInstance();
+    status_port = sound_driver->newStatusPort();
     signal_graph = new SignalGraph;
 }
     
@@ -18,37 +17,31 @@ MachinePoolContext::~MachinePoolContext()
     {
         delete signal_graph;
     }
+    
+    if(sound_driver)
+    {
+        SoundDriver::deleteInstance(sound_driver);
+    }
 }
     
         
 long MachinePoolContext::process()
 {
-    static SoundDriverIOStatusPort* status_port = nullptr;
-    if(sound_driver)
+    SoundDriverIOStatus status;
+    if(status_port->readStatus(&status, 1))
     {
-        if(status_port)
+        if(signal_graph)
         {
-            SoundDriverIOStatus status;
-            if(status_port->readStatus(&status, 1))
+            signal_graph->prepare();
+            for(int i=0; i<sound_driver->bufferSize(); i++)
             {
-                if(signal_graph)
-                {
-                    signal_graph->prepare();
-                    for(int i=0; i<sound_driver->bufferSize(); i++)
-                    {
-                        signal_graph->processSample(i);
-                    }
-                    signal_graph->finish();
-                }
+                signal_graph->processSample(i);
             }
-            else
-            {
-            }
+            signal_graph->finish();
         }
-        else
-        {
-            status_port = sound_driver->newStatusPort();
-        }
+    }
+    else
+    {
     }
     
     return 0;

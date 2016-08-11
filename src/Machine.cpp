@@ -23,6 +23,8 @@ namespace{
     
     
 class MachinePoolPrivate{
+    MachinePool* m_pool = nullptr;
+    
     Thread*  m_thread = nullptr;
     Timer*   m_timer  = nullptr;
     
@@ -32,9 +34,12 @@ class MachinePoolPrivate{
     MachineImpl* m_dst_impl  = nullptr;
     Machine*     m_dst_iface = nullptr;
     
+    LinkedList<Machine> m_machines;
+    
 public:
-    MachinePoolPrivate()
+    MachinePoolPrivate(MachinePool* pool)
     {
+        m_pool = pool;
         m_thread     = new Thread;
         m_timer      = new Timer;
         m_to_impl    = new CircularBuffer<MachineMessage>(32);
@@ -60,6 +65,31 @@ public:
         delete m_timer;
         delete m_to_impl;
         delete m_from_impl;
+    }
+    
+    void addMachine(Machine* machine)
+    {
+        m_machines.append(machine);
+    }
+    
+    void removeMachine(Machine* machine)
+    {
+        m_machines.remove(machine);
+    }
+    
+    MachinePool* pool() const
+    {
+        return m_pool;
+    }
+    
+    LinkedList<Machine>::Iterator begin() const
+    {
+        return m_machines.begin();
+    }
+    
+    LinkedList<Machine>::Iterator end() const
+    {
+        return m_machines.end();
     }
     
     void sendMessages(const MachineMessage* msgs, int nmsgs)
@@ -280,13 +310,19 @@ void MachinePoolPrivate::stopImplThread()
 Machine::Machine(MachinePool* pool)
 : m_pool_private(pool->m)
 {
-    
+    m_pool_private->addMachine(this);
 }
 
 
 Machine::~Machine()
 {
-    
+    m_pool_private->removeMachine(this);
+}
+
+
+MachinePool* Machine::pool() const
+{
+    return m_pool_private->pool();
 }
 
 
@@ -376,13 +412,25 @@ void MachineImpl::sendMessages(const MachineMessage* msgs, int nmsgs)
 
 MachinePool::MachinePool()
 {
-    m = new MachinePoolPrivate;
+    m = new MachinePoolPrivate(this);
 }
     
 
 MachinePool::~MachinePool()
 {
     delete m;
+}
+
+
+LinkedList<Machine>::Iterator MachinePool::begin() const
+{
+    return m->begin();
+}
+    
+    
+LinkedList<Machine>::Iterator MachinePool::end() const
+{
+    return m->end();
 }
 
 

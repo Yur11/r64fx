@@ -5,24 +5,26 @@
 
 namespace r64fx{
     
-class RouterMachineRule : public LinkedList<RouterMachineRule>::Node{
+class MachineConnection : public LinkedList<MachineConnection>::Node{
     MachineSignalSource* m_src_port  = nullptr;
     MachineSignalSink*   m_dst_port  = nullptr;
     
 public:
-    RouterMachineRule(MachineSignalSource* src_port, MachineSignalSink* dst_port);
+    MachineConnection(MachineSignalSource* src_port, MachineSignalSink* dst_port);
 };
   
 
 class RouterMachine : public Machine{
-    LinkedList<RouterMachineRule> m_rules;
+    LinkedList<MachineConnection> m_connections;
     
 public:
     RouterMachine(MachinePool* pool);
     
     virtual ~RouterMachine();
     
-    RouterMachineRule* createRule(MachineSignalSource* src_port, MachineSignalSink* dst_port);
+    MachineConnection* makeConnection(MachineSignalSource* src_port, MachineSignalSink* dst_port);
+    
+    virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg);
     
 protected:
     virtual void dispatchMessage(const MachineMessage &msg);

@@ -10,6 +10,8 @@ namespace r64fx{
 struct MachinePoolContext{
     SoundDriver* sound_driver = nullptr;
     SignalGraph* signal_graph = nullptr;
+
+    SoundDriverIOStatusPort* status_port = nullptr;
     
     MachinePoolContext();
     
