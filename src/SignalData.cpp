@@ -27,7 +27,7 @@ void SignalData::load(int frame_count, int component_count, float* data, bool co
 
     if(frame_count > 0 && component_count > 0)
     {
-        int size = frame_count + 1 * component_count;
+        int size = (frame_count + 1) * component_count;
         if(data)
         {
             if(copy_data)
