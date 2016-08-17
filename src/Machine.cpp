@@ -194,9 +194,9 @@ public:
     {
         if(!m_current_pack->empty())
         {
-            m_current_pack->append(MachineMessage(PickDestination, 0));
             MachineMessage msg(DispatchPack, (unsigned long)m_current_pack);
             sendMessages(nullptr, &msg, 1);
+            m_dst_impl = m_pack_dst;
             
             auto new_pack = m_spare_packs.last();
             if(new_pack)
