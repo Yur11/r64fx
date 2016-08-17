@@ -45,12 +45,20 @@ PlayerView::PlayerView(PlayerViewEventIface* event_iface, Widget* parent)
     slider_pitch->setPosition({width() - 20, 10});
     slider_pitch->setHeight(height() - 20);
     slider_pitch->setValue(0.5f);
+    
+    m_timer = new Timer;
+    m_timer->onTimeout([](Timer* timer, void* arg){
+        timer->stop();
+        auto self = (PlayerView*) arg;
+        self->pathRecieved();
+    }, this);
 }
 
 
 PlayerView::~PlayerView()
 {
-
+    if(m_timer)
+        delete m_timer;
 }
 
 
@@ -144,23 +152,20 @@ void PlayerView::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
     {
         string uri_list((const char*)event->data(), event->size());
         {
-            cout << "uri-list:\n";
             auto it = uri_list.begin();
             for(;;)
             {
                 if(it == uri_list.end())
                     break;
                 
-                auto file_path = next_file_path_from_uri_list(it, uri_list.end());
-                cout << "    " << file_path << "\n";
+                m_path = next_file_path_from_uri_list(it, uri_list.end());
+                if(!m_timer->isRunning())
+                {
+                    cout << ">>> " << m_path << "\n";
+                    m_timer->start();
+                }
+                break;
             }
-        }
-        
-        
-        {
-            auto it = uri_list.begin();
-            auto file_path = next_file_path_from_uri_list(it, uri_list.end());
-            m_event_iface->loadAudioFile(file_path);
         }
     }
 }
@@ -219,6 +224,13 @@ void PlayerView::dndLeaveEvent(DndLeaveEvent* event)
 void PlayerView::closeEvent()
 {
     m_event_iface->close();
+}
+
+
+void PlayerView::pathRecieved()
+{
+    cout << "pathRecieved: " << m_path << "\n";
+    m_event_iface->loadAudioFile(m_path);
 }
 
 }//namespace r64fx

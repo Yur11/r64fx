@@ -2,6 +2,7 @@
 #define R64FX_PLAYER_VIEW_HPP
 
 #include "Widget.hpp"
+#include "Timer.hpp"
 
 namespace r64fx{
 
@@ -10,6 +11,8 @@ class PlayerViewEventIface;
 class PlayerView : public Widget{
     PlayerViewEventIface* m_event_iface;
     float* m_waveform = nullptr;
+    Timer* m_timer = nullptr;
+    std::string m_path = "";
 
 public:
     PlayerView(PlayerViewEventIface* feedback, Widget* parent = nullptr);
@@ -37,6 +40,9 @@ public:
     virtual void dndLeaveEvent(DndLeaveEvent* event);
     
     virtual void closeEvent();
+    
+private:
+    void pathRecieved();
 };
 
 
