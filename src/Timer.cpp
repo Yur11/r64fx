@@ -173,7 +173,7 @@ int Timer::runTimers()
     long min_time = numeric_limits<long>::max();
     for(auto &timer : thread->timers)
     {
-        if(timer->is_running && timer->interval > 0)
+        if(timer->is_running && timer->interval >= 0)
         {
             if(curr_time >= timer->wakeup_time)
             {
