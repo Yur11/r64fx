@@ -56,6 +56,9 @@ public:
             Timer::runTimers();
             sleep_microseconds(5000);
         }
+        
+        m_sound_driver_machine->connect("r64fx:out_1", "system:playback_1");
+        m_sound_driver_machine->connect("r64fx:out_2", "system:playback_2");
     }
     
     virtual ~PlayerControllerPrivate()

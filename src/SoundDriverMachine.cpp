@@ -27,9 +27,11 @@ namespace{
     constexpr unsigned long DestroyAudioOutput = 10;
     constexpr unsigned long DestroyMidiInput   = 11;
     constexpr unsigned long DestroyMidiOutput  = 12;
+    constexpr unsigned long Connect    = 13;
+    constexpr unsigned long Disconnect = 14;
     
-    constexpr unsigned long SignalSourceCreated   = 13;
-    constexpr unsigned long SignalSinkCreated     = 14;
+    constexpr unsigned long SignalSourceCreated   = 15;
+    constexpr unsigned long SignalSinkCreated     = 16;
     
     struct CreatePortSpec{
         std::string port_name  = "";
@@ -37,6 +39,11 @@ namespace{
         
         void* impl = nullptr;
         void* port = nullptr;
+    };
+    
+    struct PortConnectionSpec{
+        std::string src = "";
+        std::string dst = "";
     };
 }//namespace
     
@@ -169,6 +176,16 @@ protected:
         else if(msg.opcode == DestroyMidiOutput)
         {
         }
+        else if(msg.opcode == Connect)
+        {
+            auto spec = (PortConnectionSpec*)msg.value;
+            sound_driver->connect(spec->src, spec->dst);
+        }
+        else if(msg.opcode == Disconnect)
+        {
+            auto spec = (PortConnectionSpec*)msg.value;
+            sound_driver->disconnect(spec->src, spec->dst);
+        }
     }
 };
     
@@ -297,6 +314,24 @@ void SoundDriverMachine::clear()
     {
         destroyPort(port);
     }
+}
+
+
+void SoundDriverMachine::connect(const std::string &src, const std::string &dst)
+{
+    auto spec = new PortConnectionSpec;
+    spec->src = src;
+    spec->dst = dst;
+    sendMessage(Connect, (unsigned long)spec);
+}
+
+
+void SoundDriverMachine::disconnect(const std::string &src, const std::string &dst)
+{
+    auto spec = new PortConnectionSpec;
+    spec->src = src;
+    spec->dst = dst;
+    sendMessage(Disconnect, (unsigned long)spec);
 }
       
     

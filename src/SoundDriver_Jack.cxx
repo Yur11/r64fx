@@ -277,6 +277,7 @@ struct SoundDriver_Jack : public SoundDriver{
                 {
                     auto audio_in_port = (SoundDriverIOPort_AudioInput_Jack*)(port->iface);
                     int nsamples = audio_in_port->buffer.write((float*)port_buffer, nframes);
+                    (void)nsamples;
                 }
                 else
                 {
@@ -299,6 +300,7 @@ struct SoundDriver_Jack : public SoundDriver{
                 {
                     auto audio_out_port = (SoundDriverIOPort_AudioOutput_Jack*)(port->iface);
                     int nsamples = audio_out_port->buffer.read((float*)port_buffer, nframes);
+                    (void)nsamples;
                 }
                 else
                 {
@@ -484,6 +486,16 @@ struct SoundDriver_Jack : public SoundDriver{
 
         m_new_status_ports.write(port);
         return port;
+    }
+    
+    virtual bool connect(const std::string &src, const std::string &dst)
+    {
+        return jack_connect(m_jack_client, src.c_str(), dst.c_str()) == 0;
+    }
+
+    virtual bool disconnect(const std::string &src, const std::string &dst)
+    {
+        return jack_disconnect(m_jack_client, src.c_str(), dst.c_str()) == 0;
     }
 };
 

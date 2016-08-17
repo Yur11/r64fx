@@ -109,7 +109,11 @@ public:
     virtual void deletePort(SoundDriverIOPort* port) = 0;
 
     virtual SoundDriverIOStatusPort* newStatusPort() = 0;
+    
+    virtual bool connect(const std::string &src, const std::string &dst) = 0;
 
+    virtual bool disconnect(const std::string &src, const std::string &dst) = 0;
+    
     static SoundDriver* newInstance(SoundDriver::Type type = SoundDriver::Type::Jack);
 
     static void deleteInstance(SoundDriver* driver);

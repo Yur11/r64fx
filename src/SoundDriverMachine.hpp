@@ -35,7 +35,11 @@ public:
     void destroyPort(MachinePort* port);
     
     void clear();
-        
+    
+    void connect(const std::string &src, const std::string &dst);
+
+    void disconnect(const std::string &src, const std::string &dst);
+       
 protected:
     virtual void dispatchMessage(const MachineMessage &msg);
 };
