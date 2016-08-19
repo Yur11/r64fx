@@ -52,7 +52,6 @@ set(SRC
     PlayerController.cpp
     PlayerMachine.cpp
     PlayerView.cpp
-    SoundFileData.cpp
     SignalGraph.cpp
     SignalNode_BufferIO.cpp
     SignalNode_Sampler.cpp
@@ -62,6 +61,8 @@ set(SRC
     SoundDriver.cpp
     SoundDriverMachine.cpp
     SoundFile.cpp
+    SoundFileData.cpp
+    SoundFilePool.cpp
     StringUtils.cpp
     TextPainter.cpp
     Thread.cpp
