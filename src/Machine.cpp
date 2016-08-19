@@ -179,11 +179,11 @@ public:
     void packMessages(MachineImpl* dst, const MachineMessage* msgs, int nmsgs)
     {
         if(dst != m_pack_dst)
-            pickPackDestination(dst);
+            packDestination(dst);
         packMessages(msgs, nmsgs);
     }
     
-    void pickPackDestination(MachineImpl* dst)
+    void packDestination(MachineImpl* dst)
     {
         MachineMessage msg(PickDestination, (unsigned long)dst);
         packMessages(&msg, 1);
