@@ -2,7 +2,7 @@
 #include "PlayerView.hpp"
 #include "PlayerMachine.hpp"
 #include "SoundFile.hpp"
-#include "SignalData.hpp"
+#include "SoundFileData.hpp"
 
 #include "Timer.hpp"
 #include "sleep.hpp"
@@ -14,7 +14,7 @@ using namespace std;
 
 namespace r64fx{
     
-void read_all(SoundFile* sf, SignalData* sd)
+void read_all(SoundFile* sf, SoundFileData* sd)
 {
     sd->load(sf->frameCount(), sf->componentCount());
     sf->readFrames(sd->data(), sf->frameCount());
@@ -33,7 +33,7 @@ class PlayerControllerPrivate
     MachineSignalSink* m_master_out = nullptr;
     
     SoundFile   m_sound_file;
-    SignalData  m_data;
+    SoundFileData  m_data;
     
 public:
     PlayerControllerPrivate()
@@ -116,7 +116,7 @@ public:
     
     virtual void unloadCurrentFile()
     {
-        m_data.free();
+//         m_data.free();
     }
 
     virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out)

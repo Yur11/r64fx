@@ -1,4 +1,4 @@
-#include "SignalData.hpp"
+#include "SoundFileData.hpp"
 #include <new>
 
 #ifdef R64FX_DEBUG
@@ -9,19 +9,19 @@
 
 namespace r64fx{
 
-SignalData::SignalData(int frame_count, int component_count, float* data, bool copy_data)
+SoundFileData::SoundFileData(int frame_count, int component_count, float* data, bool copy_data)
 {
     load(frame_count, component_count, data, copy_data);
 }
 
 
-SignalData::~SignalData()
+SoundFileData::~SoundFileData()
 {
     free();
 }
 
 
-void SignalData::load(int frame_count, int component_count, float* data, bool copy_data)
+void SoundFileData::load(int frame_count, int component_count, float* data, bool copy_data)
 {
     free();
 
@@ -56,9 +56,9 @@ void SignalData::load(int frame_count, int component_count, float* data, bool co
 }
 
 
-void SignalData::free()
+void SoundFileData::free()
 {
-    if(m_data && SignalData::ownsData())
+    if(m_data && SoundFileData::ownsData())
     {
         delete[] m_data;
     }
@@ -70,31 +70,31 @@ void SignalData::free()
 }
 
 
-bool SignalData::ownsData() const
+bool SoundFileData::ownsData() const
 {
     return m_flags & R64FX_OWNS_DATA;
 }
 
 
-float* SignalData::data() const
+float* SoundFileData::data() const
 {
     return m_data;
 }
 
 
-int SignalData::frameCount() const
+int SoundFileData::frameCount() const
 {
     return m_frame_count;
 }
 
 
-int SignalData::componentCount() const
+int SoundFileData::componentCount() const
 {
     return m_component_count;
 }
 
 
-float* SignalData::frame(int i) const
+float* SoundFileData::frame(int i) const
 {
 #ifndef R64FX_DEBUG
     assert(i < frame_count);
@@ -103,19 +103,19 @@ float* SignalData::frame(int i) const
 }
 
 
-void SignalData::setSampleRate(int rate)
+void SoundFileData::setSampleRate(int rate)
 {
     m_sample_rate = rate;
 }
 
 
-int SignalData::sampleRate() const
+int SoundFileData::sampleRate() const
 {
     return m_sample_rate;
 }
 
 
-bool SignalData::isGood() const
+bool SoundFileData::isGood() const
 {
     return m_data && m_frame_count > 0 && m_component_count > 0;
 }

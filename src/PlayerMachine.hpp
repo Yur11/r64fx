@@ -2,20 +2,20 @@
 #define R64FX_PLAYER_MACHINE_HPP
 
 #include "Machine.hpp"
-#include "SignalData.hpp"
+#include "SoundFileData.hpp"
 
 namespace r64fx{
     
 class PlayerMachine : public Machine{
     MachineSignalSource m_output;
-    SignalData* m_data = nullptr;
+    SoundFileData* m_data = nullptr;
     
 public:
     PlayerMachine(MachinePool* pool);
     
     virtual ~PlayerMachine();
     
-    void setData(SignalData* data);
+    void setData(SoundFileData* data);
     
     void play();
     

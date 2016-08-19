@@ -1,9 +1,9 @@
-#ifndef R64FX_SIGNAL_DATA_HPP
-#define R64FX_SIGNAL_DATA_HPP
+#ifndef R64FX_SOUND_FILE_DATA_HPP
+#define R64FX_SOUND_FILE_DATA_HPP
 
 namespace r64fx{
 
-class SignalData{
+class SoundFileData{
     float* m_data            = nullptr;
     int    m_frame_count     = 0;
     int    m_component_count = 0;
@@ -11,9 +11,9 @@ class SignalData{
     int    m_sample_rate     = 0.0f;
 
 public:
-    SignalData(int frame_count = 0, int component_count = 1, float* data = nullptr, bool copy_data = false);
+    SoundFileData(int frame_count = 0, int component_count = 1, float* data = nullptr, bool copy_data = false);
 
-    ~SignalData();
+    ~SoundFileData();
 
     void load(int frame_count = 0, int component_count = 1, float* data = nullptr, bool copy_data = false);
 
@@ -38,4 +38,4 @@ public:
 
 }//namespace r64fx
 
-#endif//R64FX_SIGNAL_DATA_HPP
+#endif//R64FX_SOUND_FILE_DATA_HPP

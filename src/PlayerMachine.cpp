@@ -25,7 +25,7 @@ namespace{
     
 class PlayerMachineImpl : public MachineImpl{    
     SignalNode_Sampler* m_sampler = nullptr;
-    SignalData* m_data = nullptr;
+    SoundFileData* m_data = nullptr;
     MachineSourceImpl* m_output_impl = nullptr;
     
 public:    
@@ -40,7 +40,7 @@ public:
         m_sampler->removeFromGraph();
     }
     
-    void setData(SignalData* data)
+    void setData(SoundFileData* data)
     {
         if(data && data->isGood())
         {
@@ -71,7 +71,7 @@ public:
     {
         if(msg.opcode == SetData)
         {
-            setData((SignalData*)msg.value);
+            setData((SoundFileData*)msg.value);
         }
         else if(msg.opcode == Play)
         {
@@ -100,12 +100,12 @@ PlayerMachine::~PlayerMachine()
 }
 
 
-void PlayerMachine::setData(SignalData* data)
+void PlayerMachine::setData(SoundFileData* data)
 {
     if(!data)
         return;
 
-    auto data_copy = new SignalData(*data);
+    auto data_copy = new SoundFileData(*data);
     MachineMessage msg(SetData, (unsigned long)data_copy);
     
     if(!m_data || data->componentCount() != m_data->componentCount())
