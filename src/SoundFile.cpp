@@ -81,6 +81,7 @@ void SoundFile::close()
         m_component_count = 0;
         m_frame_count   = 0;
         m_sample_rate   = 0;
+        m = nullptr;
     }
 }
 

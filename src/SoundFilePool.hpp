@@ -30,9 +30,11 @@ public:
     
     SoundFileData* data() const;
     
-    unsigned long totalFrames() const;
+    unsigned long frameCount() const;
     
-    unsigned long framesLoaded() const;
+    unsigned long loadedFrameCount() const;
+    
+    unsigned long componentCount() const;
 };
 
 
@@ -44,9 +46,9 @@ public:
     
     ~SoundFilePool();
     
-    SoundFileDataPtr loadFile(const std::string &path);
+    SoundFileDataPtr load(const std::string &path);
     
-    SoundFileDataPtr findLoaded(const std::string &path);    
+    SoundFileDataPtr find(const std::string &path);    
 };
     
 }//namespace r64fx

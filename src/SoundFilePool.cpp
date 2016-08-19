@@ -2,6 +2,9 @@
 #include "LinkedList.hpp"
 #include "Timer.hpp"
 
+#include <iostream>
+using namespace std;
+
 namespace r64fx{
     
 struct SoundFileDataPtrPrivate : public LinkedList<SoundFileDataPtrPrivate>::Node{
@@ -14,6 +17,8 @@ struct SoundFileDataPtrPrivate : public LinkedList<SoundFileDataPtrPrivate>::Nod
     SoundFileDataPtrPrivate(SoundFilePoolPrivate* pool);
     
     ~SoundFileDataPtrPrivate();
+    
+    void loadMoreFrames(SoundFile* file, unsigned long nframes);
 };
 
 
@@ -83,15 +88,21 @@ SoundFileData* SoundFileDataPtr::data() const
 }
 
 
-unsigned long SoundFileDataPtr::totalFrames() const
+unsigned long SoundFileDataPtr::frameCount() const
 {
     return m->data.frameCount();
 }
 
 
-unsigned long SoundFileDataPtr::framesLoaded() const
+unsigned long SoundFileDataPtr::loadedFrameCount() const
 {
     return m->frames_loaded;
+}
+
+
+unsigned long SoundFileDataPtr::componentCount() const
+{
+    return m->data.componentCount();
 }
     
     
@@ -107,21 +118,58 @@ SoundFilePool::~SoundFilePool()
 }
 
 
-SoundFileDataPtr SoundFilePool::loadFile(const std::string &path)
+SoundFileDataPtr SoundFilePool::load(const std::string &path)
 {
-    auto ptr = findLoaded(path);
+    auto ptr = find(path);
     if(ptr)
         return ptr;
+
+    if(m->file.isGood())
+    {
+        cerr << "Refusing to load another file!\n";
+        cerr << "\"" << path << "\"\n";
+        return SoundFileDataPtr();
+    }
     
     auto ptrp = new SoundFileDataPtrPrivate(m);
+    ptrp->user_count = 1;
     ptrp->path = path;
-    /* Load file here! */
+    m->file.open(path, SoundFile::Mode::Read);
+    if(!m->file.isGood())
+    {
+        cerr << "Failed to load \"" << path << "\"!\n";
+        return SoundFileDataPtr();
+    }
+    
+    if(m->file.frameCount() <= 0 || m->file.componentCount() <= 0)
+    {
+        cerr << "Bad sound file specs!\n";
+        m->file.close();
+        return SoundFileDataPtr();
+    }
+    
+    ptrp->data.load(m->file.frameCount(), m->file.componentCount());
+    ptrp->data.setSampleRate(m->file.sampleRate());
+    ptrp->loadMoreFrames(&(m->file), m->file.frameCount());
+    
+    m->file.close();
     
     return SoundFileDataPtr(ptrp);
 }
 
 
-SoundFileDataPtr SoundFilePool::findLoaded(const std::string &path)
+void SoundFileDataPtrPrivate::loadMoreFrames(SoundFile* file, unsigned long nframes)
+{
+    unsigned long frames_left = data.frameCount() - frames_loaded;
+    if(frames_left > 0)
+    {
+        unsigned long actual_frames = min(nframes, frames_left);
+        file->readFrames(data.frame(frames_loaded), actual_frames);
+    }
+}
+
+
+SoundFileDataPtr SoundFilePool::find(const std::string &path)
 {
     for(auto ptr : m->ptrs)
     {

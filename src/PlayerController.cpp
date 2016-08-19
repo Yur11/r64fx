@@ -1,8 +1,7 @@
 #include "PlayerController.hpp"
 #include "PlayerView.hpp"
 #include "PlayerMachine.hpp"
-#include "SoundFile.hpp"
-#include "SoundFileData.hpp"
+#include "SoundFilePool.hpp"
 
 #include "Timer.hpp"
 #include "sleep.hpp"
@@ -13,6 +12,8 @@
 using namespace std;
 
 namespace r64fx{
+    
+SoundFilePool* g_sound_file_pool = nullptr;
     
 void read_all(SoundFile* sf, SoundFileData* sd)
 {
@@ -32,8 +33,7 @@ class PlayerControllerPrivate
     SoundDriverMachine* m_sound_driver_machine = nullptr;
     MachineSignalSink* m_master_out = nullptr;
     
-    SoundFile   m_sound_file;
-    SoundFileData  m_data;
+    SoundFileDataPtr m_sound_data;
     
 public:
     PlayerControllerPrivate()
@@ -59,6 +59,11 @@ public:
         
         m_sound_driver_machine->connect("r64fx:out_1", "system:playback_1");
         m_sound_driver_machine->connect("r64fx:out_2", "system:playback_2");
+        
+        if(!g_sound_file_pool)
+        {
+            g_sound_file_pool = new SoundFilePool;
+        }
     }
     
     virtual ~PlayerControllerPrivate()
@@ -73,45 +78,65 @@ public:
         delete m_sound_driver_machine;
         
         delete m_pool;
+        
+        if(g_sound_file_pool)
+        {
+            delete g_sound_file_pool;
+            g_sound_file_pool = nullptr;
+        }
     }
     
     virtual int frameCount()
     {
-        return m_data.frameCount();
+        if(m_sound_data)
+        {
+            return m_sound_data.frameCount();
+        }
+        return 0;
     }
 
     virtual int componentCount()
     {
-        return m_data.componentCount();
+        if(m_sound_data)
+        {
+            return m_sound_data.componentCount();
+        }
+        return 0;
     }
 
     virtual bool loadAudioFile(const std::string &path)
     {
-        bool result = false;
-        unloadCurrentFile();
-        
-        m_sound_file.open(path, SoundFile::Mode::Read);
-        if(m_sound_file.isGood())
+        m_sound_data = g_sound_file_pool->load(path);
+        if(m_sound_data)
         {
-            cout << "Opened " << path << "\n";
-            cout << m_sound_file.componentCount() << ", " << m_sound_file.frameCount() << ", " << m_sound_file.sampleRate() << "\n";
-            result = true;
-
-            read_all(&m_sound_file, &m_data);
-            m_data.setSampleRate(m_sound_file.sampleRate());
-            m_sound_file.close();
-            
-            m_machine->setData(&m_data);
+            m_machine->setData(m_sound_data.data());
+            m_view->notifyLoad(true);
             while(!m_machine->output()->impl())
             {
                 Timer::runTimers();
                 sleep_microseconds(5000);
             }
             m_pool->makeConnection(m_machine->output(), m_master_out);
-//             
-            m_view->notifyLoad(true);
+            
+            return true;
         }
-        return result;
+        return false;
+        
+//         m_sound_file.open(path, SoundFile::Mode::Read);
+//         if(m_sound_file.isGood())
+//         {
+//             cout << "Opened " << path << "\n";
+//             cout << m_sound_file.componentCount() << ", " << m_sound_file.frameCount() << ", " << m_sound_file.sampleRate() << "\n";
+//             result = true;
+// 
+//             read_all(&m_sound_file, &m_data);
+//             m_data.setSampleRate(m_sound_file.sampleRate());
+//             m_sound_file.close();
+//             
+
+// //             
+//             m_view->notifyLoad(true);
+//         }
     }
     
     virtual void unloadCurrentFile()
@@ -130,7 +155,7 @@ public:
             for(int f=0; f<frames_per_pixel; f++)
             {
                 int ff = p * frames_per_pixel + f;
-                float value = m_data.frame(ff)[component];
+                float value = m_sound_data.data()->frame(ff)[component];
                 if(value > max_value)
                     max_value = value;
                 if(value < min_value)
