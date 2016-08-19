@@ -109,7 +109,7 @@ public:
             }
             m_pool->makeConnection(m_machine->output(), m_master_out);
 //             
-//             m_view->notifyLoad(true);
+            m_view->notifyLoad(true);
         }
         return result;
     }
