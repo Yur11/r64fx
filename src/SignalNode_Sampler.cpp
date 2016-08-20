@@ -11,7 +11,7 @@ namespace r64fx{
     
 SignalNode_Sampler::SignalNode_Sampler()
 {
-
+    resizeOutput(1);
 }
     
 
@@ -185,11 +185,14 @@ void SignalNode_Sampler::resizeOutput(int size)
         m_output = nullptr;
     }
     
-    m_output = new SignalSource[size];
-    float* buffer = new float[size];
-    for(int i=0; i<size; i++)
+    if(size > 0)
     {
-        m_output[i].setAddr(buffer + i);
+        m_output = new SignalSource[size];
+        float* buffer = new float[size];
+        for(int i=0; i<size; i++)
+        {
+            m_output[i].setAddr(buffer + i);
+        }
     }
     
     m_output_size = size;

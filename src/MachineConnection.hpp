@@ -5,10 +5,12 @@ namespace r64fx{
     
 class MachineSignalSource;
 class MachineSignalSink;
+class MachineConnectionImpl;
     
 class MachineConnection : public LinkedList<MachineConnection>::Node{
-    MachineSignalSource* m_source_port  = nullptr;
-    MachineSignalSink*   m_sink_port  = nullptr;
+    MachineSignalSource*    m_source_port  = nullptr;
+    MachineSignalSink*      m_sink_port    = nullptr;
+    MachineConnectionImpl*  m_impl         = nullptr;
     
 public:
     enum class Mapping{
@@ -35,6 +37,21 @@ public:
     inline MachineSignalSink* sinkPort() const
     {
         return m_sink_port;
+    }
+    
+    inline void setImpl(MachineConnectionImpl* impl)
+    {
+        m_impl = impl;
+    }
+    
+    inline MachineConnectionImpl* impl() const
+    {
+        return m_impl;
+    }
+    
+    inline bool isReady() const
+    {
+        return m_impl != nullptr;
     }
 };
     

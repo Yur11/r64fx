@@ -7,17 +7,15 @@ namespace r64fx{
         
 class SignalSource;
     
-class MachineSourceImpl : public Array<SignalSource*>{
-public:
-    using Array::Array;
+struct MachineSourceImpl{
+    Array<SignalSource*> sources;     
 };
 
 
 class SignalSink;
 
-class MachineSinkImpl : public Array<SignalSink*>{
-public:
-    using Array::Array;
+struct MachineSinkImpl{
+    Array<SignalSink*> sinks;
 };
     
 }//namespace r64fx

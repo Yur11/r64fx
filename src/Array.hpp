@@ -8,13 +8,14 @@ template<typename T> class Array{
     unsigned long m_size = 0;
     
 public:
+    Array()
+    {
+        
+    }
+    
     Array(unsigned long size)
     {
-        if(size > 0)
-        {
-            m_buffer = new T[size];
-            m_size = size;
-        }
+        resize(size);
     }
     
     ~Array()
@@ -43,6 +44,17 @@ public:
         {
             delete[] m_buffer;
             m_size = 0;
+            m_buffer = nullptr;
+        }
+    }
+    
+    inline void resize(unsigned long size)
+    {
+        clear();
+        if(size > 0)
+        {
+            m_buffer = new T[size];
+            m_size = size;
         }
     }
 };

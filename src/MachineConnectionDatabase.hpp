@@ -71,7 +71,7 @@ public:
     {
         return m_source;
     }
-    
+        
     MachineConnection* findSink(MachineSignalSink* sink) const;
 };
 

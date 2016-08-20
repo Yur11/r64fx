@@ -15,13 +15,6 @@ namespace r64fx{
     
 SoundFilePool* g_sound_file_pool = nullptr;
     
-void read_all(SoundFile* sf, SoundFileData* sd)
-{
-    sd->load(sf->frameCount(), sf->componentCount());
-    sf->readFrames(sd->data(), sf->frameCount());
-}
-    
-    
 class PlayerControllerPrivate
 : public PlayerViewEventIface
 {
@@ -51,11 +44,15 @@ public:
         m_sound_driver_machine->enable();
         m_master_out = m_sound_driver_machine->createAudioOutput("out", 2);
                 
-        while(!m_master_out->impl())
+        while(!m_machine->isReady() && !m_master_out->impl())
         {
+            cout << "Waiting for impl!\n";
             Timer::runTimers();
             sleep_microseconds(5000);
         }
+        cout << "Done!\n";
+
+        m_pool->makeConnection(m_machine->output(), m_master_out);
         
         m_sound_driver_machine->connect("r64fx:out_1", "system:playback_1");
         m_sound_driver_machine->connect("r64fx:out_2", "system:playback_2");
@@ -109,39 +106,16 @@ public:
         m_sound_data = g_sound_file_pool->load(path);
         if(m_sound_data)
         {
-            m_machine->setData(m_sound_data.data());
+            m_machine->replaceSample(m_sound_data);
             m_view->notifyLoad(true);
-            while(!m_machine->output()->impl())
-            {
-                Timer::runTimers();
-                sleep_microseconds(5000);
-            }
-            m_pool->makeConnection(m_machine->output(), m_master_out);
-            
             return true;
         }
         return false;
-        
-//         m_sound_file.open(path, SoundFile::Mode::Read);
-//         if(m_sound_file.isGood())
-//         {
-//             cout << "Opened " << path << "\n";
-//             cout << m_sound_file.componentCount() << ", " << m_sound_file.frameCount() << ", " << m_sound_file.sampleRate() << "\n";
-//             result = true;
-// 
-//             read_all(&m_sound_file, &m_data);
-//             m_data.setSampleRate(m_sound_file.sampleRate());
-//             m_sound_file.close();
-//             
-
-// //             
-//             m_view->notifyLoad(true);
-//         }
     }
     
     virtual void unloadCurrentFile()
     {
-//         m_data.free();
+        
     }
 
     virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out)

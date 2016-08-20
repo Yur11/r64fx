@@ -1,4 +1,6 @@
 #include "SoundFilePool.hpp"
+#include "SoundFileDataPtr.hpp"
+#include "SoundFile.hpp"
 #include "LinkedList.hpp"
 #include "Timer.hpp"
 
@@ -32,6 +34,7 @@ struct SoundFilePoolPrivate{
 
 SoundFileDataPtrPrivate::SoundFileDataPtrPrivate(SoundFilePoolPrivate* pool)
 {
+    this->pool = pool;
     pool->ptrs.append(this);
 }
     
@@ -79,6 +82,14 @@ void SoundFileDataPtr::clear()
             delete m;
         }
     }
+}
+
+
+SoundFileDataPtr &SoundFileDataPtr::operator=(const SoundFileDataPtr &other)
+{
+    m = other.m;
+    m->user_count++;
+    return *this;
 }
 
 

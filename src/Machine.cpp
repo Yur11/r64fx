@@ -27,11 +27,17 @@ namespace{
     constexpr unsigned long WithdrawMachine         = 4;
     constexpr unsigned long WithdrawAllMachines     = 5;
     constexpr unsigned long MakeConnection          = 6;
-
-    constexpr unsigned long PackDispatched          = 7;
-    constexpr unsigned long MachineDeployed         = 8;
-    constexpr unsigned long MachineWithdrawn        = 9;
-    constexpr unsigned long ConnectionResponse      = 10;
+    constexpr unsigned long BreakConnection         = 7;
+    constexpr unsigned long UpdateConnection        = 8;
+    
+    constexpr unsigned long PackDispatched          = 9;
+    constexpr unsigned long MachineDeployed         = 10;
+    constexpr unsigned long MachineWithdrawn        = 11;
+    constexpr unsigned long ConnectionMade          = 12;
+    constexpr unsigned long ConnectionFailed        = 13;
+    constexpr unsigned long ConnectionBroken        = 14;
+    constexpr unsigned long ConnectionUpdated       = 15;
+    constexpr unsigned long ConnectionUpdateFailed  = 16;
 
     
     
@@ -61,13 +67,12 @@ namespace{
     
    
     struct MachineConnectionSpec{
-        /* In */
+        MachineConnection* connection = nullptr; //Never use in impl thread!
+
+        MachineConnectionImpl* connection_impl = nullptr;
         MachineSourceImpl*  source_impl  = nullptr;
         MachineSinkImpl*    sink_impl    = nullptr;
-        MachineConnection::Mapping mapping = MachineConnection::Mapping::Default;
-        
-        /* Out */
-        MachineConnectionImpl* connection_impl = nullptr;
+        MachineConnection::Mapping mapping = MachineConnection::Mapping::Default;        
     };
 }//namespace
     
@@ -108,7 +113,7 @@ public:
             auto self = (MachinePoolPrivate*) arg;
             self->dispatchMessages();
         }, this);
-        m_timer->setInterval(500);
+        m_timer->setInterval(0);
         m_timer->start();
     }
     
@@ -259,13 +264,38 @@ public:
                 }
                 else if(msg.opcode == MachineDeployed)
                 {
-                    m_dst_iface->m_flags &= ~R64FX_MACHINE_DEPLOYMENT_PENDING;
+                    auto machine = (Machine*) msg.value;
+                    machine->m_flags |= (R64FX_MACHINE_DEPLOYED | R64FX_MACHINE_IS_READY);
                     cout << "MachineDeployed\n";
                 }
                 else if(msg.opcode == MachineWithdrawn)
                 {
-                    m_dst_iface->m_flags &= ~R64FX_MACHINE_WITHDRAWAL_PENDING;
                     cout << "MachineWithdrawn\n";
+                }
+                else if(msg.opcode == ConnectionMade)
+                {
+                    cout << "ConnectionMade\n";
+                    connectionMade((MachineConnectionSpec*) msg.value);
+                }
+                else if(msg.opcode == ConnectionFailed)
+                {
+                    cout << "ConnectionFailed\n";
+                    connectionFailed((MachineConnectionSpec*) msg.value);
+                }
+                else if(msg.opcode == ConnectionBroken)
+                {
+                    cout << "ConnectionBroken\n";
+                    connectionBroken((MachineConnectionSpec*) msg.value);
+                }
+                else if(msg.opcode == ConnectionUpdated)
+                {
+                    cout << "ConnectionUpdated\n";
+                    connectionUpdated((MachineConnectionSpec*) msg.value);
+                }
+                else if(msg.opcode == ConnectionUpdateFailed)
+                {
+                    cout << "ConnectionUpdateFailed\n";
+                    connectionUpdateFailed((MachineConnectionSpec*) msg.value);
                 }
             }
             else
@@ -289,9 +319,9 @@ public:
         if(!connection)
         {
             connection = new MachineConnection(source_port, sink_port, mapping);
-            MachineConnectionDatabase::add(connection);
 
             auto spec = new MachineConnectionSpec;
+            spec->connection = connection;
             spec->source_impl = source_port->impl();
             spec->sink_impl = sink_port->impl();
             
@@ -301,14 +331,65 @@ public:
         return connection;
     }
     
-    void breakConnection(MachineConnection* connection)
+    void connectionMade(MachineConnectionSpec* spec)
     {
-        
+        cout << "setting impl: " << spec->connection_impl << " on " << spec->connection << "\n";
+        spec->connection->setImpl(spec->connection_impl);
+        MachineConnectionDatabase::add(spec->connection);
+        delete spec;
     }
     
-    void updateConnection(MachineConnection* connection)
+    void connectionFailed(MachineConnectionSpec* spec)
     {
+        delete spec;
+    }
+    
+    void breakConnection(MachineConnection* connection)
+    {
+        auto spec = new MachineConnectionSpec;
+        spec->connection = connection;
+        spec->connection_impl = connection->impl();
         
+        MachineMessage msg(BreakConnection, (unsigned long)spec);
+        sendMessages(nullptr, &msg, 1);
+    }
+    
+    void connectionBroken(MachineConnectionSpec* spec)
+    {
+        MachineConnectionDatabase::remove(spec->connection);
+        delete spec->connection;
+        delete spec;
+    }
+    
+    void updateConnection(MachineConnection* connection, bool pack)
+    {
+        auto spec = new MachineConnectionSpec;
+        spec->connection       = connection;
+        spec->connection_impl  = connection->impl();
+        cout << "got impl: " << connection->impl() << " on " << connection << "\n";
+        spec->source_impl      = connection->sourcePort()->impl();
+        spec->sink_impl        = connection->sinkPort()->impl();
+        
+        MachineMessage msg(UpdateConnection, (unsigned long)spec);
+        if(pack)
+        {
+            packMessages(nullptr, &msg, 1);
+        }
+        else
+        {
+            sendMessages(nullptr, &msg, 1);
+        }
+    }
+
+    void connectionUpdated(MachineConnectionSpec* spec)
+    {
+        spec->connection->setImpl(spec->connection_impl);
+        delete spec;
+    }
+    
+    void connectionUpdateFailed(MachineConnectionSpec* spec)
+    {
+        delete spec;
     }
     
     void startImplThread();
@@ -408,8 +489,39 @@ public:
                 }
                 else if(msg.opcode == MakeConnection)
                 {
-                    cout << "opcode MakeConnection\n";
-                    makeConnection((MachineConnectionSpec*)msg.value);
+                    auto spec = (MachineConnectionSpec*)msg.value;
+                    makeConnection(spec);
+                    if(spec->connection_impl)
+                    {
+                        MachineMessage response(ConnectionMade, (unsigned long)spec);
+                        sendMessages(nullptr, &response, 1);
+                    }
+                    else
+                    {
+                        MachineMessage response(ConnectionFailed, (unsigned long)spec);
+                        sendMessages(nullptr, &response, 1);
+                    }
+                }
+                else if(msg.opcode == BreakConnection)
+                {
+                    breakConnection((MachineConnectionSpec*)msg.value);
+                    MachineMessage response(ConnectionBroken, 0);
+                    sendMessages(nullptr, &response, 1);
+                }
+                else if(msg.opcode == UpdateConnection)
+                {
+                    auto spec = (MachineConnectionSpec*)msg.value;
+                    updateConnection(spec);
+                    if(spec->connection_impl)
+                    {
+                        MachineMessage response(ConnectionUpdated, (unsigned long)spec);
+                        sendMessages(nullptr, &response, 1);
+                    }
+                    else
+                    {
+                        MachineMessage response(ConnectionUpdateFailed, (unsigned long)spec);
+                        sendMessages(nullptr, &response, 1);
+                    }
                 }
             }
             else
@@ -451,8 +563,8 @@ public:
                 machine_impl->setContext(m_ctx);
                 machine_impl->deploy();
                 
-                MachineMessage msg(MachineDeployed, 0);
-                sendMessages(machine_impl->iface(), &msg, 1);
+                MachineMessage msg(MachineDeployed, (unsigned long)machine_impl->iface());
+                sendMessages(nullptr, &msg, 1);
             }
         }
     }
@@ -468,8 +580,8 @@ public:
                 machine_impl->setContext(nullptr);
                 m_machines.remove(machine_impl);
                 
-                MachineMessage msg(MachineWithdrawn, 0);
-                sendMessages(machine_impl->iface(), &msg, 1);
+                MachineMessage msg(MachineWithdrawn, (unsigned long)machine_impl->iface());
+                sendMessages(nullptr, &msg, 1);
             }
         }
     }
@@ -487,49 +599,73 @@ public:
     void makeConnection(MachineConnectionSpec* spec)
     {
         cout << "makeConnection(){}\n";
+        MachineConnectionImpl* connection_impl = nullptr;
+        auto source_impl  = spec->source_impl;
+        auto sink_impl    = spec->sink_impl;
+        auto mapping      = spec->mapping;
         
-        if(spec->mapping == MachineConnection::Mapping::Default)
+        if(mapping == MachineConnection::Mapping::Default)
         {
-            if(spec->source_impl->size() == spec->sink_impl->size())
+            if(source_impl->sources.size() == sink_impl->sinks.size())
             {
-                spec->connection_impl = new MachineConnectionImpl(spec->source_impl->size());
-                for(unsigned long i=0; i<spec->source_impl->size(); i++)
+                connection_impl = new MachineConnectionImpl(source_impl->sources.size());
+                for(unsigned long i=0; i<spec->source_impl->sources.size(); i++)
                 {
-                    auto connection = new SignalConnection(spec->source_impl->at(i), spec->sink_impl->at(i));
+                    auto connection = new SignalConnection(source_impl->sources.at(i), sink_impl->sinks.at(i));
                     m_ctx->main_subgraph->addItem(connection);
-                    spec->connection_impl->at(i) = connection;
+                    connection_impl->at(i) = connection;
                 }
             }
-            else if(spec->source_impl->size() == 1)
+            else if(source_impl->sources.size() == 1)
             {
-                spec->connection_impl = new MachineConnectionImpl(spec->sink_impl->size());
-                for(unsigned long i=0; i<spec->sink_impl->size(); i++)
+                connection_impl = new MachineConnectionImpl(sink_impl->sinks.size());
+                for(unsigned long i=0; i<sink_impl->sinks.size(); i++)
                 {
-                    auto connection = new SignalConnection(spec->source_impl->at(0), spec->sink_impl->at(i));
+                    auto connection = new SignalConnection(source_impl->sources.at(0), sink_impl->sinks.at(i));
                     m_ctx->main_subgraph->addItem(connection);
-                    spec->connection_impl->at(i)= connection;
+                    connection_impl->at(i)= connection;
                 }
             }
-//             else if(spec->sink_impl->size() == 1)
-//             {
-//                 spec->connection_impl = new MachineConnectionImpl(spec->source_impl->size());
-//                 for(unsigned long i=0; i<spec->source_impl->size(); i++)
-//                 {
-//                     auto connection = new SignalConnection(spec->source_impl->at(i), spec->sink_impl->at(0));
-//                     m_ctx->main_subgraph->addItem(connection);
-//                     spec->connection_impl->at(i)= connection;
-//                 }
-//             }
             else
             {
                 cerr << "Unsupported default mapping configuration: " 
-                     << spec->source_impl->size() << " -> " << spec->sink_impl->size() << "\n";
+                     << spec->source_impl->sources.size() << " -> " << spec->sink_impl->sinks.size() << "\n";
             }
         }
         else
         {
             cerr << "Non default mappings not implemented!\n";
         }
+        
+        if(connection_impl)
+        {
+            spec->connection_impl = connection_impl;
+        }
+    }
+    
+    void breakConnection(MachineConnectionSpec* spec)
+    {
+        cout << "breakConnection: " << spec << "\n";
+        auto impl = spec->connection_impl;
+        cout << "    " << impl << "\n";
+        
+        for(unsigned long i=0; i<impl->size(); i++)
+        {
+            auto connection = impl->at(i);
+            m_ctx->main_subgraph->removeItem(connection);
+            delete connection;
+        }
+        
+        delete impl;
+    }
+    
+    void updateConnection(MachineConnectionSpec* spec)
+    {
+        cout << "updateConnection\n";
+        
+        breakConnection(spec);
+        spec->connection_impl = nullptr;
+        makeConnection(spec);
     }
 };
     
@@ -613,7 +749,7 @@ void MachinePool::breakConnection(MachineConnection* connection)
 
 void MachinePool::updateConnection(MachineConnection* connection)
 {
-    m->updateConnection(connection);
+    m->updateConnection(connection, false);
 }
 
       
@@ -658,7 +794,6 @@ void Machine::deploy()
 {
     if(!isDeployed())
     {
-        m_flags |= R64FX_MACHINE_DEPLOYMENT_PENDING;
         MachineMessage msg(DeployMachine, (unsigned long)impl());
         m_pool_private->sendMessages(nullptr, &msg, 1);
     }
@@ -669,7 +804,7 @@ void Machine::withdraw()
 {
     if(isDeployed())
     {
-        m_flags |= R64FX_MACHINE_WITHDRAWAL_PENDING;
+        m_flags &= ~R64FX_MACHINE_IS_READY;
         MachineMessage msg(WithdrawMachine, (unsigned long)impl());
         m_pool_private->sendMessages(nullptr, &msg, 1);
     }
@@ -682,15 +817,9 @@ bool Machine::isDeployed() const
 }
 
 
-bool Machine::deploymentPending() const
+bool Machine::isReady() const
 {
-    return m_flags & R64FX_MACHINE_DEPLOYMENT_PENDING;
-}
-    
-    
-bool Machine::withdrawalPending() const
-{
-    return m_flags & R64FX_MACHINE_WITHDRAWAL_PENDING;
+    return m_flags & R64FX_MACHINE_IS_READY;
 }
 
     
@@ -703,12 +832,6 @@ void Machine::setName(const std::string &name)
 std::string Machine::name() const
 {
     return m_name;
-}
-
-
-bool Machine::isReady() const
-{
-    return m_flags & R64FX_MACHINE_IS_READY;
 }
 
 
@@ -781,13 +904,23 @@ int Machine::packSize() const
 
 void Machine::packConnectionUpdatesFor(MachineSignalSource* source)
 {
-    cout << "packConnectionUpdatesForSource\n";
+    auto pp = pool()->m;
+    auto recs = MachineConnectionDatabase::bySource(source);
+    for(auto rec : *recs)
+    {
+        pp->updateConnection(rec->connection(), true);
+    }
 }
     
     
 void Machine::packConnectionUpdatesFor(MachineSignalSink* sink)
 {
-    cout << "packConnectionUpdatesForSink\n";
+    auto pp = pool()->m;
+    auto recs = MachineConnectionDatabase::bySink(sink);
+    for(auto rec : *recs)
+    {
+        pp->updateConnection(rec->connection(), true);
+    }
 }
 
 

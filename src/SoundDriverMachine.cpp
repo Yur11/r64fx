@@ -98,7 +98,8 @@ protected:
         {
             auto spec = (CreatePortSpec*) msg.value;
             
-            auto source_impl = new MachineSourceImpl(spec->component_count);
+            auto source_impl = new MachineSourceImpl;
+            source_impl->sources.resize(spec->component_count);
             for(unsigned long i=0; i<spec->component_count; i++)
             {
                 string name = spec->port_name;
@@ -110,7 +111,7 @@ protected:
                 auto input = sound_driver->newAudioInput(name);
                 auto node =  new SignalNode_BufferReader(input, sound_driver->bufferSize());
                 ctx()->input_subgraph->addItem(node);
-                source_impl->at(i) = node->source();
+                source_impl->sources.at(i) = node->source();
             }
             
             spec->impl = source_impl;
@@ -120,7 +121,8 @@ protected:
         {
             auto spec = (CreatePortSpec*) msg.value;
             
-            auto sink_impl = new MachineSinkImpl(spec->component_count);
+            auto sink_impl = new MachineSinkImpl;
+            sink_impl->sinks.resize(spec->component_count);
             for(unsigned long i=0; i<spec->component_count; i++)
             {
                 string name = spec->port_name;
@@ -132,7 +134,7 @@ protected:
                 auto output = sound_driver->newAudioOutput(name);
                 auto node =  new SignalNode_BufferWriter(output, sound_driver->bufferSize());
                 ctx()->output_subgraph->addItem(node);
-                sink_impl->at(i) = node->sink();
+                sink_impl->sinks.at(i) = node->sink();
             }
             
             spec->impl = sink_impl;
@@ -147,9 +149,9 @@ protected:
         else if(msg.opcode == DestroyAudioInput)
         {
             auto source_impl = (MachineSourceImpl*) msg.value;
-            for(unsigned long i=0; source_impl->size(); i++)
+            for(unsigned long i=0; source_impl->sources.size(); i++)
             {
-                auto source = (BufferReaderSignalSource*) source_impl->at(i);
+                auto source = (BufferReaderSignalSource*) source_impl->sources.at(i);
                 auto node = source->parentReader();
                 ctx()->input_subgraph->removeItem(node);
                 sound_driver->deletePort(node->input());
@@ -160,9 +162,9 @@ protected:
         else if(msg.opcode == DestroyAudioOutput)
         {
             auto sink_impl = (MachineSinkImpl*) msg.value;
-            for(unsigned long i=0; i<sink_impl->size(); i++)
+            for(unsigned long i=0; i<sink_impl->sinks.size(); i++)
             {
-                auto sink = (BufferWriterSignalSink*) sink_impl->at(i);
+                auto sink = (BufferWriterSignalSink*) sink_impl->sinks.at(i);
                 auto node = sink->parentWriter();
                 ctx()->output_subgraph->removeItem(node);
                 sound_driver->deletePort(node->output());

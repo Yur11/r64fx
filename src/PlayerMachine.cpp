@@ -15,11 +15,13 @@ using namespace std;
 namespace r64fx{
     
 namespace{
-    constexpr unsigned long SetData     = 1;
-    constexpr unsigned long Play        = 3;
-    constexpr unsigned long Stop        = 4;
+    constexpr unsigned long ReplaceSample  = 1;
+    constexpr unsigned long Play           = 2;
+    constexpr unsigned long Stop           = 3;
     
-    constexpr unsigned long ReturnImpl  = 5;
+    constexpr unsigned long SampleReplaced    = 4;
+    constexpr unsigned long SampleNotReplaced = 5;
+    constexpr unsigned long OutputSizeChanged = 6;
 }//namespace
     
     
@@ -33,45 +35,41 @@ public:
     {
         m_sampler = new SignalNode_Sampler;
         ctx()->main_subgraph->addItem(m_sampler);
+        m_output_impl = new MachineSourceImpl;
+        resizeOutput(1);
     }
     
     virtual void withdraw()
     {
         m_sampler->removeFromGraph();
+        delete m_output_impl;
     }
-    
-    void setData(SoundFileData* data)
+        
+    void replaceSample(SoundFileData* data)
     {
         if(data && data->isGood())
         {
             m_sampler->setData(data->data(), data->frameCount(), data->componentCount(), data->sampleRate());
             m_sampler->play();
             m_sampler->enableLoop();
-            if(!m_data || m_data->componentCount() != data->componentCount())
+            if(m_output_impl->sources.size() != (unsigned long)data->componentCount())
             {
-                m_sampler->resizeOutput(data->componentCount());
-                if(m_output_impl)
-                {
-                    delete m_output_impl;
-                }
-                
-                m_output_impl = new MachineSourceImpl(data->componentCount());
-                for(int i=0; i<data->componentCount(); i++)
-                {
-                    m_output_impl->at(i) = m_sampler->output(i);
-                }
-                    
-                sendMessage(ReturnImpl, (unsigned long)m_output_impl);
+                resizeOutput(data->componentCount());
             }
             m_data = data;
-        }        
+            sendMessage(SampleReplaced, (unsigned long)m_output_impl);
+        }
+        else
+        {
+            sendMessage(SampleNotReplaced, 0);
+        }
     }
     
     virtual void dispatchMessage(const MachineMessage &msg)
     {
-        if(msg.opcode == SetData)
+        if(msg.opcode == ReplaceSample)
         {
-            setData((SoundFileData*)msg.value);
+            replaceSample((SoundFileData*)msg.value);
         }
         else if(msg.opcode == Play)
         {
@@ -82,6 +80,18 @@ public:
             m_sampler->stop();
             m_sampler->setPlayHeadPosition(0.0f);
         }
+    }
+    
+    void resizeOutput(int size)
+    {
+        m_sampler->resizeOutput(size);
+        m_output_impl->sources.resize(size);
+        for(int i=0; i<size; i++)
+        {
+            m_output_impl->sources.at(i) = m_sampler->output(i);
+        }
+        
+        sendMessage(OutputSizeChanged, (unsigned long)m_output_impl);
     }
 };
     
@@ -99,18 +109,20 @@ PlayerMachine::~PlayerMachine()
     
 }
 
-
-void PlayerMachine::setData(SoundFileData* data)
+void PlayerMachine::replaceSample(SoundFileDataPtr new_sample)
 {
-    if(!data)
+    if(!new_sample)
         return;
-
-    auto data_copy = new SoundFileData(*data);
-    MachineMessage msg(SetData, (unsigned long)data_copy);
     
-    if(!m_data || data->componentCount() != m_data->componentCount())
+    assert(isReady());
+    
+    m_flags &= ~R64FX_MACHINE_IS_READY;
+    m_new_sample = new_sample;
+    
+    MachineMessage msg(ReplaceSample, (unsigned long)new_sample.data());
+    
+    if(!m_sample || new_sample.componentCount() != m_sample.componentCount())
     {
-        m_output.setImpl(nullptr);
         packMessage(msg);
         packConnectionUpdatesFor(&m_output);
         sendPack();
@@ -118,13 +130,6 @@ void PlayerMachine::setData(SoundFileData* data)
     else
     {
         sendMessage(msg);
-    }
-    m_data = data;
-    
-    while(!m_output.impl())
-    {
-        Timer::runTimers();
-        sleep_microseconds(5000);
     }
 }
 
@@ -155,9 +160,23 @@ void PlayerMachine::forEachPort(void (*fun)(MachinePort* port, Machine* machine,
 
 void PlayerMachine::dispatchMessage(const MachineMessage &msg)
 {
-    if(msg.opcode == ReturnImpl)
+    if(msg.opcode == OutputSizeChanged)
     {
-        m_output.setImpl((MachineSourceImpl*)msg.value);
+        auto impl = (MachineSourceImpl*)msg.value;
+        cout << "OutputSizeChanged: " << impl->sources.size() << "\n";
+        m_output.setImpl(impl);
+    }
+    else if(msg.opcode == SampleReplaced)
+    {
+        m_sample = m_new_sample;
+        m_new_sample.clear();
+        m_flags |= R64FX_MACHINE_IS_READY;
+        cout << "SampleReplaced\n";
+    }
+    else if(msg.opcode == SampleNotReplaced)
+    {
+        m_flags |= R64FX_MACHINE_IS_READY;
+        cout << "SampleNotReplaced\n";
     }
 }
     

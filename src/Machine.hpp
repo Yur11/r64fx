@@ -35,16 +35,12 @@ public:
     void withdraw();
     
     bool isDeployed() const;
-    
-    bool deploymentPending() const;
-    
-    bool withdrawalPending() const;
+
+    bool isReady() const;
     
     void setName(const std::string &name);
     
     std::string name() const;
-    
-    bool isReady() const;
     
     virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg) = 0;
     

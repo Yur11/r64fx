@@ -84,7 +84,6 @@ SignalSink* SignalConnection::sink() const
     
 void SignalConnection::processSample(int i)
 {
-//     cout << i << " connection\n";
     m_sink[0][0] = m_source[0][0];
 }
 
