@@ -148,6 +148,8 @@ std::string full_path_to_uri(const std::string &full_path)
     {
         if(ch == ' ')
             str += "%20";
+        else if(ch == '#')
+            str += "%23";
         else
             str.push_back(ch);
 
@@ -325,6 +327,11 @@ std::string next_file_path_from_uri_list(std::string::iterator &begin_it, const 
                 if(ch == '0')
                 {
                     result.push_back(' ');
+                    it++;
+                }
+                else if(ch == '3')
+                {
+                    result.push_back('#');
                     it++;
                 }
                 state = State::Path;
