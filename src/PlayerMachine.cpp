@@ -2,7 +2,6 @@
 #include "MachineImpl.hpp"
 #include "MachineFlags.hpp"
 #include "MachinePoolContext.hpp"
-#include "MachineConnectionDatabase.hpp"
 #include "MachinePortImpl.hpp"
 #include "SignalNode_Sampler.hpp"
 #include "RouterMachine.hpp"
@@ -16,13 +15,15 @@ using namespace std;
 namespace r64fx{
     
 namespace{
-    constexpr unsigned long ReplaceSample  = 1;
-    constexpr unsigned long Play           = 2;
-    constexpr unsigned long Stop           = 3;
+    enum{
+        ReplaceSample  = 1,
+        Play,
+        Stop,
     
-    constexpr unsigned long SampleReplaced    = 4;
-    constexpr unsigned long SampleNotReplaced = 5;
-    constexpr unsigned long OutputSizeChanged = 6;
+        SampleReplaced,
+        SampleNotReplaced,
+        OutputSizeChanged
+    };
 }//namespace
     
     

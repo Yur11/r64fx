@@ -40,7 +40,6 @@ set(SRC
     LayoutUtils.cpp
     Machine.cpp
     MachineConnection.cpp
-    MachineConnectionDatabase.cpp
     MachinePoolContext.cpp
     MachinePort.cpp
     MachinePortImpl.cpp

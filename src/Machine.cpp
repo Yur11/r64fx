@@ -1,5 +1,4 @@
 #include "Machine.hpp"
-#include "MachineConnectionDatabase.hpp"
 #include "MachineFlags.hpp"
 #include "MachineImpl.hpp"
 #include "MachinePool.hpp"
