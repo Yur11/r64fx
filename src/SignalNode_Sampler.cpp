@@ -7,6 +7,9 @@ using namespace std;
 #define R64FX_SAMPLER_PLAYING 1
 #define R64FX_SAMPLER_LOOPING 2
 
+const float g_playback_rate = 48000.0f;
+const float g_playback_rate_rcp = 1.0f / g_playback_rate;
+
 namespace r64fx{
     
 SignalNode_Sampler::SignalNode_Sampler()
@@ -121,6 +124,18 @@ void SignalNode_Sampler::setPitch(float pitch)
 }
 
 
+void SignalNode_Sampler::setGain(float gain)
+{
+    m_gain = gain;
+}
+    
+
+float SignalNode_Sampler::gain() const
+{
+    return m_gain;
+}
+
+
 float SignalNode_Sampler::pitch() const
 {
     return m_pitch;
@@ -213,14 +228,13 @@ void SignalNode_Sampler::aboutToBeRemovedFromGraph(SignalGraph* graph)
 
 void SignalNode_Sampler::processSample(int i)
 {
-    
     if(!m_data)
         return;
     
     if(!isPlaying())
         return;
     
-    float delta = m_pitch * m_sample_rate_rcp;
+    float delta = m_pitch * g_playback_rate_rcp;
     m_playhead += delta;
     
     if(isLooping())
@@ -239,7 +253,6 @@ void SignalNode_Sampler::processSample(int i)
         }
     }
     
-    
     float playhead_frame = m_playhead * m_sample_rate;
     double whole_part = 0.0;
     float frac_part = modf(playhead_frame, &whole_part);
@@ -252,7 +265,7 @@ void SignalNode_Sampler::processSample(int i)
         float val2 = m_data[(idx + 1) * m_component_count + c];
         float delta = val2 - val1;
         float value = val1 + frac_part * delta;
-        m_output[c][0] = value;
+        m_output[c][0] = value * m_gain;
     }
 }
 

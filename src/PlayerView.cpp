@@ -18,7 +18,7 @@ namespace r64fx{
 
 Font* g_LargeFont;
 
-PlayerView::PlayerView(PlayerViewEventIface* event_iface, Widget* parent)
+PlayerView::PlayerView(PlayerViewControllerIface* event_iface, Widget* parent)
 : m_event_iface(event_iface)
 {
     if(!g_LargeFont)
@@ -44,7 +44,13 @@ PlayerView::PlayerView(PlayerViewEventIface* event_iface, Widget* parent)
     auto slider_pitch = new Widget_Slider(150, Orientation::Vertical, this);
     slider_pitch->setPosition({width() - 20, 10});
     slider_pitch->setHeight(height() - 20);
-    slider_pitch->setValue(0.5f);
+    slider_pitch->setMinValue(0.5f);
+    slider_pitch->setMaxValue(2.0f);
+    slider_pitch->setValue(1.0f);
+    slider_pitch->onValueChanged([](void* arg, Widget_Slider*, float pitch){
+        auto ctrl_iface = (PlayerViewControllerIface*) arg;
+        ctrl_iface->changePitch(pitch);
+    }, m_event_iface);
     
     m_timer = new Timer;
     m_timer->onTimeout([](Timer* timer, void* arg){

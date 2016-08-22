@@ -17,7 +17,7 @@ namespace r64fx{
 SoundFilePool* g_sound_file_pool = nullptr;
     
 class PlayerControllerPrivate
-: public PlayerViewEventIface
+: public PlayerViewControllerIface
 {
     PlayerView* m_view = nullptr;
     PlayerMachine* m_machine = nullptr;
@@ -139,6 +139,12 @@ public:
             out[p*2] = min_value;
             out[p*2 + 1] = max_value;
         }
+    }
+    
+    virtual void changePitch(float pitch)
+    {
+        cout << pitch << "\n";
+        m_machine->setPitch(pitch);
     }
 
     virtual bool hasData()

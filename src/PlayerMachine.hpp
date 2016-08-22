@@ -10,6 +10,8 @@ class PlayerMachine : public Machine{
     MachineSignalSource m_output;
     SoundFileDataPtr m_sample;
     SoundFileDataPtr m_new_sample;
+    float m_pitch  = 1.0f;
+    float m_gain   = 1.0f;
     
 public:
     PlayerMachine(MachinePool* pool);
@@ -21,6 +23,14 @@ public:
     void play();
     
     void stop();
+    
+    void setPitch(float pitch);
+    
+    float pitch() const;
+    
+    void setGain(float gain);
+    
+    float gain() const;
     
     MachineSignalSource* output();
     

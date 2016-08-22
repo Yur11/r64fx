@@ -18,6 +18,7 @@ class SignalNode_Sampler : public SignalNode{
     float m_loop_out = 0.0f;
     float m_playhead = 0.0f;
     float m_pitch    = 1.0f;
+    float m_gain     = 1.0f;
     
     unsigned int m_flags = 0;
     
@@ -58,6 +59,10 @@ public:
     void setPitch(float pitch);
     
     float pitch() const;
+    
+    void setGain(float gain);
+    
+    float gain() const;
     
     void play();
     

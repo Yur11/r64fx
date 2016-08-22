@@ -6,16 +6,16 @@
 
 namespace r64fx{
 
-class PlayerViewEventIface;
+class PlayerViewControllerIface;
 
 class PlayerView : public Widget{
-    PlayerViewEventIface* m_event_iface;
+    PlayerViewControllerIface* m_event_iface;
     float* m_waveform = nullptr;
     Timer* m_timer = nullptr;
     std::string m_path = "";
 
 public:
-    PlayerView(PlayerViewEventIface* feedback, Widget* parent = nullptr);
+    PlayerView(PlayerViewControllerIface* feedback, Widget* parent = nullptr);
 
     virtual ~PlayerView();
 
@@ -46,7 +46,7 @@ private:
 };
 
 
-class PlayerViewEventIface{
+class PlayerViewControllerIface{
 public:    
     virtual int frameCount() = 0;
 
@@ -56,6 +56,8 @@ public:
 
     virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out) = 0;
 
+    virtual void changePitch(float pitch) = 0;
+    
     virtual bool hasData() = 0;
     
     virtual void close() = 0;

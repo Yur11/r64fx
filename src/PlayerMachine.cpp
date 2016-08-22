@@ -19,10 +19,31 @@ namespace{
         ReplaceSample  = 1,
         Play,
         Stop,
+        SetPitch,
+        SetGain,
     
         SampleReplaced,
         SampleNotReplaced,
         OutputSizeChanged
+    };
+    
+    union MsgVal{
+    private:
+        unsigned long mulong = 0;
+        float mf[2];
+        
+    public:
+        explicit MsgVal(unsigned long ulong) : mulong(ulong) {}
+        
+        explicit MsgVal(float f0, float f1 = 0.0f) : mf{f0, f1} {}
+        
+        MsgVal() {}
+        
+        inline unsigned long ulong() const { return mulong; }
+        
+        inline operator unsigned long() const { return mulong; }
+        
+        inline float f(int i = 0) const { return mf[i]; }
     };
 }//namespace
     
@@ -81,6 +102,14 @@ public:
         {
             m_sampler->stop();
             m_sampler->setPlayHeadPosition(0.0f);
+        }
+        else if(msg.opcode == SetPitch)
+        {
+            m_sampler->setPitch(MsgVal(msg.value).f(0));
+        }
+        else if(msg.opcode == SetGain)
+        {
+            m_sampler->setGain(MsgVal(msg.value).f(0));
         }
     }
     
@@ -148,6 +177,32 @@ void PlayerMachine::stop()
 }
 
 
+void PlayerMachine::setPitch(float pitch)
+{
+    m_pitch = pitch;
+    sendMessage(SetPitch, MsgVal(pitch));
+}
+
+
+float PlayerMachine::pitch() const
+{
+    return m_pitch;
+}
+
+
+void PlayerMachine::setGain(float gain)
+{
+    m_gain = gain;
+    sendMessage(SetGain, MsgVal(gain));
+}
+
+
+float PlayerMachine::gain() const
+{
+    return m_gain;
+}
+
+
 MachineSignalSource* PlayerMachine::output()
 {
     return &m_output;
@@ -165,7 +220,6 @@ void PlayerMachine::dispatchMessage(const MachineMessage &msg)
     if(msg.opcode == OutputSizeChanged)
     {
         auto impl = (MachineSourceImpl*)msg.value;
-        cout << "OutputSizeChanged: " << impl->sources.size() << "\n";
         m_output.setImpl(impl);
     }
     else if(msg.opcode == SampleReplaced)
@@ -173,12 +227,10 @@ void PlayerMachine::dispatchMessage(const MachineMessage &msg)
         m_sample = m_new_sample;
         m_new_sample.clear();
         m_flags |= R64FX_MACHINE_IS_READY;
-        cout << "SampleReplaced\n";
     }
     else if(msg.opcode == SampleNotReplaced)
     {
         m_flags |= R64FX_MACHINE_IS_READY;
-        cout << "SampleNotReplaced\n";
     }
 }
     
