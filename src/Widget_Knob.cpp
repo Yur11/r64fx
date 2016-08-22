@@ -99,6 +99,10 @@ public:
 
             Image img;
             pickFrame(&img, frame);
+            {
+                unsigned char color[2] = {0, 0};
+                fill(&img, color);
+            }
 
             if(frame > 0)
             {
@@ -172,6 +176,10 @@ public:
 
             Image img;
             pickFrame(&img, frame);
+            {
+                unsigned char color[2] = {0, 0};
+                fill(&img, color);
+            }
 
             if(frame < (frameCount()/2))
             {
