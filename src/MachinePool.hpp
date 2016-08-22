@@ -24,15 +24,15 @@ public:
     
     void withdrawAll();
     
-    MachineConnection* makeConnection(
-        MachineSignalSource*  src_port, 
-        MachineSignalSink*    dst_port, 
-        MachineConnection::Mapping mapping = MachineConnection::Mapping::Default
-    );
-    
-    void breakConnection(MachineConnection* connection);
-    
-    void updateConnection(MachineConnection* connection);
+//     MachineConnection* makeConnection(
+//         MachineSignalSource*  src_port, 
+//         MachineSignalSink*    dst_port, 
+//         MachineConnection::Mapping mapping = MachineConnection::Mapping::Default
+//     );
+//     
+//     void breakConnection(MachineConnection* connection);
+//     
+//     void updateConnection(MachineConnection* connection);
 };
     
 }//namespace r64fx

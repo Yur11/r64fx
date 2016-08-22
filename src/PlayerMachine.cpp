@@ -5,6 +5,7 @@
 #include "MachineConnectionDatabase.hpp"
 #include "MachinePortImpl.hpp"
 #include "SignalNode_Sampler.hpp"
+#include "RouterMachine.hpp"
 
 #include "Timer.hpp"
 #include "sleep.hpp"
@@ -124,7 +125,7 @@ void PlayerMachine::replaceSample(SoundFileDataPtr new_sample)
     if(!m_sample || new_sample.componentCount() != m_sample.componentCount())
     {
         packMessage(msg);
-        packConnectionUpdatesFor(&m_output);
+        RouterMachine::singletonInstance(pool())->packConnectionUpdatesFor(&m_output);
         sendPack();
     }
     else

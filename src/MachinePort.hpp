@@ -55,6 +55,7 @@ public:
 
 class MachineSignalSink : public MachineSignalPort{
     friend class MachineConnectionDatabase;
+    friend class RouterMachine;
     
     SignalSinkConnectionRecord* connection_record = nullptr;
     MachineSinkImpl* m_impl = nullptr;
@@ -76,6 +77,7 @@ public:
 
 class MachineSignalSource : public MachineSignalPort{
     friend class MachineConnectionDatabase;
+    friend class RouterMachine;
     
     SignalSourceConnectionRecord* connection_record = nullptr;
     MachineSourceImpl* m_impl = nullptr;

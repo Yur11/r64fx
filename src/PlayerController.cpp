@@ -2,6 +2,7 @@
 #include "PlayerView.hpp"
 #include "PlayerMachine.hpp"
 #include "SoundFilePool.hpp"
+#include "RouterMachine.hpp"
 
 #include "Timer.hpp"
 #include "sleep.hpp"
@@ -52,7 +53,7 @@ public:
         }
         cout << "Done!\n";
 
-        m_pool->makeConnection(m_machine->output(), m_master_out);
+        RouterMachine::singletonInstance(m_pool)->makeConnection(m_machine->output(), m_master_out);
         
         m_sound_driver_machine->connect("r64fx:out_1", "system:playback_1");
         m_sound_driver_machine->connect("r64fx:out_2", "system:playback_2");

@@ -67,10 +67,6 @@ protected:
     
     int packSize() const;
     
-    void packConnectionUpdatesFor(MachineSignalSource* source);
-    
-    void packConnectionUpdatesFor(MachineSignalSink* sink);
-    
     virtual void dispatchMessage(const MachineMessage &msg) = 0;
     
     static void block();
