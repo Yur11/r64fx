@@ -52,6 +52,7 @@ set(SRC
     PlayerController.cpp
     PlayerMachine.cpp
     PlayerView.cpp
+    RouterMachine.cpp
     SignalGraph.cpp
     SignalNode_BufferIO.cpp
     SignalNode_Sampler.cpp
