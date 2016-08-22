@@ -3,6 +3,7 @@
 
 #include "Widget.hpp"
 #include "Timer.hpp"
+#include "Image.hpp"
 
 namespace r64fx{
 
@@ -12,7 +13,7 @@ class Widget_BipolarKnob;
 class Widget_Slider;
 
 class PlayerView : public Widget{
-    PlayerViewControllerIface* m_event_iface;
+    PlayerViewControllerIface* m_ctrl;
     float* m_waveform = nullptr;
     Widget_Button* m_button_play = nullptr;
     Widget_Button* m_button_cue = nullptr;
@@ -20,6 +21,8 @@ class PlayerView : public Widget{
     Widget_Slider* m_slider_pitch = nullptr;
     Timer* m_timer = nullptr;
     std::string m_path = "";
+    Image m_caption_img;
+    Image m_tempo_img;
 
 public:
     PlayerView(PlayerViewControllerIface* feedback, Widget* parent = nullptr);
@@ -50,6 +53,16 @@ public:
     
 private:
     void pathRecieved();
+    
+    void updateCaption(const std::string &caption);
+    
+    void pitchChanged(float pitch);
+    
+    void gainChanged(float gain);
+    
+    void updateTempo(float percent);
+    
+    void updateWaveform();
 };
 
 
@@ -64,6 +77,8 @@ public:
     virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out) = 0;
 
     virtual void changePitch(float pitch) = 0;
+    
+    virtual void changeGain(float pitch) = 0;
     
     virtual bool hasData() = 0;
     

@@ -143,8 +143,12 @@ public:
     
     virtual void changePitch(float pitch)
     {
-        cout << pitch << "\n";
         m_machine->setPitch(pitch);
+    }
+    
+    virtual void changeGain(float pitch)
+    {
+        m_machine->setGain(pitch);
     }
 
     virtual bool hasData()
