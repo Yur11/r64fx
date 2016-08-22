@@ -9,7 +9,7 @@
 #include "Widget_Button.hpp"
 #include "Widget_Knob.hpp"
 #include "Widget_Slider.hpp"
-
+#include <cmath>
 #include <iostream>
 
 using namespace std;
@@ -26,30 +26,23 @@ PlayerView::PlayerView(PlayerViewControllerIface* event_iface, Widget* parent)
         g_LargeFont = new Font("", 15, 72);
     }
 
-    setSize({800, 240});
+    m_button_play = new Widget_Button(ButtonAnimation::PlayPause({48, 48}), true, this);
 
-    auto button_play = new Widget_Button(ButtonAnimation::PlayPause({48, 48}), true, this);
-    button_play->setPosition({5, height() - 55});
+    m_button_cue = new Widget_Button(ButtonAnimation::Text({48, 48}, "CUE", g_LargeFont), true, this);
 
-    auto button_cue = new Widget_Button(ButtonAnimation::Text({48, 48}, "CUE", g_LargeFont), true, this);
-    button_cue->setPosition({5, height() - 105});
+    m_knob_gain = new Widget_BipolarKnob(this);
+    m_knob_gain->setMinValue(-1.0f);
+    m_knob_gain->setMidValue(0.0f);
+    m_knob_gain->setMaxValue(+1.0f);
+    m_knob_gain->setValue(m_knob_gain->midValue());
 
-    auto knob_gain = new Widget_BipolarKnob(this);
-    knob_gain->setPosition({5, height() - 175});
-    knob_gain->setMinValue(0.0f);
-    knob_gain->setMidValue(1.0f);
-    knob_gain->setMaxValue(2.0f);
-    knob_gain->setValue(knob_gain->midValue());
-
-    auto slider_pitch = new Widget_Slider(150, Orientation::Vertical, this);
-    slider_pitch->setPosition({width() - 20, 10});
-    slider_pitch->setHeight(height() - 20);
-    slider_pitch->setMinValue(0.5f);
-    slider_pitch->setMaxValue(2.0f);
-    slider_pitch->setValue(1.0f);
-    slider_pitch->onValueChanged([](void* arg, Widget_Slider*, float pitch){
+    m_slider_pitch = new Widget_Slider(150, Orientation::Vertical, this);
+    m_slider_pitch->setMinValue(-1.0f);
+    m_slider_pitch->setMaxValue(+1.0f);
+    m_slider_pitch->setValue(0.0f);
+    m_slider_pitch->onValueChanged([](void* arg, Widget_Slider*, float slider_pos){
         auto ctrl_iface = (PlayerViewControllerIface*) arg;
-        ctrl_iface->changePitch(pitch);
+        ctrl_iface->changePitch(pow(2.0, -0.5f * slider_pos));
     }, m_event_iface);
     
     m_timer = new Timer;
@@ -58,6 +51,8 @@ PlayerView::PlayerView(PlayerViewControllerIface* event_iface, Widget* parent)
         auto self = (PlayerView*) arg;
         self->pathRecieved();
     }, this);
+    
+    setSize({800, 240});
 }
 
 
@@ -120,7 +115,7 @@ void PlayerView::paintEvent(PaintEvent* event)
     else
     {
         Image textimg;
-        text2image("Drop samples here!", TextWrap::None, g_LargeFont, &textimg);
+        text2image("Drop Samples Here", TextWrap::None, g_LargeFont, &textimg);
         unsigned char fg[4] = {0, 0, 0, 0};
         unsigned char* colors[1] = {fg};
         p->blendColors(
@@ -134,6 +129,12 @@ void PlayerView::paintEvent(PaintEvent* event)
 
 void PlayerView::resizeEvent(ResizeEvent* event)
 {
+    cout << "resizeEvent: " << event->size() << "\n";
+    m_button_play->setPosition({5, height() - 55});
+    m_button_cue->setPosition({5, height() - 105});
+    m_knob_gain->setPosition({5, height() - 175});
+    m_slider_pitch->setPosition({width() - 20, 10});
+    m_slider_pitch->setHeight(height() - 20);
     clip();
     repaint();
 }

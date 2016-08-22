@@ -7,10 +7,17 @@
 namespace r64fx{
 
 class PlayerViewControllerIface;
+class Widget_Button;
+class Widget_BipolarKnob;
+class Widget_Slider;
 
 class PlayerView : public Widget{
     PlayerViewControllerIface* m_event_iface;
     float* m_waveform = nullptr;
+    Widget_Button* m_button_play = nullptr;
+    Widget_Button* m_button_cue = nullptr;
+    Widget_BipolarKnob* m_knob_gain = nullptr;
+    Widget_Slider* m_slider_pitch = nullptr;
     Timer* m_timer = nullptr;
     std::string m_path = "";
 
