@@ -117,6 +117,12 @@ unsigned long SoundFileDataPtr::componentCount() const
 }
     
     
+int SoundFileDataPtr::sampleRate() const
+{
+    return m->data.sampleRate();
+}
+    
+    
 SoundFilePool::SoundFilePool()
 {
     m = new SoundFilePoolPrivate;

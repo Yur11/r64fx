@@ -21,7 +21,7 @@ class PlayerControllerPrivate
 {
     PlayerView* m_view = nullptr;
     PlayerMachine* m_machine = nullptr;
-    
+
     MachinePool* m_pool = nullptr;
     bool m_running = true;    
     SoundDriverMachine* m_sound_driver_machine = nullptr;
@@ -101,6 +101,15 @@ public:
         }
         return 0;
     }
+    
+    virtual float sampleRate()
+    {
+        if(m_sound_data)
+        {
+            return m_sound_data.sampleRate();
+        }
+        return 0.0f;
+    }
 
     virtual bool loadAudioFile(const std::string &path)
     {
@@ -150,6 +159,11 @@ public:
     {
         m_machine->setGain(pitch);
     }
+    
+    virtual void movePlayhead(float seconds)
+    {
+        m_machine->setPlayheadPosition(seconds);
+    }
 
     virtual bool hasData()
     {
@@ -166,7 +180,11 @@ public:
         while(m_running)
         {
             Timer::runTimers();
-            sleep_microseconds(1000);
+            if(m_view && m_machine && m_sound_data)
+            {
+                m_view->movePlayhead(m_machine->playheadPosition());
+            }
+            sleep_microseconds(5000);
         }
     }
 };

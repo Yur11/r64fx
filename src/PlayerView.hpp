@@ -24,6 +24,7 @@ class PlayerView : public Widget{
     Image m_caption_img;
     Image m_tempo_img;
     float m_gain = 1.0f;
+    int m_playhead_position = 0;
 
 public:
     PlayerView(PlayerViewControllerIface* feedback, Widget* parent = nullptr);
@@ -32,6 +33,9 @@ public:
 
     void notifyLoad(bool success);
 
+    void movePlayhead(float seconds);
+    
+protected:
     virtual void paintEvent(PaintEvent* event);
 
     virtual void resizeEvent(ResizeEvent* event);
@@ -72,6 +76,8 @@ public:
     virtual int frameCount() = 0;
 
     virtual int componentCount() = 0;
+    
+    virtual float sampleRate() = 0;
 
     virtual bool loadAudioFile(const std::string &path) = 0;
 
@@ -79,7 +85,9 @@ public:
 
     virtual void changePitch(float pitch) = 0;
     
-    virtual void changeGain(float pitch) = 0;
+    virtual void changeGain(float gain) = 0;
+
+    virtual void movePlayhead(float seconds) = 0;
     
     virtual bool hasData() = 0;
     

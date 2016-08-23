@@ -35,6 +35,8 @@ public:
     unsigned long loadedFrameCount() const;
     
     unsigned long componentCount() const;
+    
+    int sampleRate() const;
 };
     
 }//namespace r64fx

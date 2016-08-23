@@ -21,6 +21,7 @@ namespace{
         Stop,
         SetPitch,
         SetGain,
+        MovePlayhead,
     
         SampleReplaced,
         SampleNotReplaced,
@@ -112,6 +113,10 @@ public:
         else if(msg.opcode == SetGain)
         {
             m_sampler->setGain(MsgVal(msg.value).f(0));
+        }
+        else if(msg.opcode == MovePlayhead)
+        {
+            m_sampler->setPlayheadPosition(MsgVal(msg.value).f(0));
         }
     }
     
@@ -222,6 +227,7 @@ float PlayerMachine::gain() const
 void PlayerMachine::setPlayheadPosition(float playhead_position)
 {
     m_playhead_position = playhead_position;
+    sendMessage(MovePlayhead, MsgVal(playhead_position));
 }
 
 
@@ -263,7 +269,6 @@ void PlayerMachine::dispatchMessage(const MachineMessage &msg)
     else if(msg.opcode == PlayheadMoved)
     {
         m_playhead_position = MsgVal(msg.value).f(0);
-        cout << "pp: " << m_playhead_position << "\n";
     }
 }
     

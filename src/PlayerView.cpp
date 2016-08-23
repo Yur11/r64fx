@@ -9,6 +9,7 @@
 #include "Widget_Button.hpp"
 #include "Widget_Knob.hpp"
 #include "Widget_Slider.hpp"
+#include "ImageUtils.hpp"
 #include <cmath>
 #include <iostream>
 
@@ -16,7 +17,13 @@ using namespace std;
 
 namespace r64fx{
 
+namespace{
+    
 Font* g_LargeFont = nullptr;
+
+Image* g_img_triangle_down = nullptr;
+
+}//namespace
 
 PlayerView::PlayerView(PlayerViewControllerIface* ctrl, Widget* parent)
 : m_ctrl(ctrl)
@@ -24,6 +31,11 @@ PlayerView::PlayerView(PlayerViewControllerIface* ctrl, Widget* parent)
     if(!g_LargeFont)
     {
         g_LargeFont = new Font("", 15, 72);
+    }
+    
+    if(!g_img_triangle_down)
+    {
+        draw_triangles(8, nullptr, g_img_triangle_down, nullptr, nullptr);
     }
 
     m_button_play = new Widget_Button(ButtonAnimation::PlayPause({48, 48}), true, this);
@@ -88,6 +100,30 @@ void PlayerView::notifyLoad(bool success)
 }
 
 
+void PlayerView::movePlayhead(float seconds)
+{
+    int w = width() - 85;
+    float sr = m_ctrl->sampleRate();
+    float fc = m_ctrl->frameCount();
+    if(sr > 0.0f && fc > 0.0f)
+    {
+        float ph = seconds * sr;
+        ph /= fc;
+        ph *= w;
+        if(ph < 0)
+        {
+            ph = 0;
+        }
+        else if(ph >= w)
+        {
+            ph = w - 1;
+        }
+        m_playhead_position = ph;
+        repaint();
+    }
+}
+
+
 void PlayerView::paintEvent(PaintEvent* event)
 {
     auto p = event->painter();
@@ -114,10 +150,12 @@ void PlayerView::paintEvent(PaintEvent* event)
             unsigned char fg[4] = {63, 63, 63, 0};
             p->drawWaveform(
                 {60, g_LargeFont->height() + waveform_y, width() - 85, waveform_height}, 
-                fg, m_waveform + (c * m_ctrl->frameCount()), m_gain
+                fg, m_waveform + (c * (width() - 85) * 2), m_gain
             );
             waveform_y += waveform_height;
         }
+        
+        p->fillRect({m_playhead_position + 60, g_LargeFont->height(), 2, avail_height}, Color(255, 0, 0, 0));
     }
     else
     {
@@ -140,7 +178,7 @@ void PlayerView::paintEvent(PaintEvent* event)
     
     {
         unsigned char fg[4] = {0, 0, 0, 0};
-        p->fillRect({0, g_LargeFont->height(), width(), 1}, fg);
+        p->fillRect({0, g_LargeFont->height(), width(), 2}, fg);
     }
 
     Widget::paintEvent(event);
@@ -167,7 +205,27 @@ void PlayerView::resizeEvent(ResizeEvent* event)
 
 void PlayerView::mousePressEvent(MousePressEvent* event)
 {
-    Widget::mousePressEvent(event);
+    if(event->y() >= g_LargeFont->height() && event->x() >= 60 && (event->x() + 25) < width())
+    {
+        int playhead_position = event->x() - 60;
+        {
+            m_playhead_position = playhead_position;
+            float sr = m_ctrl->sampleRate();
+            float fc = m_ctrl->frameCount();
+            if(sr > 0.0f && fc > 0.0f)
+            {
+                int w = width() - 85;
+                float ph = float(m_playhead_position) / float(w);
+                ph *= fc;
+                ph /= sr;
+                m_ctrl->movePlayhead(ph);
+            }
+        }
+    }
+    else
+    {
+        Widget::mousePressEvent(event);
+    }
     repaint();
 }
 
@@ -305,14 +363,15 @@ void PlayerView::updateWaveform()
 
     int component_count = m_ctrl->componentCount();
     int frame_count = m_ctrl->frameCount();
+    int w = width() - 85;
     
-    m_waveform = new(std::nothrow) float[component_count * frame_count * 2];
+    m_waveform = new(std::nothrow) float[component_count * w * 2];
     if(!m_waveform)
         return;
 
     for(int c=0; c<component_count; c++)
     {
-        m_ctrl->loadWaveform(0, frame_count, c, width(), m_waveform + (c * frame_count));
+        m_ctrl->loadWaveform(0, frame_count, c, w, m_waveform + (c * w * 2));
     }
 }
 
