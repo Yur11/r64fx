@@ -6,6 +6,7 @@
 
 namespace r64fx{
     
+class Machine;
 class MachineThread;
 class MachinePoolContext;
     
@@ -60,6 +61,10 @@ protected:
     virtual void withdraw() = 0;
     
     virtual void dispatchMessage(const MachineMessage &msg) = 0;
+    
+    virtual void cycleStarted() = 0;
+    
+    virtual void cycleEnded() = 0;
 };
     
 }//namespace r64fx

@@ -1,4 +1,5 @@
 #include "MachinePoolContext.hpp"
+#include "MachineImpl.hpp"
 
 namespace r64fx{
     
@@ -48,7 +49,7 @@ MachinePoolContext::~MachinePoolContext()
         SoundDriver::deleteInstance(sound_driver);
     }
 }
-    
+ 
         
 long MachinePoolContext::process()
 {

@@ -281,7 +281,7 @@ class MachineThread{
     
     MachinePoolContext* m_ctx = nullptr;
     
-    LinkedList<MachineImpl> m_machines;
+    LinkedList<MachineImpl> m_deployed_machines;
     
 public:
     MachineThread(CircularBuffer<MachineMessage>* to_impl, CircularBuffer<MachineMessage>* from_impl)
@@ -380,8 +380,16 @@ public:
     {
         while(m_running)
         {
+            for(auto machine : m_deployed_machines)
+            {
+                machine->cycleStarted();
+            }
             dispatchMessages();
             m_ctx->process();
+            for(auto machine : m_deployed_machines)
+            {
+                machine->cycleEnded();
+            }
             sleep_microseconds(500);
         }
     }
@@ -392,7 +400,7 @@ public:
         {
             if(machine_impl->thread() == nullptr)
             {
-                m_machines.append(machine_impl);
+                m_deployed_machines.append(machine_impl);
                 machine_impl->setThread(this);
                 machine_impl->setContext(m_ctx);
                 machine_impl->deploy();
@@ -412,7 +420,7 @@ public:
                 machine_impl->withdraw();
                 machine_impl->setThread(nullptr);
                 machine_impl->setContext(nullptr);
-                m_machines.remove(machine_impl);
+                m_deployed_machines.remove(machine_impl);
                 
                 MachineMessage msg(MachineWithdrawn, (unsigned long)machine_impl->iface());
                 sendMessages(nullptr, &msg, 1);
@@ -422,11 +430,11 @@ public:
     
     void withdrawAll()
     {
-        auto machine_impl = m_machines.first();
+        auto machine_impl = m_deployed_machines.first();
         while(machine_impl)
         {
             withdrawMachine(machine_impl);
-            machine_impl = m_machines.first();
+            machine_impl = m_deployed_machines.first();
         }
     }
 };

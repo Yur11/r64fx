@@ -136,6 +136,16 @@ class RouterMachineImpl : public MachineImpl{
         spec->connection_impl = nullptr;
         makeConnection(spec);
     }
+    
+    virtual void cycleStarted()
+    {
+        
+    }
+    
+    virtual void cycleEnded()
+    {
+        
+    }
 };
     
 

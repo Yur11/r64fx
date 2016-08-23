@@ -5,7 +5,10 @@
 #include "SoundDriver.hpp"
 #include "SignalGraph.hpp"
 
+
 namespace r64fx{
+
+class MachineImpl;
     
 struct MachinePoolContext{
     SoundDriver* sound_driver = nullptr;

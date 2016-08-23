@@ -106,13 +106,13 @@ float SignalNode_Sampler::loopOutPosition() const
 }
 
 
-void SignalNode_Sampler::setPlayHeadPosition(float playhead)
+void SignalNode_Sampler::setPlayheadPosition(float playhead)
 {
     m_playhead = playhead;
 }
 
 
-float SignalNode_Sampler::playHeadPosition() const
+float SignalNode_Sampler::playheadPosition() const
 {
     return m_playhead;
 }

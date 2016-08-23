@@ -52,9 +52,9 @@ public:
     
     float loopOutPosition() const;
     
-    void setPlayHeadPosition(float playhead);
+    void setPlayheadPosition(float playhead);
     
-    float playHeadPosition() const;
+    float playheadPosition() const;
     
     void setPitch(float pitch);
     

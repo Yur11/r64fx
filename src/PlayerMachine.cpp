@@ -24,7 +24,8 @@ namespace{
     
         SampleReplaced,
         SampleNotReplaced,
-        OutputSizeChanged
+        OutputSizeChanged,
+        PlayheadMoved
     };
     
     union MsgVal{
@@ -52,6 +53,7 @@ class PlayerMachineImpl : public MachineImpl{
     SignalNode_Sampler* m_sampler = nullptr;
     SoundFileData* m_data = nullptr;
     MachineSourceImpl* m_output_impl = nullptr;
+    float m_playhead_position = 0.0f;
     
 public:    
     virtual void deploy()
@@ -101,7 +103,7 @@ public:
         else if(msg.opcode == Stop)
         {
             m_sampler->stop();
-            m_sampler->setPlayHeadPosition(0.0f);
+            m_sampler->setPlayheadPosition(0.0f);
         }
         else if(msg.opcode == SetPitch)
         {
@@ -123,6 +125,20 @@ public:
         }
         
         sendMessage(OutputSizeChanged, (unsigned long)m_output_impl);
+    }
+    
+    virtual void cycleStarted()
+    {
+        
+    }
+    
+    virtual void cycleEnded()
+    {
+        if(m_sampler->playheadPosition() != m_playhead_position)
+        {
+            m_playhead_position = m_sampler->playheadPosition();
+            sendMessage(PlayheadMoved, MsgVal(m_playhead_position));
+        }
     }
 };
     
@@ -203,6 +219,18 @@ float PlayerMachine::gain() const
 }
 
 
+void PlayerMachine::setPlayheadPosition(float playhead_position)
+{
+    m_playhead_position = playhead_position;
+}
+
+
+float PlayerMachine::playheadPosition() const
+{
+    return m_playhead_position;
+}
+
+
 MachineSignalSource* PlayerMachine::output()
 {
     return &m_output;
@@ -231,6 +259,11 @@ void PlayerMachine::dispatchMessage(const MachineMessage &msg)
     else if(msg.opcode == SampleNotReplaced)
     {
         m_flags |= R64FX_MACHINE_IS_READY;
+    }
+    else if(msg.opcode == PlayheadMoved)
+    {
+        m_playhead_position = MsgVal(msg.value).f(0);
+        cout << "pp: " << m_playhead_position << "\n";
     }
 }
     

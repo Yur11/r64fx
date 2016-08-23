@@ -189,6 +189,16 @@ protected:
             sound_driver->disconnect(spec->src, spec->dst);
         }
     }
+    
+    virtual void cycleStarted()
+    {
+        
+    }
+    
+    virtual void cycleEnded()
+    {
+        
+    }
 };
     
 

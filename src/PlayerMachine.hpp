@@ -12,6 +12,7 @@ class PlayerMachine : public Machine{
     SoundFileDataPtr m_new_sample;
     float m_pitch  = 1.0f;
     float m_gain   = 1.0f;
+    float m_playhead_position = 0.0f;
     
 public:
     PlayerMachine(MachinePool* pool);
@@ -31,6 +32,10 @@ public:
     void setGain(float gain);
     
     float gain() const;
+    
+    void setPlayheadPosition(float playhead_position);
+    
+    float playheadPosition() const;
     
     MachineSignalSource* output();
     
