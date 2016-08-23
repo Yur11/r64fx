@@ -23,6 +23,7 @@ class PlayerView : public Widget{
     std::string m_path = "";
     Image m_caption_img;
     Image m_tempo_img;
+    float m_gain = 1.0f;
 
 public:
     PlayerView(PlayerViewControllerIface* feedback, Widget* parent = nullptr);

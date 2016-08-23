@@ -117,7 +117,7 @@ struct PainterImplImage : public PainterImpl{
     }
 
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
         RectIntersection<int> intersection(
             current_clip_rect, rect
@@ -129,7 +129,8 @@ struct PainterImplImage : public PainterImpl{
                 window->image(),
                 color,
                 waveform + intersection.srcOffset().x() * 2,
-                Rect<int>(intersection.dstOffset(), intersection.size())
+                Rect<int>(intersection.dstOffset(), intersection.size()),
+                gain
             );
         }
     }
@@ -251,7 +252,7 @@ struct PainterImplGL : public PainterImpl{
     }
 
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
         RectIntersection<int> intersection(
             current_clip_rect, rect
@@ -263,7 +264,8 @@ struct PainterImplGL : public PainterImpl{
                 &base_texture_image,
                 color,
                 waveform + intersection.srcOffset().x() * 2,
-                Rect<int>(intersection.dstOffset(), intersection.size())
+                Rect<int>(intersection.dstOffset(), intersection.size()),
+                gain
             );
         }
         addToBaseTexture(&base_texture_image, {0, 0});

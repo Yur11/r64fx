@@ -37,7 +37,11 @@ PlayerView::PlayerView(PlayerViewControllerIface* ctrl, Widget* parent)
     m_knob_gain->setValue(m_knob_gain->midValue());
     m_knob_gain->onValueChanged([](void* arg, Widget_Knob* knob, float new_value){
         auto self = (PlayerView*) arg;
-        float gain = pow(2, new_value);
+        if(new_value < 0)
+        {
+            new_value *= 2.7f;
+        }
+        float gain = pow(5, new_value);
         self->gainChanged(gain);
         knob->setText(gain);
     }, this);
@@ -108,7 +112,10 @@ void PlayerView::paintEvent(PaintEvent* event)
         for(int c=0; c<component_count; c++)
         {
             unsigned char fg[4] = {63, 63, 63, 0};
-            p->drawWaveform({60, g_LargeFont->height() + waveform_y, width() - 85, waveform_height}, fg, m_waveform + (c * m_ctrl->frameCount()));
+            p->drawWaveform(
+                {60, g_LargeFont->height() + waveform_y, width() - 85, waveform_height}, 
+                fg, m_waveform + (c * m_ctrl->frameCount()), m_gain
+            );
             waveform_y += waveform_height;
         }
     }
@@ -276,7 +283,7 @@ void PlayerView::pitchChanged(float pitch_shift)
 void PlayerView::gainChanged(float gain)
 {
     m_ctrl->changeGain(gain);
-//     updateWaveform();
+    m_gain = gain;
     repaint();
 }
 

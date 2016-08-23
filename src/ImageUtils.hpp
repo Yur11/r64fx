@@ -116,7 +116,7 @@ void draw_radius(Image* dst, unsigned char* color, Point<float> center, float an
 void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right);
 
 
-void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect);
+void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect, float gain);
 
 
 void draw_circle(Image* dst, unsigned char* color, Point<int> center, float radius);

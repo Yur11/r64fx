@@ -538,7 +538,7 @@ void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
 }
 
 
-void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect)
+void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect, float gain)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -559,8 +559,8 @@ void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect
         for(int x=0; x<rect.width(); x++)
         {
             unsigned char* dstpx = dst->pixel(x + rect.x(), y + rect.y());
-            float min_value = data[x*2];
-            float max_value = data[x*2 + 1];
+            float min_value = data[x*2] * gain;
+            float max_value = data[x*2 + 1] * gain;
             if(yy > min_value && yy < max_value)
             {
                 for(auto c=0; c<dst->componentCount(); c++)
