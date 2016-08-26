@@ -707,6 +707,7 @@ int Widget::y() const
 
 void Widget::setSize(Size<int> size, bool send_event)
 {
+    auto old_size = size;
     m_size = size;
     if(isWindow() && size != m_parent.window->size())
     {
@@ -715,7 +716,7 @@ void Widget::setSize(Size<int> size, bool send_event)
 
     if(send_event)
     {
-        ResizeEvent event(size);
+        ResizeEvent event(old_size, size);
         resizeEvent(&event);
     }
 }
