@@ -17,6 +17,7 @@ class SignalNode_Sampler : public SignalNode{
     float m_loop_in  = 0.0f;
     float m_loop_out = 0.0f;
     float m_playhead = 0.0f;
+    float m_playhead_kahan = 0.0f;
     float m_pitch    = 1.0f;
     float m_gain     = 1.0f;
     

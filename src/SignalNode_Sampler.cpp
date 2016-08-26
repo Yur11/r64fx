@@ -235,7 +235,11 @@ void SignalNode_Sampler::processSample(int i)
         return;
     
     float delta = m_pitch * g_playback_rate_rcp;
-    m_playhead += delta;
+    float y = delta - m_playhead_kahan;
+    float tmp = m_playhead + y;
+    m_playhead_kahan = (tmp - m_playhead) - y;
+    m_playhead = tmp;
+//     m_playhead += delta;
     
     if(isLooping())
     {
