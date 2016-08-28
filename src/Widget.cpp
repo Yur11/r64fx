@@ -441,6 +441,11 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         Widget* dst = d->root_widget->leafAt(event_position, &leaf_offset);
         event_position -= leaf_offset;
 
+        while(dst && !dst->dndEnabled())
+        {
+            dst = dst->parent();
+        }
+
         if(dst)
         {
             g_dnd_target = dst;
@@ -466,10 +471,12 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
     virtual void dndLeaveEvent(Window* window)
     {
-        auto d = (WidgetImpl*) window->data();
-        DndLeaveEvent event;
-        d->root_widget->dndLeaveEvent(&event);
-        g_dnd_target = nullptr;
+        if(g_dnd_target)
+        {
+            DndLeaveEvent event;
+            g_dnd_target->dndLeaveEvent(&event);
+            g_dnd_target = nullptr;
+        }
     }
 
 
@@ -548,7 +555,7 @@ Widget::~Widget()
     }
 }
 
-    
+
 void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child)
 {
     if(isWindow())
@@ -1297,6 +1304,22 @@ void Widget::startDrag(const ClipboardMetadata &metadata, Widget* dnd_object, Po
 }
 
 
+bool Widget::dndEnabled(bool yes)
+{
+    if(yes)
+        m_flags |= R64FX_WIDGET_WANTS_DND;
+    else
+        m_flags &= ~R64FX_WIDGET_WANTS_DND;
+    return yes;
+}
+
+
+bool Widget::dndEnabled() const
+{
+    return m_flags & R64FX_WIDGET_WANTS_DND;
+}
+
+
 WidgetImpl* Widget::PaintEvent::impl() const
 {
     return m_impl;
@@ -1528,7 +1551,7 @@ void Widget::paintEvent(Widget::PaintEvent* event)
 
 void Widget::resizeEvent(ResizeEvent* event)
 {
-    
+
 }
 
 

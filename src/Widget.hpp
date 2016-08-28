@@ -62,11 +62,11 @@ protected:
 
 public:
     Widget(Widget* parent = nullptr);
-    
+
     virtual ~Widget();
 
     void setParent(Widget* parent, bool insert_after = true, Widget* existing_child = nullptr);
-    
+
     /* Parent widget or nullptr if this widget has no parent or is a window. */
     Widget* parent() const;
 
@@ -74,7 +74,7 @@ public:
        Same as calling child->setParent(this, false);
      */
     void preppend(Widget* child);
-    
+
     /* Adds a widget to the end of the children list.
        Same as calling child->setParent(this, true);
      */
@@ -116,7 +116,7 @@ public:
     void setY(int y);
 
     int y() const;
-    
+
     void setSize(Size<int> size, bool send_event = true);
 
     Size<int> size() const;
@@ -229,6 +229,10 @@ public:
 
     void startDrag(const ClipboardMetadata &metadata, Widget* dnd_object, Point<int> anchor);
 
+    bool dndEnabled(bool yes);
+
+    bool dndEnabled() const;
+
     /* Request a clipping for this widget and it's children. */
     void clip();
 
@@ -261,13 +265,13 @@ public:
         ResizeEvent(const ResizeEvent&) {}
 
     public:
-        ResizeEvent(Size<int> old_size, Size<int> new_size) 
-        : m_old_size(old_size) 
-        , m_new_size(new_size) 
+        ResizeEvent(Size<int> old_size, Size<int> new_size)
+        : m_old_size(old_size)
+        , m_new_size(new_size)
         {}
 
         inline Size<int> size() const { return m_new_size; }
-        
+
         inline Size<int> oldSize() const { return m_old_size; }
 
         inline int width()  const { return m_new_size.width(); }
@@ -341,7 +345,7 @@ protected:
 
     virtual void closeEvent();
 };
-    
+
 }//namespace r64fx
 
 #endif//R64FX_GUI_WIDGET_HPP
