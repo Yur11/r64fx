@@ -120,7 +120,7 @@ struct PainterImplImage : public PainterImpl{
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
         RectIntersection<int> intersection(
-            current_clip_rect, rect
+            current_clip_rect, rect + offset()
         );
 
         if(intersection.width() > 0 && intersection.height() > 0)
@@ -255,7 +255,7 @@ struct PainterImplGL : public PainterImpl{
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
         RectIntersection<int> intersection(
-            current_clip_rect, rect
+            current_clip_rect, rect + offset()
         );
 
         if(intersection.width() > 0 && intersection.height() > 0)
