@@ -21,6 +21,8 @@ namespace{
 
 Font* g_LargeFont = nullptr;
 
+constexpr int padding = 5;
+
 class WaveformPart;
 class TopPart;
 class LeftPart;
@@ -73,7 +75,6 @@ public:
 
     void updateWaveform()
     {
-        cout << "UPDATE WAVEFORM!\n";
         if(m->waveform)
         {
             delete[] m->waveform;
@@ -101,16 +102,6 @@ protected:
         int component_count = m->ctrl->componentCount();
         if(m->waveform && component_count > 0)
         {
-//             if(m_caption_img.isGood())
-//             {
-//                 static unsigned char fg[4] = {0, 0, 0, 0};
-//                 static unsigned char* colors[1] = {fg};
-//
-//                 p->blendColors({0, 0}, colors, &m_caption_img);
-//             }
-//
-//             int avail_height = height() - g_LargeFont->height();
-
             int waveform_height = height() / component_count;
             int waveform_y = 0;
             for(int c=0; c<component_count; c++)
@@ -214,9 +205,28 @@ public:
 protected:
     void resizeEvent(ResizeEvent* event)
     {
-        m->knob_gain->setPosition({5, 0});
-        m->button_cue->setPosition({5, event->height() - m->button_cue->height() - m->button_play->height() - 1});
-        m->button_play->setPosition({5, event->height() - m->button_cue->height()});
+        int buttons_height = m->button_cue->height() + m->button_play->height();
+        int total_height = buttons_height + m->knob_gain->height() + padding;
+        int avail_height = event->height() - padding * 2;
+
+        if(total_height < avail_height)
+        {
+            m->knob_gain->setPosition({padding, 0});
+
+            m->button_cue->setPosition({padding, event->height() - m->button_cue->height() - m->button_play->height() - 1});
+            m->button_play->setPosition({padding, event->height() - m->button_cue->height()});
+
+            setWidth(padding + max(m->knob_gain->width(), m->button_cue->width()) + padding, false);
+        }
+        else
+        {
+            m->knob_gain->setPosition({padding + m->button_cue->width() + 1, height() - padding - m->knob_gain->height()});
+
+            m->button_cue->setPosition({padding, event->height() - m->button_cue->height() - m->button_play->height() - 1});
+            m->button_play->setPosition({padding, event->height() - m->button_cue->height()});
+
+            setWidth(padding + 1 + m->button_cue->width() + m->knob_gain->width() + padding, false);
+        }
     }
 };
 
@@ -352,11 +362,11 @@ void PlayerView::resizeEvent(ResizeEvent* event)
 {
     m->top_part->setWidth(event->width());
 
-    m->left_part->setPosition({0, m->top_part->height() + 5});
-    m->left_part->setHeight(event->height() - m->top_part->height() - 10, true);
+    m->left_part->setPosition({0, m->top_part->height() + padding});
+    m->left_part->setHeight(event->height() - m->top_part->height() - padding * 2);
 
-    m->right_part->setPosition({event->width() - m->right_part->width(), m->top_part->height() + 5});
-    m->right_part->setHeight(m->left_part->height(), true);
+    m->right_part->setPosition({event->width() - m->right_part->width(), m->top_part->height() + padding});
+    m->right_part->setHeight(m->left_part->height());
 
     m->waveform_part->setPosition({m->left_part->width(), m->top_part->height()});
     m->waveform_part->setSize({
@@ -371,24 +381,24 @@ void PlayerView::resizeEvent(ResizeEvent* event)
 
 void PlayerView::mousePressEvent(MousePressEvent* event)
 {
-    if(event->y() >= g_LargeFont->height() && event->x() >= 60 && (event->x() + 25) < width())
-    {
-        int playhead_position = event->x() - 60;
-        {
-            m->playhead_position = playhead_position;
-            float sr = m->ctrl->sampleRate();
-            float fc = m->ctrl->frameCount();
-            if(sr > 0.0f && fc > 0.0f)
-            {
-                int w = width() - 85;
-                float ph = float(m->playhead_position) / float(w);
-                ph *= fc;
-                ph /= sr;
-//                 m->ctrl->movePlayhead(ph);
-            }
-        }
-    }
-    else
+//     if(event->y() >= g_LargeFont->height() && event->x() >= 60 && (event->x() + 25) < width())
+//     {
+//         int playhead_position = event->x() - 60;
+//         {
+//             m->playhead_position = playhead_position;
+//             float sr = m->ctrl->sampleRate();
+//             float fc = m->ctrl->frameCount();
+//             if(sr > 0.0f && fc > 0.0f)
+//             {
+//                 int w = width() - 85;
+//                 float ph = float(m->playhead_position) / float(w);
+//                 ph *= fc;
+//                 ph /= sr;
+// //                 m->ctrl->movePlayhead(ph);
+//             }
+//         }
+//     }
+//     else
     {
         Widget::mousePressEvent(event);
     }
