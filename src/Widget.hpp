@@ -277,6 +277,14 @@ public:
         inline int width()  const { return m_new_size.width(); }
 
         inline int height() const { return m_new_size.height(); }
+
+        inline int oldWidth() const { return m_old_size.width(); }
+
+        inline int oldHeight() const { return m_old_size.height(); }
+
+        inline bool widthChanged() const { return width() != oldWidth(); }
+
+        inline bool heightChanged() const { return height() != oldHeight(); }
     };
 
 
