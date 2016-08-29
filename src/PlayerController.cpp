@@ -13,9 +13,9 @@
 using namespace std;
 
 namespace r64fx{
-    
+
 SoundFilePool* g_sound_file_pool = nullptr;
-    
+
 class PlayerControllerPrivate
 : public PlayerViewControllerIface
 {
@@ -23,28 +23,28 @@ class PlayerControllerPrivate
     PlayerMachine* m_machine = nullptr;
 
     MachinePool* m_pool = nullptr;
-    bool m_running = true;    
+    bool m_running = true;
     SoundDriverMachine* m_sound_driver_machine = nullptr;
     MachineSignalSink* m_master_out = nullptr;
-    
+
     SoundFileDataPtr m_sound_data;
-    
+
 public:
     PlayerControllerPrivate()
     {
         m_view = new PlayerView(this);
         m_view->show();
-        
+
         m_pool = new MachinePool;
-        
+
         m_machine = new PlayerMachine(m_pool);
         m_machine->deploy();
-        
+
         m_sound_driver_machine = new SoundDriverMachine(m_pool);
         m_sound_driver_machine->deploy();
         m_sound_driver_machine->enable();
         m_master_out = m_sound_driver_machine->createAudioOutput("out", 2);
-                
+
         while(!m_machine->isReady() && !m_master_out->impl())
         {
             cout << "Waiting for impl!\n";
@@ -54,36 +54,36 @@ public:
         cout << "Done!\n";
 
         RouterMachine::singletonInstance(m_pool)->makeConnection(m_machine->output(), m_master_out);
-        
+
         m_sound_driver_machine->connect("r64fx:out_1", "system:playback_1");
         m_sound_driver_machine->connect("r64fx:out_2", "system:playback_2");
-        
+
         if(!g_sound_file_pool)
         {
             g_sound_file_pool = new SoundFilePool;
         }
     }
-    
+
     virtual ~PlayerControllerPrivate()
     {
         m_view->hide();
         delete m_view;
-        
+
         m_machine->withdraw();
         delete m_machine;
-        
+
         m_sound_driver_machine->withdraw();
         delete m_sound_driver_machine;
-        
+
         delete m_pool;
-        
+
         if(g_sound_file_pool)
         {
             delete g_sound_file_pool;
             g_sound_file_pool = nullptr;
         }
     }
-    
+
     virtual int frameCount()
     {
         if(m_sound_data)
@@ -101,7 +101,7 @@ public:
         }
         return 0;
     }
-    
+
     virtual float sampleRate()
     {
         if(m_sound_data)
@@ -122,10 +122,10 @@ public:
         }
         return false;
     }
-    
+
     virtual void unloadCurrentFile()
     {
-        
+
     }
 
     virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out)
@@ -149,17 +149,17 @@ public:
             out[p*2 + 1] = max_value;
         }
     }
-    
+
     virtual void changePitch(float pitch)
     {
         m_machine->setPitch(pitch);
     }
-    
+
     virtual void changeGain(float pitch)
     {
         m_machine->setGain(pitch);
     }
-    
+
     virtual void movePlayhead(float seconds)
     {
         m_machine->setPlayheadPosition(seconds);
@@ -169,33 +169,33 @@ public:
     {
         return false;
     }
-    
+
     virtual void close()
     {
         cout << "close!\n";
     }
-    
+
     void exec()
     {
         while(m_running)
         {
             Timer::runTimers();
-            if(m_view && m_machine && m_sound_data)
-            {
-                m_view->movePlayhead(m_machine->playheadPosition());
-            }
+//             if(m_view && m_machine && m_sound_data)
+//             {
+//                 m_view->movePlayhead(m_machine->playheadPosition());
+//             }
             sleep_microseconds(5000);
         }
     }
 };
-    
-    
+
+
 PlayerController::PlayerController()
 {
     m = new PlayerControllerPrivate;
 }
-    
-    
+
+
 PlayerController::~PlayerController()
 {
     delete m;
@@ -206,5 +206,5 @@ void PlayerController::exec()
 {
     m->exec();
 }
-    
+
 }//namespace r64fx

@@ -12,19 +12,10 @@ class Widget_Button;
 class Widget_BipolarKnob;
 class Widget_Slider;
 
+class PlayerViewPrivate;
+
 class PlayerView : public Widget{
-    PlayerViewControllerIface* m_ctrl;
-    float* m_waveform = nullptr;
-    Widget_Button* m_button_play = nullptr;
-    Widget_Button* m_button_cue = nullptr;
-    Widget_BipolarKnob* m_knob_gain = nullptr;
-    Widget_Slider* m_slider_pitch = nullptr;
-    Timer* m_timer = nullptr;
-    std::string m_path = "";
-    Image m_caption_img;
-    Image m_tempo_img;
-    float m_gain = 1.0f;
-    int m_playhead_position = 0;
+    PlayerViewPrivate* m = nullptr;
 
 public:
     PlayerView(PlayerViewControllerIface* feedback, Widget* parent = nullptr);
@@ -34,7 +25,7 @@ public:
     void notifyLoad(bool success);
 
     void movePlayhead(float seconds);
-    
+
 protected:
     virtual void paintEvent(PaintEvent* event);
 
@@ -53,30 +44,22 @@ protected:
     virtual void dndDropEvent(DndDropEvent* event);
 
     virtual void dndLeaveEvent(DndLeaveEvent* event);
-    
+
     virtual void closeEvent();
-    
+
 private:
-    void pathRecieved();
-    
     void updateCaption(const std::string &caption);
-    
-    void pitchChanged(float pitch);
-    
-    void gainChanged(float gain);
-    
+
     void updateTempo(float percent);
-    
-    void updateWaveform();
 };
 
 
 class PlayerViewControllerIface{
-public:    
+public:
     virtual int frameCount() = 0;
 
     virtual int componentCount() = 0;
-    
+
     virtual float sampleRate() = 0;
 
     virtual bool loadAudioFile(const std::string &path) = 0;
@@ -84,13 +67,13 @@ public:
     virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out) = 0;
 
     virtual void changePitch(float pitch) = 0;
-    
+
     virtual void changeGain(float gain) = 0;
 
     virtual void movePlayhead(float seconds) = 0;
-    
+
     virtual bool hasData() = 0;
-    
+
     virtual void close() = 0;
 };
 
