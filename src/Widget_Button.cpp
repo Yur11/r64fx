@@ -57,6 +57,24 @@ bool Widget_Button::ownsAnimation() const
 }
 
 
+bool Widget_Button::isPressed() const
+{
+    return m_state & 1;
+}
+
+
+void Widget_Button::setFrame(unsigned long frame)
+{
+    m_state = (m_state & 1) | (frame << 1);
+}
+
+
+bool Widget_Button::frame() const
+{
+    return m_state >> 1;
+}
+
+
 void Widget_Button::onStateChanged(void (*on_state_changed)(void* arg, Widget_Button* button, unsigned long state), void* arg)
 {
     if(on_state_changed)
@@ -398,6 +416,18 @@ ButtonAnimation* ButtonAnimation::PlayPause(Size<int> size)
     }
 
     return anim;
+}
+
+
+unsigned long ButtonAnimation::PlayFrame()
+{
+    return 0;
+}
+
+
+unsigned long ButtonAnimation::PauseFrame()
+{
+    return 1;
 }
 
 }//namespace r64fx

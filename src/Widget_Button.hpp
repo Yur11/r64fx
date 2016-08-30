@@ -25,6 +25,12 @@ public:
 
     bool ownsAnimation() const;
 
+    bool isPressed() const;
+
+    void setFrame(unsigned long frame);
+
+    bool frame() const;
+
     void onStateChanged(void (*on_state_changed)(void* arg, Widget_Button* button, unsigned long state), void* arg = nullptr);
 
 public:
@@ -68,6 +74,10 @@ public:
     static ButtonAnimation* Colored(Size<int> size, unsigned char** rgbas, int num_rgbas);
 
     static ButtonAnimation* PlayPause(Size<int> size);
+
+    static unsigned long PlayFrame();
+
+    static unsigned long PauseFrame();
 };
 
 }//namespace
