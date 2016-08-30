@@ -1,4 +1,5 @@
 #include "PlayerView.hpp"
+#include "WidgetFlags.hpp"
 #include "Painter.hpp"
 #include "TextPainter.hpp"
 #include "Clipboard.hpp"
@@ -28,6 +29,23 @@ class TopPart;
 class LeftPart;
 class RightPart;
 
+struct Marker : public LinkedList<Marker>::Node{
+    enum class Type{
+        None,
+        Playhead,
+        Start,
+        Stop,
+        LoopIn,
+        LoopOut
+    };
+
+    Marker::Type  type      = Marker::Type::None;
+    float         time      = 0.0f;
+    int           position  = 0;
+
+    Marker(Type type = Type::None) : type(type) {}
+};
+
 }//namespace
 
 
@@ -50,11 +68,14 @@ struct PlayerViewPrivate{
     Widget_Slider* slider_pitch       = nullptr;
 
     Timer*       timer                = nullptr;
+
     std::string  path                 = "";
-    Image        caption_img;
-    Image        tempo_img;
     float        gain                 = 1.0f;
-    int          playhead_position    = 0;
+    float playhead_time               = 0.0f;
+    float file_time                   = 0.0f;
+    float file_time_rcp               = 0.0f;
+
+    LinkedList<Marker> markers;
 
 
     void pathRecieved();
@@ -94,7 +115,15 @@ public:
         }
     }
 
-protected:
+
+    void repaintAll()
+    {
+        m_flags &= ~R64FX_PLAYER_VIEW_REPAINT_PLAYHEAD;
+        repaint();
+    }
+
+
+private:
     virtual void paintEvent(PaintEvent* event)
     {
         auto p = event->painter();
@@ -102,31 +131,69 @@ protected:
         int component_count = m->ctrl->componentCount();
         if(m->waveform && component_count > 0)
         {
-            int waveform_height = height() / component_count;
-            int waveform_y = 0;
-            for(int c=0; c<component_count; c++)
-            {
-                unsigned char fg[4] = {63, 63, 63, 0};
-                p->drawWaveform(
-                    {0, waveform_y, width(), waveform_height},
-                    fg, m->waveform + (c * (width()) * 2), m->gain
-                );
-                waveform_y += waveform_height;
-            }
+            float pt = m->ctrl->playheadTime();
+            int pos      = (width() - 1) * pt               * m->file_time_rcp;
+            int old_pos  = (width() - 1) * m->playhead_time * m->file_time_rcp;
+            m->playhead_time = pt;
 
-//             p->fillRect({m_playhead_position + 60, g_LargeFont->height(), 2, avail_height}, Color(255, 0, 0, 0));
+            if(m_flags & R64FX_PLAYER_VIEW_REPAINT_PLAYHEAD)
+            {
+                if(pos != old_pos)
+                {
+                    paintWaveform(p, component_count, old_pos, 2);
+                    paintPlayhead(p, pos);
+                }
+            }
+            else
+            {
+                paintWaveform(p, component_count, 0, width());
+                paintPlayhead(p, pos);
+                m_flags |= R64FX_PLAYER_VIEW_REPAINT_PLAYHEAD;
+            }
         }
         else
         {
-            Image textimg;
-            text2image("Drop Samples Here", TextWrap::None, g_LargeFont, &textimg);
-            unsigned char fg[4] = {0, 0, 0, 0};
-            unsigned char* colors[1] = {fg};
-            p->blendColors(
-                {width()/2 - textimg.width()/2, height()/2 - textimg.height()/2 + g_LargeFont->height()}, colors, &textimg
-            );
+            paintEmpty(p);
         }
     }
+
+
+    void paintPlayhead(Painter* p, int pos)
+    {
+        p->fillRect({pos, 0, 2, height()}, Color(255, 0, 0, 0));
+    }
+
+
+    void paintWaveform(Painter* p, int component_count, int pos, int size)
+    {
+        int waveform_height = height() / component_count;
+        int waveform_y = 0;
+
+        p->fillRect({pos, 0, size, height()}, Color(200, 200, 200, 0));
+
+        for(int c=0; c<component_count; c++)
+        {
+            unsigned char fg[4] = {63, 63, 63, 0};
+            p->drawWaveform(
+                {pos, waveform_y, size, waveform_height},
+                fg, m->waveform + (c * (width()) * 2) + pos * 2, m->gain
+            );
+            waveform_y += waveform_height;
+        }
+    }
+
+
+    void paintEmpty(Painter* p)
+    {
+        Image textimg;
+        text2image("Drop Samples Here", TextWrap::None, g_LargeFont, &textimg);
+        unsigned char fg[4] = {0, 0, 0, 0};
+        unsigned char* colors[1] = {fg};
+        p->blendColors(
+            {width()/2 - textimg.width()/2, height()/2 - textimg.height()/2 + g_LargeFont->height()}, colors, &textimg
+        );
+    }
+
 
     virtual void resizeEvent(ResizeEvent* event)
     {
@@ -134,6 +201,35 @@ protected:
         {
             updateWaveform();
         }
+        repaintAll();
+    }
+
+    virtual void mousePressEvent(MousePressEvent* event)
+    {
+        if(event->button() == MouseButton::Left())
+        {
+            if(m->ctrl->hasFile())
+            {
+                setPlayheadPosition(event->x());
+            }
+        }
+    }
+
+    virtual void mouseMoveEvent(MouseMoveEvent* event)
+    {
+        if(event->button() == MouseButton::Left())
+        {
+            if(m->ctrl->hasFile())
+            {
+                setPlayheadPosition(event->x());
+            }
+        }
+    }
+
+    void setPlayheadPosition(int x)
+    {
+        float time = (float(x) / float(width() - 1)) * m->file_time;
+        m->ctrl->setPlayheadTime(time);
         repaint();
     }
 };
@@ -184,8 +280,31 @@ public:
         }, m);
 
         m->button_cue = new Widget_Button(ButtonAnimation::Text({48, 48}, "CUE", g_LargeFont), true, this);
+        m->button_cue->onStateChanged([](void* arg, Widget_Button* button, unsigned long state){
+            auto m = (PlayerViewPrivate*) arg;
+            if(m->button_cue->isPressed() && m->ctrl->hasFile())
+            {
+                m->ctrl->setPlayheadTime(0.0f);
+            }
+        }, m);
 
         m->button_play = new Widget_Button(ButtonAnimation::PlayPause({48, 48}), true, this);
+        m->button_play->onStateChanged([](void* arg, Widget_Button* button, unsigned long state){
+            auto m = (PlayerViewPrivate*) arg;
+            if(!m->button_play->isPressed() && m->ctrl->hasFile())
+            {
+                if(m->ctrl->isPlaying())
+                {
+                    m->ctrl->stop();
+                    m->button_play->setFrame(ButtonAnimation::PlayFrame());
+                }
+                else
+                {
+                    m->ctrl->play();
+                    m->button_play->setFrame(ButtonAnimation::PauseFrame());
+                }
+            }
+        }, m);
 
         setWidth(60);
     }
@@ -280,10 +399,25 @@ PlayerView::PlayerView(PlayerViewControllerIface* ctrl, Widget* parent)
 
     m->timer = new Timer;
     m->timer->onTimeout([](Timer* timer, void* arg){
-        timer->stop();
+//         static int i = 0;
+//         cout << "timer " << i++ << "\n";
+
         auto m = (PlayerViewPrivate*) arg;
-        m->pathRecieved();
+        if(!m->path.empty())
+        {
+//             cout << "A\n";
+            m->pathRecieved();
+            m->path.clear();
+        }
+        else if(m->ctrl->isPlaying())
+        {
+//             cout << "B\n";
+            m->waveform_part->repaint();
+        }
+//         cout << "-- " << m->ctrl->isPlaying() << "\n";
     }, m);
+    m->timer->setInterval(5000);
+    m->timer->start();
 
     setSize({800, 240});
 }
@@ -297,49 +431,54 @@ PlayerView::~PlayerView()
         {
             delete m->waveform_part;
         }
+
+        if(m->top_part)
+        {
+            delete m->top_part;
+        }
+
+        if(m->left_part)
+        {
+            delete m->left_part;
+        }
+
+        if(m->right_part)
+        {
+            delete m->right_part;
+        }
+
+        if(m->timer)
+        {
+            m->timer->stop();
+            delete m->timer;
+        }
+
         delete m;
     }
-
-    if(m->timer)
-        delete m->timer;
 }
 
 
-void PlayerView::notifyLoad(bool success)
+void PlayerView::setPlayheadTime(float seconds)
 {
-    if(!success)
-    {
-        cerr << "Failed to load file!\n";
-        return;
-    }
-
-    updateCaption(m->path);
-    m->waveform_part->updateWaveform();
-    repaint();
-}
-
-
-void PlayerView::movePlayhead(float seconds)
-{
-    int w = width() - 85;
-    float sr = m->ctrl->sampleRate();
-    float fc = m->ctrl->frameCount();
-    if(sr > 0.0f && fc > 0.0f)
-    {
-        float ph = seconds * sr;
-        ph /= fc;
-        ph *= w;
-        if(ph < 0)
-        {
-            ph = 0;
-        }
-        else if(ph >= w)
-        {
-            ph = w - 1;
-        }
-        m->playhead_position = ph;
-        repaint();
-    }
+//     int w = width() - 85;
+//     float sr = m->ctrl->sampleRate();
+//     float fc = m->ctrl->frameCount();
+//     if(sr > 0.0f && fc > 0.0f)
+//     {
+//         float ph = seconds * sr;
+//         ph /= fc;
+//         ph *= w;
+//         if(ph < 0)
+//         {
+//             ph = 0;
+//         }
+//         else if(ph >= w)
+//         {
+//             ph = w - 1;
+//         }
+//         m->playhead_position = ph;
+//         repaint();
+//     }
 }
 
 
@@ -362,16 +501,16 @@ void PlayerView::resizeEvent(ResizeEvent* event)
 {
     m->top_part->setWidth(event->width());
 
-    m->left_part->setPosition({0, m->top_part->height() + padding});
-    m->left_part->setHeight(event->height() - m->top_part->height() - padding * 2);
+    m->left_part->setPosition({0, m->top_part->height() + padding + 2});
+    m->left_part->setHeight(event->height() - m->top_part->height() - padding * 2 - 2);
 
-    m->right_part->setPosition({event->width() - m->right_part->width(), m->top_part->height() + padding});
-    m->right_part->setHeight(m->left_part->height());
+    m->right_part->setPosition({event->width() - m->right_part->width(), m->top_part->height() + padding + 2});
+    m->right_part->setHeight(m->left_part->height() - 2);
 
-    m->waveform_part->setPosition({m->left_part->width(), m->top_part->height()});
+    m->waveform_part->setPosition({m->left_part->width(), m->top_part->height() + 2});
     m->waveform_part->setSize({
         event->width() - m->left_part->width() - m->right_part->width(),
-        event->height() - m->top_part->height()
+        event->height() - m->top_part->height() - 2
     });
 
     clip();
@@ -381,28 +520,7 @@ void PlayerView::resizeEvent(ResizeEvent* event)
 
 void PlayerView::mousePressEvent(MousePressEvent* event)
 {
-//     if(event->y() >= g_LargeFont->height() && event->x() >= 60 && (event->x() + 25) < width())
-//     {
-//         int playhead_position = event->x() - 60;
-//         {
-//             m->playhead_position = playhead_position;
-//             float sr = m->ctrl->sampleRate();
-//             float fc = m->ctrl->frameCount();
-//             if(sr > 0.0f && fc > 0.0f)
-//             {
-//                 int w = width() - 85;
-//                 float ph = float(m->playhead_position) / float(w);
-//                 ph *= fc;
-//                 ph /= sr;
-// //                 m->ctrl->movePlayhead(ph);
-//             }
-//         }
-//     }
-//     else
-    {
-        Widget::mousePressEvent(event);
-    }
-    repaint();
+    Widget::mousePressEvent(event);
 }
 
 
@@ -425,10 +543,6 @@ void PlayerView::clipboardDataRecieveEvent(ClipboardDataRecieveEvent* event)
                     break;
 
                 m->path = next_file_path_from_uri_list(it, uri_list.end());
-                if(!m->timer->isRunning())
-                {
-                    m->timer->start();
-                }
                 break;
             }
         }
@@ -492,40 +606,35 @@ void PlayerView::closeEvent()
 }
 
 
-
-void PlayerView::updateCaption(const std::string &caption)
-{
-    text2image(caption, TextWrap::None, g_LargeFont, &(m->caption_img));
-}
-
-
 void PlayerViewPrivate::pathRecieved()
 {
     cout << "pathRecieved: " << path << "\n";
-    ctrl->loadAudioFile(path);
+    if(ctrl->loadAudioFile(path))
+    {
+        waveform_part->updateWaveform();
+        file_time = float(ctrl->frameCount()) / float(ctrl->sampleRate());
+        if(file_time > 0)
+            file_time_rcp = 1.0f / file_time;
+        else
+            file_time_rcp = 0.0f;
+        parent->repaint();
+        waveform_part->repaintAll();
+    }
 }
 
 
 void PlayerViewPrivate::gainChanged(float gain)
 {
+    this->gain = gain;
     ctrl->changeGain(gain);
-    gain = gain;
-    parent->repaint();
+    waveform_part->repaintAll();
 }
 
 
 void PlayerViewPrivate::pitchChanged(float pitch)
 {
     ctrl->changePitch(pow(2.0, pitch));
-//     updateTempo(pitch);
-    parent->repaint();
-}
-
-
-void PlayerView::updateTempo(float percent)
-{
-    string text = (percent > 0 ? "+" : "") + num2str(percent * 100.0f) + "%";
-    text2image(text, TextWrap::None, g_LargeFont, &(m->tempo_img));
+    waveform_part->repaintAll();
 }
 
 }//namespace r64fx

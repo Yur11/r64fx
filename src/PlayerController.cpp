@@ -117,10 +117,14 @@ public:
         if(m_sound_data)
         {
             m_machine->replaceSample(m_sound_data);
-            m_view->notifyLoad(true);
             return true;
         }
         return false;
+    }
+
+    virtual bool hasFile()
+    {
+        return m_sound_data;
     }
 
     virtual void unloadCurrentFile()
@@ -160,9 +164,29 @@ public:
         m_machine->setGain(pitch);
     }
 
-    virtual void movePlayhead(float seconds)
+    virtual void setPlayheadTime(float seconds)
     {
-        m_machine->setPlayheadPosition(seconds);
+        m_machine->setPlayheadTime(seconds);
+    }
+
+    virtual float playheadTime()
+    {
+        return m_machine->playheadTime();
+    }
+
+    virtual void play()
+    {
+        m_machine->play();
+    }
+
+    virtual void stop()
+    {
+        m_machine->stop();
+    }
+
+    virtual bool isPlaying()
+    {
+        return m_machine->isPlaying();
     }
 
     virtual bool hasData()

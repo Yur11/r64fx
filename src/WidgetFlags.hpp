@@ -69,4 +69,6 @@
 
 #define R64FX_WIDGET_WANTS_DND                (1 << 0x1E)
 
+#define R64FX_PLAYER_VIEW_REPAINT_PLAYHEAD    (1 << 0x1F)
+
 #endif//R64FX_WIDGET_FLAGS_HPP

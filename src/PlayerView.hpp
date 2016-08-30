@@ -22,9 +22,7 @@ public:
 
     virtual ~PlayerView();
 
-    void notifyLoad(bool success);
-
-    void movePlayhead(float seconds);
+    void setPlayheadTime(float seconds);
 
 protected:
     virtual void paintEvent(PaintEvent* event);
@@ -46,11 +44,6 @@ protected:
     virtual void dndLeaveEvent(DndLeaveEvent* event);
 
     virtual void closeEvent();
-
-private:
-    void updateCaption(const std::string &caption);
-
-    void updateTempo(float percent);
 };
 
 
@@ -64,13 +57,23 @@ public:
 
     virtual bool loadAudioFile(const std::string &path) = 0;
 
+    virtual bool hasFile() = 0;
+
     virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out) = 0;
 
     virtual void changePitch(float pitch) = 0;
 
     virtual void changeGain(float gain) = 0;
 
-    virtual void movePlayhead(float seconds) = 0;
+    virtual void setPlayheadTime(float seconds) = 0;
+
+    virtual float playheadTime() = 0;
+
+    virtual void play() = 0;
+
+    virtual void stop() = 0;
+
+    virtual bool isPlaying() = 0;
 
     virtual bool hasData() = 0;
 

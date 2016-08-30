@@ -11,12 +11,12 @@ const float g_playback_rate = 48000.0f;
 const float g_playback_rate_rcp = 1.0f / g_playback_rate;
 
 namespace r64fx{
-    
+
 SignalNode_Sampler::SignalNode_Sampler()
 {
     resizeOutput(1);
 }
-    
+
 
 SignalNode_Sampler::~SignalNode_Sampler()
 {
@@ -28,7 +28,7 @@ SignalNode_Sampler::~SignalNode_Sampler()
 void SignalNode_Sampler::setData(float* data, int frame_count, int component_count, float sample_rate)
 {
     clear();
-    
+
     if(data && frame_count > 0 && component_count > 0 && sample_rate > 0)
     {
         m_data = data;
@@ -58,12 +58,12 @@ int SignalNode_Sampler::componentCount()
 }
 
 
-void SignalNode_Sampler::setStartPosition(float start)
+void SignalNode_Sampler::setStartTime(float start)
 {
     m_start = start;
 }
-    
-    
+
+
 float SignalNode_Sampler::startPostion() const
 {
     return m_start;
@@ -76,43 +76,43 @@ void SignalNode_Sampler::setStopPostion(float stop)
 }
 
 
-float SignalNode_Sampler::stopPosition() const
+float SignalNode_Sampler::stopTime() const
 {
     return m_stop;
 }
 
 
-void SignalNode_Sampler::setLoopInPosition(float loop_in)
+void SignalNode_Sampler::setLoopInTime(float loop_in)
 {
     m_loop_in = loop_in;
 }
 
 
-float SignalNode_Sampler::loopInPosition() const
+float SignalNode_Sampler::loopInTime() const
 {
     return m_loop_in;
 }
 
 
-void SignalNode_Sampler::setLoopOutPosition(float loop_out)
+void SignalNode_Sampler::setLoopOutTime(float loop_out)
 {
     m_loop_out = loop_out;
 }
 
 
-float SignalNode_Sampler::loopOutPosition() const
+float SignalNode_Sampler::loopOutTime() const
 {
     return m_loop_out;
 }
 
 
-void SignalNode_Sampler::setPlayheadPosition(float playhead)
+void SignalNode_Sampler::setPlayheadTime(float playhead)
 {
     m_playhead = playhead;
 }
 
 
-float SignalNode_Sampler::playheadPosition() const
+float SignalNode_Sampler::playheadTime() const
 {
     return m_playhead;
 }
@@ -128,7 +128,7 @@ void SignalNode_Sampler::setGain(float gain)
 {
     m_gain = gain;
 }
-    
+
 
 float SignalNode_Sampler::gain() const
 {
@@ -140,14 +140,14 @@ float SignalNode_Sampler::pitch() const
 {
     return m_pitch;
 }
-    
-    
+
+
 void SignalNode_Sampler::play()
 {
     m_flags |= R64FX_SAMPLER_PLAYING;
 }
-    
-    
+
+
 void SignalNode_Sampler::stop()
 {
     m_flags &= ~R64FX_SAMPLER_PLAYING;
@@ -176,8 +176,8 @@ bool SignalNode_Sampler::isLooping() const
 {
     return m_flags & R64FX_SAMPLER_LOOPING;
 }
-    
-    
+
+
 SignalSource* SignalNode_Sampler::output(int channel)
 {
     return m_output + channel;
@@ -188,7 +188,7 @@ void SignalNode_Sampler::resizeOutput(int size)
 {
     if(size == m_output_size || size < 0)
         return;
-    
+
     if(m_output)
     {
         float* buffer = m_output->addr();
@@ -199,7 +199,7 @@ void SignalNode_Sampler::resizeOutput(int size)
         delete[] m_output;
         m_output = nullptr;
     }
-    
+
     if(size > 0)
     {
         m_output = new SignalSource[size];
@@ -209,20 +209,20 @@ void SignalNode_Sampler::resizeOutput(int size)
             m_output[i].setAddr(buffer + i);
         }
     }
-    
+
     m_output_size = size;
 }
 
 
 void SignalNode_Sampler::addedToGraph(SignalGraph* graph)
 {
-    
+
 }
-    
-    
+
+
 void SignalNode_Sampler::aboutToBeRemovedFromGraph(SignalGraph* graph)
 {
-    
+
 }
 
 
@@ -230,17 +230,16 @@ void SignalNode_Sampler::processSample(int i)
 {
     if(!m_data)
         return;
-    
+
     if(!isPlaying())
         return;
-    
+
     float delta = m_pitch * g_playback_rate_rcp;
     float y = delta - m_playhead_kahan;
     float tmp = m_playhead + y;
     m_playhead_kahan = (tmp - m_playhead) - y;
     m_playhead = tmp;
-//     m_playhead += delta;
-    
+
     if(isLooping())
     {
         if(m_playhead >= m_loop_out)
@@ -256,12 +255,12 @@ void SignalNode_Sampler::processSample(int i)
             m_playhead = m_stop;
         }
     }
-    
+
     float playhead_frame = m_playhead * m_sample_rate;
     double whole_part = 0.0;
     float frac_part = modf(playhead_frame, &whole_part);
     int idx = (int)whole_part;
-    
+
     int count = min(m_component_count, m_output_size);
     for(int c=0; c<count; c++)
     {
@@ -273,5 +272,5 @@ void SignalNode_Sampler::processSample(int i)
     }
 }
 
-    
+
 }//namespace r64fx
