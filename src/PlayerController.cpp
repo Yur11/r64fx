@@ -3,6 +3,7 @@
 #include "PlayerMachine.hpp"
 #include "SoundFilePool.hpp"
 #include "RouterMachine.hpp"
+#include "FilterMachine.hpp"
 
 #include "Timer.hpp"
 #include "sleep.hpp"
@@ -22,6 +23,8 @@ class PlayerControllerPrivate
     PlayerView* m_view = nullptr;
     PlayerMachine* m_machine = nullptr;
 
+    FilterMachine* m_filter_machine = nullptr;
+
     MachinePool* m_pool = nullptr;
     bool m_running = true;
     SoundDriverMachine* m_sound_driver_machine = nullptr;
@@ -39,21 +42,49 @@ public:
 
         m_machine = new PlayerMachine(m_pool);
         m_machine->deploy();
+        while(!m_machine->isReady())
+        {
+            cout << "Waiting for machine!\n";
+            Timer::runTimers();
+            sleep_microseconds(5000);
+        }
+        cout << "Machine done!\n";
+
+        m_filter_machine = new FilterMachine(m_pool);
+        m_filter_machine->deploy();
+        while(!m_filter_machine->isReady())
+        {
+            cout << "Waiting for filter deployment!\n";
+            Timer::runTimers();
+            sleep_microseconds(5000);
+        }
+        cout << "Fiter deployment done!\n";
+
+        cout << m_filter_machine->sink()->impl() << ", " << m_filter_machine->source()->impl() << "\n";
+        m_filter_machine->setSize(2);
+        while(!m_filter_machine->isReady())
+        {
+            cout << "Waiting for filter size!\n";
+            Timer::runTimers();
+            sleep_microseconds(5000);
+        }
+        cout << "Filter size done!\n";
 
         m_sound_driver_machine = new SoundDriverMachine(m_pool);
         m_sound_driver_machine->deploy();
         m_sound_driver_machine->enable();
         m_master_out = m_sound_driver_machine->createAudioOutput("out", 2);
-
-        while(!m_machine->isReady() && !m_master_out->impl())
+        while(!m_master_out->impl())
         {
-            cout << "Waiting for impl!\n";
+            cout << "Waiting for m_master_out!\n";
             Timer::runTimers();
             sleep_microseconds(5000);
         }
-        cout << "Done!\n";
+        cout << "m_master_out done!\n";
+        cout << "master_out: " << m_master_out << " -> " << m_master_out->impl() << "\n";
 
-        RouterMachine::singletonInstance(m_pool)->makeConnection(m_machine->output(), m_master_out);
+        RouterMachine::singletonInstance(m_pool)->makeConnection(m_machine->output(), m_filter_machine->sink());
+        RouterMachine::singletonInstance(m_pool)->makeConnection(m_filter_machine->source(), m_master_out);
 
         m_sound_driver_machine->connect("r64fx:out_1", "system:playback_1");
         m_sound_driver_machine->connect("r64fx:out_2", "system:playback_2");
@@ -62,6 +93,8 @@ public:
         {
             g_sound_file_pool = new SoundFilePool;
         }
+
+        m_filter_machine->setPole(0.01f);
     }
 
     virtual ~PlayerControllerPrivate()
@@ -71,6 +104,9 @@ public:
 
         m_machine->withdraw();
         delete m_machine;
+
+        m_filter_machine->withdraw();
+        delete m_filter_machine;
 
         m_sound_driver_machine->withdraw();
         delete m_sound_driver_machine;
