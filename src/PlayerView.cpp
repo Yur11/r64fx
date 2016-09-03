@@ -2,15 +2,15 @@
 #include "WidgetFlags.hpp"
 #include "Painter.hpp"
 #include "TextPainter.hpp"
+#include "Timer.hpp"
+#include "ImageUtils.hpp"
 #include "Clipboard.hpp"
 #include "ClipboardEvent.hpp"
-#include "StringUtils.hpp"
-#include <string>
 #include "Font.hpp"
 #include "Widget_Button.hpp"
 #include "Widget_Knob.hpp"
 #include "Widget_Slider.hpp"
-#include "ImageUtils.hpp"
+#include "StringUtils.hpp"
 #include <cmath>
 #include <iostream>
 

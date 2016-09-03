@@ -2,8 +2,6 @@
 #define R64FX_PLAYER_VIEW_HPP
 
 #include "Widget.hpp"
-#include "Timer.hpp"
-#include "Image.hpp"
 
 namespace r64fx{
 
@@ -18,7 +16,7 @@ class PlayerView : public Widget{
     PlayerViewPrivate* m = nullptr;
 
 public:
-    PlayerView(PlayerViewControllerIface* feedback, Widget* parent = nullptr);
+    PlayerView(PlayerViewControllerIface* ctrl, Widget* parent = nullptr);
 
     virtual ~PlayerView();
 

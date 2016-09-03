@@ -31,6 +31,7 @@ set(SRC
     ClipboardEvent.cpp
     Directory.cpp
     FilterMachine.cpp
+    FilterView.cpp
     Font.cpp
     HostView.cpp
     Image.cpp
