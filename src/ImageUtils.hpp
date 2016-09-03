@@ -119,6 +119,9 @@ void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
 void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect, float gain);
 
 
+void stroke_circle(Image* dst, unsigned char* color, Point<float> center, float radius, float thickness);
+
+
 void draw_circle(Image* dst, unsigned char* color, Point<int> center, float radius);
 
 

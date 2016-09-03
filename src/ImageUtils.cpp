@@ -573,6 +573,60 @@ void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect
 }
 
 
+void stroke_circle(Image* dst, unsigned char* color, Point<float> center, float radius, float thickness)
+{
+    Rect<int> rect(center.x() - radius - 1, center.y() - radius - 1, radius * 2 + 2, radius * 2 + 2);
+
+    radius -= 1.0f;
+    thickness += 1.0f;
+    float outer_radius = radius + thickness * 0.5f;
+    float inner_radius = radius - thickness * 0.5f;
+
+    for(int y=0; y<rect.height(); y++)
+    {
+        float yy = y + rect.y();
+        if(yy >= dst->height())
+            break;
+        if(yy < 0)
+            continue;
+
+        for(int x=0; x<rect.width(); x++)
+        {
+            float xx = x + rect.x();
+            if(xx >= dst->width())
+                break;
+
+            if(xx < 0)
+                continue;
+
+            float dx = xx - center.x();
+            float dy = yy - center.y();
+            float rr = sqrt(dx*dx + dy*dy);
+
+            float outer_dd = outer_radius - rr;
+            float inner_dd = rr - inner_radius;
+
+            if(outer_dd < 0.0f)
+                outer_dd = 0.0f;
+            else if(outer_dd > 1.0f)
+                outer_dd = 1.0f;
+
+            if(inner_dd < 0.0f)
+                inner_dd = 0.0f;
+            else if(inner_dd > 1.0f)
+                inner_dd = 1.0f;
+
+            float dd = outer_dd * inner_dd;
+
+            for(int c=0; c<dst->componentCount(); c++)
+            {
+                dst->pixel(xx, yy)[c] = (unsigned char)(float(color[c]) * dd);
+            }
+        }
+    }
+}
+
+
 void draw_circle(Image* dst, unsigned char* color, Point<int> center, float radius)
 {
     Rect<int> rect(center.x() - radius - 1, center.y() - radius - 1, radius * 2 + 1, radius * 2 + 1);
