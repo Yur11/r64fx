@@ -17,8 +17,6 @@ public:
     virtual ~FilterView();
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
-
     virtual void resizeEvent(ResizeEvent* event);
 };
 

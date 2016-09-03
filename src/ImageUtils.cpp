@@ -620,7 +620,8 @@ void stroke_circle(Image* dst, unsigned char* color, Point<float> center, float 
 
             for(int c=0; c<dst->componentCount(); c++)
             {
-                dst->pixel(xx, yy)[c] = (unsigned char)(float(color[c]) * dd);
+                if(dd > 0.0f)
+                    dst->pixel(xx, yy)[c] = (unsigned char)(float(color[c]) * dd);
             }
         }
     }
