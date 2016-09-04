@@ -108,12 +108,12 @@ template<typename T> struct Polar{
         return *this;
     }
 
-    T re()
+    T re() const
     {
         return magnitude * cos(phase);
     }
 
-    T im()
+    T im() const
     {
         return magnitude * sin(phase);
     }
@@ -130,6 +130,7 @@ template<typename T> Complex<T> &Complex<T>::operator=(const Polar<T> &polar)
 {
     re = polar.re();
     im = polar.im();
+    return *this;
 }
 
 }//namespace r64fx
