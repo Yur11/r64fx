@@ -788,4 +788,40 @@ void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int cor
     blend(dst, rect.position(), colors, &mask);
 }
 
+
+void stroke_plot(Image* dst, unsigned char* color, Rect<int> rect, float* data, float scale, float offset)
+{
+    float scale_rcp = 1.0f / (scale * rect.height());
+
+    for(int y=0; y<rect.height(); y++)
+    {
+        int yy = y + rect.y();
+        if(yy < 0)
+            continue;
+        if(yy >= dst->height())
+            break;
+
+        int i = -1;
+        for(int x=0; x<rect.width(); x++)
+        {
+            i++;
+
+            int xx = x + rect.x();
+            if(xx < 0)
+                continue;
+            if(xx >= dst->width())
+                break;
+
+            float fy = float(rect.height() - yy) * scale_rcp + offset;
+            if(fy < data[i])
+            {
+                for(auto c=0; c<dst->componentCount(); c++)
+                {
+                    dst->pixel(xx, yy)[c] = color[c];
+                }
+            }
+        }
+    }
+}
+
 }//namespace r64fx

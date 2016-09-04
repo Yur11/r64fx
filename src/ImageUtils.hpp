@@ -139,6 +139,9 @@ void flip_horizontally(Image* img);
 
 void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int corner_radius);
 
+
+void stroke_plot(Image* dst, unsigned char* color, Rect<int> rect, float* data, float scale, float offset = 0.0f);
+
 }//namespace r64fx
 
 #endif//R64FX_IMAGE_UTILS_HPP
