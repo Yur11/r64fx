@@ -120,11 +120,8 @@ public:
     , m(m)
     {
         zeros.push_back({+1.0f, 0.0f});
-        zeros.push_back({+1.0f, 0.0f});
-        zeros.push_back({+1.0f, 0.0f});
-//         poles.push_back({0.0f, +0.7f});
-//         poles.push_back({0.0f, +0.7f});
-//         poles.push_back({0.0f, +0.7f});
+
+        poles.push_back({0.0f, +0.7f});
     }
 
     virtual ~PoleZeroPlot()
@@ -348,8 +345,6 @@ class ResponsePlot : public Widget{
 
     vector<float> response;
 
-    Image img;
-
 public:
     ResponsePlot(FilterViewPrivate* m, Widget* parent = nullptr)
     : Widget(parent)
@@ -367,19 +362,29 @@ public:
     {
         if(width() > 0)
         {
-            response.resize(width());
-            float rcp = 1.0f / float(response.size() - 1);
-            for(unsigned int i=0; i<response.size(); i++)
+            response.resize(width() * 2);
+            float rcp = 1.0f / float(width() - 1);
+            for(int i=0; i<width(); i++)
             {
                 float phase = (float(i) * rcp) * M_PI;
                 Complex<float> z(Polar<float>(1.0, phase));
                 Complex<float> value = m->pole_zero_plot->evaluateAt(z);
-                response[i] = value.magnitude();
+                response[i*2 + 0] = -value.magnitude();
             }
 
-            img.load(width(), height(), 1);
-            fill(&img, Color(0));
-            stroke_plot(&img, Color(255), {0, 0, img.width(), img.height()}, response.data(), 0.2f);
+            float thickness = 5.0f * rcp;
+            float aspect = 1.0f / (float(height())/float(width()));
+
+            for(int i=1; i<(width() - 1); i++)
+            {
+                float y1 = response[i * 2];
+                float y2 = response[(i + 1) * 2];
+                float dy = (y2 - y1) * height();
+                float extra = (thickness * sqrt(dy* dy + rcp*rcp) * aspect);
+                float val = response[i*2];
+                response[i*2 + 0] = val - extra + 5.0f;
+                response[i*2 + 1] = val + extra + 5.0f;
+            }
         }
     }
 
@@ -388,10 +393,7 @@ private:
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
-        if(img.isGood())
-        {
-            p->blendColors({0, 0}, Colors(Color(255, 63, 0, 0)), &img);
-        }
+        p->drawWaveform({0, 0, width(), height()}, Color(255, 63, 0), response.data(), 0.2f);
     }
 
     virtual void resizeEvent(ResizeEvent* event)
