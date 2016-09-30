@@ -212,7 +212,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
             
             if(segment_length > 1)
             {
-                float rcp = 1.0f / (segment_length + 1);
+                float rcp = 1.0f / float(segment_length + 1);
                 
                 if(next_y < curr_y)
                 {
@@ -221,15 +221,34 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                         for(int j=0; j<segment_length; j++)
                         {
                             int x = j + i - segment_length + 1;
-                            pvec[x].minblend = curr_y - 0.5f;
+                            pvec[x].minblend = curr_y - (j + 1) * rcp;
                         }
                     }
                     else
                     {
-                        for(int j=0; j<segment_length; j++)
+                        if(segment_length >= 3)
                         {
-                            int x = j + i - segment_length + 1;
-                            pvec[x].minblend = curr_y - 0.5f;
+                            for(int j=0; j<(segment_length>>1); j++)
+                            {
+                                int x1 = j + i - segment_length + 1;
+                                int x2 = i - j;
+                                pvec[x1].minblend = pvec[x2].minblend 
+                                    = curr_y - (segment_length - j) * rcp;
+                            }
+                            
+                            if(segment_length & 1)
+                            {
+                                int x = i - (segment_length >> 1);
+                                pvec[x].minblend = pvec[x + 1].minblend;
+                            }
+                        }
+                        else
+                        {
+                            for(int j=0; j<segment_length; j++)
+                            {
+                                int x = j + i - segment_length + 1;
+                                pvec[x].minblend = curr_y - 0.5f;
+                            }
                         }
                     }
                 }
@@ -238,7 +257,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                     for(int j=0; j<segment_length; j++)
                     {
                         int x = j + i - segment_length + 1;
-                        pvec[x].minblend = curr_y - 0.5f;
+                        pvec[x].minblend = curr_y - (segment_length - j) * rcp;
                     }
                 }
             }
@@ -312,15 +331,34 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                         for(int j=0; j<segment_length; j++)
                         {
                             int x = j + i - segment_length + 1;
-                            pvec[x].maxblend = curr_y + 0.5f;
+                            pvec[x].maxblend = curr_y + (j + 1) * rcp;
                         }
                     }
                     else
                     {
-                        for(int j=0; j<segment_length; j++)
+                        if(segment_length >= 3)
                         {
-                            int x = j + i - segment_length + 1;
-                            pvec[x].maxblend = curr_y + 0.5f;
+                            for(int j=0; j<(segment_length>>1); j++)
+                            {
+                                int x1 = j + i - segment_length + 1;
+                                int x2 = i - j;
+                                pvec[x1].maxblend = pvec[x2].maxblend 
+                                    = curr_y + (segment_length - j) * rcp;
+                            }
+                            
+                            if(segment_length & 1)
+                            {
+                                int x = i - (segment_length >> 1);
+                                pvec[x].maxblend = pvec[x + 1].maxblend;
+                            }
+                        }
+                        else
+                        {
+                            for(int j=0; j<segment_length; j++)
+                            {
+                                int x = j + i - segment_length + 1;
+                                pvec[x].maxblend = curr_y + 0.5f;
+                            }
                         }
                     }
                 }
@@ -329,7 +367,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                     for(int j=0; j<segment_length; j++)
                     {
                         int x = j + i - segment_length + 1;
-                        pvec[x].maxblend = curr_y + 0.5f;
+                        pvec[x].maxblend = curr_y + (segment_length - j) * rcp;
                     }
                 }
             }
