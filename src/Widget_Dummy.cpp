@@ -221,7 +221,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                         for(int j=0; j<segment_length; j++)
                         {
                             int x = j + i - segment_length + 1;
-                            pvec[x].minblend = curr_y - 1.0f;
+                            pvec[x].minblend = curr_y - 0.5f;
                         }
                     }
                     else
@@ -229,7 +229,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                         for(int j=0; j<segment_length; j++)
                         {
                             int x = j + i - segment_length + 1;
-                            pvec[x].minblend = curr_y - 1.0f;
+                            pvec[x].minblend = curr_y - 0.5f;
                         }
                     }
                 }
@@ -238,7 +238,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                     for(int j=0; j<segment_length; j++)
                     {
                         int x = j + i - segment_length + 1;
-                        pvec[x].minblend = curr_y - 0.9f;
+                        pvec[x].minblend = curr_y - 0.5f;
                     }
                 }
             }
@@ -248,12 +248,26 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                 {
                     if(prev_y > curr_y)
                     {
-                        pvec[i].minblend = next_y;
+                        if((curr_y - next_y) == 1)
+                        {
+                            pvec[i].minblend = curr_y - 0.5f;
+                        }
+                        else
+                        {
+                            pvec[i].minblend = next_y;
+                        }
                     }
                 }
                 else if(prev_y < curr_y)
                 {
-                    pvec[i].minblend = prev_y;
+                    if((curr_y - prev_y) == 1)
+                    {
+                        pvec[i].minblend = curr_y - 0.5f;
+                    }
+                    else
+                    {
+                        pvec[i].minblend = prev_y;
+                    }
                 }
             }
 
@@ -298,7 +312,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                         for(int j=0; j<segment_length; j++)
                         {
                             int x = j + i - segment_length + 1;
-                            pvec[x].maxblend = curr_y + 1.0f;
+                            pvec[x].maxblend = curr_y + 0.5f;
                         }
                     }
                     else
@@ -306,7 +320,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                         for(int j=0; j<segment_length; j++)
                         {
                             int x = j + i - segment_length + 1;
-                            pvec[x].maxblend = curr_y + 1.0f;
+                            pvec[x].maxblend = curr_y + 0.5f;
                         }
                     }
                 }
@@ -315,7 +329,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                     for(int j=0; j<segment_length; j++)
                     {
                         int x = j + i - segment_length + 1;
-                        pvec[x].maxblend = curr_y + 1.0f;
+                        pvec[x].maxblend = curr_y + 0.5f;
                     }
                 }
             }
@@ -325,12 +339,26 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
                 {
                     if(prev_y < curr_y)
                     {
-                        pvec[i].maxblend = next_y;
+                        if((next_y - curr_y) == 1)
+                        {
+                            pvec[i].maxblend = curr_y + 0.5f;
+                        }
+                        else
+                        {
+                            pvec[i].maxblend = next_y;
+                        }
                     }
                 }
                 else if(prev_y > curr_y)
                 {
-                    pvec[i].maxblend = prev_y;
+                    if((prev_y - curr_y) == 1)
+                    {
+                        pvec[i].maxblend = curr_y + 0.5f;
+                    }
+                    else
+                    {
+                        pvec[i].maxblend = prev_y;
+                    }
                 }
             }
 
@@ -346,7 +374,26 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
         {
             if(y < pp.minval)
             {
-                
+                float diff = pp.minval - pp.minblend;
+                if(diff > 0.0f)
+                {
+                    if(diff <= 1.0f)
+                    {
+                        if((y + 1) == pp.minval)
+                        {
+                            m_img(x, y)[0] = (unsigned char)(255.0f * diff);
+                        }
+                    }
+                    else
+                    {
+                        float rcp = 1.0f / (diff + 1);
+                        float val = 1.0f - (pp.minblend - y + diff) * rcp;
+                        if(val > 0.0f && val < 1.0f)
+                        {
+                            m_img(x, y)[0] = (unsigned char)(255.0f * val);
+                        }
+                    }
+                }
             }
             else if(y <= pp.maxval)
             {
@@ -354,55 +401,29 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
             }
             else
             {
-                
+                float diff = pp.maxblend - pp.maxval;
+                if(diff >= 0.0f)
+                {
+                    if(diff <= 1.0f)
+                    {
+                        if((y - 1) == pp.maxval)
+                        {
+                            m_img(x, y)[0] = (unsigned char)(255.0f * diff);
+                        }
+                    }
+                    else
+                    {
+                        float rcp = 1.0f / (diff + 1);
+                        float val = 1.0f - (y - pp.maxblend + diff) * rcp;
+                        if(val > 0.0f && val < 1.0f)
+                        {
+                            m_img(x, y)[0] = (unsigned char)(255.0f * val);
+                        }
+                    }
+                }
             }
         }
     }
-    
-//     for(int x=0; x<width(); x++)
-//     {
-//         auto &pp = pvec[x];
-//         for(int y=0; y<height(); y++)
-//         {
-//             if(y >= pp.minblend && y <= pp.maxblend)
-//             {
-//                 if(y < pp.minval)
-//                 {
-//                     float diff = pp.minval - pp.minblend;
-//                     if(diff <= 1.0f)
-//                     {
-//                         m_img(x, y)[0] = (unsigned char)(255.0f * diff);
-//                     }
-//                     else
-//                     {
-//                         float rcp = 1.0f / (diff + 1);
-//                         m_img(x, y)[0] = (unsigned char)(255.0f * (float(y + 1) - pp.minblend) * rcp);
-//                     }
-//                 }
-//                 else if(y > pp.maxval)
-//                 {
-//                     float diff = pp.maxblend - pp.maxval;
-//                     if(diff <= 1.0f)
-//                     {
-//                         m_img(x, y)[0] = 255;
-//                     }
-//                     else
-//                     {
-//                         float rcp = 1.0f / (diff + 1);
-//                         m_img(x, y)[0] = (unsigned char)(255.0f * (pp.maxblend - float(y - 1)) * rcp);
-//                     }
-//                 }
-//                 else
-//                 {
-//                     m_img(x, y)[0] = 63;
-//                 }
-//             }
-//             else
-//             {
-//                 m_img(x, y)[0] = 0;
-//             }
-//         }
-//     }
 }
 
 
