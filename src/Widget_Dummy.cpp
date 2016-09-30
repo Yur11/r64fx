@@ -50,7 +50,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
     m_img.load(width(), height(), 1);
     fill(&m_img, Color(0));
 
-    float thickness = 10.0f;
+    float thickness = 1.0f;
     float half_thickness = thickness * 0.5;
 
     vector<float> vec(width());
@@ -404,6 +404,7 @@ void Widget_Dummy::resizeEvent(ResizeEvent* event)
             prev_y = curr_y;
         }
     }
+    
     
     for(int x=0; x<width(); x++)
     {
