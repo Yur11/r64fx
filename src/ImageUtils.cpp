@@ -1,5 +1,6 @@
 #include "ImageUtils.hpp"
 #include <algorithm>
+#include <vector>
 
 #ifdef R64FX_DEBUG
 #include <assert.h>
@@ -789,35 +790,400 @@ void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int cor
 }
 
 
-void stroke_plot(Image* dst, unsigned char* color, Rect<int> rect, float* data, float scale, float offset)
+struct PlotPoint{
+    float minval   = 0.0f;
+    float maxval   = 0.0f;
+    float minblend = 0.0f;
+    float maxblend = 0.0f;
+};
+
+
+void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, float thickness, float scale, float offset)
 {
-    float scale_rcp = 1.0f / (scale * rect.height());
+    if(!img || !data || !color || rect.width() <= 0 || rect.height() <= 0 || thickness <= 0.0f || scale <= 0.0f)
+        return;
+    
+    float half_thickness = thickness * 0.5;
+    
+    /* Find extrema. */
+    struct Extremum{
+        int index = 0;
+        bool is_minimum = true;
 
-    for(int y=0; y<rect.height(); y++)
+        Extremum(int index, bool is_minimum) : index(index), is_minimum(is_minimum) {}
+    };
+
+    vector<Extremum> extrema;
+    extrema.push_back({0, true});
+    for(int i=0; i<rect.width(); i++)
     {
-        int yy = y + rect.y();
-        if(yy < 0)
-            continue;
-        if(yy >= dst->height())
-            break;
-
-        int i = -1;
-        for(int x=0; x<rect.width(); x++)
+        if(i > 0 && data[i - 1] >= data[i] && (i + 1) < rect.width() && data[i] <= data[i + 1])
         {
-            i++;
+            extrema.push_back({i, true});
+        }
+        else if(i > 0 && data[i - 1] <= data[i] && (i + 1) < rect.width() && data[i] >= data[i + 1])
+        {
+            extrema.push_back({i, false});
+        }
+    }
+    if(extrema.size() >= 2)
+    {
+        extrema[0].is_minimum = !extrema[1].is_minimum;
+    }
+    extrema.push_back({int(extrema.size()) - 1, !extrema.back().is_minimum});
 
-            int xx = x + rect.x();
-            if(xx < 0)
-                continue;
-            if(xx >= dst->width())
-                break;
 
-            float fy = float(rect.height() - yy) * scale_rcp + offset;
-            if(fy < data[i])
+    /* Generate line. */
+    vector<PlotPoint> pvec(rect.width());
+    int curr_extremum = 0;
+    float minimum = 0.0f;
+    float maximum = 0.0f;
+    for(int i=0; i<rect.width(); i++)
+    {
+        if(i == extrema[curr_extremum].index)
+        {
+            if(extrema[curr_extremum].is_minimum)
             {
-                for(auto c=0; c<dst->componentCount(); c++)
+                minimum = data[extrema[curr_extremum + 0].index] - half_thickness;
+                maximum = data[extrema[curr_extremum + 1].index] + half_thickness;
+            }
+            else
+            {
+                minimum = data[extrema[curr_extremum + 1].index] - half_thickness;
+                maximum = data[extrema[curr_extremum + 0].index] + half_thickness;
+            }
+            curr_extremum++;
+        }
+
+        float dy1;
+        float extra1;
+        {
+            dy1 = 0.0f;
+            if(i > 0)
+            {
+                dy1 = data[i] - data[i - 1];
+            }
+            extra1 = sqrt(dy1 * dy1 + 1) * half_thickness;
+        }
+
+        float dy2;
+        float extra2;
+        {
+            dy2 = 0.0f;
+            if((i + 1) < rect.width())
+            {
+                dy2 = data[i + 1] - data[i];
+            }
+            extra2 = sqrt(dy2 * dy2 + 1) * half_thickness;
+        }
+
+        PlotPoint pp;
+        if(dy1 < 0)
+        {
+            if(dy2 < 0)
+            {
+                pp.minval = data[i] - extra2;
+                pp.maxval = data[i] + extra1;
+            }
+            else
+            {
+                pp.minval = data[i] - (extra1 + extra2) * 0.5f;
+                pp.maxval = data[i] + (extra1 + extra2) * 0.5f;
+            }
+        }
+        else
+        {
+            if(dy2 >=0)
+            {
+                pp.minval = data[i] - extra1;
+                pp.maxval = data[i] + extra2;
+            }
+            else
+            {
+                pp.minval = data[i] - (extra1 + extra2) * 0.5f;
+                pp.maxval = data[i] + (extra1 + extra2) * 0.5f;
+            }
+        }
+
+        pp.minval = int(max(pp.minval, minimum) * scale + offset);
+        pp.maxval = int(min(pp.maxval, maximum) * scale + offset);
+        pvec[i] = pp;
+    }
+
+    for(int i=0; i<rect.width(); i++)
+    {
+        pvec[i].minblend = pvec[i].minval;
+        pvec[i].maxblend = pvec[i].maxval;
+    }
+
+
+    /* Blend top part. */
+    int segment_length = 0;
+    int curr_y = pvec[0].minval;
+    int prev_y = curr_y - 1;
+    for(int i=0; i<rect.width(); i++)
+    {
+        segment_length++;
+        if((i + 1) == rect.width() || int(pvec[i].minval) != int(pvec[i + 1].minval))
+        {
+            int curr_y = pvec[i].minval;
+
+            int next_y;
+            if((i + 1) < rect.width())
+            {
+                next_y = pvec[i + 1].minval;
+            }
+            else
+            {
+                next_y = curr_y - 1;
+            }
+            
+            if(segment_length > 1)
+            {
+                float rcp = 1.0f / float(segment_length + 1);
+                
+                if(next_y < curr_y)
                 {
-                    dst->pixel(xx, yy)[c] = color[c];
+                    if(prev_y > curr_y)
+                    {
+                        for(int j=0; j<segment_length; j++)
+                        {
+                            int x = j + i - segment_length + 1;
+                            pvec[x].minblend = curr_y - (j + 1) * rcp;
+                        }
+                    }
+                    else
+                    {
+                        if(segment_length >= 3)
+                        {
+                            for(int j=0; j<(segment_length>>1); j++)
+                            {
+                                int x1 = j + i - segment_length + 1;
+                                int x2 = i - j;
+                                pvec[x1].minblend = pvec[x2].minblend 
+                                    = curr_y - (segment_length - j) * rcp;
+                            }
+                            
+                            if(segment_length & 1)
+                            {
+                                int x = i - (segment_length >> 1);
+                                pvec[x].minblend = pvec[x + 1].minblend;
+                            }
+                        }
+                        else
+                        {
+                            for(int j=0; j<segment_length; j++)
+                            {
+                                int x = j + i - segment_length + 1;
+                                pvec[x].minblend = curr_y - 0.5f;
+                            }
+                        }
+                    }
+                }
+                else if(prev_y < curr_y)
+                {
+                    for(int j=0; j<segment_length; j++)
+                    {
+                        int x = j + i - segment_length + 1;
+                        pvec[x].minblend = curr_y - (segment_length - j) * rcp;
+                    }
+                }
+            }
+            else // segment_length == 1
+            {
+                if(next_y < curr_y)
+                {
+                    if(prev_y > curr_y)
+                    {
+                        if((curr_y - next_y) == 1)
+                        {
+                            pvec[i].minblend = curr_y - 0.5f;
+                        }
+                        else
+                        {
+                            pvec[i].minblend = next_y;
+                        }
+                    }
+                }
+                else if(prev_y < curr_y)
+                {
+                    if((curr_y - prev_y) == 1)
+                    {
+                        pvec[i].minblend = curr_y - 0.5f;
+                    }
+                    else
+                    {
+                        pvec[i].minblend = prev_y;
+                    }
+                }
+            }
+
+            segment_length = 0;
+            prev_y = curr_y;
+        }
+    }
+
+    
+    /* Blend bottom part. */
+    segment_length = 0;
+    curr_y = pvec[0].minval;
+    prev_y = curr_y - 1;
+    for(int i=0; i<rect.width(); i++)
+    {
+        segment_length++;
+        if((i + 1) == rect.width() || int(pvec[i].maxval) != int(pvec[i + 1].maxval))
+        {
+            int curr_y = pvec[i].maxval;
+
+            int next_y;
+            if((i + 1) < rect.width())
+            {
+                next_y = pvec[i + 1].maxval;
+            }
+            else
+            {
+                next_y = curr_y - 1;
+            }
+            
+            if(segment_length > 1)
+            {
+                float rcp = 1.0f / (segment_length + 1);
+                
+                if(next_y > curr_y)
+                {
+                    if(prev_y < curr_y)
+                    {
+                        for(int j=0; j<segment_length; j++)
+                        {
+                            int x = j + i - segment_length + 1;
+                            pvec[x].maxblend = curr_y + (j + 1) * rcp;
+                        }
+                    }
+                    else
+                    {
+                        if(segment_length >= 3)
+                        {
+                            for(int j=0; j<(segment_length>>1); j++)
+                            {
+                                int x1 = j + i - segment_length + 1;
+                                int x2 = i - j;
+                                pvec[x1].maxblend = pvec[x2].maxblend 
+                                    = curr_y + (segment_length - j) * rcp;
+                            }
+                            
+                            if(segment_length & 1)
+                            {
+                                int x = i - (segment_length >> 1);
+                                pvec[x].maxblend = pvec[x + 1].maxblend;
+                            }
+                        }
+                        else
+                        {
+                            for(int j=0; j<segment_length; j++)
+                            {
+                                int x = j + i - segment_length + 1;
+                                pvec[x].maxblend = curr_y + 0.5f;
+                            }
+                        }
+                    }
+                }
+                else if(prev_y > curr_y)
+                {
+                    for(int j=0; j<segment_length; j++)
+                    {
+                        int x = j + i - segment_length + 1;
+                        pvec[x].maxblend = curr_y + (segment_length - j) * rcp;
+                    }
+                }
+            }
+            else // segment_length == 1
+            {
+                if(next_y > curr_y)
+                {
+                    if(prev_y < curr_y)
+                    {
+                        if((next_y - curr_y) == 1)
+                        {
+                            pvec[i].maxblend = curr_y + 0.5f;
+                        }
+                        else
+                        {
+                            pvec[i].maxblend = next_y;
+                        }
+                    }
+                }
+                else if(prev_y > curr_y)
+                {
+                    if((prev_y - curr_y) == 1)
+                    {
+                        pvec[i].maxblend = curr_y + 0.5f;
+                    }
+                    else
+                    {
+                        pvec[i].maxblend = prev_y;
+                    }
+                }
+            }
+
+            segment_length = 0;
+            prev_y = curr_y;
+        }
+    }
+    
+    
+    for(int x=0; x<rect.width(); x++)
+    {
+        auto &pp = pvec[x];
+        for(int y=0; y<rect.height(); y++)
+        {
+            if(y < pp.minval)
+            {
+                float diff = pp.minval - pp.minblend;
+                if(diff > 0.0f)
+                {
+                    if(diff <= 1.0f)
+                    {
+                        if((y + 1) == pp.minval)
+                        {
+                            img->pixel(x + rect.x(), y + rect.y())[0] = (unsigned char)(255.0f * diff);
+                        }
+                    }
+                    else
+                    {
+                        float rcp = 1.0f / (diff + 1);
+                        float val = 1.0f - (pp.minblend - y + diff) * rcp;
+                        if(val > 0.0f && val < 1.0f)
+                        {
+                            img->pixel(x + rect.x(), y + rect.y())[0] = (unsigned char)(255.0f * val);
+                        }
+                    }
+                }
+            }
+            else if(y <= pp.maxval)
+            {
+                img->pixel(x + rect.x(), y + rect.y())[0] = 255;
+            }
+            else
+            {
+                float diff = pp.maxblend - pp.maxval;
+                if(diff >= 0.0f)
+                {
+                    if(diff <= 1.0f)
+                    {
+                        if((y - 1) == pp.maxval)
+                        {
+                            img->pixel(x + rect.x(), y + rect.y())[0] = (unsigned char)(255.0f * diff);
+                        }
+                    }
+                    else
+                    {
+                        float rcp = 1.0f / (diff + 1);
+                        float val = 1.0f - (y - pp.maxblend + diff) * rcp;
+                        if(val > 0.0f && val < 1.0f)
+                        {
+                            img->pixel(x + rect.x(), y + rect.y())[0] = (unsigned char)(255.0f * val);
+                        }
+                    }
                 }
             }
         }
