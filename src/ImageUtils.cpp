@@ -803,6 +803,8 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
     if(!img || !data || !color || rect.width() <= 0 || rect.height() <= 0 || thickness <= 0.0f || scale <= 0.0f)
         return;
     
+    cout << "width " << rect.width() << "\n";
+    
     float half_thickness = thickness * 0.5;
     
     /* Find extrema. */
@@ -826,12 +828,29 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
             extrema.push_back({i, false});
         }
     }
-    if(extrema.size() >= 2)
+    
+    if(extrema.size() == 1)
+    {
+        extrema[0].is_minimum = (data[0] < data[rect.width() - 1]);
+        extrema.push_back({int(rect.width()) - 1, !extrema[0].is_minimum});
+    }
+    else if(extrema.size() > 1)
     {
         extrema[0].is_minimum = !extrema[1].is_minimum;
+        if(extrema.back().index < (rect.width() - 1))
+        {
+            extrema.push_back({int(rect.width()) - 1, !extrema.back().is_minimum});
+        }
     }
-    extrema.push_back({int(extrema.size()) - 1, !extrema.back().is_minimum});
+    else
+    {
+        return;
+    }
 
+    for(auto &extremum : extrema)
+    {
+        cout << (extremum.is_minimum ? "min" : "max") << " " << extremum.index << " -> " << data[extremum.index] << "\n";
+    }
 
     /* Generate line. */
     vector<PlotPoint> pvec(rect.width());
@@ -840,7 +859,7 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
     float maximum = 0.0f;
     for(int i=0; i<rect.width(); i++)
     {
-        if(i == extrema[curr_extremum].index)
+        if(i < (rect.width() - 1) && i == extrema[curr_extremum].index)
         {
             if(extrema[curr_extremum].is_minimum)
             {

@@ -141,7 +141,7 @@ void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int cor
 
 
 void stroke_plot(
-    Image* dst, unsigned char* color, Rect<int> rect, float* data, float thickness, float scale = 1.0f, float offset = 0.0f
+    Image* img, unsigned char* color, Rect<int> rect, float* data, float thickness, float scale = 1.0f, float offset = 0.0f
 );
 
 }//namespace r64fx
