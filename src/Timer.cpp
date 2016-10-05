@@ -59,8 +59,10 @@ TimerThread* get_thread()
         else
         {
             if(this_thread == g_threads[i].thread)
+            {
                 thread = g_threads + i;
-            break;
+                break;
+            }
         }
     }
 
@@ -71,6 +73,7 @@ TimerThread* get_thread()
         if(empty_thread == nullptr)
         {
             cerr << "Too may timer threads!\n";
+            abort();
         }
         else
         {
