@@ -35,12 +35,12 @@ class SoundDriverIOPort_Audio : public SoundDriverIOPort{
 
 };
 
-class SoundDriverIOPort_AudioInput   : public SoundDriverIOPort_Audio{
+class SoundDriverIOPort_AudioInput : public SoundDriverIOPort_Audio{
 public:
     virtual int readSamples(float* samples, int nsamples) = 0;
 };
 
-class SoundDriverIOPort_AudioOutput  : public SoundDriverIOPort_Audio{
+class SoundDriverIOPort_AudioOutput : public SoundDriverIOPort_Audio{
 public:
     virtual int writeSamples(float* samples, int nsamples) = 0;
 };
@@ -50,12 +50,12 @@ class SoundDriverIOPort_Midi : public SoundDriverIOPort{
 
 };
 
-class SoundDriverIOPort_MidiInput    : public SoundDriverIOPort_Midi{
+class SoundDriverIOPort_MidiInput : public SoundDriverIOPort_Midi{
 public:
     virtual int readEvents(MidiEvent* events, int nevents) = 0;
 };
 
-class SoundDriverIOPort_MidiOutput   : public SoundDriverIOPort_Midi{
+class SoundDriverIOPort_MidiOutput : public SoundDriverIOPort_Midi{
 public:
     virtual int writeEvents(MidiEvent* events, int nevents) = 0;
 };
@@ -73,6 +73,8 @@ struct SoundDriverIOStatus{
 
 class SoundDriverIOStatusPort{
 public:
+    virtual ~SoundDriverIOStatusPort(){}
+    
     virtual int readStatus(SoundDriverIOStatus* status, int nitems = 1) = 0;
 };
 
@@ -81,6 +83,7 @@ class SoundDriver{
 public:
     enum class Type{
         Bad,
+        Stub,
         Jack
     };
 
@@ -110,11 +113,13 @@ public:
 
     virtual SoundDriverIOStatusPort* newStatusPort() = 0;
     
+    virtual void deletePort(SoundDriverIOStatusPort* port) = 0;
+    
     virtual bool connect(const std::string &src, const std::string &dst) = 0;
 
     virtual bool disconnect(const std::string &src, const std::string &dst) = 0;
     
-    static SoundDriver* newInstance(SoundDriver::Type type = SoundDriver::Type::Jack);
+    static SoundDriver* newInstance(SoundDriver::Type type);
 
     static void deleteInstance(SoundDriver* driver);
 };

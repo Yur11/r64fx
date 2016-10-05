@@ -4,6 +4,7 @@
 
 using namespace std;
 
+#include "SoundDriver_Stub.cxx"
 #ifdef R64FX_USE_JACK
 #include "SoundDriver_Jack.cxx"
 #endif//R64FX_USE_JACK
@@ -16,6 +17,13 @@ SoundDriver* SoundDriver::newInstance(SoundDriver::Type type)
     SoundDriver* driver = nullptr;
     switch(type)
     {
+        case SoundDriver::Type::Stub:
+        {
+            cout << "stub!\n";
+            driver = new(std::nothrow) SoundDriver_Stub;
+            break;
+        }
+        
         case SoundDriver::Type::Jack:
         {
             auto d = new(std::nothrow) SoundDriver_Jack;
