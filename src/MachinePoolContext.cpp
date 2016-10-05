@@ -6,7 +6,7 @@ namespace r64fx{
     
 MachinePoolContext::MachinePoolContext()
 {
-    sound_driver = SoundDriver::newInstance();
+    sound_driver = SoundDriver::newInstance(SoundDriver::Type::Stub);
     status_port = sound_driver->newStatusPort();
     
     root_graph = new SignalGraph;

@@ -120,11 +120,17 @@ public:
     , m(m)
     {
         zeros.push_back({1.0f, 0.0f});
-        zeros.push_back({1.0f, 0.0f});
-        zeros.push_back({1.0f, 0.0f});
-        
+//         zeros.push_back({1.0f, 0.0f});
+//         zeros.push_back({1.0f, 0.0f});
+//         zeros.push_back({1.0f, 0.0f});
+//         zeros.push_back({1.0f, 0.0f});
+//         
+//         poles.push_back({0.0f, 0.7f});
         poles.push_back({0.0f, 0.7f});
-        poles.push_back({0.0f, 0.7f});
+//         poles.push_back({0.0f, 0.7f});
+//         poles.push_back({0.0f, 0.7f});
+//         poles.push_back({0.0f, 0.7f});
+//         poles.push_back({0.0f, 0.7f});
     }
 
     virtual ~PoleZeroPlot()
@@ -251,8 +257,7 @@ private:
 
     virtual void mousePressEvent(MousePressEvent* event)
     {
-        auto val = evaluateAt(pointToComplex(event->position()));
-        cout << val.re << ", " << val.im << " -> " << val.magnitude() << ", " << (val.phase() / M_PI) << " --> " << (int)zimg(event->x(), event->y())[0] << "\n";
+//         auto val = evaluateAt(pointToComplex(event->position()));
         Point<int> anchor(0, 0);
         auto point = pointAt(event->position(), &anchor);
         if(point)

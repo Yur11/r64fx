@@ -19,15 +19,5 @@ int main(int argc, char* argv[])
     PlayerController p;
     p.exec();
 
-//     Widget_Dummy w;
-//     w.setSize({800, 100});
-//     w.show();
-
-//     while(g_running)
-//     {
-//         Timer::runTimers();
-//         sleep_microseconds(5000);
-//     }
-
     return 0;
 }

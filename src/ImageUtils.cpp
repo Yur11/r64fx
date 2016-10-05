@@ -803,8 +803,6 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
     if(!img || !data || !color || rect.width() <= 0 || rect.height() <= 0 || thickness <= 0.0f || scale <= 0.0f)
         return;
     
-    cout << "width " << rect.width() << "\n";
-    
     float half_thickness = thickness * 0.5;
     
     /* Find extrema. */
@@ -845,11 +843,6 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
     else
     {
         return;
-    }
-
-    for(auto &extremum : extrema)
-    {
-        cout << (extremum.is_minimum ? "min" : "max") << " " << extremum.index << " -> " << data[extremum.index] << "\n";
     }
 
     /* Generate line. */
