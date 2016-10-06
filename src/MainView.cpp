@@ -21,6 +21,8 @@ struct MainViewPrivate{
     float left_dock_ratio    = 0.2f;
     float right_dock_ratio   = 0.2f;
     float bottom_dock_ratio  = 0.33333f;
+    
+    int gap = 2;
 };
 
     
@@ -154,6 +156,10 @@ MainView::MainView(Widget* parent) : Widget(parent)
     m->bottom_dock  = new BottomDock  (m, this);
     m->main_part    = new MainPart    (m, this);
     
+    m->left_dock->setWidth(300);
+    m->right_dock->setWidth(100);
+    m->bottom_dock->setHeight(256);
+    
     setSize({800, 600});
 }
 
@@ -175,24 +181,21 @@ void MainView::resizeEvent(ResizeEvent* event)
     m->top_bar->setWidth(event->width());
     m->top_bar->setPosition({0, 0});
     
-    m->left_dock->setY(m->top_bar->height());
-    m->main_part->setY(m->top_bar->height());
-    m->right_dock->setY(m->top_bar->height());
+    m->left_dock->setY(m->top_bar->height() + m->gap);
+    m->main_part->setY(m->top_bar->height() + m->gap);
+    m->right_dock->setY(m->top_bar->height() + m->gap);
 
-    m->left_dock->setWidth(event->width() * m->left_dock_ratio);
-    m->right_dock->setWidth(event->width() * m->right_dock_ratio);
-    m->main_part->setWidth(event->width() - m->left_dock->width() - m->right_dock->width());
+    m->main_part->setWidth(event->width() - m->left_dock->width() - m->right_dock->width() - m->gap - m->gap);
     
     m->left_dock->setX(0);
-    m->main_part->setX(m->left_dock->width());
-    m->right_dock->setX(m->main_part->x() + m->main_part->width());
+    m->main_part->setX(m->left_dock->width() + m->gap);
+    m->right_dock->setX(m->main_part->x() + m->main_part->width() + m->gap);
     
     m->bottom_dock->setX(m->main_part->x());
-    m->bottom_dock->setWidth(event->width() - m->left_dock->width() - m->right_dock->width());
+    m->bottom_dock->setWidth(event->width() - m->left_dock->width() - m->right_dock->width() - m->gap - m->gap);
     
-    m->bottom_dock->setHeight(event->height() * m->bottom_dock_ratio);
     m->bottom_dock->setY(event->height() - m->bottom_dock->height());
-    m->main_part->setHeight(event->height() - m->bottom_dock->height() - m->top_bar->height());
+    m->main_part->setHeight(event->height() - m->bottom_dock->height() - m->top_bar->height() - m->gap - m->gap);
     
     m->left_dock->setHeight(event->height() - m->top_bar->height());
     m->right_dock->setHeight(event->height() - m->top_bar->height());
