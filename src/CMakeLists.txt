@@ -45,6 +45,7 @@ set(SRC
     MachinePoolContext.cpp
     MachinePort.cpp
     MachinePortImpl.cpp
+    MainView.cpp
     Midi.cpp
     MidiDispatcher.cpp
     Mouse.cpp

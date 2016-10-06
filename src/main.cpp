@@ -1,8 +1,6 @@
 #include "PlayerController.hpp"
-// #include "Widget_Dummy.hpp"
-// #include "Timer.hpp"
-// #include "sleep.hpp"
-// #include <iostream>
+
+#include "MainView.hpp"
 
 using namespace std;
 using namespace r64fx;
@@ -16,6 +14,9 @@ bool g_running = true;
 
 int main(int argc, char* argv[])
 {
+    MainView mv;
+    mv.show();
+    
     PlayerController p;
     p.exec();
 
