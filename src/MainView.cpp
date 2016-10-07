@@ -67,7 +67,7 @@ protected:
     virtual void paintEvent(PaintEvent* event)
     {
         auto p = event->painter();
-        p->fillRect({0, 0, width(), height()}, Color(127, 0, 0, 0));
+        p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
     }
 
     virtual void resizeEvent(ResizeEvent* event)
@@ -90,7 +90,7 @@ protected:
     virtual void paintEvent(PaintEvent* event)
     {
         auto p = event->painter();
-        p->fillRect({0, 0, width(), height()}, Color(0, 127, 0, 0));
+        p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
     }
 
     virtual void resizeEvent(ResizeEvent* event)
@@ -113,7 +113,7 @@ protected:
     virtual void paintEvent(PaintEvent* event)
     {
         auto p = event->painter();
-        p->fillRect({0, 0, width(), height()}, Color(127, 0, 127, 0));
+        p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
     }
 
     virtual void resizeEvent(ResizeEvent* event)
@@ -136,7 +136,7 @@ protected:
     virtual void paintEvent(PaintEvent* event)
     {
         auto p = event->painter();
-        p->fillRect({0, 0, width(), height()}, Color(0, 127, 127, 0));
+        p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
     }
 
     virtual void resizeEvent(ResizeEvent* event)
@@ -173,6 +173,28 @@ MainView::~MainView()
 void MainView::paintEvent(PaintEvent* event)
 {
     Widget::paintEvent(event);
+    
+    auto p = event->painter();
+    
+    p->fillRect(
+        {0, m->top_bar->height(), width(), m->gap}, 
+        Color(0, 0, 0, 0)
+    );
+    
+    p->fillRect(
+        {m->left_dock->width(), m->top_bar->height(), m->gap, m->left_dock->height()},
+        Color(0, 0, 0, 0)
+    );
+    
+    p->fillRect(
+        {m->main_part->x() + m->main_part->width(), m->top_bar->height(), m->gap, m->right_dock->height()},
+        Color(0, 0, 0, 0)
+    );
+    
+    p->fillRect(
+        {m->left_dock->width(), height() - m->bottom_dock->height() - m->gap, m->bottom_dock->width(), m->gap},
+        Color(0, 0, 0, 0)
+    );
 }
 
 
