@@ -2,6 +2,9 @@
 #include "Painter.hpp"
 #include "ImageUtils.hpp"
 
+#include <iostream>
+using namespace std;
+
 namespace r64fx{
 
 class TopBar;
@@ -46,6 +49,15 @@ protected:
     {
         
     }
+    
+    virtual void mouseMoveEvent(MouseMoveEvent* event)
+    {
+        auto window = Widget::rootWindow();
+        if(window)
+        {
+            window->setCursorType(Window::CursorType::Arrow);
+        }
+    }
 };
 
 
@@ -74,6 +86,15 @@ protected:
     {
         
     }
+    
+    virtual void mouseMoveEvent(MouseMoveEvent* event)
+    {
+        auto window = Widget::rootWindow();
+        if(window)
+        {
+            window->setCursorType(Window::CursorType::Arrow);
+        }
+    }
 };
 
 
@@ -96,6 +117,15 @@ protected:
     virtual void resizeEvent(ResizeEvent* event)
     {
         
+    }
+    
+    virtual void mouseMoveEvent(MouseMoveEvent* event)
+    {
+        auto window = Widget::rootWindow();
+        if(window)
+        {
+            window->setCursorType(Window::CursorType::Arrow);
+        }
     }
 };
 
@@ -120,6 +150,15 @@ protected:
     {
         
     }
+    
+    virtual void mouseMoveEvent(MouseMoveEvent* event)
+    {
+        auto window = Widget::rootWindow();
+        if(window)
+        {
+            window->setCursorType(Window::CursorType::Arrow);
+        }
+    }
 };
 
 
@@ -142,6 +181,15 @@ protected:
     virtual void resizeEvent(ResizeEvent* event)
     {
     
+    }
+    
+    virtual void mouseMoveEvent(MouseMoveEvent* event)
+    {
+        auto window = Widget::rootWindow();
+        if(window)
+        {
+            window->setCursorType(Window::CursorType::Arrow);
+        }
     }
 };
 
@@ -221,6 +269,33 @@ void MainView::resizeEvent(ResizeEvent* event)
     
     m->left_dock->setHeight(event->height() - m->top_bar->height());
     m->right_dock->setHeight(event->height() - m->top_bar->height());
+}
+
+
+void MainView::mouseMoveEvent(MouseMoveEvent* event)
+{
+    auto window = Widget::rootWindow();
+    if(window)
+    {
+        if(event->y() < m->main_part->height())
+        {
+            window->setCursorType(Window::CursorType::ResizeNS);
+        }
+        else if(event->y() < m->bottom_dock->y())
+        {
+            if(event->y() >= (m->main_part->y() + m->main_part->height()))
+            {
+                window->setCursorType(Window::CursorType::ResizeNS);
+            }
+            else
+            {
+                if(event->x() < m->left_dock->width() || event->x() >= (m->main_part->x() + m->main_part->width()))
+                {
+                    window->setCursorType(Window::CursorType::ResizeWE);
+                }
+            }
+        }
+    }
 }
     
 }//namespace r64fx

@@ -19,6 +19,8 @@ protected:
     virtual void paintEvent(PaintEvent* event);
 
     virtual void resizeEvent(ResizeEvent* event);
+    
+    virtual void mouseMoveEvent(MouseMoveEvent* event);
 };
     
 }//namespace r64fx
