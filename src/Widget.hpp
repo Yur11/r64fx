@@ -318,7 +318,7 @@ private:
 
 protected:
     virtual void mouseMoveEvent(MouseMoveEvent* event);
-
+    
     virtual void mouseEnterEvent();
 
     virtual void mouseLeaveEvent();
