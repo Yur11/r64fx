@@ -20,12 +20,11 @@ struct MainViewPrivate{
     RightDock*   right_dock   = nullptr;
     BottomDock*  bottom_dock  = nullptr;
     MainPart*    main_part    = nullptr;
-    
-    float left_dock_ratio    = 0.2f;
-    float right_dock_ratio   = 0.2f;
-    float bottom_dock_ratio  = 0.33333f;
-    
+
     int gap = 2;
+    
+    bool left_dock_expanded   = true;
+    bool right_dock_expanded  = true;
 };
 
     
@@ -61,12 +60,7 @@ protected:
 };
 
 
-struct Dock{
-    bool is_open = true;
-};
-
-
-class LeftDock : public Widget, public Dock{
+class LeftDock : public Widget{
     MainViewPrivate* m = nullptr;
     
 public:
@@ -98,7 +92,7 @@ protected:
 };
 
 
-class RightDock : public Widget, public Dock{
+class RightDock : public Widget{
     MainViewPrivate* m = nullptr;
     
 public:
@@ -130,7 +124,7 @@ protected:
 };
 
 
-class BottomDock : public Widget, public Dock{
+class BottomDock : public Widget{
     MainViewPrivate* m = nullptr;
     
 public:
@@ -229,20 +223,29 @@ void MainView::paintEvent(PaintEvent* event)
         Color(0, 0, 0, 0)
     );
     
-    p->fillRect(
-        {m->left_dock->width(), m->top_bar->height(), m->gap, m->left_dock->height()},
-        Color(0, 0, 0, 0)
-    );
+    if(m->left_dock->parent() == this)
+    {
+        p->fillRect(
+            {m->left_dock->width(), m->left_dock->y(), m->gap, m->left_dock->height()},
+            Color(0, 0, 0, 0)
+        );
+    }
+
+    if(m->right_dock->parent() == this)
+    {
+        p->fillRect(
+            {m->right_dock->x() - m->gap, m->right_dock->y(), m->gap, m->right_dock->height()},
+            Color(0, 0, 0, 0)
+        );
+    }
     
-    p->fillRect(
-        {m->main_part->x() + m->main_part->width(), m->top_bar->height(), m->gap, m->right_dock->height()},
-        Color(0, 0, 0, 0)
-    );
-    
-    p->fillRect(
-        {m->left_dock->width(), height() - m->bottom_dock->height() - m->gap, m->bottom_dock->width(), m->gap},
-        Color(0, 0, 0, 0)
-    );
+    if(m->bottom_dock->parent() == this)
+    {
+        p->fillRect(
+            {m->bottom_dock->x(), m->bottom_dock->y() - m->gap, m->bottom_dock->width(), m->gap},
+            Color(0, 0, 0, 0)
+        );
+    }
 }
 
 
@@ -251,51 +254,125 @@ void MainView::resizeEvent(ResizeEvent* event)
     m->top_bar->setWidth(event->width());
     m->top_bar->setPosition({0, 0});
     
-    m->left_dock->setY(m->top_bar->height() + m->gap);
     m->main_part->setY(m->top_bar->height() + m->gap);
-    m->right_dock->setY(m->top_bar->height() + m->gap);
-
-    m->main_part->setWidth(event->width() - m->left_dock->width() - m->right_dock->width() - m->gap - m->gap);
     
-    m->left_dock->setX(0);
-    m->main_part->setX(m->left_dock->width() + m->gap);
-    m->right_dock->setX(m->main_part->x() + m->main_part->width() + m->gap);
+    if(m->bottom_dock->parent() == this)
+    {
+        m->bottom_dock->setY(event->height() - m->bottom_dock->height());
+        
+        if(m->left_dock->parent() == this && m->left_dock_expanded)
+        {
+            m->bottom_dock->setX(m->left_dock->width() + m->gap);
+        }
+        else
+        {
+            m->bottom_dock->setX(0);
+        }
+        
+        if(m->right_dock->parent() == this && m->right_dock_expanded)
+        {
+            m->bottom_dock->setWidth(event->width() - m->bottom_dock->x() - m->right_dock->width() - m->gap);
+        }
+        else
+        {
+            m->bottom_dock->setWidth(event->width() - m->bottom_dock->x());
+        }
+        
+        m->main_part->setHeight(
+            event->height() - m->top_bar->height() - m->bottom_dock->height() - m->gap - m->gap
+        );
+    }
+    else
+    {
+        m->main_part->setHeight(
+            event->height() - m->top_bar->height() - m->gap
+        );
+    }
     
-    m->bottom_dock->setX(m->main_part->x());
-    m->bottom_dock->setWidth(event->width() - m->left_dock->width() - m->right_dock->width() - m->gap - m->gap);
+    if(m->left_dock->parent() == this)
+    {
+        m->left_dock->setX(0);
+        m->left_dock->setY(m->top_bar->height() + m->gap);
+        
+        if(m->bottom_dock->parent() == this && !m->left_dock_expanded)
+        {
+            m->left_dock->setHeight(event->height() - m->left_dock->y() - m->bottom_dock->height());
+        }
+        else
+        {
+            m->left_dock->setHeight(event->height() - m->left_dock->y());
+        }
+        
+        m->main_part->setX(m->left_dock->width() + m->gap);
+    }
+    else
+    {
+        m->main_part->setX(0);
+    }
     
-    m->bottom_dock->setY(event->height() - m->bottom_dock->height());
-    m->main_part->setHeight(event->height() - m->bottom_dock->height() - m->top_bar->height() - m->gap - m->gap);
-    
-    m->left_dock->setHeight(event->height() - m->top_bar->height());
-    m->right_dock->setHeight(event->height() - m->top_bar->height());
+    if(m->right_dock->parent() == this)
+    {
+        m->right_dock->setX(event->width() - m->right_dock->width());
+        m->right_dock->setY(m->top_bar->height() + m->gap);
+        
+        if(m->bottom_dock->parent() == this && !m->right_dock_expanded)
+        {
+            m->right_dock->setHeight(event->height() - m->right_dock->y() - m->bottom_dock->height());
+        }
+        else
+        {
+            m->right_dock->setHeight(event->height() - m->right_dock->y());
+        }
+        
+        if(m->left_dock_expanded)
+        {
+            m->main_part->setWidth(
+                event->width() - m->left_dock->width() - m->right_dock->width() - m->gap - m->gap
+            );
+        }
+        else
+        {
+            m->main_part->setWidth(
+                event->width() - m->right_dock->width() - m->gap
+            );
+        }
+    }
+    else
+    {
+        if(m->right_dock_expanded)
+        {
+            m->main_part->setWidth(
+                event->width() - m->right_dock->width() - m->gap
+            );
+        }
+    }
 }
 
 
 void MainView::mouseMoveEvent(MouseMoveEvent* event)
 {
-    auto window = Widget::rootWindow();
-    if(window)
-    {
-        if(event->y() < m->main_part->height())
-        {
-            window->setCursorType(Window::CursorType::ResizeNS);
-        }
-        else if(event->y() < m->bottom_dock->y())
-        {
-            if(event->y() >= (m->main_part->y() + m->main_part->height()))
-            {
-                window->setCursorType(Window::CursorType::ResizeNS);
-            }
-            else
-            {
-                if(event->x() < m->left_dock->width() || event->x() >= (m->main_part->x() + m->main_part->width()))
-                {
-                    window->setCursorType(Window::CursorType::ResizeWE);
-                }
-            }
-        }
-    }
+//     auto window = Widget::rootWindow();
+//     if(window)
+//     {
+//         if(event->y() < m->main_part->height())
+//         {
+//             window->setCursorType(Window::CursorType::ResizeNS);
+//         }
+//         else if(event->y() < m->bottom_dock->y())
+//         {
+//             if(event->y() >= (m->main_part->y() + m->main_part->height()))
+//             {
+//                 window->setCursorType(Window::CursorType::ResizeNS);
+//             }
+//             else
+//             {
+//                 if(event->x() < m->left_dock->width() || event->x() >= (m->main_part->x() + m->main_part->width()))
+//                 {
+//                     window->setCursorType(Window::CursorType::ResizeWE);
+//                 }
+//             }
+//         }
+//     }
 }
     
 }//namespace r64fx
