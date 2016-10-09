@@ -41,7 +41,7 @@ public:
     PlayerControllerPrivate()
     {
         m_view = new PlayerView(this);
-        m_view->show();
+//         m_view->show();
 
         m_pool = new MachinePool;
 
@@ -101,7 +101,7 @@ public:
 
         m_filter_machine->setPole(0.01f);
         m_filter_view = new FilterView(this);
-        m_filter_view->show();
+//         m_filter_view->show();
     }
 
     virtual ~PlayerControllerPrivate()
