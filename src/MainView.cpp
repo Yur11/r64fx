@@ -324,7 +324,7 @@ void MainView::resizeEvent(ResizeEvent* event)
             m->right_dock->setHeight(event->height() - m->right_dock->y());
         }
         
-        if(m->left_dock_expanded)
+        if(m->left_dock->parent() == this)
         {
             m->main_part->setWidth(
                 event->width() - m->left_dock->width() - m->right_dock->width() - m->gap - m->gap
@@ -339,11 +339,15 @@ void MainView::resizeEvent(ResizeEvent* event)
     }
     else
     {
-        if(m->right_dock_expanded)
+        if(m->left_dock->parent() == this)
         {
             m->main_part->setWidth(
-                event->width() - m->right_dock->width() - m->gap
+                event->width() - m->left_dock->width() - m->gap
             );
+        }
+        else
+        {
+            m->main_part->setWidth(event->width());
         }
     }
 }
