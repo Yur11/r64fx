@@ -8,9 +8,6 @@ using namespace std;
 
 namespace r64fx{
 
-extern bool g_running;
-
-
 Widget_Dummy::Widget_Dummy(Widget* parent)
 : Widget(parent)
 {
@@ -487,7 +484,6 @@ void Widget_Dummy::keyReleaseEvent(KeyReleaseEvent* event)
 void Widget_Dummy::closeEvent()
 {
     cout << "Close!\n";
-    g_running = false;
 }
 
 

@@ -12,8 +12,6 @@ public:
     PlayerController();
     
     virtual ~PlayerController();
-    
-    void exec();
 };
     
 }//namespace r64fx

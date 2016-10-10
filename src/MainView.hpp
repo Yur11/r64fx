@@ -21,6 +21,8 @@ protected:
     virtual void resizeEvent(ResizeEvent* event);
     
     virtual void mouseMoveEvent(MouseMoveEvent* event);
+    
+    virtual void closeEvent();
 };
     
 }//namespace r64fx

@@ -2,6 +2,10 @@
 #include "Painter.hpp"
 #include "ImageUtils.hpp"
 
+#include "Widget_Menu.hpp"
+
+#include "ProgramActions.hpp"
+
 #include <iostream>
 using namespace std;
 
@@ -15,16 +19,19 @@ class MainPart;
 
 
 struct MainViewPrivate{
-    TopBar*      top_bar      = nullptr;
-    LeftDock*    left_dock    = nullptr;
-    RightDock*   right_dock   = nullptr;
-    BottomDock*  bottom_dock  = nullptr;
-    MainPart*    main_part    = nullptr;
+    TopBar*      top_bar       = nullptr;
+    LeftDock*    left_dock     = nullptr;
+    RightDock*   right_dock    = nullptr;
+    BottomDock*  bottom_dock   = nullptr;
+    MainPart*    main_part     = nullptr;
 
+    Widget_Menu* menu          = nullptr;
+    Widget_Menu* menu_session  = nullptr;
+    
     int gap = 2;
     
-    bool left_dock_expanded   = true;
-    bool right_dock_expanded  = true;
+    bool left_dock_expanded    = true;
+    bool right_dock_expanded   = true;
 };
 
     
@@ -42,6 +49,8 @@ protected:
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
+        
+        Widget::paintEvent(event);
     }
 
     virtual void resizeEvent(ResizeEvent* event)
@@ -197,6 +206,17 @@ MainView::MainView(Widget* parent) : Widget(parent)
     m->right_dock   = new RightDock   (m, this);
     m->bottom_dock  = new BottomDock  (m, this);
     m->main_part    = new MainPart    (m, this);
+
+    m->menu_session = new Widget_Menu(m->menu);
+    m->menu_session->setOrientation(Orientation::Vertical);
+    m->menu_session->addAction(g_acts->quit_act);
+    m->menu_session->resizeAndRealign();
+    
+    m->menu = new Widget_Menu(m->top_bar);
+    m->menu->setOrientation(Orientation::Horizontal);
+    m->menu->addSubMenu(m->menu_session, "Session");
+    m->menu->resizeAndRealign();
+    m->menu->setPosition({0, 0});
     
     m->left_dock->setWidth(300);
     m->right_dock->setWidth(100);
@@ -377,6 +397,12 @@ void MainView::mouseMoveEvent(MouseMoveEvent* event)
 //             }
 //         }
 //     }
+}
+
+
+void MainView::closeEvent()
+{
+    g_acts->quit_act->exec();
 }
     
 }//namespace r64fx

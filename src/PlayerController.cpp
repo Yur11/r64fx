@@ -239,20 +239,7 @@ public:
 
     virtual void close()
     {
-        cout << "close!\n";
-    }
-
-    void exec()
-    {
-        while(m_running)
-        {
-            Timer::runTimers();
-//             if(m_view && m_machine && m_sound_data)
-//             {
-//                 m_view->movePlayhead(m_machine->playheadPosition());
-//             }
-            sleep_microseconds(5000);
-        }
+        cout << "Close!\n";
     }
 };
 
@@ -266,12 +253,6 @@ PlayerController::PlayerController()
 PlayerController::~PlayerController()
 {
     delete m;
-}
-
-
-void PlayerController::exec()
-{
-    m->exec();
 }
 
 }//namespace r64fx
