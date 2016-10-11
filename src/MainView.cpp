@@ -213,23 +213,39 @@ MainView::MainView(Widget* parent) : Widget(parent)
 
     m->menu_session = new Widget_Menu(m->menu);
     m->menu_session->setOrientation(Orientation::Vertical);
+    m->menu_session->addAction(g_acts->new_session_act);
+    m->menu_session->addAction(g_acts->open_session_act);
+    m->menu_session->addAction(g_acts->save_session_act);
+    m->menu_session->addAction(g_acts->save_session_as_act);
     m->menu_session->addAction(g_acts->quit_act);
     m->menu_session->resizeAndRealign();
     
     m->menu_project = new Widget_Menu(m->menu);
     m->menu_project->setOrientation(Orientation::Vertical);
+    m->menu_project->addAction(g_acts->new_project_act);
+    m->menu_project->addAction(g_acts->open_project_act);
+    m->menu_project->addAction(g_acts->save_project_act);
+    m->menu_project->addAction(g_acts->save_project_as_act);
+    m->menu_project->addAction(g_acts->close_project_act);
     m->menu_project->resizeAndRealign();
     
     m->menu_edit = new Widget_Menu(m->menu);
     m->menu_edit->setOrientation(Orientation::Vertical);
+    m->menu_edit->addAction(g_acts->cut_act);
+    m->menu_edit->addAction(g_acts->copy_act);
+    m->menu_edit->addAction(g_acts->paste_act);
+    m->menu_edit->addAction(g_acts->undo_act);
+    m->menu_edit->addAction(g_acts->redo_act);
     m->menu_edit->resizeAndRealign();
     
     m->menu_view = new Widget_Menu(m->menu);
     m->menu_view->setOrientation(Orientation::Vertical);
+    m->menu_view->addAction(g_acts->no_view_act);
     m->menu_view->resizeAndRealign();
     
     m->menu_help = new Widget_Menu(m->menu);
     m->menu_help->setOrientation(Orientation::Vertical);
+    m->menu_help->addAction(g_acts->no_help_act);
     m->menu_help->resizeAndRealign();
     
     m->menu = new Widget_Menu(m->top_bar);
