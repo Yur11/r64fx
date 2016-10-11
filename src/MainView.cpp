@@ -27,6 +27,10 @@ struct MainViewPrivate{
 
     Widget_Menu* menu          = nullptr;
     Widget_Menu* menu_session  = nullptr;
+    Widget_Menu* menu_project  = nullptr;
+    Widget_Menu* menu_edit     = nullptr;
+    Widget_Menu* menu_view     = nullptr;
+    Widget_Menu* menu_help     = nullptr;
     
     int gap = 2;
     
@@ -41,7 +45,7 @@ class TopBar : public Widget{
 public:
     TopBar(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
     {
-        setHeight(32);
+        
     }
     
 protected:
@@ -212,11 +216,33 @@ MainView::MainView(Widget* parent) : Widget(parent)
     m->menu_session->addAction(g_acts->quit_act);
     m->menu_session->resizeAndRealign();
     
+    m->menu_project = new Widget_Menu(m->menu);
+    m->menu_project->setOrientation(Orientation::Vertical);
+    m->menu_project->resizeAndRealign();
+    
+    m->menu_edit = new Widget_Menu(m->menu);
+    m->menu_edit->setOrientation(Orientation::Vertical);
+    m->menu_edit->resizeAndRealign();
+    
+    m->menu_view = new Widget_Menu(m->menu);
+    m->menu_view->setOrientation(Orientation::Vertical);
+    m->menu_view->resizeAndRealign();
+    
+    m->menu_help = new Widget_Menu(m->menu);
+    m->menu_help->setOrientation(Orientation::Vertical);
+    m->menu_help->resizeAndRealign();
+    
     m->menu = new Widget_Menu(m->top_bar);
     m->menu->setOrientation(Orientation::Horizontal);
-    m->menu->addSubMenu(m->menu_session, "Session");
+    m->menu->addSubMenu(m->menu_session,  "Session");
+    m->menu->addSubMenu(m->menu_project,  "Project");
+    m->menu->addSubMenu(m->menu_edit,     "Edit");
+    m->menu->addSubMenu(m->menu_view,     "View");
+    m->menu->addSubMenu(m->menu_help,     "Help");
     m->menu->resizeAndRealign();
     m->menu->setPosition({0, 0});
+
+    m->top_bar->setHeight(m->menu->height());
     
     m->left_dock->setWidth(300);
     m->right_dock->setWidth(100);
@@ -228,7 +254,20 @@ MainView::MainView(Widget* parent) : Widget(parent)
 
 MainView::~MainView()
 {
+    m->menu_session->setParent(this);
+    delete m->menu_session;
     
+    m->menu_project->setParent(this);
+    delete m->menu_project;
+    
+    m->menu_edit->setParent(this);
+    delete m->menu_edit;
+    
+    m->menu_view->setParent(this);
+    delete m->menu_view;
+    
+    m->menu_help->setParent(this);
+    delete m->menu_help;
 }
 
 
