@@ -195,13 +195,15 @@ public:
 
     bool isMouseGrabber() const;
 
-    void grabMouseMulti();
+    void grabMouseForMultipleWidgets();
 
-    void ungrabMouseMulti();
+    void ungrabMouseForMultipleWidgets();
 
     bool wantsMultiGrabs(bool yes);
 
     bool wantsMultiGrabs();
+    
+    static Widget* mouseMultiGrabber();
 
     static MouseButton pressedButtons();
 

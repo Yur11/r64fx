@@ -282,7 +282,7 @@ void Widget_Menu::showAt(Point<int> position, Widget* parent)
 
         show(Window::WmType::Menu, Window::Type::Image, parent_window);
         window()->setPosition(menu_position);
-        grabMouseMulti();
+        grabMouseForMultipleWidgets();
     }
 }
 
@@ -365,12 +365,12 @@ bool Widget_MenuItem::showSubMenu()
         }
     }
     
-
     m_sub_menu->show(Window::WmType::Menu, Window::Type::Image);
     m_sub_menu->window()->setPosition(sub_menu_position);
-    if(parent_menu == parent_menu->rootMenu() && parent_menu != root_widget)
+//     if(parent_menu == parent_menu->rootMenu() && parent_menu != root_widget)
+    if(Widget::mouseMultiGrabber() == nullptr)
     {
-        parent_menu->grabMouseMulti();
+        parent_menu->grabMouseForMultipleWidgets();
     }
     return true;
 }
@@ -380,7 +380,7 @@ void Widget_Menu::closeAll()
 {
     if(this == rootMenu())
     {
-        ungrabMouseMulti();
+        ungrabMouseForMultipleWidgets();
     }
 
     if(m_active_item)
@@ -467,6 +467,8 @@ void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget_MenuItem::mouseEnterEvent()
 {
+//     cout << "Enter: " << this << "\n";
+    
     auto parent_menu = parentMenu();
     if(!parent_menu)
         return;
@@ -505,6 +507,8 @@ void Widget_MenuItem::mouseEnterEvent()
 
 void Widget_MenuItem::mouseLeaveEvent()
 {
+//     cout << "Leave: " << this << "\n";
+    
     repaint();
 }
 

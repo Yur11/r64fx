@@ -38,7 +38,7 @@ Widget* g_moused_over_widget = nullptr;
 /* Widget that currently grabs mouse input. */
 Widget* g_mouse_grabber   = nullptr;
 
-Widget* g_multi_mouse_grabber = nullptr;
+Widget* g_root_mouse_multi_grabber = nullptr;
 
 /* Widget that currently has keyboard focus. */
 Widget* g_focus_owner = nullptr;
@@ -138,7 +138,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         g_pressed_buttons |= MouseButton(button);
 
-        if(g_multi_mouse_grabber)
+        if(g_root_mouse_multi_grabber)
         {
             bool got_widget = false;
             auto mouse_screen_position = Point<int>(x, y) + window->position();
@@ -165,7 +165,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
             if(!got_widget)
             {
-                g_multi_mouse_grabber->clickedElsewhereEvent();
+                g_root_mouse_multi_grabber->clickedElsewhereEvent();
             }
         }
         else
@@ -195,7 +195,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     {
         g_pressed_buttons &= ~MouseButton(button);
 
-        if(g_multi_mouse_grabber)
+        if(g_root_mouse_multi_grabber)
         {
             auto mouse_screen_position = Point<int>(x, y) + window->position();
             for(auto widget : g_windowed_widgets)
@@ -257,7 +257,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         Point<int> event_root_position(x, y);
         Point<int> event_delta = event_position - g_prev_mouse_position;
 
-        if(g_multi_mouse_grabber)
+        if(g_root_mouse_multi_grabber)
         {
             auto mouse_screen_position = event_position + window->position();
             for(auto widget : g_windowed_widgets)
@@ -524,8 +524,8 @@ Widget::~Widget()
     if(this == g_mouse_grabber)
         g_mouse_grabber = nullptr;
 
-    if(this == g_multi_mouse_grabber)
-        g_multi_mouse_grabber = nullptr;
+    if(this == g_root_mouse_multi_grabber)
+        g_root_mouse_multi_grabber = nullptr;
 
     if(this == g_focus_owner)
         g_focus_owner = nullptr;
@@ -1122,25 +1122,26 @@ bool Widget::isMouseGrabber() const
 }
 
 
-void Widget::grabMouseMulti()
+void Widget::grabMouseForMultipleWidgets()
 {
     auto root_window = rootWindow();
     if(!root_window)
         return;
 
     root_window->grabMouse();
-    g_multi_mouse_grabber = this;
+    g_root_mouse_multi_grabber = this;
+    cout << "Multi Grab: " << this << "!\n";
 }
 
 
-void Widget::ungrabMouseMulti()
+void Widget::ungrabMouseForMultipleWidgets()
 {
     auto root_window = rootWindow();
     if(!root_window)
         return;
 
     root_window->ungrabMouse();
-    g_multi_mouse_grabber = nullptr;
+    g_root_mouse_multi_grabber = nullptr;
 }
 
 
@@ -1161,6 +1162,12 @@ bool Widget::wantsMultiGrabs(bool yes)
 bool Widget::wantsMultiGrabs()
 {
     return m_flags & R64FX_WIDGET_WANTS_MULTI_GRABS;
+}
+
+
+Widget* Widget::mouseMultiGrabber()
+{
+    return g_root_mouse_multi_grabber;
 }
 
 
