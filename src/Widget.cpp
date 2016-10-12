@@ -40,6 +40,8 @@ Widget* g_mouse_grabber   = nullptr;
 
 Widget* g_root_mouse_multi_grabber = nullptr;
 
+std::vector<Widget*> g_mouse_multi_grab_targets;
+
 /* Widget that currently has keyboard focus. */
 Widget* g_focus_owner = nullptr;
 
@@ -142,19 +144,19 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         {
             bool got_widget = false;
             auto mouse_screen_position = Point<int>(x, y) + window->position();
-            for(auto widget : g_windowed_widgets)
+            for(auto widget : g_mouse_multi_grab_targets)
             {
-                if(!widget->wantsMultiGrabs())
+                Widget* root_widget = nullptr;
+                auto widget_offset = widget->toRootCoords({0, 0}, &root_widget);
+                
+                auto widget_root_window = root_widget->window();
+                if(!widget_root_window)
                     continue;
-
-                auto widget_window = widget->window();
-                if(!widget_window)
-                    continue;
-
-                Rect<int> rect(widget_window->position(), widget_window->size());
+                 
+                Rect<int> rect(widget_root_window->position() + widget_offset, widget->size());
                 if(rect.overlaps(mouse_screen_position))
                 {
-                    Point<int> event_position = mouse_screen_position - widget_window->position();
+                    Point<int> event_position = mouse_screen_position - widget_root_window->position();
 
                     MousePressEvent event(event_position, {0, 0}, MouseButton(button));
                     widget->mousePressEvent(&event);
@@ -198,19 +200,19 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         if(g_root_mouse_multi_grabber)
         {
             auto mouse_screen_position = Point<int>(x, y) + window->position();
-            for(auto widget : g_windowed_widgets)
+            for(auto widget : g_mouse_multi_grab_targets)
             {
-                if(!widget->wantsMultiGrabs())
+                Widget* root_widget = nullptr;
+                auto widget_offset = widget->toRootCoords({0, 0}, &root_widget);
+                
+                auto widget_root_window = root_widget->window();
+                if(!widget_root_window)
                     continue;
-
-                auto widget_window = widget->window();
-                if(!widget_window)
-                    continue;
-
-                Rect<int> rect(widget_window->position(), widget_window->size());
+                 
+                Rect<int> rect(widget_root_window->position() + widget_offset, widget->size());
                 if(rect.overlaps(mouse_screen_position))
                 {
-                    Point<int> event_position = mouse_screen_position - widget_window->position();
+                    Point<int> event_position = mouse_screen_position - widget_root_window->position();
 
                     auto dst = g_mouse_grabber;
                     if(dst)
@@ -260,20 +262,20 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         if(g_root_mouse_multi_grabber)
         {
             auto mouse_screen_position = event_position + window->position();
-            for(auto widget : g_windowed_widgets)
+            for(auto widget : g_mouse_multi_grab_targets)
             {
-                if(!widget->wantsMultiGrabs())
+                Widget* root_widget = nullptr;
+                auto widget_offset = widget->toRootCoords({0, 0}, &root_widget);
+                
+                auto widget_root_window = root_widget->window();
+                if(!widget_root_window)
                     continue;
-
-                auto widget_window = widget->window();
-                if(!widget_window)
-                    continue;
-
-                Rect<int> rect(widget_window->position(), widget_window->size());
+                 
+                Rect<int> rect(widget_root_window->position() + widget_offset, widget->size());
                 if(rect.overlaps(mouse_screen_position))
                 {
                     root_dst = widget;
-                    event_position = mouse_screen_position - widget_window->position();
+                    event_position = mouse_screen_position - widget_root_window->position();
                     break;
                 }
             }
@@ -1130,7 +1132,6 @@ void Widget::grabMouseForMultipleWidgets()
 
     root_window->grabMouse();
     g_root_mouse_multi_grabber = this;
-    cout << "Multi Grab: " << this << "!\n";
 }
 
 
@@ -1149,10 +1150,26 @@ bool Widget::wantsMultiGrabs(bool yes)
 {
     if(yes)
     {
+        if(!wantsMultiGrabs())
+        {
+            g_mouse_multi_grab_targets.push_back(this);
+        }
         m_flags |= R64FX_WIDGET_WANTS_MULTI_GRABS;
     }
     else
     {
+        if(wantsMultiGrabs())
+        {
+            auto it = g_mouse_multi_grab_targets.begin();
+            while(it != g_mouse_multi_grab_targets.end())
+            {
+                if(*it == this)
+                {
+                    g_mouse_multi_grab_targets.erase(it);
+                    break;
+                }
+            }
+        }
         m_flags &= ~R64FX_WIDGET_WANTS_MULTI_GRABS;
     }
     return yes;
