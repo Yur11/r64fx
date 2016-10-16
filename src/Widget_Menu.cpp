@@ -467,8 +467,6 @@ void Widget_MenuItem::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget_MenuItem::mouseEnterEvent()
 {
-//     cout << "Enter: " << this << "\n";
-    
     auto parent_menu = parentMenu();
     if(!parent_menu)
         return;
@@ -507,8 +505,6 @@ void Widget_MenuItem::mouseEnterEvent()
 
 void Widget_MenuItem::mouseLeaveEvent()
 {
-//     cout << "Leave: " << this << "\n";
-    
     repaint();
 }
 
@@ -522,6 +518,7 @@ void Widget_Menu::mousePressEvent(MousePressEvent* event)
 void Widget_Menu::clickedElsewhereEvent()
 {
     rootMenu()->closeAll();
+    repaint();
 }
 
 }//namespace r64fx
