@@ -17,6 +17,7 @@ struct ProgramActions{
     Action* open_project_act     = nullptr;
     Action* save_project_act     = nullptr;
     Action* save_project_as_act  = nullptr;
+    Action* create_player_act    = nullptr;
     Action* close_project_act    = nullptr;
     
     Action* cut_act              = nullptr;

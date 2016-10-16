@@ -64,7 +64,7 @@ struct ProgramPrivate{
     
     void newProject()
     {
-        
+        cout << "New Project!\n";
     }
     
     void openProject()
@@ -80,6 +80,11 @@ struct ProgramPrivate{
     void saveProjectAs()
     {
         
+    }
+    
+    void createPlayer()
+    {
+        cout << "Create Player!\n";
     }
     
     void closeProject()
@@ -208,6 +213,16 @@ public:
 };
 
 
+class Action_CreatePlayer : public Action{
+    ProgramPrivate* m;
+    
+public:
+    Action_CreatePlayer(ProgramPrivate* pp) : Action("Create Player"), m(pp) {}
+    
+    virtual void exec() { m->createPlayer(); }
+};
+
+
 class Action_CloseProject : public Action{
     ProgramPrivate* m;
     
@@ -302,6 +317,7 @@ void ProgramPrivate::initActions()
     g_acts->open_project_act     = new Action_OpenProject(this);
     g_acts->save_project_act     = new Action_SaveProject(this);
     g_acts->save_project_as_act  = new Action_SaveProjectAs(this);
+    g_acts->create_player_act    = new Action_CreatePlayer(this);
     g_acts->close_project_act    = new Action_CloseProject(this);
     
     g_acts->cut_act              = new Action_Cut(this);
@@ -328,6 +344,7 @@ void ProgramPrivate::cleanupActions()
     delete g_acts->open_project_act;
     delete g_acts->save_project_act;
     delete g_acts->save_project_as_act;
+    delete g_acts->create_player_act;
     delete g_acts->close_project_act;
     
     delete g_acts->cut_act;
@@ -355,6 +372,8 @@ Program::Program(int argc, char** argv)
     
     m = new ProgramPrivate;
     m->initActions();
+    
+    m->newProject();
 }
     
     

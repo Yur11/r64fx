@@ -3,6 +3,8 @@
 #include "ImageUtils.hpp"
 
 #include "Widget_Menu.hpp"
+#include "Widget_ItemBrowser.hpp"
+#include "Widget_DirectoryItem.hpp"
 
 #include "ProgramActions.hpp"
 
@@ -81,11 +83,20 @@ protected:
 
 class LeftDock : public Widget{
     MainViewPrivate* m = nullptr;
+    Widget_ItemBrowser* m_browser = nullptr;
     
 public:
     LeftDock(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
     {
+        auto wd = new Widget_DirectoryItem("home", "/home/yurii/");
         
+        m_browser = new Widget_ItemBrowser(this);
+        m_browser->addItem(wd);
+    }
+    
+    virtual ~LeftDock()
+    {
+        delete m_browser;
     }
     
 protected:
@@ -93,11 +104,13 @@ protected:
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
+        
+        Widget::paintEvent(event);
     }
 
     virtual void resizeEvent(ResizeEvent* event)
     {
-        
+        m_browser->setSize(event->size());
     }
     
     virtual void mouseMoveEvent(MouseMoveEvent* event)
@@ -233,6 +246,7 @@ MainView::MainView(Widget* parent) : Widget(parent)
     m->menu_project->addAction(g_acts->open_project_act);
     m->menu_project->addAction(g_acts->save_project_act);
     m->menu_project->addAction(g_acts->save_project_as_act);
+    m->menu_project->addAction(g_acts->create_player_act);
     m->menu_project->addAction(g_acts->close_project_act);
     m->menu_project->resizeAndRealign();
     
