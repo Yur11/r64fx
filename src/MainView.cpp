@@ -430,28 +430,40 @@ void MainView::resizeEvent(ResizeEvent* event)
 
 void MainView::mouseMoveEvent(MouseMoveEvent* event)
 {
-//     auto window = Widget::rootWindow();
-//     if(window)
-//     {
-//         if(event->y() < m->main_part->height())
-//         {
-//             window->setCursorType(Window::CursorType::ResizeNS);
-//         }
-//         else if(event->y() < m->bottom_dock->y())
-//         {
-//             if(event->y() >= (m->main_part->y() + m->main_part->height()))
-//             {
-//                 window->setCursorType(Window::CursorType::ResizeNS);
-//             }
-//             else
-//             {
-//                 if(event->x() < m->left_dock->width() || event->x() >= (m->main_part->x() + m->main_part->width()))
-//                 {
-//                     window->setCursorType(Window::CursorType::ResizeWE);
-//                 }
-//             }
-//         }
-//     }
+    auto window = Widget::rootWindow();
+    if(!window)
+    {
+        return;
+    }
+
+    if(event->y() <= (m->top_bar->height() + m->gap))
+    {
+        return;
+    }
+
+    int left = (
+        (m->left_dock->parent() == this && m->left_dock_expanded) ? m->left_dock->width() + m->gap : 0
+    );
+
+    int right = (
+        (m->right_dock->parent() == this && m->right_dock_expanded) ? m->main_part->x() + m->main_part->width() : width()
+    );
+
+    if(event->x() < left)
+    {
+        window->setCursorType(Window::CursorType::ResizeWE);
+    }
+    else if(event->x() < right)
+    {
+        if(m->bottom_dock->parent() == this && event->y() < m->bottom_dock->y())
+        {
+            window->setCursorType(Window::CursorType::ResizeNS);
+        }
+    }
+    else
+    {
+        window->setCursorType(Window::CursorType::ResizeWE);
+    }
 }
 
 
