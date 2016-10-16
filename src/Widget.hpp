@@ -309,16 +309,12 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent* event);
 
-private:
     bool childrenMousePressEvent(MousePressEvent* event);
 
-protected:
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
-private:
     bool childrenMouseReleaseEvent(MouseReleaseEvent* event);
 
-protected:
     virtual void mouseMoveEvent(MouseMoveEvent* event);
     
     virtual void mouseEnterEvent();
