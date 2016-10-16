@@ -437,17 +437,18 @@ void MainView::resizeEvent(ResizeEvent* event)
 
 void MainView::mousePressEvent(MousePressEvent* event)
 {
-    if(event->button() == MouseButton::Left())
+    if(!childrenMousePressEvent(event))
     {
-        auto dock = m->findDockAt(event->position());
-        if(dock)
+        if(event->button() == MouseButton::Left())
         {
-            m->currently_resized_dock = dock;
-            grabMouse();
+            auto dock = m->findDockAt(event->position());
+            if(dock)
+            {
+                m->currently_resized_dock = dock;
+                grabMouse();
+            }
         }
     }
-
-    Widget::mousePressEvent(event);
 }
 
 
@@ -458,30 +459,64 @@ void MainView::mouseReleaseEvent(MouseReleaseEvent* event)
         ungrabMouse();
         m->currently_resized_dock = nullptr;
     }
-
-    Widget::mouseReleaseEvent(event);
+    else
+    {
+        childrenMouseReleaseEvent(event);
+    }
 }
 
 
 void MainView::mouseMoveEvent(MouseMoveEvent* event)
 {
-//     if(m->currently_resized_dock && event->button() == MouseButton::Left())
-//     {
-//         if(m->currently_resized_dock == m->left_dock)
-//         {
-//             m->left_dock->setWidth(event->x());
-//         }
-//         else if(m->currently_resized_dock == m->bottom_dock)
-//         {
-//
-//         }
-//         else if(m->currently_resized_dock == m->right_dock)
-//         {
-//
-//         }
-//
-//         return;
-//     }
+    if(m->currently_resized_dock && event->button() == MouseButton::Left())
+    {
+        if(m->currently_resized_dock == m->left_dock)
+        {
+            int new_width = event->x();
+            int new_main_part_width = width() - (new_width + m->gap);
+            if(m->right_dock->parent() == this)
+            {
+                new_main_part_width -= (m->right_dock->width() + m->gap);
+            }
+
+            if(new_main_part_width >= 10)
+            {
+                m->left_dock->setWidth(new_width);
+                setSize(size());
+                repaint();
+            }
+        }
+        else if(m->currently_resized_dock == m->bottom_dock)
+        {
+            int new_height = height() - event->y();
+            int new_main_part_height = height() - new_height - m->top_bar->height() - m->gap - m->gap;
+            if(new_main_part_height >= 10)
+            {
+                m->bottom_dock->setHeight(new_height);
+                m->bottom_dock->setY(event->y());
+                setSize(size());
+                repaint();
+            }
+        }
+        else if(m->currently_resized_dock == m->right_dock)
+        {
+            int new_width = width() - event->x();
+            int new_main_part_width = width() - (new_width + m->gap);
+            if(m->left_dock->parent() == this)
+            {
+                new_main_part_width -= (m->left_dock->width() + m->gap);
+            }
+            
+            if(new_main_part_width >= 10)
+            {
+                m->right_dock->setWidth(new_width);
+                setSize(size());
+                repaint();
+            }
+        }
+
+        return;
+    }
 
     auto window = Widget::rootWindow();
     if(!window)
