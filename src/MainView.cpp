@@ -19,6 +19,8 @@ class MainPart;
 
 
 struct MainViewPrivate{
+    MainView*    main_view     = nullptr;
+
     TopBar*      top_bar       = nullptr;
     LeftDock*    left_dock     = nullptr;
     RightDock*   right_dock    = nullptr;
@@ -36,6 +38,10 @@ struct MainViewPrivate{
     
     bool left_dock_expanded    = true;
     bool right_dock_expanded   = true;
+
+    Widget* currently_resized_dock = nullptr;
+
+    Widget* findDockAt(Point<int> p);
 };
 
     
@@ -177,7 +183,7 @@ public:
     {
         
     }
-    
+
 protected:
     virtual void paintEvent(PaintEvent* event)
     {
@@ -204,6 +210,7 @@ protected:
 MainView::MainView(Widget* parent) : Widget(parent)
 {
     m = new MainViewPrivate;
+    m->main_view = this;
     
     m->top_bar      = new TopBar      (m, this);
     m->left_dock    = new LeftDock    (m, this);
@@ -428,42 +435,102 @@ void MainView::resizeEvent(ResizeEvent* event)
 }
 
 
+void MainView::mousePressEvent(MousePressEvent* event)
+{
+    if(event->button() == MouseButton::Left())
+    {
+        auto dock = m->findDockAt(event->position());
+        if(dock)
+        {
+            m->currently_resized_dock = dock;
+            grabMouse();
+        }
+    }
+
+    Widget::mousePressEvent(event);
+}
+
+
+void MainView::mouseReleaseEvent(MouseReleaseEvent* event)
+{
+    if(isMouseGrabber())
+    {
+        ungrabMouse();
+        m->currently_resized_dock = nullptr;
+    }
+
+    Widget::mouseReleaseEvent(event);
+}
+
+
 void MainView::mouseMoveEvent(MouseMoveEvent* event)
 {
+//     if(m->currently_resized_dock && event->button() == MouseButton::Left())
+//     {
+//         if(m->currently_resized_dock == m->left_dock)
+//         {
+//             m->left_dock->setWidth(event->x());
+//         }
+//         else if(m->currently_resized_dock == m->bottom_dock)
+//         {
+//
+//         }
+//         else if(m->currently_resized_dock == m->right_dock)
+//         {
+//
+//         }
+//
+//         return;
+//     }
+
     auto window = Widget::rootWindow();
     if(!window)
     {
         return;
     }
 
-    if(event->y() <= (m->top_bar->height() + m->gap))
+    auto dock = m->findDockAt(event->position());
+    if(dock)
     {
-        return;
+        window->setCursorType(
+            (dock == m->bottom_dock) ? Window::CursorType::ResizeNS : Window::CursorType::ResizeWE
+        );
+    }
+}
+
+
+Widget* MainViewPrivate::findDockAt(Point<int> p)
+{
+    if(p.y() <= (top_bar->height() + gap))
+    {
+        return nullptr;
     }
 
     int left = (
-        (m->left_dock->parent() == this && m->left_dock_expanded) ? m->left_dock->width() + m->gap : 0
+        (left_dock->parent() == main_view && left_dock_expanded) ? left_dock->width() + gap : 0
     );
 
     int right = (
-        (m->right_dock->parent() == this && m->right_dock_expanded) ? m->main_part->x() + m->main_part->width() : width()
+        (right_dock->parent() == main_view && right_dock_expanded) ? main_part->x() + main_part->width() : main_view->width()
     );
 
-    if(event->x() < left)
+    if(p.x() < left)
     {
-        window->setCursorType(Window::CursorType::ResizeWE);
+        return left_dock;
     }
-    else if(event->x() < right)
+    else if(p.x() < right)
     {
-        if(m->bottom_dock->parent() == this && event->y() < m->bottom_dock->y())
+        if(bottom_dock->parent() == main_view && p.y() < bottom_dock->y())
         {
-            window->setCursorType(Window::CursorType::ResizeNS);
+            return bottom_dock;
         }
     }
     else
     {
-        window->setCursorType(Window::CursorType::ResizeWE);
+        return right_dock;
     }
+
+    return nullptr;
 }
 
 
