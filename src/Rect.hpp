@@ -9,7 +9,7 @@ namespace r64fx{
 template<typename T> T min(const T &a, const T &b) { return a < b ? a : b; }
 template<typename T> T max(const T &a, const T &b) { return a > b ? a : b; }
 
-    
+
 template<typename T> class Rect{
     T mx;
     T my;
