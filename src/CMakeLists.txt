@@ -69,6 +69,7 @@ set(SRC
     SoundFileData.cpp
     SoundFilePool.cpp
     StringUtils.cpp
+    SystemUtils.cpp
     TextPainter.cpp
     Thread.cpp
     Timer.cpp

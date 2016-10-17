@@ -1,6 +1,7 @@
 #include "MainView.hpp"
 #include "Painter.hpp"
 #include "ImageUtils.hpp"
+#include "SystemUtils.hpp"
 
 #include "Widget_Menu.hpp"
 #include "Widget_ItemBrowser.hpp"
@@ -88,7 +89,19 @@ class LeftDock : public Widget{
 public:
     LeftDock(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
     {
-        auto wd = new Widget_DirectoryItem("home", "/home/yurii/");
+        std::string name = "home";
+        auto path = home_dir();
+        if(path.empty())
+        {
+            path = "/";
+            name = "/";
+        }
+        else if(path.back() != '/')
+        {
+            path.push_back('/');
+        }
+        
+        auto wd = new Widget_DirectoryItem(name, path);
         
         m_browser = new Widget_ItemBrowser(this);
         m_browser->addItem(wd);
