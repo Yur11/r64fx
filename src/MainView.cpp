@@ -213,13 +213,18 @@ public:
 protected:
     virtual void paintEvent(PaintEvent* event)
     {
-        auto p = event->painter();
-        p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
+//         auto p = event->painter();
+//         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
+        Widget::paintEvent(event);
     }
 
     virtual void resizeEvent(ResizeEvent* event)
     {
-    
+        for(auto child : *this)
+        {
+            child->setSize(event->size());
+            break;
+        }
     }
     
     virtual void mouseMoveEvent(MouseMoveEvent* event)
@@ -318,6 +323,12 @@ MainView::~MainView()
     
     m->menu_help->setParent(this);
     delete m->menu_help;
+}
+
+
+void MainView::setMainPartWidget(Widget* widget)
+{
+    widget->setParent(m->main_part);
 }
 
 

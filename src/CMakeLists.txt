@@ -56,6 +56,7 @@ set(SRC
     PlayerView.cpp
     Program.cpp
     Project.cpp
+    ProjectView.cpp
     RouterMachine.cpp
     SignalGraph.cpp
     SignalNode_BufferIO.cpp

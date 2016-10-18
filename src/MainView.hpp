@@ -14,7 +14,9 @@ public:
     MainView(Widget* parent = nullptr);
     
     virtual ~MainView();
-    
+
+    void setMainPartWidget(Widget* widget);
+
 protected:
     virtual void paintEvent(PaintEvent* event);
 

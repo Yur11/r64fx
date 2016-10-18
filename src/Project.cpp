@@ -4,13 +4,20 @@ namespace r64fx{
 
 Project::Project()
 {
-
+    m_view = new ProjectView;
 }
 
 
 Project::~Project()
 {
+    m_view->setParent(nullptr);
+    delete m_view;
+}
 
+
+ProjectView* Project::view() const
+{
+    return m_view;
 }
 
 
