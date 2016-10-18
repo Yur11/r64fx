@@ -5,6 +5,8 @@
 
 #include "MainView.hpp"
 
+#include "Project.hpp"
+
 #include "Timer.hpp"
 #include "sleep.hpp"
 
@@ -13,7 +15,7 @@
 using namespace std;
 
 namespace r64fx{
-    
+
 Program*         g_program  = nullptr;
 ProgramActions*  g_acts     = nullptr;
 
@@ -22,6 +24,9 @@ struct ProgramPrivate{
     
     MainView* main_view = nullptr;
     
+    LinkedList<Project> open_projects;
+    Project* current_project = nullptr;
+
     void exec()
     {
         main_view = new MainView;
@@ -65,6 +70,9 @@ struct ProgramPrivate{
     void newProject()
     {
         cout << "New Project!\n";
+        auto project = new Project;
+        open_projects.append(project);
+        current_project = project;
     }
     
     void openProject()
@@ -89,7 +97,11 @@ struct ProgramPrivate{
     
     void closeProject()
     {
-        
+        if(current_project)
+        {
+            open_projects.remove(current_project);
+            delete current_project;
+        }
     }
     
     void cut()
