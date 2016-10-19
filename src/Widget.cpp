@@ -31,7 +31,7 @@ MouseButton g_pressed_buttons = MouseButton::None();
 Widget* g_moused_over_widget = nullptr;
 
 /* Widget that currently grabs mouse input. */
-Widget* g_mouse_grabber   = nullptr;
+Widget* g_mouse_focus_owner   = nullptr;
 
 Widget* g_root_mouse_multi_grabber = nullptr;
 
@@ -169,7 +169,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         {
             Point<int> event_position(x, y);
 
-            auto dst = g_mouse_grabber;
+            auto dst = g_mouse_focus_owner;
             if(dst)
             {
                 event_position -= dst->toRootCoords(Point<int>(0, 0));
@@ -209,7 +209,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
                 {
                     Point<int> event_position = mouse_screen_position - widget_root_window->position();
 
-                    auto dst = g_mouse_grabber;
+                    auto dst = g_mouse_focus_owner;
                     if(dst)
                     {
                         event_position -= dst->toRootCoords(Point<int>(0, 0));
@@ -230,7 +230,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         {
             Point<int> event_position(x, y);
 
-            auto dst = g_mouse_grabber;
+            auto dst = g_mouse_focus_owner;
             if(dst)
             {
                 event_position -= dst->toRootCoords(Point<int>(0, 0));
@@ -283,7 +283,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
 
         if(root_dst)
         {
-            auto dst = g_mouse_grabber;
+            auto dst = g_mouse_focus_owner;
             if(dst)
             {
                 event_position -= dst->toRootCoords(Point<int>(0, 0));
@@ -518,8 +518,8 @@ Widget::~Widget()
     if(this == g_moused_over_widget)
         g_moused_over_widget = nullptr;
 
-    if(this == g_mouse_grabber)
-        g_mouse_grabber = nullptr;
+    if(this == g_mouse_focus_owner)
+        g_mouse_focus_owner = nullptr;
 
     if(this == g_root_mouse_multi_grabber)
         g_root_mouse_multi_grabber = nullptr;
@@ -1093,25 +1093,25 @@ std::string Widget::windowTitle() const
 
 void Widget::grabMouseFocus()
 {
-    g_mouse_grabber = this;
+    g_mouse_focus_owner = this;
 }
 
 
 void Widget::releaseMouseFocus()
 {
-    g_mouse_grabber = nullptr;
+    g_mouse_focus_owner = nullptr;
 }
 
 
 Widget* Widget::mouseFocusOwner()
 {
-    return g_mouse_grabber;
+    return g_mouse_focus_owner;
 }
 
 
 bool Widget::isMouseFocusOwner() const
 {
-    return (this == g_mouse_grabber);
+    return (this == g_mouse_focus_owner);
 }
 
 
