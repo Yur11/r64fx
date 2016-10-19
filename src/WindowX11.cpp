@@ -74,9 +74,9 @@ struct WindowX11 : public Window, public LinkedList<WindowX11>::Node{
     virtual void setCursorType(CursorType cursor_type);
 
 
-    virtual void grabMouse();
+    virtual void grabMouseFocus();
 
-    virtual void ungrabMouse();
+    virtual void releaseMouseFocus();
 
 
     virtual void startTextInput();
@@ -686,7 +686,7 @@ void WindowX11::setCursorType(CursorType type)
 }
 
 
-void WindowX11::grabMouse()
+void WindowX11::grabMouseFocus()
 {
     XGrabPointer(
         g_display,
@@ -700,7 +700,7 @@ void WindowX11::grabMouse()
 }
 
 
-void WindowX11::ungrabMouse()
+void WindowX11::releaseMouseFocus()
 {
     XUngrabPointer(
         g_display,

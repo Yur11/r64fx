@@ -482,7 +482,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
     virtual void dndReleaseEvent()
     {
         g_pressed_buttons = MouseButton::None();//?
-        Widget::ungrabMouse();
+        Widget::releaseMouseFocus();
         if(g_dnd_object && g_dnd_source)
         {
             g_dnd_object->close();
@@ -1097,25 +1097,25 @@ std::string Widget::windowTitle() const
 }
 
 
-void Widget::grabMouse()
+void Widget::grabMouseFocus()
 {
     g_mouse_grabber = this;
 }
 
 
-void Widget::ungrabMouse()
+void Widget::releaseMouseFocus()
 {
     g_mouse_grabber = nullptr;
 }
 
 
-Widget* Widget::mouseGrabber()
+Widget* Widget::mouseFocusOwner()
 {
     return g_mouse_grabber;
 }
 
 
-bool Widget::isMouseGrabber() const
+bool Widget::isMouseFocusOwner() const
 {
     return (this == g_mouse_grabber);
 }
@@ -1127,7 +1127,7 @@ void Widget::grabMouseForMultipleWidgets()
     if(!root_window)
         return;
 
-    root_window->grabMouse();
+    root_window->grabMouseFocus();
     g_root_mouse_multi_grabber = this;
 }
 
@@ -1138,7 +1138,7 @@ void Widget::ungrabMouseForMultipleWidgets()
     if(!root_window)
         return;
 
-    root_window->ungrabMouse();
+    root_window->releaseMouseFocus();
     g_root_mouse_multi_grabber = nullptr;
 }
 
@@ -1197,7 +1197,7 @@ bool Widget::isHovered()
 }
 
 
-void Widget::setFocus()
+void Widget::grabKeyboardFocus()
 {
     if(g_focus_owner)
     {
@@ -1208,7 +1208,7 @@ void Widget::setFocus()
 }
 
 
-void Widget::removeFocus()
+void Widget::releaseKeyboardFocus()
 {
     if(g_focus_owner)
     {
@@ -1218,13 +1218,13 @@ void Widget::removeFocus()
 }
 
 
-Widget* Widget::focusOwner()
+Widget* Widget::keyboardFocusOwner()
 {
     return g_focus_owner;
 }
 
 
-bool Widget::hasFocus() const
+bool Widget::hasKeyboardFocus() const
 {
     return this == g_focus_owner;
 }

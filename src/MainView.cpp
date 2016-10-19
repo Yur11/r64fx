@@ -483,7 +483,7 @@ void MainView::mousePressEvent(MousePressEvent* event)
             if(dock)
             {
                 m->currently_resized_dock = dock;
-                grabMouse();
+                grabMouseFocus();
             }
         }
     }
@@ -492,9 +492,9 @@ void MainView::mousePressEvent(MousePressEvent* event)
 
 void MainView::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    if(isMouseGrabber())
+    if(isMouseFocusOwner())
     {
-        ungrabMouse();
+        releaseMouseFocus();
         m->currently_resized_dock = nullptr;
     }
     else

@@ -541,8 +541,8 @@ void Widget_DataItem::mousePressEventPlain(MousePressEvent* event)
     if(event->button() & MouseButton::Left())
     {
         setSelected(true);
-        setFocus();
-        grabMouse();
+        grabKeyboardFocus();
+        grabMouseFocus();
     }
     else if(event->button() & MouseButton::Right())
     {
@@ -582,9 +582,9 @@ void Widget_DataItem::mousePressEventTree(MousePressEvent* event)
 
 void Widget_DataItem::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    if(isMouseGrabber() && (event->button() & MouseButton::Left()))
+    if(isMouseFocusOwner() && (event->button() & MouseButton::Left()))
     {
-        ungrabMouse();
+        releaseMouseFocus();
     }
     Widget::mouseReleaseEvent(event);
 }
@@ -592,7 +592,7 @@ void Widget_DataItem::mouseReleaseEvent(MouseReleaseEvent* event)
 
 void Widget_DataItem::mouseMoveEvent(MouseMoveEvent* event)
 {
-    if(isMouseGrabber() && (event->button() & MouseButton::Left()))
+    if(isMouseFocusOwner() && (event->button() & MouseButton::Left()))
     {
         int distance = event->dx() * event->dx() + event->dy() * event->dy();
         if(distance > 1 && (!caption().empty()))

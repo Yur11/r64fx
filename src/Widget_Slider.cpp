@@ -308,7 +308,7 @@ void Widget_Slider::mousePressEvent(MousePressEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        grabMouse();
+        grabMouseFocus();
         setValue(event->position());
     }
 }
@@ -318,9 +318,9 @@ void Widget_Slider::mouseReleaseEvent(MouseReleaseEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        if(isMouseGrabber())
+        if(isMouseFocusOwner())
         {
-            ungrabMouse();
+            releaseMouseFocus();
         }
     }
 }

@@ -433,7 +433,7 @@ void Widget_Text::paintEvent(WidgetPaintEvent* event)
         delete m_image;
     }
     m_image = new Image(width(), height(), 4);
-    if(isMouseGrabber())
+    if(isMouseFocusOwner())
     {
         unsigned char color[4] = {255, 127, 127, 0};
         fill(m_image, color);
@@ -505,7 +505,7 @@ void Widget_Text::resizeEvent(WidgetResizeEvent* event)
 
 void Widget_Text::mousePressEvent(MousePressEvent* event)
 {
-    setFocus();
+    grabKeyboardFocus();
 
     if(event->button() == MouseButton::Right())
     {
@@ -578,7 +578,7 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
 
     if(event->key() == Keyboard::Key::Escape)
     {
-        removeFocus();
+        releaseKeyboardFocus();
     }
     else if(Keyboard::CtrlDown() && Keyboard::ShiftDown() && event->key() == Keyboard::Key::Z)
     {

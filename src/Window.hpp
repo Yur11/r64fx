@@ -115,9 +115,9 @@ public:
     virtual void setCursorType(CursorType shape) = 0;
 
 
-    virtual void grabMouse() = 0;
+    virtual void grabMouseFocus() = 0;
 
-    virtual void ungrabMouse() = 0;
+    virtual void releaseMouseFocus() = 0;
 
 
     virtual void startTextInput() = 0;

@@ -102,7 +102,7 @@ void Widget_Button::mousePressEvent(MousePressEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        grabMouse();
+        grabMouseFocus();
         m_state |= 1;
         m_on_state_changed(m_on_state_changed_arg, this, m_state);
         repaint();
@@ -114,8 +114,8 @@ void Widget_Button::mouseReleaseEvent(MouseReleaseEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        if(isMouseGrabber())
-            ungrabMouse();
+        if(isMouseFocusOwner())
+            releaseMouseFocus();
         m_state &= ~1;
         m_on_state_changed(m_on_state_changed_arg, this, m_state);
         repaint();

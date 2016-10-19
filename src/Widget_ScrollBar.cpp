@@ -119,9 +119,9 @@ int Widget_ScrollBar::handleLength()
 
 void Widget_ScrollBar::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    if(isMouseGrabber())
+    if(isMouseFocusOwner())
     {
-        ungrabMouse();
+        releaseMouseFocus();
     }
 }
 
@@ -175,7 +175,7 @@ void Widget_ScrollBar_Vertical::mousePressEvent(MousePressEvent* event)
     else
     {
         Widget_ScrollBar::mousePressEvent(event);
-        grabMouse();
+        grabMouseFocus();
     }
 }
 
@@ -244,7 +244,7 @@ void Widget_ScrollBar_Horizontal::mousePressEvent(MousePressEvent* event)
     else
     {
         Widget_ScrollBar::mousePressEvent(event);
-        grabMouse();
+        grabMouseFocus();
     }
 }
 

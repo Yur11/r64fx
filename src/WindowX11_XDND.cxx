@@ -144,7 +144,7 @@ void WindowX11::startDrag(const ClipboardMetadata &metadata, Window* drag_object
 
     g_drag_anchor_x = anchor_x;
     g_drag_anchor_y = anchor_y;
-    grabMouse();
+    grabMouseFocus();
 }
 
 
@@ -214,7 +214,7 @@ void WindowX11::dndRelease()
     }
 
     setCursorType(Window::CursorType::Arrow);
-    ungrabMouse();
+    releaseMouseFocus();
     g_events->dndReleaseEvent();
     g_drag_anchor_x = 0;
     g_drag_anchor_y = 0;

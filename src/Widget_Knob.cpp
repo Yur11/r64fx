@@ -523,15 +523,15 @@ void Widget_Knob::mousePressEvent(MousePressEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        grabMouse();
+        grabMouseFocus();
     }
 }
 
 
 void Widget_Knob::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    if(event->button() == MouseButton::Left() && isMouseGrabber())
-        ungrabMouse();
+    if(event->button() == MouseButton::Left() && isMouseFocusOwner())
+        releaseMouseFocus();
 }
 
 

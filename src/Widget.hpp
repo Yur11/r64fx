@@ -170,13 +170,13 @@ public:
 
     std::string windowTitle() const;
 
-    void grabMouse();
+    void grabMouseFocus();
 
-    static void ungrabMouse();
+    static void releaseMouseFocus();
 
-    static Widget* mouseGrabber();
+    static Widget* mouseFocusOwner();
 
-    bool isMouseGrabber() const;
+    bool isMouseFocusOwner() const;
 
     void grabMouseForMultipleWidgets();
 
@@ -192,13 +192,13 @@ public:
 
     bool isHovered();
 
-    void setFocus();
+    void grabKeyboardFocus();
 
-    static void removeFocus();
+    static void releaseKeyboardFocus();
 
-    static Widget* focusOwner();
+    static Widget* keyboardFocusOwner();
 
-    bool hasFocus() const;
+    bool hasKeyboardFocus() const;
 
     void startTextInput();
 
