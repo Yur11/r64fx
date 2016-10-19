@@ -27,7 +27,9 @@ Point<int> g_prev_mouse_position = {0, 0};
 
 MouseButton g_pressed_buttons = MouseButton::None();
 
-/* Widget that currently recieves mouse move events. */
+/* Widget that currently recieves mouse move events. 
+   Needed for doing mouse enter/leave events.
+ */
 Widget* g_moused_over_widget = nullptr;
 
 /* Widget that currently grabs mouse input. */
