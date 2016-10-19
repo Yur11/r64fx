@@ -38,7 +38,7 @@ Widget* g_root_mouse_multi_grabber = nullptr;
 std::vector<Widget*> g_mouse_multi_grab_targets;
 
 /* Widget that currently has keyboard focus. */
-Widget* g_focus_owner = nullptr;
+Widget* g_keyboard_focus_owner = nullptr;
 
 Widget* g_anouncer_clipboard       = nullptr;
 Widget* g_anouncer_selection       = nullptr;
@@ -343,9 +343,9 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         Keyboard::trackModifierPress(key);
 
         KeyPressEvent event(key);
-        if(g_focus_owner)
+        if(g_keyboard_focus_owner)
         {
-            g_focus_owner->keyPressEvent(&event);
+            g_keyboard_focus_owner->keyPressEvent(&event);
         }
         else
         {
@@ -360,9 +360,9 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         Keyboard::trackModifierRelease(key);
 
         KeyReleaseEvent event(key);
-        if(g_focus_owner)
+        if(g_keyboard_focus_owner)
         {
-            g_focus_owner->keyReleaseEvent(&event);
+            g_keyboard_focus_owner->keyReleaseEvent(&event);
         }
         else
         {
@@ -377,9 +377,9 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         Keyboard::trackModifierPress(key);
 
         TextInputEvent event(text, key);
-        if(g_focus_owner)
+        if(g_keyboard_focus_owner)
         {
-            g_focus_owner->textInputEvent(&event);
+            g_keyboard_focus_owner->textInputEvent(&event);
         }
         else
         {
@@ -524,8 +524,8 @@ Widget::~Widget()
     if(this == g_root_mouse_multi_grabber)
         g_root_mouse_multi_grabber = nullptr;
 
-    if(this == g_focus_owner)
-        g_focus_owner = nullptr;
+    if(this == g_keyboard_focus_owner)
+        g_keyboard_focus_owner = nullptr;
 
     if(this == g_anouncer_clipboard)
         g_anouncer_clipboard = nullptr;
@@ -1193,34 +1193,34 @@ bool Widget::isHovered()
 
 void Widget::grabKeyboardFocus()
 {
-    if(g_focus_owner)
+    if(g_keyboard_focus_owner)
     {
-        g_focus_owner->focusOutEvent();
+        g_keyboard_focus_owner->focusOutEvent();
     }
-    g_focus_owner = this;
-    g_focus_owner->focusInEvent();
+    g_keyboard_focus_owner = this;
+    g_keyboard_focus_owner->focusInEvent();
 }
 
 
 void Widget::releaseKeyboardFocus()
 {
-    if(g_focus_owner)
+    if(g_keyboard_focus_owner)
     {
-        g_focus_owner->focusOutEvent();
+        g_keyboard_focus_owner->focusOutEvent();
     }
-    g_focus_owner = nullptr;
+    g_keyboard_focus_owner = nullptr;
 }
 
 
 Widget* Widget::keyboardFocusOwner()
 {
-    return g_focus_owner;
+    return g_keyboard_focus_owner;
 }
 
 
 bool Widget::hasKeyboardFocus() const
 {
-    return this == g_focus_owner;
+    return this == g_keyboard_focus_owner;
 }
 
 
