@@ -4,8 +4,6 @@
 #include "TextPainter.hpp"
 #include "Timer.hpp"
 #include "ImageUtils.hpp"
-#include "Clipboard.hpp"
-#include "ClipboardEvent.hpp"
 #include "Font.hpp"
 #include "Widget_Button.hpp"
 #include "Widget_Knob.hpp"
@@ -124,7 +122,7 @@ public:
 
 
 private:
-    virtual void paintEvent(PaintEvent* event)
+    virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
 
@@ -195,7 +193,7 @@ private:
     }
 
 
-    virtual void resizeEvent(ResizeEvent* event)
+    virtual void resizeEvent(WidgetResizeEvent* event)
     {
         if(event->widthChanged())
         {
@@ -245,12 +243,12 @@ public:
     }
 
 protected:
-    virtual void paintEvent(PaintEvent* event)
+    virtual void paintEvent(WidgetPaintEvent* event)
     {
 
     }
 
-    virtual void resizeEvent(ResizeEvent* event)
+    virtual void resizeEvent(WidgetResizeEvent* event)
     {
 
     }
@@ -322,7 +320,7 @@ public:
     }
 
 protected:
-    void resizeEvent(ResizeEvent* event)
+    void resizeEvent(WidgetResizeEvent* event)
     {
         int buttons_height = m->button_cue->height() + m->button_play->height();
         int total_height = buttons_height + m->knob_gain->height() + padding;
@@ -370,7 +368,7 @@ public:
     }
 
 protected:
-    void resizeEvent(ResizeEvent* event)
+    void resizeEvent(WidgetResizeEvent* event)
     {
         m->slider_pitch->setPosition({0, 5});
         m->slider_pitch->setHeight(event->height() - 10);
@@ -482,7 +480,7 @@ void PlayerView::setPlayheadTime(float seconds)
 }
 
 
-void PlayerView::paintEvent(PaintEvent* event)
+void PlayerView::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
     unsigned char bg[4] = {127, 127, 127, 0};
@@ -497,7 +495,7 @@ void PlayerView::paintEvent(PaintEvent* event)
 }
 
 
-void PlayerView::resizeEvent(ResizeEvent* event)
+void PlayerView::resizeEvent(WidgetResizeEvent* event)
 {
     m->top_part->setWidth(event->width());
 

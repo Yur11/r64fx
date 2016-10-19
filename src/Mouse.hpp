@@ -84,56 +84,6 @@ inline MouseButton &operator&=(MouseButton &a, MouseButton b)
     return a;
 }
 
-
-class MouseEvent{
-    Point<int>  m_position;
-    Point<int>  m_delta;
-    MouseButton m_button;
-
-public:
-    bool ignore_grabs = false;
-
-    explicit MouseEvent(Point<int> position, Point<int> delta, MouseButton button)
-    : m_position(position)
-    , m_delta(delta)
-    , m_button(button)
-    {
-
-    }
-
-    inline void setPosition(Point<int> position) { m_position = position; }
-
-    inline Point<int> position() const { return m_position; }
-
-    inline int x() const { return m_position.x(); }
-    inline int y() const { return m_position.y(); }
-
-    inline Point<int> delta() const { return m_delta; }
-
-    inline int dx() const { return m_delta.x(); }
-    inline int dy() const { return m_delta.y(); }
-
-    inline MouseButton button() const { return m_button; }
-};
-
-
-class MousePressEvent : public MouseEvent{
-public:
-    using MouseEvent::MouseEvent;
-};
-
-
-class MouseReleaseEvent : public MouseEvent{
-public:
-    using MouseEvent::MouseEvent;
-};
-
-
-class MouseMoveEvent : public MouseEvent{
-public:
-    using MouseEvent::MouseEvent;
-};
-
 }//namespace r64fx
 
 #endif//R64FX_MOUSE_HPP

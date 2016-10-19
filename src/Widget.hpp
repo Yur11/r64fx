@@ -5,40 +5,23 @@
 #include "LinkedList.hpp"
 #include "Rect.hpp"
 #include "Mouse.hpp"
-#include "Clipboard.hpp"
 #include "Orientation.hpp"
 #include "Window.hpp"
+#include "WidgetEvents.hpp"
+#include "ClipboardEvents.hpp"
 
 namespace r64fx{
 
 class Widget;
-class WidgetImpl;
 class Window;
-class Painter;
-class MousePressEvent;
-class MouseReleaseEvent;
-class MouseMoveEvent;
-class KeyPressEvent;
-class KeyReleaseEvent;
-class TextInputEvent;
-class ClipboardMetadata;
-class ClipboardDataRecieveEvent;
-class ClipboardDataTransmitEvent;
-class ClipboardMetadataRecieveEvent;
-class DndMoveEvent;
-class DndDropEvent;
-class DndLeaveEvent;
-class DndReleaseEvent;
-class DndFinishedEvent;
 
 typedef LinkedList<Widget>::Iterator WidgetIterator;
-
 
 class Widget : public LinkedList<Widget>::Node{
     friend class WidgetImpl;
     friend class WindowEventDispatcher;
 
-    /* Widgets parent can be either a widget or a window.
+    /* Parent can either be a widget or a window.
      * Never both at same time. */
     union{
         Widget* widget = nullptr;
@@ -241,71 +224,12 @@ public:
     /* Request a repaint for this widget. */
     void repaint();
 
-    /* PaintEvent structure passed to the paintEvent() method. */
-    class PaintEvent{
-        friend class WidgetImpl;
-
-        WidgetImpl* m_impl = nullptr;
-
-        PaintEvent(WidgetImpl* impl)
-        : m_impl(impl)
-        {}
-
-        PaintEvent(const PaintEvent&) {}
-
-    public:
-        WidgetImpl* impl() const;
-
-        Painter* painter() const;
-    };
-
-
-    class ResizeEvent{
-        Size<int> m_old_size;
-        Size<int> m_new_size;
-
-        ResizeEvent(const ResizeEvent&) {}
-
-    public:
-        ResizeEvent(Size<int> old_size, Size<int> new_size)
-        : m_old_size(old_size)
-        , m_new_size(new_size)
-        {}
-
-        inline Size<int> size() const { return m_new_size; }
-
-        inline Size<int> oldSize() const { return m_old_size; }
-
-        inline int width()  const { return m_new_size.width(); }
-
-        inline int height() const { return m_new_size.height(); }
-
-        inline int oldWidth() const { return m_old_size.width(); }
-
-        inline int oldHeight() const { return m_old_size.height(); }
-
-        inline bool widthChanged() const { return width() != oldWidth(); }
-
-        inline bool heightChanged() const { return height() != oldHeight(); }
-    };
-
-
-    class ClipEvent{
-        Rect<int> m_rect;
-
-    public:
-        ClipEvent(Rect<int> rect) : m_rect(rect) {}
-
-        inline Rect<int> rect() const { return m_rect; }
-    };
-
-
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 
-    virtual void resizeEvent(ResizeEvent* event);
+    virtual void resizeEvent(WidgetResizeEvent* event);
 
-    virtual void clipEvent(ClipEvent* event);
+    virtual void clipEvent(WidgetClipEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

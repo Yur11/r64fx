@@ -43,7 +43,7 @@ public:
     virtual int barLength();
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 
@@ -58,7 +58,7 @@ public:
     virtual int barLength();
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

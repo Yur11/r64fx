@@ -81,7 +81,7 @@ public:
     virtual bool isBipolar();
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 };
 
 
@@ -104,7 +104,7 @@ public:
     virtual bool isBipolar();
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 };

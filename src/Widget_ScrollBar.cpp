@@ -140,7 +140,7 @@ int Widget_ScrollBar_Vertical::barLength()
 }
 
 
-void Widget_ScrollBar_Vertical::paintEvent(PaintEvent* event)
+void Widget_ScrollBar_Vertical::paintEvent(WidgetPaintEvent* event)
 {
     static unsigned char fg[4] = {0, 0, 127, 0};
     static unsigned char bg[4] = {0, 127, 0, 0};
@@ -209,7 +209,7 @@ int Widget_ScrollBar_Horizontal::barLength()
 }
 
 
-void Widget_ScrollBar_Horizontal::paintEvent(PaintEvent* event)
+void Widget_ScrollBar_Horizontal::paintEvent(WidgetPaintEvent* event)
 {
     static unsigned char fg[4] = {0, 0, 127, 0};
     static unsigned char bg[4] = {0, 127, 0, 0};

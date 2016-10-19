@@ -12,7 +12,7 @@ public:
     virtual ~ProjectView();
     
 public:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
     
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 };

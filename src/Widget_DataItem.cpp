@@ -5,7 +5,6 @@
 #include "Painter.hpp"
 #include "TextPainter.hpp"
 #include "ImageUtils.hpp"
-#include "ClipboardEvent.hpp"
 
 #include <iostream>
 using namespace std;
@@ -437,7 +436,7 @@ bool Widget_DataItem::isExpanded()
 }
 
 
-void Widget_DataItem::paintEvent(PaintEvent* event)
+void Widget_DataItem::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
@@ -500,7 +499,7 @@ void Widget_DataItem::paintEvent(PaintEvent* event)
 }
 
 
-void Widget_DataItem::clipEvent(ClipEvent* event)
+void Widget_DataItem::clipEvent(WidgetClipEvent* event)
 {
     m_visible_rect = event->rect();
 }

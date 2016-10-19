@@ -21,7 +21,7 @@ Widget_Dummy::~Widget_Dummy()
 }
 
 
-void Widget_Dummy::paintEvent(PaintEvent* event)
+void Widget_Dummy::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, m_color);
@@ -42,7 +42,7 @@ struct PlotPoint{
 };
 
 
-void Widget_Dummy::resizeEvent(ResizeEvent* event)
+void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 {
     m_img.load(width(), height(), 1);
     fill(&m_img, Color(0));

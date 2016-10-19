@@ -25,7 +25,7 @@ public:
     void openPlayer();
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void closeEvent();
 };
@@ -105,7 +105,7 @@ void HostViewPrivate::openPlayer()
 }
 
 
-void HostViewPrivate::paintEvent(PaintEvent* event)
+void HostViewPrivate::paintEvent(WidgetPaintEvent* event)
 {
     unsigned char bg[4] = {127, 127, 127, 0};
     event->painter()->fillRect({0, 0, width(), m_main_menu->height()}, bg);

@@ -213,7 +213,7 @@ public:
     }
 
 private:
-    virtual void paintEvent(PaintEvent* event)
+    virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
 
@@ -249,7 +249,7 @@ private:
         }
     }
 
-    virtual void resizeEvent(ResizeEvent* event)
+    virtual void resizeEvent(WidgetResizeEvent* event)
     {
         update();
         repaint();
@@ -383,7 +383,7 @@ public:
     }
 
 private:
-    virtual void paintEvent(PaintEvent* event)
+    virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
@@ -393,7 +393,7 @@ private:
         p->blendColors({0, 0}, Colors(Color(255, 63, 0)), &img);
     }
 
-    virtual void resizeEvent(ResizeEvent* event)
+    virtual void resizeEvent(WidgetResizeEvent* event)
     {
         update();
         repaint();
@@ -442,7 +442,7 @@ FilterView::~FilterView()
 }
 
 
-void FilterView::resizeEvent(ResizeEvent* event)
+void FilterView::resizeEvent(WidgetResizeEvent* event)
 {
     if(event->width() > event->height())
     {

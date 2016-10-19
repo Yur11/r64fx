@@ -126,7 +126,7 @@ bool Widget_Label::ownsImage()
 }
 
 
-void Widget_Label::paintEvent(PaintEvent* event)
+void Widget_Label::paintEvent(WidgetPaintEvent* event)
 {
     if(!m_image)
         return;

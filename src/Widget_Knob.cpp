@@ -576,7 +576,7 @@ bool Widget_UnipolarKnob::isBipolar()
 }
 
 
-void Widget_UnipolarKnob::paintEvent(PaintEvent* event)
+void Widget_UnipolarKnob::paintEvent(WidgetPaintEvent* event)
 {
     if(m_animation)
     {
@@ -650,7 +650,7 @@ bool Widget_BipolarKnob::isBipolar()
 }
 
 
-void Widget_BipolarKnob::paintEvent(PaintEvent* event)
+void Widget_BipolarKnob::paintEvent(WidgetPaintEvent* event)
 {
     if(m_animation)
     {

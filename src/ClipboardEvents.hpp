@@ -176,6 +176,11 @@ public:
     inline Widget* dndObject() const { return m_dnd_object; }
 };
 
+
+class DndFinishedEvent{
+    
+};
+
 }//namespace r64fx
 
 #endif//R64FX_CLIPBOARD_EVENT_HPP

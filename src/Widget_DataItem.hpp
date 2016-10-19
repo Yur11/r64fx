@@ -80,9 +80,9 @@ public:
     bool isExpanded();
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 
-    virtual void clipEvent(ClipEvent* event);
+    virtual void clipEvent(WidgetClipEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

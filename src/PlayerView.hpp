@@ -23,9 +23,9 @@ public:
     void setPlayheadTime(float seconds);
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 
-    virtual void resizeEvent(ResizeEvent* event);
+    virtual void resizeEvent(WidgetResizeEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

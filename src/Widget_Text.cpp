@@ -5,8 +5,6 @@
 #include "Painter.hpp"
 #include "Keyboard.hpp"
 #include "KeyboardModifiers.hpp"
-#include "KeyEvent.hpp"
-#include "ClipboardEvent.hpp"
 #include "Mouse.hpp"
 #include "TextPainter.hpp"
 #include "UndoRedoChain.hpp"
@@ -428,7 +426,7 @@ void Widget_Text::resizeToText()
 }
 
 
-void Widget_Text::paintEvent(PaintEvent* event)
+void Widget_Text::paintEvent(WidgetPaintEvent* event)
 {
     if(m_image)
     {
@@ -497,7 +495,7 @@ void Widget_Text::focusOutEvent()
 }
 
 
-void Widget_Text::resizeEvent(ResizeEvent* event)
+void Widget_Text::resizeEvent(WidgetResizeEvent* event)
 {
     m_text_painter->setReflowWidth(event->width() - paddingLeft() - paddingRight());
     m_text_painter->reflow();

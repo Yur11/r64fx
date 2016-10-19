@@ -28,7 +28,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_PTHREAD")
 set(SRC
     Action.cpp
     Clipboard.cpp
-    ClipboardEvent.cpp
+    ClipboardEvents.cpp
     Directory.cpp
     FilterMachine.cpp
     FilterView.cpp

@@ -235,7 +235,7 @@ void Widget_Slider::onValueChanged(void (on_value_changed)(void* arg, Widget_Sli
 }
 
 
-void Widget_Slider::paintEvent(PaintEvent* event)
+void Widget_Slider::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 

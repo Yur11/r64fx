@@ -2,9 +2,6 @@
 #include "WidgetFlags.hpp"
 #include "Keyboard.hpp"
 #include "KeyboardModifiers.hpp"
-#include "KeyEvent.hpp"
-#include "Clipboard.hpp"
-#include "ClipboardEvent.hpp"
 #include "Widget_Menu.hpp"
 #include "StringUtils.hpp"
 

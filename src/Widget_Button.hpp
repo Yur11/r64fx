@@ -34,7 +34,7 @@ public:
     void onStateChanged(void (*on_state_changed)(void* arg, Widget_Button* button, unsigned long state), void* arg = nullptr);
 
 public:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

@@ -245,7 +245,7 @@ void Widget_ItemBrowser::onItemSelected(void (*callback)(Widget_ItemBrowser* bro
 }
 
 
-void Widget_ItemBrowser::paintEvent(Widget::PaintEvent* event)
+void Widget_ItemBrowser::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
     unsigned char red[4] = {255, 0, 0, 0};
@@ -255,7 +255,7 @@ void Widget_ItemBrowser::paintEvent(Widget::PaintEvent* event)
 }
 
 
-void Widget_ItemBrowser::resizeEvent(ResizeEvent* event)
+void Widget_ItemBrowser::resizeEvent(WidgetResizeEvent* event)
 {
     rearrange();
     clip();

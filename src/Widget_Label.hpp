@@ -29,7 +29,7 @@ public:
     bool ownsImage();
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 };
 
 }//namespace r64fx

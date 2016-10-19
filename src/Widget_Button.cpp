@@ -89,7 +89,7 @@ void Widget_Button::onStateChanged(void (*on_state_changed)(void* arg, Widget_Bu
 }
 
 
-void Widget_Button::paintEvent(PaintEvent* event)
+void Widget_Button::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
     Image frame;

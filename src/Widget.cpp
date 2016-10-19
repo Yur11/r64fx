@@ -3,9 +3,6 @@
 #include "Mouse.hpp"
 #include "Keyboard.hpp"
 #include "KeyboardModifiers.hpp"
-#include "KeyEvent.hpp"
-#include "Clipboard.hpp"
-#include "ClipboardEvent.hpp"
 #include "Painter.hpp"
 #include "Timer.hpp"
 
@@ -725,7 +722,7 @@ void Widget::setSize(Size<int> size, bool send_event)
 
     if(send_event)
     {
-        ResizeEvent event(old_size, size);
+        WidgetResizeEvent event(old_size, size);
         resizeEvent(&event);
     }
 }
@@ -1344,13 +1341,13 @@ bool Widget::dndEnabled() const
 }
 
 
-WidgetImpl* Widget::PaintEvent::impl() const
+WidgetImpl* WidgetPaintEvent::impl() const
 {
     return m_impl;
 }
 
 
-Painter* Widget::PaintEvent::painter() const
+Painter* WidgetPaintEvent::painter() const
 {
     return m_impl->painter;
 }
@@ -1402,7 +1399,7 @@ void WidgetImpl::clipChildren(Widget* parent)
 
         if(child->m_flags & R64FX_WIDGET_WANTS_CLIPPING)
         {
-            Widget::ClipEvent event(rect - child_global_position);
+            WidgetClipEvent event(rect - child_global_position);
             child->clipEvent(&event);
 
             if(rect.width() > 0 && rect.height() > 0)
@@ -1466,7 +1463,7 @@ void WidgetImpl::repaint()
         if(flags & R64FX_WIDGET_WANTS_REPAINT) //The root widget wants repaint.
         {
             //Paint whole window surface.
-            Widget::PaintEvent event(this);
+            WidgetPaintEvent event(this);
             root_widget->paintEvent(&event);
             painter->repaint();
         }
@@ -1539,7 +1536,7 @@ void WidgetImpl::paintChildren(Widget* parent)
             got_rect = true; //The child will read this value as it's parent_got_rect
                                //and will know not to add any rects of it's own.
 
-            Widget::PaintEvent event(this);
+            WidgetPaintEvent event(this);
             child->paintEvent(&event);
 
             if(!parent_got_rect)
@@ -1567,19 +1564,19 @@ void WidgetImpl::paintChildren(Widget* parent)
 }
 
 
-void Widget::paintEvent(Widget::PaintEvent* event)
+void Widget::paintEvent(WidgetPaintEvent* event)
 {
     event->impl()->paintChildren(this);
 }
 
 
-void Widget::resizeEvent(ResizeEvent* event)
+void Widget::resizeEvent(WidgetResizeEvent* event)
 {
 
 }
 
 
-void Widget::clipEvent(ClipEvent* event)
+void Widget::clipEvent(WidgetClipEvent* event)
 {
 
 }

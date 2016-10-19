@@ -58,7 +58,7 @@ public:
     }
     
 protected:
-    virtual void paintEvent(PaintEvent* event)
+    virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
@@ -66,7 +66,7 @@ protected:
         Widget::paintEvent(event);
     }
 
-    virtual void resizeEvent(ResizeEvent* event)
+    virtual void resizeEvent(WidgetResizeEvent* event)
     {
         
     }
@@ -113,7 +113,7 @@ public:
     }
     
 protected:
-    virtual void paintEvent(PaintEvent* event)
+    virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
@@ -121,7 +121,7 @@ protected:
         Widget::paintEvent(event);
     }
 
-    virtual void resizeEvent(ResizeEvent* event)
+    virtual void resizeEvent(WidgetResizeEvent* event)
     {
         m_browser->setSize(event->size());
     }
@@ -147,13 +147,13 @@ public:
     }
     
 protected:
-    virtual void paintEvent(PaintEvent* event)
+    virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
     }
 
-    virtual void resizeEvent(ResizeEvent* event)
+    virtual void resizeEvent(WidgetResizeEvent* event)
     {
         
     }
@@ -179,13 +179,13 @@ public:
     }
     
 protected:
-    virtual void paintEvent(PaintEvent* event)
+    virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
     }
 
-    virtual void resizeEvent(ResizeEvent* event)
+    virtual void resizeEvent(WidgetResizeEvent* event)
     {
         
     }
@@ -211,14 +211,14 @@ public:
     }
 
 protected:
-    virtual void paintEvent(PaintEvent* event)
+    virtual void paintEvent(WidgetPaintEvent* event)
     {
 //         auto p = event->painter();
 //         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
         Widget::paintEvent(event);
     }
 
-    virtual void resizeEvent(ResizeEvent* event)
+    virtual void resizeEvent(WidgetResizeEvent* event)
     {
         for(auto child : *this)
         {
@@ -332,7 +332,7 @@ void MainView::setMainPartWidget(Widget* widget)
 }
 
 
-void MainView::paintEvent(PaintEvent* event)
+void MainView::paintEvent(WidgetPaintEvent* event)
 {
     Widget::paintEvent(event);
     
@@ -369,7 +369,7 @@ void MainView::paintEvent(PaintEvent* event)
 }
 
 
-void MainView::resizeEvent(ResizeEvent* event)
+void MainView::resizeEvent(WidgetResizeEvent* event)
 {
     m->top_bar->setWidth(event->width());
     m->top_bar->setPosition({0, 0});

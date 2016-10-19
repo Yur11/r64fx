@@ -52,7 +52,7 @@ public:
     void onValueChanged(void (on_value_changed)(void* arg, Widget_Slider* slider, float value), void* arg = nullptr);
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

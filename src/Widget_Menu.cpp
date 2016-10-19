@@ -78,7 +78,7 @@ public:
     void activate();
 
 protected:
-    virtual void paintEvent(PaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 
@@ -406,7 +406,7 @@ void Widget_MenuItem::activate()
 }
 
 
-void Widget_MenuItem::paintEvent(PaintEvent* event)
+void Widget_MenuItem::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
