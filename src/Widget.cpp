@@ -19,8 +19,6 @@ using namespace std;
 
 namespace r64fx{
 
-LinkedList<Widget> g_windowed_widgets;
-
 Timer* g_gui_timer = nullptr;
 
 long int g_window_count = 0;
@@ -995,8 +993,6 @@ void Widget::show(
             cerr << "Widget: Failed to create WidgetImpl!\n";
         }
 #endif//R64FX_DEBUG
-
-        g_windowed_widgets.append(this);
     }
     m_parent.window->setSize(size());
     if(modal_parent)
@@ -1051,8 +1047,6 @@ void Widget::close()
             cerr << "Widget: Window count is less than zero!\n";
         }
 #endif//R64FX_DEBUG
-
-        g_windowed_widgets.remove(this);
     }
 }
 
