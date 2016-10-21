@@ -88,6 +88,7 @@ set(SRC
     Widget_ScrollArea.cpp
     Widget_ScrollBar.cpp
     Widget_Slider.cpp
+    Widget_TabBar.cpp
     Widget_Text.cpp
     Window.cpp
     current_time.cpp
