@@ -10,6 +10,8 @@ using namespace std;
 
 namespace r64fx{
 
+namespace{
+
 unsigned long g_tab_bar_count = 0;
     
 Font* g_tab_bar_font = nullptr;
@@ -21,6 +23,10 @@ void init()
 {
     g_tab_bar_font = new Font("", 14, 72);
 }
+
+void tab_selected_stub(TabHandle* handle, void* payload, void* arg) {}
+
+}//namespace
 
 
 void cleanup()
@@ -110,7 +116,7 @@ protected:
                 tab_bar->m_current_tab->repaint();
             }
             tab_bar->m_current_tab = this;
-            tab_bar->tabSelected(this, m_payload);
+            tab_bar->m_tab_selected(this, m_payload, tab_bar->m_tab_selected_arg);
             
             m_flags |= R64FX_TAB_SELECTED;
             repaint();
@@ -132,6 +138,8 @@ Widget_TabBar::Widget_TabBar(Widget* parent) : Widget(parent)
         init();
     }
     g_tab_bar_count++;
+
+    onTabSelected(nullptr);
 }
 
 
@@ -159,6 +167,20 @@ void Widget_TabBar::resizeAndRealign()
 }
 
 
+void Widget_TabBar::onTabSelected(void (tab_selected)(TabHandle* handle, void* payload, void* arg), void* arg)
+{
+    if(!tab_selected)
+    {
+        m_tab_selected = tab_selected_stub;
+    }
+    else
+    {
+        m_tab_selected = tab_selected;
+        m_tab_selected_arg = arg;
+    }
+}
+
+
 void Widget_TabBar::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
@@ -178,10 +200,4 @@ void Widget_TabBar::paintEvent(WidgetPaintEvent* event)
     }
 }
 
-
-void Widget_TabBar::tabSelected(TabHandle* tab, void* tab_payload)
-{
-    
-}
-    
 }//namespace r64fx

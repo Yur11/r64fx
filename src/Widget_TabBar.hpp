@@ -11,6 +11,9 @@ class Widget_TabBar : public Widget{
     friend class TabHandle;
     TabHandle* m_current_tab = nullptr;
     
+    void (*m_tab_selected)(TabHandle* handle, void* payload, void* arg) = nullptr;
+    void* m_tab_selected_arg = nullptr;
+
 public:
     Widget_TabBar(Widget* parent = nullptr);
     
@@ -19,11 +22,11 @@ public:
     virtual TabHandle* addTab(void* tab_payload, const std::string &caption = "");
     
     void resizeAndRealign();
+
+    void onTabSelected(void (tab_selected)(TabHandle* handle, void* payload, void* arg), void* arg = nullptr);
     
 protected:
     virtual void paintEvent(WidgetPaintEvent* event);
-    
-    virtual void tabSelected(TabHandle* tab, void* tab_payload);
 };
     
 }//namespace r64fx
