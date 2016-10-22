@@ -83,15 +83,15 @@ protected:
         {
             if(m_flags & R64FX_TAB_SELECTED)
             {
-                p->fillRect({0, 0, width(),     height()}, Color(191, 191, 191, 0));
-                p->fillRect({0, 0, 1,           height()}, Color(175, 175, 175, 0));
-                p->fillRect({0, 0, width() - 1, height()}, Color(175, 175, 175, 0));
+                p->fillRect({0,           0, width(), height()}, Color(191, 191, 191, 0));
+                p->fillRect({0,           0, 1,       height()}, Color(175, 175, 175, 0));
+                p->fillRect({width() - 1, 0, 1,       height()}, Color(175, 175, 175, 0));
             }
             else
             {
-                p->fillRect({0, 0, width(),     height()}, Color(127, 127, 127, 0));
-                p->fillRect({0, 0, 1,           height()}, Color(175, 175, 175, 0));
-                p->fillRect({0, 0, width() - 1, height()}, Color(111, 111, 111, 0));
+                p->fillRect({0,           0, width(), height()}, Color(127, 127, 127, 0));
+                p->fillRect({0,           0, 1,       height()}, Color(127, 127, 127, 0));
+                p->fillRect({width() - 1, 0, 1,       height()}, Color(111, 111, 111, 0));
             }
             
             p->blendColors({g_hori_padding, g_vert_padding}, Colors(Color(0, 0, 0, 0)), &m_img);
@@ -100,14 +100,27 @@ protected:
     
     virtual void mousePressEvent(MousePressEvent* event)
     {
-        m_flags |= R64FX_TAB_SELECTED;
-        repaint();
+        auto tab_bar = (Widget_TabBar*) parent();
+        
+        if(tab_bar->m_current_tab != this)
+        {
+            if(tab_bar->m_current_tab)
+            {
+                tab_bar->m_current_tab->m_flags &= ~R64FX_TAB_SELECTED;
+                tab_bar->m_current_tab->repaint();
+            }
+            tab_bar->m_current_tab = this;
+            tab_bar->tabSelected(this, m_payload);
+            
+            m_flags |= R64FX_TAB_SELECTED;
+            repaint();
+        }
     }
     
     virtual void mouseReleaseEvent(MouseReleaseEvent* event)
     {
-        m_flags &= ~R64FX_TAB_SELECTED;
-        repaint();
+//         m_flags &= ~R64FX_TAB_SELECTED;
+//         repaint();
     }
 };
     

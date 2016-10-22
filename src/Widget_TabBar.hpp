@@ -8,6 +8,9 @@ namespace r64fx{
 class TabHandle;
     
 class Widget_TabBar : public Widget{
+    friend class TabHandle;
+    TabHandle* m_current_tab = nullptr;
+    
 public:
     Widget_TabBar(Widget* parent = nullptr);
     

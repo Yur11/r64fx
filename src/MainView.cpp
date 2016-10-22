@@ -40,7 +40,7 @@ struct MainViewPrivate{
     
     Widget_TabBar* project_tab_bar = nullptr;
     
-    int gap = 2;
+    int gap = 1;
     
     bool left_dock_expanded    = true;
     bool right_dock_expanded   = true;
@@ -59,7 +59,7 @@ class TopBar : public Widget{
 public:
     TopBar(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
     {
-        cout << "TopBar: " << this << "\n";
+        
     }
     
     virtual ~TopBar()
@@ -495,6 +495,10 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
             m->main_part->setWidth(event->width());
         }
     }
+    
+    m->project_tab_bar->setX(
+        (m->main_part->x() + m->main_part->width()) - m->project_tab_bar->width() + 1
+    );
 }
 
 
