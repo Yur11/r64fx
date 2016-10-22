@@ -111,8 +111,8 @@ TabHandle* Widget_TabBar::addTab(void* tab_payload, const std::string &caption)
 
 void Widget_TabBar::resizeAndRealign()
 {
-    auto s = align_horizontally(begin(), end(), {5, 0}, 10);
-    setSize({s.width() + 10, s.height()});
+    auto s = align_horizontally(begin(), end(), {8, 0}, 8);
+    setSize({s.width() + 16, s.height()});
 }
 
 

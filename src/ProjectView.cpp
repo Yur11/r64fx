@@ -22,7 +22,7 @@ ProjectView::~ProjectView()
 void ProjectView::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
-    p->fillRect({0, 0, width(), height()}, Color(255, 255, 255, 0));
+    p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 }
 
 
