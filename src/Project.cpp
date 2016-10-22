@@ -51,6 +51,18 @@ void Project::clear()
 }
 
 
+void Project::setName(const std::string &name)
+{
+    m_name = name;
+}
+
+
+std::string Project::name() const
+{
+    return m_name;
+}
+
+
 ProjectItem::ProjectItem()
 {
 

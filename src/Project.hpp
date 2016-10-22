@@ -11,6 +11,7 @@ class ProjectItem;
 class Project : public LinkedList<Project>::Node{
     LinkedList<ProjectItem> m_items;
     ProjectView* m_view = nullptr;
+    std::string m_name = "";
 
 public:
     Project();
@@ -28,6 +29,10 @@ public:
     LinkedList<ProjectItem>::Iterator end() const;
 
     void clear();
+
+    void setName(const std::string &name);
+
+    std::string name() const;
 };
 
 
