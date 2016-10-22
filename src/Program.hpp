@@ -2,19 +2,8 @@
 #define R64FX_PROGRAM_HPP
 
 namespace r64fx{
-    
-class ProgramPrivate;
-    
-class Program{
-    ProgramPrivate* m = nullptr;
-    
-public:
-    Program(int argc, char** argv);
-    
-    ~Program();
-    
-    int exec();
-};
+
+int exec(int argc, char** argv);
     
 }//namespace r64fx
 

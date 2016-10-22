@@ -16,7 +16,6 @@ using namespace std;
 
 namespace r64fx{
 
-Program*         g_program  = nullptr;
 ProgramActions*  g_acts     = nullptr;
 
 struct ProgramPrivate{
@@ -27,8 +26,10 @@ struct ProgramPrivate{
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
 
-    void exec()
+    int exec(int argc, char** argv)
     {
+        initActions();
+
         main_view = new MainView;
         main_view->show();
         
@@ -42,6 +43,10 @@ struct ProgramPrivate{
         
         main_view->close();
         delete main_view;
+
+        cleanupActions();
+
+        return 0;
     }
     
     void newSession()
@@ -377,31 +382,10 @@ void ProgramPrivate::cleanupActions()
 }
 
 
-Program::Program(int argc, char** argv)
+int exec(int argc, char** argv)
 {
-    if(g_program)
-    {
-        cerr << "Refusing to create another Program instance!\n";
-        abort();
-    }
-    g_program = this;
-    
-    m = new ProgramPrivate;
-    m->initActions();
-}
-
-
-Program::~Program()
-{
-    m->cleanupActions();
-    delete m;
-}
-
-
-int Program::exec()
-{
-    m->exec();
-    return 0;
+    ProgramPrivate p;
+    return p.exec(argc, argv);
 }
 
 }//namespace r64fx
