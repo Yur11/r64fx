@@ -4,6 +4,7 @@
 #include "SystemUtils.hpp"
 
 #include "Widget_Menu.hpp"
+#include "Widget_TabBar.hpp"
 #include "Widget_ItemBrowser.hpp"
 #include "Widget_DirectoryItem.hpp"
 
@@ -37,6 +38,8 @@ struct MainViewPrivate{
     Widget_Menu* menu_view     = nullptr;
     Widget_Menu* menu_help     = nullptr;
     
+    Widget_TabBar* project_tab_bar = nullptr;
+    
     int gap = 2;
     
     bool left_dock_expanded    = true;
@@ -51,8 +54,15 @@ struct MainViewPrivate{
 class TopBar : public Widget{
     MainViewPrivate* m = nullptr;
     
+    
+    
 public:
     TopBar(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
+    {
+        cout << "TopBar: " << this << "\n";
+    }
+    
+    virtual ~TopBar()
     {
         
     }
@@ -240,6 +250,8 @@ protected:
         
 MainView::MainView(Widget* parent) : Widget(parent)
 {
+    cout << "MainView: " << this << "\n";
+    
     m = new MainViewPrivate;
     m->main_view = this;
     
@@ -297,6 +309,16 @@ MainView::MainView(Widget* parent) : Widget(parent)
     m->menu->resizeAndRealign();
     m->menu->setPosition({0, 0});
 
+    m->project_tab_bar = new Widget_TabBar(m->top_bar);
+    m->project_tab_bar->addTab(nullptr, "Hello");
+    m->project_tab_bar->addTab(nullptr, "Doctor");
+    m->project_tab_bar->addTab(nullptr, "Name");
+    m->project_tab_bar->addTab(nullptr, "Continue");
+    m->project_tab_bar->addTab(nullptr, "Yesterday");
+    m->project_tab_bar->addTab(nullptr, "Tommorow");
+    m->project_tab_bar->resizeAndRealign();
+    m->project_tab_bar->setPosition({m->menu->width() + 20, 0});
+    
     m->top_bar->setHeight(m->menu->height());
     
     m->left_dock->setWidth(300);
@@ -309,19 +331,22 @@ MainView::MainView(Widget* parent) : Widget(parent)
 
 MainView::~MainView()
 {
-    m->menu_session->setParent(this);
+    m->project_tab_bar->setParent(nullptr);
+    delete m->project_tab_bar;
+    
+    m->menu_session->setParent(nullptr);
     delete m->menu_session;
     
-    m->menu_project->setParent(this);
+    m->menu_project->setParent(nullptr);
     delete m->menu_project;
     
-    m->menu_edit->setParent(this);
+    m->menu_edit->setParent(nullptr);
     delete m->menu_edit;
     
-    m->menu_view->setParent(this);
+    m->menu_view->setParent(nullptr);
     delete m->menu_view;
     
-    m->menu_help->setParent(this);
+    m->menu_help->setParent(nullptr);
     delete m->menu_help;
 }
 
