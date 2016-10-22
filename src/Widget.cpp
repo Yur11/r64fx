@@ -648,7 +648,13 @@ WidgetIterator Widget::end() const
 
 bool Widget::hasChildren() const
 {
-    return m_children.isEmpty();
+    return !m_children.isEmpty();
+}
+
+
+Widget* Widget::firstChild() const
+{
+    return m_children.first();
 }
 
 
@@ -657,6 +663,22 @@ Widget* Widget::popFirstChild()
     if(m_children.isEmpty())
         return nullptr;
     auto child = m_children.first();
+    child->setParent(nullptr);
+    return child;
+}
+
+
+Widget* Widget::lastChild() const
+{
+    return m_children.first();
+}
+
+
+Widget* Widget::popLastChild()
+{
+    if(m_children.isEmpty())
+        return nullptr;
+    auto child = m_children.last();
     child->setParent(nullptr);
     return child;
 }

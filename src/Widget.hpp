@@ -81,8 +81,13 @@ public:
 
     bool hasChildren() const;
 
-    /* Remove the first child and return it. */
+    Widget* firstChild() const;
+
     Widget* popFirstChild();
+
+    Widget* lastChild() const;
+
+    Widget* popLastChild();
 
     /* The root parent widget in a tree that this widget belongs to. */
     Widget* root() const;
