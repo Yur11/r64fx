@@ -391,6 +391,16 @@ void MainView::paintEvent(WidgetPaintEvent* event)
             Color(0, 0, 0, 0)
         );
     }
+    
+    {
+        int x = m->project_tab_bar->x() + m->project_tab_bar->currentTabX();
+        int w = m->project_tab_bar->currentTabWidth();
+        
+        p->fillRect(
+            {x, m->top_bar->height(), w, m->gap},
+            Color(191, 191, 191, 0)
+        );
+    }
 }
 
 

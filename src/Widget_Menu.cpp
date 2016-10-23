@@ -410,29 +410,23 @@ void Widget_MenuItem::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
-    static unsigned char grey       [4] = {127, 127, 127,  0};
-    static unsigned char orange     [4] = {255, 127,  63,  0};
-    static unsigned char blue       [4] = { 63, 127, 255,  0};
-    static unsigned char black      [4] = {  0,   0,   0,  0};
-
-    unsigned char* color = grey;
-
     auto parent_menu = parentMenu();
 
-    if(Widget::isHovered())
+    if(Widget::isHovered() || parent_menu->activeItem() == this)
     {
-        color = orange;
+        p->fillRect({{0, 0}, size()}, Color(63, 63, 63, 0));
+        if(m_image)
+        {
+            p->blendColors({0, 0}, Colors(Color(191, 191, 191, 0)), m_image);
+        }
     }
-    else if(parent_menu->activeItem() == this)
+    else
     {
-        color = blue;
-    }
-
-    p->fillRect({{0, 0}, size()}, color);
-    if(m_image)
-    {
-        unsigned char* colors = (unsigned char*)&black;
-        p->blendColors({0, 0}, &colors, m_image);
+        p->fillRect({{0, 0}, size()}, Color(127, 127, 127, 0));
+        if(m_image)
+        {
+            p->blendColors({0, 0}, Colors(Color(0, 0, 0, 0)), m_image);
+        }
     }
 
     Widget::paintEvent(event);

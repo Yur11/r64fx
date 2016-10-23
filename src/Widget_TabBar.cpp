@@ -81,6 +81,18 @@ public:
         return m_payload;
     }
     
+    void repaintSelected()
+    {
+        m_flags |= R64FX_TAB_SELECTED;
+        repaint();
+    }
+    
+    void repaintDeselected()
+    {
+        m_flags &= ~R64FX_TAB_SELECTED;
+        repaint();
+    }
+    
 protected:
     virtual void paintEvent(WidgetPaintEvent* event)
     {
@@ -107,26 +119,12 @@ protected:
     virtual void mousePressEvent(MousePressEvent* event)
     {
         auto tab_bar = (Widget_TabBar*) parent();
-        
-        if(tab_bar->m_current_tab != this)
-        {
-            if(tab_bar->m_current_tab)
-            {
-                tab_bar->m_current_tab->m_flags &= ~R64FX_TAB_SELECTED;
-                tab_bar->m_current_tab->repaint();
-            }
-            tab_bar->m_current_tab = this;
-            tab_bar->m_tab_selected(this, m_payload, tab_bar->m_tab_selected_arg);
-            
-            m_flags |= R64FX_TAB_SELECTED;
-            repaint();
-        }
+        tab_bar->selectTab(this);
     }
     
     virtual void mouseReleaseEvent(MouseReleaseEvent* event)
     {
-//         m_flags &= ~R64FX_TAB_SELECTED;
-//         repaint();
+
     }
 };
     
@@ -156,6 +154,7 @@ Widget_TabBar::~Widget_TabBar()
 TabHandle* Widget_TabBar::addTab(void* tab_payload, const std::string &caption)
 {
     auto tab_handle = new TabHandle(this, caption, tab_payload);
+    selectTab(tab_handle);
     return tab_handle;
 }
 
@@ -178,6 +177,46 @@ void Widget_TabBar::onTabSelected(void (tab_selected)(TabHandle* handle, void* p
         m_tab_selected = tab_selected;
         m_tab_selected_arg = arg;
     }
+}
+
+
+TabHandle* Widget_TabBar::currentTab() const
+{
+    return m_current_tab;
+}
+
+
+void Widget_TabBar::selectTab(TabHandle* tab_handle)
+{
+    if(tab_handle->parent() == this && tab_handle != m_current_tab)
+    {
+        if(m_current_tab)
+        {
+            m_current_tab->repaintDeselected();
+        }
+        m_tab_selected(tab_handle, tab_handle->payload(), m_tab_selected_arg);
+        
+        m_current_tab = tab_handle;
+        m_current_tab->repaintSelected();
+    }
+}
+
+
+int Widget_TabBar::currentTabX() const
+{
+    if(!m_current_tab)
+        return 0;
+
+    return m_current_tab->x();
+}
+
+
+int Widget_TabBar::currentTabWidth() const
+{
+    if(!m_current_tab)
+        return 0;
+
+    return m_current_tab->width();
 }
 
 

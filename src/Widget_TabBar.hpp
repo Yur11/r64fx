@@ -25,6 +25,14 @@ public:
 
     void onTabSelected(void (tab_selected)(TabHandle* handle, void* payload, void* arg), void* arg = nullptr);
     
+    TabHandle* currentTab() const;
+    
+    void selectTab(TabHandle* tab_handle);
+    
+    int currentTabX() const;
+    
+    int currentTabWidth() const;
+    
 protected:
     virtual void paintEvent(WidgetPaintEvent* event);
 };
