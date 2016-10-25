@@ -18,7 +18,7 @@ namespace r64fx{
 
 ProgramActions*  g_acts     = nullptr;
 
-struct ProgramPrivate{
+struct ProgramPrivate : public MainViewEventIface{
     bool running = true;
     
     MainView* main_view = nullptr;
@@ -30,7 +30,7 @@ struct ProgramPrivate{
     {
         initActions();
 
-        main_view = new MainView;
+        main_view = new MainView(this);
         main_view->show();
         
         newProject();
@@ -76,10 +76,11 @@ struct ProgramPrivate{
 
     void newProject()
     {
-        cout << "New Project!\n";
         auto project = new Project;
         open_projects.append(project);
         current_project = project;
+        
+        main_view->addMainPartOption(project, "Untitled");
         main_view->setMainPartWidget(project->view());
         main_view->repaint();
     }
@@ -137,10 +138,15 @@ struct ProgramPrivate{
     {
         
     }
-
+    
     void initActions();
 
     void cleanupActions();
+    
+    virtual void mainPartOptionSelected(void* option)
+    {
+        
+    }
 };
 
 

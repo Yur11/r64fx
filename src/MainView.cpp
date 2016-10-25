@@ -23,6 +23,8 @@ class MainPart;
 
 
 struct MainViewPrivate{
+    MainViewEventIface* event  = nullptr;
+    
     MainView*    main_view     = nullptr;
 
     TopBar*      top_bar       = nullptr;
@@ -38,7 +40,7 @@ struct MainViewPrivate{
     Widget_Menu* menu_view     = nullptr;
     Widget_Menu* menu_help     = nullptr;
     
-    Widget_TabBar* project_tab_bar = nullptr;
+    Widget_TabBar* main_tab_bar = nullptr;
     
     int gap = 1;
     
@@ -248,11 +250,10 @@ protected:
 };
 
         
-MainView::MainView(Widget* parent) : Widget(parent)
+MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(parent)
 {
-    cout << "MainView: " << this << "\n";
-    
     m = new MainViewPrivate;
+    m->event = event_iface;
     m->main_view = this;
     
     m->top_bar      = new TopBar      (m, this);
@@ -309,15 +310,13 @@ MainView::MainView(Widget* parent) : Widget(parent)
     m->menu->resizeAndRealign();
     m->menu->setPosition({0, 0});
 
-    m->project_tab_bar = new Widget_TabBar(m->top_bar);
-    m->project_tab_bar->addTab(nullptr, "Hello");
-    m->project_tab_bar->addTab(nullptr, "Doctor");
-    m->project_tab_bar->addTab(nullptr, "Name");
-    m->project_tab_bar->addTab(nullptr, "Continue");
-    m->project_tab_bar->addTab(nullptr, "Yesterday");
-    m->project_tab_bar->addTab(nullptr, "Tommorow");
-    m->project_tab_bar->resizeAndRealign();
-    m->project_tab_bar->setPosition({m->menu->width() + 20, 0});
+    m->main_tab_bar = new Widget_TabBar(m->top_bar);
+    m->main_tab_bar->resizeAndRealign();
+    m->main_tab_bar->setY(0);
+    m->main_tab_bar->onTabSelected([](TabHandle* handle, void* payload, void* arg){
+        auto m = (MainViewPrivate*)arg;
+        m->event->mainPartOptionSelected(payload);
+    }, m);
     
     m->top_bar->setHeight(m->menu->height());
     
@@ -331,8 +330,8 @@ MainView::MainView(Widget* parent) : Widget(parent)
 
 MainView::~MainView()
 {
-    m->project_tab_bar->setParent(nullptr);
-    delete m->project_tab_bar;
+    m->main_tab_bar->setParent(nullptr);
+    delete m->main_tab_bar;
     
     m->menu_session->setParent(nullptr);
     delete m->menu_session;
@@ -348,6 +347,14 @@ MainView::~MainView()
     
     m->menu_help->setParent(nullptr);
     delete m->menu_help;
+}
+
+
+void MainView::addMainPartOption(void* option, const std::string &name)
+{
+    m->main_tab_bar->addTab(option, name);
+    m->main_tab_bar->resizeAndRealign();
+    setSize(size());
 }
 
 
@@ -393,8 +400,8 @@ void MainView::paintEvent(WidgetPaintEvent* event)
     }
     
     {
-        int x = m->project_tab_bar->x() + m->project_tab_bar->currentTabX();
-        int w = m->project_tab_bar->currentTabWidth();
+        int x = m->main_tab_bar->x() + m->main_tab_bar->currentTabX();
+        int w = m->main_tab_bar->currentTabWidth();
         
         p->fillRect(
             {x, m->top_bar->height(), w, m->gap},
@@ -506,8 +513,8 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
         }
     }
     
-    m->project_tab_bar->setX(
-        (m->main_part->x() + m->main_part->width()) - m->project_tab_bar->width() + 1
+    m->main_tab_bar->setX(
+        (m->main_part->x() + m->main_part->width()) - m->main_tab_bar->width() + 1
     );
 }
 
