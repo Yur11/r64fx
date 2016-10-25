@@ -10,6 +10,8 @@
 
 #include "ProgramActions.hpp"
 
+#include "IconSupply.hpp"
+
 #include <iostream>
 using namespace std;
 
@@ -50,6 +52,17 @@ struct MainViewPrivate{
     Widget* currently_resized_dock = nullptr;
 
     Widget* findDockAt(Point<int> p);
+    
+    Image* icon10 = nullptr;
+    Image* icon16 = nullptr;
+    Image* icon18 = nullptr;
+    Image* icon20 = nullptr;
+    Image* icon22 = nullptr;
+    Image* icon24 = nullptr;
+    Image* icon26 = nullptr;
+    Image* icon28 = nullptr;
+    Image* icon30 = nullptr;
+    Image* icon32 = nullptr;
 };
 
     
@@ -163,6 +176,17 @@ protected:
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
+        
+        p->putImage(m->icon10, {10, 10});
+        p->putImage(m->icon16, {10, 24});
+        p->putImage(m->icon18, {10, 45});
+        p->putImage(m->icon20, {10, 68});
+        p->putImage(m->icon22, {10, 93});
+        p->putImage(m->icon24, {10, 120});
+        p->putImage(m->icon26, {10, 149});
+        p->putImage(m->icon28, {10, 180});
+        p->putImage(m->icon30, {10, 214});
+        p->putImage(m->icon32, {10, 250});
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -324,12 +348,34 @@ MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(par
     m->right_dock->setWidth(100);
     m->bottom_dock->setHeight(256);
     
+    auto name = IconName::Page;
+    m->icon10 = get_icon(name, 10);
+    m->icon16 = get_icon(name, 16);
+    m->icon18 = get_icon(name, 18);
+    m->icon20 = get_icon(name, 20);
+    m->icon22 = get_icon(name, 22);
+    m->icon24 = get_icon(name, 24);
+    m->icon26 = get_icon(name, 26);
+    m->icon28 = get_icon(name, 28);
+    m->icon30 = get_icon(name, 30);
+    m->icon32 = get_icon(name, 32);
+    
     setSize({800, 600});
 }
 
 
 MainView::~MainView()
 {
+    free_icon(m->icon10);
+    free_icon(m->icon16);
+    free_icon(m->icon18);
+    free_icon(m->icon20);
+    free_icon(m->icon22);
+    free_icon(m->icon24);
+    free_icon(m->icon28);
+    free_icon(m->icon30);
+    free_icon(m->icon32);
+    
     m->main_tab_bar->setParent(nullptr);
     delete m->main_tab_bar;
     

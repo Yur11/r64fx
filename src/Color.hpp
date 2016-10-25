@@ -24,6 +24,8 @@ public:
     {}
 
     inline operator unsigned char*() { return m_color; }
+    
+    inline unsigned char &operator[](int c) { return m_color[c]; }
 };
 
 
