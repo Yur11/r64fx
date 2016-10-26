@@ -4,6 +4,7 @@
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
 #include "TextPainter.hpp"
+#include "IconSupply.hpp"
 
 #include <iostream>
 using namespace std;
@@ -39,12 +40,15 @@ void cleanup()
 class TabHandle : public Widget{
     Image m_img;
     std::string m_caption = nullptr;
+    IconName m_icon_name = IconName::None;
     void* m_payload = nullptr;
+    Image* m_icon_img = nullptr;
     
 public:
-    TabHandle(Widget* parent, const std::string &caption, void* tab_payload) 
+    TabHandle(Widget* parent, const std::string &caption, IconName icon_name, void* tab_payload) 
     : Widget(parent)
     , m_caption(caption)
+    , m_icon_name(icon_name)
     , m_payload(tab_payload)
     {
         resizeAndRealign();
@@ -64,10 +68,20 @@ public:
         else
         {
             text2image(m_caption, TextWrap::None, g_tab_bar_font, &m_img);
-            setSize({
-                g_hori_padding + m_img.width()  + g_hori_padding, 
-                g_vert_padding + m_img.height() + g_vert_padding
-            });
+            int w = g_hori_padding + m_img.width()  + g_hori_padding;
+            int h = g_vert_padding + m_img.height() + g_vert_padding;
+
+            if(m_icon_name != IconName::None)
+            {
+                m_icon_img = get_icon(m_icon_name, g_tab_bar_font->height() - 2);
+            }            
+            
+            if(m_icon_img)
+            {
+                w += m_icon_img->width() + 2 + g_hori_padding;
+            }
+            
+            setSize({w, h});
         }
     }
     
@@ -97,22 +111,33 @@ protected:
     virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
+        int x = g_hori_padding;
+        if(m_icon_img)
+        {
+            x += m_icon_img->width() + 2 + g_hori_padding;
+        }
+        
         if(m_img.isGood())
         {
             if(m_flags & R64FX_TAB_SELECTED)
             {
-                p->fillRect({0,           0, width(), height()}, Color(191, 191, 191, 0));
-                p->fillRect({0,           0, 1,       height()}, Color(175, 175, 175, 0));
-                p->fillRect({width() - 1, 0, 1,       height()}, Color(175, 175, 175, 0));
+                p->fillRect({0,               0, width(), height()}, Color(191, 191, 191, 0));
+                p->fillRect({0,               0, 1,       height()}, Color(175, 175, 175, 0));
+                p->fillRect({0 + width() - 1, 0, 1,       height()}, Color(175, 175, 175, 0));
             }
             else
             {
-                p->fillRect({0,           0, width(), height()}, Color(127, 127, 127, 0));
-                p->fillRect({0,           0, 1,       height()}, Color(127, 127, 127, 0));
-                p->fillRect({width() - 1, 0, 1,       height()}, Color(111, 111, 111, 0));
+                p->fillRect({0,               0, width(), height()}, Color(127, 127, 127, 0));
+                p->fillRect({0,               0, 1,       height()}, Color(127, 127, 127, 0));
+                p->fillRect({0 + width() - 1, 0, 1,       height()}, Color(111, 111, 111, 0));
             }
             
-            p->blendColors({g_hori_padding, g_vert_padding}, Colors(Color(0, 0, 0, 0)), &m_img);
+            p->blendColors({x, g_vert_padding}, Colors(Color(0, 0, 0, 0)), &m_img);
+        }
+        
+        if(m_icon_img)
+        {
+            p->putImage(m_icon_img, {g_hori_padding, height()/2 - m_icon_img->height()/2});
         }
     }
     
@@ -151,9 +176,9 @@ Widget_TabBar::~Widget_TabBar()
 }
 
 
-TabHandle* Widget_TabBar::addTab(void* tab_payload, const std::string &caption)
+TabHandle* Widget_TabBar::addTab(void* tab_payload, const std::string &caption, IconName icon_name)
 {
-    auto tab_handle = new TabHandle(this, caption, tab_payload);
+    auto tab_handle = new TabHandle(this, caption, icon_name, tab_payload);
     selectTab(tab_handle);
     return tab_handle;
 }

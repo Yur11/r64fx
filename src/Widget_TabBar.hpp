@@ -2,6 +2,7 @@
 #define R64FX_WIDGET_TAB_BAR_HPP
 
 #include "Widget.hpp"
+#include "IconNames.hpp"
 
 namespace r64fx{
     
@@ -19,7 +20,7 @@ public:
     
     virtual ~Widget_TabBar();
     
-    virtual TabHandle* addTab(void* tab_payload, const std::string &caption = "");
+    virtual TabHandle* addTab(void* tab_payload, const std::string &caption = "", IconName icon_name = IconName::None);
     
     void resizeAndRealign();
 

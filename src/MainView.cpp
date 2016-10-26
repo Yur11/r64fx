@@ -398,7 +398,7 @@ MainView::~MainView()
 
 void MainView::addMainPartOption(void* option, const std::string &name)
 {
-    m->main_tab_bar->addTab(option, name);
+    m->main_tab_bar->addTab(option, name, IconName::Page);
     m->main_tab_bar->resizeAndRealign();
     setSize(size());
 }
