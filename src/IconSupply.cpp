@@ -132,8 +132,10 @@ void gen_icon_DoublePage(Image* img, int size, bool highlighted)
     int page_w = size - 2;
     int page_h = size;
     
-    draw_rect_with_border(img, page_x    , page_y    , page_w - 2, page_h - 2, border, bright);
-    draw_rect_with_border(img, page_x + 2, page_y + 2, page_w - 2, page_h - 2, border, bright);
+    int offset = size / 8;
+    
+    draw_rect_with_border(img, page_x         , page_y         , page_w - offset, page_h - offset, border, bright);
+    draw_rect_with_border(img, page_x + offset, page_y + offset, page_w - offset, page_h - offset, border, bright);
     
     int corner_size = size / 3;
     draw_page_folded_corner(img, page_x, page_y, page_w, page_h, corner_size, border, bg);
@@ -158,23 +160,14 @@ void draw_diskette_corner(Image* img, int dsk_x, int dsk_y, int dsk_w, int dsk_h
 }
 
 
-void gen_icon_Diskette(Image* img, int size, bool highlighted)
+void draw_diskette(Image* img, int dsk_x, int dsk_y, int dsk_w, int dsk_h, bool highlighted)
 {
-    if(size < 8)
-        return;
-    
-    int dsk_x = 0;
-    int dsk_y = 0;
-    int dsk_w = size;
-    int dsk_h = size;
-    
     draw_rect_with_border(img, dsk_x, dsk_y, dsk_w, dsk_h, border, bg);
     
-    int corner_size = size / 5;
-    draw_diskette_corner(img, dsk_x, dsk_y, dsk_w, dsk_h, corner_size, border, bg);
+    draw_diskette_corner(img, dsk_x, dsk_y, dsk_w, dsk_h, dsk_w / 5, border, bg);
     
     /* Diskette Label */
-    if(size >= 16)
+    if(dsk_w >= 14)
     {
         int offset = dsk_w / 5;
         int height = dsk_h / 2;
@@ -182,7 +175,7 @@ void gen_icon_Diskette(Image* img, int size, bool highlighted)
     }
     
     /* Diskette Shutter */
-    if(size >= 16)
+    if(dsk_w >= 14)
     {
         int width  = (dsk_w / 2) - 1;
         int height = (dsk_h / 3) + 1;
@@ -190,6 +183,41 @@ void gen_icon_Diskette(Image* img, int size, bool highlighted)
         fill(img, border, {dsk_x + offset, dsk_y, width, height});
         fill(img, bg, {dsk_x + offset + 1, dsk_y + 1, (width / 2) - 1, height - 2});
     }
+}
+
+
+void gen_icon_Diskette(Image* img, int size, bool highlighted)
+{
+    if(size < 8)
+        return;
+    
+    int dsk_x = 0;
+    int dsk_y = 1;
+    int dsk_w = size;
+    int dsk_h = size - 2;
+    
+    draw_diskette(img, dsk_x, dsk_y, dsk_w, dsk_h, highlighted);
+}
+
+
+void gen_icon_DoubleDiskette(Image* img, int size, bool highlighted)
+{
+    if(size < 8)
+        return;
+    
+    int dsk_x = 0;
+    int dsk_y = 1;
+    int dsk_w = size;
+    int dsk_h = size - 2;
+    
+    int offset = size / 8;
+    
+    draw_rect_with_border(img, dsk_x, dsk_y, dsk_w - offset, dsk_h - offset, border, bg);
+    
+    int corner_size = size / 5;
+    draw_diskette_corner(img, dsk_x, dsk_y, dsk_w - offset, dsk_h - offset, corner_size, border, bg);
+    
+    draw_diskette(img, dsk_x + offset, dsk_y + offset, dsk_w - offset, dsk_h - offset, highlighted);
 }
 
 
@@ -338,6 +366,12 @@ IconEntry* gen_new_icon(IconName name, int size, bool highlighted)
         case IconName::Diskette:
         {
             gen_icon_Diskette(&(entry->img), size, highlighted);
+            break;
+        }
+        
+        case IconName::DoubleDiskette:
+        {
+            gen_icon_DoubleDiskette(&(entry->img), size, highlighted);
             break;
         }
         

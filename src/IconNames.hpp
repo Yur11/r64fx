@@ -7,7 +7,8 @@ enum class IconName{
     Page,
     DoublePage,
     Folder,
-    Diskette
+    Diskette,
+    DoubleDiskette
 };
     
 }//namespace r64fx
