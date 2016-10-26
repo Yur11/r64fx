@@ -5,6 +5,7 @@ namespace r64fx{
     
 enum class IconName{
     Page,
+    DoublePage,
     Folder,
     Diskette
 };

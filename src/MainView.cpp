@@ -348,7 +348,7 @@ MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(par
     m->right_dock->setWidth(100);
     m->bottom_dock->setHeight(256);
     
-    auto name = IconName::Folder;
+    auto name = IconName::DoublePage;
     m->icon10 = get_icon(name, 10);
     m->icon16 = get_icon(name, 16);
     m->icon18 = get_icon(name, 18);

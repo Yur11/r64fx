@@ -122,6 +122,24 @@ void gen_icon_Page(Image* img, int size, bool highlighted)
 }
 
 
+void gen_icon_DoublePage(Image* img, int size, bool highlighted)
+{
+    if(size < 8)
+        return;
+    
+    int page_x = 1;
+    int page_y = 0;
+    int page_w = size - 2;
+    int page_h = size;
+    
+    draw_rect_with_border(img, page_x    , page_y    , page_w - 2, page_h - 2, border, bright);
+    draw_rect_with_border(img, page_x + 2, page_y + 2, page_w - 2, page_h - 2, border, bright);
+    
+    int corner_size = size / 3;
+    draw_page_folded_corner(img, page_x, page_y, page_w, page_h, corner_size, border, bg);
+}
+
+
 void draw_diskette_corner(Image* img, int dsk_x, int dsk_y, int dsk_w, int dsk_h, int corner_size, Color &stroke, Color &fill)
 {
     for(int y=0; y<corner_size; y++)
@@ -302,6 +320,12 @@ IconEntry* gen_new_icon(IconName name, int size, bool highlighted)
         case IconName::Page:
         {
             gen_icon_Page(&(entry->img), size, highlighted);
+            break;
+        }
+        
+        case IconName::DoublePage:
+        {
+            gen_icon_DoublePage(&(entry->img), size, highlighted);
             break;
         }
         
