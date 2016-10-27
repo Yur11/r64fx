@@ -28,6 +28,13 @@ void implant(Image* dst, Transform2D<float> transform, Image* src, Rect<int> rec
 void implant(Image* dst, Transform2D<float> transform, Image* src);
 
 
+void implant_alpha(Image* dst, Point<int> pos, Image* src);
+
+void implant_alpha(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> src_offset, Image* src);
+
+void implant_alpha(Image* dst, const RectIntersection<int> &intersection, Image* src);
+
+
 void blend(Image* dst, Point<int> pos, unsigned char** colors, Image* mask);
 
 void blend(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> mask_offset, unsigned char** colors, Image* mask);

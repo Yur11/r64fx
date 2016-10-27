@@ -130,24 +130,7 @@ void implant(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> src_o
 
 void implant(Image* dst, const RectIntersection<int> &intersection, Image* src)
 {
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(src != nullptr);
-#endif//R64FX_DEBUG
-
-    for(int y=0; y<intersection.height(); y++)
-    {
-        for(int x=0; x<intersection.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + intersection.dstx(), y + intersection.dsty());
-            auto srcpx = src->pixel(x + intersection.srcx(), y + intersection.srcy());
-
-            for(int c=0; c<dst->componentCount(); c++)
-            {
-                dstpx[c] = srcpx[c];
-            }
-        }
-    }
+    implant(dst, intersection.dstOffset(), intersection.size(), intersection.srcOffset(), src);
 }
 
 
@@ -231,6 +214,51 @@ void implant(Image* dst, Transform2D<float> transform, Image* src, Rect<int> rec
 void implant(Image* dst, Transform2D<float> transform, Image* src)
 {
     implant(dst, transform, src, {0, 0, dst->width(), dst->height()});
+}
+
+
+void implant_alpha(Image* dst, Point<int> pos, Image* src)
+{
+    implant(dst, RectIntersection<int>(
+        {0,       0,       dst->width(), dst->height()},
+        {pos.x(), pos.y(), src->width(), src->height()}
+    ), src);
+}
+
+
+void implant_alpha(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> src_offset, Image* src)
+{
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(src != nullptr);
+    assert(dst->componentCount() == 4);
+    assert(src->componentCount() == 4);
+#endif//R64FX_DEBUG
+
+    static const float rcp = 1.0f / 255.f;
+
+    for(int y=0; y<size.height(); y++)
+    {
+        for(int x=0; x<size.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_offset.x(), y + dst_offset.y());
+            auto srcpx = src->pixel(x + src_offset.x(), y + src_offset.y());
+
+            float dst_coeff = float(srcpx[3]) * rcp;
+            float src_coeff = 1.0f - dst_coeff;
+
+            for(int c=0; c<3; c++)
+            {
+                dstpx[c] = (unsigned char)((float(dstpx[c]) * dst_coeff + float(srcpx[c]) * src_coeff) * 255.0f);
+            }
+        }
+    }
+}
+
+
+void implant_alpha(Image* dst, const RectIntersection<int> &intersection, Image* src)
+{
+    implant_alpha(dst, intersection.dstOffset(), intersection.size(), intersection.srcOffset(), src);
 }
 
 
