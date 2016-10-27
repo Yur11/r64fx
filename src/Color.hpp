@@ -3,8 +3,9 @@
 
 namespace r64fx{
 
-class Color{
+union Color{
     unsigned char m_color[4];
+    unsigned int  m_bits = 0;
 
 public:
     Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
@@ -24,10 +25,23 @@ public:
     {}
 
     inline operator unsigned char*() { return m_color; }
-    
+
     inline unsigned char &operator[](int c) { return m_color[c]; }
+
+    inline const unsigned int &bits() const { return m_bits; }
 };
 
+
+inline bool operator==(const Color &a, const Color &b)
+{
+    return a.bits() == b.bits();
+}
+
+
+inline bool operator!=(const Color &a, const Color &b)
+{
+    return !operator==(a, b);
+}
 
 class Colors{
     unsigned char* m_colors[4];

@@ -71,9 +71,15 @@ public:
             int w = g_hori_padding + m_img.width()  + g_hori_padding;
             int h = g_vert_padding + m_img.height() + g_vert_padding;
 
+            IconColors colors;
+            colors.stroke1 = Color(31, 31, 31, 0);
+            colors.fill1   = Color(127, 127, 127, 0);
+            colors.stroke2 = Color(63, 63, 63, 0);
+            colors.fill2   = Color(223, 223, 223, 0);
+
             if(m_icon_name != IconName::None)
             {
-                m_icon_img = get_icon(m_icon_name, g_tab_bar_font->height() - 2);
+                m_icon_img = get_icon(m_icon_name, g_tab_bar_font->height() - 2, &colors);
             }            
             
             if(m_icon_img)

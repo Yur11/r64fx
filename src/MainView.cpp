@@ -24,6 +24,8 @@ class BottomDock;
 class MainPart;
 
 
+IconColors g_colors;
+
 struct MainViewPrivate{
     MainViewEventIface* event  = nullptr;
     
@@ -348,17 +350,22 @@ MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(par
     m->right_dock->setWidth(100);
     m->bottom_dock->setHeight(256);
     
+    g_colors.stroke1 = Color(31, 31, 31, 0);
+    g_colors.fill1   = Color(127, 127, 127, 0);
+    g_colors.stroke2 = Color(63, 63, 63, 0);
+    g_colors.fill2   = Color(223, 223, 223, 0);
+    
     auto name = IconName::DoublePage;
-    m->icon10 = get_icon(name, 10);
-    m->icon16 = get_icon(name, 16);
-    m->icon18 = get_icon(name, 18);
-    m->icon20 = get_icon(name, 20);
-    m->icon22 = get_icon(name, 22);
-    m->icon24 = get_icon(name, 24);
-    m->icon26 = get_icon(name, 26);
-    m->icon28 = get_icon(name, 28);
-    m->icon30 = get_icon(name, 30);
-    m->icon32 = get_icon(name, 32);
+    m->icon10 = get_icon(name, 10, &g_colors);
+    m->icon16 = get_icon(name, 16, &g_colors);
+    m->icon18 = get_icon(name, 18, &g_colors);
+    m->icon20 = get_icon(name, 20, &g_colors);
+    m->icon22 = get_icon(name, 22, &g_colors);
+    m->icon24 = get_icon(name, 24, &g_colors);
+    m->icon26 = get_icon(name, 26, &g_colors);
+    m->icon28 = get_icon(name, 28, &g_colors);
+    m->icon30 = get_icon(name, 30, &g_colors);
+    m->icon32 = get_icon(name, 32, &g_colors);
     
     setSize({800, 600});
 }
