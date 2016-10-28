@@ -127,14 +127,6 @@ public:
      * The optional root parameter is used to obtain the root widget. */
     Point<int> toRootCoords(Point<int> point, Widget** root = nullptr);
 
-    /* Iterate over the children and find whether they are visible inside the given clip_rect.
-     * The clip_rect is used in the coordinate system of this widget with contentOffset() applied. */
-    void recomputeChildrenVisibility(const Rect<int> &clip_rect);
-
-    /* Calls recomputeChildrenVisibility() with clip_rect = {0, 0, width(), height()}. */
-    void recomputeChildrenVisibility();
-
-    /* Visiblity flag updated by calling recomputeChildrenVisibility() on the parent widget. */
     bool isVisible() const;
 
     /* Offset added to positions of child widgets

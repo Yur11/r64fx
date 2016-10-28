@@ -837,47 +837,6 @@ Point<int> Widget::toRootCoords(Point<int> point, Widget** root)
 }
 
 
-void Widget::recomputeChildrenVisibility(const Rect<int> &clip_rect)
-{
-    auto shifted_clip_rect = clip_rect - contentOffset();
-
-    for(auto child : m_children)
-    {
-        auto visible_rect = intersection(Rect<int>(child->position(), child->size()), shifted_clip_rect);
-        if(visible_rect.width() > 0 && visible_rect.height() > 0)
-        {
-            child->m_flags |= R64FX_WIDGET_IS_VISIBLE;
-
-            if(visible_rect.width() < child->width() || visible_rect.height() < child->height())
-            {
-                child->m_flags |= R64FX_WIDGET_IS_PARTIALLY_VISIBLE;
-            }
-            else
-            {
-                child->m_flags &= ~R64FX_WIDGET_IS_PARTIALLY_VISIBLE;
-            }
-
-            child->recomputeChildrenVisibility(Rect<int>(
-                visible_rect.position() - child->position(),
-                visible_rect.size()
-            ));
-        }
-        else
-        {
-            child->m_flags &= ~R64FX_WIDGET_IS_VISIBLE;
-            child->m_flags &= ~R64FX_WIDGET_IS_PARTIALLY_VISIBLE;
-        }
-    }
-}
-
-
-void Widget::recomputeChildrenVisibility()
-{
-    Rect<int> clip_rect(0, 0, width(), height());
-    recomputeChildrenVisibility(clip_rect);
-}
-
-
 bool Widget::isVisible() const
 {
     return m_flags & R64FX_WIDGET_IS_VISIBLE;
@@ -1511,13 +1470,13 @@ void WidgetImpl::repaint()
 
 Painter* Widget::painter()
 {
-    Widget* root_widget = nullptr;
-    auto offset = toRootCoords({0, 0}, &root_widget);
-    auto root_window = root_widget->window();
-    if(!root_window)
-        return nullptr;
-    auto d = (WidgetImpl*) root_window->data();
-    auto p = d->painter;
+//     Widget* root_widget = nullptr;
+//     auto offset = toRootCoords({0, 0}, &root_widget);
+//     auto root_window = root_widget->window();
+//     if(!root_window)
+//         return nullptr;
+//     auto d = (WidgetImpl*) root_window->data();
+//     auto p = d->painter;
     
     return nullptr;
 }
