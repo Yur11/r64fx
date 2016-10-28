@@ -9,6 +9,7 @@ namespace r64fx{
 
 class Image;
 class Window;
+class PainterTexture;
 
 class Painter : public OffsetMixin<int>{
 
@@ -60,6 +61,10 @@ public:
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain) = 0;
 
+    virtual PainterTexture* loadTexture(Image* img) = 0;
+    
+    virtual void drawTexture(PainterTexture* tex, Point<int> dst_pos) = 0;
+    
     /** Make the changes visible.
 
         Update window surface. Swap buffers. etc.
@@ -70,6 +75,17 @@ public:
     /* Allways call this before any other paint commands
      * if the window has been resized. */
     virtual void adjustForWindowSize() = 0;
+};
+
+
+class PainterTexture{
+protected:
+    virtual ~PainterTexture() {};
+    
+public:
+    virtual Painter* parentPainter() = 0;
+    
+    virtual Rect<int> rect() = 0;
 };
 
 }//namespace r64fx

@@ -18,12 +18,52 @@
 using namespace std;
 
 namespace r64fx{
+    
+
+class PainterTextureImpl : public PainterTexture, public LinkedList<PainterTextureImpl>::Node{
+    Painter* m_parent_painter = nullptr;
+    
+public:
+    virtual ~PainterTextureImpl() {}
+    
+    PainterTextureImpl(Painter* parent_painter) : m_parent_painter(parent_painter) {}
+    
+    virtual Painter* parentPainter()
+    {
+        return m_parent_painter;
+    }
+};
+    
+    
+struct PainterTextureImplImage : public PainterTextureImpl{
+    Point<int> pos;
+    Image img;
+    
+    PainterTextureImplImage(Painter* parent_painter, Image* img)
+    : PainterTextureImpl(parent_painter)
+    {
+        load(img);
+    }
+    
+    void load(Image* img)
+    {
+        this->img.load(img->width(), img->height(), img->componentCount(), img->data(), true);
+    }
+    
+    virtual Rect<int> rect()
+    {
+        return {pos.x(), pos.y(), img.width(), img.height()};
+    }
+};
+
 
 struct PainterImpl : public Painter{
     Window*     window    = nullptr;
 
     Rect<int> current_clip_rect;
 
+    LinkedList<PainterTextureImpl> m_textures;
+    
     PainterImpl(Window* window)
     : window(window)
     {
@@ -154,7 +194,37 @@ struct PainterImplImage : public PainterImpl{
             );
         }
     }
+    
+    
+    virtual PainterTexture* loadTexture(Image* img)
+    {
+        auto tex = new PainterTextureImplImage(this, img);
+        tex->load(img);
+        return tex;
+    }
 
+    
+    virtual void drawTexture(PainterTexture* tex, Point<int> dst_pos)
+    {
+        auto tex_impl_img = (PainterTextureImplImage*) tex;
+        
+        RectIntersection<int> intersection(
+            current_clip_rect,
+            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), tex_impl_img->img.width(), tex_impl_img->img.height()}
+        );
+        
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            implant(
+                window->image(),
+                intersection.dstOffset() + current_clip_rect.position(),
+                intersection.size(),
+                intersection.srcOffset(),
+                &(tex_impl_img->img)
+            );
+        }
+    }
+    
 
     virtual void repaint(Rect<int>* rects, int numrects)
     {
@@ -174,7 +244,6 @@ struct PainterImplImage : public PainterImpl{
 };//PainterImplImage
 
 
-
 #ifdef R64FX_USE_GL
 namespace
 {
@@ -187,6 +256,17 @@ namespace
 
     const GLuint primitive_restart = 0xFFFF;
 }
+
+
+class PainterTextureImplGL : public PainterTextureImpl{
+    Rect<int> m_rect;
+    
+public:
+    virtual Rect<int> rect()
+    {
+        return m_rect;
+    }
+};
 
 
 struct PainterImplGL : public PainterImpl{
@@ -311,6 +391,12 @@ struct PainterImplGL : public PainterImpl{
         addToBaseTexture(&base_texture_image, {0, 0});
     }
 
+    
+    virtual PainterTexture* loadTexture(Image* img)
+    {
+        return nullptr;
+    }
+    
 
     void addToBaseTexture(Image* img, Point<int> pos)
     {

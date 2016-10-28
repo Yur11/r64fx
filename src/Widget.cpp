@@ -1509,6 +1509,20 @@ void WidgetImpl::repaint()
 }
 
 
+Painter* Widget::painter()
+{
+    Widget* root_widget = nullptr;
+    auto offset = toRootCoords({0, 0}, &root_widget);
+    auto root_window = root_widget->window();
+    if(!root_window)
+        return nullptr;
+    auto d = (WidgetImpl*) root_window->data();
+    auto p = d->painter;
+    
+    return nullptr;
+}
+
+
 /* Recursivly paint child widgets.
 
    If R64FX_CHILD_WANTS_REPAINT flag is set on one of the children,

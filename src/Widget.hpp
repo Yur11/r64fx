@@ -153,7 +153,7 @@ public:
     /* Show this widget in a window. */
     void show(
         Window::WmType  wm_type        = Window::WmType::Normal,
-        Window::Type    type           = Window::Type::GL,
+        Window::Type    type           = Window::Type::Image,
         Window*         modal_parent   = nullptr
     );
 
@@ -228,6 +228,8 @@ public:
 
     /* Request a repaint for this widget. */
     void repaint();
+    
+    Painter* painter();
 
 protected:
     virtual void paintEvent(WidgetPaintEvent* event);
