@@ -51,6 +51,8 @@ public:
      */
     virtual void putImage(Image* img, Point<int> pos = {0, 0}) = 0;
 
+    /* Same as putImage() but with alpha blend. */
+    virtual void blendImage(Image* img, Point<int> pos = {0, 0}) = 0;
 
     /* Blend multiple colors using multi-component alpha mask. */
     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask) = 0;

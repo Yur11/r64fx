@@ -97,6 +97,26 @@ struct PainterImplImage : public PainterImpl{
     }
 
 
+    virtual void blendImage(Image* img, Point<int> pos)
+    {
+        RectIntersection<int> intersection(
+            current_clip_rect,
+            {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
+        );
+
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            implant_alpha(
+                window->image(),
+                intersection.dstOffset() + current_clip_rect.position(),
+                intersection.size(),
+                intersection.srcOffset(),
+                img
+            );
+        }
+    }
+
+
     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
     {
         RectIntersection<int> intersection(
@@ -221,6 +241,26 @@ struct PainterImplGL : public PainterImpl{
         if(intersection.width() > 0 && intersection.height() > 0)
         {
             implant(
+                &base_texture_image,
+                intersection.dstOffset() + current_clip_rect.position(),
+                intersection.size(),
+                intersection.srcOffset(),
+                img
+            );
+            addToBaseTexture(&base_texture_image, {0, 0});
+        }
+    }
+
+    virtual void blendImage(Image* img, Point<int> pos)
+    {
+        RectIntersection<int> intersection(
+            current_clip_rect,
+            {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
+        );
+
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            implant_alpha(
                 &base_texture_image,
                 intersection.dstOffset() + current_clip_rect.position(),
                 intersection.size(),

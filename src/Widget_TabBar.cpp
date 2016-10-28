@@ -39,10 +39,11 @@ void cleanup()
 
 class TabHandle : public Widget{
     Image m_img;
-    std::string m_caption = nullptr;
-    IconName m_icon_name = IconName::None;
-    void* m_payload = nullptr;
-    Image* m_icon_img = nullptr;
+    std::string m_caption       = nullptr;
+    IconName m_icon_name        = IconName::None;
+    void* m_payload             = nullptr;
+    Image* m_icon_img           = nullptr;
+    Image* m_selected_icon_img  = nullptr;
     
 public:
     TabHandle(Widget* parent, const std::string &caption, IconName icon_name, void* tab_payload) 
@@ -73,7 +74,7 @@ public:
 
             IconColors colors;
             colors.stroke1 = Color(31, 31, 31, 0);
-            colors.fill1   = Color(127, 127, 127, 0);
+            colors.fill1   = Color(0, 0, 0, 255);
             colors.stroke2 = Color(63, 63, 63, 0);
             colors.fill2   = Color(223, 223, 223, 0);
 
@@ -143,7 +144,7 @@ protected:
         
         if(m_icon_img)
         {
-            p->putImage(m_icon_img, {g_hori_padding, height()/2 - m_icon_img->height()/2});
+            p->blendImage(m_icon_img, {g_hori_padding, height()/2 - m_icon_img->height()/2});
         }
     }
     

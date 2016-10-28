@@ -179,16 +179,16 @@ protected:
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
         
-        p->putImage(m->icon10, {10, 10});
-        p->putImage(m->icon16, {10, 24});
-        p->putImage(m->icon18, {10, 45});
-        p->putImage(m->icon20, {10, 68});
-        p->putImage(m->icon22, {10, 93});
-        p->putImage(m->icon24, {10, 120});
-        p->putImage(m->icon26, {10, 149});
-        p->putImage(m->icon28, {10, 180});
-        p->putImage(m->icon30, {10, 214});
-        p->putImage(m->icon32, {10, 250});
+        p->blendImage(m->icon10, {10, 10});
+        p->blendImage(m->icon16, {10, 24});
+        p->blendImage(m->icon18, {10, 45});
+        p->blendImage(m->icon20, {10, 68});
+        p->blendImage(m->icon22, {10, 93});
+        p->blendImage(m->icon24, {10, 120});
+        p->blendImage(m->icon26, {10, 149});
+        p->blendImage(m->icon28, {10, 180});
+        p->blendImage(m->icon30, {10, 214});
+        p->blendImage(m->icon32, {10, 250});
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -351,7 +351,7 @@ MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(par
     m->bottom_dock->setHeight(256);
     
     g_colors.stroke1 = Color(31, 31, 31, 0);
-    g_colors.fill1   = Color(127, 127, 127, 0);
+    g_colors.fill1   = Color(0, 0, 0, 255);
     g_colors.stroke2 = Color(63, 63, 63, 0);
     g_colors.fill2   = Color(223, 223, 223, 0);
     

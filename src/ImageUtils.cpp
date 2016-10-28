@@ -249,7 +249,7 @@ void implant_alpha(Image* dst, Point<int> dst_offset, Size<int> size, Point<int>
 
             for(int c=0; c<3; c++)
             {
-                dstpx[c] = (unsigned char)((float(dstpx[c]) * dst_coeff + float(srcpx[c]) * src_coeff) * 255.0f);
+                dstpx[c] = (unsigned char)(float(dstpx[c]) * dst_coeff + float(srcpx[c]) * src_coeff);
             }
         }
     }
