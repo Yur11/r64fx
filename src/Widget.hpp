@@ -143,8 +143,8 @@ public:
 
     Orientation orientation() const;
 
-    /* Show this widget in a window. */
-    void show(
+    /* Open this widget in a separate window. */
+    void openWindow(
         Window::WmType  wm_type        = Window::WmType::Normal,
         Window::Type    type           = Window::Type::Image,
         Window*         modal_parent   = nullptr

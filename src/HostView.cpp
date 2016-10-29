@@ -33,7 +33,7 @@ protected:
 HostView::HostView(HostViewControllerIface* controller_iface)
 {
     p = new HostViewPrivate(controller_iface);
-    p->show();
+    p->openWindow();
 }
 
 

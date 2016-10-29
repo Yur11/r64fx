@@ -280,7 +280,7 @@ void Widget_Menu::showAt(Point<int> position, Widget* parent)
             menu_position.setY(menu_position.y() - height());
         }
 
-        show(Window::WmType::Menu, Window::Type::Image, parent_window);
+        openWindow(Window::WmType::Menu, Window::Type::Image, parent_window);
         window()->setPosition(menu_position);
         grabMouseForMultipleWidgets();
     }
@@ -365,7 +365,7 @@ bool Widget_MenuItem::showSubMenu()
         }
     }
     
-    m_sub_menu->show(Window::WmType::Menu, Window::Type::Image);
+    m_sub_menu->openWindow(Window::WmType::Menu, Window::Type::Image);
     m_sub_menu->window()->setPosition(sub_menu_position);
 //     if(parent_menu == parent_menu->rootMenu() && parent_menu != root_widget)
     if(Widget::mouseMultiGrabber() == nullptr)

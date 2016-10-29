@@ -894,7 +894,7 @@ Orientation Widget::orientation() const
 }
 
 
-void Widget::show(
+void Widget::openWindow(
     Window::WmType  wm_type,
     Window::Type    type,
     Window*         modal_parent
@@ -1298,7 +1298,7 @@ void Widget::startDrag(const ClipboardMetadata &metadata, Widget* dnd_object, Po
         g_dnd_source = this;
         if(!dnd_object->isWindow())
         {
-            dnd_object->show(Window::WmType::DND, Window::Type::Image);
+            dnd_object->openWindow(Window::WmType::DND, Window::Type::Image);
         }
         root_window->startDrag(metadata, dnd_object->window(), anchor.x(), anchor.y());
     }

@@ -31,7 +31,7 @@ struct ProgramPrivate : public MainViewEventIface{
         initActions();
 
         main_view = new MainView(this);
-        main_view->show();
+        main_view->openWindow();
         
         newProject();
         
