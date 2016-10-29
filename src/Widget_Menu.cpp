@@ -396,7 +396,7 @@ void Widget_Menu::closeAll()
 
     if(isWindow())
     {
-        close();
+        closeWindow();
     }
 }
 

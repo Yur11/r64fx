@@ -485,7 +485,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
         Widget::releaseMouseFocus();
         if(g_dnd_object && g_dnd_source)
         {
-            g_dnd_object->close();
+            g_dnd_object->closeWindow();
             DndReleaseEvent event(g_dnd_object);
             g_dnd_source->dndReleaseEvent(&event);
             g_dnd_object = nullptr;
@@ -998,7 +998,7 @@ void Widget::hide()
 }
 
 
-void Widget::close()
+void Widget::closeWindow()
 {
     if(isWindow())
     {
@@ -1758,7 +1758,7 @@ void Widget::dndFinishedEvent(DndFinishedEvent* event)
 
 void Widget::closeEvent()
 {
-    close();
+    closeWindow();
 }
 
 }//namespace r64fx

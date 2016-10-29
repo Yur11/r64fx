@@ -41,7 +41,7 @@ struct ProgramPrivate : public MainViewEventIface{
             sleep_microseconds(5000);
         }
         
-        main_view->close();
+        main_view->closeWindow();
         delete main_view;
 
         cleanupActions();

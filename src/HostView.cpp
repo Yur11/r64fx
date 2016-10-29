@@ -85,7 +85,7 @@ HostViewPrivate::HostViewPrivate(HostViewControllerIface* controller_iface)
 
 HostViewPrivate::~HostViewPrivate()
 {
-    close();
+    closeWindow();
     delete m_main_menu;
     delete m_menu_menu;
     delete m_action_open_player;

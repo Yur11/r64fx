@@ -154,7 +154,7 @@ public:
     void hide();
 
     /* Close the window. */
-    void close();
+    void closeWindow();
 
     /* The window that this widget is shown in or nullptr. */
     Window* window() const;
