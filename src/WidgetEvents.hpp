@@ -4,6 +4,7 @@
 namespace r64fx{
     
 class Painter;
+class PainterTextureManager;
 class WidgetImpl;
 
 class WidgetPaintEvent{
@@ -93,6 +94,35 @@ public:
     inline int dy() const { return m_delta.y(); }
 
     inline MouseButton button() const { return m_button; }
+};
+
+
+class WidgetShowEvent{
+    Window* m_window = nullptr;
+    PainterTextureManager* m_ptm = nullptr;
+    
+public:
+    WidgetShowEvent(Window* window, PainterTextureManager* ptm) 
+    : m_window(window)
+    , m_ptm(ptm)
+    {
+        
+    }
+    
+    inline Window* window() const
+    {
+        return m_window;
+    }
+    
+    inline PainterTextureManager* textureManager() const
+    {
+        return m_ptm;
+    }
+};
+
+
+class WidgetHideEvent{
+    
 };
 
 

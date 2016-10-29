@@ -14,7 +14,6 @@ namespace r64fx{
 
 class Widget;
 class Window;
-class PainterTextureManager;
 
 typedef LinkedList<Widget>::Iterator WidgetIterator;
 
@@ -164,6 +163,8 @@ public:
 
     bool isWindow() const;
 
+    bool isShownInWindow() const;
+    
     void setWindowTitle(std::string title);
 
     std::string windowTitle() const;
@@ -227,9 +228,9 @@ public:
 protected:
     void childrenPaintEvent(WidgetPaintEvent* event);
 
-    void childrenShowEvent();
+    void childrenShowEvent(WidgetShowEvent* event);
     
-    void childrenHideEvent();
+    void childrenHideEvent(WidgetHideEvent* event);
 
     bool childrenMousePressEvent(MousePressEvent* event);
 
@@ -242,9 +243,9 @@ private:
 
     virtual void clipEvent(WidgetClipEvent* event);
     
-    virtual void showEvent();
+    virtual void showEvent(WidgetShowEvent* event);
     
-    virtual void hideEvent();
+    virtual void hideEvent(WidgetHideEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

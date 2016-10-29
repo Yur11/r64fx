@@ -551,6 +551,7 @@ Widget::~Widget()
     for(auto child : m_children)
     {
         child->setParent(nullptr);
+        delete child;
     }
 }
 
@@ -563,12 +564,16 @@ void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child
         cerr << "WARNING: Widget::setParent()\nTrying to set parent on a window!\n";
 #endif//R64FX_DEBUG
         abort();
-        return;
     }
 
     if(m_parent.widget)
     {
-        hideEvent();
+        if(isShownInWindow())
+        {
+            WidgetHideEvent event;
+            hideEvent(&event);
+            m_flags &= ~R64FX_WIDGET_IS_SHOWN;
+        }
         m_parent.widget->m_children.remove(this);
     }
 
@@ -588,7 +593,14 @@ void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child
             else
                 parent->m_children.preppend(this);
         }
-        showEvent();
+        
+        if(parent->isShownInWindow())
+        {
+            m_flags |= R64FX_WIDGET_IS_SHOWN;
+            auto parent_window = parent->rootWindow();
+            WidgetShowEvent event(parent_window, parent->textureManager());
+            showEvent(&event);
+        }
     }
     m_parent.widget = parent;
 }
@@ -971,6 +983,16 @@ void Widget::openWindow(
                 }
 #endif//R64FX_DEBUG
             }
+            
+            window->setSize(size());
+            if(modal_parent)
+                m_parent.window->setModalTo(modal_parent);
+            window->show();
+            m_flags |= R64FX_WIDGET_IS_SHOWN;
+            WidgetShowEvent event(window, painter);
+            showEvent(&event);
+            clip();
+            repaint();
         }
 #ifdef R64FX_DEBUG
         else
@@ -979,13 +1001,6 @@ void Widget::openWindow(
         }
 #endif//R64FX_DEBUG
     }
-    m_parent.window->setSize(size());
-    if(modal_parent)
-        m_parent.window->setModalTo(modal_parent);
-    m_parent.window->show();
-    showEvent();
-    clip();
-    repaint();
 }
 
 
@@ -1052,6 +1067,12 @@ Window* Widget::rootWindow() const
 bool Widget::isWindow() const
 {
     return m_flags & R64FX_WIDGET_IS_WINDOW;
+}
+
+
+bool Widget::isShownInWindow() const
+{
+    return m_flags & R64FX_WIDGET_IS_SHOWN;
 }
 
 
@@ -1489,15 +1510,23 @@ void Widget::childrenPaintEvent(WidgetPaintEvent* event)
 }
 
 
-void Widget::childrenShowEvent()
+void Widget::childrenShowEvent(WidgetShowEvent* event)
 {
-    
+    for(auto child : m_children)
+    {
+        child->m_flags |= R64FX_WIDGET_IS_SHOWN;
+        child->showEvent(event);
+    }
 }
 
 
-void Widget::childrenHideEvent()
+void Widget::childrenHideEvent(WidgetHideEvent* event)
 {
-    
+    for(auto child : m_children)
+    {
+        child->hideEvent(event);
+        child->m_flags &= ~R64FX_WIDGET_IS_SHOWN;
+    }
 }
 
 
@@ -1630,15 +1659,15 @@ void Widget::clipEvent(WidgetClipEvent* event)
 }
 
 
-void Widget::showEvent()
+void Widget::showEvent(WidgetShowEvent* event)
 {
-    
+    childrenShowEvent(event);
 }
 
 
-void Widget::hideEvent()
+void Widget::hideEvent(WidgetHideEvent* event)
 {
-    
+    childrenHideEvent(event);
 }
 
 
