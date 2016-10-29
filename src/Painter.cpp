@@ -60,6 +60,8 @@ public:
     
     virtual Rect<int> rect();
     
+    virtual int componentCount();
+    
     virtual void loadImage(Image* teximg);
     
     virtual void readImage(Image* teximg);
@@ -123,91 +125,13 @@ struct PainterImplImage : public PainterImpl{
     {
 
     }
-
+    
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
         auto intersection_rect = clip(rect + offset());
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
             fill(window->image(), color, intersection_rect);
-        }
-    }
-
-    virtual void putImage(Image* img, Point<int> pos)
-    {
-        RectIntersection<int> intersection(
-            current_clip_rect,
-            {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
-        );
-
-        if(intersection.width() > 0 && intersection.height() > 0)
-        {
-            implant(
-                window->image(),
-                intersection.dstOffset() + current_clip_rect.position(),
-                intersection.size(),
-                intersection.srcOffset(),
-                img
-            );
-        }
-    }
-
-
-    virtual void blendImage(Image* img, Point<int> pos)
-    {
-        RectIntersection<int> intersection(
-            current_clip_rect,
-            {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
-        );
-
-        if(intersection.width() > 0 && intersection.height() > 0)
-        {
-            implant_alpha(
-                window->image(),
-                intersection.dstOffset() + current_clip_rect.position(),
-                intersection.size(),
-                intersection.srcOffset(),
-                img
-            );
-        }
-    }
-
-
-    virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
-    {
-        RectIntersection<int> intersection(
-            current_clip_rect,
-            {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
-        );
-
-        if(intersection.width() > 0 && intersection.height() > 0)
-        {
-            blend(
-                window->image(),
-                intersection.dstOffset() + current_clip_rect.position(),
-                intersection.size(),
-                intersection.srcOffset(),
-                colors, mask
-            );
-        }
-    }
-
-
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
-    {
-        RectIntersection<int> intersection(
-            current_clip_rect, rect + offset()
-        );
-
-        if(intersection.width() > 0 && intersection.height() > 0)
-        {
-            draw_waveform(
-                window->image(),
-                color,
-                waveform + intersection.srcOffset().x() * 2,
-                Rect<int>(intersection.dstOffset(), intersection.size()),
-                gain
-            );
         }
     }
 
@@ -222,7 +146,6 @@ struct PainterImplImage : public PainterImpl{
         }
         return texture;
     }
-    
     
     virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos)
     {
@@ -244,7 +167,45 @@ struct PainterImplImage : public PainterImpl{
             );
         }
     }
-    
+
+    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture* mask_texture)
+    {
+        auto mask = static_cast<PainterTextureImplImage*>(mask_texture);
+        
+        RectIntersection<int> intersection(
+            current_clip_rect,
+            {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
+        );
+
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            blend(
+                window->image(),
+                intersection.dstOffset() + current_clip_rect.position(),
+                intersection.size(),
+                intersection.srcOffset(),
+                colors, mask->image();
+            );
+        }
+    }
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
+    {
+        RectIntersection<int> intersection(
+            current_clip_rect, rect + offset()
+        );
+
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            draw_waveform(
+                window->image(),
+                color,
+                waveform + intersection.srcOffset().x() * 2,
+                Rect<int>(intersection.dstOffset(), intersection.size()),
+                gain
+            );
+        }
+    }
 
     virtual void repaint(Rect<int>* rects, int numrects)
     {
@@ -279,6 +240,12 @@ bool PainterTextureImplImage::isGood()
 Rect<int> PainterTextureImplImage::rect()
 {
     return {m_pos.x(), m_pos.y(), m_img.width(), m_img.height()};
+}
+
+
+int PainterTextureImplImage::componentCount()
+{
+    return m_img.componentCount();
 }
 
 
