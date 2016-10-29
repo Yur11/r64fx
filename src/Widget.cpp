@@ -572,7 +572,7 @@ void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child
         {
             WidgetRemovedFromWindowEvent event(rootWindow());
             removedFromWindowEvent(&event);
-            m_flags &= ~R64FX_WIDGET_IS_SHOWN;
+            m_flags &= ~R64FX_WIDGET_BELONGS_TO_WINDOW;
         }
         m_parent.widget->m_children.remove(this);
     }
@@ -596,7 +596,7 @@ void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child
         
         if(parent->isShownInWindow())
         {
-            m_flags |= R64FX_WIDGET_IS_SHOWN;
+            m_flags |= R64FX_WIDGET_BELONGS_TO_WINDOW;
             auto parent_window = parent->rootWindow();
             WidgetAddedToWindowEvent event(parent_window, parent->textureManager());
             addedToWindowEvent(&event);
@@ -988,7 +988,7 @@ void Widget::openWindow(
             if(modal_parent)
                 m_parent.window->setModalTo(modal_parent);
             window->show();
-            m_flags |= R64FX_WIDGET_IS_SHOWN;
+            m_flags |= R64FX_WIDGET_BELONGS_TO_WINDOW;
             WidgetAddedToWindowEvent event(window, painter);
             addedToWindowEvent(&event);
             clip();
@@ -1066,7 +1066,7 @@ bool Widget::isWindow() const
 
 bool Widget::isShownInWindow() const
 {
-    return m_flags & R64FX_WIDGET_IS_SHOWN;
+    return m_flags & R64FX_WIDGET_BELONGS_TO_WINDOW;
 }
 
 
@@ -1508,7 +1508,7 @@ void Widget::childrenAddedToWindowEvent(WidgetAddedToWindowEvent* event)
 {
     for(auto child : m_children)
     {
-        child->m_flags |= R64FX_WIDGET_IS_SHOWN;
+        child->m_flags |= R64FX_WIDGET_BELONGS_TO_WINDOW;
         child->addedToWindowEvent(event);
     }
 }
@@ -1519,7 +1519,7 @@ void Widget::childrenRemovedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
     for(auto child : m_children)
     {
         child->removedFromWindowEvent(event);
-        child->m_flags &= ~R64FX_WIDGET_IS_SHOWN;
+        child->m_flags &= ~R64FX_WIDGET_BELONGS_TO_WINDOW;
     }
 }
 
