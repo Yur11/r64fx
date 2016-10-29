@@ -106,7 +106,6 @@ public:
 
     virtual ~PlayerControllerPrivate()
     {
-        m_view->hide();
         delete m_view;
 
         m_machine->withdraw();

@@ -97,12 +97,12 @@ public:
 };
 
 
-class WidgetShowEvent{
+class WidgetAddedToWindowEvent{
     Window* m_window = nullptr;
     PainterTextureManager* m_ptm = nullptr;
     
 public:
-    WidgetShowEvent(Window* window, PainterTextureManager* ptm) 
+    WidgetAddedToWindowEvent(Window* window, PainterTextureManager* ptm) 
     : m_window(window)
     , m_ptm(ptm)
     {
@@ -121,8 +121,20 @@ public:
 };
 
 
-class WidgetHideEvent{
+class WidgetRemovedFromWindowEvent{
+    Window* m_window = nullptr;
     
+public:
+    WidgetRemovedFromWindowEvent(Window* window)
+    : m_window(window)
+    {
+        
+    }
+    
+    inline Window* window() const
+    {
+        return m_window;
+    }
 };
 
 

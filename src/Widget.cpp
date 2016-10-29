@@ -570,8 +570,8 @@ void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child
     {
         if(isShownInWindow())
         {
-            WidgetHideEvent event;
-            hideEvent(&event);
+            WidgetRemovedFromWindowEvent event(rootWindow());
+            removedFromWindowEvent(&event);
             m_flags &= ~R64FX_WIDGET_IS_SHOWN;
         }
         m_parent.widget->m_children.remove(this);
@@ -598,8 +598,8 @@ void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child
         {
             m_flags |= R64FX_WIDGET_IS_SHOWN;
             auto parent_window = parent->rootWindow();
-            WidgetShowEvent event(parent_window, parent->textureManager());
-            showEvent(&event);
+            WidgetAddedToWindowEvent event(parent_window, parent->textureManager());
+            addedToWindowEvent(&event);
         }
     }
     m_parent.widget = parent;
@@ -989,8 +989,8 @@ void Widget::openWindow(
                 m_parent.window->setModalTo(modal_parent);
             window->show();
             m_flags |= R64FX_WIDGET_IS_SHOWN;
-            WidgetShowEvent event(window, painter);
-            showEvent(&event);
+            WidgetAddedToWindowEvent event(window, painter);
+            addedToWindowEvent(&event);
             clip();
             repaint();
         }
@@ -1004,19 +1004,13 @@ void Widget::openWindow(
 }
 
 
-void Widget::hide()
-{
-    if(isWindow())
-    {
-        m_parent.window->hide();
-    }
-}
-
-
 void Widget::closeWindow()
 {
     if(isWindow())
     {
+        WidgetRemovedFromWindowEvent event(m_parent.window);
+        removedFromWindowEvent(&event);
+        
         auto d = (WidgetImpl*) m_parent.window->data();
         auto painter = d->painter;
         Painter::deleteInstance(painter);
@@ -1510,21 +1504,21 @@ void Widget::childrenPaintEvent(WidgetPaintEvent* event)
 }
 
 
-void Widget::childrenShowEvent(WidgetShowEvent* event)
+void Widget::childrenAddedToWindowEvent(WidgetAddedToWindowEvent* event)
 {
     for(auto child : m_children)
     {
         child->m_flags |= R64FX_WIDGET_IS_SHOWN;
-        child->showEvent(event);
+        child->addedToWindowEvent(event);
     }
 }
 
 
-void Widget::childrenHideEvent(WidgetHideEvent* event)
+void Widget::childrenRemovedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
 {
     for(auto child : m_children)
     {
-        child->hideEvent(event);
+        child->removedFromWindowEvent(event);
         child->m_flags &= ~R64FX_WIDGET_IS_SHOWN;
     }
 }
@@ -1659,15 +1653,15 @@ void Widget::clipEvent(WidgetClipEvent* event)
 }
 
 
-void Widget::showEvent(WidgetShowEvent* event)
+void Widget::addedToWindowEvent(WidgetAddedToWindowEvent* event)
 {
-    childrenShowEvent(event);
+    childrenAddedToWindowEvent(event);
 }
 
 
-void Widget::hideEvent(WidgetHideEvent* event)
+void Widget::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
 {
-    childrenHideEvent(event);
+    childrenRemovedFromWindowEvent(event);
 }
 
 

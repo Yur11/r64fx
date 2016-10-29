@@ -149,9 +149,6 @@ public:
         Window*         modal_parent   = nullptr
     );
 
-    /* Hide the window. */
-    void hide();
-
     /* Close the window. */
     void closeWindow();
 
@@ -228,9 +225,9 @@ public:
 protected:
     void childrenPaintEvent(WidgetPaintEvent* event);
 
-    void childrenShowEvent(WidgetShowEvent* event);
+    void childrenAddedToWindowEvent(WidgetAddedToWindowEvent* event);
     
-    void childrenHideEvent(WidgetHideEvent* event);
+    void childrenRemovedFromWindowEvent(WidgetRemovedFromWindowEvent* event);
 
     bool childrenMousePressEvent(MousePressEvent* event);
 
@@ -243,9 +240,9 @@ private:
 
     virtual void clipEvent(WidgetClipEvent* event);
     
-    virtual void showEvent(WidgetShowEvent* event);
+    virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event);
     
-    virtual void hideEvent(WidgetHideEvent* event);
+    virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 
