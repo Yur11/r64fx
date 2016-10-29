@@ -33,7 +33,6 @@ set(SRC
     FilterMachine.cpp
     FilterView.cpp
     Font.cpp
-    HostView.cpp
     IconSupply.cpp
     Image.cpp
     ImageAnimation.cpp
