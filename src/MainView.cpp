@@ -572,6 +572,13 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
 }
 
 
+void MainView::showEvent()
+{
+    auto tm = textureManager();
+    cout << "show tm: " << tm << "\n";
+}
+
+
 void MainView::mousePressEvent(MousePressEvent* event)
 {
     if(!childrenMousePressEvent(event))

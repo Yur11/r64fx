@@ -25,6 +25,8 @@ protected:
 
     virtual void resizeEvent(WidgetResizeEvent* event);
     
+    virtual void showEvent();
+    
     virtual void mousePressEvent(MousePressEvent* event);
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);

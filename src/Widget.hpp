@@ -230,6 +230,10 @@ protected:
     virtual void resizeEvent(WidgetResizeEvent* event);
 
     virtual void clipEvent(WidgetClipEvent* event);
+    
+    virtual void showEvent();
+    
+    virtual void hideEvent();
 
     virtual void mousePressEvent(MousePressEvent* event);
 

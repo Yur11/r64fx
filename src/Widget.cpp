@@ -568,6 +568,7 @@ void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child
 
     if(m_parent.widget)
     {
+        hideEvent();
         m_parent.widget->m_children.remove(this);
     }
 
@@ -587,6 +588,7 @@ void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child
             else
                 parent->m_children.preppend(this);
         }
+        showEvent();
     }
     m_parent.widget = parent;
 }
@@ -981,6 +983,7 @@ void Widget::show(
     if(modal_parent)
         m_parent.window->setModalTo(modal_parent);
     m_parent.window->show();
+    showEvent();
     clip();
     repaint();
 }
@@ -1568,6 +1571,18 @@ void Widget::resizeEvent(WidgetResizeEvent* event)
 void Widget::clipEvent(WidgetClipEvent* event)
 {
 
+}
+
+
+void Widget::showEvent()
+{
+    
+}
+
+
+void Widget::hideEvent()
+{
+    
 }
 
 
