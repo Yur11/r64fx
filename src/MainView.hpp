@@ -24,8 +24,8 @@ protected:
     virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void resizeEvent(WidgetResizeEvent* event);
-    
-    virtual void showEvent();
+
+    virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event);
     
     virtual void mousePressEvent(MousePressEvent* event);
 

@@ -65,6 +65,17 @@ struct MainViewPrivate{
     Image* icon28 = nullptr;
     Image* icon30 = nullptr;
     Image* icon32 = nullptr;
+    
+    PainterTexture* icon10_tex = nullptr;
+    PainterTexture* icon16_tex = nullptr;
+    PainterTexture* icon18_tex = nullptr;
+    PainterTexture* icon20_tex = nullptr;
+    PainterTexture* icon22_tex = nullptr;
+    PainterTexture* icon24_tex = nullptr;
+    PainterTexture* icon26_tex = nullptr;
+    PainterTexture* icon28_tex = nullptr;
+    PainterTexture* icon30_tex = nullptr;
+    PainterTexture* icon32_tex = nullptr;
 };
 
     
@@ -179,16 +190,16 @@ protected:
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
         
-//         p->blendImage(m->icon10, {10, 10});
-//         p->blendImage(m->icon16, {10, 24});
-//         p->blendImage(m->icon18, {10, 45});
-//         p->blendImage(m->icon20, {10, 68});
-//         p->blendImage(m->icon22, {10, 93});
-//         p->blendImage(m->icon24, {10, 120});
-//         p->blendImage(m->icon26, {10, 149});
-//         p->blendImage(m->icon28, {10, 180});
-//         p->blendImage(m->icon30, {10, 214});
-//         p->blendImage(m->icon32, {10, 250});
+        p->blendTexture(m->icon10_tex, {10, 10});
+        p->blendTexture(m->icon16_tex, {10, 24});
+        p->blendTexture(m->icon18_tex, {10, 45});
+        p->blendTexture(m->icon20_tex, {10, 68});
+        p->blendTexture(m->icon22_tex, {10, 93});
+        p->blendTexture(m->icon24_tex, {10, 120});
+        p->blendTexture(m->icon26_tex, {10, 149});
+        p->blendTexture(m->icon28_tex, {10, 180});
+        p->blendTexture(m->icon30_tex, {10, 214});
+        p->blendTexture(m->icon32_tex, {10, 250});
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -572,10 +583,21 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
 }
 
 
-void MainView::showEvent()
+void MainView::addedToWindowEvent(WidgetAddedToWindowEvent* event)
 {
-    auto tm = textureManager();
-    cout << "show tm: " << tm << "\n";
+    auto tm = event->textureManager();
+    cout << "tmtm: " << tm << "\n";
+    
+    m->icon10_tex = tm->newTexture(m->icon10);
+    m->icon16_tex = tm->newTexture(m->icon16);
+    m->icon18_tex = tm->newTexture(m->icon18);
+    m->icon20_tex = tm->newTexture(m->icon20);
+    m->icon22_tex = tm->newTexture(m->icon22);
+    m->icon24_tex = tm->newTexture(m->icon24);
+    m->icon26_tex = tm->newTexture(m->icon26);
+    m->icon28_tex = tm->newTexture(m->icon28);
+    m->icon30_tex = tm->newTexture(m->icon30);
+    m->icon32_tex = tm->newTexture(m->icon32);
 }
 
 

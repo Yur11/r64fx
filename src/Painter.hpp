@@ -73,6 +73,11 @@ public:
     
     virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha = false) = 0;
     
+    inline void blendTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha = false)
+    {
+        drawTexture(texture, dst_pos, true);
+    }
+    
     virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture* mask_texture) = 0;
     
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain) = 0;
