@@ -179,16 +179,16 @@ protected:
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
         
-        p->blendImage(m->icon10, {10, 10});
-        p->blendImage(m->icon16, {10, 24});
-        p->blendImage(m->icon18, {10, 45});
-        p->blendImage(m->icon20, {10, 68});
-        p->blendImage(m->icon22, {10, 93});
-        p->blendImage(m->icon24, {10, 120});
-        p->blendImage(m->icon26, {10, 149});
-        p->blendImage(m->icon28, {10, 180});
-        p->blendImage(m->icon30, {10, 214});
-        p->blendImage(m->icon32, {10, 250});
+//         p->blendImage(m->icon10, {10, 10});
+//         p->blendImage(m->icon16, {10, 24});
+//         p->blendImage(m->icon18, {10, 45});
+//         p->blendImage(m->icon20, {10, 68});
+//         p->blendImage(m->icon22, {10, 93});
+//         p->blendImage(m->icon24, {10, 120});
+//         p->blendImage(m->icon26, {10, 149});
+//         p->blendImage(m->icon28, {10, 180});
+//         p->blendImage(m->icon30, {10, 214});
+//         p->blendImage(m->icon32, {10, 250});
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)

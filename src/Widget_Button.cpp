@@ -94,7 +94,7 @@ void Widget_Button::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
     Image frame;
     m_animation->pickFrame(&frame, m_state);
-    p->putImage(&frame, {0, 0});
+//     p->putImage(&frame, {0, 0});
 }
 
 

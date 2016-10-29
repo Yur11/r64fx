@@ -504,7 +504,7 @@ void Widget_Knob::paintAnimation(Painter* painter, int frame_num)
 
     Image frame;
     m_animation->pickFrame(&frame, frame_num);
-    painter->blendColors({0, 0}, colors, &frame);
+//     painter->blendColors({0, 0}, colors, &frame);
 }
 
 
@@ -515,7 +515,7 @@ void Widget_Knob::paintText(Painter* painter)
 
     Image text_mask;
     text2image(m_text, TextWrap::None, g_knob_font, &text_mask);
-    painter->blendColors({width()/2 - text_mask.width()/2, m_animation->height()}, colors, &text_mask);
+//     painter->blendColors({width()/2 - text_mask.width()/2, m_animation->height()}, colors, &text_mask);
 }
 
 

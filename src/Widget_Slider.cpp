@@ -272,7 +272,7 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
         {
             p->fillRect({bar_x, barOffset(), 2, barLength()}, black);
         }
-        p->blendColors({handle_x, pos}, colors, handle_img);
+//         p->blendColors({handle_x, pos}, colors, handle_img);
     }
     else
     {
@@ -299,7 +299,7 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
         {
             p->fillRect({barOffset(), bar_y, barLength(), 2}, black);
         }
-        p->blendColors({pos, handle_y}, colors, handle_img);
+//         p->blendColors({pos, handle_y}, colors, handle_img);
     }
 }
 

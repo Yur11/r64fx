@@ -147,7 +147,7 @@ struct PainterImplImage : public PainterImpl{
         return texture;
     }
     
-    virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos)
+    virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha)
     {
         auto texture_impl = static_cast<PainterTextureImplImage*>(texture);
         
@@ -158,13 +158,26 @@ struct PainterImplImage : public PainterImpl{
         
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            implant(
-                window->image(),
-                intersection.dstOffset() + current_clip_rect.position(),
-                intersection.size(),
-                intersection.srcOffset(),
-                texture_impl->image()
-            );
+            if(blend_alpha)
+            {
+                implant_alpha(
+                    window->image(),
+                    intersection.dstOffset() + current_clip_rect.position(),
+                    intersection.size(),
+                    intersection.srcOffset(),
+                    texture_impl->image()
+                );
+            }
+            else
+            {
+                implant(
+                    window->image(),
+                    intersection.dstOffset() + current_clip_rect.position(),
+                    intersection.size(),
+                    intersection.srcOffset(),
+                    texture_impl->image()
+                );
+            }
         }
     }
 
@@ -184,7 +197,7 @@ struct PainterImplImage : public PainterImpl{
                 intersection.dstOffset() + current_clip_rect.position(),
                 intersection.size(),
                 intersection.srcOffset(),
-                colors, mask->image();
+                colors, mask->image()
             );
         }
     }

@@ -220,33 +220,33 @@ private:
         p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
         if(zimg.isGood())
         {
-            p->blendColors({0, 0}, Colors(Color(255, 255, 255, 0)), &zimg);
+//             p->blendColors({0, 0}, Colors(Color(255, 255, 255, 0)), &zimg);
         }
 
         if(markup_img.isGood())
         {
-            p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &markup_img);
+// //             p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &markup_img);
         }
 
         Point<int> handle_offset((handle_size >> 1) + 1, (handle_size >> 1) + 1);
 
-        for(auto zero : zeros)
-        {
-            p->blendColors(
-                complexToPoint(zero) - handle_offset,
-                Colors(Color(0, 0, 255, 0)),
-                g_circle_img
-            );
-        }
-
-        for(auto pole : poles)
-        {
-            p->blendColors(
-                complexToPoint(pole) - handle_offset,
-                Colors(Color(255, 0, 0, 0)),
-                g_cross_img
-            );
-        }
+//         for(auto zero : zeros)
+//         {
+//             p->blendColors(
+//                 complexToPoint(zero) - handle_offset,
+//                 Colors(Color(0, 0, 255, 0)),
+//                 g_circle_img
+//             );
+//         }
+// 
+//         for(auto pole : poles)
+//         {
+//             p->blendColors(
+//                 complexToPoint(pole) - handle_offset,
+//                 Colors(Color(255, 0, 0, 0)),
+//                 g_cross_img
+//             );
+//         }
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -390,7 +390,7 @@ private:
         Image img(width(), height(), 1);
         fill(&img, Color(0));
         stroke_plot(&img, Color(255), {0, 0, width(), height()}, response.data(), 2.0f, 1.0f, height() / 2);
-        p->blendColors({0, 0}, Colors(Color(255, 63, 0)), &img);
+//         p->blendColors({0, 0}, Colors(Color(255, 63, 0)), &img);
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)

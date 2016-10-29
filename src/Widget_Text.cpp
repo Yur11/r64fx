@@ -473,7 +473,7 @@ void Widget_Text::paintEvent(WidgetPaintEvent* event)
     }
 
     auto painter = event->painter();
-    painter->putImage(m_image);
+//     painter->putImage(m_image);
 
     Widget::paintEvent(event);
 }

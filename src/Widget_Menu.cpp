@@ -417,7 +417,7 @@ void Widget_MenuItem::paintEvent(WidgetPaintEvent* event)
         p->fillRect({{0, 0}, size()}, Color(63, 63, 63, 0));
         if(m_image)
         {
-            p->blendColors({0, 0}, Colors(Color(191, 191, 191, 0)), m_image);
+//             p->blendColors({0, 0}, Colors(Color(191, 191, 191, 0)), m_image);
         }
     }
     else
@@ -425,7 +425,7 @@ void Widget_MenuItem::paintEvent(WidgetPaintEvent* event)
         p->fillRect({{0, 0}, size()}, Color(127, 127, 127, 0));
         if(m_image)
         {
-            p->blendColors({0, 0}, Colors(Color(0, 0, 0, 0)), m_image);
+//             p->blendColors({0, 0}, Colors(Color(0, 0, 0, 0)), m_image);
         }
     }
 

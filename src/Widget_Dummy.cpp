@@ -27,7 +27,7 @@ void Widget_Dummy::paintEvent(WidgetPaintEvent* event)
     p->fillRect({0, 0, width(), height()}, m_color);
     if(m_img.isGood())
     {
-        p->blendColors({0, 0}, Colors(Color(0, 0, 0, 0)), &m_img);
+//         p->blendColors({0, 0}, Colors(Color(0, 0, 0, 0)), &m_img);
     }
 
     Widget::paintEvent(event);

@@ -153,8 +153,8 @@ void Widget_ScrollBar_Vertical::paintEvent(WidgetPaintEvent* event)
     p->fillRect(handle_rect, fg);
 
     unsigned char* colors[1] = {fg};
-    p->blendColors({0, 0                            }, colors, img_button_up);
-    p->blendColors({0, height() - g_scroll_bar_width}, colors, img_button_down);
+//     p->blendColors({0, 0                            }, colors, img_button_up);
+//     p->blendColors({0, height() - g_scroll_bar_width}, colors, img_button_down);
 
     Widget::paintEvent(event);
 }
@@ -222,8 +222,8 @@ void Widget_ScrollBar_Horizontal::paintEvent(WidgetPaintEvent* event)
     p->fillRect(handle_rect, fg);
 
     unsigned char* colors[1] = {fg};
-    p->blendColors({0, 0                           }, colors, img_button_left);
-    p->blendColors({width() - g_scroll_bar_width, 0}, colors, img_button_right);
+//     p->blendColors({0, 0                           }, colors, img_button_left);
+//     p->blendColors({width() - g_scroll_bar_width, 0}, colors, img_button_right);
 
     Widget::paintEvent(event);
 }
