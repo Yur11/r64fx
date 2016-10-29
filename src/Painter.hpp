@@ -11,7 +11,15 @@ class Image;
 class Window;
 class PainterTexture;
 
-class Painter : public OffsetMixin<int>{
+
+class PainterTextureManager{
+public:
+    /* Generate a new texture. Optionally load the texture image. */
+    virtual PainterTexture* newTexture(Image* img = nullptr) = 0;
+};
+
+
+class Painter : public PainterTextureManager, public OffsetMixin<int>{
 
 protected:
     virtual ~Painter() {};
@@ -29,6 +37,8 @@ public:
      */
     virtual void setClipRect(Rect<int> rect) = 0;
 
+    virtual void setClipRectAtCurrentOffset(Size<int> size) = 0;
+    
     virtual Rect<int> clipRect() = 0;
 
     /** Fill a rectangle with the given color.
@@ -60,10 +70,8 @@ public:
 
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain) = 0;
-
-    virtual PainterTexture* loadTexture(Image* img) = 0;
     
-    virtual void drawTexture(PainterTexture* tex, Point<int> dst_pos) = 0;
+    virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos) = 0;
     
     /** Make the changes visible.
 
@@ -83,9 +91,17 @@ protected:
     virtual ~PainterTexture() {};
     
 public:
+    virtual bool isGood() = 0;
+    
     virtual Painter* parentPainter() = 0;
     
     virtual Rect<int> rect() = 0;
+    
+    virtual void loadImage(Image* teximg) = 0;
+    
+    virtual void readImage(Image* teximg) = 0;
+    
+    virtual void free() = 0;
 };
 
 }//namespace r64fx

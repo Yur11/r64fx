@@ -14,6 +14,7 @@ namespace r64fx{
 
 class Widget;
 class Window;
+class PainterTextureManager;
 
 typedef LinkedList<Widget>::Iterator WidgetIterator;
 
@@ -221,7 +222,7 @@ public:
     /* Request a repaint for this widget. */
     void repaint();
     
-    Painter* painter();
+    PainterTextureManager* textureManager();
 
 protected:
     virtual void paintEvent(WidgetPaintEvent* event);

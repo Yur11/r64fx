@@ -1468,17 +1468,15 @@ void WidgetImpl::repaint()
 }
 
 
-Painter* Widget::painter()
+PainterTextureManager* Widget::textureManager()
 {
-//     Widget* root_widget = nullptr;
-//     auto offset = toRootCoords({0, 0}, &root_widget);
-//     auto root_window = root_widget->window();
-//     if(!root_window)
-//         return nullptr;
-//     auto d = (WidgetImpl*) root_window->data();
-//     auto p = d->painter;
-    
-    return nullptr;
+    Widget* root_widget = nullptr;
+    toRootCoords({0, 0}, &root_widget);
+    auto root_window = root_widget->window();
+    if(!root_window)
+        return nullptr;
+    auto d = (WidgetImpl*) root_window->data();
+    return d->painter;    
 }
 
 
