@@ -429,7 +429,7 @@ void Widget_MenuItem::paintEvent(WidgetPaintEvent* event)
         }
     }
 
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
 }
 
 
@@ -505,7 +505,7 @@ void Widget_MenuItem::mouseLeaveEvent()
 
 void Widget_Menu::mousePressEvent(MousePressEvent* event)
 {
-    Widget::mousePressEvent(event);
+    childrenMousePressEvent(event);
 }
 
 

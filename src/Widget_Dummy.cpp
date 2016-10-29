@@ -30,7 +30,7 @@ void Widget_Dummy::paintEvent(WidgetPaintEvent* event)
 //         p->blendColors({0, 0}, Colors(Color(0, 0, 0, 0)), &m_img);
     }
 
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
 }
 
 

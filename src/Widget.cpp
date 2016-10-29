@@ -1483,6 +1483,62 @@ PainterTextureManager* Widget::textureManager()
 }
 
 
+void Widget::childrenPaintEvent(WidgetPaintEvent* event)
+{
+    event->impl()->paintChildren(this);
+}
+
+
+void Widget::childrenShowEvent()
+{
+    
+}
+
+
+void Widget::childrenHideEvent()
+{
+    
+}
+
+
+bool Widget::childrenMousePressEvent(MousePressEvent* event)
+{
+    Point<int> event_pos = event->position() - contentOffset();
+    for(auto child : m_children)
+    {
+        if(Rect<int>(child->position(), child->size()).overlaps(event_pos))
+        {
+            Point<int> old_pos = event->position();
+            event->setPosition(event_pos - child->position());
+            child->mousePressEvent(event);
+            event->setPosition(old_pos);
+            return true;
+        }
+    }
+    return false;
+}
+
+
+
+bool Widget::childrenMouseReleaseEvent(MouseReleaseEvent* event)
+{
+    Point<int> event_pos = event->position() - contentOffset();
+    for(auto child : m_children)
+    {
+        if(Rect<int>(child->position(), child->size()).overlaps(event_pos))
+        {
+            Point<int> old_pos = event->position();
+            event->setPosition(event_pos - child->position());
+            child->mouseReleaseEvent(event);
+            event->setPosition(old_pos);
+            return true;
+        }
+    }
+    return false;
+}
+
+
+
 /* Recursivly paint child widgets.
 
    If R64FX_CHILD_WANTS_REPAINT flag is set on one of the children,
@@ -1496,7 +1552,7 @@ PainterTextureManager* Widget::textureManager()
    See WidgetFlags.hpp
 
    Doing this recursivly allows a widget to do some painting, make it's children paint themselves
-   and the do some more painting on top.
+   and then do some more painting on top.
  */
 void WidgetImpl::paintChildren(Widget* parent)
 {
@@ -1558,7 +1614,7 @@ void WidgetImpl::paintChildren(Widget* parent)
 
 void Widget::paintEvent(WidgetPaintEvent* event)
 {
-    event->impl()->paintChildren(this);
+    childrenPaintEvent(event);
 }
 
 
@@ -1592,45 +1648,9 @@ void Widget::mousePressEvent(MousePressEvent* event)
 }
 
 
-bool Widget::childrenMousePressEvent(MousePressEvent* event)
-{
-    Point<int> event_pos = event->position() - contentOffset();
-    for(auto child : m_children)
-    {
-        if(Rect<int>(child->position(), child->size()).overlaps(event_pos))
-        {
-            Point<int> old_pos = event->position();
-            event->setPosition(event_pos - child->position());
-            child->mousePressEvent(event);
-            event->setPosition(old_pos);
-            return true;
-        }
-    }
-    return false;
-}
-
-
 void Widget::mouseReleaseEvent(MouseReleaseEvent* event)
 {
     childrenMouseReleaseEvent(event);
-}
-
-
-bool Widget::childrenMouseReleaseEvent(MouseReleaseEvent* event)
-{
-    Point<int> event_pos = event->position() - contentOffset();
-    for(auto child : m_children)
-    {
-        if(Rect<int>(child->position(), child->size()).overlaps(event_pos))
-        {
-            Point<int> old_pos = event->position();
-            event->setPosition(event_pos - child->position());
-            child->mouseReleaseEvent(event);
-            event->setPosition(old_pos);
-            return true;
-        }
-    }
-    return false;
 }
 
 

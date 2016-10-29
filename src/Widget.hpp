@@ -225,6 +225,17 @@ public:
     PainterTextureManager* textureManager();
 
 protected:
+    void childrenPaintEvent(WidgetPaintEvent* event);
+
+    void childrenShowEvent();
+    
+    void childrenHideEvent();
+
+    bool childrenMousePressEvent(MousePressEvent* event);
+
+    bool childrenMouseReleaseEvent(MouseReleaseEvent* event);
+    
+private:
     virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void resizeEvent(WidgetResizeEvent* event);
@@ -237,11 +248,7 @@ protected:
 
     virtual void mousePressEvent(MousePressEvent* event);
 
-    bool childrenMousePressEvent(MousePressEvent* event);
-
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
-
-    bool childrenMouseReleaseEvent(MouseReleaseEvent* event);
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
     

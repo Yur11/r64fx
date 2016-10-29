@@ -251,7 +251,7 @@ void Widget_ItemBrowser::paintEvent(WidgetPaintEvent* event)
     unsigned char red[4] = {255, 0, 0, 0};
     p->fillRect({0, 0, width(), height()}, red);
 
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
 }
 
 
@@ -265,7 +265,7 @@ void Widget_ItemBrowser::resizeEvent(WidgetResizeEvent* event)
 
 void Widget_ItemBrowser::mousePressEvent(MousePressEvent* event)
 {
-    Widget::mousePressEvent(event);
+    childrenMousePressEvent(event);
 
     if(event->button() & MouseButton::Left())
     {

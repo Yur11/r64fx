@@ -475,7 +475,7 @@ void Widget_Text::paintEvent(WidgetPaintEvent* event)
     auto painter = event->painter();
 //     painter->putImage(m_image);
 
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
 }
 
 
@@ -552,19 +552,19 @@ void Widget_Text::mouseMoveEvent(MouseMoveEvent* event)
         m_text_painter->updateSelection();
         repaint();
     }
-    Widget::mouseMoveEvent(event);
+//     Widget::mouseMoveEvent(event);
 }
 
 
 void Widget_Text::keyPressEvent(KeyPressEvent* event)
 {
-    Widget::keyPressEvent(event);
+//     Widget::keyPressEvent(event);
 }
 
 
 void Widget_Text::keyReleaseEvent(KeyReleaseEvent* event)
 {
-    Widget::keyReleaseEvent(event);
+//     Widget::keyReleaseEvent(event);
 }
 
 

@@ -495,7 +495,7 @@ void Widget_DataItem::paintEvent(WidgetPaintEvent* event)
         }
     }
 
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
 }
 
 
@@ -523,7 +523,7 @@ void Widget_DataItem::mousePressEvent(MousePressEvent* event)
 
         default:
         {
-            Widget::mousePressEvent(event);
+            childrenMousePressEvent(event);
             break;
         }
     }
@@ -548,7 +548,7 @@ void Widget_DataItem::mousePressEventPlain(MousePressEvent* event)
     {
         showContextMenu(event->position());
     }
-    Widget::mousePressEvent(event);
+    childrenMousePressEvent(event);
 }
 
 
@@ -574,7 +574,7 @@ void Widget_DataItem::mousePressEventTree(MousePressEvent* event)
     }
     else
     {
-        Widget::mousePressEvent(event);
+        childrenMousePressEvent(event);
     }
 
 }
@@ -586,7 +586,7 @@ void Widget_DataItem::mouseReleaseEvent(MouseReleaseEvent* event)
     {
         releaseMouseFocus();
     }
-    Widget::mouseReleaseEvent(event);
+    childrenMouseReleaseEvent(event);
 }
 
 

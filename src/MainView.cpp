@@ -90,7 +90,7 @@ protected:
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
         
-        Widget::paintEvent(event);
+        childrenPaintEvent(event);
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -145,7 +145,7 @@ protected:
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
         
-        Widget::paintEvent(event);
+        childrenPaintEvent(event);
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -253,7 +253,7 @@ protected:
     {
 //         auto p = event->painter();
 //         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
-        Widget::paintEvent(event);
+        childrenPaintEvent(event);
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -419,7 +419,7 @@ void MainView::setMainPartWidget(Widget* widget)
 
 void MainView::paintEvent(WidgetPaintEvent* event)
 {
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
     
     auto p = event->painter();
     

@@ -486,7 +486,7 @@ void PlayerView::paintEvent(WidgetPaintEvent* event)
     unsigned char bg[4] = {127, 127, 127, 0};
     p->fillRect({0, 0, width(), height()}, bg);
 
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
 
     {
         unsigned char fg[4] = {0, 0, 0, 0};
@@ -518,7 +518,7 @@ void PlayerView::resizeEvent(WidgetResizeEvent* event)
 
 void PlayerView::mousePressEvent(MousePressEvent* event)
 {
-    Widget::mousePressEvent(event);
+    childrenMousePressEvent(event);
 }
 
 

@@ -156,7 +156,7 @@ void Widget_ScrollBar_Vertical::paintEvent(WidgetPaintEvent* event)
 //     p->blendColors({0, 0                            }, colors, img_button_up);
 //     p->blendColors({0, height() - g_scroll_bar_width}, colors, img_button_down);
 
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
 }
 
 
@@ -174,7 +174,7 @@ void Widget_ScrollBar_Vertical::mousePressEvent(MousePressEvent* event)
     }
     else
     {
-        Widget_ScrollBar::mousePressEvent(event);
+        childrenMousePressEvent(event);
         grabMouseFocus();
     }
 }
@@ -225,7 +225,7 @@ void Widget_ScrollBar_Horizontal::paintEvent(WidgetPaintEvent* event)
 //     p->blendColors({0, 0                           }, colors, img_button_left);
 //     p->blendColors({width() - g_scroll_bar_width, 0}, colors, img_button_right);
 
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
 }
 
 
@@ -243,7 +243,7 @@ void Widget_ScrollBar_Horizontal::mousePressEvent(MousePressEvent* event)
     }
     else
     {
-        Widget_ScrollBar::mousePressEvent(event);
+        childrenMousePressEvent(event);
         grabMouseFocus();
     }
 }

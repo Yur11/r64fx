@@ -256,7 +256,7 @@ void Widget_TabBar::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
     if(hasChildren())
     {
         for(auto child : *this)

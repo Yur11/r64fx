@@ -109,7 +109,7 @@ void HostViewPrivate::paintEvent(WidgetPaintEvent* event)
 {
     unsigned char bg[4] = {127, 127, 127, 0};
     event->painter()->fillRect({0, 0, width(), m_main_menu->height()}, bg);
-    Widget::paintEvent(event);
+    childrenPaintEvent(event);
 }
 
 
