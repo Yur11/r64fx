@@ -43,6 +43,8 @@ public:
     
     virtual Rect<int> clipRect() = 0;
 
+    virtual void clear(unsigned char* color) = 0;
+
     /** Fill a rectangle with the given color.
 
         rect   Rectangle coords. to fill.

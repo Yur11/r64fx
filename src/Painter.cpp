@@ -22,7 +22,49 @@ namespace r64fx{
 namespace{
     constexpr float uchar2float_rcp = 1.0f / 255.0f;
 }//namespace
+
+
+struct PainterImpl : public Painter{
+    Window*     window    = nullptr;
+
+    Rect<int> current_clip_rect;
     
+    PainterImpl(Window* window)
+    : window(window)
+    {
+
+    }
+
+    virtual ~PainterImpl()
+    {
+
+    }
+
+    virtual void setClipRect(Rect<int> rect)
+    {
+        current_clip_rect = rect;
+    }
+
+    virtual void setClipRectAtCurrentOffset(Size<int> size)
+    {
+        current_clip_rect = {offset(), size};
+    }
+
+    virtual Rect<int> clipRect()
+    {
+        return current_clip_rect;
+    }
+
+    /** @brief Clip a rectangle with the current_clip_rect. */
+    Rect<int> clip(Rect<int> rect)
+    {
+        return intersection(
+            current_clip_rect,
+            rect
+        );
+    }
+};//PainterImpl
+
 
 class PainterImplImage;
 
@@ -79,48 +121,6 @@ public:
 };
 
 
-struct PainterImpl : public Painter{
-    Window*     window    = nullptr;
-
-    Rect<int> current_clip_rect;
-    
-    PainterImpl(Window* window)
-    : window(window)
-    {
-
-    }
-
-    virtual ~PainterImpl()
-    {
-
-    }
-
-    virtual void setClipRect(Rect<int> rect)
-    {
-        current_clip_rect = rect;
-    }
-    
-    virtual void setClipRectAtCurrentOffset(Size<int> size)
-    {
-        current_clip_rect = {offset(), size};
-    }
-
-    virtual Rect<int> clipRect()
-    {
-        return current_clip_rect;
-    }
-
-    /** @brief Clip a rectangle with the current_clip_rect. */
-    Rect<int> clip(Rect<int> rect)
-    {
-        return intersection(
-            current_clip_rect,
-            rect
-        );
-    }
-};//PainterImpl
-
-
 struct PainterImplImage : public PainterImpl{
     LinkedList<PainterTextureImplImage> m_textures;
     
@@ -134,7 +134,14 @@ struct PainterImplImage : public PainterImpl{
     {
 
     }
+
+
+    virtual void clear(unsigned char* color)
+    {
+        fill(window->image(), color, {0, 0, window->width(), window->height()});
+    }
     
+
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
         auto intersection_rect = clip(rect + offset());
@@ -436,18 +443,22 @@ public:
         gl::DeleteBuffers(1, &m_vbo);
     }
     
-    void setRect(const Rect<int> &rect)
+    void setRect(float left, float top, float right, float bottom)
     { 
         float buff[8];
-        buff[0] = rect.x();
-        buff[1] = rect.y();
-        buff[2] = rect.x() + rect.width();
-        buff[3] = rect.y();
-        buff[4] = rect.x() + rect.width();
-        buff[5] = rect.y() + rect.height();
-        buff[6] = rect.x();
-        buff[7] = rect.y() + rect.height();
-        
+
+        buff[0] = left;
+        buff[1] = top;
+
+        buff[2] = right;
+        buff[3] = top;
+
+        buff[4] = right;
+        buff[5] = bottom;
+
+        buff[6] = left;
+        buff[7] = bottom;
+
         gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
         gl::BufferSubData(GL_ARRAY_BUFFER, 0, 32, buff);
     }
@@ -462,16 +473,24 @@ public:
 
 struct PainterImplGL : public PainterImpl{    
     PainterGL_RGBA m_rgba_painter;
-    
+
     LinkedList<PainterTextureImplGL> m_textures;
+
+    float m_window_double_width_rcp = 1.0f;
+    float m_window_double_height_rcp = 1.0f;
+    float m_window_half_width = 0.0f;
+    float m_window_half_height = 0.0f;
+
 
     PainterImplGL(Window* window)
     :PainterImpl(window)
     {
         initSharedGLStuffIfNeeded();
         m_rgba_painter.init();
+        m_rgba_painter.setRect(0.0f, 0.0f, 1.0f, -1.0f);
         PainterImplGL_count++;
     }
+
 
     virtual ~PainterImplGL()
     {
@@ -490,29 +509,43 @@ struct PainterImplGL : public PainterImpl{
 #endif//R64FX_DEBUG
     }
 
+
+    virtual void clear(unsigned char* color)
+    {
+        gl::ClearColor(
+            float(color[0]) * uchar2float_rcp,
+            float(color[1]) * uchar2float_rcp,
+            float(color[2]) * uchar2float_rcp,
+            float(color[3]) * uchar2float_rcp
+        );
+        gl::Clear(GL_COLOR_BUFFER_BIT);
+    }
+
+
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
         auto intersection_rect = clip(rect + offset());
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
-            m_rgba_painter.setRect(intersection_rect);
-            
             g_Shader_rgba->use();
-            
+
+            float rw = intersection_rect.width()  * m_window_double_width_rcp;
+            float rh = intersection_rect.height() * m_window_double_height_rcp;
+
+            float rx = (intersection_rect.x() - m_window_half_width) * m_window_double_width_rcp;
+            float ry = (m_window_half_height - intersection_rect.y()) * m_window_double_height_rcp;
+
             g_Shader_rgba->setScaleAndShift(
-                2.0f/float(window->width()),
-               -2.0f/float(window->height()),
-               -1.0f,
-                1.0f
+                rw, rh, rx, ry
             );
-            
+
             g_Shader_rgba->setColor(
                 float(color[0]) * uchar2float_rcp,
                 float(color[1]) * uchar2float_rcp,
                 float(color[2]) * uchar2float_rcp,
                 float(color[3]) * uchar2float_rcp
             );
-            
+
             m_rgba_painter.draw();
         }
     }
@@ -649,6 +682,12 @@ struct PainterImplGL : public PainterImpl{
 
         setClipRect({0, 0, window->width(), window->height()});
         setOffset({0, 0});
+
+        m_window_double_width_rcp = 2.0f / float(window->width());
+        m_window_double_height_rcp = 2.0f / float(window->height());
+
+        m_window_half_width = window->width() * 0.5f;
+        m_window_half_height = window->height() * 0.5f;
     }
 
     static void initSharedGLStuffIfNeeded()

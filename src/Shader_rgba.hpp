@@ -24,7 +24,7 @@ public:
     
     void setColor(float r, float g, float b, float a);
     
-    void bindPositionAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer);    
+    void bindPositionAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer);
 };
 
 }//namespace r64fx
