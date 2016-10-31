@@ -11,9 +11,8 @@ class VertexArray_rgba;
 
 /** @brief ShadingProgram with single color per vertex. */
 class Shader_rgba : public ShadingProgram{
-    friend class VertexArray_rgba;
     GLint attr_position;
-    GLint attr_color;
+    GLint unif_color;
     GLint unif_sxsytxty;
 
 public:
@@ -22,6 +21,10 @@ public:
     virtual ~Shader_rgba();
 
     void setScaleAndShift(float sx, float sy, float tx, float ty);
+    
+    void setColor(float r, float g, float b, float a);
+    
+    void bindPositionAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer);    
 };
 
 }//namespace r64fx

@@ -136,6 +136,13 @@ void ShadingProgram::getUniformLocation(GLint &out, const char* name)
     }
 #endif//R64FX_DEBUG
 }
+
+
+void ShadingProgram::bindAttribute(GLuint attr, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
+{
+    gl::EnableVertexAttribArray(attr);
+    gl::VertexAttribPointer(attr, size, type, normalized, stride, pointer);
+}
     
 }//namespace r64x
 

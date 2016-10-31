@@ -67,6 +67,8 @@ public:
     void getAttribLocation(GLint &out, const char* name);
 
     void getUniformLocation(GLint &out, const char* name);
+    
+    void bindAttribute(GLuint attr, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer);
 };
 
 }//namespace r64fx
