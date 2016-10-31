@@ -15,7 +15,9 @@ class PainterTexture;
 class PainterTextureManager{
 public:
     /* Generate a new texture. Optionally load the texture image. */
-    virtual PainterTexture* newTexture(Image* img = nullptr) = 0;
+    virtual PainterTexture* newTexture(Image* image = nullptr) = 0;
+
+    virtual void deleteTexture(PainterTexture* &texture) = 0;
 };
 
 

@@ -23,9 +23,10 @@ void init_menu_font_if_needed()
 
 
 class Widget_MenuItem : public Widget{
-    Image*        m_image     = nullptr;
-    Action*       m_action    = nullptr;
-    Widget_Menu*  m_sub_menu  = nullptr;
+    Image*           m_image     = nullptr;
+    PainterTexture*  m_texture   = nullptr;
+    Action*          m_action    = nullptr;
+    Widget_Menu*     m_sub_menu  = nullptr;
 
     Image* createCaptionImage(const std::string &caption_text)
     {
@@ -79,6 +80,10 @@ public:
 
 protected:
     virtual void paintEvent(WidgetPaintEvent* event);
+
+    virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event);
+
+    virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 
@@ -415,21 +420,40 @@ void Widget_MenuItem::paintEvent(WidgetPaintEvent* event)
     if(Widget::isHovered() || parent_menu->activeItem() == this)
     {
         p->fillRect({{0, 0}, size()}, Color(63, 63, 63, 0));
-        if(m_image)
+        if(m_texture)
         {
-//             p->blendColors({0, 0}, Colors(Color(191, 191, 191, 0)), m_image);
+            p->blendColors({0, 0}, Colors(Color(191, 191, 191, 0)), m_texture);
         }
     }
     else
     {
         p->fillRect({{0, 0}, size()}, Color(127, 127, 127, 0));
-        if(m_image)
+        if(m_texture)
         {
-//             p->blendColors({0, 0}, Colors(Color(0, 0, 0, 0)), m_image);
+            p->blendColors({0, 0}, Colors(Color(0, 0, 0, 0)), m_texture);
         }
     }
 
     childrenPaintEvent(event);
+}
+
+
+void Widget_MenuItem::addedToWindowEvent(WidgetAddedToWindowEvent* event)
+{
+    if(!m_image || !m_image->isGood())
+        return;
+
+    auto tm = event->textureManager();
+    m_texture = tm->newTexture(m_image);
+}
+
+
+void Widget_MenuItem::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
+{
+    if(m_texture && m_texture->isGood())
+    {
+        //delete texture
+    }
 }
 
 

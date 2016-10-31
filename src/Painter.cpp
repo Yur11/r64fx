@@ -31,6 +31,11 @@ public:
     PainterTextureImplImage(PainterImplImage* painter)
     : m_painter(painter)
     {
+
+    }
+
+    virtual ~PainterTextureImplImage()
+    {
         
     }
     
@@ -136,17 +141,30 @@ struct PainterImplImage : public PainterImpl{
     }
 
     
-    virtual PainterTexture* newTexture(Image* img = nullptr)
+    virtual PainterTexture* newTexture(Image* image = nullptr)
     {
         auto texture = new PainterTextureImplImage(this);
         m_textures.append(texture);
-        if(img)
+        if(image)
         {
-            texture->loadImage(img);
+            texture->loadImage(image);
         }
         return texture;
     }
     
+
+    virtual void deleteTexture(PainterTexture* &texture)
+    {
+        if(texture->parentPainter() == this)
+        {
+            auto texture_impl = static_cast<PainterTextureImplImage*>(texture);
+            texture_impl->free();
+            delete texture_impl;
+            texture = nullptr;
+        }
+    }
+
+
     virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha)
     {
         auto texture_impl = static_cast<PainterTextureImplImage*>(texture);
