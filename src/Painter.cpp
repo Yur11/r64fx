@@ -312,17 +312,49 @@ namespace
 }
 
 
-class PainterTextureImplGL : public PainterTextureImpl{
-    Rect<int> m_rect;    
+class PainterImplGL;
+
+class PainterTextureImplGL : public PainterTexture, public LinkedList<PainterTextureImplGL>::Node{
+    PainterImplGL*  m_painter          = nullptr;
+    Rect<int>       m_rect;
+    int             m_component_count  = 0;
+    GLuint          m_texture          = 0;
+    
+public:
+    PainterTextureImplGL(PainterImplGL* painter) : m_painter(painter)
+    {
+
+    }
+    
+    virtual ~PainterTextureImplGL()
+    {
+
+    }
+    
+    virtual bool isGood();
+    
+    virtual Painter* parentPainter();
+    
+    virtual Rect<int> rect();
+    
+    virtual int componentCount();
+    
+    virtual void loadImage(Image* teximg);
+    
+    virtual void readImage(Image* teximg);
+    
+    virtual void free();
 };
 
 
 struct PainterImplGL : public PainterImpl{
-    Image base_texture_image;
-    GLuint base_texture = 0;
-    Size<int> base_texture_size;
-    GLuint base_vao;
-    GLuint base_vbo;
+//     Image base_texture_image;
+//     GLuint base_texture = 0;
+//     Size<int> base_texture_size;
+//     GLuint base_vao;
+//     GLuint base_vbo;
+    
+    LinkedList<PainterTextureImplGL> m_textures;
 
     PainterImplGL(Window* window)
     :PainterImpl(window)
@@ -351,160 +383,186 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
-        auto intersection_rect = clip(rect + offset());
-        if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
-        {
-            fill(&base_texture_image, color, intersection_rect);
-            addToBaseTexture(&base_texture_image, {0, 0});
-        }
+//         auto intersection_rect = clip(rect + offset());
+//         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
+//         {
+//             fill(&base_texture_image, color, intersection_rect);
+//             addToBaseTexture(&base_texture_image, {0, 0});
+//         }
     }
-
-    virtual void putImage(Image* img, Point<int> pos)
+    
+    
+    virtual PainterTexture* newTexture(Image* image = nullptr)
     {
-        RectIntersection<int> intersection(
-            current_clip_rect,
-            {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
-        );
-
-        if(intersection.width() > 0 && intersection.height() > 0)
+        auto texture = new PainterTextureImplGL(this);
+        m_textures.append(texture);
+        if(image)
         {
-            implant(
-                &base_texture_image,
-                intersection.dstOffset() + current_clip_rect.position(),
-                intersection.size(),
-                intersection.srcOffset(),
-                img
-            );
-            addToBaseTexture(&base_texture_image, {0, 0});
+            texture->loadImage(image);
         }
+        return texture;
     }
 
-    virtual void blendImage(Image* img, Point<int> pos)
+    
+    virtual void deleteTexture(PainterTexture* &texture)
     {
-        RectIntersection<int> intersection(
-            current_clip_rect,
-            {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
-        );
-
-        if(intersection.width() > 0 && intersection.height() > 0)
-        {
-            implant_alpha(
-                &base_texture_image,
-                intersection.dstOffset() + current_clip_rect.position(),
-                intersection.size(),
-                intersection.srcOffset(),
-                img
-            );
-            addToBaseTexture(&base_texture_image, {0, 0});
-        }
+        
     }
-
-    virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
+    
+    
+    virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha = false)
     {
-        RectIntersection<int> intersection(
-            current_clip_rect,
-            {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
-        );
-
-        if(intersection.width() > 0 && intersection.height() > 0)
-        {
-            blend(
-                &base_texture_image,
-                intersection.dstOffset() + current_clip_rect.position(),
-                intersection.size(),
-                intersection.srcOffset(),
-                colors, mask
-            );
-            addToBaseTexture(&base_texture_image, {0, 0});
-        }
+        
     }
+    
+    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture* mask_texture)
+    {
+        
+    }
+    
+//     virtual void putImage(Image* img, Point<int> pos)
+//     {
+//         RectIntersection<int> intersection(
+//             current_clip_rect,
+//             {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
+//         );
+// 
+//         if(intersection.width() > 0 && intersection.height() > 0)
+//         {
+//             implant(
+//                 &base_texture_image,
+//                 intersection.dstOffset() + current_clip_rect.position(),
+//                 intersection.size(),
+//                 intersection.srcOffset(),
+//                 img
+//             );
+//             addToBaseTexture(&base_texture_image, {0, 0});
+//         }
+//     }
+
+//     virtual void blendImage(Image* img, Point<int> pos)
+//     {
+//         RectIntersection<int> intersection(
+//             current_clip_rect,
+//             {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
+//         );
+// 
+//         if(intersection.width() > 0 && intersection.height() > 0)
+//         {
+//             implant_alpha(
+//                 &base_texture_image,
+//                 intersection.dstOffset() + current_clip_rect.position(),
+//                 intersection.size(),
+//                 intersection.srcOffset(),
+//                 img
+//             );
+//             addToBaseTexture(&base_texture_image, {0, 0});
+//         }
+//     }
+// 
+//     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
+//     {
+//         RectIntersection<int> intersection(
+//             current_clip_rect,
+//             {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
+//         );
+// 
+//         if(intersection.width() > 0 && intersection.height() > 0)
+//         {
+//             blend(
+//                 &base_texture_image,
+//                 intersection.dstOffset() + current_clip_rect.position(),
+//                 intersection.size(),
+//                 intersection.srcOffset(),
+//                 colors, mask
+//             );
+//             addToBaseTexture(&base_texture_image, {0, 0});
+//         }
+//     }
 
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
-        RectIntersection<int> intersection(
-            current_clip_rect, rect + offset()
-        );
-
-        if(intersection.width() > 0 && intersection.height() > 0)
-        {
-            draw_waveform(
-                &base_texture_image,
-                color,
-                waveform + intersection.srcOffset().x() * 2,
-                Rect<int>(intersection.dstOffset(), intersection.size()),
-                gain
-            );
-        }
-        addToBaseTexture(&base_texture_image, {0, 0});
+//         RectIntersection<int> intersection(
+//             current_clip_rect, rect + offset()
+//         );
+// 
+//         if(intersection.width() > 0 && intersection.height() > 0)
+//         {
+//             draw_waveform(
+//                 &base_texture_image,
+//                 color,
+//                 waveform + intersection.srcOffset().x() * 2,
+//                 Rect<int>(intersection.dstOffset(), intersection.size()),
+//                 gain
+//             );
+//         }
+//         addToBaseTexture(&base_texture_image, {0, 0});
     }
 
     
-    virtual PainterTexture* loadTexture(Image* img)
-    {
-        return nullptr;
-    }
-    
-
-    void addToBaseTexture(Image* img, Point<int> pos)
-    {
-        gl::BindTexture(GL_TEXTURE_2D, base_texture);
-        gl::TexSubImage2D(
-            GL_TEXTURE_2D, 0,
-            pos.x(), pos.y(), img->width(), img->height(),
-            GL_RGBA, GL_UNSIGNED_BYTE, img->data()
-        );
-    }
+//     void addToBaseTexture(Image* img, Point<int> pos)
+//     {
+//         gl::BindTexture(GL_TEXTURE_2D, base_texture);
+//         gl::TexSubImage2D(
+//             GL_TEXTURE_2D, 0,
+//             pos.x(), pos.y(), img->width(), img->height(),
+//             GL_RGBA, GL_UNSIGNED_BYTE, img->data()
+//         );
+//     }
 
     virtual void repaint(Rect<int>* rects, int numrects)
     {
-        gl::BindTexture(GL_TEXTURE_2D, base_texture);
-        g_Shader_rgba_tex->use();
-        g_Shader_rgba_tex->setScaleAndShift(
-            2.0f/float(window->width()),
-           -2.0f/float(window->height()),
-           -1.0f,
-            1.0f
-        );
-        g_Shader_rgba_tex->setSampler(0);
-        gl::BindVertexArray(base_vao);
-        gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
+        glClearColor(1.0f, 0.0, 0.0, 0.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        
+//         gl::BindTexture(GL_TEXTURE_2D, base_texture);
+//         g_Shader_rgba_tex->use();
+//         g_Shader_rgba_tex->setScaleAndShift(
+//             2.0f/float(window->width()),
+//            -2.0f/float(window->height()),
+//            -1.0f,
+//             1.0f
+//         );
+//         g_Shader_rgba_tex->setSampler(0);
+//         gl::BindVertexArray(base_vao);
+//         gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
+// 
         window->repaint(rects, numrects);
-        gl::Finish();
+//         gl::Finish();
     }
 
     virtual void adjustForWindowSize()
     {
-        resizeBaseTextureIfNeeded(window->width(), window->height());
+//         resizeBaseTextureIfNeeded(window->width(), window->height());
 
         gl::Viewport(0, 0, window->width(), window->height());
         gl::Clear(GL_COLOR_BUFFER_BIT);
 
-        float buff[16];
-
-        /* Position. */
-        buff[0] = 0.0f;
-        buff[1] = 0.0f;
-        buff[2] = float(window->width());
-        buff[3] = 0.0f;
-        buff[4] = float(window->width());
-        buff[5] = float(window->height());
-        buff[6] = 0.0f;
-        buff[7] = float(window->height());
-
-        /* Tex. Coords. */
-        buff[8]  = 0.0f;
-        buff[9]  = 0.0f;
-        buff[10] = float(window->width()) / float(base_texture_size.width());
-        buff[11] = 0.0f;
-        buff[12] = float(window->width())  / float(base_texture_size.width());
-        buff[13] = float(window->height()) / float(base_texture_size.height());
-        buff[14] = 0.0f;
-        buff[15] = float(window->height()) / float(base_texture_size.height());
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
-        gl::BufferSubData(GL_ARRAY_BUFFER, 0, 64, buff);
+//         float buff[16];
+// 
+//         /* Position. */
+//         buff[0] = 0.0f;
+//         buff[1] = 0.0f;
+//         buff[2] = float(window->width());
+//         buff[3] = 0.0f;
+//         buff[4] = float(window->width());
+//         buff[5] = float(window->height());
+//         buff[6] = 0.0f;
+//         buff[7] = float(window->height());
+// 
+//         /* Tex. Coords. */
+//         buff[8]  = 0.0f;
+//         buff[9]  = 0.0f;
+//         buff[10] = float(window->width()) / float(base_texture_size.width());
+//         buff[11] = 0.0f;
+//         buff[12] = float(window->width())  / float(base_texture_size.width());
+//         buff[13] = float(window->height()) / float(base_texture_size.height());
+//         buff[14] = 0.0f;
+//         buff[15] = float(window->height()) / float(base_texture_size.height());
+// 
+//         gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
+//         gl::BufferSubData(GL_ARRAY_BUFFER, 0, 64, buff);
 
         setClipRect({0, 0, window->width(), window->height()});
         setOffset({0, 0});
@@ -551,65 +609,112 @@ struct PainterImplGL : public PainterImpl{
 
     void initGLStuff()
     {
-        gl::GenVertexArrays(1, &base_vao);
-        gl::BindVertexArray(base_vao);
-        gl::GenBuffers(1, &base_vbo);
-        gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
-        gl::BufferData(GL_ARRAY_BUFFER, 64, nullptr, GL_STATIC_DRAW);
-        gl::EnableVertexAttribArray(g_Shader_rgba_tex->attr_position);
-        gl::VertexAttribPointer(
-            g_Shader_rgba_tex->attr_position,
-            2, GL_FLOAT, GL_FALSE,
-            0, 0
-        );
-        gl::EnableVertexAttribArray(g_Shader_rgba_tex->attr_tex_coord);
-        gl::VertexAttribPointer(
-            g_Shader_rgba_tex->attr_tex_coord,
-            2, GL_FLOAT, GL_FALSE,
-            0, 32
-        );
+//         gl::GenVertexArrays(1, &base_vao);
+//         gl::BindVertexArray(base_vao);
+//         gl::GenBuffers(1, &base_vbo);
+//         gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
+//         gl::BufferData(GL_ARRAY_BUFFER, 64, nullptr, GL_STATIC_DRAW);
+//         gl::EnableVertexAttribArray(g_Shader_rgba_tex->attr_position);
+//         gl::VertexAttribPointer(
+//             g_Shader_rgba_tex->attr_position,
+//             2, GL_FLOAT, GL_FALSE,
+//             0, 0
+//         );
+//         gl::EnableVertexAttribArray(g_Shader_rgba_tex->attr_tex_coord);
+//         gl::VertexAttribPointer(
+//             g_Shader_rgba_tex->attr_tex_coord,
+//             2, GL_FLOAT, GL_FALSE,
+//             0, 32
+//         );
     }
 
     void cleanupGLStuff()
     {
-        deleteBaseTextureIfNeeded();
-        gl::DeleteVertexArrays(1, &base_vao);
-        gl::DeleteBuffers(1, &base_vbo);
+//         deleteBaseTextureIfNeeded();
+//         gl::DeleteVertexArrays(1, &base_vao);
+//         gl::DeleteBuffers(1, &base_vbo);
     }
 
-    void resizeBaseTextureIfNeeded(int w, int h)
-    {
-        bool tex_resize_needed = ( base_texture == 0 || w > base_texture_size.width() || h > base_texture_size.height() );
-        if(!tex_resize_needed)
-            return;
-
-        deleteBaseTextureIfNeeded();
-
-        /* Texture width must be divisible by 4 ? */
-        while(w & 3)
-            w++;
-
-        gl::GenTextures(1, &base_texture);
-        gl::BindTexture(GL_TEXTURE_2D, base_texture);
-        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        gl::TexStorage2D(
-            GL_TEXTURE_2D,
-            1,
-            GL_RGBA8,
-            w, h
-        );
-
-        base_texture_size = {w, h};
-        base_texture_image.load(w, h, 4);
-    }
-
-    void deleteBaseTextureIfNeeded()
-    {
-        if(base_texture)
-            gl::DeleteTextures(1, &base_texture);
-    }
+//     void resizeBaseTextureIfNeeded(int w, int h)
+//     {
+//         bool tex_resize_needed = ( base_texture == 0 || w > base_texture_size.width() || h > base_texture_size.height() );
+//         if(!tex_resize_needed)
+//             return;
+// 
+//         deleteBaseTextureIfNeeded();
+// 
+//         /* Texture width must be divisible by 4 ? */
+//         while(w & 3)
+//             w++;
+// 
+//         gl::GenTextures(1, &base_texture);
+//         gl::BindTexture(GL_TEXTURE_2D, base_texture);
+//         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//         gl::TexStorage2D(
+//             GL_TEXTURE_2D,
+//             1,
+//             GL_RGBA8,
+//             w, h
+//         );
+// 
+//         base_texture_size = {w, h};
+//         base_texture_image.load(w, h, 4);
+//     }
+// 
+//     void deleteBaseTextureIfNeeded()
+//     {
+//         if(base_texture)
+//             gl::DeleteTextures(1, &base_texture);
+//     }
 };//PainterImplImage
+
+
+bool PainterTextureImplGL::isGood()
+{
+    return m_texture != 0;
+}
+
+
+Painter* PainterTextureImplGL::parentPainter()
+{
+    return m_painter;
+}
+
+
+Rect<int> PainterTextureImplGL::rect()
+{
+    return m_rect;
+}
+
+
+int PainterTextureImplGL::componentCount()
+{
+    return m_component_count;
+}
+
+
+void PainterTextureImplGL::loadImage(Image* teximg)
+{
+    free();
+    
+    gl::GenTextures(1, &m_texture);
+}
+
+void PainterTextureImplGL::readImage(Image* teximg)
+{
+    
+}
+
+
+void PainterTextureImplGL::free()
+{
+    if(!isGood())
+        return;
+    
+    gl::DeleteTextures(1, &m_texture);
+    m_texture = 0;
+}
 #endif//R64FX_USE_GL
 
 
