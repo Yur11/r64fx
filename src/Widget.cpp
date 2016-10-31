@@ -570,7 +570,7 @@ void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child
     {
         if(isShownInWindow())
         {
-            WidgetRemovedFromWindowEvent event(rootWindow());
+            WidgetRemovedFromWindowEvent event(rootWindow(), textureManager());
             removedFromWindowEvent(&event);
             m_flags &= ~R64FX_WIDGET_BELONGS_TO_WINDOW;
         }
@@ -1008,7 +1008,7 @@ void Widget::closeWindow()
 {
     if(isWindow())
     {
-        WidgetRemovedFromWindowEvent event(m_parent.window);
+        WidgetRemovedFromWindowEvent event(m_parent.window, textureManager());
         removedFromWindowEvent(&event);
         
         auto d = (WidgetImpl*) m_parent.window->data();

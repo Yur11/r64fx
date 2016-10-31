@@ -97,12 +97,12 @@ public:
 };
 
 
-class WidgetAddedToWindowEvent{
+class WidgetWindowAvailabilityEvent{
     Window* m_window = nullptr;
     PainterTextureManager* m_ptm = nullptr;
     
 public:
-    WidgetAddedToWindowEvent(Window* window, PainterTextureManager* ptm) 
+    WidgetWindowAvailabilityEvent(Window* window, PainterTextureManager* ptm) 
     : m_window(window)
     , m_ptm(ptm)
     {
@@ -121,20 +121,15 @@ public:
 };
 
 
-class WidgetRemovedFromWindowEvent{
-    Window* m_window = nullptr;
-    
+class WidgetAddedToWindowEvent : public WidgetWindowAvailabilityEvent{
 public:
-    WidgetRemovedFromWindowEvent(Window* window)
-    : m_window(window)
-    {
-        
-    }
-    
-    inline Window* window() const
-    {
-        return m_window;
-    }
+    using WidgetWindowAvailabilityEvent::WidgetWindowAvailabilityEvent;
+};
+
+
+class WidgetRemovedFromWindowEvent : public WidgetWindowAvailabilityEvent{
+public:
+    using WidgetWindowAvailabilityEvent::WidgetWindowAvailabilityEvent;
 };
 
 

@@ -27,6 +27,8 @@ protected:
 
     virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event);
     
+    virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event);
+
     virtual void mousePressEvent(MousePressEvent* event);
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);

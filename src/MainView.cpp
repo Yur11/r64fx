@@ -586,8 +586,6 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
 void MainView::addedToWindowEvent(WidgetAddedToWindowEvent* event)
 {
     auto tm = event->textureManager();
-    cout << "tmtm: " << tm << "\n";
-    
     m->icon10_tex = tm->newTexture(m->icon10);
     m->icon16_tex = tm->newTexture(m->icon16);
     m->icon18_tex = tm->newTexture(m->icon18);
@@ -598,6 +596,27 @@ void MainView::addedToWindowEvent(WidgetAddedToWindowEvent* event)
     m->icon28_tex = tm->newTexture(m->icon28);
     m->icon30_tex = tm->newTexture(m->icon30);
     m->icon32_tex = tm->newTexture(m->icon32);
+
+    childrenAddedToWindowEvent(event);
+}
+
+
+void MainView::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
+{
+    cout << "MainPart::removedFromWindowEvent()\n";
+    childrenRemovedFromWindowEvent(event);
+
+    auto tm = event->textureManager();
+    tm->deleteTexture(m->icon10_tex);
+    tm->deleteTexture(m->icon16_tex);
+    tm->deleteTexture(m->icon18_tex);
+    tm->deleteTexture(m->icon20_tex);
+    tm->deleteTexture(m->icon22_tex);
+    tm->deleteTexture(m->icon24_tex);
+    tm->deleteTexture(m->icon26_tex);
+    tm->deleteTexture(m->icon28_tex);
+    tm->deleteTexture(m->icon30_tex);
+    tm->deleteTexture(m->icon32_tex);
 }
 
 
