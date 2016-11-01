@@ -63,8 +63,8 @@ set(SRC
     SignalNode_Filter.cpp
     SignalNode_Sampler.cpp
     Shader.cpp
-    Shader_rgba.cpp
-    Shader_rgba_tex.cpp
+    Shader_RGBA.cpp
+    Shader_RGBA_Tex.cpp
     SoundDriver.cpp
     SoundDriverMachine.cpp
     SoundFile.cpp

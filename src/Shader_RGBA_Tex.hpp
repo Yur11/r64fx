@@ -8,12 +8,13 @@
 namespace r64fx{
 
 /** @brief ShadingProgram with a rgba texture. */
-struct Shader_rgba_tex : public ShadingProgram{
+class Shader_rgba_tex : public ShadingProgram{
     GLint attr_position;
     GLint attr_tex_coord;
     GLint unif_sxsytxty;
     GLint unif_sampler;
 
+public:
     Shader_rgba_tex();
 
     virtual ~Shader_rgba_tex();
@@ -21,6 +22,10 @@ struct Shader_rgba_tex : public ShadingProgram{
     void setScaleAndShift(float sx, float sy, float tx, float ty);
 
     void setSampler(int sampler);
+    
+    void bindPositionAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer);
+    
+    void bindTexCoordAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer);
 };
 
 }//namespace r64fx

@@ -1,6 +1,6 @@
 #ifdef R64FX_USE_GL
 
-#include "Shader_rgba.hpp"
+#include "Shader_RGBA.hpp"
 #include "ShaderImplUtils.hpp"
 
 namespace r64fx{

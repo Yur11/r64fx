@@ -1,6 +1,6 @@
 #ifdef R64FX_USE_GL
 
-#include "Shader_rgba_tex.hpp"
+#include "Shader_RGBA_Tex.hpp"
 #include "ShaderImplUtils.hpp"
 
 namespace r64fx{
@@ -44,6 +44,18 @@ void Shader_rgba_tex::setScaleAndShift(float sx, float sy, float tx, float ty)
 void Shader_rgba_tex::setSampler(int sampler)
 {
     gl::Uniform1i(unif_sampler, sampler);
+}
+
+
+void Shader_rgba_tex::bindPositionAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
+{
+    bindAttribute(attr_position, 2, type, normalized, stride, pointer);
+}
+
+
+void Shader_rgba_tex::bindTexCoordAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
+{
+    bindAttribute(attr_tex_coord, 2, type, normalized, stride, pointer);
 }
 
 }//namespace r64fx
