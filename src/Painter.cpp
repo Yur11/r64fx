@@ -573,6 +573,12 @@ struct PainterImplGL : public PainterImpl{
         );
     }
 
+    inline void setShaderScaleAndShift(PainterShader* shader, const RectIntersection<int> intersection)
+    {
+        setShaderScaleAndShift(
+            g_Shader_Texture, {intersection.dstOffset(), intersection.size()}
+        );
+    }
 
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
@@ -581,9 +587,7 @@ struct PainterImplGL : public PainterImpl{
         {
             useShader(g_Shader_Color);
             
-            setShaderScaleAndShift(
-                g_Shader_Color, intersection_rect
-            );
+            setShaderScaleAndShift(g_Shader_Color, intersection_rect);
 
             g_Shader_Color->setColor(
                 float(color[0]) * uchar2float_rcp,
@@ -632,9 +636,7 @@ struct PainterImplGL : public PainterImpl{
         {
             useShader(g_Shader_Texture);
 
-            setShaderScaleAndShift(
-                g_Shader_Texture, {intersection.dstOffset(), intersection.size()}
-            );
+            setShaderScaleAndShift(g_Shader_Texture, intersection);
             
             gl::ActiveTexture(GL_TEXTURE0);
             tex->bind();
