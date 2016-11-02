@@ -404,24 +404,18 @@ public:
 
 
 class PainterGLRoutine{
-
-};
-
-
-class PainterGLRoutine_ColoredRect : public PainterGLRoutine{
+protected:
     GLuint m_vao;
     GLuint m_vbo;
 
 public:
-    void init()
+    void init(int nbytes)
     {
         gl::GenVertexArrays(1, &m_vao);
         gl::BindVertexArray(m_vao);
         gl::GenBuffers(1, &m_vbo);
         gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        gl::BufferData(GL_ARRAY_BUFFER, 32, nullptr, GL_STREAM_DRAW);
-        
-        g_Shader_Color->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
+        gl::BufferData(GL_ARRAY_BUFFER, nbytes, nullptr, GL_STREAM_DRAW);
     }
     
     void cleanup()
@@ -449,7 +443,7 @@ public:
         gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
         gl::BufferSubData(GL_ARRAY_BUFFER, 0, 32, buff);
     }
-    
+
     void draw()
     {
         gl::BindVertexArray(m_vao);
@@ -458,49 +452,25 @@ public:
 };
 
 
-class PainterGLRoutine_TexturedRect : public PainterGLRoutine{
-    GLuint m_vao;
-    GLuint m_vbo;
-
+class PainterGLRoutine_ColoredRect : public PainterGLRoutine{
 public:
     void init()
     {
-        gl::GenVertexArrays(1, &m_vao);
-        gl::BindVertexArray(m_vao);
-        gl::GenBuffers(1, &m_vbo);
-        gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        gl::BufferData(GL_ARRAY_BUFFER, 64, nullptr, GL_STREAM_DRAW);
-        
+        PainterGLRoutine::init(32);
+        g_Shader_Color->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
+    }
+};
+
+
+class PainterGLRoutine_TexturedRect : public PainterGLRoutine{
+public:
+    void init()
+    {
+        PainterGLRoutine::init(64);
         g_Shader_Texture->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
         g_Shader_Texture->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
     }
-    
-    void cleanup()
-    {
-        gl::DeleteVertexArrays(1, &m_vao);
-        gl::DeleteBuffers(1, &m_vbo);
-    }
-    
-    void setRect(float left, float top, float right, float bottom)
-    { 
-        float buff[8];
 
-        buff[0] = left;
-        buff[1] = top;
-
-        buff[2] = right;
-        buff[3] = top;
-
-        buff[4] = right;
-        buff[5] = bottom;
-
-        buff[6] = left;
-        buff[7] = bottom;
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        gl::BufferSubData(GL_ARRAY_BUFFER, 0, 32, buff);
-    }
-    
     void setTexCoords(float left, float top, float right, float bottom)
     { 
         float buff[8];
@@ -519,12 +489,6 @@ public:
 
         gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
         gl::BufferSubData(GL_ARRAY_BUFFER, 32, 32, buff);
-    }
-    
-    void draw()
-    {
-        gl::BindVertexArray(m_vao);
-        gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
 };
 
