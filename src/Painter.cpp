@@ -494,8 +494,8 @@ public:
 
 
 struct PainterImplGL : public PainterImpl{    
-    PainterGLRoutine_ColoredRect     m_rgba_painter;
-    PainterGLRoutine_TexturedRect m_rgba_tex_painter;
+    PainterGLRoutine_ColoredRect     m_colored_rect;
+    PainterGLRoutine_TexturedRect m_textured_rect;
 
     LinkedList<PainterTextureImplGL> m_textures;
 
@@ -510,11 +510,11 @@ struct PainterImplGL : public PainterImpl{
     {
         initSharedGLStuffIfNeeded();
         
-        m_rgba_painter.init();
-        m_rgba_painter.setRect(0.0f, 0.0f, 1.0f, -1.0f);
+        m_colored_rect.init();
+        m_colored_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f);
         
-        m_rgba_tex_painter.init();
-        m_rgba_tex_painter.setRect(0.0f, 0.0f, 1.0f, -1.0f);
+        m_textured_rect.init();
+        m_textured_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f);
         
         PainterImplGL_count++;
     }
@@ -522,8 +522,8 @@ struct PainterImplGL : public PainterImpl{
 
     virtual ~PainterImplGL()
     {
-        m_rgba_painter.cleanup();
-        m_rgba_tex_painter.cleanup();
+        m_colored_rect.cleanup();
+        m_textured_rect.cleanup();
         
         PainterImplGL_count--;
         if(PainterImplGL_count == 0)
@@ -592,7 +592,7 @@ struct PainterImplGL : public PainterImpl{
                 float(color[3]) * uchar2float_rcp
             );
 
-            m_rgba_painter.draw();
+            m_colored_rect.draw();
         }
     }
     
@@ -640,13 +640,13 @@ struct PainterImplGL : public PainterImpl{
             tex->bind();
             g_Shader_Texture->setSampler(0);
             
-            m_rgba_tex_painter.setTexCoords(
+            m_textured_rect.setTexCoords(
                 intersection.srcx() * tex->wrcp(),
                 intersection.srcy() * tex->hrcp(),
                 (intersection.srcx() + intersection.width())  * tex->wrcp(),
                 (intersection.srcy() + intersection.height()) * tex->hrcp()
             );
-            m_rgba_tex_painter.draw();
+            m_textured_rect.draw();
         }
     }
     
