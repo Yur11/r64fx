@@ -403,7 +403,12 @@ public:
 };
 
 
-class PainterGL_RGBA{
+class PainterGLRoutine{
+
+};
+
+
+class PainterGLRoutine_ColoredRect : public PainterGLRoutine{
     GLuint m_vao;
     GLuint m_vbo;
 
@@ -453,7 +458,7 @@ public:
 };
 
 
-class PainterGL_RGBA_Tex{
+class PainterGLRoutine_TexturedRect : public PainterGLRoutine{
     GLuint m_vao;
     GLuint m_vbo;
 
@@ -525,8 +530,8 @@ public:
 
 
 struct PainterImplGL : public PainterImpl{    
-    PainterGL_RGBA     m_rgba_painter;
-    PainterGL_RGBA_Tex m_rgba_tex_painter;
+    PainterGLRoutine_ColoredRect     m_rgba_painter;
+    PainterGLRoutine_TexturedRect m_rgba_tex_painter;
 
     LinkedList<PainterTextureImplGL> m_textures;
 
@@ -583,6 +588,20 @@ struct PainterImplGL : public PainterImpl{
     }
 
 
+    void setShaderScaleAndShift(PainterShader* target_shader, const Rect<int> &rect)
+    {
+        float rw = rect.width()  * m_window_double_width_rcp;
+        float rh = rect.height() * m_window_double_hrcp;
+
+        float rx = (rect.x() - m_window_half_width) * m_window_double_width_rcp;
+        float ry = (m_window_half_height - rect.y()) * m_window_double_hrcp;
+
+        target_shader->setScaleAndShift(
+            rw, rh, rx, ry
+        );
+    }
+
+
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
         auto intersection_rect = clip(rect + offset());
@@ -590,14 +609,8 @@ struct PainterImplGL : public PainterImpl{
         {
             g_Shader_Color->use();
 
-            float rw = intersection_rect.width()  * m_window_double_width_rcp;
-            float rh = intersection_rect.height() * m_window_double_hrcp;
-
-            float rx = (intersection_rect.x() - m_window_half_width) * m_window_double_width_rcp;
-            float ry = (m_window_half_height - intersection_rect.y()) * m_window_double_hrcp;
-
-            g_Shader_Color->setScaleAndShift(
-                rw, rh, rx, ry
+            setShaderScaleAndShift(
+                g_Shader_Color, intersection_rect
             );
 
             g_Shader_Color->setColor(
@@ -646,15 +659,9 @@ struct PainterImplGL : public PainterImpl{
         if(intersection.width() > 0 && intersection.height() > 0)
         {
             g_Shader_Texture->use();
-            
-            float rw = intersection.width()  * m_window_double_width_rcp;
-            float rh = intersection.height() * m_window_double_hrcp;
 
-            float rx = (intersection.dstx() - m_window_half_width)  * m_window_double_width_rcp;
-            float ry = (m_window_half_height - intersection.dsty()) * m_window_double_hrcp;
-
-            g_Shader_Texture->setScaleAndShift(
-                rw, rh, rx, ry
+            setShaderScaleAndShift(
+                g_Shader_Texture, {intersection.dstOffset(), intersection.size()}
             );
             
             gl::ActiveTexture(GL_TEXTURE0);
