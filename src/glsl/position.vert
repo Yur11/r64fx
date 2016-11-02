@@ -1,13 +1,9 @@
 #version 130
 
-in vec2 position;
-
 /* Scale and shift. */
 uniform vec4 sxsytxty = vec4(1.0, 1.0, 0.0, 0.0);
 
-uniform vec4 color = vec4(1.0, 1.0, 1.0, 0.0);
-
-out vec4 frag_color;
+in vec2 position;
 
 void main()
 {
@@ -17,6 +13,4 @@ void main()
         0.0,
         1.0
     );
-
-    frag_color = color;
 }

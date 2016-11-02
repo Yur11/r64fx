@@ -63,30 +63,36 @@ void Shader::free()
 }
 
 
-ShadingProgram::ShadingProgram(VertexShader vs, FragmentShader fs) : m_vs(vs), m_fs(fs)
+bool ShadingProgram::load(VertexShader vs, FragmentShader fs)
 {
     m_program = gl::CreateProgram();
     if(!m_program)
-        return;
+        return false;
     
     gl::AttachShader(m_program, vs.id());
     gl::AttachShader(m_program, fs.id());
     gl::LinkProgram(m_program);
 
-    if(!isOk())
+    if(!isGood())
     {
         cerr << infoLog() << "\n";
+        return false;
     }
+    
+    return true;
 }
 
 
-ShadingProgram::~ShadingProgram()
+void ShadingProgram::free()
 {
+    if(!isGood())
+        return;
+    
     gl::DeleteProgram(m_program);
 }
 
 
-bool ShadingProgram::isOk()
+bool ShadingProgram::isGood()
 {
     if(!m_program)
         return false;

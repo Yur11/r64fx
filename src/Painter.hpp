@@ -73,8 +73,6 @@ public:
 //     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask) = 0;
 
 
-    
-    
     virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha = false) = 0;
     
     inline void blendTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha = false)

@@ -48,11 +48,11 @@ class ShadingProgram{
     GLuint m_program = 0;
     
 public:
-    ShadingProgram(VertexShader vs, FragmentShader fs);
-    
-    virtual ~ShadingProgram();
+    bool load(VertexShader vs, FragmentShader fs);
 
-    bool isOk();
+    void free();
+    
+    bool isGood();
     
     const char* infoLog();
     

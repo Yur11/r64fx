@@ -51,6 +51,7 @@ set(SRC
     Mouse.cpp
     Mutex.cpp
     Painter.cpp
+    PainterShaders.cpp
     PlayerController.cpp
     PlayerMachine.cpp
     PlayerView.cpp
@@ -63,8 +64,6 @@ set(SRC
     SignalNode_Filter.cpp
     SignalNode_Sampler.cpp
     Shader.cpp
-    Shader_RGBA.cpp
-    Shader_RGBA_Tex.cpp
     SoundDriver.cpp
     SoundDriverMachine.cpp
     SoundFile.cpp
