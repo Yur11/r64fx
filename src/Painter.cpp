@@ -587,8 +587,16 @@ struct PainterImplGL : public PainterImpl{
         gl::Clear(GL_COLOR_BUFFER_BIT);
     }
 
+    void useShader(PainterShader* shader)
+    {
+        if(g_current_shader != shader)
+        {
+            g_current_shader = shader;
+            g_current_shader->use();
+        }
+    }
 
-    void setShaderScaleAndShift(PainterShader* target_shader, const Rect<int> &rect)
+    void setShaderScaleAndShift(PainterShader* shader, const Rect<int> &rect)
     {
         float rw = rect.width()  * m_window_double_width_rcp;
         float rh = rect.height() * m_window_double_hrcp;
@@ -596,7 +604,7 @@ struct PainterImplGL : public PainterImpl{
         float rx = (rect.x() - m_window_half_width) * m_window_double_width_rcp;
         float ry = (m_window_half_height - rect.y()) * m_window_double_hrcp;
 
-        target_shader->setScaleAndShift(
+        shader->setScaleAndShift(
             rw, rh, rx, ry
         );
     }
@@ -607,8 +615,8 @@ struct PainterImplGL : public PainterImpl{
         auto intersection_rect = clip(rect + offset());
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
-            g_Shader_Color->use();
-
+            useShader(g_Shader_Color);
+            
             setShaderScaleAndShift(
                 g_Shader_Color, intersection_rect
             );
@@ -658,7 +666,7 @@ struct PainterImplGL : public PainterImpl{
         
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            g_Shader_Texture->use();
+            useShader(g_Shader_Texture);
 
             setShaderScaleAndShift(
                 g_Shader_Texture, {intersection.dstOffset(), intersection.size()}
