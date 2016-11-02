@@ -318,6 +318,8 @@ namespace
     Shader_Color*    g_Shader_Color    = nullptr;
     Shader_Texture*  g_Shader_Texture  = nullptr;
 
+    PainterShader*   g_current_shader  = nullptr;
+
     const GLuint primitive_restart = 0xFFFF;
 }
 
@@ -329,8 +331,10 @@ class PainterTextureImplGL : public PainterTexture, public LinkedList<PainterTex
     Rect<int>       m_rect;
     int             m_component_count  = 0;
     GLuint          m_texture          = 0;
-    float           m_tex_w            = 1.0f;
-    float           m_tex_h            = 1.0f;
+    float           m_width_ratio      = 1.0f;
+    float           m_height_ratio     = 1.0f;
+    float           m_wrcp             = 1.0f;
+    float           m_hrcp             = 1.0f;
     
 public:
     PainterTextureImplGL(PainterImplGL* painter) : m_painter(painter)
@@ -357,25 +361,25 @@ public:
     {
         return m_rect.height();
     }
-    
-    inline void setTexCoordWidth(float width)
+
+    inline float widthRatio() const
     {
-        m_tex_w = width;
+        return m_width_ratio;
     }
     
-    inline void setTexCoordHeight(float height)
+    inline float heightRatio() const
     {
-        m_tex_h = height;
+        return m_height_ratio;
     }
     
-    inline float texCoordWidth() const
+    inline float wrcp() const
     {
-        return m_tex_w;
+        return m_wrcp;
     }
     
-    inline float texCoordHeight() const
+    inline float hrcp() const
     {
-        return m_tex_h;
+        return m_hrcp;
     }
     
     inline void bind()
@@ -397,69 +401,6 @@ public:
     
     virtual void free();
 };
-
-
-//     void initGLStuff()
-//     {
-//         gl::GenVertexArrays(1, &base_vao);
-//         gl::BindVertexArray(base_vao);
-//         gl::GenBuffers(1, &base_vbo);
-//         gl::BindBuffer(GL_ARRAY_BUFFER, base_vbo);
-//         gl::BufferData(GL_ARRAY_BUFFER, 64, nullptr, GL_STATIC_DRAW);
-//         gl::EnableVertexAttribArray(g_Shader_Color_tex->attr_position);
-//         gl::VertexAttribPointer(
-//             g_Shader_Color_tex->attr_position,
-//             2, GL_FLOAT, GL_FALSE,
-//             0, 0
-//         );
-//         gl::EnableVertexAttribArray(g_Shader_Color_tex->attr_tex_coord);
-//         gl::VertexAttribPointer(
-//             g_Shader_Color_tex->attr_tex_coord,
-//             2, GL_FLOAT, GL_FALSE,
-//             0, 32
-//         );
-//     }
-
-
-//     void cleanupGLStuff()
-//     {
-//         deleteBaseTextureIfNeeded();
-//         gl::DeleteVertexArrays(1, &base_vao);
-//         gl::DeleteBuffers(1, &base_vbo);
-//     }
-
-//     void resizeBaseTextureIfNeeded(int w, int h)
-//     {
-//         bool tex_resize_needed = ( base_texture == 0 || w > base_texture_size.width() || h > base_texture_size.height() );
-//         if(!tex_resize_needed)
-//             return;
-// 
-//         deleteBaseTextureIfNeeded();
-// 
-//         /* Texture width must be divisible by 4 ? */
-//         while(w & 3)
-//             w++;
-// 
-//         gl::GenTextures(1, &base_texture);
-//         gl::BindTexture(GL_TEXTURE_2D, base_texture);
-//         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//         gl::TexStorage2D(
-//             GL_TEXTURE_2D,
-//             1,
-//             GL_RGBA8,
-//             w, h
-//         );
-// 
-//         base_texture_size = {w, h};
-//         base_texture_image.load(w, h, 4);
-//     }
-// 
-//     void deleteBaseTextureIfNeeded()
-//     {
-//         if(base_texture)
-//             gl::DeleteTextures(1, &base_texture);
-//     }
 
 
 class PainterGL_RGBA{
@@ -590,7 +531,7 @@ struct PainterImplGL : public PainterImpl{
     LinkedList<PainterTextureImplGL> m_textures;
 
     float m_window_double_width_rcp = 1.0f;
-    float m_window_double_height_rcp = 1.0f;
+    float m_window_double_hrcp = 1.0f;
     float m_window_half_width = 0.0f;
     float m_window_half_height = 0.0f;
 
@@ -650,10 +591,10 @@ struct PainterImplGL : public PainterImpl{
             g_Shader_Color->use();
 
             float rw = intersection_rect.width()  * m_window_double_width_rcp;
-            float rh = intersection_rect.height() * m_window_double_height_rcp;
+            float rh = intersection_rect.height() * m_window_double_hrcp;
 
             float rx = (intersection_rect.x() - m_window_half_width) * m_window_double_width_rcp;
-            float ry = (m_window_half_height - intersection_rect.y()) * m_window_double_height_rcp;
+            float ry = (m_window_half_height - intersection_rect.y()) * m_window_double_hrcp;
 
             g_Shader_Color->setScaleAndShift(
                 rw, rh, rx, ry
@@ -695,11 +636,11 @@ struct PainterImplGL : public PainterImpl{
         assert(texture->parentPainter() == this);
 #endif//R64FX_DEBUG
         
-        auto texture_gl = static_cast<PainterTextureImplGL*>(texture);
+        auto tex = static_cast<PainterTextureImplGL*>(texture);
         
         RectIntersection<int> intersection(
             current_clip_rect,
-            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), texture_gl->width(), texture_gl->height()}
+            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), tex->width(), tex->height()}
         );
         
         if(intersection.width() > 0 && intersection.height() > 0)
@@ -707,20 +648,25 @@ struct PainterImplGL : public PainterImpl{
             g_Shader_Texture->use();
             
             float rw = intersection.width()  * m_window_double_width_rcp;
-            float rh = intersection.height() * m_window_double_height_rcp;
+            float rh = intersection.height() * m_window_double_hrcp;
 
             float rx = (intersection.dstx() - m_window_half_width)  * m_window_double_width_rcp;
-            float ry = (m_window_half_height - intersection.dsty()) * m_window_double_height_rcp;
+            float ry = (m_window_half_height - intersection.dsty()) * m_window_double_hrcp;
 
             g_Shader_Texture->setScaleAndShift(
                 rw, rh, rx, ry
             );
             
             gl::ActiveTexture(GL_TEXTURE0);
-            texture_gl->bind();
+            tex->bind();
             g_Shader_Texture->setSampler(0);
             
-            m_rgba_tex_painter.setTexCoords(0.0, 0.0, texture_gl->texCoordWidth(), 1.0f);
+            m_rgba_tex_painter.setTexCoords(
+                intersection.srcx() * tex->wrcp(),
+                intersection.srcy() * tex->hrcp(),
+                (intersection.srcx() + intersection.width())  * tex->wrcp(),
+                (intersection.srcy() + intersection.height()) * tex->hrcp()
+            );
             m_rgba_tex_painter.draw();
         }
     }
@@ -730,96 +676,12 @@ struct PainterImplGL : public PainterImpl{
         
     }
     
-//     virtual void putImage(Image* img, Point<int> pos)
-//     {
-//         RectIntersection<int> intersection(
-//             current_clip_rect,
-//             {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
-//         );
-// 
-//         if(intersection.width() > 0 && intersection.height() > 0)
-//         {
-//             implant(
-//                 &base_texture_image,
-//                 intersection.dstOffset() + current_clip_rect.position(),
-//                 intersection.size(),
-//                 intersection.srcOffset(),
-//                 img
-//             );
-//             addToBaseTexture(&base_texture_image, {0, 0});
-//         }
-//     }
-
-//     virtual void blendImage(Image* img, Point<int> pos)
-//     {
-//         RectIntersection<int> intersection(
-//             current_clip_rect,
-//             {pos.x() + offsetX(), pos.y() + offsetY(), img->width(), img->height()}
-//         );
-// 
-//         if(intersection.width() > 0 && intersection.height() > 0)
-//         {
-//             implant_alpha(
-//                 &base_texture_image,
-//                 intersection.dstOffset() + current_clip_rect.position(),
-//                 intersection.size(),
-//                 intersection.srcOffset(),
-//                 img
-//             );
-//             addToBaseTexture(&base_texture_image, {0, 0});
-//         }
-//     }
-// 
-//     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
-//     {
-//         RectIntersection<int> intersection(
-//             current_clip_rect,
-//             {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
-//         );
-// 
-//         if(intersection.width() > 0 && intersection.height() > 0)
-//         {
-//             blend(
-//                 &base_texture_image,
-//                 intersection.dstOffset() + current_clip_rect.position(),
-//                 intersection.size(),
-//                 intersection.srcOffset(),
-//                 colors, mask
-//             );
-//             addToBaseTexture(&base_texture_image, {0, 0});
-//         }
-//     }
-
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
-//         RectIntersection<int> intersection(
-//             current_clip_rect, rect + offset()
-//         );
-// 
-//         if(intersection.width() > 0 && intersection.height() > 0)
-//         {
-//             draw_waveform(
-//                 &base_texture_image,
-//                 color,
-//                 waveform + intersection.srcOffset().x() * 2,
-//                 Rect<int>(intersection.dstOffset(), intersection.size()),
-//                 gain
-//             );
-//         }
-//         addToBaseTexture(&base_texture_image, {0, 0});
+
     }
 
-    
-//     void addToBaseTexture(Image* img, Point<int> pos)
-//     {
-//         gl::BindTexture(GL_TEXTURE_2D, base_texture);
-//         gl::TexSubImage2D(
-//             GL_TEXTURE_2D, 0,
-//             pos.x(), pos.y(), img->width(), img->height(),
-//             GL_RGBA, GL_UNSIGNED_BYTE, img->data()
-//         );
-//     }
 
     virtual void repaint(Rect<int>* rects, int numrects)
     {        
@@ -835,7 +697,7 @@ struct PainterImplGL : public PainterImpl{
         setOffset({0, 0});
 
         m_window_double_width_rcp = 2.0f / float(window->width());
-        m_window_double_height_rcp = 2.0f / float(window->height());
+        m_window_double_hrcp = 2.0f / float(window->height());
 
         m_window_half_width = window->width() * 0.5f;
         m_window_half_height = window->height() * 0.5f;
@@ -956,7 +818,7 @@ void PainterTextureImplGL::loadImage(Image* teximg)
     /* Texture width must be divisible by 4 ? */
     while(w & 3)
         w++;
-    setTexCoordWidth(float(teximg->width()) / float(w));
+    m_width_ratio = float(teximg->width()) / float(w);
     
     gl::TexStorage2D(
         GL_TEXTURE_2D,
@@ -976,6 +838,9 @@ void PainterTextureImplGL::loadImage(Image* teximg)
         teximg->data()
     );
     
+    m_wrcp = 1.0f / float(w);
+    m_hrcp = 1.0f / float(h);
+
     m_rect = {0, 0, teximg->width(), teximg->height()};
 }
 

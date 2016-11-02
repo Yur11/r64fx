@@ -7,14 +7,14 @@
 
 namespace r64fx{
     
-class ShaderCommon : public ShadingProgram{
+class PainterShader : public ShadingProgram{
     GLint unif_sxsytxty;
     GLint attr_position;
     
 public:
-    ShaderCommon();
+    PainterShader();
     
-    ~ShaderCommon();
+    ~PainterShader();
     
     void setScaleAndShift(float sx, float sy, float tx, float ty);
     
@@ -25,7 +25,7 @@ protected:
 };
     
     
-class Shader_Color : public ShaderCommon{
+class Shader_Color : public PainterShader{
     GLint unif_color;
 
 public:
@@ -37,7 +37,7 @@ public:
 };
     
     
-class Shader_Texture : public ShaderCommon{
+class Shader_Texture : public PainterShader{
     GLint unif_sampler;
     GLint attr_tex_coord;
 

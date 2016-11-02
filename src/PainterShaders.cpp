@@ -57,7 +57,7 @@ void cleanup()
 }//namespace
 
 
-ShaderCommon::ShaderCommon()
+PainterShader::PainterShader()
 {
     if(g_user_count == 0)
     {
@@ -67,7 +67,7 @@ ShaderCommon::ShaderCommon()
 }
     
     
-ShaderCommon::~ShaderCommon()
+PainterShader::~PainterShader()
 {
     g_user_count--;
     if(g_user_count == 0)
@@ -77,19 +77,19 @@ ShaderCommon::~ShaderCommon()
 }
 
 
-void ShaderCommon::setScaleAndShift(float sx, float sy, float tx, float ty)
+void PainterShader::setScaleAndShift(float sx, float sy, float tx, float ty)
 {
     gl::Uniform4f(unif_sxsytxty, sx, sy, tx, ty);
 }
 
 
-void ShaderCommon::bindPositionAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
+void PainterShader::bindPositionAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
 {
     bindAttribute(attr_position, 2, type, normalized, stride, pointer);
 }
 
 
-void ShaderCommon::fetchCommonIndices()
+void PainterShader::fetchCommonIndices()
 {
     R64FX_GET_UNIFORM_LOCATION(sxsytxty);
     R64FX_GET_ATTRIB_LOCATION(position);
