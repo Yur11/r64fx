@@ -509,6 +509,20 @@ inline void PrimitiveRestartIndex(GLuint index)
 }
 
 
+inline void PixelStoref(GLenum pname, GLfloat param)
+{
+    glPixelStoref(pname, param);
+    CHECK_FOR_GL_ERRORS("glPixelStoref");
+}
+
+
+inline void PixelStorei(GLenum pname, GLint param)
+{
+    glPixelStorei(pname, param);
+    CHECK_FOR_GL_ERRORS("glPixelStorei");
+}
+
+
 inline void Finish()
 {
     glFinish();
