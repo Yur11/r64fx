@@ -5,6 +5,10 @@
 #define R64FX_GET_ATTRIB_LOCATION(name) getAttribLocation(attr_##name, #name)
 #define R64FX_GET_UNIFORM_LOCATION(name) getUniformLocation(unif_##name, #name)
 
+#ifdef R64FX_DEBUG
+#include <assert.h>
+#endif//R64FX_DEBUG
+
 namespace r64fx{
     
 namespace{
@@ -17,13 +21,16 @@ const char* glsl_pos_and_tex_coord =
 #include "glsl_pos_and_tex_coord.vert.h"
 ;
 
-
 const char* glsl_color =
 #include "glsl_color.frag.h"
 ;
 
 const char* glsl_texture =
 #include "glsl_texture.frag.h"
+;
+
+const char* glsl_blend_color = 
+#include "glsl_blend_color.frag.h"
 ;
 
 
@@ -52,7 +59,6 @@ void cleanup()
     g_color.free();
     g_texture.free();
 }
-
     
 }//namespace
 
@@ -124,8 +130,6 @@ Shader_Texture::Shader_Texture()
         return;
 
     fetchCommonIndices();
-    R64FX_GET_UNIFORM_LOCATION(sampler);
-    R64FX_GET_ATTRIB_LOCATION(tex_coord);
 }
 
 
@@ -144,6 +148,45 @@ void Shader_Texture::setSampler(int sampler)
 void Shader_Texture::bindTexCoordAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
 {
     bindAttribute(attr_tex_coord, 2, type, normalized, stride, pointer);
+}
+
+
+void Shader_Texture::fetchCommonIndices()
+{
+    PainterShader::fetchCommonIndices();
+    R64FX_GET_UNIFORM_LOCATION(sampler);
+    R64FX_GET_ATTRIB_LOCATION(tex_coord);
+}
+
+
+Shader_ColorBlend::Shader_ColorBlend()
+{    
+    const char* frag = glsl_blend_color;
+    
+    if(!load(g_pos_and_tex_coord, frag))
+        return;
+    
+    fetchCommonIndices();
+    R64FX_GET_UNIFORM_LOCATION(color);
+    R64FX_GET_UNIFORM_LOCATION(texture_component);
+}
+
+    
+Shader_ColorBlend::~Shader_ColorBlend()
+{
+    
+}
+
+
+void Shader_ColorBlend::setColor(float r, float g, float b, float a)
+{
+    gl::Uniform4f(unif_color, r, g, b, a);
+}
+
+
+void Shader_ColorBlend::setTextureComponent(int component)
+{
+    gl::Uniform1i(unif_texture_component, component);
 }
 
 }//namespace r64fx

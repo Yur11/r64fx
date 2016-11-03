@@ -49,6 +49,24 @@ public:
     void setSampler(int sampler);
     
     void bindTexCoordAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer);
+    
+protected:
+    void fetchCommonIndices();
+};
+
+
+class Shader_ColorBlend : public Shader_Texture{
+    GLint unif_color;
+    GLint unif_texture_component;
+    
+public:
+    Shader_ColorBlend();
+    
+    ~Shader_ColorBlend();
+    
+    void setColor(float r, float g, float b, float a);
+    
+    void setTextureComponent(int component);
 };
     
 }//namespace r64fx

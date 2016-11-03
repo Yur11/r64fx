@@ -19,7 +19,9 @@ using namespace std;
 namespace r64fx{
 
 namespace{
-    constexpr float uchar2float_rcp = 1.0f / 255.0f;
+
+constexpr float uchar2float_rcp = 1.0f / 255.0f;    
+    
 }//namespace
 
 
@@ -315,8 +317,9 @@ namespace
 
     bool gl_stuff_is_good = false;
 
-    Shader_Color*    g_Shader_Color    = nullptr;
-    Shader_Texture*  g_Shader_Texture  = nullptr;
+    Shader_Color*       g_Shader_Color      = nullptr;
+    Shader_Texture*     g_Shader_Texture    = nullptr;
+    Shader_ColorBlend*  g_Shader_ColorBlend = nullptr;
 
     PainterShader*   g_current_shader  = nullptr;
 
@@ -493,9 +496,21 @@ public:
 };
 
 
+class PainterGLRoutine_ColorBlend : public PainterGLRoutine_TexturedRect{
+public:
+    void init()
+    {
+        PainterGLRoutine::init(64);
+        g_Shader_ColorBlend->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
+        g_Shader_ColorBlend->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
+    }
+};
+
+
 struct PainterImplGL : public PainterImpl{    
-    PainterGLRoutine_ColoredRect     m_colored_rect;
-    PainterGLRoutine_TexturedRect m_textured_rect;
+    PainterGLRoutine_ColoredRect   m_colored_rect;
+    PainterGLRoutine_TexturedRect  m_textured_rect;
+    PainterGLRoutine_ColorBlend    m_color_blend;
 
     LinkedList<PainterTextureImplGL> m_textures;
 
@@ -516,6 +531,9 @@ struct PainterImplGL : public PainterImpl{
         m_textured_rect.init();
         m_textured_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f);
         
+        m_color_blend.init();
+        m_color_blend.setRect(0.0f, 0.0f, 1.0f, -1.0f);
+        
         PainterImplGL_count++;
     }
 
@@ -524,6 +542,7 @@ struct PainterImplGL : public PainterImpl{
     {
         m_colored_rect.cleanup();
         m_textured_rect.cleanup();
+        m_color_blend.cleanup();
         
         PainterImplGL_count--;
         if(PainterImplGL_count == 0)
@@ -586,7 +605,6 @@ struct PainterImplGL : public PainterImpl{
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
             useShader(g_Shader_Color);
-            
             setShaderScaleAndShift(g_Shader_Color, intersection_rect);
 
             g_Shader_Color->setColor(
@@ -635,7 +653,6 @@ struct PainterImplGL : public PainterImpl{
         if(intersection.width() > 0 && intersection.height() > 0)
         {
             useShader(g_Shader_Texture);
-
             setShaderScaleAndShift(g_Shader_Texture, intersection);
             
             gl::ActiveTexture(GL_TEXTURE0);
@@ -652,15 +669,56 @@ struct PainterImplGL : public PainterImpl{
         }
     }
     
-    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture* mask_texture)
+    
+    virtual void blendColors(Point<int> dst_pos, unsigned char** colors, PainterTexture* mask_texture)
     {
+#ifdef R64FX_DEBUG
+        assert(mask_texture->parentPainter() == this);
+#endif//R64FX_DEBUG
         
+        auto tex = static_cast<PainterTextureImplGL*>(mask_texture);
+        
+        RectIntersection<int> intersection(
+            current_clip_rect,
+            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), tex->width(), tex->height()}
+        );
+        
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            useShader(g_Shader_ColorBlend);
+            setShaderScaleAndShift(g_Shader_ColorBlend, intersection);
+            
+            gl::ActiveTexture(GL_TEXTURE0);
+            tex->bind();
+            g_Shader_ColorBlend->setSampler(0);
+            
+            m_color_blend.setTexCoords(
+                intersection.srcx() * tex->wrcp(),
+                intersection.srcy() * tex->hrcp(),
+                (intersection.srcx() + intersection.width())  * tex->wrcp(),
+                (intersection.srcy() + intersection.height()) * tex->hrcp()
+            );
+            
+            for(int c=0; c<mask_texture->componentCount(); c++)
+            {
+                g_Shader_ColorBlend->setColor(
+                    float(colors[c][0]) * uchar2float_rcp,
+                    float(colors[c][1]) * uchar2float_rcp,
+                    float(colors[c][2]) * uchar2float_rcp,
+                    float(colors[c][3]) * uchar2float_rcp
+                );
+                
+                g_Shader_ColorBlend->setTextureComponent(c);
+                
+                m_color_blend.draw();
+            }
+        }
     }
     
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
-
+        
     }
 
 
@@ -707,6 +765,10 @@ struct PainterImplGL : public PainterImpl{
         g_Shader_Texture = new Shader_Texture;
         if(!g_Shader_Texture->isGood())
             abort();
+        
+        g_Shader_ColorBlend = new Shader_ColorBlend();
+        if(!g_Shader_ColorBlend->isGood())
+            abort();
 
         gl::Enable(GL_PRIMITIVE_RESTART);
         gl::PrimitiveRestartIndex(primitive_restart);
@@ -727,6 +789,9 @@ struct PainterImplGL : public PainterImpl{
 
         if(g_Shader_Texture)
             delete g_Shader_Texture;
+        
+        if(g_Shader_ColorBlend)
+            delete g_Shader_ColorBlend;
     }
 
 };//PainterImplImage
