@@ -334,8 +334,6 @@ class PainterTextureImplGL : public PainterTexture, public LinkedList<PainterTex
     Rect<int>       m_rect;
     int             m_component_count  = 0;
     GLuint          m_texture          = 0;
-    float           m_width_ratio      = 1.0f;
-    float           m_height_ratio     = 1.0f;
     float           m_wrcp             = 1.0f;
     float           m_hrcp             = 1.0f;
     
@@ -363,16 +361,6 @@ public:
     inline int height() const
     {
         return m_rect.height();
-    }
-
-    inline float widthRatio() const
-    {
-        return m_width_ratio;
-    }
-    
-    inline float heightRatio() const
-    {
-        return m_height_ratio;
     }
     
     inline float wrcp() const
@@ -658,7 +646,7 @@ struct PainterImplGL : public PainterImpl{
             gl::ActiveTexture(GL_TEXTURE0);
             tex->bind();
             g_Shader_Texture->setSampler(0);
-            
+
             m_textured_rect.setTexCoords(
                 intersection.srcx() * tex->wrcp(),
                 intersection.srcy() * tex->hrcp(),
@@ -668,8 +656,8 @@ struct PainterImplGL : public PainterImpl{
             m_textured_rect.draw();
         }
     }
-    
-    
+
+
     virtual void blendColors(Point<int> dst_pos, unsigned char** colors, PainterTexture* mask_texture)
     {
 #ifdef R64FX_DEBUG
@@ -698,7 +686,7 @@ struct PainterImplGL : public PainterImpl{
                 (intersection.srcx() + intersection.width())  * tex->wrcp(),
                 (intersection.srcy() + intersection.height()) * tex->hrcp()
             );
-            
+
             for(int c=0; c<mask_texture->componentCount(); c++)
             {
                 g_Shader_ColorBlend->setColor(
@@ -714,7 +702,7 @@ struct PainterImplGL : public PainterImpl{
             }
         }
     }
-    
+
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
@@ -861,11 +849,6 @@ void PainterTextureImplGL::loadImage(Image* teximg)
     int w = teximg->width();
     int h = teximg->height();
     
-    /* Texture width must be divisible by 4 ? */
-    while(w & 3)
-        w++;
-    m_width_ratio = float(teximg->width()) / float(w);
-    
     gl::TexStorage2D(
         GL_TEXTURE_2D,
         1,
@@ -873,6 +856,8 @@ void PainterTextureImplGL::loadImage(Image* teximg)
         w, h
     );
     
+    gl::PixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
     gl::TexSubImage2D(
         GL_TEXTURE_2D,
         0,
@@ -883,7 +868,7 @@ void PainterTextureImplGL::loadImage(Image* teximg)
         GL_UNSIGNED_BYTE,
         teximg->data()
     );
-    
+
     m_wrcp = 1.0f / float(w);
     m_hrcp = 1.0f / float(h);
 
