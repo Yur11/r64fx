@@ -66,16 +66,16 @@ struct MainViewPrivate{
     Image* icon30 = nullptr;
     Image* icon32 = nullptr;
     
-    PainterTexture* icon10_tex = nullptr;
-    PainterTexture* icon16_tex = nullptr;
-    PainterTexture* icon18_tex = nullptr;
-    PainterTexture* icon20_tex = nullptr;
-    PainterTexture* icon22_tex = nullptr;
-    PainterTexture* icon24_tex = nullptr;
-    PainterTexture* icon26_tex = nullptr;
-    PainterTexture* icon28_tex = nullptr;
-    PainterTexture* icon30_tex = nullptr;
-    PainterTexture* icon32_tex = nullptr;
+    PainterTexture2D* icon10_tex = nullptr;
+    PainterTexture2D* icon16_tex = nullptr;
+    PainterTexture2D* icon18_tex = nullptr;
+    PainterTexture2D* icon20_tex = nullptr;
+    PainterTexture2D* icon22_tex = nullptr;
+    PainterTexture2D* icon24_tex = nullptr;
+    PainterTexture2D* icon26_tex = nullptr;
+    PainterTexture2D* icon28_tex = nullptr;
+    PainterTexture2D* icon30_tex = nullptr;
+    PainterTexture2D* icon32_tex = nullptr;
 };
 
     

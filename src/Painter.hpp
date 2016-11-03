@@ -9,15 +9,15 @@ namespace r64fx{
 
 class Image;
 class Window;
-class PainterTexture;
+class PainterTexture2D;
 
 
 class PainterTextureManager{
 public:
     /* Generate a new texture. Optionally load the texture image. */
-    virtual PainterTexture* newTexture(Image* image = nullptr) = 0;
+    virtual PainterTexture2D* newTexture(Image* image = nullptr) = 0;
 
-    virtual void deleteTexture(PainterTexture* &texture) = 0;
+    virtual void deleteTexture(PainterTexture2D* &texture) = 0;
 };
 
 
@@ -73,14 +73,14 @@ public:
 //     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask) = 0;
 
 
-    virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha = false) = 0;
+    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha = false) = 0;
     
-    inline void blendTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha = false)
+    inline void blendTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha = false)
     {
         drawTexture(texture, dst_pos, true);
     }
     
-    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture* mask_texture) = 0;
+    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture2D* mask_texture) = 0;
     
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain) = 0;
     
@@ -97,9 +97,9 @@ public:
 };
 
 
-class PainterTexture{
+class PainterTexture2D{
 protected:
-    virtual ~PainterTexture() {};
+    virtual ~PainterTexture2D() {};
     
 public:
     virtual bool isGood() = 0;

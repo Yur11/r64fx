@@ -69,19 +69,19 @@ struct PainterImpl : public Painter{
 
 class PainterImplImage;
 
-class PainterTextureImplImage : public PainterTexture, public LinkedList<PainterTextureImplImage>::Node{
+class PainterTexture2DImplImage : public PainterTexture2D, public LinkedList<PainterTexture2DImplImage>::Node{
     PainterImplImage* m_painter;
     Point<int> m_pos;
     Image m_img;
     
 public:
-    PainterTextureImplImage(PainterImplImage* painter)
+    PainterTexture2DImplImage(PainterImplImage* painter)
     : m_painter(painter)
     {
 
     }
 
-    virtual ~PainterTextureImplImage()
+    virtual ~PainterTexture2DImplImage()
     {
         
     }
@@ -123,7 +123,7 @@ public:
 
 
 struct PainterImplImage : public PainterImpl{
-    LinkedList<PainterTextureImplImage> m_textures;
+    LinkedList<PainterTexture2DImplImage> m_textures;
     
     PainterImplImage(Window* window)
     : PainterImpl(window)
@@ -153,9 +153,9 @@ struct PainterImplImage : public PainterImpl{
     }
 
     
-    virtual PainterTexture* newTexture(Image* image = nullptr)
+    virtual PainterTexture2D* newTexture(Image* image = nullptr)
     {
-        auto texture = new PainterTextureImplImage(this);
+        auto texture = new PainterTexture2DImplImage(this);
         m_textures.append(texture);
         if(image)
         {
@@ -165,11 +165,11 @@ struct PainterImplImage : public PainterImpl{
     }
     
 
-    virtual void deleteTexture(PainterTexture* &texture)
+    virtual void deleteTexture(PainterTexture2D* &texture)
     {
         if(texture->parentPainter() == this)
         {
-            auto texture_impl = static_cast<PainterTextureImplImage*>(texture);
+            auto texture_impl = static_cast<PainterTexture2DImplImage*>(texture);
             texture_impl->free();
             delete texture_impl;
             texture = nullptr;
@@ -177,9 +177,9 @@ struct PainterImplImage : public PainterImpl{
     }
 
 
-    virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha)
+    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha)
     {
-        auto texture_impl = static_cast<PainterTextureImplImage*>(texture);
+        auto texture_impl = static_cast<PainterTexture2DImplImage*>(texture);
         
         RectIntersection<int> intersection(
             current_clip_rect,
@@ -211,9 +211,9 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
-    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture* mask_texture)
+    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture2D* mask_texture)
     {
-        auto mask = static_cast<PainterTextureImplImage*>(mask_texture);
+        auto mask = static_cast<PainterTexture2DImplImage*>(mask_texture);
         
         RectIntersection<int> intersection(
             current_clip_rect,
@@ -268,43 +268,43 @@ struct PainterImplImage : public PainterImpl{
 };//PainterImplImage
 
 
-Painter* PainterTextureImplImage::parentPainter()
+Painter* PainterTexture2DImplImage::parentPainter()
 {
     return m_painter;
 }
 
 
-bool PainterTextureImplImage::isGood()
+bool PainterTexture2DImplImage::isGood()
 {
     return m_img.isGood();
 }
 
 
-Rect<int> PainterTextureImplImage::rect()
+Rect<int> PainterTexture2DImplImage::rect()
 {
     return {m_pos.x(), m_pos.y(), m_img.width(), m_img.height()};
 }
 
 
-int PainterTextureImplImage::componentCount()
+int PainterTexture2DImplImage::componentCount()
 {
     return m_img.componentCount();
 }
 
 
-void PainterTextureImplImage::loadImage(Image* teximg)
+void PainterTexture2DImplImage::loadImage(Image* teximg)
 {
     m_img.load(teximg->width(), teximg->height(), teximg->componentCount(), teximg->data(), true);
 }
 
 
-void PainterTextureImplImage::readImage(Image* teximg)
+void PainterTexture2DImplImage::readImage(Image* teximg)
 {
     teximg->load(m_img.width(), m_img.height(), m_img.componentCount(), m_img.data(), true);
 }
 
 
-void PainterTextureImplImage::free()
+void PainterTexture2DImplImage::free()
 {
     m_img.free();
 }
@@ -329,7 +329,7 @@ namespace
 
 class PainterImplGL;
 
-class PainterTextureImplGL : public PainterTexture, public LinkedList<PainterTextureImplGL>::Node{
+class PainterTexture2DImplGL : public PainterTexture2D, public LinkedList<PainterTexture2DImplGL>::Node{
     PainterImplGL*  m_painter          = nullptr;
     Rect<int>       m_rect;
     int             m_component_count  = 0;
@@ -338,12 +338,12 @@ class PainterTextureImplGL : public PainterTexture, public LinkedList<PainterTex
     float           m_hrcp             = 1.0f;
     
 public:
-    PainterTextureImplGL(PainterImplGL* painter) : m_painter(painter)
+    PainterTexture2DImplGL(PainterImplGL* painter) : m_painter(painter)
     {
 
     }
     
-    virtual ~PainterTextureImplGL()
+    virtual ~PainterTexture2DImplGL()
     {
 
     }
@@ -500,7 +500,7 @@ struct PainterImplGL : public PainterImpl{
     PainterGLRoutine_TexturedRect  m_textured_rect;
     PainterGLRoutine_ColorBlend    m_color_blend;
 
-    LinkedList<PainterTextureImplGL> m_textures;
+    LinkedList<PainterTexture2DImplGL> m_textures;
 
     float m_window_double_width_rcp = 1.0f;
     float m_window_double_hrcp = 1.0f;
@@ -607,9 +607,9 @@ struct PainterImplGL : public PainterImpl{
     }
     
     
-    virtual PainterTexture* newTexture(Image* image = nullptr)
+    virtual PainterTexture2D* newTexture(Image* image = nullptr)
     {
-        auto texture = new PainterTextureImplGL(this);
+        auto texture = new PainterTexture2DImplGL(this);
         m_textures.append(texture);
         if(image)
         {
@@ -619,19 +619,19 @@ struct PainterImplGL : public PainterImpl{
     }
 
     
-    virtual void deleteTexture(PainterTexture* &texture)
+    virtual void deleteTexture(PainterTexture2D* &texture)
     {
         
     }
     
     
-    virtual void drawTexture(PainterTexture* texture, Point<int> dst_pos, bool blend_alpha = false)
+    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha = false)
     {
 #ifdef R64FX_DEBUG
         assert(texture->parentPainter() == this);
 #endif//R64FX_DEBUG
         
-        auto tex = static_cast<PainterTextureImplGL*>(texture);
+        auto tex = static_cast<PainterTexture2DImplGL*>(texture);
         
         RectIntersection<int> intersection(
             current_clip_rect,
@@ -658,13 +658,13 @@ struct PainterImplGL : public PainterImpl{
     }
 
 
-    virtual void blendColors(Point<int> dst_pos, unsigned char** colors, PainterTexture* mask_texture)
+    virtual void blendColors(Point<int> dst_pos, unsigned char** colors, PainterTexture2D* mask_texture)
     {
 #ifdef R64FX_DEBUG
         assert(mask_texture->parentPainter() == this);
 #endif//R64FX_DEBUG
         
-        auto tex = static_cast<PainterTextureImplGL*>(mask_texture);
+        auto tex = static_cast<PainterTexture2DImplGL*>(mask_texture);
         
         RectIntersection<int> intersection(
             current_clip_rect,
@@ -785,31 +785,31 @@ struct PainterImplGL : public PainterImpl{
 };//PainterImplImage
 
 
-bool PainterTextureImplGL::isGood()
+bool PainterTexture2DImplGL::isGood()
 {
     return m_texture != 0;
 }
 
 
-Painter* PainterTextureImplGL::parentPainter()
+Painter* PainterTexture2DImplGL::parentPainter()
 {
     return m_painter;
 }
 
 
-Rect<int> PainterTextureImplGL::rect()
+Rect<int> PainterTexture2DImplGL::rect()
 {
     return m_rect;
 }
 
 
-int PainterTextureImplGL::componentCount()
+int PainterTexture2DImplGL::componentCount()
 {
     return m_component_count;
 }
 
 
-void PainterTextureImplGL::loadImage(Image* teximg)
+void PainterTexture2DImplGL::loadImage(Image* teximg)
 {
 #ifdef R64FX_DEBUG
     assert(teximg != nullptr);
@@ -875,13 +875,13 @@ void PainterTextureImplGL::loadImage(Image* teximg)
     m_rect = {0, 0, teximg->width(), teximg->height()};
 }
 
-void PainterTextureImplGL::readImage(Image* teximg)
+void PainterTexture2DImplGL::readImage(Image* teximg)
 {
     
 }
 
 
-void PainterTextureImplGL::free()
+void PainterTexture2DImplGL::free()
 {
     if(!isGood())
         return;

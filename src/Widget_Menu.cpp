@@ -23,10 +23,10 @@ void init_menu_font_if_needed()
 
 
 class Widget_MenuItem : public Widget{
-    Image*           m_image     = nullptr;
-    PainterTexture*  m_texture   = nullptr;
-    Action*          m_action    = nullptr;
-    Widget_Menu*     m_sub_menu  = nullptr;
+    Image*             m_image     = nullptr;
+    PainterTexture2D*  m_texture   = nullptr;
+    Action*            m_action    = nullptr;
+    Widget_Menu*       m_sub_menu  = nullptr;
 
     Image* createCaptionImage(const std::string &caption_text)
     {
