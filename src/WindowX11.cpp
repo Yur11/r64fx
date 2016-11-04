@@ -803,6 +803,19 @@ Window* Window::newInstance(
 {
     init_x_if_needed();
 
+    if(type == Window::Type::Best)
+    {
+#ifdef R64FX_USE_GL
+        type = Window::Type::GL;
+#else
+        type = Window::Type::Image;
+#endif//R64FX_USE_GL
+    }
+    else if(type == Window::Type::Default)
+    {
+        type = Window::Type::Image;
+    }
+
     WindowX11* window = nullptr;
     if(type == Window::Type::Image)
     {

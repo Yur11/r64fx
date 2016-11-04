@@ -26,6 +26,8 @@ public:
     };
 
     enum class Type{
+        Default,
+        Best,
         Image
 #ifdef R64FX_USE_GL
         ,GL

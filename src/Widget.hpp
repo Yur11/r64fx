@@ -145,7 +145,7 @@ public:
     /* Open this widget in a separate window. */
     void openWindow(
         Window::WmType  wm_type        = Window::WmType::Normal,
-        Window::Type    type           = Window::Type::GL,
+        Window::Type    type           = Window::Type::Best,
         Window*         modal_parent   = nullptr
     );
 
