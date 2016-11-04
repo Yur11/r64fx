@@ -225,13 +225,11 @@ struct PainterImplImage : public PainterImpl{
 
     }
 
-
     virtual void clear(unsigned char* color)
     {
         fill(window->image(), color, {0, 0, window->width(), window->height()});
     }
     
-
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
         auto intersection_rect = clip(rect + offset());
@@ -241,19 +239,16 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
-
     virtual PainterTexture1D* newTexture()
     {
         return nullptr;
     }
-
 
     virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count)
     {
         return nullptr;
     }
 
-    
     virtual PainterTexture2D* newTexture(Image* image = nullptr)
     {
         auto texture = new PainterTexture2DImplImage(this);
@@ -265,7 +260,6 @@ struct PainterImplImage : public PainterImpl{
         return texture;
     }
     
-
     virtual void deleteTexture(PainterTexture2D* &texture)
     {
         if(texture->parentPainter() == this)
@@ -277,7 +271,6 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
-
     virtual void deleteTexture(PainterTexture1D* &texture)
     {
         if(texture->parentPainter() == this)
@@ -288,7 +281,6 @@ struct PainterImplImage : public PainterImpl{
             texture = nullptr;
         }
     }
-
 
     virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha)
     {
@@ -372,7 +364,6 @@ struct PainterImplImage : public PainterImpl{
         window->repaint(rects, numrects);
     }
 
-
     virtual void adjustForWindowSize()
     {
         setClipRect({0, 0, window->width(), window->height()});
@@ -414,10 +405,30 @@ namespace
 class PainterImplGL;
 
 
-class PainterTexture1DImplGL : public PainterTexture1D, public LinkedList<PainterTexture1DImplGL>::Node{
-    int m_length = 0;
+struct PainterTextureImplGL{
+    PainterImplGL*  m_parent_painter   = nullptr;
+    GLuint          m_texture          = 0;
+    int             m_component_count  = 0;
     
+    PainterTextureImplGL(PainterImplGL* parent_painter)
+    : m_parent_painter(parent_painter)
+    {}
+};
+
+
+class PainterTexture1DImplGL
+: public PainterTexture1D
+, public LinkedList<PainterTexture1DImplGL>::Node
+, public PainterTextureImplGL{
+    int m_length = 0;
+
 public:
+    PainterTexture1DImplGL(PainterImplGL* parent_painter)
+    : PainterTextureImplGL(parent_painter)
+    {}
+
+    virtual Painter* parentPainter();
+
     virtual bool isGood()
     {
         return false;
@@ -432,12 +443,12 @@ public:
     {
         
     }
-    
+
     virtual int length()
     {
         return 0;
     }
-    
+
     virtual void load(unsigned char* data, int length, int component_count)
     {
         
@@ -446,29 +457,25 @@ public:
 };//PainterTexture1DImplGL
 
 
-class PainterTexture2DImplGL : public PainterTexture2D, public LinkedList<PainterTexture2DImplGL>::Node{
-    PainterImplGL*  m_painter          = nullptr;
-    Position<int>   m_posision;
+class PainterTexture2DImplGL
+: public PainterTexture2D
+, public LinkedList<PainterTexture2DImplGL>::Node
+, public PainterTextureImplGL {
+    Point<int>      m_posision;
     Size<int>       m_size;
-    int             m_component_count  = 0;
-    GLuint          m_texture          = 0;
     float           m_wrcp             = 1.0f;
     float           m_hrcp             = 1.0f;
     
 public:
-    PainterTexture2DImplGL(PainterImplGL* painter) : m_painter(painter)
+    PainterTexture2DImplGL(PainterImplGL* parent_painter)
+    : PainterTextureImplGL(parent_painter)
     {
 
     }
-    
-    virtual ~PainterTexture2DImplGL()
-    {
 
-    }
-    
     inline PainterImplGL* painter() const
     {
-        return m_painter;
+        return m_parent_painter;
     }
     
     inline int width() const
@@ -496,10 +503,7 @@ public:
         gl::BindTexture(GL_TEXTURE_2D, m_texture);
     }
     
-    virtual Painter* parentPainter()
-    {
-        return m_parent_painter;
-    }
+    virtual Painter* parentPainter();
     
     virtual bool isGood()
     {
@@ -521,13 +525,86 @@ public:
         return m_size;
     }
     
+    virtual void loadImage(Image* teximg)
+    {
+#ifdef R64FX_DEBUG
+        assert(teximg != nullptr);
+        assert(teximg->width() > 0);
+        assert(teximg->height() > 0);
+        assert(teximg->componentCount() > 0);
+        assert(teximg->componentCount() <= 4);
+#endif//R64FX_DEBUG
+
+        free();
+
+        gl::GenTextures(1, &m_texture);
+        gl::BindTexture(GL_TEXTURE_2D, m_texture);
+        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
+        m_component_count = teximg->componentCount();
+        GLenum internal_format = GL_RGBA8;
+        GLenum format = GL_RGBA;
+        if(m_component_count == 1)
+        {
+            internal_format = GL_R8;
+            format = GL_RED;
+        }
+        else if(m_component_count == 2)
+        {
+            internal_format = GL_RG8;
+            format = GL_RG;
+        }
+        else if(m_component_count == 3)
+        {
+            internal_format = GL_RGB8;
+            format = GL_RGB;
+        }
+
+        int w = teximg->width();
+        int h = teximg->height();
+
+        gl::TexStorage2D(
+            GL_TEXTURE_2D,
+            1,
+            internal_format,
+            w, h
+        );
+
+        gl::PixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        gl::TexSubImage2D(
+            GL_TEXTURE_2D,
+            0,
+            0, 0,
+            teximg->width(),
+            teximg->height(),
+            format,
+            GL_UNSIGNED_BYTE,
+            teximg->data()
+        );
+
+        m_wrcp = 1.0f / float(w);
+        m_hrcp = 1.0f / float(h);
+
+        m_size = {teximg->width(), teximg->height()};
+    }
     
-    virtual void loadImage(Image* teximg);
-    
-    virtual void readImage(Image* teximg);
-    
-    virtual void free();
-    
+    virtual void readImage(Image* teximg)
+    {
+
+    }
+
+    virtual void free()
+    {
+        if(!isGood())
+            return;
+
+        gl::DeleteTextures(1, &m_texture);
+        m_texture = 0;
+    }
+
 };//PainterTexture2DImplGL
 
 
@@ -940,86 +1017,17 @@ struct PainterImplGL : public PainterImpl{
 };//PainterImplImage
 
 
-void PainterTexture2DImplGL::loadImage(Image* teximg)
+Painter* PainterTexture1DImplGL::parentPainter()
 {
-#ifdef R64FX_DEBUG
-    assert(teximg != nullptr);
-    assert(teximg->width() > 0);
-    assert(teximg->height() > 0);
-    assert(teximg->componentCount() > 0);
-    assert(teximg->componentCount() <= 4);
-#endif//R64FX_DEBUG
-    
-    free();
-    
-    gl::GenTextures(1, &m_texture);
-    gl::BindTexture(GL_TEXTURE_2D, m_texture);
-    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-
-    m_component_count = teximg->componentCount();
-    GLenum internal_format = GL_RGBA8;
-    GLenum format = GL_RGBA;
-    if(m_component_count == 1)
-    {
-        internal_format = GL_R8;
-        format = GL_RED;
-    }
-    else if(m_component_count == 2)
-    {
-        internal_format = GL_RG8;
-        format = GL_RG;
-    }
-    else if(m_component_count == 3)
-    {
-        internal_format = GL_RGB8;
-        format = GL_RGB;
-    }
-    
-    int w = teximg->width();
-    int h = teximg->height();
-    
-    gl::TexStorage2D(
-        GL_TEXTURE_2D,
-        1,
-        internal_format,
-        w, h
-    );
-    
-    gl::PixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    gl::TexSubImage2D(
-        GL_TEXTURE_2D,
-        0,
-        0, 0,
-        teximg->width(),
-        teximg->height(),
-        format,
-        GL_UNSIGNED_BYTE,
-        teximg->data()
-    );
-
-    m_wrcp = 1.0f / float(w);
-    m_hrcp = 1.0f / float(h);
-
-    m_rect = {0, 0, teximg->width(), teximg->height()};
-}
-
-void PainterTexture2DImplGL::readImage(Image* teximg)
-{
-    
+    return m_parent_painter;
 }
 
 
-void PainterTexture2DImplGL::free()
+Painter* PainterTexture2DImplGL::parentPainter()
 {
-    if(!isGood())
-        return;
-    
-    gl::DeleteTextures(1, &m_texture);
-    m_texture = 0;
+    return m_parent_painter;
 }
+
 #endif//R64FX_USE_GL
 
 
