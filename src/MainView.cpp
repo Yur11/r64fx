@@ -190,16 +190,16 @@ protected:
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
         
-        p->blendTexture(m->icon10_tex, {10, 10});
-        p->blendTexture(m->icon16_tex, {10, 24});
-        p->blendTexture(m->icon18_tex, {10, 45});
-        p->blendTexture(m->icon20_tex, {10, 68});
-        p->blendTexture(m->icon22_tex, {10, 93});
-        p->blendTexture(m->icon24_tex, {10, 120});
-        p->blendTexture(m->icon26_tex, {10, 149});
-        p->blendTexture(m->icon28_tex, {10, 180});
-        p->blendTexture(m->icon30_tex, {10, 214});
-        p->blendTexture(m->icon32_tex, {10, 250});
+        p->drawTexture(m->icon10_tex, {10, 10});
+        p->drawTexture(m->icon16_tex, {10, 24});
+        p->drawTexture(m->icon18_tex, {10, 45});
+        p->drawTexture(m->icon20_tex, {10, 68});
+        p->drawTexture(m->icon22_tex, {10, 93});
+        p->drawTexture(m->icon24_tex, {10, 120});
+        p->drawTexture(m->icon26_tex, {10, 149});
+        p->drawTexture(m->icon28_tex, {10, 180});
+        p->drawTexture(m->icon30_tex, {10, 214});
+        p->drawTexture(m->icon32_tex, {10, 250});
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)

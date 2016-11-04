@@ -62,16 +62,16 @@ public:
      */
     virtual void fillRect(const Rect<int> &rect, unsigned char* color) = 0;
 
-//     /** Put an image at the given position.
-// 
-//         image  Image to use. Must not be null.
-//                       For now RGBA only!
-// 
-//         pos    Position to put the image at.
-//                       Top left corner.
-//                       Offset and clipping are applied.
-//      */
-//     virtual void putImage(Image* img, Point<int> pos = {0, 0}) = 0;
+    /** Put an image at the given position.
+
+        image  Image to use. Must not be null.
+                      For now RGBA only!
+
+        pos    Position to put the image at.
+                      Top left corner.
+                      Offset and clipping are applied.
+     */
+    virtual void putImage(Image* img, Point<int> dst_pos) = 0;
 // 
 //     /* Same as putImage() but with alpha blend. */
 //     virtual void blendImage(Image* img, Point<int> pos = {0, 0}) = 0;
@@ -80,13 +80,8 @@ public:
 //     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask) = 0;
 
 
-    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha = false) = 0;
-    
-    inline void blendTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha = false)
-    {
-        drawTexture(texture, dst_pos, true);
-    }
-    
+    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos) = 0;
+
     virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture2D* mask_texture) = 0;
     
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain) = 0;

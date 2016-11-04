@@ -234,7 +234,26 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
-    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha)
+    virtual void putImage(Image* img, Point<int> dst_pos)
+    {
+        RectIntersection<int> intersection(
+            current_clip_rect,
+            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), img->width(), img->height()}
+        );
+
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            implant(
+                window->image(),
+                intersection.dstOffset() + current_clip_rect.position(),
+                intersection.size(),
+                intersection.srcOffset(),
+                img
+            );
+        }
+    }
+
+    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos)
     {
         auto texture_impl = static_cast<PainterTexture2DImplImage*>(texture);
         
@@ -245,26 +264,13 @@ struct PainterImplImage : public PainterImpl{
         
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            if(blend_alpha)
-            {
-                implant_alpha(
-                    window->image(),
-                    intersection.dstOffset() + current_clip_rect.position(),
-                    intersection.size(),
-                    intersection.srcOffset(),
-                    texture_impl->image()
-                );
-            }
-            else
-            {
-                implant(
-                    window->image(),
-                    intersection.dstOffset() + current_clip_rect.position(),
-                    intersection.size(),
-                    intersection.srcOffset(),
-                    texture_impl->image()
-                );
-            }
+            implant_alpha(
+                window->image(),
+                intersection.dstOffset() + current_clip_rect.position(),
+                intersection.size(),
+                intersection.srcOffset(),
+                texture_impl->image()
+            );
         }
     }
 
@@ -861,7 +867,7 @@ struct PainterImplGL : public PainterImpl{
         }
     }
 
-    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha = false)
+    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos)
     {
 #ifdef R64FX_DEBUG
         assert(texture->parentPainter() == this);
