@@ -126,7 +126,7 @@ protected:
 public:
     virtual int length() = 0;
     
-    virtual void load(unsigned char* data, int length, int component_count, bool copy_data = false) = 0;
+    virtual void load(unsigned char* data, int length, int component_count) = 0;
 };
 
 

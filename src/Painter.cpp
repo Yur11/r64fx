@@ -74,7 +74,6 @@ class PainterImplImage;
 class PainterTexture1DImplImage : public PainterTexture1D, public LinkedList<PainterTexture1DImplImage>::Node{
     PainterImplImage*  m_parent_painter   = nullptr;
     unsigned char*     m_data             = 0;
-    bool               m_owns_data        = false;
     int                m_length           = 0;
     int                m_component_count  = 0;
 
@@ -92,30 +91,26 @@ public:
         return m_length;
     }
 
+    virtual bool isGood()
+    {
+        return (m_data != nullptr && m_length > 0 && m_component_count > 0);
+    }
+
     virtual int componentCount()
     {
         return m_component_count;
     }
 
-    virtual void load(unsigned char* data, int length, int component_count, bool copy_data)
+    virtual void load(unsigned char* data, int length, int component_count)
     {
         free();
 
         int nbytes = length * component_count;
         m_length = length;
-        if(copy_data)
+        m_data = new unsigned char[nbytes];
+        for(int i=0; i<nbytes; i++)
         {
-            m_data = new unsigned char[nbytes];
-            for(int i=0; i<nbytes; i++)
-            {
-                memcpy(m_data, data, nbytes);
-            }
-            m_owns_data = true;
-        }
-        else
-        {
-            m_data = data;
-            m_owns_data = true;
+            memcpy(m_data, data, nbytes);
         }
         m_length = length;
         m_component_count = component_count;
@@ -123,11 +118,10 @@ public:
 
     virtual void free()
     {
-        if(m_data && m_owns_data)
+        if(m_data)
         {
             delete[] m_data;
             m_data = nullptr;
-            m_owns_data = false;
             m_length = 0;
             m_component_count = 0;
         }
@@ -212,7 +206,8 @@ public:
 
 
 struct PainterImplImage : public PainterImpl{
-    LinkedList<PainterTexture2DImplImage> m_textures;
+    LinkedList<PainterTexture1DImplImage> m_1d_textures;
+    LinkedList<PainterTexture2DImplImage> m_2d_textures;
     
     PainterImplImage(Window* window)
     : PainterImpl(window)
@@ -236,49 +231,6 @@ struct PainterImplImage : public PainterImpl{
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
             fill(window->image(), color, intersection_rect);
-        }
-    }
-
-    virtual PainterTexture1D* newTexture()
-    {
-        return nullptr;
-    }
-
-    virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count)
-    {
-        return nullptr;
-    }
-
-    virtual PainterTexture2D* newTexture(Image* image = nullptr)
-    {
-        auto texture = new PainterTexture2DImplImage(this);
-        m_textures.append(texture);
-        if(image)
-        {
-            texture->loadImage(image);
-        }
-        return texture;
-    }
-    
-    virtual void deleteTexture(PainterTexture2D* &texture)
-    {
-        if(texture->parentPainter() == this)
-        {
-            auto texture_impl = static_cast<PainterTexture2DImplImage*>(texture);
-            texture_impl->free();
-            delete texture_impl;
-            texture = nullptr;
-        }
-    }
-
-    virtual void deleteTexture(PainterTexture1D* &texture)
-    {
-        if(texture->parentPainter() == this)
-        {
-            auto texture_impl = static_cast<PainterTexture1DImplImage*>(texture);
-            texture_impl->free();
-            delete texture_impl;
-            texture = nullptr;
         }
     }
 
@@ -352,6 +304,56 @@ struct PainterImplImage : public PainterImpl{
                 Rect<int>(intersection.dstOffset(), intersection.size()),
                 gain
             );
+        }
+    }
+
+    virtual PainterTexture1D* newTexture()
+    {
+        auto texture_impl = new PainterTexture1DImplImage(this);
+        m_1d_textures.append(texture_impl);
+        return texture_impl;
+    }
+
+    virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count)
+    {
+        auto texture_impl = new PainterTexture1DImplImage(this);
+        m_1d_textures.append(texture_impl);
+        texture_impl->load(data, length, component_count);
+        return texture_impl;
+    }
+
+    virtual PainterTexture2D* newTexture(Image* image = nullptr)
+    {
+        auto texture_impl = new PainterTexture2DImplImage(this);
+        m_2d_textures.append(texture_impl);
+        if(image)
+        {
+            texture_impl->loadImage(image);
+        }
+        return texture_impl;
+    }
+
+    virtual void deleteTexture(PainterTexture1D* &texture)
+    {
+        if(texture->parentPainter() == this)
+        {
+            auto texture_impl = static_cast<PainterTexture1DImplImage*>(texture);
+            m_1d_textures.remove(texture_impl);
+            texture_impl->free();
+            delete texture_impl;
+            texture = nullptr;
+        }
+    }
+
+    virtual void deleteTexture(PainterTexture2D* &texture)
+    {
+        if(texture->parentPainter() == this)
+        {
+            auto texture_impl = static_cast<PainterTexture2DImplImage*>(texture);
+            m_2d_textures.remove(texture_impl);
+            texture_impl->free();
+            delete texture_impl;
+            texture = nullptr;
         }
     }
 
@@ -760,7 +762,8 @@ struct PainterImplGL : public PainterImpl{
     PainterGLRoutine_TexturedRect  m_textured_rect;
     PainterGLRoutine_ColorBlend    m_color_blend;
 
-    LinkedList<PainterTexture2DImplGL> m_textures;
+    LinkedList<PainterTexture1DImplGL> m_1d_textures;
+    LinkedList<PainterTexture2DImplGL> m_2d_textures;
 
     float m_window_double_width_rcp = 1.0f;
     float m_window_double_hrcp = 1.0f;
@@ -858,38 +861,6 @@ struct PainterImplGL : public PainterImpl{
         }
     }
 
-    virtual PainterTexture1D* newTexture()
-    {
-        return nullptr;
-    }
-
-    virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count)
-    {
-        return nullptr;
-    }
-
-    virtual PainterTexture2D* newTexture(Image* image = nullptr)
-    {
-        auto texture = new PainterTexture2DImplGL(this);
-        m_textures.append(texture);
-        if(image)
-        {
-            texture->loadImage(image);
-        }
-        return texture;
-    }
-
-    virtual void deleteTexture(PainterTexture2D* &texture)
-    {
-        
-    }
-    
-    
-    virtual void deleteTexture(PainterTexture1D* &texture)
-    {
-        
-    }
-
     virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha = false)
     {
 #ifdef R64FX_DEBUG
@@ -970,6 +941,56 @@ struct PainterImplGL : public PainterImpl{
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
         
+    }
+
+    virtual PainterTexture1D* newTexture()
+    {
+        auto texture_impl = new PainterTexture1DImplGL(this);
+        m_1d_textures.append(texture_impl);
+        return texture_impl;
+    }
+
+    virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count)
+    {
+        auto texture_impl = new PainterTexture1DImplGL(this);
+        m_1d_textures.append(texture_impl);
+        texture_impl->load(data, length, component_count);
+        return texture_impl;
+    }
+
+    virtual PainterTexture2D* newTexture(Image* image = nullptr)
+    {
+        auto texture_impl = new PainterTexture2DImplGL(this);
+        m_2d_textures.append(texture_impl);
+        if(image)
+        {
+            texture_impl->loadImage(image);
+        }
+        return texture_impl;
+    }
+
+    virtual void deleteTexture(PainterTexture1D* &texture)
+    {
+        if(texture->parentPainter() == this)
+        {
+            auto texture_impl = static_cast<PainterTexture1DImplGL*>(texture);
+            m_1d_textures.remove(texture_impl);
+            texture_impl->free();
+            delete texture_impl;
+            texture = nullptr;
+        }
+    }
+
+    virtual void deleteTexture(PainterTexture2D* &texture)
+    {
+        if(texture->parentPainter() == this)
+        {
+            auto texture_impl = static_cast<PainterTexture2DImplGL*>(texture);
+            m_2d_textures.remove(texture_impl);
+            texture_impl->free();
+            delete texture_impl;
+            texture = nullptr;
+        }
     }
 
     virtual void repaint(Rect<int>* rects, int numrects)
