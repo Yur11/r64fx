@@ -9,14 +9,21 @@ namespace r64fx{
 
 class Image;
 class Window;
+class PainterTexture;
+class PainterTexture1D;
 class PainterTexture2D;
 
 
 class PainterTextureManager{
 public:
-    /* Generate a new texture. Optionally load the texture image. */
+    virtual PainterTexture1D* newTexture() = 0;
+    
+    virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count) = 0;
+
     virtual PainterTexture2D* newTexture(Image* image = nullptr) = 0;
 
+    virtual void deleteTexture(PainterTexture1D* &texture) = 0;
+    
     virtual void deleteTexture(PainterTexture2D* &texture) = 0;
 };
 
@@ -97,24 +104,44 @@ public:
 };
 
 
-class PainterTexture2D{
+class PainterTexture{
+protected:
+    virtual ~PainterTexture() {};
+    
+public:
+    virtual Painter* parentPainter() = 0;
+    
+    virtual bool isGood() = 0;
+
+    virtual int componentCount() = 0;
+
+    virtual void free() = 0;
+};
+
+
+class PainterTexture1D : public PainterTexture{
+protected:
+    virtual ~PainterTexture1D() {};
+    
+public:
+    virtual int length() = 0;
+    
+    virtual void load(unsigned char* data, int length, int component_count, bool copy_data = false) = 0;
+};
+
+
+class PainterTexture2D : public PainterTexture{
 protected:
     virtual ~PainterTexture2D() {};
     
-public:
-    virtual bool isGood() = 0;
+public:    
+    virtual Point<int> position() = 0;
     
-    virtual Painter* parentPainter() = 0;
-    
-    virtual Rect<int> rect() = 0;
-    
-    virtual int componentCount() = 0;
+    virtual Size<int> size() = 0;
     
     virtual void loadImage(Image* teximg) = 0;
     
     virtual void readImage(Image* teximg) = 0;
-    
-    virtual void free() = 0;
 };
 
 }//namespace r64fx

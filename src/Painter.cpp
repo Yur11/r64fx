@@ -4,6 +4,7 @@
 #include "ImageUtils.hpp"
 #include "LinkedList.hpp"
 #include <vector>
+#include <cstring>
 
 #ifdef R64FX_USE_GL
 #include "PainterShaders.hpp"
@@ -21,7 +22,7 @@ namespace r64fx{
 namespace{
 
 constexpr float uchar2float_rcp = 1.0f / 255.0f;    
-    
+
 }//namespace
 
 
@@ -29,7 +30,7 @@ struct PainterImpl : public Painter{
     Window*     window    = nullptr;
 
     Rect<int> current_clip_rect;
-    
+
     PainterImpl(Window* window)
     : window(window)
     {
@@ -69,14 +70,79 @@ struct PainterImpl : public Painter{
 
 class PainterImplImage;
 
+
+class PainterTexture1DImplImage : public PainterTexture1D, public LinkedList<PainterTexture1DImplImage>::Node{
+    PainterImplImage*  m_parent_painter   = nullptr;
+    unsigned char*     m_data             = 0;
+    bool               m_owns_data        = false;
+    int                m_length           = 0;
+    int                m_component_count  = 0;
+
+public:
+    PainterTexture1DImplImage(PainterImplImage* parent_painter)
+    : m_parent_painter(parent_painter)
+    {
+
+    }
+
+    virtual Painter* parentPainter();
+
+    virtual int length()
+    {
+        return m_length;
+    }
+
+    virtual int componentCount()
+    {
+        return m_component_count;
+    }
+
+    virtual void load(unsigned char* data, int length, int component_count, bool copy_data)
+    {
+        free();
+
+        int nbytes = length * component_count;
+        m_length = length;
+        if(copy_data)
+        {
+            m_data = new unsigned char[nbytes];
+            for(int i=0; i<nbytes; i++)
+            {
+                memcpy(m_data, data, nbytes);
+            }
+            m_owns_data = true;
+        }
+        else
+        {
+            m_data = data;
+            m_owns_data = true;
+        }
+        m_length = length;
+        m_component_count = component_count;
+    }
+
+    virtual void free()
+    {
+        if(m_data && m_owns_data)
+        {
+            delete[] m_data;
+            m_data = nullptr;
+            m_owns_data = false;
+            m_length = 0;
+            m_component_count = 0;
+        }
+    }
+};
+
+
 class PainterTexture2DImplImage : public PainterTexture2D, public LinkedList<PainterTexture2DImplImage>::Node{
-    PainterImplImage* m_painter;
+    PainterImplImage* m_parent_painter;
     Point<int> m_pos;
     Image m_img;
     
 public:
-    PainterTexture2DImplImage(PainterImplImage* painter)
-    : m_painter(painter)
+    PainterTexture2DImplImage(PainterImplImage* parent_painter)
+    : m_parent_painter(parent_painter)
     {
 
     }
@@ -88,7 +154,7 @@ public:
     
     inline PainterImplImage* painter() const
     {
-        return m_painter;
+        return m_parent_painter;
     }
     
     inline int width() const
@@ -108,17 +174,40 @@ public:
     
     virtual Painter* parentPainter();
     
-    virtual bool isGood();
+    virtual bool isGood()
+    {
+        return m_img.isGood();
+    }
+
+    virtual Point<int> position()
+    {
+        return m_pos;
+    }
     
-    virtual Rect<int> rect();
+    virtual Size<int> size()
+    {
+        return {m_img.width(), m_img.height()};
+    }
     
-    virtual int componentCount();
+    virtual int componentCount()
+    {
+        return m_img.componentCount();
+    }
     
-    virtual void loadImage(Image* teximg);
+    virtual void loadImage(Image* teximg)
+    {
+        m_img.load(teximg->width(), teximg->height(), teximg->componentCount(), teximg->data(), true);
+    }
     
-    virtual void readImage(Image* teximg);
+    virtual void readImage(Image* teximg)
+    {
+        teximg->load(m_img.width(), m_img.height(), m_img.componentCount(), m_img.data(), true);
+    }
     
-    virtual void free();
+    virtual void free()
+    {
+        m_img.free();
+    }
 };
 
 
@@ -152,6 +241,18 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
+
+    virtual PainterTexture1D* newTexture()
+    {
+        return nullptr;
+    }
+
+
+    virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count)
+    {
+        return nullptr;
+    }
+
     
     virtual PainterTexture2D* newTexture(Image* image = nullptr)
     {
@@ -170,6 +271,18 @@ struct PainterImplImage : public PainterImpl{
         if(texture->parentPainter() == this)
         {
             auto texture_impl = static_cast<PainterTexture2DImplImage*>(texture);
+            texture_impl->free();
+            delete texture_impl;
+            texture = nullptr;
+        }
+    }
+
+
+    virtual void deleteTexture(PainterTexture1D* &texture)
+    {
+        if(texture->parentPainter() == this)
+        {
+            auto texture_impl = static_cast<PainterTexture1DImplImage*>(texture);
             texture_impl->free();
             delete texture_impl;
             texture = nullptr;
@@ -268,45 +381,15 @@ struct PainterImplImage : public PainterImpl{
 };//PainterImplImage
 
 
+Painter* PainterTexture1DImplImage::parentPainter()
+{
+    return m_parent_painter;
+}
+
+
 Painter* PainterTexture2DImplImage::parentPainter()
 {
-    return m_painter;
-}
-
-
-bool PainterTexture2DImplImage::isGood()
-{
-    return m_img.isGood();
-}
-
-
-Rect<int> PainterTexture2DImplImage::rect()
-{
-    return {m_pos.x(), m_pos.y(), m_img.width(), m_img.height()};
-}
-
-
-int PainterTexture2DImplImage::componentCount()
-{
-    return m_img.componentCount();
-}
-
-
-void PainterTexture2DImplImage::loadImage(Image* teximg)
-{
-    m_img.load(teximg->width(), teximg->height(), teximg->componentCount(), teximg->data(), true);
-}
-
-
-void PainterTexture2DImplImage::readImage(Image* teximg)
-{
-    teximg->load(m_img.width(), m_img.height(), m_img.componentCount(), m_img.data(), true);
-}
-
-
-void PainterTexture2DImplImage::free()
-{
-    m_img.free();
+    return m_parent_painter;
 }
 
 
@@ -324,14 +407,49 @@ namespace
     PainterShader*   g_current_shader  = nullptr;
 
     const GLuint primitive_restart = 0xFFFF;
-}
+
+}//namespace
 
 
 class PainterImplGL;
 
+
+class PainterTexture1DImplGL : public PainterTexture1D, public LinkedList<PainterTexture1DImplGL>::Node{
+    int m_length = 0;
+    
+public:
+    virtual bool isGood()
+    {
+        return false;
+    }
+
+    virtual int componentCount()
+    {
+        return 0;
+    }
+
+    virtual void free()
+    {
+        
+    }
+    
+    virtual int length()
+    {
+        return 0;
+    }
+    
+    virtual void load(unsigned char* data, int length, int component_count)
+    {
+        
+    }
+
+};//PainterTexture1DImplGL
+
+
 class PainterTexture2DImplGL : public PainterTexture2D, public LinkedList<PainterTexture2DImplGL>::Node{
     PainterImplGL*  m_painter          = nullptr;
-    Rect<int>       m_rect;
+    Position<int>   m_posision;
+    Size<int>       m_size;
     int             m_component_count  = 0;
     GLuint          m_texture          = 0;
     float           m_wrcp             = 1.0f;
@@ -355,12 +473,12 @@ public:
     
     inline int width() const
     {
-        return m_rect.width();
+        return m_size.width();
     }
     
     inline int height() const
     {
-        return m_rect.height();
+        return m_size.height();
     }
     
     inline float wrcp() const
@@ -378,20 +496,39 @@ public:
         gl::BindTexture(GL_TEXTURE_2D, m_texture);
     }
     
-    virtual bool isGood();
+    virtual Painter* parentPainter()
+    {
+        return m_parent_painter;
+    }
     
-    virtual Painter* parentPainter();
+    virtual bool isGood()
+    {
+        return m_texture != 0;
+    }
+
+    virtual int componentCount()
+    {
+        return m_component_count;
+    }
     
-    virtual Rect<int> rect();
+    virtual Point<int> position()
+    {
+        return m_posision;
+    }
     
-    virtual int componentCount();
+    virtual Size<int> size()
+    {
+        return m_size;
+    }
+    
     
     virtual void loadImage(Image* teximg);
     
     virtual void readImage(Image* teximg);
     
     virtual void free();
-};
+    
+};//PainterTexture2DImplGL
 
 
 class PainterGLRoutine{
@@ -605,8 +742,20 @@ struct PainterImplGL : public PainterImpl{
             m_colored_rect.draw();
         }
     }
-    
-    
+
+
+    virtual PainterTexture1D* newTexture()
+    {
+        return nullptr;
+    }
+
+
+    virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count)
+    {
+        return nullptr;
+    }
+
+
     virtual PainterTexture2D* newTexture(Image* image = nullptr)
     {
         auto texture = new PainterTexture2DImplGL(this);
@@ -620,6 +769,12 @@ struct PainterImplGL : public PainterImpl{
 
     
     virtual void deleteTexture(PainterTexture2D* &texture)
+    {
+        
+    }
+    
+    
+    virtual void deleteTexture(PainterTexture1D* &texture)
     {
         
     }
@@ -783,30 +938,6 @@ struct PainterImplGL : public PainterImpl{
     }
 
 };//PainterImplImage
-
-
-bool PainterTexture2DImplGL::isGood()
-{
-    return m_texture != 0;
-}
-
-
-Painter* PainterTexture2DImplGL::parentPainter()
-{
-    return m_painter;
-}
-
-
-Rect<int> PainterTexture2DImplGL::rect()
-{
-    return m_rect;
-}
-
-
-int PainterTexture2DImplGL::componentCount()
-{
-    return m_component_count;
-}
 
 
 void PainterTexture2DImplGL::loadImage(Image* teximg)
