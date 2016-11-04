@@ -399,6 +399,52 @@ namespace
 
     const GLuint primitive_restart = 0xFFFF;
 
+    void init_gl_stuff()
+    {
+        if(gl_stuff_is_good)
+            return;
+
+        int major, minor;
+        gl::GetIntegerv(GL_MAJOR_VERSION, &major);
+        gl::GetIntegerv(GL_MINOR_VERSION, &minor);
+        if(major < 3)
+        {
+            cerr << "OpenGL version " << major << "." << minor << " is to old!\n";
+            abort();
+        }
+
+        gl::InitIfNeeded();
+
+        g_Shader_Color = new Shader_Color;
+        if(!g_Shader_Color->isGood())
+            abort();
+
+        g_Shader_Texture = new Shader_Texture;
+        if(!g_Shader_Texture->isGood())
+            abort();
+
+        g_Shader_ColorBlend = new Shader_ColorBlend();
+        if(!g_Shader_ColorBlend->isGood())
+            abort();
+
+        gl::Enable(GL_PRIMITIVE_RESTART);
+        gl::PrimitiveRestartIndex(primitive_restart);
+
+        gl::Enable(GL_BLEND);
+        gl::BlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+    }
+
+    void cleanup_gl_stuff()
+    {
+        if(g_Shader_Color)
+            delete g_Shader_Color;
+
+        if(g_Shader_Texture)
+            delete g_Shader_Texture;
+
+        if(g_Shader_ColorBlend)
+            delete g_Shader_ColorBlend;
+    }
 }//namespace
 
 
@@ -721,24 +767,24 @@ struct PainterImplGL : public PainterImpl{
     float m_window_half_width = 0.0f;
     float m_window_half_height = 0.0f;
 
-
     PainterImplGL(Window* window)
     :PainterImpl(window)
     {
-        initSharedGLStuffIfNeeded();
-        
+        if(PainterImplGL_count == 0)
+        {
+            init_gl_stuff();
+        }
+        PainterImplGL_count++;
+
         m_colored_rect.init();
         m_colored_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f);
-        
+
         m_textured_rect.init();
         m_textured_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f);
-        
+
         m_color_blend.init();
         m_color_blend.setRect(0.0f, 0.0f, 1.0f, -1.0f);
-        
-        PainterImplGL_count++;
     }
-
 
     virtual ~PainterImplGL()
     {
@@ -749,17 +795,9 @@ struct PainterImplGL : public PainterImpl{
         PainterImplGL_count--;
         if(PainterImplGL_count == 0)
         {
-            cleanupSharedGLStuffIfNeeded();
+            cleanup_gl_stuff();
         }
-#ifdef R64FX_DEBUG
-        else if(PainterImplGL_count <= 0)
-        {
-            cerr << "Warning PainterImplGL_count is " << PainterImplGL_count << "!\n";
-            cerr << "Something is really wrong!\n";
-        }
-#endif//R64FX_DEBUG
     }
-
 
     virtual void clear(unsigned char* color)
     {
@@ -820,18 +858,15 @@ struct PainterImplGL : public PainterImpl{
         }
     }
 
-
     virtual PainterTexture1D* newTexture()
     {
         return nullptr;
     }
 
-
     virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count)
     {
         return nullptr;
     }
-
 
     virtual PainterTexture2D* newTexture(Image* image = nullptr)
     {
@@ -844,7 +879,6 @@ struct PainterImplGL : public PainterImpl{
         return texture;
     }
 
-    
     virtual void deleteTexture(PainterTexture2D* &texture)
     {
         
@@ -855,8 +889,7 @@ struct PainterImplGL : public PainterImpl{
     {
         
     }
-    
-    
+
     virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos, bool blend_alpha = false)
     {
 #ifdef R64FX_DEBUG
@@ -888,7 +921,6 @@ struct PainterImplGL : public PainterImpl{
             m_textured_rect.draw();
         }
     }
-
 
     virtual void blendColors(Point<int> dst_pos, unsigned char** colors, PainterTexture2D* mask_texture)
     {
@@ -935,12 +967,10 @@ struct PainterImplGL : public PainterImpl{
         }
     }
 
-
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
         
     }
-
 
     virtual void repaint(Rect<int>* rects, int numrects)
     {        
@@ -960,58 +990,6 @@ struct PainterImplGL : public PainterImpl{
 
         m_window_half_width = window->width() * 0.5f;
         m_window_half_height = window->height() * 0.5f;
-    }
-
-    static void initSharedGLStuffIfNeeded()
-    {
-        if(gl_stuff_is_good)
-            return;
-
-        int major, minor;
-        gl::GetIntegerv(GL_MAJOR_VERSION, &major);
-        gl::GetIntegerv(GL_MINOR_VERSION, &minor);
-        if(major < 3)
-        {
-            cerr << "OpenGL version " << major << "." << minor << " is to old!\n";
-            abort();
-        }
-
-        gl::InitIfNeeded();
-
-        g_Shader_Color = new Shader_Color;
-        if(!g_Shader_Color->isGood())
-            abort();
-
-        g_Shader_Texture = new Shader_Texture;
-        if(!g_Shader_Texture->isGood())
-            abort();
-        
-        g_Shader_ColorBlend = new Shader_ColorBlend();
-        if(!g_Shader_ColorBlend->isGood())
-            abort();
-
-        gl::Enable(GL_PRIMITIVE_RESTART);
-        gl::PrimitiveRestartIndex(primitive_restart);
-        
-        gl::Enable(GL_BLEND);
-        gl::BlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
-
-        gl_stuff_is_good = true;
-    }
-
-    static void cleanupSharedGLStuffIfNeeded()
-    {
-        if(!gl_stuff_is_good)
-            return;
-
-        if(g_Shader_Color)
-            delete g_Shader_Color;
-
-        if(g_Shader_Texture)
-            delete g_Shader_Texture;
-        
-        if(g_Shader_ColorBlend)
-            delete g_Shader_ColorBlend;
     }
 
 };//PainterImplImage
