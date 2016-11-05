@@ -208,7 +208,7 @@ public:
 struct PainterImplImage : public PainterImpl{
     LinkedList<PainterTexture1DImplImage> m_1d_textures;
     LinkedList<PainterTexture2DImplImage> m_2d_textures;
-    
+
     PainterImplImage(Window* window)
     : PainterImpl(window)
     {
@@ -224,7 +224,7 @@ struct PainterImplImage : public PainterImpl{
     {
         fill(window->image(), color, {0, 0, window->width(), window->height()});
     }
-    
+
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
         auto intersection_rect = clip(rect + offset());
@@ -243,7 +243,7 @@ struct PainterImplImage : public PainterImpl{
 
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            implant(
+            implant_alpha(
                 window->image(),
                 intersection.dstOffset() + current_clip_rect.position(),
                 intersection.size(),
@@ -253,31 +253,19 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
-    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos)
+    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos)
     {
+#ifdef R64FX_DEBUG
+        assert(texture != nullptr);
+        assert(texture->parentPainter() == this);
+#endif//R64FX_DEBUG
+        
         auto texture_impl = static_cast<PainterTexture2DImplImage*>(texture);
-        
-        RectIntersection<int> intersection(
-            current_clip_rect,
-            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), texture_impl->width(), texture_impl->height()}
-        );
-        
-        if(intersection.width() > 0 && intersection.height() > 0)
-        {
-            implant_alpha(
-                window->image(),
-                intersection.dstOffset() + current_clip_rect.position(),
-                intersection.size(),
-                intersection.srcOffset(),
-                texture_impl->image()
-            );
-        }
+        PainterImplImage::putImage(texture_impl->image(), dst_pos);
     }
 
-    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture2D* mask_texture)
+    virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
     {
-        auto mask = static_cast<PainterTexture2DImplImage*>(mask_texture);
-        
         RectIntersection<int> intersection(
             current_clip_rect,
             {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
@@ -290,9 +278,20 @@ struct PainterImplImage : public PainterImpl{
                 intersection.dstOffset() + current_clip_rect.position(),
                 intersection.size(),
                 intersection.srcOffset(),
-                colors, mask->image()
+                colors, mask
             );
         }
+    }
+
+    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture2D* mask)
+    {
+#ifdef R64FX_DEBUG
+        assert(mask != nullptr);
+        assert(mask->parentPainter() == this);
+#endif//R64FX_DEBUG
+
+        auto mask_texture_impl = static_cast<PainterTexture2DImplImage*>(mask);
+        PainterImplImage::blendColors(pos, colors, mask_texture_impl->image());
     }
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
@@ -771,13 +770,16 @@ struct PainterImplGL : public PainterImpl{
     LinkedList<PainterTexture1DImplGL> m_1d_textures;
     LinkedList<PainterTexture2DImplGL> m_2d_textures;
 
+    PainterTexture2DImplGL m_spare_2d_texture;
+
     float m_window_double_width_rcp = 1.0f;
     float m_window_double_hrcp = 1.0f;
     float m_window_half_width = 0.0f;
     float m_window_half_height = 0.0f;
 
     PainterImplGL(Window* window)
-    :PainterImpl(window)
+    : PainterImpl(window)
+    , m_spare_2d_texture(this)
     {
         if(PainterImplGL_count == 0)
         {
@@ -867,7 +869,13 @@ struct PainterImplGL : public PainterImpl{
         }
     }
 
-    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos)
+    virtual void putImage(Image* img, Point<int> dst_pos)
+    {
+        m_spare_2d_texture.loadImage(img);
+        PainterImplGL::putImage(&m_spare_2d_texture, dst_pos);
+    }
+
+    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos)
     {
 #ifdef R64FX_DEBUG
         assert(texture->parentPainter() == this);
@@ -899,17 +907,23 @@ struct PainterImplGL : public PainterImpl{
         }
     }
 
+    virtual void blendColors(Point<int> dst_pos, unsigned char** colors, Image* mask_image)
+    {
+        m_spare_2d_texture.loadImage(mask_image);
+        PainterImplGL::blendColors(dst_pos, colors, &m_spare_2d_texture);
+    }
+
     virtual void blendColors(Point<int> dst_pos, unsigned char** colors, PainterTexture2D* mask_texture)
     {
 #ifdef R64FX_DEBUG
         assert(mask_texture->parentPainter() == this);
 #endif//R64FX_DEBUG
         
-        auto tex = static_cast<PainterTexture2DImplGL*>(mask_texture);
+        auto mask_texture_impl = static_cast<PainterTexture2DImplGL*>(mask_texture);
         
         RectIntersection<int> intersection(
             current_clip_rect,
-            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), tex->width(), tex->height()}
+            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), mask_texture_impl->width(), mask_texture_impl->height()}
         );
         
         if(intersection.width() > 0 && intersection.height() > 0)
@@ -918,17 +932,17 @@ struct PainterImplGL : public PainterImpl{
             setShaderScaleAndShift(g_Shader_ColorBlend, intersection);
             
             gl::ActiveTexture(GL_TEXTURE0);
-            tex->bind();
+            mask_texture_impl->bind();
             g_Shader_ColorBlend->setSampler(0);
             
             m_color_blend.setTexCoords(
-                intersection.srcx() * tex->wrcp(),
-                intersection.srcy() * tex->hrcp(),
-                (intersection.srcx() + intersection.width())  * tex->wrcp(),
-                (intersection.srcy() + intersection.height()) * tex->hrcp()
+                intersection.srcx() * mask_texture_impl->wrcp(),
+                intersection.srcy() * mask_texture_impl->hrcp(),
+                (intersection.srcx() + intersection.width())  * mask_texture_impl->wrcp(),
+                (intersection.srcy() + intersection.height()) * mask_texture_impl->hrcp()
             );
 
-            for(int c=0; c<mask_texture->componentCount(); c++)
+            for(int c=0; c<mask_texture_impl->componentCount(); c++)
             {
                 g_Shader_ColorBlend->setColor(
                     float(colors[c][0]) * uchar2float_rcp,

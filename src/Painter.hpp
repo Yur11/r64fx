@@ -71,21 +71,19 @@ public:
                       Top left corner.
                       Offset and clipping are applied.
      */
-    virtual void putImage(Image* img, Point<int> dst_pos) = 0;
-// 
-//     /* Same as putImage() but with alpha blend. */
-//     virtual void blendImage(Image* img, Point<int> pos = {0, 0}) = 0;
-// 
-//     /* Blend multiple colors using multi-component alpha mask. */
-//     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask) = 0;
+    virtual void putImage(Image* image, Point<int> dst_pos) = 0;
 
+    /**  */
+    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos) = 0;
 
-    virtual void drawTexture(PainterTexture2D* texture, Point<int> dst_pos) = 0;
+    /* Blend multiple colors using multi-component alpha mask. */
+    virtual void blendColors(Point<int> dst_pos, unsigned char** colors, Image* mask_image) = 0;
 
-    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture2D* mask_texture) = 0;
-    
+    /**  */
+    virtual void blendColors(Point<int> dst_pos, unsigned char** colors, PainterTexture2D* mask_texture) = 0;
+
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain) = 0;
-    
+
     /** Make the changes visible.
 
         Update window surface. Swap buffers. etc.
