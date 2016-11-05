@@ -138,13 +138,13 @@ protected:
                 p->fillRect({0,               0, 1,       height()}, Color(127, 127, 127, 0));
                 p->fillRect({0 + width() - 1, 0, 1,       height()}, Color(111, 111, 111, 0));
             }
-            
-//             p->blendColors({x, g_vert_padding}, Colors(Color(0, 0, 0, 0)), &m_img);
+
+            p->blendColors({x, g_vert_padding}, Colors(Color(0, 0, 0, 0)), &m_img);
         }
-        
+
         if(m_icon_img)
         {
-//             p->blendImage(m_icon_img, {g_hori_padding, height()/2 - m_icon_img->height()/2});
+            p->putImage(m_icon_img, {g_hori_padding, height()/2 - m_icon_img->height()/2});
         }
     }
     

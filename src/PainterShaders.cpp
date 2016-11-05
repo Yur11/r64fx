@@ -161,12 +161,10 @@ void Shader_Texture::fetchCommonIndices()
 
 Shader_ColorBlend::Shader_ColorBlend()
 {    
-    const char* frag = glsl_blend_color;
-    
-    if(!load(g_pos_and_tex_coord, frag))
+    if(!load(g_pos_and_tex_coord, glsl_blend_color))
         return;
-    
-    fetchCommonIndices();
+
+    Shader_Texture::fetchCommonIndices();
     R64FX_GET_UNIFORM_LOCATION(color);
     R64FX_GET_UNIFORM_LOCATION(texture_component);
 }

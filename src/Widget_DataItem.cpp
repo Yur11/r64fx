@@ -476,19 +476,22 @@ void Widget_DataItem::paintEvent(WidgetPaintEvent* event)
             else
                 colors = normal;
 
-            if(kind() == Widget_DataItem::Kind::Tree)
+            if(m_image->width() > 0 && m_image->height() > 0)
             {
-                Image* button_img = nullptr;
-                if(isExpanded())
-                    button_img = g_button_img_down;
+                if(kind() == Widget_DataItem::Kind::Tree)
+                {
+                    Image* button_img = nullptr;
+                    if(isExpanded())
+                        button_img = g_button_img_down;
+                    else
+                        button_img = g_button_img_right;
+                    p->blendColors({offset + g_button_img_offset, g_button_img_offset}, &colors, button_img);
+                    p->blendColors({offset + m_image->height(), 0}, &colors, m_image);
+                }
                 else
-                    button_img = g_button_img_right;
-// //                 p->blendColors({offset + g_button_img_offset, g_button_img_offset}, &colors, button_img);
-//                 p->blendColors({offset + m_image->height(), 0}, &colors, m_image);
-            }
-            else
-            {
-//                 p->blendColors({offset, 0}, &colors, m_image);
+                {
+                    p->blendColors({offset, 0}, &colors, m_image);
+                }
             }
 
             p->setClipRect(old_clip_rect);

@@ -187,9 +187,9 @@ private:
         text2image("Drop Samples Here", TextWrap::None, g_LargeFont, &textimg);
         unsigned char fg[4] = {0, 0, 0, 0};
         unsigned char* colors[1] = {fg};
-//         p->blendColors(
-//             {width()/2 - textimg.width()/2, height()/2 - textimg.height()/2 + g_LargeFont->height()}, colors, &textimg
-//         );
+        p->blendColors(
+            {width()/2 - textimg.width()/2, height()/2 - textimg.height()/2 + g_LargeFont->height()}, colors, &textimg
+        );
     }
 
 

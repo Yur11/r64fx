@@ -430,7 +430,7 @@ namespace
         if(!g_Shader_Texture->isGood())
             abort();
 
-        g_Shader_ColorBlend = new Shader_ColorBlend();
+        g_Shader_ColorBlend = new Shader_ColorBlend;
         if(!g_Shader_ColorBlend->isGood())
             abort();
 
@@ -843,13 +843,6 @@ struct PainterImplGL : public PainterImpl{
         );
     }
 
-    inline void setShaderScaleAndShift(PainterShader* shader, const RectIntersection<int> intersection)
-    {
-        setShaderScaleAndShift(
-            g_Shader_Texture, {intersection.dstOffset(), intersection.size()}
-        );
-    }
-
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
         auto intersection_rect = clip(rect + offset());
@@ -880,19 +873,21 @@ struct PainterImplGL : public PainterImpl{
 #ifdef R64FX_DEBUG
         assert(texture->parentPainter() == this);
 #endif//R64FX_DEBUG
-        
+
         auto tex = static_cast<PainterTexture2DImplGL*>(texture);
-        
+
         RectIntersection<int> intersection(
             current_clip_rect,
             {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), tex->width(), tex->height()}
         );
-        
+
         if(intersection.width() > 0 && intersection.height() > 0)
         {
             useShader(g_Shader_Texture);
-            setShaderScaleAndShift(g_Shader_Texture, intersection);
-            
+            setShaderScaleAndShift(
+                g_Shader_Texture, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+            );
+
             gl::ActiveTexture(GL_TEXTURE0);
             tex->bind();
             g_Shader_Texture->setSampler(0);
@@ -918,23 +913,25 @@ struct PainterImplGL : public PainterImpl{
 #ifdef R64FX_DEBUG
         assert(mask_texture->parentPainter() == this);
 #endif//R64FX_DEBUG
-        
+
         auto mask_texture_impl = static_cast<PainterTexture2DImplGL*>(mask_texture);
-        
+
         RectIntersection<int> intersection(
             current_clip_rect,
             {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), mask_texture_impl->width(), mask_texture_impl->height()}
         );
-        
+
         if(intersection.width() > 0 && intersection.height() > 0)
         {
             useShader(g_Shader_ColorBlend);
-            setShaderScaleAndShift(g_Shader_ColorBlend, intersection);
-            
+            setShaderScaleAndShift(
+                g_Shader_ColorBlend, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+            );
+
             gl::ActiveTexture(GL_TEXTURE0);
             mask_texture_impl->bind();
             g_Shader_ColorBlend->setSampler(0);
-            
+
             m_color_blend.setTexCoords(
                 intersection.srcx() * mask_texture_impl->wrcp(),
                 intersection.srcy() * mask_texture_impl->hrcp(),
@@ -950,9 +947,9 @@ struct PainterImplGL : public PainterImpl{
                     float(colors[c][2]) * uchar2float_rcp,
                     float(colors[c][3]) * uchar2float_rcp
                 );
-                
+
                 g_Shader_ColorBlend->setTextureComponent(c);
-                
+
                 m_color_blend.draw();
             }
         }

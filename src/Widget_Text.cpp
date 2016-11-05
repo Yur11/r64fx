@@ -472,7 +472,7 @@ void Widget_Text::paintEvent(WidgetPaintEvent* event)
         }
     }
 
-    auto painter = event->painter();
+//     auto painter = event->painter();
 //     painter->putImage(m_image);
 
     childrenPaintEvent(event);
