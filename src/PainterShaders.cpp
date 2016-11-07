@@ -13,24 +13,24 @@ namespace r64fx{
     
 namespace{
 
-const char* glsl_position =
-#include "glsl_position.vert.h"
+const char* shader_position =
+#include "shader_position.vert.h"
 ;
 
-const char* glsl_pos_and_tex_coord =
-#include "glsl_pos_and_tex_coord.vert.h"
+const char* shader_pos_and_tex_coord =
+#include "shader_pos_and_tex_coord.vert.h"
 ;
 
-const char* glsl_color =
-#include "glsl_color.frag.h"
+const char* shader_color =
+#include "shader_color.frag.h"
 ;
 
-const char* glsl_texture =
-#include "glsl_texture.frag.h"
+const char* shader_texture =
+#include "shader_texture.frag.h"
 ;
 
-const char* glsl_blend_color = 
-#include "glsl_blend_color.frag.h"
+const char* shader_blend_color = 
+#include "shader_blend_color.frag.h"
 ;
 
 
@@ -45,11 +45,11 @@ int g_user_count = 0;
 
 void init()
 {
-    g_position           = VertexShader(glsl_position);
-    g_pos_and_tex_coord  = VertexShader(glsl_pos_and_tex_coord);
+    g_position           = VertexShader(shader_position);
+    g_pos_and_tex_coord  = VertexShader(shader_pos_and_tex_coord);
     
-    g_color              = FragmentShader(glsl_color);
-    g_texture            = FragmentShader(glsl_texture);
+    g_color              = FragmentShader(shader_color);
+    g_texture            = FragmentShader(shader_texture);
 }
 
 void cleanup()
@@ -161,7 +161,7 @@ void Shader_Texture::fetchCommonIndices()
 
 Shader_ColorBlend::Shader_ColorBlend()
 {    
-    if(!load(g_pos_and_tex_coord, glsl_blend_color))
+    if(!load(g_pos_and_tex_coord, shader_blend_color))
         return;
 
     Shader_Texture::fetchCommonIndices();

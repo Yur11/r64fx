@@ -511,8 +511,6 @@ namespace
     Shader_Texture*     g_Shader_Texture    = nullptr;
     Shader_ColorBlend*  g_Shader_ColorBlend = nullptr;
 
-    PainterShader*   g_current_shader  = nullptr;
-
     const GLuint primitive_restart = 0xFFFF;
 
     void init_gl_stuff()
@@ -545,9 +543,6 @@ namespace
 
         gl::Enable(GL_PRIMITIVE_RESTART);
         gl::PrimitiveRestartIndex(primitive_restart);
-
-        gl::Enable(GL_BLEND);
-        gl::BlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
     }
 
     void cleanup_gl_stuff()
@@ -635,12 +630,12 @@ public:
 
     virtual bool isGood()
     {
-        return false;
+        return m_texture != 0;
     }
 
     virtual int componentCount()
     {
-        return 0;
+        return m_component_count;
     }
 
     virtual void free()
@@ -673,11 +668,11 @@ public:
         gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         
         m_component_count = component_count;
-        GLenum internal_format, format;
+        GLenum internal_format = 0, format = 0;
         formats(m_component_count, internal_format, format);
         
         gl::TexStorage1D(
-            GL_TEXTURE_2D,
+            GL_TEXTURE_1D,
             1,
             internal_format,
             length
@@ -739,7 +734,7 @@ public:
     PainterTexture2DImplGL(PainterImplGL* parent_painter)
     : PainterTextureImplGL(parent_painter)
     {
-
+        
     }
 
     inline PainterImplGL* painter() const
@@ -812,7 +807,7 @@ public:
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         m_component_count = teximg->componentCount();
-        GLenum internal_format, format;
+        GLenum internal_format = 0, format = 0;
         formats(m_component_count, internal_format, format);
 
         gl::TexStorage2D(
@@ -958,7 +953,9 @@ public:
 };
 
 
-struct PainterImplGL : public PainterImpl{    
+struct PainterImplGL : public PainterImpl{
+    PainterShader* m_current_shader = nullptr;
+    
     PainterGLRoutine_ColoredRect   m_colored_rect;
     PainterGLRoutine_TexturedRect  m_textured_rect;
     PainterGLRoutine_ColorBlend    m_color_blend;
@@ -966,6 +963,7 @@ struct PainterImplGL : public PainterImpl{
     LinkedList<PainterTexture1DImplGL> m_1d_textures;
     LinkedList<PainterTexture2DImplGL> m_2d_textures;
 
+    PainterTexture1DImplGL m_spare_1d_texture;
     PainterTexture2DImplGL m_spare_2d_texture;
 
     float m_window_double_width_rcp = 1.0f;
@@ -975,8 +973,11 @@ struct PainterImplGL : public PainterImpl{
 
     PainterImplGL(Window* window)
     : PainterImpl(window)
+    , m_spare_1d_texture(this)
     , m_spare_2d_texture(this)
     {
+        window->makeCurrent();
+        
         if(PainterImplGL_count == 0)
         {
             init_gl_stuff();
@@ -991,6 +992,9 @@ struct PainterImplGL : public PainterImpl{
 
         m_color_blend.init();
         m_color_blend.setRect(0.0f, 0.0f, 1.0f, -1.0f);
+        
+        gl::Enable(GL_BLEND);
+        gl::BlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
     }
 
     virtual ~PainterImplGL()
@@ -1019,10 +1023,10 @@ struct PainterImplGL : public PainterImpl{
 
     void useShader(PainterShader* shader)
     {
-        if(g_current_shader != shader)
+        if(m_current_shader != shader)
         {
-            g_current_shader = shader;
-            g_current_shader->use();
+            m_current_shader = shader;
+            m_current_shader->use();
         }
     }
 
@@ -1153,12 +1157,15 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
     {
-        
+        m_spare_1d_texture.load(waveform, rect.width(), 2);
+        PainterImplGL::drawWaveform(rect, color, &m_spare_1d_texture, gain);
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform, float gain)
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform_texture, float gain)
     {
-        
+#ifdef R64FX_DEBUG
+        assert(waveform_texture->componentCount() == 2);
+#endif//R64FX_DEBUG
     }
 
     virtual PainterTexture1D* newTexture()
