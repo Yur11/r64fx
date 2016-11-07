@@ -575,6 +575,41 @@ struct PainterTextureImplGL{
     PainterTextureImplGL(PainterImplGL* parent_painter)
     : m_parent_painter(parent_painter)
     {}
+    
+    bool formats(int component_count, GLenum &internal_format, GLenum &format)
+    {
+#ifndef R64FX_DEBUG
+        assert(component_count >= 1);
+        assert(component_count <= 4);
+#endif//R64FX_DEBUG
+        
+        if(component_count == 1)
+        {
+            internal_format = GL_R8;
+            format = GL_RED;
+        }
+        else if(m_component_count == 2)
+        {
+            internal_format = GL_RG8;
+            format = GL_RG;
+        }
+        else if(component_count == 3)
+        {
+            internal_format = GL_RGB8;
+            format = GL_RGB;
+        }
+        else if(component_count == 4)
+        {
+            internal_format = GL_RGBA8;
+            format = GL_RGBA;
+        }
+        else
+        {
+            return false;
+        }
+        
+        return true;
+    }
 };
 
 
@@ -583,11 +618,18 @@ class PainterTexture1DImplGL
 , public LinkedList<PainterTexture1DImplGL>::Node
 , public PainterTextureImplGL{
     int m_length = 0;
+    int m_length_rcp = 0;
+    Type m_data_type;
 
 public:
     PainterTexture1DImplGL(PainterImplGL* parent_painter)
     : PainterTextureImplGL(parent_painter)
     {}
+    
+    Type dataType()
+    {
+        return m_data_type;
+    }
 
     virtual Painter* parentPainter();
 
@@ -603,7 +645,11 @@ public:
 
     virtual void free()
     {
-        
+        if(!isGood())
+            return;
+
+        gl::DeleteTextures(1, &m_texture);
+        m_texture = 0;
     }
 
     virtual int length()
@@ -611,9 +657,70 @@ public:
         return 0;
     }
 
+    template<typename T> void loadData(T* data, int length, int component_count, GLenum type)
+    {
+#ifdef R64Fx_DEBUG
+        assert(data != nullptr);
+        assert(length > 0);
+        assert(component_count > 0);
+#endif//R64FX_DEBUG
+        
+        free();
+
+        gl::GenTextures(1, &m_texture);
+        gl::BindTexture(GL_TEXTURE_1D, m_texture);
+        gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        
+        m_component_count = component_count;
+        GLenum internal_format, format;
+        formats(m_component_count, internal_format, format);
+        
+        gl::TexStorage1D(
+            GL_TEXTURE_2D,
+            1,
+            internal_format,
+            length
+        );
+        
+        gl::PixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        gl::TexSubImage1D(
+            GL_TEXTURE_1D,
+            0,
+            0,
+            length,
+            format,
+            type,
+            data
+        );
+        
+        m_length = length;
+        m_length_rcp = 1.0f / float(length);        
+    }
+    
     virtual void load(unsigned char* data, int length, int component_count)
     {
-        
+        loadData(data, length, component_count, GL_UNSIGNED_BYTE);
+        m_data_type = PainterTexture1D::Type::UnsignedChar;
+    }
+    
+    virtual void load(unsigned short*  data, int length, int component_count)
+    {
+        loadData(data, length, component_count, GL_UNSIGNED_SHORT);
+        m_data_type = PainterTexture1D::Type::UnsignedShort;
+    }
+
+    virtual void load(unsigned int*    data, int length, int component_count)
+    {
+        loadData(data, length, component_count, GL_UNSIGNED_INT);
+        m_data_type = PainterTexture1D::Type::UnsignedInt;
+    }
+
+    virtual void load(float* data, int length, int component_count)
+    {
+        loadData(data, length, component_count, GL_FLOAT);
+        m_data_type = PainterTexture1D::Type::Float;
     }
 
 };//PainterTexture1DImplGL
@@ -704,34 +811,15 @@ public:
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-
         m_component_count = teximg->componentCount();
-        GLenum internal_format = GL_RGBA8;
-        GLenum format = GL_RGBA;
-        if(m_component_count == 1)
-        {
-            internal_format = GL_R8;
-            format = GL_RED;
-        }
-        else if(m_component_count == 2)
-        {
-            internal_format = GL_RG8;
-            format = GL_RG;
-        }
-        else if(m_component_count == 3)
-        {
-            internal_format = GL_RGB8;
-            format = GL_RGB;
-        }
-
-        int w = teximg->width();
-        int h = teximg->height();
+        GLenum internal_format, format;
+        formats(m_component_count, internal_format, format);
 
         gl::TexStorage2D(
             GL_TEXTURE_2D,
             1,
             internal_format,
-            w, h
+            teximg->width(), teximg->height()
         );
 
         gl::PixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -747,10 +835,9 @@ public:
             teximg->data()
         );
 
-        m_wrcp = 1.0f / float(w);
-        m_hrcp = 1.0f / float(h);
-
         m_size = {teximg->width(), teximg->height()};
+        m_wrcp = 1.0f / float(teximg->width());
+        m_hrcp = 1.0f / float(teximg->height());
     }
     
     virtual void readImage(Image* teximg)
@@ -1069,6 +1156,11 @@ struct PainterImplGL : public PainterImpl{
         
     }
 
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform, float gain)
+    {
+        
+    }
+
     virtual PainterTexture1D* newTexture()
     {
         auto texture_impl = new PainterTexture1DImplGL(this);
@@ -1077,6 +1169,30 @@ struct PainterImplGL : public PainterImpl{
     }
 
     virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count)
+    {
+        auto texture_impl = new PainterTexture1DImplGL(this);
+        m_1d_textures.append(texture_impl);
+        texture_impl->load(data, length, component_count);
+        return texture_impl;
+    }
+
+    virtual PainterTexture1D* newTexture(unsigned short* data, int length, int component_count)
+    {
+        auto texture_impl = new PainterTexture1DImplGL(this);
+        m_1d_textures.append(texture_impl);
+        texture_impl->load(data, length, component_count);
+        return texture_impl;
+    }
+
+    virtual PainterTexture1D* newTexture(unsigned int*   data, int length, int component_count)
+    {
+        auto texture_impl = new PainterTexture1DImplGL(this);
+        m_1d_textures.append(texture_impl);
+        texture_impl->load(data, length, component_count);
+        return texture_impl;
+    }
+
+    virtual PainterTexture1D* newTexture(float* data, int length, int component_count)
     {
         auto texture_impl = new PainterTexture1DImplGL(this);
         m_1d_textures.append(texture_impl);
