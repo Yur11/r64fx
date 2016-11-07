@@ -13,51 +13,59 @@ namespace r64fx{
     
 namespace{
 
-const char* shader_position =
+const char* shader_text_position =
 #include "shader_position.vert.h"
 ;
 
-const char* shader_pos_and_tex_coord =
+const char* shader_text_pos_and_tex_coord =
 #include "shader_pos_and_tex_coord.vert.h"
 ;
 
-const char* shader_color =
+const char* shader_text_color =
 #include "shader_color.frag.h"
 ;
 
-const char* shader_texture =
+const char* shader_text_texture =
 #include "shader_texture.frag.h"
 ;
 
-const char* shader_blend_color = 
+const char* shader_text_blend_color =
 #include "shader_blend_color.frag.h"
 ;
 
-
-VertexShader g_position;
-VertexShader g_pos_and_tex_coord;
-
-FragmentShader g_color;
-FragmentShader g_texture;
+const char* shader_text_waveform =
+#include "shader_waveform.frag.h"
+;
 
 
-int g_user_count = 0;
+VertexShader shader_position;
+VertexShader shader_pos_and_tex_coord;
+
+FragmentShader shader_color;
+FragmentShader shader_texture;
+FragmentShader shader_blend_color;
+FragmentShader shader_waveform;
+
+
+int shader_user_count = 0;
 
 void init()
 {
-    g_position           = VertexShader(shader_position);
-    g_pos_and_tex_coord  = VertexShader(shader_pos_and_tex_coord);
+    shader_position           = VertexShader(shader_text_position);
+    shader_pos_and_tex_coord  = VertexShader(shader_text_pos_and_tex_coord);
     
-    g_color              = FragmentShader(shader_color);
-    g_texture            = FragmentShader(shader_texture);
+    shader_color              = FragmentShader(shader_text_color);
+    shader_texture            = FragmentShader(shader_text_texture);
+    shader_blend_color        = FragmentShader(shader_text_blend_color);
+    shader_waveform           = FragmentShader(shader_text_waveform);
 }
 
 void cleanup()
 {
-    g_position.free();
-    g_pos_and_tex_coord.free();
-    g_color.free();
-    g_texture.free();
+    shader_position.free();
+    shader_pos_and_tex_coord.free();
+    shader_color.free();
+    shader_texture.free();
 }
     
 }//namespace
@@ -65,18 +73,18 @@ void cleanup()
 
 PainterShader::PainterShader()
 {
-    if(g_user_count == 0)
+    if(shader_user_count == 0)
     {
         init();
     }
-    g_user_count++;
+    shader_user_count++;
 }
     
     
 PainterShader::~PainterShader()
 {
-    g_user_count--;
-    if(g_user_count == 0)
+    shader_user_count--;
+    if(shader_user_count == 0)
     {
         cleanup();
     }
@@ -104,7 +112,7 @@ void PainterShader::fetchCommonIndices()
 
 Shader_Color::Shader_Color()
 {
-    if(!load(g_position, g_color))
+    if(!load(shader_position, shader_color))
         return;
 
     fetchCommonIndices();
@@ -126,7 +134,7 @@ void Shader_Color::setColor(float r, float g, float b, float a)
 
 Shader_Texture::Shader_Texture()
 {
-    if(!load(g_pos_and_tex_coord, g_texture))
+    if(!load(shader_pos_and_tex_coord, shader_texture))
         return;
 
     fetchCommonIndices();
@@ -161,10 +169,11 @@ void Shader_Texture::fetchCommonIndices()
 
 Shader_ColorBlend::Shader_ColorBlend()
 {    
-    if(!load(g_pos_and_tex_coord, shader_blend_color))
+    if(!load(shader_pos_and_tex_coord, shader_blend_color))
         return;
 
     Shader_Texture::fetchCommonIndices();
+    
     R64FX_GET_UNIFORM_LOCATION(color);
     R64FX_GET_UNIFORM_LOCATION(texture_component);
 }
@@ -185,6 +194,35 @@ void Shader_ColorBlend::setColor(float r, float g, float b, float a)
 void Shader_ColorBlend::setTextureComponent(int component)
 {
     gl::Uniform1i(unif_texture_component, component);
+}
+
+
+Shader_Waveform::Shader_Waveform()
+{
+    if(!load(shader_pos_and_tex_coord, shader_waveform))
+        return;
+    
+    Shader_Texture::fetchCommonIndices();
+    R64FX_GET_UNIFORM_LOCATION(color);
+    R64FX_GET_UNIFORM_LOCATION(gain);
+}
+
+
+Shader_Waveform::~Shader_Waveform()
+{
+    
+}
+
+
+void Shader_Waveform::setColor(float r, float g, float b, float a)
+{
+    gl::Uniform4f(unif_color, r, g, b, a);
+}
+
+
+void Shader_Waveform::setGain(float gain)
+{
+    gl::Uniform1f(unif_gain, gain);
 }
 
 }//namespace r64fx

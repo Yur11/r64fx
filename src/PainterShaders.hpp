@@ -23,11 +23,11 @@ public:
 protected:
     void fetchCommonIndices();
 };
-    
+
     
 class Shader_Color : public PainterShader{
     GLint unif_color;
-
+    
 public:
     Shader_Color();
 
@@ -67,6 +67,21 @@ public:
     void setColor(float r, float g, float b, float a);
     
     void setTextureComponent(int component);
+};
+
+
+class Shader_Waveform : public Shader_Texture{
+    GLint unif_color;
+    GLint unif_gain;
+    
+public:
+    Shader_Waveform();
+    
+    ~Shader_Waveform();
+    
+    void setColor(float r, float g, float b, float a);
+    
+    void setGain(float gain);
 };
     
 }//namespace r64fx
