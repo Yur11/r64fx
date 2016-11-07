@@ -33,7 +33,7 @@ MachinePoolContext::~MachinePoolContext()
         if(main_subgraph)
         {
             main_subgraph->clear();
-            delete input_subgraph;
+            delete main_subgraph;
         }
         
         if(output_subgraph)

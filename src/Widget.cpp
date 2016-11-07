@@ -517,6 +517,9 @@ Widget::Widget(Widget* parent)
 
 Widget::~Widget()
 {
+    if(!isWindow())
+        setParent(nullptr);
+    
     if(this == g_moused_over_widget)
         g_moused_over_widget = nullptr;
 
@@ -546,13 +549,6 @@ Widget::~Widget()
 
     if(this == g_dnd_target)
         g_dnd_target = nullptr;
-
-
-    for(auto child : m_children)
-    {
-        child->setParent(nullptr);
-        delete child;
-    }
 }
 
 

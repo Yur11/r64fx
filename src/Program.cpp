@@ -10,6 +10,8 @@
 #include "Timer.hpp"
 #include "sleep.hpp"
 
+#include "PlayerController.hpp"
+
 #include <iostream>
 
 using namespace std;
@@ -25,7 +27,7 @@ struct ProgramPrivate : public MainViewEventIface{
     
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
-
+    
     int exec(int argc, char** argv)
     {
         initActions();
@@ -35,11 +37,15 @@ struct ProgramPrivate : public MainViewEventIface{
         
         newProject();
         
+        auto player = new PlayerController;
+        
         while(running)
         {
             Timer::runTimers();
             sleep_microseconds(5000);
         }
+        
+        delete player;
         
         main_view->closeWindow();
         delete main_view;

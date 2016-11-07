@@ -18,7 +18,13 @@ class PainterTextureManager{
 public:
     virtual PainterTexture1D* newTexture() = 0;
     
-    virtual PainterTexture1D* newTexture(unsigned char* data, int length, int component_count) = 0;
+    virtual PainterTexture1D* newTexture(unsigned char*  data, int length, int component_count) = 0;
+    
+    virtual PainterTexture1D* newTexture(unsigned short* data, int length, int component_count) = 0;
+    
+    virtual PainterTexture1D* newTexture(unsigned int*   data, int length, int component_count) = 0;
+    
+    virtual PainterTexture1D* newTexture(float* data, int length, int component_count) = 0;
 
     virtual PainterTexture2D* newTexture(Image* image = nullptr) = 0;
 
@@ -84,6 +90,8 @@ public:
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain) = 0;
 
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform, float gain) = 0;
+    
     /** Make the changes visible.
 
         Update window surface. Swap buffers. etc.
@@ -115,25 +123,40 @@ public:
 class PainterTexture1D : public PainterTexture{
 protected:
     virtual ~PainterTexture1D() {};
-    
+
 public:
-    virtual int length() = 0;
+    enum class Type{
+        UnsignedChar,
+        UnsignedShort,
+        UnsignedInt,
+        Float
+    };
     
-    virtual void load(unsigned char* data, int length, int component_count) = 0;
+    virtual Type dataType() = 0;
+    
+    virtual int length() = 0;
+
+    virtual void load(unsigned char*   data, int length, int component_count) = 0;
+
+    virtual void load(unsigned short*  data, int length, int component_count) = 0;
+
+    virtual void load(unsigned int*    data, int length, int component_count) = 0;
+
+    virtual void load(float* data, int length, int component_count) = 0;
 };
 
 
 class PainterTexture2D : public PainterTexture{
 protected:
     virtual ~PainterTexture2D() {};
-    
+
 public:    
     virtual Point<int> position() = 0;
-    
+
     virtual Size<int> size() = 0;
-    
+
     virtual void loadImage(Image* teximg) = 0;
-    
+
     virtual void readImage(Image* teximg) = 0;
 };
 

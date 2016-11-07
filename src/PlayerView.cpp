@@ -309,14 +309,20 @@ public:
 
     virtual ~LeftPart()
     {
-        if(m->knob_gain)
+        if(m->button_play)
+        {
             delete m->button_play;
+        }
 
         if(m->button_cue)
+        {
             delete m->button_cue;
+        }
 
         if(m->knob_gain)
+        {
             delete m->knob_gain;
+        }
     }
 
 protected:

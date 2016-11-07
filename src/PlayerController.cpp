@@ -41,7 +41,7 @@ public:
     PlayerControllerPrivate()
     {
         m_view = new PlayerView(this);
-//         m_view->show();
+        m_view->openWindow();
 
         m_pool = new MachinePool;
 
