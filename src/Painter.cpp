@@ -3,11 +3,10 @@
 #include "Image.hpp"
 #include "ImageUtils.hpp"
 #include "LinkedList.hpp"
-#include <vector>
 #include <cstring>
 
 #ifdef R64FX_USE_GL
-#include "PainterShaders.hpp"
+#include "PainterVertexArrays.hpp"
 #endif//R64FX_USE_GL
 
 #ifdef R64FX_DEBUG
@@ -505,19 +504,10 @@ namespace
 {
     int PainterImplGL_count = 0;
 
-    bool gl_stuff_is_good = false;
-
-    Shader_Color*       g_Shader_Color      = nullptr;
-    Shader_Texture*     g_Shader_Texture    = nullptr;
-    Shader_ColorBlend*  g_Shader_ColorBlend = nullptr;
-
     const GLuint primitive_restart = 0xFFFF;
 
     void init_gl_stuff()
     {
-        if(gl_stuff_is_good)
-            return;
-
         int major, minor;
         gl::GetIntegerv(GL_MAJOR_VERSION, &major);
         gl::GetIntegerv(GL_MINOR_VERSION, &minor);
@@ -527,19 +517,8 @@ namespace
             abort();
         }
 
-        gl::InitIfNeeded();
-
-        g_Shader_Color = new Shader_Color;
-        if(!g_Shader_Color->isGood())
-            abort();
-
-        g_Shader_Texture = new Shader_Texture;
-        if(!g_Shader_Texture->isGood())
-            abort();
-
-        g_Shader_ColorBlend = new Shader_ColorBlend;
-        if(!g_Shader_ColorBlend->isGood())
-            abort();
+        gl::InitIfNeeded();        
+        init_painter_shaders();
 
         gl::Enable(GL_PRIMITIVE_RESTART);
         gl::PrimitiveRestartIndex(primitive_restart);
@@ -547,14 +526,7 @@ namespace
 
     void cleanup_gl_stuff()
     {
-        if(g_Shader_Color)
-            delete g_Shader_Color;
-
-        if(g_Shader_Texture)
-            delete g_Shader_Texture;
-
-        if(g_Shader_ColorBlend)
-            delete g_Shader_ColorBlend;
+        cleanup_painter_shaders();
     }
 }//namespace
 
@@ -852,113 +824,12 @@ public:
 };//PainterTexture2DImplGL
 
 
-class PainterGLRoutine{
-protected:
-    GLuint m_vao;
-    GLuint m_vbo;
-
-public:
-    void init(int nbytes)
-    {
-        gl::GenVertexArrays(1, &m_vao);
-        gl::BindVertexArray(m_vao);
-        gl::GenBuffers(1, &m_vbo);
-        gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        gl::BufferData(GL_ARRAY_BUFFER, nbytes, nullptr, GL_STREAM_DRAW);
-    }
-    
-    void cleanup()
-    {
-        gl::DeleteVertexArrays(1, &m_vao);
-        gl::DeleteBuffers(1, &m_vbo);
-    }
-    
-    void setRect(float left, float top, float right, float bottom)
-    { 
-        float buff[8];
-
-        buff[0] = left;
-        buff[1] = top;
-
-        buff[2] = right;
-        buff[3] = top;
-
-        buff[4] = right;
-        buff[5] = bottom;
-
-        buff[6] = left;
-        buff[7] = bottom;
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        gl::BufferSubData(GL_ARRAY_BUFFER, 0, 32, buff);
-    }
-
-    void draw()
-    {
-        gl::BindVertexArray(m_vao);
-        gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    }
-};
-
-
-class PainterGLRoutine_ColoredRect : public PainterGLRoutine{
-public:
-    void init()
-    {
-        PainterGLRoutine::init(32);
-        g_Shader_Color->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
-    }
-};
-
-
-class PainterGLRoutine_TexturedRect : public PainterGLRoutine{
-public:
-    void init()
-    {
-        PainterGLRoutine::init(64);
-        g_Shader_Texture->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
-        g_Shader_Texture->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
-    }
-
-    void setTexCoords(float left, float top, float right, float bottom)
-    { 
-        float buff[8];
-
-        buff[0] = left;
-        buff[1] = top;
-
-        buff[2] = right;
-        buff[3] = top;
-
-        buff[4] = right;
-        buff[5] = bottom;
-
-        buff[6] = left;
-        buff[7] = bottom;
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        gl::BufferSubData(GL_ARRAY_BUFFER, 32, 32, buff);
-    }
-};
-
-
-class PainterGLRoutine_ColorBlend : public PainterGLRoutine_TexturedRect{
-public:
-    void init()
-    {
-        PainterGLRoutine::init(64);
-        g_Shader_ColorBlend->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
-        g_Shader_ColorBlend->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
-    }
-};
-
-
 struct PainterImplGL : public PainterImpl{
     PainterShader* m_current_shader = nullptr;
     
-    PainterGLRoutine_ColoredRect   m_colored_rect;
-    PainterGLRoutine_TexturedRect  m_textured_rect;
-    PainterGLRoutine_ColorBlend    m_color_blend;
+    PainterVertexArray_ColoredRect   m_colored_rect;
+    PainterVertexArray_TexturedRect  m_textured_rect;
+    PainterVertexArray_ColorBlend    m_color_blend;
 
     LinkedList<PainterTexture1DImplGL> m_1d_textures;
     LinkedList<PainterTexture2DImplGL> m_2d_textures;
@@ -1048,10 +919,10 @@ struct PainterImplGL : public PainterImpl{
         auto intersection_rect = clip(rect + offset());
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
-            useShader(g_Shader_Color);
-            setShaderScaleAndShift(g_Shader_Color, intersection_rect);
+            useShader(g_PainterShader_Color);
+            setShaderScaleAndShift(g_PainterShader_Color, intersection_rect);
 
-            g_Shader_Color->setColor(
+            g_PainterShader_Color->setColor(
                 float(color[0]) * uchar2float_rcp,
                 float(color[1]) * uchar2float_rcp,
                 float(color[2]) * uchar2float_rcp,
@@ -1083,14 +954,14 @@ struct PainterImplGL : public PainterImpl{
 
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            useShader(g_Shader_Texture);
+            useShader(g_PainterShader_Texture);
             setShaderScaleAndShift(
-                g_Shader_Texture, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+                g_PainterShader_Texture, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
             );
 
             gl::ActiveTexture(GL_TEXTURE0);
             tex->bind();
-            g_Shader_Texture->setSampler(0);
+            g_PainterShader_Texture->setSampler(0);
 
             m_textured_rect.setTexCoords(
                 intersection.srcx() * tex->wrcp(),
@@ -1123,14 +994,14 @@ struct PainterImplGL : public PainterImpl{
 
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            useShader(g_Shader_ColorBlend);
+            useShader(g_PainterShader_ColorBlend);
             setShaderScaleAndShift(
-                g_Shader_ColorBlend, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+                g_PainterShader_ColorBlend, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
             );
 
             gl::ActiveTexture(GL_TEXTURE0);
             mask_texture_impl->bind();
-            g_Shader_ColorBlend->setSampler(0);
+            g_PainterShader_ColorBlend->setSampler(0);
 
             m_color_blend.setTexCoords(
                 intersection.srcx() * mask_texture_impl->wrcp(),
@@ -1141,14 +1012,14 @@ struct PainterImplGL : public PainterImpl{
 
             for(int c=0; c<mask_texture_impl->componentCount(); c++)
             {
-                g_Shader_ColorBlend->setColor(
+                g_PainterShader_ColorBlend->setColor(
                     float(colors[c][0]) * uchar2float_rcp,
                     float(colors[c][1]) * uchar2float_rcp,
                     float(colors[c][2]) * uchar2float_rcp,
                     float(colors[c][3]) * uchar2float_rcp
                 );
 
-                g_Shader_ColorBlend->setTextureComponent(c);
+                g_PainterShader_ColorBlend->setTextureComponent(c);
 
                 m_color_blend.draw();
             }

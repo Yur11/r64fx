@@ -52,6 +52,7 @@ set(SRC
     Mutex.cpp
     Painter.cpp
     PainterShaders.cpp
+    PainterVertexArrays.cpp
     PlayerController.cpp
     PlayerMachine.cpp
     PlayerView.cpp
