@@ -73,6 +73,17 @@ public:
         g_PainterShader_ColorBlend->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
     }
 };
+
+
+class PainterVertexArray_Waveform : public PainterVertexArray_TexturedRect{
+public:
+    void init()
+    {
+        PainterVertexArray::init(64);
+        g_PainterShader_Waveform->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
+        g_PainterShader_Waveform->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
+    }
+};
     
 }//namespace r64x
 

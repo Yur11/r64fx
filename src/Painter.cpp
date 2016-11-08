@@ -584,9 +584,9 @@ class PainterTexture1DImplGL
 : public PainterTexture1D
 , public LinkedList<PainterTexture1DImplGL>::Node
 , public PainterTextureImplGL{
-    int m_length = 0;
-    int m_length_rcp = 0;
-    Type m_data_type;
+    int    m_length      = 0;
+    float  m_length_rcp  = 0;
+    Type   m_data_type;
 
 public:
     PainterTexture1DImplGL(PainterImplGL* parent_painter)
@@ -618,10 +618,20 @@ public:
         gl::DeleteTextures(1, &m_texture);
         m_texture = 0;
     }
+    
+    inline void bind()
+    {
+        gl::BindTexture(GL_TEXTURE_1D, m_texture);
+    }
 
     virtual int length()
     {
         return 0;
+    }
+    
+    virtual float lengthRcp()
+    {
+        return m_length_rcp;
     }
 
     template<typename T> void loadData(T* data, int length, int component_count, GLenum type)
@@ -830,6 +840,7 @@ struct PainterImplGL : public PainterImpl{
     PainterVertexArray_ColoredRect   m_colored_rect;
     PainterVertexArray_TexturedRect  m_textured_rect;
     PainterVertexArray_ColorBlend    m_color_blend;
+    PainterVertexArray_Waveform      m_waveform_rect;
 
     LinkedList<PainterTexture1DImplGL> m_1d_textures;
     LinkedList<PainterTexture2DImplGL> m_2d_textures;
@@ -863,6 +874,9 @@ struct PainterImplGL : public PainterImpl{
 
         m_color_blend.init();
         m_color_blend.setRect(0.0f, 0.0f, 1.0f, -1.0f);
+        
+        m_waveform_rect.init();
+        m_waveform_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f);
         
         gl::Enable(GL_BLEND);
         gl::BlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
@@ -1037,6 +1051,46 @@ struct PainterImplGL : public PainterImpl{
 #ifdef R64FX_DEBUG
         assert(waveform_texture->componentCount() == 2);
 #endif//R64FX_DEBUG
+        
+        auto waveform_texture_impl = static_cast<PainterTexture1DImplGL*>(waveform_texture);
+        
+        RectIntersection<int> intersection(
+            current_clip_rect,
+            {rect.x() + offsetX(), rect.y() + offsetY(), rect.width(), rect.height()}
+        );
+
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            useShader(g_PainterShader_Waveform);
+            setShaderScaleAndShift(
+                g_PainterShader_Waveform, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+            );
+            
+            g_PainterShader_Waveform->setColor(
+                float(color[0]) * uchar2float_rcp,
+                float(color[1]) * uchar2float_rcp,
+                float(color[2]) * uchar2float_rcp,
+                float(color[3]) * uchar2float_rcp
+            );
+            
+            g_PainterShader_Waveform->setGain(gain);
+            
+            gl::ActiveTexture(GL_TEXTURE0);
+            waveform_texture_impl->bind();
+            g_PainterShader_Waveform->setSampler(0);
+            
+            float wrcp = waveform_texture_impl->lengthRcp();
+            float hrcp = 1.0f / float(rect.height());
+            
+            m_waveform_rect.setTexCoords(
+                intersection.srcx() * wrcp,
+                intersection.srcy() * hrcp,
+                (intersection.srcx() + intersection.width())  * wrcp,
+                (intersection.srcy() + intersection.height()) * hrcp
+            );
+            
+            m_waveform_rect.draw();
+        }
     }
 
     virtual PainterTexture1D* newTexture()
