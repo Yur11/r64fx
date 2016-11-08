@@ -1,4 +1,5 @@
 #include "ImageUtils.hpp"
+#include <limits>
 #include <algorithm>
 #include <vector>
 
@@ -567,7 +568,19 @@ void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
 }
 
 
-void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect, float gain)
+template<typename T> inline float denormalize(T num)
+{
+    static const float rcp = 1.0f / float(std::numeric_limits<T>::max());
+    return float(num) * rcp;
+}
+
+template<> inline float denormalize(float num)
+{
+    return num;
+}
+
+
+template<typename T> void draw_waveform(Image* dst, unsigned char* color, T* data, const Rect<int> &rect)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -578,18 +591,17 @@ void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect
     assert(rect.bottom() <= dst->height());
 #endif//R64FX_DEBUG
 
-    float half_height = rect.height() / 2;
-    float half_height_rcp = 1.0f / half_height;
+    float height_rcp = 1.0f / rect.height();
 
     for(int y=0; y<rect.height(); y++)
     {
-        float yy = (y - half_height) * half_height_rcp;
+        float yy = y * height_rcp;
 
         for(int x=0; x<rect.width(); x++)
         {
             unsigned char* dstpx = dst->pixel(x + rect.x(), y + rect.y());
-            float min_value = data[x*2] * gain;
-            float max_value = data[x*2 + 1] * gain;
+            float min_value = denormalize<T>(data[x*2]);
+            float max_value = denormalize<T>(data[x*2 + 1]);
             if(yy > min_value && yy < max_value)
             {
                 for(auto c=0; c<dst->componentCount(); c++)
@@ -599,6 +611,30 @@ void draw_waveform(Image* dst, unsigned char* color, float* data, Rect<int> rect
             }
         }
     }
+}
+
+
+void draw_waveform(Image* dst, unsigned char* color, unsigned char* data, const Rect<int> &rect)
+{
+    draw_waveform<unsigned char>(dst, color, data, rect);
+}
+
+
+void draw_waveform(Image* dst, unsigned char* color, unsigned short* data, const Rect<int> &rect)
+{
+    draw_waveform<unsigned short>(dst, color, data, rect);
+}
+
+
+void draw_waveform(Image* dst, unsigned char* color, unsigned int* data, const Rect<int> &rect)
+{
+    draw_waveform<unsigned int>(dst, color, data, rect);
+}
+
+
+void draw_waveform(Image* dst, unsigned char* color, float* data, const Rect<int> &rect)
+{
+    draw_waveform<float>(dst, color, data, rect);
 }
 
 

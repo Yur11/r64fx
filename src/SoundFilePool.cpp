@@ -121,7 +121,13 @@ int SoundFileDataPtr::sampleRate() const
 {
     return m->data.sampleRate();
 }
-    
+
+
+SoundFileData* SoundFileDataPtr::operator->()
+{
+    return &(m->data);
+}
+
     
 SoundFilePool::SoundFilePool()
 {

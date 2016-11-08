@@ -85,13 +85,18 @@ public:
     /* Blend multiple colors using multi-component alpha mask. */
     virtual void blendColors(Point<int> dst_pos, unsigned char** colors, Image* mask_image) = 0;
 
-    /**  */
     virtual void blendColors(Point<int> dst_pos, unsigned char** colors, PainterTexture2D* mask_texture) = 0;
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain) = 0;
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned char*  waveform) = 0;
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform, float gain) = 0;
-    
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned short* waveform) = 0;
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned int*   waveform) = 0;
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float*          waveform) = 0;
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform) = 0;
+
     /** Make the changes visible.
 
         Update window surface. Swap buffers. etc.

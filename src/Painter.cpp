@@ -367,7 +367,7 @@ struct PainterImplImage : public PainterImpl{
         PainterImplImage::blendColors(pos, colors, mask_texture_impl->image());
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform, float gain)
+    template<typename T> void drawWaveform(const Rect<int> &rect, unsigned char* color, T* waveform)
     {
         RectIntersection<int> intersection(
             current_clip_rect, rect + offset()
@@ -379,13 +379,32 @@ struct PainterImplImage : public PainterImpl{
                 window->image(),
                 color,
                 waveform + intersection.srcOffset().x() * 2,
-                Rect<int>(intersection.dstOffset(), intersection.size()),
-                gain
+                Rect<int>(intersection.dstOffset(), intersection.size())
             );
         }
     }
-    
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform, float gain)
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned char* waveform)
+    {
+        drawWaveform<unsigned char>(rect, color, waveform);
+    }
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned short* waveform)
+    {
+        drawWaveform<unsigned short>(rect, color, waveform);
+    }
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned int* waveform)
+    {
+        drawWaveform<unsigned int>(rect, color, waveform);
+    }
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform)
+    {
+        drawWaveform<float>(rect, color, waveform);
+    }
+
+    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform)
     {
 #ifdef R64FX_DEBUG
         assert(waveform->length() == rect.width());
@@ -393,7 +412,7 @@ struct PainterImplImage : public PainterImpl{
 #endif//R64FX_DEBUG
         
         auto waveform_texture_impl = static_cast<PainterTexture1DImplImage*>(waveform);
-        PainterImplImage::drawWaveform(rect, color, waveform_texture_impl->dataFloat(), gain);
+        PainterImplImage::drawWaveform(rect, color, waveform_texture_impl->dataFloat());
     }
 
     virtual PainterTexture1D* newTexture()

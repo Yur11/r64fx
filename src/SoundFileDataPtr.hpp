@@ -37,6 +37,8 @@ public:
     unsigned long componentCount() const;
     
     int sampleRate() const;
+
+    SoundFileData* operator->();
 };
     
 }//namespace r64fx

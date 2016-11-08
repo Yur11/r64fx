@@ -1,6 +1,7 @@
 #include "PlayerController.hpp"
 #include "PlayerView.hpp"
 #include "PlayerMachine.hpp"
+#include "WaveformUtils.hpp"
 #include "SoundFilePool.hpp"
 #include "RouterMachine.hpp"
 #include "FilterMachine.hpp"
@@ -174,26 +175,28 @@ public:
 
     }
 
-    virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out)
+    virtual void loadWaveform(int begin_frame, int end_frame, int component, int pixel_count, unsigned char* out, float gain)
     {
-        int range = end_idx - begin_idx;
-        int frames_per_pixel = range / pixel_count;
-        for(int p=0; p<pixel_count; p++)
-        {
-            float min_value = 0;
-            float max_value = 0;
-            for(int f=0; f<frames_per_pixel; f++)
-            {
-                int ff = p * frames_per_pixel + f;
-                float value = m_sound_data.data()->frame(ff)[component];
-                if(value > max_value)
-                    max_value = value;
-                if(value < min_value)
-                    min_value = value;
-            }
-            out[p*2] = min_value;
-            out[p*2 + 1] = max_value;
-        }
+#ifndef R64FX_DEBUG
+        assert(component >= 0);
+        assert(component < m_sound_data.componentCount());
+#endif//R64FX_DEBUG
+
+        gen_waveform(
+            m_sound_data->data(), begin_frame, end_frame, m_sound_data.componentCount(), component, gain, pixel_count, out
+        );
+    }
+
+    virtual void loadWaveform(int begin_frame, int end_frame, int component, int pixel_count, unsigned short* out, float gain)
+    {
+#ifndef R64FX_DEBUG
+        assert(component >= 0);
+        assert(component < m_sound_data.componentCount());
+#endif//R64FX_DEBUG
+
+        gen_waveform(
+            m_sound_data->data(), begin_frame, end_frame, m_sound_data.componentCount(), component, gain, pixel_count, out
+        );
     }
 
     virtual void changePitch(float pitch)

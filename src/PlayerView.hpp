@@ -57,7 +57,9 @@ public:
 
     virtual bool hasFile() = 0;
 
-    virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, float* out) = 0;
+    virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, unsigned char* out, float gain = 1.0f) = 0;
+
+    virtual void loadWaveform(int begin_idx, int end_idx, int component, int pixel_count, unsigned short* out, float gain = 1.0f) = 0;
 
     virtual void changePitch(float pitch) = 0;
 

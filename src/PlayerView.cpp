@@ -52,8 +52,8 @@ struct PlayerViewPrivate{
 
     PlayerView*    parent             = nullptr;
 
-    WaveformPart*  waveform_part      = nullptr;
-    float*         waveform           = nullptr;
+    WaveformPart*   waveform_part      = nullptr;
+    unsigned short* waveform           = nullptr;
 
     TopPart*       top_part           = nullptr;
     LeftPart*      left_part          = nullptr;
@@ -103,13 +103,13 @@ public:
         int component_count = m->ctrl->componentCount();
         int frame_count = m->ctrl->frameCount();
 
-        m->waveform = new(std::nothrow) float[component_count * width() * 2];
+        m->waveform = new(std::nothrow) unsigned short[component_count * width() * 2];
         if(!m->waveform)
             return;
 
         for(int c=0; c<component_count; c++)
         {
-            m->ctrl->loadWaveform(0, frame_count, c, width(), m->waveform + (c * width() * 2));
+            m->ctrl->loadWaveform(0, frame_count, c, width(), m->waveform + (c * width() * 2), m->gain);
         }
     }
 
@@ -174,7 +174,7 @@ private:
             unsigned char fg[4] = {63, 63, 63, 0};
             p->drawWaveform(
                 {pos, waveform_y, size, waveform_height},
-                fg, m->waveform + (c * (width()) * 2) + pos * 2, m->gain
+                fg, m->waveform + (c * (width()) * 2) + pos * 2
             );
             waveform_y += waveform_height;
         }
@@ -635,6 +635,7 @@ void PlayerViewPrivate::gainChanged(float gain)
 {
     this->gain = gain;
     ctrl->changeGain(gain);
+    waveform_part->updateWaveform();
     waveform_part->repaintAll();
 }
 
