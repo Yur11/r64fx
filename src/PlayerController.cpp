@@ -131,7 +131,7 @@ public:
     {
         if(m_sound_data)
         {
-            return m_sound_data.frameCount();
+            return m_sound_data->frameCount();
         }
         return 0;
     }
@@ -140,7 +140,7 @@ public:
     {
         if(m_sound_data)
         {
-            return m_sound_data.componentCount();
+            return m_sound_data->componentCount();
         }
         return 0;
     }
@@ -149,7 +149,7 @@ public:
     {
         if(m_sound_data)
         {
-            return m_sound_data.sampleRate();
+            return m_sound_data->sampleRate();
         }
         return 0.0f;
     }
@@ -183,7 +183,7 @@ public:
 #endif//R64FX_DEBUG
 
         gen_waveform(
-            m_sound_data->data(), begin_frame, end_frame, m_sound_data.componentCount(), component, gain, pixel_count, out
+            m_sound_data->data(), begin_frame, end_frame, m_sound_data->componentCount(), component, gain, pixel_count, out
         );
     }
 
@@ -195,7 +195,7 @@ public:
 #endif//R64FX_DEBUG
 
         gen_waveform(
-            m_sound_data->data(), begin_frame, end_frame, m_sound_data.componentCount(), component, gain, pixel_count, out
+            m_sound_data->data(), begin_frame, end_frame, m_sound_data->componentCount(), component, gain, pixel_count, out
         );
     }
 

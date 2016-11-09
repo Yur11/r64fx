@@ -93,36 +93,6 @@ SoundFileDataPtr &SoundFileDataPtr::operator=(const SoundFileDataPtr &other)
 }
 
 
-SoundFileData* SoundFileDataPtr::data() const
-{
-    return &(m->data);
-}
-
-
-unsigned long SoundFileDataPtr::frameCount() const
-{
-    return m->data.frameCount();
-}
-
-
-unsigned long SoundFileDataPtr::loadedFrameCount() const
-{
-    return m->frames_loaded;
-}
-
-
-unsigned long SoundFileDataPtr::componentCount() const
-{
-    return m->data.componentCount();
-}
-    
-    
-int SoundFileDataPtr::sampleRate() const
-{
-    return m->data.sampleRate();
-}
-
-
 SoundFileData* SoundFileDataPtr::operator->()
 {
     return &(m->data);

@@ -154,9 +154,9 @@ void PlayerMachine::replaceSample(SoundFileDataPtr new_sample)
     m_flags &= ~R64FX_MACHINE_IS_READY;
     m_new_sample = new_sample;
 
-    MachineMessage msg(ReplaceSample, (unsigned long)new_sample.data());
+    MachineMessage msg(ReplaceSample, (unsigned long)new_sample->data());
 
-    if(!m_sample || new_sample.componentCount() != m_sample.componentCount())
+    if(!m_sample || new_sample->componentCount() != m_sample->componentCount())
     {
         packMessage(msg);
         RouterMachine::singletonInstance(pool())->packConnectionUpdatesFor(&m_output);

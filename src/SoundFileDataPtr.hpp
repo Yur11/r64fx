@@ -27,16 +27,6 @@ public:
     {
         return m != nullptr;
     }
-    
-    SoundFileData* data() const;
-    
-    unsigned long frameCount() const;
-    
-    unsigned long loadedFrameCount() const;
-    
-    unsigned long componentCount() const;
-    
-    int sampleRate() const;
 
     SoundFileData* operator->();
 };
