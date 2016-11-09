@@ -111,11 +111,13 @@ Timer::~Timer()
         if(thread)
         {
             auto &timers = thread->timers;
-            auto it = timers.begin();
-            while(it != timers.end() || *it == m_impl) it++;
-            if(it != timers.end())
+            for(auto it = timers.begin(); it != timers.end(); it++)
             {
-                timers.erase(it);
+                if(*it == m_impl)
+                {
+                    timers.erase(it);
+                    break;
+                }
             }
         }
 

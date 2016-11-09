@@ -46,6 +46,7 @@ SoundDriver* SoundDriver::newInstance(SoundDriver::Type type)
 
 void SoundDriver::deleteInstance(SoundDriver* driver)
 {
+    driver->disable();
     delete driver;
 }
 
