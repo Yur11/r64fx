@@ -211,7 +211,8 @@ SoundDriverMachine::SoundDriverMachine(MachinePool* pool)
     
 SoundDriverMachine::~SoundDriverMachine()
 {
-    clear();
+    delete impl();
+    setImpl(nullptr);
 }
 
 
@@ -316,15 +317,6 @@ void SoundDriverMachine::destroyPort(MachinePort* port)
     else if(port->isSequencerPort())
     {
         
-    }
-}
-
-
-void SoundDriverMachine::clear()
-{
-    for(auto port : m_ports)
-    {
-        destroyPort(port);
     }
 }
 

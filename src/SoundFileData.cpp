@@ -96,8 +96,8 @@ int SoundFileData::componentCount() const
 
 float* SoundFileData::frame(int i) const
 {
-#ifndef R64FX_DEBUG
-    assert(i < frame_count);
+#ifdef R64FX_DEBUG
+    assert(i < m_frame_count);
 #endif//R64FX_DEBUG
     return m_data + (i * m_component_count);
 }

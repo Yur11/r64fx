@@ -587,7 +587,10 @@ std::string Machine::name() const
 void Machine::setImpl(MachineImpl* impl)
 {
     m_impl = impl;
-    m_impl->setIface(this);
+    if(m_impl)
+    {
+        m_impl->setIface(this);
+    }
 }
 
 

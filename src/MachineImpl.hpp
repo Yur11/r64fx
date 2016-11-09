@@ -34,6 +34,8 @@ class MachineImpl : public LinkedList<MachineImpl>::Node{
     }
     
 public:
+    virtual ~MachineImpl() {}
+    
     inline MachineThread* thread() const
     {
         return m_thread;

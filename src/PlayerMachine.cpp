@@ -51,6 +51,8 @@ public:
     virtual void withdraw()
     {
         m_sampler->removeFromGraph();
+        ctx()->main_subgraph->removeItem(m_sampler);
+        delete m_sampler;
         delete m_output_impl;
     }
 
@@ -149,7 +151,9 @@ void PlayerMachine::replaceSample(SoundFileDataPtr new_sample)
     if(!new_sample)
         return;
 
+#ifdef R64FX_DEBUG
     assert(isReady());
+#endif//R64FX_DEBUG
 
     m_flags &= ~R64FX_MACHINE_IS_READY;
     m_new_sample = new_sample;

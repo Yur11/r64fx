@@ -49,7 +49,7 @@ struct PainterTextureImplGL{
     
     bool formats(int component_count, GLenum &internal_format, GLenum &format)
     {
-#ifndef R64FX_DEBUG
+#ifdef R64FX_DEBUG
         assert(component_count >= 1);
         assert(component_count <= 4);
 #endif//R64FX_DEBUG

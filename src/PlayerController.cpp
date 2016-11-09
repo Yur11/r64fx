@@ -115,6 +115,7 @@ public:
         m_filter_machine->withdraw();
         delete m_filter_machine;
 
+        m_sound_driver_machine->destroyPort(m_master_out);
         m_sound_driver_machine->withdraw();
         delete m_sound_driver_machine;
 
@@ -125,6 +126,8 @@ public:
             delete g_sound_file_pool;
             g_sound_file_pool = nullptr;
         }
+        
+        delete m_filter_view;
     }
 
     virtual int frameCount()
@@ -177,9 +180,9 @@ public:
 
     virtual void loadWaveform(int begin_frame, int end_frame, int component, int pixel_count, unsigned char* out, float gain)
     {
-#ifndef R64FX_DEBUG
+#ifdef R64FX_DEBUG
         assert(component >= 0);
-        assert(component < m_sound_data.componentCount());
+        assert(component < m_sound_data->componentCount());
 #endif//R64FX_DEBUG
 
         gen_waveform(
@@ -189,9 +192,9 @@ public:
 
     virtual void loadWaveform(int begin_frame, int end_frame, int component, int pixel_count, unsigned short* out, float gain)
     {
-#ifndef R64FX_DEBUG
+#ifdef R64FX_DEBUG
         assert(component >= 0);
-        assert(component < m_sound_data.componentCount());
+        assert(component < m_sound_data->componentCount());
 #endif//R64FX_DEBUG
 
         gen_waveform(
