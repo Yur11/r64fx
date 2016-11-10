@@ -8,78 +8,45 @@
 namespace r64fx{
     
 class MachinePool;
-class MachinePoolPrivate;
 class MachineImpl;
-    
+class MachinePoolThread;
+class MachinePoolThreadImpl;
+
+typedef MachineImpl*  (*MachineDeploymentFun) (Machine* iface, MachinePoolThreadImpl*);
+typedef void          (*MachineWithdrawalFun) (MachineImpl* impl);
+
 class Machine : public LinkedList<Machine>::Node{
     friend class MachinePool;
-    friend class MachinePoolPrivate;
+
+    MachinePool*        m_parent_pool        = nullptr;
+    MachineImpl*        m_deployed_impl      = nullptr;
+    MachinePoolThread*  m_deployment_thread  = nullptr;
     
-    MachinePoolPrivate* m_pool_private = nullptr;
-    MachineImpl* m_impl = nullptr;
-    
-    std::string m_name = "";
+    MachineDeploymentFun m_deploy   = nullptr;
+    MachineWithdrawalFun m_withdraw = nullptr;
 
 protected:
-    unsigned long m_flags = 0;
-    
-public:
-    Machine(MachinePool* pool);
+    Machine(MachinePool* parent_pool, MachineDeploymentFun deploy, MachineWithdrawalFun withdraw);
     
     virtual ~Machine();
-    
-    MachinePool* pool() const;
+
+public: 
+    MachinePool* parentPool() const;
     
     void deploy();
     
     void withdraw();
     
     bool isDeployed() const;
-
-    bool isReady() const;
-    
-    void setName(const std::string &name);
-    
-    std::string name() const;
     
     virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg) = 0;
     
-protected:
-    void setImpl(MachineImpl* impl);
+private:
+    void implDeployed(MachineImpl* impl);
     
-    MachineImpl* impl() const;
-    
-    void sendMessage(unsigned long opcode, unsigned long value);
-    
-    void sendMessage(const MachineMessage &msg);
-    
-    void sendMessages(const MachineMessage* msgs, int nmsgs);
-    
-    void packMessage(unsigned long opcode, unsigned long value);
-    
-    void packMessage(const MachineMessage &msg);
-    
-    void packMessages(const MachineMessage* msgs, int nmsgs);
-    
-    void sendPack();
-    
-    void clearPack();
-    
-    int packSize() const;
-    
-    virtual void dispatchMessage(const MachineMessage &msg) = 0;
-    
-    static void block();
+    virtual void messageRecievedFromImpl(const MachineMessage &msg) = 0;
 };
 
-
-class MachineEventIface{
-public:
-    virtual void machineDeployed() = 0;
-    
-    virtual void machineWithdrawn() = 0;
-};
-    
 }//namespace r64fx
 
 #endif//R64FX_MACHINE_HPP

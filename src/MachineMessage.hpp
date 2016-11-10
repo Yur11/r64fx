@@ -7,9 +7,14 @@ struct MachineMessage{
     unsigned long opcode = 0;
     unsigned long value  = 0;
 
-    MachineMessage(unsigned long opcode, unsigned long value)
+    explicit MachineMessage(unsigned long opcode, unsigned long value)
     : opcode(opcode)
     , value(value)
+    {}
+    
+    explicit MachineMessage(unsigned long opcode, void* value)
+    : opcode(opcode)
+    , value((unsigned long)value)
     {}
 
     MachineMessage()

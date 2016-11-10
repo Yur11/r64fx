@@ -27,9 +27,6 @@ public:
     MachineSignalSource* source();
 
     virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg);
-
-public:
-    virtual void dispatchMessage(const MachineMessage &msg);
 };
 
 }//namespace r64fx

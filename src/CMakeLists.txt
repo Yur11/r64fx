@@ -43,7 +43,8 @@ set(SRC
     LayoutUtils.cpp
     Machine.cpp
     MachineConnection.cpp
-    MachinePoolContext.cpp
+    MachinePool.cpp
+    MachinePoolThread.cpp
     MachinePort.cpp
     MachinePortImpl.cpp
     MainView.cpp
@@ -60,7 +61,6 @@ set(SRC
     Program.cpp
     Project.cpp
     ProjectView.cpp
-    RouterMachine.cpp
     SignalGraph.cpp
     SignalNode_BufferIO.cpp
     SignalNode_Filter.cpp

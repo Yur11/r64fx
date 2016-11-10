@@ -3,7 +3,6 @@
 #include "PlayerMachine.hpp"
 #include "WaveformUtils.hpp"
 #include "SoundFilePool.hpp"
-#include "RouterMachine.hpp"
 #include "FilterMachine.hpp"
 
 #include "Timer.hpp"
@@ -41,93 +40,93 @@ class PlayerControllerPrivate
 public:
     PlayerControllerPrivate()
     {
-        m_view = new PlayerView(this);
-        m_view->openWindow();
-
-        m_pool = new MachinePool;
-
-        m_machine = new PlayerMachine(m_pool);
-        m_machine->deploy();
-        while(!m_machine->isReady())
-        {
-            cout << "Waiting for machine!\n";
-            Timer::runTimers();
-            sleep_microseconds(5000);
-        }
-        cout << "Machine done!\n";
-
-        m_filter_machine = new FilterMachine(m_pool);
-        m_filter_machine->deploy();
-        while(!m_filter_machine->isReady())
-        {
-            cout << "Waiting for filter deployment!\n";
-            Timer::runTimers();
-            sleep_microseconds(5000);
-        }
-        cout << "Fiter deployment done!\n";
-
-        cout << m_filter_machine->sink()->impl() << ", " << m_filter_machine->source()->impl() << "\n";
-        m_filter_machine->setSize(2);
-        while(!m_filter_machine->isReady())
-        {
-            cout << "Waiting for filter size!\n";
-            Timer::runTimers();
-            sleep_microseconds(5000);
-        }
-        cout << "Filter size done!\n";
-
-        m_sound_driver_machine = new SoundDriverMachine(m_pool);
-        m_sound_driver_machine->deploy();
-        m_sound_driver_machine->enable();
-        m_master_out = m_sound_driver_machine->createAudioOutput("out", 2);
-        while(!m_master_out->impl())
-        {
-            cout << "Waiting for m_master_out!\n";
-            Timer::runTimers();
-            sleep_microseconds(5000);
-        }
-        cout << "m_master_out done!\n";
-        cout << "master_out: " << m_master_out << " -> " << m_master_out->impl() << "\n";
-
-        RouterMachine::singletonInstance(m_pool)->makeConnection(m_machine->output(), m_filter_machine->sink());
-        RouterMachine::singletonInstance(m_pool)->makeConnection(m_filter_machine->source(), m_master_out);
-
-        m_sound_driver_machine->connect("r64fx:out_1", "system:playback_1");
-        m_sound_driver_machine->connect("r64fx:out_2", "system:playback_2");
-
-        if(!g_sound_file_pool)
-        {
-            g_sound_file_pool = new SoundFilePool;
-        }
-
-        m_filter_machine->setPole(0.01f);
-        m_filter_view = new FilterView(this);
+//         m_view = new PlayerView(this);
+//         m_view->openWindow();
+// 
+//         m_pool = new MachinePool;
+// 
+//         m_machine = new PlayerMachine(m_pool);
+//         m_machine->deploy();
+//         while(!m_machine->isReady())
+//         {
+//             cout << "Waiting for machine!\n";
+//             Timer::runTimers();
+//             sleep_microseconds(5000);
+//         }
+//         cout << "Machine done!\n";
+// 
+//         m_filter_machine = new FilterMachine(m_pool);
+//         m_filter_machine->deploy();
+//         while(!m_filter_machine->isReady())
+//         {
+//             cout << "Waiting for filter deployment!\n";
+//             Timer::runTimers();
+//             sleep_microseconds(5000);
+//         }
+//         cout << "Fiter deployment done!\n";
+// 
+//         cout << m_filter_machine->sink()->impl() << ", " << m_filter_machine->source()->impl() << "\n";
+//         m_filter_machine->setSize(2);
+//         while(!m_filter_machine->isReady())
+//         {
+//             cout << "Waiting for filter size!\n";
+//             Timer::runTimers();
+//             sleep_microseconds(5000);
+//         }
+//         cout << "Filter size done!\n";
+// 
+//         m_sound_driver_machine = new SoundDriverMachine(m_pool);
+//         m_sound_driver_machine->deploy();
+//         m_sound_driver_machine->enable();
+//         m_master_out = m_sound_driver_machine->createAudioOutput("out", 2);
+//         while(!m_master_out->impl())
+//         {
+//             cout << "Waiting for m_master_out!\n";
+//             Timer::runTimers();
+//             sleep_microseconds(5000);
+//         }
+//         cout << "m_master_out done!\n";
+//         cout << "master_out: " << m_master_out << " -> " << m_master_out->impl() << "\n";
+// 
+//         RouterMachine::singletonInstance(m_pool)->makeConnection(m_machine->output(), m_filter_machine->sink());
+//         RouterMachine::singletonInstance(m_pool)->makeConnection(m_filter_machine->source(), m_master_out);
+// 
+//         m_sound_driver_machine->connect("r64fx:out_1", "system:playback_1");
+//         m_sound_driver_machine->connect("r64fx:out_2", "system:playback_2");
+// 
+//         if(!g_sound_file_pool)
+//         {
+//             g_sound_file_pool = new SoundFilePool;
+//         }
+// 
+//         m_filter_machine->setPole(0.01f);
+//         m_filter_view = new FilterView(this);
 //         m_filter_view->show();
     }
 
     virtual ~PlayerControllerPrivate()
     {
-        delete m_view;
-
-        m_machine->withdraw();
-        delete m_machine;
-
-        m_filter_machine->withdraw();
-        delete m_filter_machine;
-
-        m_sound_driver_machine->destroyPort(m_master_out);
-        m_sound_driver_machine->withdraw();
-        delete m_sound_driver_machine;
-
-        delete m_pool;
-
-        if(g_sound_file_pool)
-        {
-            delete g_sound_file_pool;
-            g_sound_file_pool = nullptr;
-        }
-        
-        delete m_filter_view;
+//         delete m_view;
+// 
+//         m_machine->withdraw();
+//         delete m_machine;
+// 
+//         m_filter_machine->withdraw();
+//         delete m_filter_machine;
+// 
+//         m_sound_driver_machine->destroyPort(m_master_out);
+//         m_sound_driver_machine->withdraw();
+//         delete m_sound_driver_machine;
+// 
+//         delete m_pool;
+// 
+//         if(g_sound_file_pool)
+//         {
+//             delete g_sound_file_pool;
+//             g_sound_file_pool = nullptr;
+//         }
+//         
+//         delete m_filter_view;
     }
 
     virtual int frameCount()

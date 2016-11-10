@@ -2,7 +2,7 @@
 #define R64FX_MACHINE_POOL_HPP
 
 #include "Machine.hpp"
-#include "MachineConnection.hpp"
+#include "MachinePoolThread.hpp"
 
 namespace r64fx{
 
@@ -11,7 +11,8 @@ class MachinePoolPrivate;
 class MachinePool{
     friend class Machine;
     
-    MachinePoolPrivate* m = nullptr;
+    LinkedList<MachinePoolThread> m_threads;
+    LinkedList<Machine>           m_machines;
     
 public:
     MachinePool();
@@ -22,17 +23,10 @@ public:
     
     LinkedList<Machine>::Iterator end() const;
     
-    void withdrawAll();
+    MachinePoolThread* getThread() const;
     
-//     MachineConnection* makeConnection(
-//         MachineSignalSource*  src_port, 
-//         MachineSignalSink*    dst_port, 
-//         MachineConnection::Mapping mapping = MachineConnection::Mapping::Default
-//     );
-//     
-//     void breakConnection(MachineConnection* connection);
-//     
-//     void updateConnection(MachineConnection* connection);
+private:
+    MachinePoolThread* startNewThread();
 };
     
 }//namespace r64fx
