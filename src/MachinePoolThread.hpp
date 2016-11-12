@@ -16,7 +16,8 @@ class MachinePoolThread : public LinkedList<MachinePoolThread>::Node, private Th
     CircularBuffer<MachineMessage>*  m_to_thread    = nullptr;
     CircularBuffer<MachineMessage>*  m_from_thread  = nullptr;
 
-    MachineImpl* m_dst_impl = nullptr;
+    MachineImpl*  m_dst_impl   = nullptr;
+    Machine*      m_dst_iface  = nullptr;
 
 public:
     MachinePoolThread();
@@ -30,7 +31,7 @@ public:
     void readMessagesFromImpl();
 
 private:
-    void pickDestination(MachineImpl* dst);
+    void pickDestinationImpl(MachineImpl* dst);
 
     void sendMessagesToImpl(MachineImpl* dst, MachineMessage* msgs, int nmsgs);
 

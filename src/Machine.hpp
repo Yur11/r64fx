@@ -17,6 +17,7 @@ typedef void          (*MachineWithdrawalFun) (MachineImpl* impl);
 
 class Machine : public LinkedList<Machine>::Node{
     friend class MachinePool;
+    friend class MachinePoolThread;
 
     MachinePool*        m_parent_pool        = nullptr;
     MachineImpl*        m_deployed_impl      = nullptr;
