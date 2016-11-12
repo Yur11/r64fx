@@ -6,14 +6,14 @@
 
 namespace r64fx{
     
-class Machine;
+class MachineIface;
 class MachineSourceImpl;
 class MachineSinkImpl;
 class SignalSourceConnectionRecord;
 class SignalSinkConnectionRecord;
     
 class MachinePort : public LinkedList<MachinePort>::Node{
-    Machine* m_machine = nullptr;
+    MachineIface* m_machine = nullptr;
     std::string m_name = "";
     int m_component_count = 0;
     
@@ -21,9 +21,9 @@ protected:
     unsigned int m_flags = 0;
     
 public:
-    MachinePort(Machine* machine, const std::string &name, int component_count = 1);
+    MachinePort(MachineIface* machine, const std::string &name, int component_count = 1);
     
-    Machine* machine() const;
+    MachineIface* machine() const;
     
     void setName(const std::string &name);
     

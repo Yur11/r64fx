@@ -10,7 +10,7 @@
 #include "Timer.hpp"
 #include "sleep.hpp"
 
-#include "PlayerController.hpp"
+#include "DummyMachine.hpp"
 
 #include <iostream>
 
@@ -37,15 +37,11 @@ struct ProgramPrivate : public MainViewEventIface{
         
         newProject();
         
-        auto player = new PlayerController;
-        
         while(running)
         {
             Timer::runTimers();
             sleep_microseconds(5000);
         }
-        
-        delete player;
         
         main_view->closeWindow();
         delete main_view;

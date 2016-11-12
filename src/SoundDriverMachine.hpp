@@ -1,12 +1,12 @@
 #ifndef R64FX_SOUND_DRIVER_MACHINE_HPP
 #define R64FX_SOUND_DRIVER_MACHINE_HPP
 
-#include "Machine.hpp"
+#include "MachineIface.hpp"
 #include <string>
 
 namespace r64fx{
     
-class SoundDriverMachine : public Machine{
+class SoundDriverMachine : public MachineIface{
     LinkedList<MachinePort> m_ports;
     
 public:
@@ -14,7 +14,7 @@ public:
     
     virtual ~SoundDriverMachine();
     
-    virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg);
+    virtual void forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg);
     
     void enable();
     

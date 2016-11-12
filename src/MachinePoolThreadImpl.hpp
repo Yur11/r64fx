@@ -12,15 +12,15 @@ class MachinePoolThreadImpl{
     CircularBuffer<MachineMessage>*  m_from_thread  = nullptr;
     bool                             m_running      = true;
 
-    MachineImpl*  m_dst_impl   = nullptr;
-    Machine*      m_dst_iface  = nullptr;
+    MachineImpl*   m_dst_impl   = nullptr;
+    MachineIface*  m_dst_iface  = nullptr;
     
 public:
     void run(CircularBuffer<MachineMessage>* to_thread, CircularBuffer<MachineMessage>* from_thread);
     
-    void pickDestinationIface(Machine* dst);
+    void pickDestinationIface(MachineIface* dst_iface);
     
-    void sendMessagesToIface(Machine* dst, MachineMessage* msgs, int nmsgs);
+    void sendMessagesToIface(MachineIface* dst_iface, MachineMessage* msgs, int nmsgs);
 };
     
 }//namespace r64fx

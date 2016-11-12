@@ -60,7 +60,7 @@ class SoundDriverSignalSink : public SignalSink{
     
 struct SoundDriverMachineImpl : public MachineImpl{
 
-    SoundDriverMachineImpl(Machine* iface)
+    SoundDriverMachineImpl(MachineIface* iface)
     : MachineImpl(iface)
     {
         
@@ -204,7 +204,7 @@ struct SoundDriverMachineImpl : public MachineImpl{
 };
 
 
-MachineImpl* deploy_impl(Machine* iface, MachinePoolThreadImpl*)
+MachineImpl* deploy_impl(MachineIface* iface, MachinePoolThreadImpl*)
 {
     return new SoundDriverMachineImpl(iface);
 }
@@ -218,7 +218,7 @@ void withdraw_impl(MachineImpl* impl)
 
 
 SoundDriverMachine::SoundDriverMachine(MachinePool* pool)
-: Machine(pool, deploy_impl, withdraw_impl)
+: MachineIface(pool, deploy_impl, withdraw_impl)
 {
 
 }
@@ -230,7 +230,7 @@ SoundDriverMachine::~SoundDriverMachine()
 }
 
 
-void SoundDriverMachine::forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg)
+void SoundDriverMachine::forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg)
 {
     for(auto port : m_ports)
     {

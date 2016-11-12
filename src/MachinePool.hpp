@@ -1,7 +1,7 @@
 #ifndef R64FX_MACHINE_POOL_HPP
 #define R64FX_MACHINE_POOL_HPP
 
-#include "Machine.hpp"
+#include "MachineIface.hpp"
 #include "MachinePoolThread.hpp"
 
 namespace r64fx{
@@ -9,19 +9,19 @@ namespace r64fx{
 class MachinePoolPrivate;
     
 class MachinePool{
-    friend class Machine;
+    friend class MachineIface;
     
     LinkedList<MachinePoolThread> m_threads;
-    LinkedList<Machine>           m_machines;
+    LinkedList<MachineIface>      m_machines;
     
 public:
     MachinePool();
     
     virtual ~MachinePool();
     
-    LinkedList<Machine>::Iterator begin() const;
+    LinkedList<MachineIface>::Iterator begin() const;
     
-    LinkedList<Machine>::Iterator end() const;
+    LinkedList<MachineIface>::Iterator end() const;
     
     MachinePoolThread* getThread() const;
     

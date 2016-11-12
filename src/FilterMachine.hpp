@@ -1,11 +1,11 @@
 #ifndef R64FX_FILTER_MACHINE_HPP
 #define R64FX_FILTER_MACHINE_HPP
 
-#include "Machine.hpp"
+#include "MachineIface.hpp"
 
 namespace r64fx{
 
-class FilterMachine : public Machine{
+class FilterMachine : public MachineIface{
     MachineSignalSink    m_sink;
     MachineSignalSource  m_source;
 
@@ -26,7 +26,7 @@ public:
 
     MachineSignalSource* source();
 
-    virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg);
+    virtual void forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg);
 };
 
 }//namespace r64fx

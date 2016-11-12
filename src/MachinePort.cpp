@@ -6,7 +6,7 @@
 
 namespace r64fx{
     
-MachinePort::MachinePort(Machine* machine, const std::string &name, int component_count)
+MachinePort::MachinePort(MachineIface* machine, const std::string &name, int component_count)
 : m_machine(machine)
 , m_name(name)
 , m_component_count(component_count)
@@ -15,7 +15,7 @@ MachinePort::MachinePort(Machine* machine, const std::string &name, int componen
 }
     
     
-Machine* MachinePort::machine() const
+MachineIface* MachinePort::machine() const
 {
     return m_machine;
 }

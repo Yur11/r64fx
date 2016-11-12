@@ -73,7 +73,7 @@ void MachinePoolThread::readMessagesFromImpl()
     {
         if(msg.opcode == PickDestination)
         {
-            m_dst_iface = (Machine*) msg.value;
+            m_dst_iface = (MachineIface*) msg.value;
         }
         else
         {
@@ -118,7 +118,7 @@ void MachinePoolThread::sendMessagesToImpl(MachineImpl* dst, MachineMessage* msg
 }
 
 
-void MachinePoolThread::deployMachine(MachineDeploymentFun fun, Machine* iface)
+void MachinePoolThread::deployMachine(MachineDeploymentFun fun, MachineIface* iface)
 {
     pickDestinationImpl(nullptr);
     
@@ -139,8 +139,8 @@ void MachinePoolThreadImpl::run(CircularBuffer<MachineMessage>* to_thread, Circu
     m_from_thread  = from_thread;
     m_running      = true;
     
-    Machine*      machine_to_be_deployed   = nullptr;
-    MachineImpl*  machine_to_be_withdrawn  = nullptr;
+    MachineIface*  machine_to_be_deployed   = nullptr;
+    MachineImpl*   machine_to_be_withdrawn  = nullptr;
     
     while(m_running)
     {
@@ -161,7 +161,7 @@ void MachinePoolThreadImpl::run(CircularBuffer<MachineMessage>* to_thread, Circu
                 {
                     if(msg.opcode == MachineToBeDeployed)
                     {
-                        machine_to_be_deployed = (Machine*) msg.value;
+                        machine_to_be_deployed = (MachineIface*) msg.value;
                     }
                     else if(msg.opcode == DeployMachine)
                     {
@@ -200,7 +200,7 @@ void MachinePoolThreadImpl::run(CircularBuffer<MachineMessage>* to_thread, Circu
 }
 
 
-void MachinePoolThreadImpl::pickDestinationIface(Machine* dst)
+void MachinePoolThreadImpl::pickDestinationIface(MachineIface* dst)
 {
     if(dst != m_dst_iface)
     {
@@ -210,7 +210,7 @@ void MachinePoolThreadImpl::pickDestinationIface(Machine* dst)
     }
 }
     
-void MachinePoolThreadImpl::sendMessagesToIface(Machine* dst, MachineMessage* msgs, int nmsgs)
+void MachinePoolThreadImpl::sendMessagesToIface(MachineIface* dst, MachineMessage* msgs, int nmsgs)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);

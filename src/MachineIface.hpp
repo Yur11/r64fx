@@ -1,21 +1,22 @@
-#ifndef R64FX_MACHINE_HPP
-#define R64FX_MACHINE_HPP
+#ifndef R64FX_MACHINE_IFACE_HPP
+#define R64FX_MACHINE_IFACE_HPP
 
 #include <string>
 #include "MachineMessage.hpp"
 #include "MachinePort.hpp"
 
 namespace r64fx{
-    
-class MachinePool;
+
+class MachineIface;
 class MachineImpl;
+class MachinePool;
 class MachinePoolThread;
 class MachinePoolThreadImpl;
 
-typedef MachineImpl*  (*MachineDeploymentFun) (Machine* iface, MachinePoolThreadImpl*);
+typedef MachineImpl*  (*MachineDeploymentFun) (MachineIface* iface, MachinePoolThreadImpl*);
 typedef void          (*MachineWithdrawalFun) (MachineImpl* impl);
 
-class Machine : public LinkedList<Machine>::Node{
+class MachineIface : public LinkedList<MachineIface>::Node{
     friend class MachinePool;
     friend class MachinePoolThread;
 
@@ -27,9 +28,9 @@ class Machine : public LinkedList<Machine>::Node{
     MachineWithdrawalFun m_withdraw = nullptr;
 
 protected:
-    Machine(MachinePool* parent_pool, MachineDeploymentFun deploy, MachineWithdrawalFun withdraw);
+    MachineIface(MachinePool* parent_pool, MachineDeploymentFun deploy, MachineWithdrawalFun withdraw);
     
-    virtual ~Machine();
+    virtual ~MachineIface();
 
 public: 
     MachinePool* parentPool() const;
@@ -40,7 +41,7 @@ public:
     
     bool isDeployed() const;
     
-    virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg) = 0;
+    virtual void forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg) = 0;
     
 private:
     void implDeployed(MachineImpl* impl);
@@ -50,4 +51,4 @@ private:
 
 }//namespace r64fx
 
-#endif//R64FX_MACHINE_HPP
+#endif//R64FX_MACHINE_IFACE_HPP

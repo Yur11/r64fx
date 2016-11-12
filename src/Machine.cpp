@@ -1,4 +1,4 @@
-#include "Machine.hpp"
+#include "MachineIface.hpp"
 #include "MachineFlags.hpp"
 #include "MachineImpl.hpp"
 #include "MachinePool.hpp"
@@ -12,7 +12,7 @@ using namespace std;
 namespace r64fx{
 
     
-Machine::Machine(MachinePool* parent_pool, MachineDeploymentFun deploy, MachineWithdrawalFun withdraw)
+MachineIface::MachineIface(MachinePool* parent_pool, MachineDeploymentFun deploy, MachineWithdrawalFun withdraw)
 : m_parent_pool(parent_pool)
 , m_deploy(deploy)
 , m_withdraw(withdraw)
@@ -25,19 +25,19 @@ Machine::Machine(MachinePool* parent_pool, MachineDeploymentFun deploy, MachineW
 }
 
     
-Machine::~Machine()
+MachineIface::~MachineIface()
 {
     
 }
 
 
-MachinePool* Machine::parentPool() const
+MachinePool* MachineIface::parentPool() const
 {
     return m_parent_pool;
 }
 
 
-void Machine::deploy()
+void MachineIface::deploy()
 {
 #ifdef R64FX_DEBUG
     assert(m_parent_pool != nullptr);
@@ -53,7 +53,7 @@ void Machine::deploy()
 }
 
 
-void Machine::withdraw()
+void MachineIface::withdraw()
 {
 #ifdef R64FX_DEBUG
     assert(m_parent_pool != nullptr);
@@ -61,13 +61,13 @@ void Machine::withdraw()
 }
 
 
-bool Machine::isDeployed() const
+bool MachineIface::isDeployed() const
 {
     return m_deployed_impl != nullptr;
 }
 
 
-void Machine::implDeployed(MachineImpl* impl)
+void MachineIface::implDeployed(MachineImpl* impl)
 {
 #ifdef R64FX_DEBUG
     assert(impl != nullptr);

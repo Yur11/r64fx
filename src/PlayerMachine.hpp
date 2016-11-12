@@ -1,12 +1,12 @@
 #ifndef R64FX_PLAYER_MACHINE_HPP
 #define R64FX_PLAYER_MACHINE_HPP
 
-#include "Machine.hpp"
+#include "MachineIface.hpp"
 #include "SoundFileDataPtr.hpp"
 
 namespace r64fx{
 
-class PlayerMachine : public Machine{
+class PlayerMachine : public MachineIface{
     MachineSignalSource m_output;
     SoundFileDataPtr m_sample;
     SoundFileDataPtr m_new_sample;
@@ -42,7 +42,7 @@ public:
 
     MachineSignalSource* output();
 
-    virtual void forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg);
+    virtual void forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg);
 
 public:
     

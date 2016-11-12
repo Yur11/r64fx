@@ -14,13 +14,13 @@ MachinePool::~MachinePool()
 }
     
 
-LinkedList<Machine>::Iterator MachinePool::begin() const
+LinkedList<MachineIface>::Iterator MachinePool::begin() const
 {
     return m_machines.begin();
 }
 
 
-LinkedList<Machine>::Iterator MachinePool::end() const
+LinkedList<MachineIface>::Iterator MachinePool::end() const
 {
     return m_machines.end();
 }

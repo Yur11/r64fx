@@ -5,15 +5,13 @@
 
 namespace r64fx{
     
-class Machine;
-class MachineThread;
-class MachinePoolThreadImpl;
+class MachineIface;
     
 class MachineImpl{
-    Machine* m_iface = nullptr;
+    MachineIface* m_iface = nullptr;
 
 public:
-    MachineImpl(Machine* machine_iface)
+    MachineImpl(MachineIface* machine_iface)
     : m_iface(machine_iface)
     {
         

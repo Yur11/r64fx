@@ -29,7 +29,7 @@ struct FilterMachineImpl : public MachineImpl{
     MachineSinkImpl*    m_sink_impl    = nullptr;
     MachineSourceImpl*  m_source_impl  = nullptr;
 
-    FilterMachineImpl(Machine* iface)
+    FilterMachineImpl(MachineIface* iface)
     : MachineImpl(iface)
     {
 //         m_filter = new SignalNode_Filter;
@@ -106,7 +106,7 @@ struct FilterMachineImpl : public MachineImpl{
 
 namespace{
 
-MachineImpl* deploy_impl(Machine* iface, MachinePoolThreadImpl*)
+MachineImpl* deploy_impl(MachineIface* iface, MachinePoolThreadImpl*)
 {
     return new FilterMachineImpl(iface);
 }
@@ -124,7 +124,7 @@ void withdraw_impl(MachineImpl* impl)
 
 
 FilterMachine::FilterMachine(MachinePool* pool)
-: Machine(pool, deploy_impl, withdraw_impl)
+: MachineIface(pool, deploy_impl, withdraw_impl)
 , m_sink(this, "in")
 , m_source(this, "out")
 {
@@ -173,7 +173,7 @@ MachineSignalSource* FilterMachine::source()
 }
 
 
-void FilterMachine::forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg)
+void FilterMachine::forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg)
 {
     fun(&m_sink,   this, arg);
     fun(&m_source, this, arg);

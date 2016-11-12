@@ -38,7 +38,7 @@ struct PlayerMachineImpl : public MachineImpl{
     MachineSourceImpl* m_output_impl = nullptr;
     float m_playhead_time = 0.0f;
 
-    PlayerMachineImpl(Machine* machine_iface)
+    PlayerMachineImpl(MachineIface* machine_iface)
     : MachineImpl(machine_iface)
     {
 //         m_sampler = new SignalNode_Sampler;
@@ -138,7 +138,7 @@ struct PlayerMachineImpl : public MachineImpl{
 
 namespace{
 
-MachineImpl* deploy_impl(Machine* iface, MachinePoolThreadImpl*)
+MachineImpl* deploy_impl(MachineIface* iface, MachinePoolThreadImpl*)
 {
     return new PlayerMachineImpl(iface);
 }
@@ -154,7 +154,7 @@ void withdraw_impl(MachineImpl* impl)
 
 
 PlayerMachine::PlayerMachine(MachinePool* pool)
-: Machine(pool, deploy_impl, withdraw_impl)
+: MachineIface(pool, deploy_impl, withdraw_impl)
 , m_output(this, "out")
 {
 
@@ -256,7 +256,7 @@ MachineSignalSource* PlayerMachine::output()
 }
 
 
-void PlayerMachine::forEachPort(void (*fun)(MachinePort* port, Machine* machine, void* arg), void* arg)
+void PlayerMachine::forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg)
 {
 //     fun(&m_output, this, arg);
 }
