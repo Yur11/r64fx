@@ -9,6 +9,10 @@
 namespace r64fx{
 
 class MachineImpl;
+class MachinePoolThreadImpl;
+
+typedef MachineImpl*  (*MachineImplDeploymentFun) (MachineIface* iface,  MachinePoolThreadImpl* thread);
+typedef void          (*MachineImplWithdrawalFun) (MachineImpl* impl,    MachinePoolThreadImpl* thread);
 
 class MachinePoolThread : public LinkedList<MachinePoolThread>::Node, private Thread{
     friend class MachineIface;
@@ -30,12 +34,14 @@ public:
 
     void readMessagesFromImpl();
 
+    void deployImpl(MachineImplDeploymentFun fun, MachineIface* iface);
+    
+    void withdrawImpl(MachineImplWithdrawalFun fun, MachineImpl* impl);
+    
 private:
-    void pickDestinationImpl(MachineImpl* dst);
+    void pickDestinationImpl(MachineImpl* dst_impl);
 
-    void sendMessagesToImpl(MachineImpl* dst, MachineMessage* msgs, int nmsgs);
-
-    void deployMachine(MachineDeploymentFun fun, MachineIface* iface);
+    void sendMessagesToImpl(MachineImpl* dst_impl, MachineMessage* msgs, int nmsgs);
 };
 
 }//namespace r64fx

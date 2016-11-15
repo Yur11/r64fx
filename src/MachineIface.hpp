@@ -11,10 +11,6 @@ class MachineIface;
 class MachineImpl;
 class MachinePool;
 class MachinePoolThread;
-class MachinePoolThreadImpl;
-
-typedef MachineImpl*  (*MachineDeploymentFun) (MachineIface* iface, MachinePoolThreadImpl*);
-typedef void          (*MachineWithdrawalFun) (MachineImpl* impl);
 
 class MachineIface : public LinkedList<MachineIface>::Node{
     friend class MachinePool;
@@ -23,30 +19,37 @@ class MachineIface : public LinkedList<MachineIface>::Node{
     MachinePool*        m_parent_pool        = nullptr;
     MachineImpl*        m_deployed_impl      = nullptr;
     MachinePoolThread*  m_deployment_thread  = nullptr;
-    
-    MachineDeploymentFun m_deploy   = nullptr;
-    MachineWithdrawalFun m_withdraw = nullptr;
 
 protected:
-    MachineIface(MachinePool* parent_pool, MachineDeploymentFun deploy, MachineWithdrawalFun withdraw);
-    
+    MachineIface();
+
     virtual ~MachineIface();
 
 public: 
     MachinePool* parentPool() const;
-    
-    void deploy();
-    
-    void withdraw();
-    
+
     bool isDeployed() const;
-    
+
+    void withdraw();
+
     virtual void forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg) = 0;
+    
+protected:
+    inline MachinePoolThread* deploymentThread() const 
+    {
+        return m_deployment_thread;
+    }
+    
+    virtual void deploymentEvent() = 0;
+    
+    virtual void withdrawalEvent() = 0;
+
+    void sendMessagesToImpl(MachineMessage* msgs, int nmsgs);
+    
+    virtual void messageRecievedFromImpl(const MachineMessage &msg) = 0;
     
 private:
     void implDeployed(MachineImpl* impl);
-    
-    virtual void messageRecievedFromImpl(const MachineMessage &msg) = 0;
 };
 
 }//namespace r64fx

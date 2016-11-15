@@ -12,17 +12,46 @@ MachinePool::~MachinePool()
 {
     
 }
-    
 
-LinkedList<MachineIface>::Iterator MachinePool::begin() const
+
+void MachinePool::deployMachine(MachineIface* machine)
 {
-    return m_machines.begin();
+#ifdef R64FX_DEBUG
+    assert(machine != nullptr);
+#endif//R64FX_DEBUG
+    
+    auto thread = getThread();
+#ifdef R64FX_DEBUG
+    assert(thread != nullptr);
+#endif//R64FX_DEBUG
+    
+    machine->m_deployment_thread = thread;
+    machine->deploymentEvent();
 }
 
 
-LinkedList<MachineIface>::Iterator MachinePool::end() const
+void MachinePool::withdrawMachine(MachineIface* machine)
 {
-    return m_machines.end();
+#ifdef R64FX_DEBUG
+    assert(machine != nullptr);
+#endif//R64FX_DEBUG
+
+    machine->withdrawalEvent();
+}
+
+
+void MachinePool::withdrawAllMachines()
+{
+    for(auto machine : machines())
+    {
+        withdrawMachine(machine);
+    }
+}
+
+
+IteratorPair<LinkedList<MachineIface>::Iterator> MachinePool::machines() const
+{
+    return {m_machines.begin(), m_machines.end()};
 }
 
 

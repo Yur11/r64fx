@@ -31,8 +31,9 @@ set(SRC
     Clipboard.cpp
     ClipboardEvents.cpp
     Directory.cpp
-    FilterMachine.cpp
-    FilterView.cpp
+    DummyMachine.cpp
+#     FilterMachine.cpp
+#     FilterView.cpp
     Font.cpp
     IconSupply.cpp
     Image.cpp
@@ -41,8 +42,9 @@ set(SRC
     Keyboard.cpp
     KeyboardModifiers.cpp
     LayoutUtils.cpp
-    Machine.cpp
     MachineConnection.cpp
+    MachineIface.cpp
+    MachineImpl.cpp
     MachinePool.cpp
     MachinePoolThread.cpp
     MachinePort.cpp
@@ -55,9 +57,9 @@ set(SRC
     Painter.cpp
     PainterShaders.cpp
     PainterVertexArrays.cpp
-    PlayerController.cpp
-    PlayerMachine.cpp
-    PlayerView.cpp
+#     PlayerController.cpp
+#     PlayerMachine.cpp
+#     PlayerView.cpp
     Program.cpp
     Project.cpp
     ProjectView.cpp
@@ -67,7 +69,7 @@ set(SRC
     SignalNode_Sampler.cpp
     Shader.cpp
     SoundDriver.cpp
-    SoundDriverMachine.cpp
+#     SoundDriverMachine.cpp
     SoundFile.cpp
     SoundFileData.cpp
     SoundFilePool.cpp

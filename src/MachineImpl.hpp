@@ -6,21 +6,25 @@
 namespace r64fx{
     
 class MachineIface;
+class MachinePoolThreadImpl;
     
 class MachineImpl{
-    MachineIface* m_iface = nullptr;
+    MachineIface*           m_iface                   = nullptr;
+    MachinePoolThreadImpl*  m_deployment_thread_impl  = nullptr;
 
 public:
-    MachineImpl(MachineIface* machine_iface)
+    MachineImpl(MachineIface* machine_iface, MachinePoolThreadImpl* thread)
     : m_iface(machine_iface)
+    , m_deployment_thread_impl(thread)
     {
         
     }
     
     virtual ~MachineImpl() {}
     
-    virtual void messageRecievedFromIface(const MachineMessage &msg) = 0;
+    void sendMessagesToIface(MachineMessage* msgs, int nmsgs);
     
+    virtual void messageRecievedFromIface(const MachineMessage &msg) = 0;
 };
     
 }//namespace r64fx

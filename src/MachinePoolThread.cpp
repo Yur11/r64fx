@@ -93,6 +93,31 @@ void MachinePoolThread::readMessagesFromImpl()
 }
 
 
+
+void MachinePoolThread::deployImpl(MachineImplDeploymentFun fun, MachineIface* iface)
+{
+    pickDestinationImpl(nullptr);
+    
+    MachineMessage msgs[2] = {
+        MachineMessage(MachineToBeDeployed, (void*)iface),
+        MachineMessage(DeployMachine,       (void*)fun)
+    };
+    m_to_thread->write(msgs, 2);
+}
+
+
+void MachinePoolThread::withdrawImpl(MachineImplWithdrawalFun fun, MachineImpl* impl)
+{
+    pickDestinationImpl(nullptr);
+    
+    MachineMessage msgs[2] = {
+        MachineMessage(MachineToBeWithdrawn, (void*)impl),
+        MachineMessage(WithdrawMachine,      (void*)fun)
+    };
+    m_to_thread->write(msgs, 2);
+}
+
+
 void MachinePoolThread::pickDestinationImpl(MachineImpl* dst)
 {
     if(dst != m_dst_impl)
@@ -116,19 +141,6 @@ void MachinePoolThread::sendMessagesToImpl(MachineImpl* dst, MachineMessage* msg
     pickDestinationImpl(dst);
     m_to_thread->write(msgs, nmsgs);
 }
-
-
-void MachinePoolThread::deployMachine(MachineDeploymentFun fun, MachineIface* iface)
-{
-    pickDestinationImpl(nullptr);
-    
-    MachineMessage msgs[2] = {
-        MachineMessage(MachineToBeDeployed, iface),
-        MachineMessage(DeployMachine,       (void*)fun)
-    };
-    m_to_thread->write(msgs, 2);
-}
-
 
 /* ==================================================================================================================== */
 
@@ -168,7 +180,7 @@ void MachinePoolThreadImpl::run(CircularBuffer<MachineMessage>* to_thread, Circu
 #ifdef R64FX_DEBUG
                         assert(machine_to_be_deployed != nullptr);
 #endif//R64FX_DEBUG
-                        auto deployment_fun = (MachineDeploymentFun) msg.value;
+                        auto deployment_fun = (MachineImplDeploymentFun) msg.value;
                         auto impl = deployment_fun(machine_to_be_deployed, this);
                         MachineMessage response_msg(ImplDeployed, impl);
                     }
@@ -181,8 +193,8 @@ void MachinePoolThreadImpl::run(CircularBuffer<MachineMessage>* to_thread, Circu
 #ifdef R64FX_DEBUG
                         assert(machine_to_be_withdrawn != nullptr);
 #endif//R64FX_DEBUG
-                        auto withdrawal_fun = (MachineWithdrawalFun) msg.value;
-                        withdrawal_fun(machine_to_be_withdrawn);
+                        auto withdrawal_fun = (MachineImplWithdrawalFun) msg.value;
+                        withdrawal_fun(machine_to_be_withdrawn, this);
                     }
 #ifdef R64FX_DEBUG
                     else
