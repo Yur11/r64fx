@@ -4,33 +4,35 @@
 namespace r64fx{
 
 class ThreadObjectMessage{
-    unsigned long m1 = 0;
-    unsigned long m2 = 0;
+    unsigned long m_key     = 0;
+    unsigned long m_value   = 0;
 
 public:
-    ThreadObjectMessage(unsigned long p1, unsigned long p2)
-    : m1(p1), m2(p2)
+    ThreadObjectMessage(unsigned long key, unsigned long value)
+    : m_key(key)
+    , m_value(value)
     {
-    }
-    
-    ThreadObjectMessage(unsigned long p1, void* p2)
-    : m1(p1), m2((unsigned long)p2)
-    {
+
     }
 
-    ThreadObjectMessage()
-    : m1(0), m2(0)
+    ThreadObjectMessage(unsigned long key, void* value)
+    : m_key(key)
+    , m_value((unsigned long)value)
     {
+
     }
-    
+
+    ThreadObjectMessage() {}
+
+
     inline unsigned long key() const
     {
-        return m1;
+        return m_key;
     }
-    
+
     inline unsigned long value() const
     {
-        return m2;
+        return m_value;
     }
 };
 
