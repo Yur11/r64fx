@@ -9,42 +9,47 @@ namespace r64fx{
 class ThreadObjectIface;
 class ThreadObjectImpl;
 class ThreadObjectMessage;
-class ThreadObjectCommLink_IfaceEnd;
+class ThreadObjectManagerIface;
+
 
 class ThreadObjectDeploymentAgent{
-    friend class ThreadObjectIface;
-    friend class ThreadObjectImpl;
+    friend class ThreadObjectManagerIface;
+    friend class ThreadObjectManagerImpl;
 
     ThreadObjectIface*  parent_iface   = nullptr;
     ThreadObjectIface*  public_iface   = nullptr;
     ThreadObjectImpl*   deployed_impl  = nullptr;
 
-public:
     virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface, ThreadObjectImpl* parent_impl) = 0;
 };
 
+
 class ThreadObjectWithdrawalAgent{
-    friend class ThreadObjectIface;
-    friend class ThreadObjectImpl;
+    friend class ThreadObjectManagerIface;
+    friend class ThreadObjectManagerImpl;
 
     ThreadObjectIface*  parent_iface    = nullptr;
     ThreadObjectIface*  public_iface    = nullptr;
     ThreadObjectImpl*   withdrawn_impl  = nullptr;
 
-public:
     virtual void withdrawImpl(ThreadObjectImpl* impl) = 0;
 };
 
+
 class ThreadObjectThreadExecAgent{
-public:
+    friend class ThreadObjectManagerIface;
+    friend class ThreadObjectManagerImpl;
+
+    virtual void init() = 0;
     virtual void exec() = 0;
 };
+
 
 typedef LinkedList<ThreadObjectIface>::Iterator ThreadObjectIfaceIterator;
 
 class ThreadObjectIface : public LinkedList<ThreadObjectIface>::Node{
-    friend class ThreadObjectCommLink_IfaceEnd;
-    ThreadObjectCommLink_IfaceEnd*  m_comm_link      = nullptr;
+    friend class ThreadObjectManagerIface;
+    ThreadObjectManagerIface*       m_manager        = nullptr;
     ThreadObjectImpl*               m_deployed_impl  = nullptr;
     ThreadObjectIface*              m_parent         = nullptr;
     LinkedList<ThreadObjectIface>   m_children;
@@ -71,16 +76,22 @@ public:
 
     bool isDeployed() const;
 
+    bool isPending() const;
+    
     bool deploymentPending() const;
 
     bool withdrawalPending() const;
+
+    void deployThreadRoot();
+
+    void withdrawThreadRoot();
+
+    bool isThreadRoot() const;
 
 protected:
     void sendMessagesToImpl(ThreadObjectMessage* msgs, int nmsgs);
 
 private:
-    void dispatchMessage(const ThreadObjectMessage &msg);
-
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg) = 0;
 
     virtual ThreadObjectDeploymentAgent* newDeploymentAgent() = 0;

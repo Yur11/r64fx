@@ -5,13 +5,13 @@
 
 namespace r64fx{
 
-class ThreadObjectCommLink_ImplEnd;
+class ThreadObjectManagerImpl;
 
 class ThreadObjectImpl : public LinkedList<ThreadObjectImpl>::Node{
-    friend class ThreadObjectCommLink_ImplEnd;
-    ThreadObjectCommLink_ImplEnd*  m_comm_link     = nullptr;
-    ThreadObjectIface*             m_iface  = nullptr;
-    ThreadObjectImpl*              m_parent;
+    friend class ThreadObjectManagerImpl;
+    ThreadObjectManagerImpl*       m_manager  = nullptr;
+    ThreadObjectIface*             m_iface    = nullptr;
+    ThreadObjectImpl*              m_parent   = nullptr;
     LinkedList<ThreadObjectImpl>   m_children;
 
 public:
@@ -23,8 +23,6 @@ protected:
     void sendMessagesToIface(ThreadObjectMessage* msgs, int nmsgs);
 
 private:
-    void dispatchMessage(const ThreadObjectMessage &msg);
-
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) = 0;
 };
 
