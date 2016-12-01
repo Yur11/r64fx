@@ -10,6 +10,8 @@ class ThreadObjectIface;
 class ThreadObjectImpl;
 class ThreadObjectMessage;
 class ThreadObjectManagerIface;
+class ThreadObjectManagerImpl;
+typedef void (*ThreadObjectCallbackFun)(ThreadObjectIface* iface, void* arg);
 
 
 class ThreadObjectDeploymentAgent{
@@ -19,8 +21,14 @@ class ThreadObjectDeploymentAgent{
     ThreadObjectIface*  parent_iface   = nullptr;
     ThreadObjectIface*  public_iface   = nullptr;
     ThreadObjectImpl*   deployed_impl  = nullptr;
+    
+    ThreadObjectCallbackFun  done      = nullptr;
+    void*                    done_arg  = nullptr;
 
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface, ThreadObjectImpl* parent_impl) = 0;
+    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface) = 0;
+
+public:
+    virtual ~ThreadObjectDeploymentAgent() {}
 };
 
 
@@ -33,15 +41,25 @@ class ThreadObjectWithdrawalAgent{
     ThreadObjectImpl*   withdrawn_impl  = nullptr;
 
     virtual void withdrawImpl(ThreadObjectImpl* impl) = 0;
+
+public:
+    virtual ~ThreadObjectWithdrawalAgent() {}
 };
 
 
-class ThreadObjectThreadExecAgent{
+class ThreadObjectExecAgent{
     friend class ThreadObjectManagerIface;
     friend class ThreadObjectManagerImpl;
 
-    virtual void init() = 0;
+    ThreadObjectManagerImpl* m_manager_impl = nullptr;
+
     virtual void exec() = 0;
+
+public:
+    virtual ~ThreadObjectExecAgent() {}
+    
+protected:
+    void readMessagesFromIface();
 };
 
 
@@ -58,21 +76,19 @@ protected:
     unsigned int m_flags = 0;
 
 public:
-    ThreadObjectIface(ThreadObjectIface* parent_iface = nullptr);
+    ThreadObjectIface();
 
     virtual ~ThreadObjectIface();
+
+    void deploy(ThreadObjectIface* parent = nullptr, ThreadObjectCallbackFun done = nullptr, void* done_arg = nullptr);
+
+    void withdraw();
+
+    void withdrawAllChildren();
 
     ThreadObjectIface* parent() const;
 
     IteratorPair<ThreadObjectIfaceIterator> children() const;
-
-    void deployChild(ThreadObjectIface* child);
-
-    void withdrawChild(ThreadObjectIface* child);
-
-    void withdrawAllChildren();
-
-    void withdrawFromParent();
 
     bool isDeployed() const;
 
@@ -81,10 +97,6 @@ public:
     bool deploymentPending() const;
 
     bool withdrawalPending() const;
-
-    void deployThreadRoot();
-
-    void withdrawThreadRoot();
 
     bool isThreadRoot() const;
 
@@ -102,9 +114,9 @@ private:
     
     virtual void deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent) = 0;
     
-    virtual ThreadObjectThreadExecAgent* newExecAgent() = 0;
+    virtual ThreadObjectExecAgent* newExecAgent() = 0;
     
-    virtual void deleteExecAgent(ThreadObjectThreadExecAgent* agent) = 0;
+    virtual void deleteExecAgent(ThreadObjectExecAgent* agent) = 0;
 };
 
 }//namespace r64fx

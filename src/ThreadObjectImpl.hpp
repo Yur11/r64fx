@@ -11,8 +11,6 @@ class ThreadObjectImpl : public LinkedList<ThreadObjectImpl>::Node{
     friend class ThreadObjectManagerImpl;
     ThreadObjectManagerImpl*       m_manager  = nullptr;
     ThreadObjectIface*             m_iface    = nullptr;
-    ThreadObjectImpl*              m_parent   = nullptr;
-    LinkedList<ThreadObjectImpl>   m_children;
 
 public:
     ThreadObjectImpl(ThreadObjectIface* iface);

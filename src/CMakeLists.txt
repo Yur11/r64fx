@@ -115,3 +115,20 @@ set(LIBS
 )
 
 target_link_libraries(r64fx ${LIBS})
+
+
+set(test_ThreadObject_SRC
+    test_ThreadObject.cpp 
+    ThreadObject.cpp
+    Thread.cpp 
+    Mutex.cpp 
+    Timer.cpp 
+    current_time.cpp 
+    sleep.cpp 
+)
+
+add_executable(test_ThreadObject ${test_ThreadObject_SRC})
+
+set(test_ThreadObject_LIBS pthread)
+
+target_link_libraries(test_ThreadObject ${test_ThreadObject_LIBS})
