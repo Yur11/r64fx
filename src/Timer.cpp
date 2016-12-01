@@ -1,7 +1,7 @@
 #include "Timer.hpp"
 #include <iostream>
-#include <vector>
 #include <limits>
+#include "LinkedList.hpp"
 #include "Thread.hpp"
 #include "Mutex.hpp"
 #include "current_time.hpp"
@@ -14,7 +14,7 @@ namespace{
 
 void callback_stub(Timer*, void*){}
 
-struct TimerImpl{
+struct TimerImpl : public LinkedList<TimerImpl>::Node{
     Timer*  iface          = nullptr;
     long    interval       = 100;
     long    wakeup_time    = numeric_limits<long>::max();
@@ -29,7 +29,7 @@ struct TimerImpl{
 
 struct TimerThread{
     Thread thread;
-    vector<TimerImpl*> timers;
+    LinkedList<TimerImpl> timers;
 };
 
 
@@ -49,7 +49,7 @@ TimerThread* get_thread()
 
     for(int i=0; i<max_threads; i++)
     {
-        if(g_threads[i].timers.empty())
+        if(g_threads[i].timers.isEmpty())
         {
             if(empty_thread == nullptr)
             {
@@ -95,11 +95,11 @@ Timer::Timer(long interval)
     m_impl->iface = this;
     setInterval(interval);
 
-    TimerThread* thread = get_thread();numeric_limits<long>::max();
+    TimerThread* thread = get_thread();
     if(!thread)
         return;
 
-    thread->timers.push_back(m_impl);
+    thread->timers.append(m_impl);
 }
 
 
@@ -110,15 +110,7 @@ Timer::~Timer()
         TimerThread* thread = get_thread();
         if(thread)
         {
-            auto &timers = thread->timers;
-            for(auto it = timers.begin(); it != timers.end(); it++)
-            {
-                if(*it == m_impl)
-                {
-                    timers.erase(it);
-                    break;
-                }
-            }
+            thread->timers.remove(m_impl);
         }
 
         delete m_impl;
@@ -176,7 +168,7 @@ int Timer::runTimers()
     long curr_time = current_time();
 
     long min_time = numeric_limits<long>::max();
-    for(auto &timer : thread->timers)
+    for(auto timer : thread->timers)
     {
         if(timer->is_running && timer->interval >= 0)
         {
