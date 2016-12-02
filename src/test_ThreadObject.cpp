@@ -90,12 +90,29 @@ private:
 };
 
 
+TestObject tobj1;
+TestObject tobj2;
+TestObject tobj3;
+TestObject tobj4;
+TestObject tobj5;
+
 int main()
 {
-    TestObject tobj;
-    tobj.deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
-        cout << "Deployed!\n";
-    }, nullptr);
+    tobj1.deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
+        cout << "Deployed 1\n";
+        tobj2.deploy(iface, [](ThreadObjectIface* iface, void* arg){
+            cout << "Deployed 2\n";
+            tobj3.deploy(iface, [](ThreadObjectIface* iface, void* arg){
+                cout << "Deployed 3\n";
+            });
+            tobj4.deploy(iface, [](ThreadObjectIface* iface, void* arg){
+                cout << "Deployed 4\n";
+            });
+        });
+        tobj5.deploy(iface, [](ThreadObjectIface* iface, void* arg){
+            cout << "Deployed 5\n";
+        });
+    });
     
     bool running = true;
     while(running)

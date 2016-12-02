@@ -64,7 +64,7 @@ public:
 
     void deployObject(ThreadObjectIface* parent, ThreadObjectIface* child, ThreadObjectCallbackFun done, void* done_arg);
 
-    void withdrawObject(ThreadObjectIface* parent, ThreadObjectIface* child);
+    void withdrawObject(ThreadObjectIface* parent, ThreadObjectIface* child, ThreadObjectCallbackFun done, void* done_arg);
 
 private:
     void dispatchMessageFromImpl(const ThreadObjectMessage &msg);
@@ -109,15 +109,22 @@ void ThreadObjectIface::deploy(ThreadObjectIface* parent, ThreadObjectCallbackFu
 #ifdef R64FX_DEBUG
     assert(!isPending());
     assert(!isDeployed());
-    if(parent)
-    {
-        assert(parent->isDeployed());
-    }
 #endif//R64FX_DEBUG
 
     if(parent)
     {
-        m_manager = parent->m_manager;
+#ifdef R64FX_DEBUG
+        assert(!parent->isPending());
+#endif//R64FX_DEBUG
+        if(parent->isDeployed())
+        {
+            m_manager = parent->m_manager;
+        }
+        else
+        {
+            parent->m_children.append(this);
+            m_parent = parent;
+        }
     }
     else
     {
@@ -129,28 +136,30 @@ void ThreadObjectIface::deploy(ThreadObjectIface* parent, ThreadObjectCallbackFu
         
         m_flags |= R64FX_THREAD_OBJECT_IS_ROOT;
     }
-    
-    m_manager->deployObject(parent, this, done, done_arg);
-    m_flags |= R64FX_THREAD_OBJECT_PENDING;
+
+    if(m_manager)
+    {
+        m_manager->deployObject(parent, this, done, done_arg);
+        m_flags |= R64FX_THREAD_OBJECT_PENDING;
+    }
 }
 
 
-void ThreadObjectIface::withdraw()
+void ThreadObjectIface::withdraw(ThreadObjectCallbackFun done, void* done_arg)
 {
 #ifdef R64FX_DEBUG
-    assert(isDeployed());
+    assert(m_parent != nullptr);
 #endif//R64FX_DEBUG
-    withdrawAllChildren();
 
-    m_flags |= R64FX_THREAD_OBJECT_PENDING;
-}
-
-
-void ThreadObjectIface::withdrawAllChildren()
-{
-    for(auto child : children())
+    if(isDeployed())
     {
-        child->withdraw();
+        m_flags |= R64FX_THREAD_OBJECT_PENDING;
+        m_manager->withdrawObject(m_parent, this, done, done_arg);
+    }
+    else
+    {
+        m_parent->m_children.remove(this);
+        m_parent = nullptr;
     }
 }
 
@@ -272,7 +281,9 @@ inline void ThreadObjectManagerIface::readMessagesFromImpl()
 }
 
 
-inline void ThreadObjectManagerIface::deployObject(ThreadObjectIface* parent, ThreadObjectIface* child, ThreadObjectCallbackFun done, void* done_arg)
+inline void ThreadObjectManagerIface::deployObject(
+    ThreadObjectIface* parent, ThreadObjectIface* child, ThreadObjectCallbackFun done, void* done_arg
+)
 {
     auto agent = child->newDeploymentAgent();
 #ifdef R64FX_DEBUG
@@ -288,7 +299,9 @@ inline void ThreadObjectManagerIface::deployObject(ThreadObjectIface* parent, Th
 }
 
 
-inline void ThreadObjectManagerIface::withdrawObject(ThreadObjectIface* parent, ThreadObjectIface* child)
+inline void ThreadObjectManagerIface::withdrawObject(
+    ThreadObjectIface* parent, ThreadObjectIface* child, ThreadObjectCallbackFun done, void* done_arg
+)
 {
     auto agent = child->newWithdrawalAgent();
 #ifdef R64FX_DEBUG

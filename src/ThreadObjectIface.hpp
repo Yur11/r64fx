@@ -82,9 +82,7 @@ public:
 
     void deploy(ThreadObjectIface* parent = nullptr, ThreadObjectCallbackFun done = nullptr, void* done_arg = nullptr);
 
-    void withdraw();
-
-    void withdrawAllChildren();
+    void withdraw(ThreadObjectCallbackFun done = nullptr, void* done_arg = nullptr);
 
     ThreadObjectIface* parent() const;
 
