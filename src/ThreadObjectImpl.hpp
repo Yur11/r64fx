@@ -12,8 +12,10 @@ class ThreadObjectDeploymentAgent{
     friend class ThreadObjectManagerImpl;
 
     ThreadObjectIface*  parent_iface   = nullptr;
-    ThreadObjectIface*  public_iface   = nullptr;
+    ThreadObjectIface*  child_iface    = nullptr;
     ThreadObjectImpl*   deployed_impl  = nullptr;
+
+    ThreadObjectDeploymentAgent* parent_agent = nullptr;
     
     ThreadObjectCallbackFun  done      = nullptr;
     void*                    done_arg  = nullptr;

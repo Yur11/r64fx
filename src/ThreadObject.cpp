@@ -300,7 +300,7 @@ void ThreadObjectManagerIface::deployObject(
     assert(agent != nullptr);
 #endif//R64FX_DEBUG
     agent->parent_iface = parent;
-    agent->public_iface = child;
+    agent->child_iface  = child;
     agent->done         = done;
     agent->done_arg     = done_arg;
 
@@ -333,7 +333,7 @@ inline void ThreadObjectManagerIface::dispatchMessageFromImpl(const ThreadObject
     if(msg.key() == ObjectDeployed)
     {
         auto agent = (ThreadObjectDeploymentAgent*) msg.value();
-        auto child = agent->public_iface;
+        auto child =  agent->child_iface;
         auto parent = agent->parent_iface;
         if(parent)
         {
@@ -440,7 +440,7 @@ inline void ThreadObjectManagerImpl::dispatchMessageFromIface(const ThreadObject
     if(msg.key() == DeployObject)
     {
         auto agent = (ThreadObjectDeploymentAgent*) msg.value();
-        agent->deployed_impl = agent->deployImpl(agent->public_iface);
+        agent->deployed_impl = agent->deployImpl(agent->child_iface);
         ThreadObjectMessage response_msg(ObjectDeployed, agent);
         sendMessagesToIface(nullptr, &response_msg, 1);
     }
