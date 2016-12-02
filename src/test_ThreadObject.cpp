@@ -11,7 +11,7 @@ using namespace r64fx;
 struct TestObjectImpl : public ThreadObjectImpl{
     TestObjectImpl(ThreadObjectIface* iface) : ThreadObjectImpl(iface)
     {
-        
+        cout << "1: " << iface << " TestObjectImpl\n";
     }
 
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg)
@@ -99,18 +99,18 @@ TestObject tobj5;
 int main()
 {
     tobj1.deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
-        cout << "Deployed 1\n";
+        cout << "0: " << iface << " Deployed 1\n";
         tobj2.deploy(iface, [](ThreadObjectIface* iface, void* arg){
-            cout << "Deployed 2\n";
+            cout << "0: " << iface << " Deployed 2\n";
             tobj3.deploy(iface, [](ThreadObjectIface* iface, void* arg){
-                cout << "Deployed 3\n";
+                cout << "0: " << iface << " Deployed 3\n";
             });
             tobj4.deploy(iface, [](ThreadObjectIface* iface, void* arg){
-                cout << "Deployed 4\n";
+                cout << "0: " << iface << " Deployed 4\n";
             });
         });
         tobj5.deploy(iface, [](ThreadObjectIface* iface, void* arg){
-            cout << "Deployed 5\n";
+            cout << "0: " << iface << " Deployed 5\n";
         });
     });
     

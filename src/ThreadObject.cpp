@@ -62,9 +62,17 @@ public:
 
     void readMessagesFromImpl();
 
-    void deployObject(ThreadObjectIface* parent, ThreadObjectIface* child, ThreadObjectCallbackFun done, void* done_arg);
+    void deployObject(
+        ThreadObjectIface* parent, ThreadObjectIface* child,
+        ThreadObjectCallbackFun done, void* done_arg,
+        ThreadObjectDeploymentAgent* parent_agent = nullptr
+    );
 
-    void withdrawObject(ThreadObjectIface* parent, ThreadObjectIface* child, ThreadObjectCallbackFun done, void* done_arg);
+    void withdrawObject(
+        ThreadObjectIface* parent, ThreadObjectIface* child,
+        ThreadObjectCallbackFun done, void* done_arg,
+        ThreadObjectWithdrawalAgent* parent_agent = nullptr
+    );
 
 private:
     void dispatchMessageFromImpl(const ThreadObjectMessage &msg);
@@ -281,8 +289,10 @@ inline void ThreadObjectManagerIface::readMessagesFromImpl()
 }
 
 
-inline void ThreadObjectManagerIface::deployObject(
-    ThreadObjectIface* parent, ThreadObjectIface* child, ThreadObjectCallbackFun done, void* done_arg
+void ThreadObjectManagerIface::deployObject(
+    ThreadObjectIface* parent, ThreadObjectIface* child,
+    ThreadObjectCallbackFun done, void* done_arg,
+    ThreadObjectDeploymentAgent* parent_agent
 )
 {
     auto agent = child->newDeploymentAgent();
@@ -299,8 +309,10 @@ inline void ThreadObjectManagerIface::deployObject(
 }
 
 
-inline void ThreadObjectManagerIface::withdrawObject(
-    ThreadObjectIface* parent, ThreadObjectIface* child, ThreadObjectCallbackFun done, void* done_arg
+void ThreadObjectManagerIface::withdrawObject(
+    ThreadObjectIface* parent, ThreadObjectIface* child,
+    ThreadObjectCallbackFun done, void* done_arg,
+    ThreadObjectWithdrawalAgent* parent_agent
 )
 {
     auto agent = child->newWithdrawalAgent();

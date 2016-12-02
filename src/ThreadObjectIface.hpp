@@ -11,58 +11,11 @@ class ThreadObjectImpl;
 class ThreadObjectMessage;
 class ThreadObjectManagerIface;
 class ThreadObjectManagerImpl;
+class ThreadObjectDeploymentAgent;
+class ThreadObjectWithdrawalAgent;
+class ThreadObjectExecAgent;
+
 typedef void (*ThreadObjectCallbackFun)(ThreadObjectIface* iface, void* arg);
-
-
-class ThreadObjectDeploymentAgent{
-    friend class ThreadObjectManagerIface;
-    friend class ThreadObjectManagerImpl;
-
-    ThreadObjectIface*  parent_iface   = nullptr;
-    ThreadObjectIface*  public_iface   = nullptr;
-    ThreadObjectImpl*   deployed_impl  = nullptr;
-    
-    ThreadObjectCallbackFun  done      = nullptr;
-    void*                    done_arg  = nullptr;
-
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface) = 0;
-
-public:
-    virtual ~ThreadObjectDeploymentAgent() {}
-};
-
-
-class ThreadObjectWithdrawalAgent{
-    friend class ThreadObjectManagerIface;
-    friend class ThreadObjectManagerImpl;
-
-    ThreadObjectIface*  parent_iface    = nullptr;
-    ThreadObjectIface*  public_iface    = nullptr;
-    ThreadObjectImpl*   withdrawn_impl  = nullptr;
-
-    virtual void withdrawImpl(ThreadObjectImpl* impl) = 0;
-
-public:
-    virtual ~ThreadObjectWithdrawalAgent() {}
-};
-
-
-class ThreadObjectExecAgent{
-    friend class ThreadObjectManagerIface;
-    friend class ThreadObjectManagerImpl;
-
-    ThreadObjectManagerImpl* m_manager_impl = nullptr;
-
-    virtual void exec() = 0;
-
-public:
-    virtual ~ThreadObjectExecAgent() {}
-    
-protected:
-    void readMessagesFromIface();
-};
-
-
 typedef LinkedList<ThreadObjectIface>::Iterator ThreadObjectIfaceIterator;
 
 class ThreadObjectIface : public LinkedList<ThreadObjectIface>::Node{
