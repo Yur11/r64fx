@@ -62,9 +62,9 @@ public:
             next_node = prev_node = nullptr;
         }
 
+    public:
         T* next() const { return (T*)next_node; }
         T* prev() const { return (T*)prev_node; }
-
     };//Node
 
 
