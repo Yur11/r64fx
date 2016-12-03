@@ -9,9 +9,9 @@ using namespace r64fx;
 
 
 struct TestObjectImpl : public ThreadObjectImpl{
-    TestObjectImpl(ThreadObjectIface* iface) : ThreadObjectImpl(iface)
+    TestObjectImpl(int num, ThreadObjectIface* iface) : ThreadObjectImpl(iface)
     {
-        cout << "1: " << iface << " TestObjectImpl\n";
+        cout << "1: " << num << " -> " << iface << " TestObjectImpl\n";
     }
 
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg)
@@ -22,9 +22,11 @@ struct TestObjectImpl : public ThreadObjectImpl{
 
 
 struct TestObjectDeploymentAgent : ThreadObjectDeploymentAgent{
+    int num = 0;
+
     virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface)
     {
-        return new TestObjectImpl(public_iface);
+        return new TestObjectImpl(num, public_iface);
     }
 };
 
@@ -52,6 +54,15 @@ struct TestObjectExecAgent : ThreadObjectExecAgent{
 
 
 class TestObject : public ThreadObjectIface{
+    int m_num = 0;
+
+public:
+    TestObject(int num)
+    : m_num(num)
+    {
+        
+    }
+
 private:
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg)
     {
@@ -60,7 +71,9 @@ private:
 
     virtual ThreadObjectDeploymentAgent* newDeploymentAgent()
     {
-        return new TestObjectDeploymentAgent;
+        auto agent = new TestObjectDeploymentAgent;
+        agent->num = m_num;
+        return agent;
     }
 
     virtual void deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent)
@@ -90,28 +103,21 @@ private:
 };
 
 
-TestObject tobj1;
-TestObject tobj2;
-TestObject tobj3;
-TestObject tobj4;
-TestObject tobj5;
+TestObject tobj1(1);
+TestObject tobj2(2);
+TestObject tobj3(3);
+TestObject tobj4(4);
+TestObject tobj5(5);
 
 int main()
 {
+    tobj2.deploy(&tobj1);
+    tobj3.deploy(&tobj1);
+    tobj4.deploy(&tobj2);
+    tobj5.deploy(&tobj2);
+
     tobj1.deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
-        cout << "0: " << iface << " Deployed 1\n";
-        tobj2.deploy(iface, [](ThreadObjectIface* iface, void* arg){
-            cout << "0: " << iface << " Deployed 2\n";
-            tobj3.deploy(iface, [](ThreadObjectIface* iface, void* arg){
-                cout << "0: " << iface << " Deployed 3\n";
-            });
-            tobj4.deploy(iface, [](ThreadObjectIface* iface, void* arg){
-                cout << "0: " << iface << " Deployed 4\n";
-            });
-        });
-        tobj5.deploy(iface, [](ThreadObjectIface* iface, void* arg){
-            cout << "0: " << iface << " Deployed 5\n";
-        });
+        cout << "Deployed!\n";
     });
     
     bool running = true;

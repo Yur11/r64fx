@@ -26,7 +26,7 @@ class ThreadObjectIface : public LinkedList<ThreadObjectIface>::Node{
     LinkedList<ThreadObjectIface>   m_children;
 
 protected:
-    unsigned int m_flags = 0;
+    unsigned long m_flags = 0;
 
 public:
     ThreadObjectIface();
@@ -35,7 +35,7 @@ public:
 
     void deploy(ThreadObjectIface* parent = nullptr, ThreadObjectCallbackFun done = nullptr, void* done_arg = nullptr);
 
-    void withdraw(ThreadObjectCallbackFun done = nullptr, void* done_arg = nullptr);
+    void withdraw(ThreadObjectCallbackFun done_fun = nullptr, void* done_arg = nullptr);
 
     ThreadObjectIface* parent() const;
 
