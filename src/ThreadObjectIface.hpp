@@ -33,7 +33,7 @@ public:
 
     virtual ~ThreadObjectIface();
 
-    void deploy(ThreadObjectIface* parent = nullptr, ThreadObjectCallbackFun done = nullptr, void* done_arg = nullptr);
+    void deploy(ThreadObjectIface* parent = nullptr, ThreadObjectCallbackFun done_fun = nullptr, void* done_arg = nullptr);
 
     void withdraw(ThreadObjectCallbackFun done_fun = nullptr, void* done_arg = nullptr);
 

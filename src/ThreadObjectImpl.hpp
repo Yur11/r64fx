@@ -30,9 +30,13 @@ class ThreadObjectWithdrawalAgent{
     friend class ThreadObjectManagerIface;
     friend class ThreadObjectManagerImpl;
 
-    ThreadObjectIface*  parent_iface    = nullptr;
-    ThreadObjectIface*  public_iface    = nullptr;
+    ThreadObjectIface*  object_iface    = nullptr;
     ThreadObjectImpl*   withdrawn_impl  = nullptr;
+
+    ThreadObjectWithdrawalAgent* parent_agent = nullptr;
+
+    ThreadObjectCallbackFun  done_fun  = nullptr;
+    void*                    done_arg  = nullptr;
 
     virtual void withdrawImpl(ThreadObjectImpl* impl) = 0;
 
@@ -48,6 +52,8 @@ class ThreadObjectExecAgent{
     ThreadObjectManagerImpl* m_manager_impl = nullptr;
 
     virtual void exec() = 0;
+
+    virtual void terminate() = 0;
 
 public:
     virtual ~ThreadObjectExecAgent() {}

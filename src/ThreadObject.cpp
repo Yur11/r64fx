@@ -23,6 +23,7 @@ enum{
     WithdrawObject,
     ObjectWithdrawn,
     TerminateThread,
+    ThreadTerminated,
 
     PickDestination  = 0xFFFFFFFFFFFFFFFF
 };
@@ -62,7 +63,7 @@ struct ThreadObjectManagerIface{
     void readMessagesFromImpl();
 
     void deployObject(
-        ThreadObjectIface* child,
+        ThreadObjectIface* object,
         ThreadObjectCallbackFun done, void* done_arg,
         ThreadObjectDeploymentAgent* parent_agent
     );
@@ -70,7 +71,7 @@ struct ThreadObjectManagerIface{
     void objectDeployed(ThreadObjectDeploymentAgent* agent);
 
     void withdrawObject(
-        ThreadObjectIface* parent, ThreadObjectIface* child,
+        ThreadObjectIface* object,
         ThreadObjectCallbackFun done, void* done_arg,
         ThreadObjectWithdrawalAgent* parent_agent
     );
@@ -115,6 +116,8 @@ struct ThreadObjectManagerImpl{
     CircularBuffer<ThreadObjectMessage>* m_from_iface = nullptr;
     ThreadObjectIface* m_dst_iface = nullptr;
     ThreadObjectImpl*  m_dst_impl  = nullptr;
+
+    ThreadObjectExecAgent* m_exec_agent = nullptr;
 
     ThreadObjectManagerImpl(CircularBuffer<ThreadObjectMessage>* to_iface, CircularBuffer<ThreadObjectMessage>* from_iface)
     : m_to_iface(to_iface)
@@ -188,6 +191,8 @@ void ThreadObjectManagerIface::deployObject(
     ThreadObjectDeploymentAgent* parent_agent
 )
 {
+    object->m_manager = this;
+
     auto agent = object->newDeploymentAgent();
 #ifdef R64FX_DEBUG
     assert(agent != nullptr);
@@ -268,16 +273,12 @@ void ThreadObjectManagerIface::objectDeployed(ThreadObjectDeploymentAgent* agent
 }
 
 
-void ThreadObjectIface::withdraw(ThreadObjectCallbackFun done, void* done_arg)
+void ThreadObjectIface::withdraw(ThreadObjectCallbackFun done_fun, void* done_arg)
 {
-#ifdef R64FX_DEBUG
-    assert(m_parent != nullptr);
-#endif//R64FX_DEBUG
-
     if(isDeployed())
     {
-        m_flags |= R64FX_THREAD_OBJECT_PENDING;
-        m_manager->withdrawObject(m_parent, this, done, done_arg, nullptr);
+        ThreadObjectManagerIface::alterTreeFlags(this, R64FX_THREAD_OBJECT_PENDING, true);
+        m_manager->withdrawObject(this, done_fun, done_arg, nullptr);
     }
     else
     {
@@ -288,37 +289,66 @@ void ThreadObjectIface::withdraw(ThreadObjectCallbackFun done, void* done_arg)
 
 
 void ThreadObjectManagerIface::withdrawObject(
-    ThreadObjectIface* parent, ThreadObjectIface* child,
-    ThreadObjectCallbackFun done, void* done_arg,
+    ThreadObjectIface* object,
+    ThreadObjectCallbackFun done_fun, void* done_arg,
     ThreadObjectWithdrawalAgent* parent_agent
 )
 {
-    auto agent = child->newWithdrawalAgent();
+    for(;;)
+    {
+        auto agent = object->newWithdrawalAgent();
 #ifdef R64FX_DEBUG
-    assert(agent != nullptr);
+        assert(agent != nullptr);
 #endif//R64FX_DEBUG
-    agent->parent_iface    =  parent;
-    agent->public_iface    =  child;
-    agent->withdrawn_impl  =  child->m_deployed_impl;
+        agent->object_iface    =  object;
+        agent->withdrawn_impl  =  object->m_deployed_impl;
+        agent->done_fun        =  done_fun;
+        agent->done_arg        =  done_arg;
+        agent->parent_agent    =  parent_agent;
+        parent_agent           =  agent;
 
-    ThreadObjectMessage msg(WithdrawObject, agent);
-    sendMessagesToImpl(nullptr, &msg, 1);
+        if(object->m_children.isEmpty())
+        {
+            ThreadObjectMessage msg(WithdrawObject, agent);
+            sendMessagesToImpl(nullptr, &msg, 1);
+            break;
+        }
+        else
+        {
+            object = object->m_children.last();
+        }
+    }
 }
 
 
 void ThreadObjectManagerIface::objectWithdrawn(ThreadObjectWithdrawalAgent* agent)
 {
-    auto child = agent->public_iface;
-    auto parent = agent->parent_iface;
-    if(parent)
+    auto object = agent->object_iface;
+    object->m_manager = nullptr;
+
+    auto parent_agent = agent->parent_agent;
+    object->deleteWithdrawalAgent(agent);
+    if(parent_agent)
     {
-        parent->m_children.remove(child);
+        auto sibling = object->prev();
+        if(sibling)
+        {
+            withdrawObject(sibling, nullptr, nullptr, parent_agent);
+        }
+        else
+        {
+            ThreadObjectMessage msg(WithdrawObject, parent_agent);
+            sendMessagesToImpl(nullptr, &msg, 1);
+        }
     }
-    child->m_parent = nullptr;
-    child->m_deployed_impl = nullptr;
-    child->m_flags &= ~R64FX_THREAD_OBJECT_DEPLOYED;
-    child->m_flags &= ~R64FX_THREAD_OBJECT_PENDING;
-    child->deleteWithdrawalAgent(agent);
+    else
+    {
+        alterTreeFlags(object, (R64FX_THREAD_OBJECT_PENDING | R64FX_THREAD_OBJECT_DEPLOYED), false);
+        if(!object->m_parent)
+        {
+            
+        }
+    }
 }
 
 
@@ -392,7 +422,10 @@ inline void ThreadObjectManagerIface::runThread(ThreadObjectExecAgent* agent)
         auto manager = new ThreadObjectManagerImpl(args->impl_to_iface, args->iface_to_impl);
         delete args;
         agent->m_manager_impl = manager;
+        manager->m_exec_agent = agent;
         agent->exec();
+        ThreadObjectMessage msg(ThreadTerminated);
+        manager->sendMessagesToIface(nullptr, &msg, 1);
         delete manager;
         return nullptr;
     }, args);
@@ -448,6 +481,11 @@ inline void ThreadObjectManagerIface::dispatchMessageFromImpl(const ThreadObject
     else if(msg.key() == ObjectWithdrawn)
     {
         objectWithdrawn((ThreadObjectWithdrawalAgent*) msg.value());
+    }
+    else if(msg.key() == ThreadTerminated)
+    {
+        m_timer->stop();
+        m_thread->join();
     }
     else
     {
@@ -535,6 +573,10 @@ inline void ThreadObjectManagerImpl::dispatchMessageFromIface(const ThreadObject
         agent->withdrawImpl(agent->withdrawn_impl);
         ThreadObjectMessage response_msg(ObjectWithdrawn, agent);
         sendMessagesToIface(nullptr, &response_msg, 1);
+    }
+    else if(msg.key() == TerminateThread)
+    {
+        m_exec_agent->terminate();
     }
     else
     {

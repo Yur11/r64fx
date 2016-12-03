@@ -22,6 +22,13 @@ public:
 
     }
 
+    ThreadObjectMessage(unsigned long key)
+    : m_key(key)
+    , m_value(0)
+    {
+
+    }
+
     ThreadObjectMessage() {}
 
 
