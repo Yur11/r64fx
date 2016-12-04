@@ -1,13 +1,15 @@
 #include "current_time.hpp"
-#include <sys/time.h>
+#include <time.h>
 
 namespace r64fx{
 
-long current_time()
+constexpr unsigned long bseq = 1000 * 1000 * 1000;
+
+unsigned long current_nanoseconds()
 {
-    timeval tv;
-    gettimeofday(&tv, nullptr);
-    return tv.tv_usec + tv.tv_sec * 1000 * 1000;
+    timespec spec;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &spec);
+    return spec.tv_nsec + spec.tv_sec * bseq;
 }
 
 }//namespace r64fx

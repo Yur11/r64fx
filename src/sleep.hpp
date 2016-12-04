@@ -3,7 +3,9 @@
 
 namespace r64fx{
 
-void sleep_microseconds(long useconds);
+void sleep_microseconds(unsigned long mseconds);
+
+void sleep_nanoseconds(unsigned long nseconds);
 
 }//namespace r64fx
 

@@ -3,7 +3,7 @@
 
 namespace r64fx{
 
-long current_time();
+unsigned long current_nanoseconds();
 
 }//namespace r64fx
 

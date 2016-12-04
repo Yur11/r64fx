@@ -15,13 +15,27 @@ namespace{
 void callback_stub(Timer*, void*){}
 
 struct TimerImpl : public LinkedList<TimerImpl>::Node{
-    Timer*  iface          = nullptr;
-    long    interval       = 100;
-    long    wakeup_time    = numeric_limits<long>::max();
-    bool    is_running     = false;
-    void    (*callback)(Timer* timer, void* data)
-                           = callback_stub;
-    void*   callback_data  = nullptr;
+    Timer*           iface;
+    unsigned long    interval;
+    unsigned long    wakeup_time;
+    bool             is_running;
+    void             (*callback)(Timer* timer, void* data);
+    void*            callback_data;
+
+    TimerImpl()
+    {
+        init();
+    }
+
+    void init()
+    {
+        iface          =  nullptr;
+        interval       =  100;
+        wakeup_time    =  numeric_limits<unsigned long>::max();
+        is_running     =  false;
+        callback       =  callback_stub;
+        callback_data  =  nullptr;
+    }
 };
 
 #define m_impl ((TimerImpl*)m)
@@ -31,6 +45,7 @@ struct TimerThread{
     Thread thread;
     LinkedList<TimerImpl> active_timers;
     LinkedList<TimerImpl> spare_timers;
+    bool is_reserved = false;
 };
 
 
@@ -39,7 +54,7 @@ TimerThread g_threads[max_threads];
 Mutex g_thread_mutex;
 
 
-TimerThread* get_thread()
+TimerThread* allocate_thread()
 {
     Thread this_thread = Thread::thisThread();
 
@@ -50,7 +65,7 @@ TimerThread* get_thread()
 
     for(int i=0; i<max_threads; i++)
     {
-        if(g_threads[i].active_timers.isEmpty() && g_threads[i].spare_timers.isEmpty())
+        if((!g_threads[i].is_reserved) && g_threads[i].active_timers.isEmpty() && g_threads[i].spare_timers.isEmpty())
         {
             if(empty_thread == nullptr)
             {
@@ -86,13 +101,12 @@ TimerThread* get_thread()
     return thread;
 }
 
-
 }//namespace
 
 
-Timer::Timer(long interval)
+Timer::Timer(unsigned long interval)
 {
-    TimerThread* thread = get_thread();
+    TimerThread* thread = allocate_thread();
     if(!thread)
         return;
 
@@ -117,7 +131,7 @@ Timer::~Timer()
 {
     if(m_impl)
     {
-        TimerThread* thread = get_thread();
+        TimerThread* thread = allocate_thread();
         if(thread)
         {
             thread->active_timers.remove(m_impl);
@@ -134,13 +148,13 @@ bool Timer::isGood() const
 }
 
 
-void Timer::setInterval(long interval)
+void Timer::setInterval(unsigned long interval)
 {
     m_impl->interval = interval;
 }
 
 
-long Timer::interval() const
+unsigned long Timer::interval() const
 {
     return m_impl->interval;
 }
@@ -156,10 +170,10 @@ void Timer::onTimeout(void (*callback)(Timer* timer, void* data), void* data)
 }
 
 
-void Timer::start()
+void Timer::start(unsigned long start_delay)
 {
     m_impl->is_running = true;
-    m_impl->wakeup_time = current_time();
+    m_impl->wakeup_time = current_nanoseconds() + start_delay;
 }
 
 
@@ -179,24 +193,48 @@ void Timer::suicide()
 {
     if(m_impl)
     {
-        TimerThread* thread = get_thread();
+        TimerThread* thread = allocate_thread();
         thread->active_timers.remove(m_impl);
         thread->spare_timers.append(m_impl);
-        m_impl->iface = nullptr;
+        m_impl->init();
         m = nullptr;
     }
 }
 
 
-int Timer::runTimers()
+TimerThreadId* Timer::reserveThreadId()
 {
-    TimerThread* thread = get_thread();
-    if(!thread)
-        return -1;
+    auto thread = allocate_thread();
+    thread->is_reserved = true;
+    return (TimerThreadId*) thread;
+}
 
-    long curr_time = current_time();
 
-    long min_time = numeric_limits<long>::max();
+void Timer::freeThreadId(TimerThreadId* thread_id)
+{
+    auto thread = (TimerThread*) thread_id;
+    if(thread->active_timers.isEmpty() && thread->spare_timers.isEmpty())
+    {
+        thread->is_reserved = false;
+    }
+}
+
+
+unsigned long Timer::runTimers(TimerThreadId* thread_id)
+{
+    TimerThread* thread;
+    if(thread_id)
+    {
+        thread = (TimerThread*) thread_id;
+    }
+    else
+    {
+        thread = allocate_thread();
+    }
+
+    unsigned long long curr_time = current_nanoseconds();
+
+    unsigned long min_time = numeric_limits<unsigned long>::max();
     auto timer = thread->active_timers.first();
     while(timer)
     {
@@ -208,33 +246,28 @@ int Timer::runTimers()
             if(curr_time >= timer->wakeup_time)
             {
                 timer->callback(timer->iface, timer->callback_data);
-                timer->wakeup_time += timer->interval;
+                timer->wakeup_time = curr_time + timer->interval;
             }
-            else
+
+            if(timer->wakeup_time < min_time)
             {
-                if(timer->wakeup_time < min_time)
-                {
-                    min_time = timer->wakeup_time;
-                }
+                min_time = timer->wakeup_time;
             }
         }
         timer = next_timer;
     }
 
-    if(min_time == numeric_limits<long>::max())
-        return 0;
-
-    long time_diff = min_time - curr_time;
-    if(time_diff > numeric_limits<int>::max())
-        return numeric_limits<int>::max();
-    else
-        return time_diff;
+    if(min_time > curr_time)
+    {
+        return (min_time - curr_time);
+    }
+    return 0;
 }
 
 
 void Timer::cleanup()
 {
-    auto thread = get_thread();
+    auto thread = allocate_thread();
 
     for(;;)
     {
