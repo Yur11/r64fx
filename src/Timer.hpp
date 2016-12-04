@@ -11,7 +11,10 @@ class Timer{
 public:
     Timer(long interval = 0);
 
+    /* When in need to delete the timer from within it's own callback call suicide() before deleting. */
     ~Timer();
+
+    bool isGood() const;
 
     void setInterval(long interval); //in microseconds
 
@@ -25,7 +28,12 @@ public:
 
     bool isRunning();
 
+    void suicide();
+
     static int runTimers();
+
+    /* Cleanup after timers that have committed suicide. */
+    static void cleanup();
 };
 
 }//namespace r64fx

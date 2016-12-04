@@ -29,7 +29,8 @@ struct TimerImpl : public LinkedList<TimerImpl>::Node{
 
 struct TimerThread{
     Thread thread;
-    LinkedList<TimerImpl> timers;
+    LinkedList<TimerImpl> active_timers;
+    LinkedList<TimerImpl> spare_timers;
 };
 
 
@@ -49,7 +50,7 @@ TimerThread* get_thread()
 
     for(int i=0; i<max_threads; i++)
     {
-        if(g_threads[i].timers.isEmpty())
+        if(g_threads[i].active_timers.isEmpty() && g_threads[i].spare_timers.isEmpty())
         {
             if(empty_thread == nullptr)
             {
@@ -91,15 +92,24 @@ TimerThread* get_thread()
 
 Timer::Timer(long interval)
 {
-    m = new TimerImpl;
-    m_impl->iface = this;
-    setInterval(interval);
-
     TimerThread* thread = get_thread();
     if(!thread)
         return;
 
-    thread->timers.append(m_impl);
+    if(thread->spare_timers.isEmpty())
+    {
+        m = new TimerImpl;
+    }
+    else
+    {
+        m = thread->spare_timers.last();
+        thread->spare_timers.remove(m_impl);
+    }
+
+    m_impl->iface = this;
+    setInterval(interval);
+
+    thread->active_timers.append(m_impl);
 }
 
 
@@ -110,11 +120,17 @@ Timer::~Timer()
         TimerThread* thread = get_thread();
         if(thread)
         {
-            thread->timers.remove(m_impl);
+            thread->active_timers.remove(m_impl);
         }
 
         delete m_impl;
     }
+}
+
+
+bool Timer::isGood() const
+{
+    return m != nullptr;
 }
 
 
@@ -159,6 +175,19 @@ bool Timer::isRunning()
 }
 
 
+void Timer::suicide()
+{
+    if(m_impl)
+    {
+        TimerThread* thread = get_thread();
+        thread->active_timers.remove(m_impl);
+        thread->spare_timers.append(m_impl);
+        m_impl->iface = nullptr;
+        m = nullptr;
+    }
+}
+
+
 int Timer::runTimers()
 {
     TimerThread* thread = get_thread();
@@ -168,8 +197,12 @@ int Timer::runTimers()
     long curr_time = current_time();
 
     long min_time = numeric_limits<long>::max();
-    for(auto timer : thread->timers)
+    auto timer = thread->active_timers.first();
+    while(timer)
     {
+        //Make sure we fetch the next_timer before the callback
+        //so that the timer could be removed from the active_timers list.
+        auto next_timer = timer->next();
         if(timer->is_running && timer->interval >= 0)
         {
             if(curr_time >= timer->wakeup_time)
@@ -185,6 +218,7 @@ int Timer::runTimers()
                 }
             }
         }
+        timer = next_timer;
     }
 
     if(min_time == numeric_limits<long>::max())
@@ -195,6 +229,21 @@ int Timer::runTimers()
         return numeric_limits<int>::max();
     else
         return time_diff;
+}
+
+
+void Timer::cleanup()
+{
+    auto thread = get_thread();
+
+    for(;;)
+    {
+        auto timer = thread->spare_timers.first();
+        if(!timer)
+            break;
+        thread->spare_timers.remove(timer);
+        delete timer;
+    }
 }
 
 }//namespace r64fx

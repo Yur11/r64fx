@@ -117,6 +117,28 @@ set(LIBS
 target_link_libraries(r64fx ${LIBS})
 
 
+#########################################################################################
+## Some Tests ###########################################################################
+#########################################################################################
+
+## test_Timer ##
+set(test_Timer_SRC
+    test_Timer.cpp
+    Timer.cpp
+    Thread.cpp
+    Mutex.cpp
+    current_time.cpp
+    sleep.cpp
+)
+
+add_executable(test_Timer ${test_Timer_SRC})
+
+set(test_Timer_LIBS pthread)
+
+target_link_libraries(test_Timer ${test_Timer_LIBS})
+
+
+## test_ThreadObject ##
 set(test_ThreadObject_SRC
     test_ThreadObject.cpp 
     ThreadObject.cpp
