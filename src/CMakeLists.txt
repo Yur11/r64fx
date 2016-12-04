@@ -77,6 +77,7 @@ set(SRC
     SystemUtils.cpp
     TextPainter.cpp
     Thread.cpp
+    TimeUtils.cpp
     Timer.cpp
     UndoRedoChain.cpp
     WaveformUtils.cpp
@@ -95,10 +96,8 @@ set(SRC
     Widget_TabBar.cpp
     Widget_Text.cpp
     Window.cpp
-    current_time.cpp
     gl.cpp
     main.cpp
-    sleep.cpp
 )
 
 add_executable(r64fx ${SRC})
@@ -127,8 +126,7 @@ set(test_Timer_SRC
     Timer.cpp
     Thread.cpp
     Mutex.cpp
-    current_time.cpp
-    sleep.cpp
+    TimeUtils.cpp
 )
 
 add_executable(test_Timer ${test_Timer_SRC})
@@ -145,8 +143,7 @@ set(test_ThreadObject_SRC
     Thread.cpp 
     Mutex.cpp 
     Timer.cpp 
-    current_time.cpp 
-    sleep.cpp 
+    TimeUtils.cpp
 )
 
 add_executable(test_ThreadObject ${test_ThreadObject_SRC})

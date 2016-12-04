@@ -1,13 +1,15 @@
-#include "sleep.hpp"
+#include "TimeUtils.hpp"
 #include <time.h>
 
 namespace r64fx{
 
 constexpr unsigned long bsec = 1000 * 1000 * 1000;
 
-void sleep_microseconds(unsigned long mseconds)
+unsigned long current_nanoseconds()
 {
-    sleep_microseconds(mseconds * 1000);
+    timespec spec;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &spec);
+    return spec.tv_nsec + spec.tv_sec * bsec;
 }
 
 
