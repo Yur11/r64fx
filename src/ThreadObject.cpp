@@ -11,6 +11,18 @@ using std::cout;
 using std::cerr;
 #endif//R64FX_DEBUG
 
+/*
+ * Framework for objects that have their implementations in another thread.
+ *
+ * There are two main classes ThreadObjectIface and ThreadObjectImpl.
+ * ThreadObjectIface lives in the gui thread and provides the public interface for the user.
+ * ThreadObjectImpl is deployed in an implementation thread and does the work.
+ * A communication link is established between the interface and the implementation
+ * that allows for asyncronous non-blocking passing of ThreadObjectMessage instances between the two.
+ *
+ * ThreadObjectIface instances can form parent/child hierarchies. The communication link is created
+ * once when the root object is deployed and is shared with all children in the tree.
+ */
 namespace r64fx{
 
 namespace{
@@ -24,10 +36,11 @@ enum{
     TerminateThread,
     ThreadTerminating,
 
+    /* Reserved. Must not be used by derived classes. */
     PickDestination  = 0xFFFFFFFFFFFFFFFF
 };
 
-}
+}//namespace
 
 
 struct ThreadObjectManagerIface{
@@ -65,9 +78,10 @@ struct ThreadObjectManagerIface{
 
     void dispatchMessageFromImpl(const ThreadObjectMessage &msg);
 
+    /* Don't touch the object after calling. */
     void suicide();
 
-    /* Set or clear two groups of flags of a ThreadObjectIface subtree. */
+    /* Set or clear a group of flags of a ThreadObjectIface subtree. */
     static void alterTreeFlags(ThreadObjectIface* iface, unsigned long f1, bool s1)
     {
         if(s1)
