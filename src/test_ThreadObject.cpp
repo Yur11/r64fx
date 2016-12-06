@@ -2,10 +2,14 @@
 #include "ThreadObjectIface.hpp"
 #include "ThreadObjectImpl.hpp"
 #include "Timer.hpp"
-#include "sleep.hpp"
+#include "TimeUtils.hpp"
 
 using namespace std;
 using namespace r64fx;
+
+enum{
+    Ping
+};
 
 
 struct TestObjectImpl : public ThreadObjectImpl{
@@ -24,7 +28,10 @@ struct TestObjectImpl : public ThreadObjectImpl{
 
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg)
     {
-        
+        if(msg.key() == Ping)
+        {
+            cout << "Ping: " << (int)msg.value() << "\n";
+        }
     }
 };
 
@@ -55,7 +62,7 @@ struct TestObjectExecAgent : ThreadObjectExecAgent{
         while(m_running)
         {
             readMessagesFromIface();
-            sleep_microseconds(1500);
+            sleep_nanoseconds(1500 * 1000);
         }
     }
 
@@ -74,6 +81,12 @@ public:
     : m_num(num)
     {
         
+    }
+
+    void ping(int num)
+    {
+        ThreadObjectMessage msg(Ping, num);
+        sendMessagesToImpl(&msg, 1);
     }
 
 private:
@@ -129,19 +142,6 @@ class Test{
     TestObject m_obj8 = 8;
     TestObject m_obj9 = 9;
 
-    void deployOne()
-    {
-        m_obj1.deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
-            auto m = (Test*) arg;
-            m->withdrawOne();
-        }, this);
-    }
-
-    void withdrawOne()
-    {
-        
-    }
-
     void deployBunch()
     {
         cout << "Deploy Bunch\n";
@@ -156,6 +156,15 @@ class Test{
         m_obj9.deploy(&m_obj5);
         m_obj1.deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
             auto m = (Test*) arg;
+            m->m_obj1.ping(123);
+            m->m_obj2.ping(123);
+            m->m_obj3.ping(123);
+            m->m_obj4.ping(123);
+            m->m_obj5.ping(123);
+            m->m_obj6.ping(123);
+            m->m_obj7.ping(123);
+            m->m_obj8.ping(123);
+            m->m_obj9.ping(123);
             m->withdrawBunch();
         }, this);
     }
@@ -163,7 +172,10 @@ class Test{
     void withdrawBunch()
     {
         cout << "Withdraw Bunch\n";
-        m_obj1.withdraw();
+        m_obj1.withdraw([](ThreadObjectIface* iface, void* arg){
+            auto m = (Test*) arg;
+            m->m_running = false;
+        }, this);
     }
 
 public:
@@ -174,8 +186,9 @@ public:
         while(m_running)
         {
             Timer::runTimers();
-            sleep_microseconds(1500);
+            sleep_nanoseconds(1500 * 1000);
         }
+        Timer::cleanup();
 
         return 0;
     }

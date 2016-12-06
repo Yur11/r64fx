@@ -2,6 +2,7 @@
 #define R64FX_THREAD_OBJECT_IMPL_HPP
 
 #include "LinkedList.hpp"
+#include "ThreadObjectMessage.hpp"
 
 namespace r64fx{
 
@@ -49,6 +50,7 @@ class ThreadObjectExecAgent{
     friend class ThreadObjectManagerIface;
     friend class ThreadObjectManagerImpl;
 
+    ThreadObjectIface*       root_iface   = nullptr;
     ThreadObjectManagerImpl* m_manager_impl = nullptr;
 
     virtual void exec() = 0;
