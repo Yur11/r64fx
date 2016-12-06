@@ -33,7 +33,7 @@ set(SRC
     Clipboard.cpp
     ClipboardEvents.cpp
     Directory.cpp
-    DummyMachine.cpp
+#     DummyMachine.cpp
 #     FilterMachine.cpp
 #     FilterView.cpp
     Font.cpp
@@ -44,13 +44,13 @@ set(SRC
     Keyboard.cpp
     KeyboardModifiers.cpp
     LayoutUtils.cpp
-    MachineConnection.cpp
-    MachineIface.cpp
-    MachineImpl.cpp
-    MachinePool.cpp
-    MachinePoolThread.cpp
-    MachinePort.cpp
-    MachinePortImpl.cpp
+#     MachineConnection.cpp
+#     MachineIface.cpp
+#     MachineImpl.cpp
+#     MachinePool.cpp
+#     MachinePoolThread.cpp
+#     MachinePort.cpp
+#     MachinePortImpl.cpp
     MainView.cpp
     Midi.cpp
     MidiDispatcher.cpp

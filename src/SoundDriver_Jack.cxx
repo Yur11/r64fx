@@ -4,7 +4,7 @@
 #include <jack/midiport.h>
 #include "CircularBuffer.hpp"
 #include "LinkedList.hpp"
-#include "current_time.hpp"
+#include "TimeUtils.hpp"
 
 namespace r64fx{
 
@@ -243,7 +243,7 @@ struct SoundDriver_Jack : public SoundDriver{
     int process(int nframes)
     {
         SoundDriverIOStatus status;
-        status.begin_time = current_time();
+        status.begin_time = current_nanoseconds();
 
         SoundDriverIOPort_Jack* new_port = nullptr;
         while(m_new_ports.read(&new_port, 1))
@@ -335,7 +335,7 @@ struct SoundDriver_Jack : public SoundDriver{
             status_port = nullptr;
         }
 
-        status.end_time = current_time();
+        status.end_time = current_nanoseconds();
         for(auto status_port : m_status_ports)
         {
             status_port->buffer.write(&status, 1);

@@ -8,7 +8,7 @@
 #include "Project.hpp"
 
 #include "Timer.hpp"
-#include "sleep.hpp"
+#include "TimeUtils.hpp"
 
 #include "DummyMachine.hpp"
 
@@ -39,8 +39,8 @@ struct ProgramPrivate : public MainViewEventIface{
         
         while(running)
         {
-            Timer::runTimers();
-            sleep_microseconds(5000);
+            auto time = Timer::runTimers();
+            sleep_nanoseconds(time);
         }
         
         main_view->closeWindow();

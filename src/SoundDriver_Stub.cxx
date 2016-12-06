@@ -3,8 +3,7 @@
 #include "CircularBuffer.hpp"
 #include "LinkedList.hpp"
 #include "Thread.hpp"
-#include "current_time.hpp"
-#include "sleep.hpp"
+#include "TimeUtils.hpp"
 
 namespace r64fx{
     
@@ -255,13 +254,13 @@ private:
         while(m_running)
         {
             SoundDriverIOStatus status;
-            status.begin_time = status.end_time = current_time();
+            status.begin_time = status.end_time = current_nanoseconds();
             for(auto status_port : m_status_ports)
             {
                 status_port->buffer.write(&status, 1);
             }
             
-            sleep_microseconds(100000);
+            sleep_nanoseconds(1000000);
         }
         return nullptr;
     }
