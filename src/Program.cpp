@@ -4,13 +4,9 @@
 #include "ProgramActions.hpp"
 
 #include "MainView.hpp"
-
 #include "Project.hpp"
-
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
-
-#include "DummyMachine.hpp"
 
 #include <iostream>
 
