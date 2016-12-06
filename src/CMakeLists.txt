@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 
+set(CMAKE_CXX_COMPILER "g++")
+
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
 ### Pick one of these!
