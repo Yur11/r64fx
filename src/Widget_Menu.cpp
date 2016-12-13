@@ -463,7 +463,8 @@ void Widget_MenuItem::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event
 {
     if(m_texture && m_texture->isGood())
     {
-        //delete texture
+        auto tm = event->textureManager();
+        tm->deleteTexture(&m_texture);
     }
 }
 

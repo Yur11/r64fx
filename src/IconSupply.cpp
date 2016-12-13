@@ -347,6 +347,7 @@ IconEntry* gen_new_icon(IconName name, int size, IconColors* ic)
     entry->name = name;
     entry->size = size;
     entry->img.load(size, size, 4);
+    entry->colors = ic;
     fill(&(entry->img), ic->fill1);
     switch(name)
     {

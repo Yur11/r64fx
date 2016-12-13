@@ -457,27 +457,27 @@ struct PainterImplImage : public PainterImpl{
         return texture_impl;
     }
 
-    virtual void deleteTexture(PainterTexture1D* &texture)
+    virtual void deleteTexture(PainterTexture1D** texture)
     {
-        if(texture->parentPainter() == this)
+        if(texture[0]->parentPainter() == this)
         {
-            auto texture_impl = static_cast<PainterTexture1DImplImage*>(texture);
+            auto texture_impl = static_cast<PainterTexture1DImplImage*>(texture[0]);
             m_1d_textures.remove(texture_impl);
             texture_impl->free();
             delete texture_impl;
-            texture = nullptr;
+            texture[0] = nullptr;
         }
     }
 
-    virtual void deleteTexture(PainterTexture2D* &texture)
+    virtual void deleteTexture(PainterTexture2D** texture)
     {
-        if(texture->parentPainter() == this)
+        if(texture[0]->parentPainter() == this)
         {
-            auto texture_impl = static_cast<PainterTexture2DImplImage*>(texture);
+            auto texture_impl = static_cast<PainterTexture2DImplImage*>(texture[0]);
             m_2d_textures.remove(texture_impl);
             texture_impl->free();
             delete texture_impl;
-            texture = nullptr;
+            texture[0] = nullptr;
         }
     }
 

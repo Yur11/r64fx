@@ -17,12 +17,19 @@ unsigned long g_tab_bar_count = 0;
     
 Font* g_tab_bar_font = nullptr;
 
+IconColors g_icon_colors;
+
 int g_vert_padding = 5;
 int g_hori_padding = 5;
 
 void init()
 {
     g_tab_bar_font = new Font("", 14, 72);
+
+    g_icon_colors.stroke1 = Color(31, 31, 31, 0);
+    g_icon_colors.fill1   = Color(0, 0, 0, 255);
+    g_icon_colors.stroke2 = Color(63, 63, 63, 0);
+    g_icon_colors.fill2   = Color(223, 223, 223, 0);
 }
 
 void tab_selected_stub(TabHandle* handle, void* payload, void* arg) {}
@@ -75,19 +82,13 @@ public:
             int w = g_hori_padding + m_img.width()  + g_hori_padding;
             int h = g_vert_padding + m_img.height() + g_vert_padding;
 
-            IconColors colors;
-            colors.stroke1 = Color(31, 31, 31, 0);
-            colors.fill1   = Color(0, 0, 0, 255);
-            colors.stroke2 = Color(63, 63, 63, 0);
-            colors.fill2   = Color(223, 223, 223, 0);
-
             if(m_icon_name != IconName::None)
             {
                 if(m_icon_img)
                 {
                     free_icon(&m_icon_img);
                 }
-                m_icon_img = get_icon(m_icon_name, g_tab_bar_font->height() - 2, &colors);
+                m_icon_img = get_icon(m_icon_name, g_tab_bar_font->height() - 2, &g_icon_colors);
             }
 
             if(m_icon_img)
