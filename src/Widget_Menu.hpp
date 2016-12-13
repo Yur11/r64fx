@@ -13,6 +13,7 @@ class Widget_Menu : public Widget{
 public:
     Widget_Menu(Widget* parent = nullptr);
 
+    virtual ~Widget_Menu();
 
     void setParentItem(Widget* parent_item);
 

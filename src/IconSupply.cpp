@@ -3,6 +3,9 @@
 #include "Image.hpp"
 #include "ImageUtils.hpp"
 
+#include <iostream>
+using namespace std;
+
 namespace r64fx{
 
 bool operator!=(const IconColors &a, const IconColors &b)
@@ -352,39 +355,40 @@ IconEntry* gen_new_icon(IconName name, int size, IconColors* ic)
             gen_icon_Page(&(entry->img), size, ic);
             break;
         }
-        
+
         case IconName::DoublePage:
         {
             gen_icon_DoublePage(&(entry->img), size, ic);
             break;
         }
-        
+
         case IconName::Folder:
         {
             gen_icon_Folder(&(entry->img), size, ic);
             break;
         }
-        
+
         case IconName::Diskette:
         {
             gen_icon_Diskette(&(entry->img), size, ic);
             break;
         }
-        
+
         case IconName::DoubleDiskette:
         {
             gen_icon_DoubleDiskette(&(entry->img), size, ic);
             break;
         }
-        
+
         default:
             break;
     }
+    g_icons.append(entry);
     return entry;
 }
-    
+
 }//namespace
-    
+
 Image* get_icon(IconName name, int size, IconColors* ic)
 {
     auto entry = find_existing_icon(name, size, ic);
@@ -396,16 +400,18 @@ Image* get_icon(IconName name, int size, IconColors* ic)
     return &(entry->img);
 }
 
-void free_icon(Image* icon_image)
+void free_icon(Image** icon_image)
 {
-    auto entry = find_existing_icon(icon_image);
+    auto entry = find_existing_icon(*icon_image);
     if(entry)
     {
         entry->user_count--;
         if(entry->user_count == 0)
         {
             entry->img.free();
+            g_icons.remove(entry);
             delete entry;
+            *icon_image = nullptr;
         }
     }
 }

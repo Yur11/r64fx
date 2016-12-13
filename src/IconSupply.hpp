@@ -24,7 +24,7 @@ inline bool operator==(const IconColors &a, const IconColors &b)
 
 Image* get_icon(IconName name, int size, IconColors* ic = nullptr);
 
-void free_icon(Image* icon_image);
+void free_icon(Image** icon_image);
 
 }//namespace r64fx
 

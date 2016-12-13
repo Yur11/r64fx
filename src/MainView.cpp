@@ -384,15 +384,15 @@ MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(par
 
 MainView::~MainView()
 {
-    free_icon(m->icon10);
-    free_icon(m->icon16);
-    free_icon(m->icon18);
-    free_icon(m->icon20);
-    free_icon(m->icon22);
-    free_icon(m->icon24);
-    free_icon(m->icon28);
-    free_icon(m->icon30);
-    free_icon(m->icon32);
+    free_icon(&m->icon10);
+    free_icon(&m->icon16);
+    free_icon(&m->icon18);
+    free_icon(&m->icon20);
+    free_icon(&m->icon22);
+    free_icon(&m->icon24);
+    free_icon(&m->icon28);
+    free_icon(&m->icon30);
+    free_icon(&m->icon32);
     
     m->main_tab_bar->setParent(nullptr);
     delete m->main_tab_bar;
@@ -603,7 +603,6 @@ void MainView::addedToWindowEvent(WidgetAddedToWindowEvent* event)
 
 void MainView::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
 {
-    cout << "MainPart::removedFromWindowEvent()\n";
     childrenRemovedFromWindowEvent(event);
 
     auto tm = event->textureManager();

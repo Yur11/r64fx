@@ -44,7 +44,7 @@ class TabHandle : public Widget{
     void* m_payload             = nullptr;
     Image* m_icon_img           = nullptr;
     Image* m_selected_icon_img  = nullptr;
-    
+
 public:
     TabHandle(Widget* parent, const std::string &caption, IconName icon_name, void* tab_payload) 
     : Widget(parent)
@@ -54,12 +54,15 @@ public:
     {
         resizeAndRealign();
     }
-    
+
     virtual ~TabHandle()
     {
-        
+        if(m_icon_img)
+        {
+            free_icon(&m_icon_img);
+        }
     }
-    
+
     void resizeAndRealign()
     {
         if(m_caption.empty())
@@ -80,40 +83,44 @@ public:
 
             if(m_icon_name != IconName::None)
             {
+                if(m_icon_img)
+                {
+                    free_icon(&m_icon_img);
+                }
                 m_icon_img = get_icon(m_icon_name, g_tab_bar_font->height() - 2, &colors);
-            }            
-            
+            }
+
             if(m_icon_img)
             {
                 w += m_icon_img->width() + 2 + g_hori_padding;
             }
-            
+
             setSize({w, h});
         }
     }
-    
+
     inline std::string caption() const
     {
         return m_caption;
     }
-    
+
     inline void* payload() const
     {
         return m_payload;
     }
-    
+
     void repaintSelected()
     {
         m_flags |= R64FX_TAB_SELECTED;
         repaint();
     }
-    
+
     void repaintDeselected()
     {
         m_flags &= ~R64FX_TAB_SELECTED;
         repaint();
     }
-    
+
 protected:
     virtual void paintEvent(WidgetPaintEvent* event)
     {
@@ -123,7 +130,7 @@ protected:
         {
             x += m_icon_img->width() + 2 + g_hori_padding;
         }
-        
+
         if(m_img.isGood())
         {
             if(m_flags & R64FX_TAB_SELECTED)
@@ -147,13 +154,13 @@ protected:
             p->putImage(m_icon_img, {g_hori_padding, height()/2 - m_icon_img->height()/2});
         }
     }
-    
+
     virtual void mousePressEvent(MousePressEvent* event)
     {
         auto tab_bar = (Widget_TabBar*) parent();
         tab_bar->selectTab(this);
     }
-    
+
     virtual void mouseReleaseEvent(MouseReleaseEvent* event)
     {
 
@@ -175,6 +182,13 @@ Widget_TabBar::Widget_TabBar(Widget* parent) : Widget(parent)
 
 Widget_TabBar::~Widget_TabBar()
 {
+    while(hasChildren())
+    {
+        auto child = popLastChild();
+        child->setParent(nullptr);
+        delete child;
+    }
+
     g_tab_bar_count--;
     if(g_tab_bar_count == 0)
     {

@@ -142,6 +142,17 @@ Widget_Menu::Widget_Menu(Widget* parent)
 }
 
 
+Widget_Menu::~Widget_Menu()
+{
+    while(hasChildren())
+    {
+        auto child = popLastChild();
+        child->setParent(nullptr);
+        delete child;
+    }
+}
+
+
 void Widget_Menu::setParentItem(Widget* parent_item)
 {
     m_parent_item = parent_item;

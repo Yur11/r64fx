@@ -517,16 +517,15 @@ Widget::Widget(Widget* parent)
 
 Widget::~Widget()
 {
+    if(!isWindow())
+        setParent(nullptr);
+
     while(!m_children.isEmpty())
     {
         auto child = m_children.last();
         child->setParent(nullptr);
-        delete child;
     }
 
-    if(!isWindow())
-        setParent(nullptr);
-    
     if(this == g_moused_over_widget)
         g_moused_over_widget = nullptr;
 
