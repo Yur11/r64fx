@@ -227,7 +227,7 @@ void Widget_TabBar::selectTab(TabHandle* tab_handle)
             m_current_tab->repaintDeselected();
         }
         m_tab_selected(tab_handle, tab_handle->payload(), m_tab_selected_arg);
-        
+
         m_current_tab = tab_handle;
         m_current_tab->repaintSelected();
     }

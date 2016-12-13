@@ -18,40 +18,41 @@ ProgramActions*  g_acts     = nullptr;
 
 struct ProgramPrivate : public MainViewEventIface{
     bool running = true;
-    
+
     MainView* main_view = nullptr;
-    
+
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
-    
+
     int exec(int argc, char** argv)
     {
         initActions();
 
         main_view = new MainView(this);
         main_view->openWindow();
-        
+
         newProject();
-        
+
         while(running)
         {
             auto time = Timer::runTimers();
             sleep_nanoseconds(time);
         }
-        
+
         main_view->closeWindow();
+        closeAllProjects();
         delete main_view;
 
         cleanupActions();
 
         return 0;
     }
-    
+
     void newSession()
     {
         
     }
-    
+
     void openSession()
     {
         
@@ -76,11 +77,16 @@ struct ProgramPrivate : public MainViewEventIface{
     {
         auto project = new Project;
         open_projects.append(project);
-        current_project = project;
-        
+        setCurrentProject(project);
+
         main_view->addMainPartOption(project, "Untitled");
         main_view->setMainPartWidget(project->view());
         main_view->repaint();
+    }
+
+    void setCurrentProject(Project* project)
+    {
+        current_project = project;
     }
 
     void openProject()
@@ -98,18 +104,19 @@ struct ProgramPrivate : public MainViewEventIface{
         
     }
 
+    void closeAllProjects()
+    {
+        while(!open_projects.isEmpty())
+        {
+            auto proj = open_projects.last();
+            open_projects.remove(proj);
+            delete proj;
+        }
+    }
+
     void createPlayer()
     {
         cout << "Create Player!\n";
-    }
-
-    void closeProject()
-    {
-        if(current_project)
-        {
-            open_projects.remove(current_project);
-            delete current_project;
-        }
     }
 
     void cut()
@@ -136,11 +143,11 @@ struct ProgramPrivate : public MainViewEventIface{
     {
         
     }
-    
+
     void initActions();
 
     void cleanupActions();
-    
+
     virtual void mainPartOptionSelected(void* option)
     {
         
@@ -254,7 +261,7 @@ class Action_CloseProject : public Action{
 public:
     Action_CloseProject(ProgramPrivate* pp) : Action("Close Project"), m(pp) {}
 
-    virtual void exec() { m->closeProject(); }
+    virtual void exec() { /*m->closeCurrentProject();*/ }
 };
 
 
