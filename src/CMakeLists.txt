@@ -55,6 +55,7 @@ set(SRC
     Midi.cpp
     MidiDispatcher.cpp
     Module.cpp
+    Module_Player.cpp
     Mouse.cpp
     Mutex.cpp
     Painter.cpp
@@ -80,6 +81,7 @@ set(SRC
     SystemUtils.cpp
     TextPainter.cpp
     Thread.cpp
+    ThreadObject.cpp
     TimeUtils.cpp
     Timer.cpp
     UndoRedoChain.cpp

@@ -4,8 +4,10 @@
 namespace r64fx{
 
 class Module{
+    friend class ModulePrivate;
+    void* m = nullptr;
 
-public:
+protected:
     Module();
 
     virtual ~Module();
