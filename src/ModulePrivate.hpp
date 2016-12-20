@@ -6,6 +6,27 @@
 
 namespace r64fx{
 
+class ModuleThreadObjectIface : public ThreadObjectIface{
+    virtual void messageFromImplRecieved(const ThreadObjectMessage &msg);
+
+    virtual void deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent);
+
+    virtual void deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent);
+
+    virtual ThreadObjectExecAgent* newExecAgent();
+
+    virtual void deleteExecAgent(ThreadObjectExecAgent* agent);
+};
+
+
+class ModuleThreadObjectImpl : public ThreadObjectImpl{
+    virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg);
+
+public:
+    using ThreadObjectImpl::ThreadObjectImpl;
+};
+
+
 class ModuleThreadObjectDeploymentAgent : public ThreadObjectDeploymentAgent{
     virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface);
 };
@@ -22,27 +43,6 @@ class ModuleThreadObjectExecAgent : public ThreadObjectExecAgent{
     virtual void exec();
 
     virtual void terminate();
-};
-
-
-class ModuleThreadObjectImpl : public ThreadObjectImpl{
-    virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg);
-
-public:
-    using ThreadObjectImpl::ThreadObjectImpl;
-};
-
-
-class ModuleThreadObjectIface : public ThreadObjectIface{
-    virtual void messageFromImplRecieved(const ThreadObjectMessage &msg);
-
-    virtual void deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent);
-
-    virtual void deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent);
-
-    virtual ThreadObjectExecAgent* newExecAgent();
-
-    virtual void deleteExecAgent(ThreadObjectExecAgent* agent);
 };
 
 
