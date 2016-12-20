@@ -36,11 +36,7 @@ public:
 class ModuleThreadObjectIface : public ThreadObjectIface{
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg);
 
-    virtual ThreadObjectDeploymentAgent* newDeploymentAgent();
-
     virtual void deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent);
-
-    virtual ThreadObjectWithdrawalAgent* newWithdrawalAgent();
 
     virtual void deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent);
 

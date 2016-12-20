@@ -40,8 +40,8 @@ class PlayerControllerPrivate
 public:
     PlayerControllerPrivate()
     {
-//         m_view = new PlayerView(this);
-//         m_view->openWindow();
+        m_view = new PlayerView(this);
+        m_view->openWindow();
 // 
 //         m_pool = new MachinePool;
 // 
@@ -106,8 +106,8 @@ public:
 
     virtual ~PlayerControllerPrivate()
     {
-//         delete m_view;
-// 
+        delete m_view;
+
 //         m_machine->withdraw();
 //         delete m_machine;
 // 

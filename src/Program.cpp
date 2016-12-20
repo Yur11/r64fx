@@ -8,6 +8,8 @@
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
 
+#include "Player.hpp"
+
 #include <iostream>
 
 using namespace std;

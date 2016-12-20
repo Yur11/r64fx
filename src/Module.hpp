@@ -11,7 +11,9 @@ protected:
     Module();
 
     virtual ~Module();
-};    
+};
+
+typedef void (*ModuleCallback)(Module* module, void* arg);
 
 }//namespace r64fx
 

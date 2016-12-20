@@ -55,15 +55,18 @@ set(SRC
     Midi.cpp
     MidiDispatcher.cpp
     Module.cpp
+    Module_Oscillator.cpp
     Module_Player.cpp
     Mouse.cpp
     Mutex.cpp
+    Oscillator.cpp
     Painter.cpp
     PainterShaders.cpp
     PainterVertexArrays.cpp
 #     PlayerController.cpp
 #     PlayerMachine.cpp
-#     PlayerView.cpp
+    Player.cpp
+    PlayerView.cpp
     Program.cpp
     Project.cpp
     ProjectView.cpp

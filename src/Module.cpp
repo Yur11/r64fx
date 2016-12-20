@@ -51,21 +51,9 @@ void ModuleThreadObjectIface::messageFromImplRecieved(const ThreadObjectMessage 
 }
 
 
-ThreadObjectDeploymentAgent* ModuleThreadObjectIface::newDeploymentAgent()
-{
-    return new ModuleThreadObjectDeploymentAgent;
-}
-
-
 void ModuleThreadObjectIface::deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent)
 {
     delete agent;
-}
-
-
-ThreadObjectWithdrawalAgent* ModuleThreadObjectIface::newWithdrawalAgent()
-{
-    return new ModuleThreadObjectWithdrawalAgent;
 }
 
 
