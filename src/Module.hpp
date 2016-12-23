@@ -3,6 +3,41 @@
 
 namespace r64fx{
 
+class Module;
+
+enum class ModulePortType{
+    Bad,
+    Signal,
+    Sequencer
+};
+
+class ModulePort{
+    ModulePortType m_type = ModulePortType::Bad;
+
+public:
+    ModulePort(ModulePortType type) : m_type(type) {}
+
+    ModulePort() {}
+
+    inline ModulePortType type() const { return m_type; }
+};
+
+class ModuleSink : public ModulePort{
+public:
+    using ModulePort::ModulePort;
+};
+
+class ModuleSource : public ModulePort{
+public:
+    using ModulePort::ModulePort;
+};
+
+
+typedef void (*ModuleCallback)(Module* module, void* arg);
+
+typedef void (*ModulePortCallback)(ModulePort* port, void* arg);
+
+
 class Module{
     friend class ModulePrivate;
     void* m = nullptr;
@@ -11,9 +46,20 @@ protected:
     Module();
 
     virtual ~Module();
+
+    virtual void forEachPort(ModulePortCallback callback);
 };
 
-typedef void (*ModuleCallback)(Module* module, void* arg);
+
+class ModuleConnection{
+    Module*        m_source_module  = nullptr;
+    ModuleSource*  m_source_port    = nullptr;
+    Module*        m_sink_module    = nullptr;
+    ModuleSink*    m_sink_port      = nullptr;
+
+public:
+    ModuleConnection(Module* source_module, ModuleSource* source_port, Module* sink_module, ModuleSink* sink_port);
+};
 
 }//namespace r64fx
 
