@@ -72,9 +72,9 @@ set(SRC
     Project.cpp
     ProjectView.cpp
     SignalGraph.cpp
-    SignalNode_BufferIO.cpp
-    SignalNode_Filter.cpp
-    SignalNode_Sampler.cpp
+#     SignalNode_BufferIO.cpp
+#     SignalNode_Filter.cpp
+#     SignalNode_Sampler.cpp
     Shader.cpp
     SoundDriver.cpp
 #     SoundDriverMachine.cpp

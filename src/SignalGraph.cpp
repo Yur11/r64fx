@@ -5,188 +5,48 @@ using namespace std;
 
 namespace r64fx{
 
-SignalGraphProcessable::~SignalGraphProcessable()
+
+void SignalEdge::setParent(SignalNode* node)
 {
-    removeFromGraph();
+    if(m_parent)
+        m_parent->m_edges.remove(this);
+    m_parent = node;
+    if(m_parent)
+        node->m_edges.append(this);
 }
 
 
-void SignalGraphProcessable::addedToGraph(SignalGraph* graph)
+SignalNode* SignalEdge::parent() const
 {
-    
+    return m_parent;
 }
 
 
-void SignalGraphProcessable::aboutToBeRemovedFromGraph(SignalGraph* graph)
+void SignalNode::setParent(SignalNode* node)
 {
-    
+    if(m_parent)
+        m_parent->m_nodes.remove(this);
+    m_parent = node;
+    if(m_parent)
+        node->m_nodes.append(this);
 }
 
 
-void SignalGraphProcessable::removeFromGraph()
+SignalNode* SignalNode::parent() const
 {
-    if(m_graph)
-    {
-        m_graph->removeItem(this);
-    }
-}
-    
-    
-void SignalGraphProcessable::prepare()
-{
-    
+    return m_parent;
 }
 
 
-void SignalGraphProcessable::processSample(int i)
+IteratorPair<LinkedList<SignalNode>::Iterator> SignalNode::nodes() const
 {
-    
+    return {m_nodes.begin(), m_nodes.end()};
 }
 
 
-void SignalGraphProcessable::finish()
+IteratorPair<LinkedList<SignalEdge>::Iterator> SignalNode::edges() const
 {
-    
-}
-
-
-SignalConnection::SignalConnection(SignalSource* source, SignalSink* sink)
-: m_source(source)
-, m_sink(sink)
-{
-    
-}
-
-
-void SignalConnection::setSource(SignalSource* source)
-{
-    m_source = source;
-}
-    
-    
-SignalSource* SignalConnection::source() const
-{
-    return m_source;
-}
-
-
-void SignalConnection::setSink(SignalSink* sink)
-{
-    m_sink = sink;
-}
-
-
-SignalSink* SignalConnection::sink() const
-{
-    return m_sink;
-}
-    
-    
-void SignalConnection::processSample(int i)
-{
-    m_sink[0][0] = m_source[0][0];
-}
-
-
-void SignalGraph::addItem(SignalGraphProcessable* item)
-{
-    if(item->graph() != this)
-    {
-        m_items.append(item);
-        item->setGraph(this);
-        item->addedToGraph(this);
-    }
-}
-    
-    
-void SignalGraph::removeItem(SignalGraphProcessable* item)
-{
-    if(item->graph() == this)
-    {
-        item->aboutToBeRemovedFromGraph(this);
-        item->setGraph(nullptr);
-        m_items.remove(item);
-    }
-}
-
-
-void SignalGraph::clear()
-{
-    while(m_items.last())
-        removeItem(m_items.last());
-}
-
-
-void SignalGraph::replaceSource(SignalSource* old_source, SignalSource* new_source)
-{
-    for(auto item : m_items)
-    {
-        auto signal_connection = dynamic_cast<SignalConnection*>(item);
-        if(signal_connection)
-        {
-            if(signal_connection->source() == old_source)
-            {
-                signal_connection->setSource(new_source);
-            }
-        }
-        else
-        {
-            auto signal_graph = dynamic_cast<SignalGraph*>(item);
-            {
-                signal_graph->replaceSource(old_source, new_source);
-            }
-        }
-    }
-}
-
-
-void SignalGraph::replaceSink(SignalSink* old_sink, SignalSink* new_sink)
-{
-    for(auto item : m_items)
-    {
-        auto signal_connection = dynamic_cast<SignalConnection*>(item);
-        if(signal_connection)
-        {
-            if(signal_connection->sink() == old_sink)
-            {
-                signal_connection->setSink(new_sink);
-            }
-        }
-        else
-        {
-            auto signal_graph = dynamic_cast<SignalGraph*>(item);
-            {
-                signal_graph->replaceSink(old_sink, new_sink);
-            }
-        }
-    }
-}
-
-
-void SignalGraph::prepare()
-{
-    for(auto item : m_items)
-    {
-        item->prepare();
-    }
-}
-    
-    
-void SignalGraph::processSample(int i)
-{
-    for(auto item : m_items)
-    {
-        item->processSample(i);
-    }
-}
-
-
-void SignalGraph::finish()
-{
-    for(auto item : m_items)
-    {
-        item->finish();
-    }
+    return {m_edges.begin(), m_edges.end()};
 }
 
 }//namespace r64fx
