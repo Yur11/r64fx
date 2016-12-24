@@ -5,48 +5,87 @@ using namespace std;
 
 namespace r64fx{
 
-
-void SignalEdge::setParent(SignalNode* node)
+SignalGraphElement::~SignalGraphElement()
 {
-    if(m_parent)
-        m_parent->m_edges.remove(this);
-    m_parent = node;
-    if(m_parent)
-        node->m_edges.append(this);
+    
 }
 
 
-SignalNode* SignalEdge::parent() const
+void SignalGraphElement::setParent(SignalNode* node)
+{
+    if(m_parent)
+        m_parent->m_subgraph.remove(this);
+    m_parent = node;
+    if(m_parent)
+        node->m_subgraph.append(this);
+}
+
+
+SignalNode* SignalGraphElement::parent() const
 {
     return m_parent;
 }
 
 
-void SignalNode::setParent(SignalNode* node)
+SignalPort::SignalPort(SignalNode* parent)
+: m_addr(new float)
+, m_parent(parent)
 {
-    if(m_parent)
-        m_parent->m_nodes.remove(this);
-    m_parent = node;
-    if(m_parent)
-        node->m_nodes.append(this);
+    
 }
 
 
-SignalNode* SignalNode::parent() const
+SignalPort::~SignalPort()
 {
-    return m_parent;
+    delete m_addr;
 }
 
 
-IteratorPair<LinkedList<SignalNode>::Iterator> SignalNode::nodes() const
+SignalNode::SignalNode()
 {
-    return {m_nodes.begin(), m_nodes.end()};
+    
 }
 
 
-IteratorPair<LinkedList<SignalEdge>::Iterator> SignalNode::edges() const
+SignalNode::~SignalNode()
 {
-    return {m_edges.begin(), m_edges.end()};
+    
+}
+
+
+void SignalNode::prologue()
+{
+    
+}
+
+
+void SignalNode::routine(int i)
+{
+    
+}
+
+
+void SignalNode::epilogue()
+{
+    
+}
+
+
+SignalEdge::SignalEdge(SignalSource* source, SignalSink* sink, SignalNode* parent)
+{
+    
+}
+
+
+SignalEdge::~SignalEdge()
+{
+    
+}
+
+
+void SignalEdge::routine(int i)
+{
+    (void)i;
 }
 
 }//namespace r64fx

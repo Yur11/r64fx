@@ -72,6 +72,7 @@ set(SRC
     Project.cpp
     ProjectView.cpp
     SignalGraph.cpp
+    SignalNode_Buffer.cpp
 #     SignalNode_BufferIO.cpp
 #     SignalNode_Filter.cpp
 #     SignalNode_Sampler.cpp

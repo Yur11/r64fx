@@ -8,27 +8,38 @@ namespace r64fx{
 
 class SignalNode;
 
+/* Base class for Nodes and edges. */
+class SignalGraphElement : public LinkedList<SignalGraphElement>::Node{
+    SignalNode* m_parent = nullptr;
+
+public:
+    virtual ~SignalGraphElement();
+
+    void setParent(SignalNode* parent);
+
+    SignalNode* parent() const;
+
+protected:
+    virtual void prologue() = 0;
+
+    virtual void routine(int i) = 0;
+
+    virtual void epilogue() = 0;
+};
+
+
 class SignalPort{
     float*      m_addr   = nullptr;
     SignalNode* m_parent = nullptr;
 
 public:
-    SignalPort(float* addr, SignalNode* parent = nullptr) 
-    : m_addr(addr) 
-    , m_parent(parent)
-    {}
+    SignalPort(SignalNode* parent = nullptr);
 
-    SignalPort() {}
+    ~SignalPort();
 
     inline SignalNode* parentNode() const { return m_parent; }
 
-    inline void setAddr(float* addr) { m_addr = addr; }
-
-    inline float* addr() const { return m_addr; }
-
-    inline float &operator[](int i) { return m_addr[i]; }
-
-    inline float &operator*() { return m_addr[0]; }
+    inline float &operator[](unsigned long index) { return m_addr[index]; }
 };
 
 
@@ -44,7 +55,25 @@ public:
 };
 
 
-class SignalEdge : public LinkedList<SignalEdge>::Node{
+class SignalNode : public SignalGraphElement{
+    friend class SignalGraphElement;
+    LinkedList<SignalGraphElement> m_subgraph;
+
+public:
+    SignalNode();
+
+    virtual ~SignalNode();
+
+protected:
+    virtual void prologue();
+
+    virtual void routine(int i);
+
+    virtual void epilogue();
+};
+
+
+class SignalEdge : public SignalGraphElement{
     SignalNode*   m_parent = nullptr;
     SignalSource* m_source = nullptr;
     SignalSink*   m_sink   = nullptr;
@@ -52,26 +81,10 @@ class SignalEdge : public LinkedList<SignalEdge>::Node{
 public:
     SignalEdge(SignalSource* source, SignalSink* sink, SignalNode* parent = nullptr);
 
-    void setParent(SignalNode* node);
+    virtual ~SignalEdge();
 
-    SignalNode* parent() const;
-};
-
-
-class SignalNode : public LinkedList<SignalNode>::Node{
-    friend class SignalEdge;
-    SignalNode* m_parent = nullptr;
-    LinkedList<SignalNode> m_nodes;
-    LinkedList<SignalEdge> m_edges;
-
-public:
-    void setParent(SignalNode* node);
-
-    SignalNode* parent() const;
-
-    IteratorPair<LinkedList<SignalNode>::Iterator> nodes() const;
-
-    IteratorPair<LinkedList<SignalEdge>::Iterator> edges() const;
+private:
+    virtual void routine(int i);
 };
 
 }//namespace r64fx
