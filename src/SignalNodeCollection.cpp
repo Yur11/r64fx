@@ -1,4 +1,4 @@
-#include "SignalNode_Buffer.hpp"
+#include "SignalNodeCollection.hpp"
 
 namespace r64fx{
 
