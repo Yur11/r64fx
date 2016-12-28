@@ -1,36 +1,33 @@
 #ifndef X86_64_JIT_ASSEMBLER_H
 #define X86_64_JIT_ASSEMBLER_H
 
-#ifdef DEBUG
+#ifdef R64FX_DEBUG
 #include <assert.h>
-#include <sstream>
-#endif//DEBUG
+#endif//R64FX_DEBUG
 
-#include "shared/binary_constants.hpp"
+#ifdef R64FX_DEBUG_JIT_STDOUT
+#include <iostream>
+#endif//R64FX_DEBUG_JIT_STDOUT_JIT_STDOUT
+
+#include "binary_constants.hpp"
 
 namespace r64fx{
 
-    
-void* alloc_pages_raw(int npages);
+void* alloc_aligned_memory(int alignment, int nbytes);
 
-void* alloc_aligned_raw(int alignment, int nbytes);
-    
-template<typename T> T alloc_pages(int npages) { return (T) alloc_pages_raw(npages); }
-
-template<typename T> T alloc_aligned(int alignment, int nbytes) { return (T) alloc_aligned_raw(alignment, nbytes); }
-
+int memory_page_size();
 
 /* Immediate operands. */
 class Imm8{
     friend class CodeBuffer;
     unsigned char byte;
-    
+
 public:
     Imm8(unsigned char byte)
     {
         this->byte = byte;
     }
-    
+
     inline operator unsigned char() const { return byte; }
     inline operator   signed char() const { return byte; }
 };
@@ -41,13 +38,13 @@ class Imm16{
         unsigned short word;
         unsigned char byte[2];
     }bytes;
-    
+
 public:
     explicit Imm16(unsigned short word)
     {
         bytes.word = word;
     }
-    
+
     inline operator unsigned short() const { return bytes.word; }
     inline operator   signed short() const { return bytes.word; }
 };
@@ -59,13 +56,13 @@ class Imm32{
         unsigned int dword;
         unsigned char byte[4];
     }bytes;
-    
+
 public:
     explicit Imm32(unsigned int dword)
     {
         bytes.dword = dword;
     }
-    
+
     inline operator unsigned int() const { return bytes.dword; }
     inline operator   signed int() const { return bytes.dword; }
 };
@@ -77,15 +74,15 @@ class Imm64{
         unsigned long qword;
         unsigned char byte[8];
     }bytes;
-    
+
 public:
     explicit Imm64(void* ptr) : Imm64((unsigned long)ptr) {}
-    
+
     explicit Imm64(unsigned long qword)
     {
         bytes.qword = qword;
     }
-    
+
     inline operator unsigned long int() const { return bytes.qword; }
     inline operator   signed long int() const { return bytes.qword; }
 }; 
@@ -109,26 +106,26 @@ class Register{
 
 public:
     Register(const unsigned char bits) : _bits(bits) {}
-    
+
     inline unsigned char bits() const { return _bits; }
-    
+
     inline unsigned char code() const { return _bits; }
-    
+
     /** @brief R or B bit of the REX prefix.*/
     inline bool prefix_bit() const { return _bits & b1000; }    
 };
 
 class GPR64 : public Register{
-#ifdef DEBUG
+#ifdef R64FX_DEBUG_JIT_STDOUT
     static const char* names[];
-#endif//DEBUG
-    
+#endif//R64FX_DEBUG_JIT_STDOUT
+
 public:
     explicit GPR64(const unsigned char bits) : Register(bits) {}
-    
-#ifdef DEBUG
+
+#ifdef R64FX_DEBUG_JIT_STDOUT
     inline const char* name() const { return names[Register::code()]; }
-#endif//DEBUG
+#endif//R64FX_DEBUG_JIT_STDOUT
 };
 
 const GPR64
@@ -152,16 +149,16 @@ const GPR64
 
 
 class GPR32 : public Register{
-#ifdef DEBUG
+#ifdef R64FX_DEBUG_JIT_STDOUT
     static const char* names[];
-#endif//DEBUG
-    
+#endif//R64FX_DEBUG_JIT_STDOUT
+
 public:
     explicit GPR32(const unsigned char bits) : Register(bits) {}
-    
-#ifdef DEBUG
+
+#ifdef R64FX_DEBUG_JIT_STDOUT
     inline const char* name() const { return names[Register::code()]; }
-#endif//DEBUG
+#endif//R64FX_DEBUG_JIT_STDOUT
 };
 
 const GPR32
@@ -185,16 +182,16 @@ const GPR32
 
 
 class GPR16 : public Register{
-#ifdef DEBUG
+#ifdef R64FX_DEBUG_JIT_STDOUT
     static const char* names[];
-#endif//DEBUG
+#endif//R64FX_DEBUG_JIT_STDOUT
     
 public:
     explicit GPR16(const unsigned char bits) : Register(bits) {}
-    
-#ifdef DEBUG
+
+#ifdef R64FX_DEBUG_JIT_STDOUT
     inline const char* name() const { return names[Register::code()]; }
-#endif//DEBUG
+#endif//R64FX_DEBUG_JIT_STDOUT
 };
 
 const GPR16
@@ -210,16 +207,16 @@ const GPR16
 
 
 class GPR8 : public Register{
-#ifdef DEBUG
+#ifdef R64FX_DEBUG_JIT_STDOUT
     static const char* names[];
-#endif//DEBUG
-    
+#endif//R64FX_DEBUG_JIT_STDOUT
+
 public:
     explicit GPR8(const unsigned char bits) : Register(bits) {}
-    
-#ifdef DEBUG
+
+#ifdef R64FX_DEBUG_JIT_STDOUT
     inline const char* name() const { return names[Register::code()]; }
-#endif//DEBUG
+#endif//R64FX_DEBUG_JIT_STDOUT
 };
 
 const GPR8
@@ -235,16 +232,16 @@ const GPR8
 
 
 class Xmm : public Register{
-#ifdef DEBUG
+#ifdef R64FX_DEBUG_JIT_STDOUT
     static const char* names[];
-#endif//DEBUG
-    
+#endif//R64FX_DEBUG_JIT_STDOUT
+
 public:
     explicit Xmm(const unsigned char bits) : Register(bits) {}
-    
-#ifdef DEBUG
+
+#ifdef R64FX_DEBUG_JIT_STDOUT
     inline const char* name() const { return names[Register::code()]; }
-#endif//DEBUG
+#endif//R64FX_DEBUG_JIT_STDOUT
 };
 
 const Xmm
@@ -294,7 +291,7 @@ const Ymm
 
 struct Mem8{
     long int addr;
-    
+
     Mem8(void* addr)
     {
         this->addr = (long int) addr;
@@ -303,51 +300,51 @@ struct Mem8{
 
 struct Mem16{
     long int addr;
-    
+
     Mem16(void* addr)
     {
-#ifdef DEBUG
+#ifdef R64FX_DEBUG
         assert((long int)addr % 2 == 0);
-#endif//DEBUG
+#endif//R64FX_DEBUG
         this->addr = (long int) addr;
     }
 };
 
 struct Mem32{
     long int addr;
-    
+
     Mem32(void* addr)
     {
-#ifdef DEBUG
+#ifdef R64FX_DEBUG
         assert((long int)addr % 4 == 0);
-#endif//DEBUG
+#endif//R64FX_DEBUG
         this->addr = (long int) addr;
     }
 };
 
 struct Mem64{
     long int addr;
-    
+
     Mem64(void* addr)
     {
-#ifdef DEBUG
+#ifdef R64FX_DEBUG
         assert((long int)addr % 8 == 0);
-#endif//DEBUG
+#endif//R64FX_DEBUG
         this->addr = (long int) addr;
     }
 };
 
 struct Mem128{
     long int addr;
-    
+
     Mem128(void* addr)
     {
-#ifdef DEBUG
+#ifdef R64FX_DEBUG_JIT_STDOUT
         assert((long int)addr % 16 == 0);
-#endif//DEBUG
+#endif//R64FX_DEBUG_JIT_STDOUT
         this->addr = (long int) addr;
     }
-    
+
     Mem128(float arr[4]) : Mem128((void*)arr) {}
     Mem128(int arr[4]) : Mem128((void*)arr) {}
     Mem128(unsigned int arr[4]) : Mem128((void*)arr) {}
@@ -355,12 +352,12 @@ struct Mem128{
 
 struct Mem256{
     long int addr;
-    
+
     Mem256(void* addr)
     {
-#ifdef DEBUG
+#ifdef R64FX_DEBUG_JIT_STDOUT
         assert((long int)addr % 32 == 0);
-#endif//DEBUG
+#endif//R64FX_DEBUG_JIT_STDOUT
         this->addr = (long int) addr;
     }
 };
@@ -388,19 +385,19 @@ const unsigned char Scale8 = b11;
 
 class CmpCode{
     unsigned int _code;
-    
-#ifdef DEBUG
+
+#ifdef R64FX_DEBUG_JIT_STDOUT
     static const char* names[];
-#endif//DEBUG
+#endif//R64FX_DEBUG_JIT_STDOUT
 
 public:
     CmpCode(unsigned int code) : _code(code) {}
 
     inline unsigned int code() const { return _code; }
-    
-#ifdef DEBUG
+
+#ifdef R64FX_DEBUG_JIT_STDOUT
     inline const char* name() const { return names[code()]; }
-#endif//DEBUG
+#endif//R64FX_DEBUG_JIT_STDOUT
 };
 
 /** @brief Codes used with cmpps. */
@@ -429,37 +426,39 @@ unsigned char shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigne
 
 
 class CodeBuffer{
-    unsigned char* begin;
-    unsigned char* end;
-    int _npages;
-    
+    unsigned char*  m_begin       = nullptr;
+    unsigned char*  m_end         = nullptr;
+    int             m_page_count  = 0;
+
 public:
     CodeBuffer(int npages = 1);
-    
-    ~CodeBuffer()
-    {
-    }
-    
-    void cleanup();
-    
+
+    ~CodeBuffer();
+
     inline void rewind() 
     {
-        end = begin;
+        m_end = m_begin;
     }
-    
+
     /** @brief Pointer to the beginning of the buffer. */
-    inline unsigned char* codeBegin() const { return begin; }
-    
+    inline unsigned char* codeBegin() const { return m_begin; }
+
     /** @brief Pointer to the byte past the end of the written bytes. 
      
         This can be used to obtain memory locations for doing branching to lower addresses.
      */
-    inline unsigned char* codeEnd() const { return end; }
-    
-    inline void setEnd(void* addr) { end = (unsigned char*) addr; }
-    
-    inline int npages() const { return _npages; }
-        
+    inline unsigned char* codeEnd() const { return m_end; }
+
+    inline void setEnd(void* addr) { m_end = (unsigned char*) addr; }
+
+    inline int npages() const { return m_page_count; }
+
+    inline int nbytes() const { return m_page_count * memory_page_size(); }
+
+    void enableExec();
+
+    void disableExec();
+
     CodeBuffer &operator<<(unsigned char byte);
 
     inline CodeBuffer &operator<<(Imm8 imm)
@@ -468,35 +467,56 @@ public:
     }
 
     CodeBuffer &operator<<(Imm16 imm);
-    
+
     CodeBuffer &operator<<(Imm32 imm);
-    
+
     CodeBuffer &operator<<(Imm64 imm);
 };
 
 
 class Assembler{
+    CodeBuffer* m_bytes = nullptr;
+
 public:
-    CodeBuffer &bytes;
-    
-#ifdef DEBUG
-    std::ostringstream dump;
-#endif//DEBUG
-    
-    /** Use an external CodeBuffer. Do not free it! */
-    Assembler(CodeBuffer &cb) : bytes(cb)
+
+    Assembler(CodeBuffer* bytes) : m_bytes(bytes)
     {
 
     }
 
-    inline void* getFun()
+    inline CodeBuffer* codeBuffer() const
     {
-        return bytes.codeBegin();
+        return m_bytes;
+    }
+
+    inline void enableExec()
+    {
+        m_bytes->enableExec();
+    }
+
+    inline void disableExec()
+    {
+        m_bytes->disableExec();
+    }
+
+    inline unsigned char* codeBegin()
+    {
+        return m_bytes->codeBegin();
     }
 
     inline unsigned char* ip()
     {
-        return bytes.codeEnd();
+        return m_bytes->codeEnd();
+    }
+
+    inline void setIp(unsigned char* addr)
+    {
+        m_bytes->setEnd(addr);
+    }
+
+    inline void rewindIp()
+    {
+        m_bytes->setEnd(m_bytes->codeBegin());
     }
 
     /** @brief Insert one or more nop instructions. */
@@ -504,35 +524,35 @@ public:
     {
         while(count--) 
         {
-#ifdef DEBUG
-            dump << (void*)ip() << "    nop\n";
-#endif//DEBUG
-            bytes << 0x90;
+#ifdef R64FX_DEBUG_JIT_STDOUT
+            std::cout << (void*)ip() << "    nop\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+            *m_bytes << 0x90;
         }
     }
 
     inline void ret()
     {
-#ifdef DEBUG
-        dump << (void*)ip() << "    ret\n";
-#endif//DEBUG
-        bytes << 0xC3;
+#ifdef R64FX_DEBUG_JIT_STDOUT
+        std::cout << (void*)ip() << "    ret\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+        *m_bytes << 0xC3;
     }
 
-    inline void rdtsc() 
+    inline void rdtsc()
     {
-#ifdef DEBUG
-        dump << (void*)ip() << "    rdtsc\n";
-#endif//DEBUG
-        bytes << 0x0F << 0x31; 
+#ifdef R64FX_DEBUG_JIT_STDOUT
+        std::cout << (void*)ip() << "    rdtsc\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+        *m_bytes << 0x0F << 0x31;
     }
-    
+
     inline void rdpmc() 
     { 
-#ifdef DEBUG
-        dump << (void*)ip() << "    rdpmc\n";
-#endif//DEBUG
-        bytes << 0x0F << 0x33; 
+#ifdef R64FX_DEBUG_JIT_STDOUT
+        std::cout << (void*)ip() << "    rdpmc\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+        *m_bytes << 0x0F << 0x33;
     }
 
     void add(GPR32 reg, Mem32 mem);
@@ -568,7 +588,7 @@ public:
     void mov(GPR32 reg, Mem32 mem);
     void mov(Mem32 mem, GPR32 reg);
     void mov(GPR32 dst, GPR32 src);
-    
+
     void mov(GPR64 reg, Mem64 mem);
     void mov(Mem64 mem, GPR64 reg);
     void mov(GPR64 dst, GPR64 src);
@@ -582,11 +602,9 @@ public:
     void mov(Base base, GPR64 reg) { mov(base, Disp8(0), reg); }
     void mov(Base base, GPR32 reg);
 
-
     void push(GPR64 reg);
 
     void pop(GPR64 reg);
-
 
     void cmp(GPR64 reg, Imm32 imm);
     inline void cmp(GPR64 reg, unsigned int imm) { cmp(reg, Imm32(imm)); }
@@ -598,17 +616,15 @@ public:
     void jne(Mem8 mem);
     void jl(Mem8 mem);
 
-
-    /* SSE */
 private:
     void sse_ps_instruction(unsigned char second_opcode, Xmm dst, Xmm src);
     void sse_ps_instruction(unsigned char second_opcode, Xmm reg, Mem128 mem);
     void sse_ps_instruction(unsigned char second_opcode, Xmm reg, Base base, Disp8 disp);
-    
+
     void sse_ss_instruction(unsigned char third_opcode, Xmm dst, Xmm src);
     void sse_ss_instruction(unsigned char third_opcode, Xmm reg, Mem32 mem);
     void sse_ss_instruction(unsigned char third_opcode, Xmm reg, Base base, Disp8 disp);
-    
+
 public:
     void addps(Xmm dst, Xmm src);
     void addps(Xmm reg, Mem128 mem);
@@ -697,7 +713,7 @@ public:
     void xorps(Xmm dst, Xmm src);
     void xorps(Xmm reg, Mem128 mem);
     void xorps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-    
+
     void cmpps(CmpCode kind, Xmm dst, Xmm src);
     void cmpps(CmpCode kind, Xmm reg, Mem128 mem);
     void cmpps(CmpCode kind, Xmm reg, Base base, Disp8 disp = Disp8(0));
@@ -705,16 +721,16 @@ public:
     void cmpss(CmpCode kind, Xmm dst, Xmm src);
     void cmpss(CmpCode kind, Xmm reg, Mem128 mem);
     void cmpss(CmpCode kind, Xmm reg, Base base, Disp8 disp = Disp8(0));
-    
+
     inline void cmpltps(Xmm dst, Xmm src) { cmpps(LT, dst, src); }
     inline void cmpltps(Xmm reg, Mem128 mem) { cmpps(LT, reg, mem); }
 
     inline void cmpnltps(Xmm dst, Xmm src) { cmpps(NLT, dst, src); }
     inline void cmpnltps(Xmm reg, Mem128 mem) { cmpps(NLT, reg, mem); }
-    
+
     inline void cmpeqps(Xmm dst, Xmm src) { cmpps(EQ, dst, src); }
     inline void cmpeqps(Xmm reg, Mem128 mem) { cmpps(EQ, reg, mem); }
-    
+
     void movups(Xmm dst, Xmm src);
     void movups(Xmm reg, Mem128 mem);
     void movups(Xmm reg, Base base, Disp8 disp = Disp8(0));
@@ -728,15 +744,15 @@ public:
     void movaps(Mem128, Xmm reg);
     void movaps(Base base, Disp8 disp, Xmm reg);
     inline void movaps(Base base, Xmm reg) { movaps(base, Disp8(0), reg); }
-    
+
     void movss(Mem32 mem, Xmm reg);
     void movss(Xmm reg, Mem32 mem);
-    
+
     /* ??? */
     void shufps(Xmm dst, Xmm src, unsigned char imm);
     void shufps(Xmm reg, Mem128 mem, unsigned char imm);
     /* ??? */
-    
+
     void pshufd(Xmm dst, Xmm src, unsigned char imm);
     void pshufd(Xmm reg, Mem128 mem, unsigned char imm);
     void pshufd(Xmm reg, Base base, Disp8 disp, unsigned char imm);
@@ -744,15 +760,15 @@ public:
     {
         pshufd(reg, base, Disp8(0), imm);
     }
-    
+
     void cvtps2dq(Xmm dst, Xmm src);
     void cvtps2dq(Xmm reg, Mem128 mem);
     void cvtps2dq(Xmm reg, Base base, Disp8 disp = Disp8(0));
-    
+
     void cvtdq2ps(Xmm dst, Xmm src);
     void cvtdq2ps(Xmm reg, Mem128 mem);
     void cvtdq2ps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-    
+
     void paddd(Xmm dst, Xmm src);
     void paddd(Xmm reg, Mem128 mem);
     void paddd(Xmm reg, Base base, Disp8 disp = Disp8(0));
@@ -764,7 +780,6 @@ public:
 };//Assembler
 
 }//namespace r64fx
-
 
 
 #endif//X86_64_JIT_ASSEMBLER_H

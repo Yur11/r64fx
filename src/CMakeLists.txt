@@ -7,10 +7,11 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 ### Pick one of these!
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2 -pg")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g -fno-omit-frame-pointer")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g -fno-omit-frame-pointer -fsanitize=address")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g -fno-omit-frame-pointer")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g -fno-omit-frame-pointer -fsanitize=address")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_DEBUG")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_DEBUG_JIT_STDOUT")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_X11")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_MITSHM")
@@ -161,3 +162,12 @@ add_executable(test_ThreadObject ${test_ThreadObject_SRC})
 set(test_ThreadObject_LIBS pthread)
 
 target_link_libraries(test_ThreadObject ${test_ThreadObject_LIBS})
+
+
+## test_jit ##
+set(test_jit_SRC
+    test_jit.cpp
+    jit.cpp
+)
+
+add_executable(test_jit ${test_jit_SRC})
