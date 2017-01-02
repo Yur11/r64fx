@@ -30,72 +30,72 @@ bool test_mov(Assembler &as)
 
     srand(time(NULL));
 
-    cout << "mov(gpr64, imm32)\n";
+    cout << "mov(GPR64, Imm32)\n";
     {
         int num = rand();
         as.rewindIp();
-        as.mov(rax, Imm32(num));
+        as.mov(rax, Imm32S(num));
         as.ret();
         R64FX_EXPECT_EQ(num, jitfun());
     }
 
-    cout << "mov(gpr64, imm32) rex\n";
+    cout << "mov(GPR64, Imm32) rex\n";
     {
         int num1 = rand();
         int num2 = rand();
         as.rewindIp();
-        as.mov(rax, Imm32(num1));
-        as.mov(r8,  Imm32(num2));
+        as.mov(rax, Imm32S(num1));
+        as.mov(r8,  Imm32S(num2));
         as.ret();
         R64FX_EXPECT_EQ(num1, jitfun())
     }
 
-    cout << "mov(gpr64, imm64)\n";
+    cout << "mov(GPR64, Imm64)\n";
     {
         long int num = rand();
         as.rewindIp();
-        as.mov(rax, Imm64(num));
+        as.mov(rax, Imm64S(num));
         as.ret();
         R64FX_EXPECT_EQ(num, jitfun());
     }
 
-    cout << "mov(gpr64, imm64) rex\n";
+    cout << "mov(GPR64, Imm64) rex\n";
     {
         int num1 = rand();
         int num2 = rand();
         as.rewindIp();
-        as.mov(rax, Imm64(num1));
-        as.mov(r8,  Imm64(num2));
+        as.mov(rax, Imm64S(num1));
+        as.mov(r8,  Imm64S(num2));
         as.ret();
         R64FX_EXPECT_EQ(num1, jitfun());
     }
 
-    cout << "mov(gpr64, gpr64)\n";
+    cout << "mov(GPR64, GPR64)\n";
     {
         int num = rand();
         as.rewindIp();
-        as.mov(rcx, Imm32(num));
+        as.mov(rcx, Imm32S(num));
         as.mov(rax, rcx);
         as.ret();
         R64FX_EXPECT_EQ(num, jitfun());
     }
 
-    cout << "mov(gpr64, gpr64) rex\n";
+    cout << "mov(GPR64, GPR64) rex\n";
     {
         int num1 = rand();
         int num2 = rand();
         int num3 = rand();
         as.rewindIp();
-        as.mov(r9,  Imm32(num1));
-        as.mov(rdx, Imm32(num2));
-        as.mov(rcx, Imm32(num3));
+        as.mov(r9,  Imm32S(num1));
+        as.mov(rdx, Imm32S(num2));
+        as.mov(rcx, Imm32S(num3));
         as.mov(rax, r9);
         as.mov(r8,  rdx);
         as.ret();
         R64FX_EXPECT_EQ(num1, jitfun());
     }
 
-    cout << "mov(gpr64, mem64)\n";
+    cout << "mov(GPR64, Mem64)\n";
     {
         *a = rand();
         as.rewindIp();
@@ -104,7 +104,7 @@ bool test_mov(Assembler &as)
         R64FX_EXPECT_EQ(*a, jitfun());
     }
 
-    cout << "mov(gpr64, mem64) rex\n";
+    cout << "mov(GPR64, Mem64) rex\n";
     {
         *a = rand();
         *b = rand();
@@ -115,31 +115,75 @@ bool test_mov(Assembler &as)
         R64FX_EXPECT_EQ(*a, jitfun());
     }
 
-    cout << "mov(mem64, gpr64)\n";
+    cout << "mov(Mem64, GPR64)\n";
     {
         int num = rand();
         *a = rand();
         as.rewindIp();
-        as.mov(rcx, Imm32(num));
+        as.mov(rcx, Imm32S(num));
         as.mov(Mem64(a), rcx);
         as.ret();
         jitfun();
         R64FX_EXPECT_EQ(num, *a);
     }
 
-    cout << "mov(mem64, gpr64) rex\n";
+    cout << "mov(Mem64, GPR64) rex\n";
     {
         int num1 = rand();
         int num2 = rand();
         *a = 0;
         as.rewindIp();
-        as.mov(rax, Imm32(num1));
-        as.mov(r8,  Imm32(num2));
+        as.mov(rax, Imm32S(num1));
+        as.mov(r8,  Imm32S(num2));
         as.mov(Mem64(a), r8);
         as.ret();
         jitfun();
         R64FX_EXPECT_EQ(num2, *a);
     }
+
+    return true;
+}
+
+
+bool test_add(Assembler &as)
+{
+    auto jitfun = (JitFun) as.codeBegin();
+
+    auto buff = (long int*) g_data;
+    auto a = buff;
+    auto b = buff + 1;
+
+    srand(time(NULL));
+
+    cout << "add(GPR64, Imm32) + rex\n";
+    {
+        int num1 = rand() % 10000;
+        int num2 = rand() % 10000;
+        int num3 = rand() % 10000;
+        int sum = num1 + num2;
+        as.rewindIp();
+        as.mov(rax, Imm32S(num1));
+        as.add(rax, Imm32S(num2));
+        as.mov(r8,  Imm32S(0));
+        as.add(r8,  Imm32S(num3));
+        as.ret();
+        R64FX_EXPECT_EQ(sum, jitfun());
+    }
+
+//     cout << "add(GPR64, GPR64) + rex\n";
+//     {
+//         int num1 = rand() % 10000;
+//         int num2 = rand() % 10000;
+//         int num3 = rand() % 10000;
+//         int num3 = rand() % 10000;
+//         int sum = num1 + num2;
+//         as.rewindIp();
+//         as.mov(rax, Imm32(num1));
+//         as.mov(rcx, Imm32(num2));
+//         as.mov(rdx, Imm32(num3));
+//         as.add(rax);
+//         as.ret();
+//     }
 
     return true;
 }
@@ -159,6 +203,7 @@ int main()
 
     auto ok = true;
     ok = ok && test_mov(as);
+    ok = ok && test_add(as);
 
     free(g_data);
 

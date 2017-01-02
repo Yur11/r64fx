@@ -56,7 +56,7 @@ CodeBuffer &CodeBuffer::operator<<(Imm16 imm)
 #endif//R64FX_DEBUG
     for(int i=0; i<2; i++)
     {
-        *m_end = imm.bytes.byte[i];
+        *m_end = imm.b[i];
         m_end += 1;
     }
     return *this;
@@ -70,7 +70,7 @@ CodeBuffer &CodeBuffer::operator<<(Imm32 imm)
 #endif//R64FX_DEBUG
     for(int i=0; i<4; i++)
     {
-        *m_end = imm.bytes.byte[i];
+        *m_end = imm.b[i];
         m_end += 1;
     }
     return *this;
@@ -84,7 +84,7 @@ CodeBuffer &CodeBuffer::operator<<(Imm64 imm)
 #endif//R64FX_DEBUG
     for(int i=0; i<8; i++)
     {
-        *m_end = imm.bytes.byte[i];
+        *m_end = imm.b[i];
         m_end += 1;
     }
     return *this;
@@ -161,7 +161,7 @@ struct Rip32{
 
 CodeBuffer &operator<<(CodeBuffer &buff, Rip32 rip)
 {
-    return buff << Imm32(rip.displacement);
+    return buff << Imm32S(rip.displacement);
 }
 
 
@@ -169,7 +169,7 @@ void encode_modrm_sib_base_and_disp8(CodeBuffer* bytes, Register &reg, Base &bas
 {
     *bytes << ModRM(b01, reg.code(), b100);
     *bytes << SIB(b00, b100, base.reg.code());
-    *bytes << Imm8(disp.byte);
+    *bytes << Imm8U(disp.byte);
 }
 
 
@@ -198,15 +198,6 @@ const char* CmpCode::names[] = {
     "eq", "lt", "le", "unord", "neq", "nlt", "nle", "ord"
 };
 #endif//R64FX_DEBUG_JIT_STDOUT
-
-
-void Assembler::mov(GPR64 reg, unsigned long int imm)
-{
-    if(imm < numeric_limits<unsigned long int>::max())
-        mov(reg, Imm32(imm));
-    else
-        mov(reg, Imm64(imm));
-}
 
 
 void Assembler::mov(GPR64 reg, Imm32 imm)

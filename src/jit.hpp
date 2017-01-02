@@ -17,87 +17,103 @@ void* alloc_aligned_memory(int alignment, int nbytes);
 
 int memory_page_size();
 
-/* Immediate operands. */
-class Imm8{
-    friend class CodeBuffer;
-    unsigned char byte;
 
-public:
-    Imm8(unsigned char byte)
-    {
-        this->byte = byte;
-    }
-
-    inline operator unsigned char() const { return byte; }
-    inline operator   signed char() const { return byte; }
+union Imm8{
+    signed char    s;
+    unsigned char  u;
 };
 
-class Imm16{
-    friend class CodeBuffer;
-    union{
-        unsigned short word;
-        unsigned char byte[2];
-    }bytes;
+inline Imm8 Imm8S(signed char byte)
+{
+    Imm8 imm;
+    imm.s = byte;
+    return imm;
+}
 
-public:
-    explicit Imm16(unsigned short word)
-    {
-        bytes.word = word;
-    }
+inline Imm8 Imm8U(unsigned char byte)
+{
+    Imm8 imm;
+    imm.u = byte;
+    return imm;
+}
 
-    inline operator unsigned short() const { return bytes.word; }
-    inline operator   signed short() const { return bytes.word; }
+
+union Imm16{
+    signed short    s;
+    unsigned short  u;
+    unsigned char   b[2];
+};
+
+inline Imm16 Imm16S(signed short word)
+{
+    Imm16 imm;
+    imm.s = word;
+    return imm;
+}
+
+inline Imm16 Imm16U(unsigned short word)
+{
+    Imm16 imm;
+    imm.u = word;
+    return imm;
+}
+
+
+union Imm32{
+    signed int     s;
+    unsigned int   u;
+    unsigned char  b[4];
+};
+
+inline Imm32 Imm32S(signed int dword)
+{
+    Imm32 imm;
+    imm.s = dword;
+    return imm;
+}
+
+inline Imm32 Imm32U(unsigned int dword)
+{
+    Imm32 imm;
+    imm.u = dword;
+    return imm;
+}
+
+
+union Imm64{
+    signed long    s;
+    unsigned long  u;
+    unsigned char  b[8];
 };
 
 
-class Imm32{
-    friend class CodeBuffer;
-    union{
-        unsigned int dword;
-        unsigned char byte[4];
-    }bytes;
+inline Imm64 Imm64S(signed long qword)
+{
+    Imm64 imm;
+    imm.s = qword;
+    return imm;
+}
 
-public:
-    explicit Imm32(unsigned int dword)
-    {
-        bytes.dword = dword;
-    }
-
-    inline operator unsigned int() const { return bytes.dword; }
-    inline operator   signed int() const { return bytes.dword; }
-};
-
-
-class Imm64{
-    friend class CodeBuffer;
-    union{
-        unsigned long qword;
-        unsigned char byte[8];
-    }bytes;
-
-public:
-    explicit Imm64(unsigned long qword)
-    {
-        bytes.qword = qword;
-    }
-
-    inline operator unsigned long int() const { return bytes.qword; }
-    inline operator   signed long int() const { return bytes.qword; }
-}; 
+inline Imm64 Imm64U(unsigned long qword)
+{
+    Imm64 imm;
+    imm.u = qword;
+    return imm;
+}
 
 
 class Register{
-    const unsigned char _bits;
+    const unsigned char mbits;
 
 public:
-    Register(const unsigned char bits) : _bits(bits) {}
+    Register(const unsigned char bits) : mbits(bits) {}
 
-    inline unsigned char bits() const { return _bits; }
+    inline unsigned char bits() const { return mbits; }
 
-    inline unsigned char code() const { return _bits; }
+    inline unsigned char code() const { return mbits; }
 
     /* R or B bit of the REX prefix.*/
-    inline bool prefix_bit() const { return _bits & b1000; }    
+    inline bool prefix_bit() const { return mbits & b1000; }
 };
 
 class GPR64 : public Register{
@@ -337,7 +353,7 @@ public:
 
     inline CodeBuffer &operator<<(Imm8 imm)
     {
-        return operator<<(imm.byte);
+        return operator<<(imm.u);
     }
 
     CodeBuffer &operator<<(Imm16 imm);
@@ -352,7 +368,6 @@ class Assembler{
     CodeBuffer* m_bytes = nullptr;
 
 public:
-
     Assembler(CodeBuffer* bytes) : m_bytes(bytes)
     {
 
@@ -419,7 +434,6 @@ public:
         *m_bytes << 0x0F << 0x33;
     }
 
-    void mov(GPR64 reg, unsigned long int imm);
     void mov(GPR64 reg, Imm32 imm);
     void mov(GPR64 reg, Imm64 imm);
     void mov(GPR64 dst, GPR64 src);
@@ -447,7 +461,7 @@ public:
     void pop(GPR64 reg);
 
     void cmp(GPR64 reg, Imm32 imm);
-    inline void cmp(GPR64 reg, unsigned int imm) { cmp(reg, Imm32(imm)); }
+    inline void cmp(GPR64 reg, unsigned int imm) { cmp(reg, Imm32U(imm)); }
 
     void jmp(Mem8 mem);
     void jnz(Mem8 mem);
