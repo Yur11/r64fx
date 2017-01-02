@@ -24,8 +24,8 @@ int memory_page_size()
     
 CodeBuffer::CodeBuffer(int page_count) : m_page_count(page_count)
 {
-    m_begin = m_end = (unsigned char*) alloc_aligned_memory(memory_page_size(), nbytes());
-    mprotect(m_begin, nbytes(), PROT_READ | PROT_WRITE | PROT_EXEC);
+    m_begin = m_end = (unsigned char*) alloc_aligned_memory(memory_page_size(), byteCount());
+    mprotect(m_begin, byteCount(), PROT_READ | PROT_WRITE | PROT_EXEC);
 }
 
 
@@ -40,14 +40,34 @@ CodeBuffer::~CodeBuffer()
 
 CodeBuffer &CodeBuffer::operator<<(unsigned char byte)
 {
+#ifdef R64FX_DEBUG
+    assert(bytesAvailable() > 0);
+#endif//R64FX_DEBUG
     *m_end = byte;
     m_end += 1;
     return *this;
 }
 
 
+CodeBuffer &CodeBuffer::operator<<(Imm16 imm)
+{
+#ifdef R64FX_DEBUG
+    assert(bytesAvailable() > 1);
+#endif//R64FX_DEBUG
+    for(int i=0; i<2; i++)
+    {
+        *m_end = imm.bytes.byte[i];
+        m_end += 1;
+    }
+    return *this;
+}
+
+
 CodeBuffer &CodeBuffer::operator<<(Imm32 imm)
 {
+#ifdef R64FX_DEBUG
+    assert(bytesAvailable() > 3);
+#endif//R64FX_DEBUG
     for(int i=0; i<4; i++)
     {
         *m_end = imm.bytes.byte[i];
@@ -59,18 +79,10 @@ CodeBuffer &CodeBuffer::operator<<(Imm32 imm)
 
 CodeBuffer &CodeBuffer::operator<<(Imm64 imm)
 {
+#ifdef R64FX_DEBUG
+    assert(bytesAvailable() > 7);
+#endif//R64FX_DEBUG
     for(int i=0; i<8; i++)
-    {
-        *m_end = imm.bytes.byte[i];
-        m_end += 1;
-    }
-    return *this;
-}
-
-
-CodeBuffer &CodeBuffer::operator<<(Imm16 imm)
-{
-    for(int i=0; i<2; i++)
     {
         *m_end = imm.bytes.byte[i];
         m_end += 1;
@@ -132,29 +144,6 @@ unsigned char Rex(bool W, bool R, bool X, bool B)
 }
 
 
-struct Vex2{
-    unsigned char bytes[2];
-
-    Vex2(bool R, unsigned char ww, bool L, unsigned char pp)
-    {
-        bytes[0] = 0xC5;
-        bytes[1] = ((!R)<<7) | ((~ww)<<3) | (L<<2) | pp;
-    }
-};
-
-
-struct Vex3{
-    unsigned char bytes[3];
-
-    Vex3(bool R, bool X, bool B, unsigned char map_select, bool W, unsigned char ww, bool L, unsigned char pp)
-    {
-        bytes[0] = 0xC4;
-        bytes[1] = ((!R)<<7) | ((!X)<<6) | ((!B)<<5) | map_select;
-        bytes[2] = ((!W)<<7) | ((~ww)<<3) | (L<<2) | pp;
-    }
-};
-
-
 struct Rip32{
     int displacement;
 
@@ -173,26 +162,6 @@ struct Rip32{
 CodeBuffer &operator<<(CodeBuffer &buff, Rip32 rip)
 {
     return buff << Imm32(rip.displacement);
-}
-
-
-CodeBuffer &operator<<(CodeBuffer &buff, Vex2 vex)
-{
-    for(int i=0; i<2; i++)
-    {
-        buff << vex.bytes[i];
-    }
-    return buff;
-}
-
-
-CodeBuffer &operator<<(CodeBuffer &buff, Vex3 vex)
-{
-    for(int i=0; i<3; i++)
-    {
-        buff << vex.bytes[i];
-    }
-    return buff;
 }
 
 
@@ -240,6 +209,42 @@ void Assembler::mov(GPR64 reg, unsigned long int imm)
 }
 
 
+void Assembler::mov(GPR64 reg, Imm32 imm)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " mov    " << reg.name() << ", " << (int)imm << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+    
+    *m_bytes << Rex(1, 0, 0, reg.prefix_bit());
+    *m_bytes << 0xC7;
+    *m_bytes << ModRM(b11, 0, reg.code());
+    *m_bytes << imm;
+}
+
+
+void Assembler::mov(GPR64 reg, Imm64 imm)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " mov    " << reg.name() << ", " << (signed long int) imm << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+    
+    *m_bytes << Rex(1, 0, 0, reg.prefix_bit());
+    *m_bytes << (0xB8 + (reg.code() & b0111)) << imm;
+}
+
+
+void Assembler::mov(GPR64 dst, GPR64 src)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " mov    " << dst.name() << ", " << src.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+    
+    *m_bytes << Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
+    *m_bytes << 0x8B;
+    *m_bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
 void Assembler::mov(GPR64 reg, Mem64 mem)
 {
 #ifdef R64FX_DEBUG_JIT_STDOUT
@@ -263,42 +268,6 @@ void Assembler::mov(Mem64 mem, GPR64 reg)
     *m_bytes << 0x89;
     *m_bytes << ModRM(b00, reg.code(), b101);
     *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
-}
-
-
-void Assembler::mov(GPR64 dst, GPR64 src)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " mov    " << dst.name() << ", " << src.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    *m_bytes << Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
-    *m_bytes << 0x8B;
-    *m_bytes << ModRM(b11, dst.code(), src.code());
-}
-
-
-void Assembler::mov(GPR64 reg, Imm32 imm)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " mov    " << reg.name() << ", " << (int)imm << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    *m_bytes << Rex(1, 0, 0, reg.prefix_bit());
-    *m_bytes << 0xC7;
-    *m_bytes << ModRM(b11, 0, reg.code());
-    *m_bytes << imm;
-}
-
-
-void Assembler::mov(GPR64 reg, Imm64 imm)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " mov    " << reg.name() << ", " << (signed long int) imm << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    *m_bytes << Rex(1, 0, 0, reg.prefix_bit());
-    *m_bytes << (0xB8 + (reg.code() & b0111)) << imm;
 }
 
 
@@ -411,44 +380,6 @@ void Assembler::add(GPR64 reg, Base base, Disp8 disp)
     else
         encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
 }
-
-
-// void Assembler::sub(GPR32 reg, Mem32 mem)
-// {
-// #ifdef R64FX_DEBUG_JIT_STDOUT
-//     std::cout << (void*)ip() << " sub    " << reg.name() << ", [" << (void*)mem.addr << "]\n";
-// #endif//R64FX_DEBUG_JIT_STDOUT
-//     
-//     if(reg.prefix_bit()) *m_bytes << Rex(0, 1, 0, 0);
-//     *m_bytes << 0x2B;
-//     *m_bytes << ModRM(b00, reg.code(), b101);
-//     *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
-// }
-// 
-// 
-// void Assembler::sub(Mem32 mem, GPR32 reg)
-// {
-// #ifdef R64FX_DEBUG_JIT_STDOUT
-//     std::cout << (void*)ip() << " sub    [" << (void*)mem.addr << "], " << reg.name() << "\n";
-// #endif//R64FX_DEBUG_JIT_STDOUT
-//     
-//     if(reg.prefix_bit()) *m_bytes << Rex(0, 1, 0, 0);
-//     *m_bytes << 0x29;
-//     *m_bytes << ModRM(b00, reg.code(), b101);
-//     *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
-// }
-// 
-// 
-// void Assembler::sub(GPR32 dst, GPR32 src)
-// {
-// #ifdef R64FX_DEBUG_JIT_STDOUT
-//     std::cout << (void*)ip() << " sub    " << dst.name() << ", " << src.name() << "\n";
-// #endif//R64FX_DEBUG_JIT_STDOUT
-//     
-//     if(src.prefix_bit() || dst.prefix_bit()) *m_bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
-//     *m_bytes << 0x2B;
-//     *m_bytes << ModRM(b11, dst.code(), src.code());
-// }
 
 
 void Assembler::sub(GPR64 reg, Mem64 mem)
@@ -862,7 +793,7 @@ void Assembler::movups(Xmm reg, Mem128 mem)
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << (void*)ip() << " movups " << reg.name() << ", [" << (void*)mem.addr << "]\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
     *m_bytes << 0x0F << 0x10;
     *m_bytes << ModRM(b00, reg.code(), b101);
@@ -875,7 +806,7 @@ void Assembler::movups(Xmm reg, Base base, Disp8 disp)
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << (void*)ip() << " movups" << reg.name() << ", [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ]\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     if(reg.prefix_bit() || base.reg.prefix_bit()) 
         *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
     *m_bytes << 0x0F << 0x10;
@@ -891,7 +822,7 @@ void Assembler::movups(Mem128 mem, Xmm reg)
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << (void*)ip() << " movups [" << (void*)mem.addr << "], " << reg.name() << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
     *m_bytes << 0x0F << 0x11;
     *m_bytes << ModRM(b00, reg.code(), b101);
@@ -904,7 +835,7 @@ void Assembler::movups(Base base, Disp8 disp, Xmm reg)
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << (void*)ip() << " movups [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ], " << reg.name() << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     if(reg.prefix_bit() || base.reg.prefix_bit()) 
         *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
     *m_bytes << 0x0F << 0x11;

@@ -4,91 +4,145 @@
 using namespace std;
 using namespace r64fx;
 
+template<typename T1, typename T2> bool expect_eq(T1 expected, T2 got)
+{
+    if(expected != got)
+    {
+        std::cout << "Expected " << expected << ", Got " << got << "!\n";
+        return false;
+    }
+    return true;
+}
+#define R64FX_EXPECT_EQ(expected, got) { auto evaled = (got); if(!expect_eq(expected, evaled)) return false; }
+
+
 typedef long (*JitFun)();
 
 void* g_data = nullptr;
 
-bool test_add64(Assembler &as)
+bool test_mov(Assembler &as)
 {
+    auto jitfun = (JitFun) as.codeBegin();
+
     auto buff = (long int*) g_data;
     auto a = buff;
     auto b = buff + 1;
 
-    auto aval = 13;
-    auto bval = 25;
-    *a = aval;
-    *b = bval;
+    srand(time(NULL));
 
-    as.rewindIp();
-    as.mov(rax, Imm64(0));
-    as.mov(rcx, Imm64(0));
-
-    as.add(rax, Mem64(a));
-    as.mov(rdx, Imm64((unsigned long)a));
-    as.add(rcx, Base(rdx), Disp8(8));
-    as.mov(Mem64(a), rcx);
-    as.add(rax, rcx);
-
-    as.ret();
-
-    auto jitfun = (JitFun) as.codeBegin();
-    int result = jitfun();
-    cout << result << ", " << *a << "\n";
-
-    int expected_result = (aval + bval);
-    if(result != expected_result)
+    cout << "mov(gpr64, imm32)\n";
     {
-        cerr << "test_add64.1: Failed!\nExpected: " << expected_result << ", Got: " << result << "\n";
-        return false;
+        int num = rand();
+        as.rewindIp();
+        as.mov(rax, Imm32(num));
+        as.ret();
+        R64FX_EXPECT_EQ(num, jitfun());
     }
 
-    if(*a != bval)
+    cout << "mov(gpr64, imm32) rex\n";
     {
-        cerr << "test_add64.2: Failed!\nExpected: " << bval << ", Got: " << *a << "\n";
-        return false;
+        int num1 = rand();
+        int num2 = rand();
+        as.rewindIp();
+        as.mov(rax, Imm32(num1));
+        as.mov(r8,  Imm32(num2));
+        as.ret();
+        R64FX_EXPECT_EQ(num1, jitfun())
+    }
+
+    cout << "mov(gpr64, imm64)\n";
+    {
+        long int num = rand();
+        as.rewindIp();
+        as.mov(rax, Imm64(num));
+        as.ret();
+        R64FX_EXPECT_EQ(num, jitfun());
+    }
+
+    cout << "mov(gpr64, imm64) rex\n";
+    {
+        int num1 = rand();
+        int num2 = rand();
+        as.rewindIp();
+        as.mov(rax, Imm64(num1));
+        as.mov(r8,  Imm64(num2));
+        as.ret();
+        R64FX_EXPECT_EQ(num1, jitfun());
+    }
+
+    cout << "mov(gpr64, gpr64)\n";
+    {
+        int num = rand();
+        as.rewindIp();
+        as.mov(rcx, Imm32(num));
+        as.mov(rax, rcx);
+        as.ret();
+        R64FX_EXPECT_EQ(num, jitfun());
+    }
+
+    cout << "mov(gpr64, gpr64) rex\n";
+    {
+        int num1 = rand();
+        int num2 = rand();
+        int num3 = rand();
+        as.rewindIp();
+        as.mov(r9,  Imm32(num1));
+        as.mov(rdx, Imm32(num2));
+        as.mov(rcx, Imm32(num3));
+        as.mov(rax, r9);
+        as.mov(r8,  rdx);
+        as.ret();
+        R64FX_EXPECT_EQ(num1, jitfun());
+    }
+
+    cout << "mov(gpr64, mem64)\n";
+    {
+        *a = rand();
+        as.rewindIp();
+        as.mov(rax, Mem64(a));
+        as.ret();
+        R64FX_EXPECT_EQ(*a, jitfun());
+    }
+
+    cout << "mov(gpr64, mem64) rex\n";
+    {
+        *a = rand();
+        *b = rand();
+        as.rewindIp();
+        as.mov(rax, Mem64(a));
+        as.mov(r8,  Mem64(b));
+        as.ret();
+        R64FX_EXPECT_EQ(*a, jitfun());
+    }
+
+    cout << "mov(mem64, gpr64)\n";
+    {
+        int num = rand();
+        *a = rand();
+        as.rewindIp();
+        as.mov(rcx, Imm32(num));
+        as.mov(Mem64(a), rcx);
+        as.ret();
+        jitfun();
+        R64FX_EXPECT_EQ(num, *a);
+    }
+
+    cout << "mov(mem64, gpr64) rex\n";
+    {
+        int num1 = rand();
+        int num2 = rand();
+        *a = 0;
+        as.rewindIp();
+        as.mov(rax, Imm32(num1));
+        as.mov(r8,  Imm32(num2));
+        as.mov(Mem64(a), r8);
+        as.ret();
+        jitfun();
+        R64FX_EXPECT_EQ(num2, *a);
     }
 
     return true;
 }
-
-
-// bool test2(Assembler &as)
-// {
-//     auto a = (float*) g_data;
-//     auto b = a + 4;
-//     a[0] = 1.0f;
-//     a[1] = 2.0f;
-//     a[2] = 3.0f;
-//     a[3] = 4.0f;
-// 
-//     b[0] = 0.1f;
-//     b[1] = 0.2f;
-//     b[2] = 0.3f;
-//     b[3] = 0.4f;
-// 
-//     float c[4] = {1.1f, 2.2f, 3.3f, 4.4f};
-// 
-//     as.rewindIp();
-//     as.movaps (xmm0, Mem128(a));
-//     as.movaps (xmm1, Mem128(b));
-//     as.addps  (xmm0, xmm1);
-//     as.movaps (Mem128(a), xmm0);
-//     as.ret();
-// 
-//     auto jitfun = (JitFun) as.codeBegin();
-//     jitfun();
-// 
-//     for(int i=0; i<4; i++)
-//     {
-//         if(a[i] != c[i])
-//         {
-//             cout << "test2: Failed!\n";
-//             cout << "   i: " << i << " -> Expected: " << c[i] << ", Got: " << a[i] << "\n";
-//             return false;
-//         }
-//     }
-//     return true;
-// }
 
 
 int main()
@@ -104,7 +158,7 @@ int main()
     Assembler as(&codebuff);
 
     auto ok = true;
-    ok = ok && test_add64(as);
+    ok = ok && test_mov(as);
 
     free(g_data);
 

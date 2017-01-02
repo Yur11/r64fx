@@ -320,21 +320,18 @@ public:
     /* Pointer to the beginning of the buffer. */
     inline unsigned char* codeBegin() const { return m_begin; }
 
-    /* Pointer to the byte past the end of the written bytes. 
-     
-        This can be used to obtain memory locations for doing branching to lower addresses.
-     */
+    /* Pointer to the byte past the end of the written bytes. */
     inline unsigned char* codeEnd() const { return m_end; }
 
     inline void setEnd(void* addr) { m_end = (unsigned char*) addr; }
 
-    inline int npages() const { return m_page_count; }
+    inline int pageCount() const { return m_page_count; }
 
-    inline int nbytes() const { return m_page_count * memory_page_size(); }
+    inline int byteCount() const { return m_page_count * memory_page_size(); }
 
-    void enableExec();
+    inline int bytesUsed() const { return int(m_end - m_begin); }
 
-    void disableExec();
+    inline int bytesAvailable() const { return byteCount() - bytesUsed(); }
 
     CodeBuffer &operator<<(unsigned char byte);
 
@@ -422,6 +419,15 @@ public:
         *m_bytes << 0x0F << 0x33;
     }
 
+    void mov(GPR64 reg, unsigned long int imm);
+    void mov(GPR64 reg, Imm32 imm);
+    void mov(GPR64 reg, Imm64 imm);
+    void mov(GPR64 dst, GPR64 src);
+    void mov(GPR64 reg, Mem64 mem);
+    void mov(Mem64 mem, GPR64 reg);
+    void mov(GPR64 reg, Base base, Disp8 disp);
+    void mov(Base base, Disp8 disp, GPR64 reg);
+
     void add(GPR64 reg, Imm32 imm);
     void add(GPR64 dst, GPR64 src);
     void add(GPR64 reg, Mem64 mem);
@@ -437,20 +443,7 @@ public:
     void sub(GPR64 reg, Base base, Disp8 disp);
     void sub(Base base, Disp8 disp, GPR64 reg);
 
-    void mov(GPR64 reg, Mem64 mem);
-    void mov(Mem64 mem, GPR64 reg);
-    void mov(GPR64 dst, GPR64 src);
-    void mov(GPR64 reg, Imm32 imm);
-    void mov(GPR64 reg, Imm64 imm);
-    void mov(GPR64 reg, unsigned long int imm);
-
-    void mov(GPR64 reg, Base base, Disp8 disp = Disp8(0));
-    void mov(Base base, Disp8 disp, GPR64 reg);
-    inline 
-    void mov(Base base, GPR64 reg) { mov(base, Disp8(0), reg); }
-
     void push(GPR64 reg);
-
     void pop(GPR64 reg);
 
     void cmp(GPR64 reg, Imm32 imm);
