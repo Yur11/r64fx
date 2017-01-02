@@ -76,8 +76,6 @@ class Imm64{
     }bytes;
 
 public:
-    explicit Imm64(void* ptr) : Imm64((unsigned long)ptr) {}
-
     explicit Imm64(unsigned long qword)
     {
         bytes.qword = qword;
@@ -86,19 +84,6 @@ public:
     inline operator unsigned long int() const { return bytes.qword; }
     inline operator   signed long int() const { return bytes.qword; }
 }; 
-
-
-class ImmPtr{
-    Imm64 imm;
-
-public:
-    explicit ImmPtr(void* ptr)
-    :imm((long int)ptr)
-    {
-    }
-
-    inline operator Imm64() const { return imm; }
-};
 
 
 class Register{
@@ -111,7 +96,7 @@ public:
 
     inline unsigned char code() const { return _bits; }
 
-    /** @brief R or B bit of the REX prefix.*/
+    /* R or B bit of the REX prefix.*/
     inline bool prefix_bit() const { return _bits & b1000; }    
 };
 
@@ -148,89 +133,6 @@ const GPR64
 ;
 
 
-class GPR32 : public Register{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    static const char* names[];
-#endif//R64FX_DEBUG_JIT_STDOUT
-
-public:
-    explicit GPR32(const unsigned char bits) : Register(bits) {}
-
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    inline const char* name() const { return names[Register::code()]; }
-#endif//R64FX_DEBUG_JIT_STDOUT
-};
-
-const GPR32
-    eax(b000),
-    ecx(b001),
-    edx(b010),
-    ebx(b011),
-    esp(b100),
-    ebp(b101),
-    esi(b110),
-    edi(b111),
-    r8d (b1000),
-    r9d (b1001),
-    r10d(b1010),
-    r11d(b1011),
-    r12d(b1100),
-    r13d(b1101),
-    r14d(b1110),
-    r15d(b1111)
-;
-
-
-class GPR16 : public Register{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    static const char* names[];
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-public:
-    explicit GPR16(const unsigned char bits) : Register(bits) {}
-
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    inline const char* name() const { return names[Register::code()]; }
-#endif//R64FX_DEBUG_JIT_STDOUT
-};
-
-const GPR16
-    ax(b000),
-    cx(b001),
-    dx(b010),
-    bx(b011),
-    sp(b100),
-    bp(b101),
-    si(b110),
-    di(b111)
-;
-
-
-class GPR8 : public Register{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    static const char* names[];
-#endif//R64FX_DEBUG_JIT_STDOUT
-
-public:
-    explicit GPR8(const unsigned char bits) : Register(bits) {}
-
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    inline const char* name() const { return names[Register::code()]; }
-#endif//R64FX_DEBUG_JIT_STDOUT
-};
-
-const GPR8
-    al(b000),
-    cl(b001),
-    dl(b010),
-    bl(b011),
-    ah(b100),
-    ch(b101),
-    dh(b110),
-    bh(b111)
-;
-
-
 class Xmm : public Register{
 #ifdef R64FX_DEBUG_JIT_STDOUT
     static const char* names[];
@@ -263,31 +165,6 @@ const Xmm
     xmm15(b1111)
 ;
 
-
-class Ymm : public Register{
-
-public:
-    explicit Ymm(const unsigned char bits) : Register(bits) {}
-};
-
-const Ymm
-    ymm0(b0000),
-    ymm1(b0001),
-    ymm2(b0010),
-    ymm3(b0011),
-    ymm4(b0100),
-    ymm5(b0101),
-    ymm6(b0110),
-    ymm7(b0111),
-    ymm8(b1000),
-    ymm9(b1001),
-    ymm10(b1010),
-    ymm11(b1011),
-    ymm12(b1100),
-    ymm13(b1101),
-    ymm14(b1110),
-    ymm15(b1111)
-;
 
 struct Mem8{
     long int addr;
@@ -400,7 +277,7 @@ public:
 #endif//R64FX_DEBUG_JIT_STDOUT
 };
 
-/** @brief Codes used with cmpps. */
+/* Codes used with cmpps. */
 const CmpCode
     EQ(0),
     LT(1),
@@ -413,7 +290,7 @@ const CmpCode
 ;
 
 
-/** @brief Pack four 0..3 values into a sigle byte. To be used with shuffle instructions. 
+/* Pack four 0..3 values into a sigle byte. To be used with shuffle instructions. 
  
     Each parameter defines the source scalar from which to read the data into the current position.
     For example 
@@ -440,10 +317,10 @@ public:
         m_end = m_begin;
     }
 
-    /** @brief Pointer to the beginning of the buffer. */
+    /* Pointer to the beginning of the buffer. */
     inline unsigned char* codeBegin() const { return m_begin; }
 
-    /** @brief Pointer to the byte past the end of the written bytes. 
+    /* Pointer to the byte past the end of the written bytes. 
      
         This can be used to obtain memory locations for doing branching to lower addresses.
      */
@@ -489,16 +366,6 @@ public:
         return m_bytes;
     }
 
-    inline void enableExec()
-    {
-        m_bytes->enableExec();
-    }
-
-    inline void disableExec()
-    {
-        m_bytes->disableExec();
-    }
-
     inline unsigned char* codeBegin()
     {
         return m_bytes->codeBegin();
@@ -519,13 +386,13 @@ public:
         m_bytes->setEnd(m_bytes->codeBegin());
     }
 
-    /** @brief Insert one or more nop instructions. */
+    /* Insert one or more nop instructions. */
     inline void nop(int count = 1)
     {
         while(count--) 
         {
 #ifdef R64FX_DEBUG_JIT_STDOUT
-            std::cout << (void*)ip() << "    nop\n";
+            std::cout << (void*)ip() << " nop\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
             *m_bytes << 0x90;
         }
@@ -534,7 +401,7 @@ public:
     inline void ret()
     {
 #ifdef R64FX_DEBUG_JIT_STDOUT
-        std::cout << (void*)ip() << "    ret\n";
+        std::cout << (void*)ip() << " ret\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
         *m_bytes << 0xC3;
     }
@@ -542,7 +409,7 @@ public:
     inline void rdtsc()
     {
 #ifdef R64FX_DEBUG_JIT_STDOUT
-        std::cout << (void*)ip() << "    rdtsc\n";
+        std::cout << (void*)ip() << " rdtsc\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
         *m_bytes << 0x0F << 0x31;
     }
@@ -550,44 +417,25 @@ public:
     inline void rdpmc() 
     { 
 #ifdef R64FX_DEBUG_JIT_STDOUT
-        std::cout << (void*)ip() << "    rdpmc\n";
+        std::cout << (void*)ip() << " rdpmc\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
         *m_bytes << 0x0F << 0x33;
     }
 
-    void add(GPR32 reg, Mem32 mem);
-    void add(Mem32 mem, GPR32 reg);
-    void add(GPR32 dst, GPR32 src);
-
+    void add(GPR64 reg, Imm32 imm);
+    void add(GPR64 dst, GPR64 src);
     void add(GPR64 reg, Mem64 mem);
     void add(Mem64 mem, GPR64 reg);
-    void add(GPR64 dst, GPR64 src);
-
-    void add(GPR64 reg, Base base, Disp8 disp = Disp8(0));
-    void add(Base base, GPR64 reg);
-
-    void add(GPR64 reg, Imm32 imm);
-    inline
-    void add(GPR64 reg, unsigned int imm) { add(reg, Imm32(imm)); }
-
-    void sub(GPR32 reg, Mem32 mem);
-    void sub(Mem32 mem, GPR32 reg);
-    void sub(GPR32 dst, GPR32 src);
+    void add(Base base, Disp8 disp, GPR64 reg);
+    void add(GPR64 reg, Base base, Disp8 disp);
 
     void sub(GPR64 reg, Mem64 mem);
     void sub(Mem64 mem, GPR64 reg);
     void sub(GPR64 dst, GPR64 src);
-
     void sub(GPR64 reg, Imm32 imm);
-    inline
-    void sub(GPR64 reg, unsigned int imm) { sub(reg, Imm32(imm)); }
-
     void sub(GPR64 reg, Base base);
-    void sub(Base base, GPR64 reg);
-
-    void mov(GPR32 reg, Mem32 mem);
-    void mov(Mem32 mem, GPR32 reg);
-    void mov(GPR32 dst, GPR32 src);
+    void sub(GPR64 reg, Base base, Disp8 disp);
+    void sub(Base base, Disp8 disp, GPR64 reg);
 
     void mov(GPR64 reg, Mem64 mem);
     void mov(Mem64 mem, GPR64 reg);
@@ -600,7 +448,6 @@ public:
     void mov(Base base, Disp8 disp, GPR64 reg);
     inline 
     void mov(Base base, GPR64 reg) { mov(base, Disp8(0), reg); }
-    void mov(Base base, GPR32 reg);
 
     void push(GPR64 reg);
 
