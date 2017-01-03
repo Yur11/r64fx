@@ -373,6 +373,31 @@ void Assembler::add(Base base, Disp8 disp, GPR64 reg)
 }
 
 
+void Assembler::sub(GPR64 reg, Imm32 imm)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " sub    " << reg.name() << ", " << (int)imm << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+    
+    *m_bytes << Rex(1, 0, 0, reg.prefix_bit());
+    *m_bytes << 0x81;
+    *m_bytes << ModRM(b11, 5, reg.code());
+    *m_bytes << imm;
+}
+
+
+void Assembler::sub(GPR64 dst, GPR64 src)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " sub    " << dst.name() << ", " << src.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+    
+    *m_bytes << Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
+    *m_bytes << 0x2B;
+    *m_bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
 void Assembler::sub(GPR64 reg, Mem64 mem)
 {
 #ifdef R64FX_DEBUG_JIT_STDOUT
@@ -399,40 +424,18 @@ void Assembler::sub(Mem64 mem, GPR64 reg)
 }
 
 
-void Assembler::sub(GPR64 dst, GPR64 src)
+void Assembler::sub(GPR64 reg, Base base, Disp8 disp)
 {
 #ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " sub    " << dst.name() << ", " << src.name() << "\n";
+    std::cout << (void*)ip() << " sub    [" << base.reg.name() << "] + " << int(disp.byte) << ", " << reg.name() << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
-    *m_bytes << Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
+
+    *m_bytes << Rex(1, reg.prefix_bit(), 0, base.reg.prefix_bit());
     *m_bytes << 0x2B;
-    *m_bytes << ModRM(b11, dst.code(), src.code());
-}
-
-
-void Assembler::sub(GPR64 reg, Imm32 imm)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " sub    " << reg.name() << ", " << (int)imm << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    *m_bytes << Rex(1, 0, 0, reg.prefix_bit());
-    *m_bytes << 0x81;
-    *m_bytes << ModRM(b11, 5, reg.code());
-    *m_bytes << imm;
-}
-
-
-void Assembler::sub(GPR64 reg, Base base)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " sub    " << reg.name() << ", [" << base.reg.name() << "]\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    *m_bytes << Rex(1, reg.prefix_bit(), 0, 0);
-    *m_bytes << 0x2B;
-    encode_modrm_and_sib_base(m_bytes, reg, base);
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(m_bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
 }
 
 
@@ -442,23 +445,8 @@ void Assembler::sub(Base base, Disp8 disp, GPR64 reg)
     std::cout << (void*)ip() << " sub    [" << base.reg.name() << "] + " << int(disp.byte) << ", " << reg.name() << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
 
-    if(reg.prefix_bit()) *m_bytes << Rex(0, 1, 0, 0);
+    *m_bytes << Rex(1, reg.prefix_bit(), 0, base.reg.prefix_bit());
     *m_bytes << 0x29;
-    if(disp.byte == 0)
-        encode_modrm_and_sib_base(m_bytes, reg, base);
-    else
-        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
-}
-
-
-void Assembler::sub(GPR64 reg, Base base, Disp8 disp)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " sub    [" << base.reg.name() << "] + " << int(disp.byte) << ", " << reg.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    if(reg.prefix_bit()) *m_bytes << Rex(0, 1, 0, 0);
-    *m_bytes << 0x2B;
     if(disp.byte == 0)
         encode_modrm_and_sib_base(m_bytes, reg, base);
     else

@@ -453,11 +453,10 @@ public:
     void add(GPR64 reg, Base base, Disp8 disp);
     void add(Base base, Disp8 disp, GPR64 reg);
 
-    void sub(GPR64 reg, Mem64 mem);
-    void sub(Mem64 mem, GPR64 reg);
     void sub(GPR64 dst, GPR64 src);
     void sub(GPR64 reg, Imm32 imm);
-    void sub(GPR64 reg, Base base);
+    void sub(GPR64 reg, Mem64 mem);
+    void sub(Mem64 mem, GPR64 reg);
     void sub(GPR64 reg, Base base, Disp8 disp);
     void sub(Base base, Disp8 disp, GPR64 reg);
 
