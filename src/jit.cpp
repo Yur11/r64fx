@@ -305,16 +305,15 @@ void Assembler::add(GPR64 reg, Imm32 imm)
 }
 
 
-void Assembler::add(Mem64 mem, GPR64 reg)
+void Assembler::add(GPR64 dst, GPR64 src)
 {
 #ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " add    [" << mem.addr << "], " << reg.name() << "\n";
+    std::cout << (void*)ip() << " add    " << dst.name() << ", " << src.name() << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
     
-    *m_bytes << Rex(1, reg.prefix_bit(), 0, 0);
-    *m_bytes << 0x01;
-    *m_bytes << ModRM(b00, reg.code(), b101);
-    *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
+    *m_bytes << Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
+    *m_bytes << 0x03;
+    *m_bytes << ModRM(b11, dst.code(), src.code());
 }
 
 
@@ -331,30 +330,16 @@ void Assembler::add(GPR64 reg, Mem64 mem)
 }
 
 
-void Assembler::add(GPR64 dst, GPR64 src)
+void Assembler::add(Mem64 mem, GPR64 reg)
 {
 #ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " add    " << dst.name() << ", " << src.name() << "\n";
+    std::cout << (void*)ip() << " add    [" << mem.addr << "], " << reg.name() << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
     
-    *m_bytes << Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
-    *m_bytes << 0x03;
-    *m_bytes << ModRM(b11, dst.code(), src.code());
-}
-
-
-void Assembler::add(Base base, Disp8 disp, GPR64 reg)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " add    [" << base.reg.name() << "], " << reg.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    *m_bytes << Rex(1, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    *m_bytes << Rex(1, reg.prefix_bit(), 0, 0);
     *m_bytes << 0x01;
-    if(disp.byte == 0)
-        encode_modrm_and_sib_base(m_bytes, reg, base);
-    else
-        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
+    *m_bytes << ModRM(b00, reg.code(), b101);
+    *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
 }
 
 
@@ -366,6 +351,21 @@ void Assembler::add(GPR64 reg, Base base, Disp8 disp)
     
     *m_bytes << Rex(1, reg.prefix_bit(), 0, base.reg.prefix_bit());
     *m_bytes << 0x03;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(m_bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
+}
+
+
+void Assembler::add(Base base, Disp8 disp, GPR64 reg)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " add    [" << base.reg.name() << "] + " << int(disp.byte) << ", " << reg.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+    
+    *m_bytes << Rex(1, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    *m_bytes << 0x01;
     if(disp.byte == 0)
         encode_modrm_and_sib_base(m_bytes, reg, base);
     else

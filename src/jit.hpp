@@ -86,7 +86,6 @@ union Imm64{
     unsigned char  b[8];
 };
 
-
 inline Imm64 Imm64S(signed long qword)
 {
     Imm64 imm;
@@ -99,6 +98,11 @@ inline Imm64 Imm64U(unsigned long qword)
     Imm64 imm;
     imm.u = qword;
     return imm;
+}
+
+inline Imm64 ImmAddr(void* addr)
+{
+    return Imm64U((unsigned long)addr);
 }
 
 
@@ -446,8 +450,8 @@ public:
     void add(GPR64 dst, GPR64 src);
     void add(GPR64 reg, Mem64 mem);
     void add(Mem64 mem, GPR64 reg);
-    void add(Base base, Disp8 disp, GPR64 reg);
     void add(GPR64 reg, Base base, Disp8 disp);
+    void add(Base base, Disp8 disp, GPR64 reg);
 
     void sub(GPR64 reg, Mem64 mem);
     void sub(Mem64 mem, GPR64 reg);
