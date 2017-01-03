@@ -454,6 +454,41 @@ void Assembler::sub(Base base, Disp8 disp, GPR64 reg)
 }
 
 
+void Assembler::push(GPR64 reg)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " push  " << reg.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    *m_bytes << Rex(1, 0, 0, reg.prefix_bit());
+    *m_bytes << (0x50 + (reg.code() & b0111));
+}
+
+
+void Assembler::pop(GPR64 reg)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " pop   " << reg.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    *m_bytes << Rex(1, 0, 0, reg.prefix_bit());
+    *m_bytes << (0x58 + (reg.code() & b0111));
+}
+
+
+void Assembler::cmp(GPR64 reg, Imm32 imm)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " cmp   " << reg.name() << ", " << (int)imm << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+    
+    *m_bytes << Rex(1, reg.prefix_bit(), 0, 0);
+    *m_bytes << 0x81;
+    *m_bytes << ModRM(b11, 7, reg.code());
+    *m_bytes << imm;
+}
+
+
 void Assembler::jmp(Mem8 mem)
 {
 #ifdef R64FX_DEBUG_JIT_STDOUT
@@ -1197,41 +1232,6 @@ void Assembler::psubd(Xmm reg, Base base, Disp8 disp)
         encode_modrm_and_sib_base(m_bytes, reg, base);
     else
         encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
-}
-
-
-void Assembler::push(GPR64 reg)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " push  " << reg.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    *m_bytes << Rex(1, 0, 0, reg.prefix_bit());
-    *m_bytes << (0x50 + (reg.code() & b0111));
-}
-
-
-void Assembler::pop(GPR64 reg)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " pop   " << reg.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    *m_bytes << Rex(1, 0, 0, reg.prefix_bit());
-    *m_bytes << (0x58 + (reg.code() & b0111));
-}
-
-
-void Assembler::cmp(GPR64 reg, Imm32 imm)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " cmp   " << reg.name() << ", " << (int)imm << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    *m_bytes << Rex(1, reg.prefix_bit(), 0, 0);
-    *m_bytes << 0x81;
-    *m_bytes << ModRM(b11, 7, reg.code());
-    *m_bytes << imm;
 }
 
 }//namespace r64fx

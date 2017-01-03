@@ -373,6 +373,25 @@ bool test_sub(Assembler &as)
 }
 
 
+bool test_push_pop(Assembler &as)
+{
+    auto jitfun = (JitFun) as.codeBegin();
+
+    cout << "push & pop\n";
+    {
+        long num = rand();
+        as.rewindIp();
+        as.mov(r9, Imm64S(num));
+        as.push(r9);
+        as.pop(rax);
+        as.ret();
+        R64FX_EXPECT_EQ(num, jitfun());
+    }
+
+    cout << "\n";
+    return true;
+}
+
 int main()
 {
     g_data = alloc_aligned_memory(memory_page_size(), memory_page_size());
@@ -388,7 +407,8 @@ int main()
     bool ok =
         test_mov(as) &&
         test_add(as) &&
-        test_sub(as)
+        test_sub(as) &&
+        test_push_pop(as)
     ;
 
     free(g_data);
