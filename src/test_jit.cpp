@@ -392,6 +392,162 @@ bool test_push_pop(Assembler &as)
     return true;
 }
 
+
+template<typename T> bool vec4_eq(T* a, T* b)
+{
+    return (a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]) && (a[3] == b[3]);
+}
+
+
+bool test_sse(Assembler &as)
+{
+    auto jitfun = (JitFun) as.codeBegin();
+
+    cout << "movaps\n";
+    {
+        float* buff = (float*) g_data;
+        auto a = buff;
+        auto b = buff + 4;
+        auto c = buff + 8;
+        auto d = buff + 12;
+
+        for(int i=0; i<4; i++)
+        {
+            a[i] = float(rand());
+            b[i] = float(rand());
+            c[i] = float(rand());
+            d[i] = float(rand());
+        }
+
+        as.rewindIp();
+        as.movaps(xmm0, Mem128(a));
+        as.movaps(xmm8, Mem128(b));
+        as.movaps(xmm1, xmm8);
+        as.movaps(xmm9, xmm0);
+        as.movaps(Mem128(c), xmm1);
+        as.movaps(Mem128(d), xmm9);
+        as.ret();
+
+        jitfun();
+
+        if(!vec4_eq(c, b) || !vec4_eq(a, d))
+        {
+            return false;
+        }
+    }
+
+    cout << "movups + rex\n";
+    {
+        float* buff = (float*) g_data;
+        auto a = buff + 1;
+        auto b = buff + 5;
+        auto c = buff + 9;
+        auto d = buff + 13;
+
+        for(int i=0; i<4; i++)
+        {
+            a[i] = float(rand());
+            b[i] = float(rand());
+            c[i] = float(rand());
+            d[i] = float(rand());
+        }
+
+        as.rewindIp();
+        as.movups(xmm0, Mem128(a));
+        as.movups(xmm8, Mem128(b));
+        as.movups(xmm1, xmm8);
+        as.movups(xmm9, xmm0);
+        as.movups(Mem128(c), xmm1);
+        as.movups(Mem128(d), xmm9);
+        as.ret();
+
+        jitfun();
+
+        if(!vec4_eq(c, b) || !vec4_eq(a, d))
+        {
+            return false;
+        }
+    }
+
+    cout << "(add|sub|mul|div)ps + rex\n";
+    {
+        float* buff = (float*) g_data;
+        auto a = buff + 4;
+        auto b = buff + 8;
+        auto c = buff + 12;
+        auto d = buff + 16;
+        auto f = buff + 20;
+        auto r = buff + 24;
+        auto n = buff + 28;
+
+        for(int i=0; i<4; i++)
+        {
+            n[i] = 0.0f;
+            a[i] = float(rand());
+            b[i] = float(rand());
+            c[i] = float(rand());
+            do{ d[i] = float(rand()); } while(d[i] == 0.0f);
+            r[i] = ((((a[i] + a[i] + a[i] - b[i] - b[i] - b[i]) * c[i] * c[i] * c[i]) / d[i]) / d[i]) / d[i];
+            f[i] = float(rand());
+        }
+
+        as.rewindIp();
+
+        as.movaps(xmm0,  Mem128(n));
+        as.movaps(xmm1,  Mem128(f));
+        as.movaps(xmm2,  Mem128(n));
+        as.movaps(xmm3,  Mem128(n));
+
+        as.movaps(xmm8,  Mem128(n));
+        as.movaps(xmm9,  Mem128(n));
+        as.movaps(xmm10, Mem128(n));
+        as.movaps(xmm11, Mem128(n));
+
+        as.mov(r9, ImmAddr(buff));
+
+        as.addps(xmm8, Mem128(a));
+        as.addps(xmm0, Mem128(f));
+        as.addps(xmm8, Base(r9), Disp8(4 * 4));
+        as.movaps(xmm9, Mem128(a));
+        as.addps(xmm8, xmm9);
+        as.addps(xmm0, xmm1);
+
+        as.subps(xmm8, Mem128(b));
+        as.subps(xmm0, Mem128(f));
+        as.subps(xmm8, Base(r9), Disp8(4 * 8));
+        as.movaps(xmm9, Mem128(b));
+        as.subps(xmm8, xmm9);
+        as.subps(xmm0, xmm1);
+
+        as.mulps(xmm8, Mem128(c));
+        as.mulps(xmm0, Mem128(f));
+        as.mulps(xmm8, Base(r9), Disp8(4 * 12));
+        as.movaps(xmm9, Mem128(c));
+        as.mulps(xmm8, xmm9);
+        as.mulps(xmm0, xmm1);
+
+        as.divps(xmm8, Mem128(d));
+        as.divps(xmm0, Mem128(f));
+        as.divps(xmm8, Base(r9), Disp8(4 * 16));
+        as.movaps(xmm9, Mem128(d));
+        as.divps(xmm8, xmm9);
+        as.divps(xmm0, xmm1);
+
+        as.movaps(Mem128(n), xmm8);
+        as.ret();
+        jitfun();
+
+        if(!vec4_eq(r, n))
+        {
+            return false;
+        }
+    }
+
+    cout << "\n";
+    return true;
+}
+
+
 int main()
 {
     g_data = alloc_aligned_memory(memory_page_size(), memory_page_size());
@@ -408,6 +564,7 @@ int main()
         test_mov(as) &&
         test_add(as) &&
         test_sub(as) &&
+        test_sse(as) &&
         test_push_pop(as)
     ;
 

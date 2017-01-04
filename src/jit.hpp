@@ -464,14 +464,24 @@ public:
     void pop(GPR64 reg);
 
     void cmp(GPR64 reg, Imm32 imm);
-    inline void cmp(GPR64 reg, unsigned int imm) { cmp(reg, Imm32U(imm)); }
-
     void jmp(Mem8 mem);
     void jnz(Mem8 mem);
     void jz(Mem8 mem);
     void je(Mem8 mem);
     void jne(Mem8 mem);
     void jl(Mem8 mem);
+
+    void movaps(Xmm dst, Xmm src);
+    void movaps(Xmm reg, Mem128 mem);
+    void movaps(Mem128, Xmm reg);
+    void movaps(Xmm reg, Base base, Disp8 disp);
+    void movaps(Base base, Disp8 disp, Xmm reg);
+
+    void movups(Xmm dst, Xmm src);
+    void movups(Xmm reg, Mem128 mem);
+    void movups(Mem128, Xmm reg);
+    void movups(Xmm reg, Base base, Disp8 disp);
+    void movups(Base base, Disp8 disp, Xmm reg);
 
 private:
     void sse_ps_instruction(unsigned char second_opcode, Xmm dst, Xmm src);
@@ -587,20 +597,6 @@ public:
 
     inline void cmpeqps(Xmm dst, Xmm src) { cmpps(EQ, dst, src); }
     inline void cmpeqps(Xmm reg, Mem128 mem) { cmpps(EQ, reg, mem); }
-
-    void movups(Xmm dst, Xmm src);
-    void movups(Xmm reg, Mem128 mem);
-    void movups(Xmm reg, Base base, Disp8 disp = Disp8(0));
-    void movups(Mem128, Xmm reg);
-    void movups(Base base, Disp8 disp, Xmm reg);
-    inline void movups(Base base, Xmm reg) { movups(base, Disp8(0), reg); }
-
-    void movaps(Xmm dst, Xmm src);
-    void movaps(Xmm reg, Mem128 mem);
-    void movaps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-    void movaps(Mem128, Xmm reg);
-    void movaps(Base base, Disp8 disp, Xmm reg);
-    inline void movaps(Base base, Xmm reg) { movaps(base, Disp8(0), reg); }
 
     void movss(Mem32 mem, Xmm reg);
     void movss(Xmm reg, Mem32 mem);

@@ -545,12 +545,152 @@ void Assembler::jl(Mem8 mem)
 }
 
 
+void Assembler::movaps(Xmm dst, Xmm src)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " movups " << dst.name() << ", " << src.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    if(dst.prefix_bit() || src.prefix_bit()) *m_bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    *m_bytes << 0x0F << 0x28;
+    *m_bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::movaps(Xmm reg, Mem128 mem)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " movaps " << reg.name() << ", [" << (void*)mem.addr << "]\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    *m_bytes << 0x0F << 0x28;
+    *m_bytes << ModRM(b00, reg.code(), b101);
+    *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
+}
+
+
+void Assembler::movaps(Mem128 mem, Xmm reg)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " movaps [" << (void*)mem.addr << "], " << reg.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    *m_bytes << 0x0F << 0x29;
+    *m_bytes << ModRM(b00, reg.code(), b101);
+    *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
+}
+
+
+void Assembler::movaps(Xmm reg, Base base, Disp8 disp)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " movups" << reg.name() << ", [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ]\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    if(reg.prefix_bit() || base.reg.prefix_bit())
+        *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    *m_bytes << 0x0F << 0x28;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(m_bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
+}
+
+
+void Assembler::movaps(Base base, Disp8 disp, Xmm reg)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " movups [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ], " << reg.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    if(reg.prefix_bit() || base.reg.prefix_bit())
+        *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    *m_bytes << 0x0F << 0x29;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(m_bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
+}
+
+
+void Assembler::movups(Xmm dst, Xmm src)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " movups " << dst.name() << ", " << src.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    if(dst.prefix_bit() || src.prefix_bit()) *m_bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+    *m_bytes << 0x0F << 0x10;
+    *m_bytes << ModRM(b11, dst.code(), src.code());
+}
+
+
+void Assembler::movups(Xmm reg, Mem128 mem)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " movups " << reg.name() << ", [" << (void*)mem.addr << "]\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    *m_bytes << 0x0F << 0x10;
+    *m_bytes << ModRM(b00, reg.code(), b101);
+    *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
+}
+
+
+void Assembler::movups(Mem128 mem, Xmm reg)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " movups [" << (void*)mem.addr << "], " << reg.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
+    *m_bytes << 0x0F << 0x11;
+    *m_bytes << ModRM(b00, reg.code(), b101);
+    *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
+}
+
+
+void Assembler::movups(Xmm reg, Base base, Disp8 disp)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " movups" << reg.name() << ", [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ]\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    if(reg.prefix_bit() || base.reg.prefix_bit())
+        *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    *m_bytes << 0x0F << 0x10;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(m_bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
+}
+
+
+void Assembler::movups(Base base, Disp8 disp, Xmm reg)
+{
+#ifdef R64FX_DEBUG_JIT_STDOUT
+    std::cout << (void*)ip() << " movups [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ], " << reg.name() << "\n";
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+    if(reg.prefix_bit() || base.reg.prefix_bit())
+        *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    *m_bytes << 0x0F << 0x11;
+    if(disp.byte == 0)
+        encode_modrm_and_sib_base(m_bytes, reg, base);
+    else
+        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
+}
+
+
 void Assembler::sse_ps_instruction(unsigned char second_opcode, Xmm dst, Xmm src)
 {
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << "  " << dst.name() << ", " << src.name() << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     if(dst.prefix_bit() || src.prefix_bit()) *m_bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
     *m_bytes << 0x0F << second_opcode;
     *m_bytes << ModRM(b11, dst.code(), src.code());
@@ -562,7 +702,7 @@ void Assembler::sse_ps_instruction(unsigned char second_opcode, Xmm reg, Mem128 
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << "  " << reg.name() << ", [" << (void*)mem.addr << "]\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
     *m_bytes << 0x0F << second_opcode;
     *m_bytes << ModRM(b00, reg.code(), b101);
@@ -575,7 +715,7 @@ void Assembler::sse_ps_instruction(unsigned char second_opcode, Xmm reg, Base ba
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << "  " << reg.name() << ", [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ]\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     if(reg.prefix_bit() || base.reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
     *m_bytes << 0x0F << second_opcode;
     if(disp.byte == 0)
@@ -620,7 +760,7 @@ void Assembler::sse_ss_instruction(unsigned char third_opcode, Xmm dst, Xmm src)
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << "  " << dst.name() << ", " << src.name() << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     *m_bytes << 0xF3;
     if(dst.prefix_bit() || src.prefix_bit()) *m_bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
     *m_bytes << 0x0F << third_opcode;
@@ -633,7 +773,7 @@ void Assembler::sse_ss_instruction(unsigned char third_opcode, Xmm reg, Mem32 me
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << "  " << reg.name() << ", [" << (void*)mem.addr << "]\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     *m_bytes << 0xF3;
     if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
     *m_bytes << 0x0F << third_opcode;
@@ -647,7 +787,7 @@ void Assembler::sse_ss_instruction(unsigned char third_opcode, Xmm reg, Base bas
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << "  " << reg.name() << ", [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ]\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     *m_bytes << 0xF3;
     if(reg.prefix_bit() || base.reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
     *m_bytes << 0x0F << third_opcode;
@@ -787,146 +927,6 @@ void Assembler::cmpss(CmpCode kind, Xmm reg, Base base, Disp8 disp)
     else
         encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
     *m_bytes << kind.code();
-}
-
-
-void Assembler::movups(Xmm dst, Xmm src)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " movups " << dst.name() << ", " << src.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    if(dst.prefix_bit() || src.prefix_bit()) *m_bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
-    *m_bytes << 0x0F << 0x10;
-    *m_bytes << ModRM(b11, dst.code(), src.code());
-}
-
-
-void Assembler::movups(Xmm reg, Mem128 mem)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " movups " << reg.name() << ", [" << (void*)mem.addr << "]\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-
-    if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
-    *m_bytes << 0x0F << 0x10;
-    *m_bytes << ModRM(b00, reg.code(), b101);
-    *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
-}
-
-
-void Assembler::movups(Xmm reg, Base base, Disp8 disp)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " movups" << reg.name() << ", [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ]\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-
-    if(reg.prefix_bit() || base.reg.prefix_bit()) 
-        *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
-    *m_bytes << 0x0F << 0x10;
-    if(disp.byte == 0)
-        encode_modrm_and_sib_base(m_bytes, reg, base);
-    else
-        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
-}
-
-
-void Assembler::movups(Mem128 mem, Xmm reg)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " movups [" << (void*)mem.addr << "], " << reg.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-
-    if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
-    *m_bytes << 0x0F << 0x11;
-    *m_bytes << ModRM(b00, reg.code(), b101);
-    *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
-}
-
-
-void Assembler::movups(Base base, Disp8 disp, Xmm reg)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " movups [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ], " << reg.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-
-    if(reg.prefix_bit() || base.reg.prefix_bit()) 
-        *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
-    *m_bytes << 0x0F << 0x11;
-    if(disp.byte == 0)
-        encode_modrm_and_sib_base(m_bytes, reg, base);
-    else
-        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
-}
-
-
-void Assembler::movaps(Xmm dst, Xmm src)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " movups " << dst.name() << ", " << src.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    if(dst.prefix_bit() || src.prefix_bit()) *m_bytes << Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
-    *m_bytes << 0x0F << 0x28;
-    *m_bytes << ModRM(b11, dst.code(), src.code());
-}
-
-
-void Assembler::movaps(Xmm reg, Mem128 mem)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " movaps " << reg.name() << ", [" << (void*)mem.addr << "]\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
-    *m_bytes << 0x0F << 0x28;
-    *m_bytes << ModRM(b00, reg.code(), b101);
-    *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
-}
-
-
-void Assembler::movaps(Xmm reg, Base base, Disp8 disp)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " movups" << reg.name() << ", [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ]\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    if(reg.prefix_bit() || base.reg.prefix_bit()) 
-        *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
-    *m_bytes << 0x0F << 0x28;
-    if(disp.byte == 0)
-        encode_modrm_and_sib_base(m_bytes, reg, base);
-    else
-        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
-}
-
-
-void Assembler::movaps(Mem128 mem, Xmm reg)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " movaps [" << (void*)mem.addr << "], " << reg.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    if(reg.prefix_bit()) *m_bytes << Rex(0, reg.prefix_bit(), 0, 0);
-    *m_bytes << 0x0F << 0x29;
-    *m_bytes << ModRM(b00, reg.code(), b101);
-    *m_bytes << Rip32(mem.addr, m_bytes->codeEnd() + 4);
-}
-
-
-void Assembler::movaps(Base base, Disp8 disp, Xmm reg)
-{
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " movups [ " << base.reg.name() << " + " << (unsigned int) disp.byte << " ], " << reg.name() << "\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-    
-    if(reg.prefix_bit() || base.reg.prefix_bit()) 
-        *m_bytes << Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
-    *m_bytes << 0x0F << 0x29;
-    if(disp.byte == 0)
-        encode_modrm_and_sib_base(m_bytes, reg, base);
-    else
-        encode_modrm_sib_base_and_disp8(m_bytes, reg, base, disp);
 }
 
 
