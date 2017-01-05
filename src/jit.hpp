@@ -319,7 +319,7 @@ const CmpCode
        - shuf(3, 2, 1, 0) - reverse order.
        - etc...
  */
-unsigned char shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3);
+unsigned char Shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3);
 
 
 class CodeBuffer{
@@ -601,18 +601,12 @@ public:
     void movss(Mem32 mem, Xmm reg);
     void movss(Xmm reg, Mem32 mem);
 
-    /* ??? */
     void shufps(Xmm dst, Xmm src, unsigned char imm);
     void shufps(Xmm reg, Mem128 mem, unsigned char imm);
-    /* ??? */
 
     void pshufd(Xmm dst, Xmm src, unsigned char imm);
     void pshufd(Xmm reg, Mem128 mem, unsigned char imm);
     void pshufd(Xmm reg, Base base, Disp8 disp, unsigned char imm);
-    inline void pshufd(Xmm reg, Base base, unsigned char imm)
-    {
-        pshufd(reg, base, Disp8(0), imm);
-    }
 
     void cvtps2dq(Xmm dst, Xmm src);
     void cvtps2dq(Xmm reg, Mem128 mem);
@@ -625,7 +619,7 @@ public:
     void paddd(Xmm dst, Xmm src);
     void paddd(Xmm reg, Mem128 mem);
     void paddd(Xmm reg, Base base, Disp8 disp = Disp8(0));
-    
+
     void psubd(Xmm dst, Xmm src);
     void psubd(Xmm reg, Mem128 mem);
     void psubd(Xmm reg, Base base, Disp8 disp = Disp8(0));

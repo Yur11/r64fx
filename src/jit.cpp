@@ -187,7 +187,7 @@ void encode_modrm_and_sib_base(CodeBuffer* bytes, Register &reg, Base &base)
 }
 
 
-unsigned char shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3)
+unsigned char Shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3)
 {
     return (s3 << 6) + (s2 << 4) + (s1 << 2) + s0;
 }

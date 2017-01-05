@@ -403,7 +403,7 @@ bool test_sse(Assembler &as)
 {
     auto jitfun = (JitFun) as.codeBegin();
 
-    cout << "movaps\n";
+    cout << "movaps + rex\n";
     {
         float* buff = (float*) g_data;
         auto a = buff;
@@ -709,6 +709,159 @@ bool test_sse(Assembler &as)
         jitfun();
 
         if(!vec4_eq(r, n))
+        {
+            return false;
+        }
+    }
+
+    cout << "minps\n";
+    {
+        float* buff = (float*) g_data;
+        auto a = buff;
+        auto b = buff + 4;
+        auto c = buff + 8;
+        auto d = buff + 12;
+        auto n = buff + 16;
+        auto r = buff + 20;
+        auto m = buff + 24;
+
+        for(int i=0; i<4; i++)
+        {
+            m[i] = float(rand());
+            a[i] = float(rand());
+            b[i] = float(rand());
+            c[i] = float(rand());
+            d[i] = float(rand());
+            r[i] = d[i];
+            r[i] = (r[i] < a[i] ? r[i] : a[i]);
+            r[i] += m[i];
+            r[i] = (r[i] < b[i] ? r[i] : b[i]);
+            r[i] *= m[i];
+            r[i] = (r[i] < c[i] ? r[i] : c[i]);
+            n[i] = 0;
+        }
+
+        as.rewindIp();
+        as.movaps(xmm8, Mem128(d));
+        as.minps(xmm8, Mem128(a));
+        as.addps(xmm8, Mem128(m));
+        as.movaps(xmm9, Mem128(b));
+        as.minps(xmm8, xmm9);
+        as.mulps(xmm8, Mem128(m));
+        as.mov(rcx, ImmAddr(buff));
+        as.minps(xmm8, Base(rcx), Disp8(4 * 8));
+        as.movaps(Mem128(n), xmm8);
+        as.ret();
+        jitfun();
+
+        if(!vec4_eq(r, n))
+        {
+            return false;
+        }
+    }
+
+    cout << "maxps\n";
+    {
+        float* buff = (float*) g_data;
+        auto a = buff;
+        auto b = buff + 4;
+        auto c = buff + 8;
+        auto d = buff + 12;
+        auto n = buff + 16;
+        auto r = buff + 20;
+        auto m = buff + 24;
+
+        for(int i=0; i<4; i++)
+        {
+            m[i] = float(rand());
+            a[i] = float(rand());
+            b[i] = float(rand());
+            c[i] = float(rand());
+            d[i] = float(rand());
+            r[i] = d[i];
+            r[i] = (r[i] > a[i] ? r[i] : a[i]);
+            r[i] += m[i];
+            r[i] = (r[i] > b[i] ? r[i] : b[i]);
+            r[i] *= m[i];
+            r[i] = (r[i] > c[i] ? r[i] : c[i]);
+            n[i] = 0;
+        }
+
+        as.rewindIp();
+        as.movaps(xmm8, Mem128(d));
+        as.maxps(xmm8, Mem128(a));
+        as.addps(xmm8, Mem128(m));
+        as.movaps(xmm9, Mem128(b));
+        as.maxps(xmm8, xmm9);
+        as.mulps(xmm8, Mem128(m));
+        as.mov(rcx, ImmAddr(buff));
+        as.maxps(xmm8, Base(rcx), Disp8(4 * 8));
+        as.movaps(Mem128(n), xmm8);
+        as.ret();
+        jitfun();
+
+        if(!vec4_eq(r, n))
+        {
+            return false;
+        }
+    }
+
+    cout << "pshufd\n";
+    {
+        int* buff = (int*) g_data;
+        auto a1 = buff;
+        auto b1 = buff + 4;
+        auto c1 = buff + 8;
+        auto a2 = buff + 12;
+        auto b2 = buff + 16;
+        auto c2 = buff + 20;
+        auto a3 = buff + 24;
+        auto b3 = buff + 28;
+        auto c3 = buff + 32;
+
+        for(int i=0; i<4; i++)
+        {
+            a1[i] = rand();
+            b1[i] = 0;
+
+            a2[i] = rand();
+            b2[i] = 0;
+
+            a3[i] = rand();
+            b3[i] = 0;
+        }
+
+        c1[3] = a1[0];
+        c1[2] = a1[1];
+        c1[1] = a1[2];
+        c1[0] = a1[3];
+
+        c2[3] = a2[1];
+        c2[2] = a2[1];
+        c2[1] = a2[1];
+        c2[0] = a2[1];
+
+        c3[3] = a3[0];
+        c3[2] = a3[2];
+        c3[1] = a3[0];
+        c3[0] = a3[2];
+
+        as.rewindIp();
+        as.pshufd(xmm8, Mem128(a1), Shuf(3, 2, 1, 0));
+        as.movaps(Mem128(b1), xmm8);
+
+        as.movaps(xmm0, Mem128(a2));
+        as.pshufd(xmm0, xmm0, Shuf(1, 1, 1, 1));
+        as.movaps(Mem128(b2), xmm0);
+
+        as.mov(rcx, ImmAddr(buff));
+        as.pshufd(xmm5, Base(rcx), Disp8(4 * 24), Shuf(2, 0, 2, 0));
+        as.movaps(Mem128(b3), xmm5);
+
+        as.ret();
+        jitfun();
+
+        if(!vec4_eq(b1, c1) || !vec4_eq(b2, c2) || !vec4_eq(b3, c3))
         {
             return false;
         }
