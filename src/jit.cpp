@@ -494,7 +494,7 @@ void Assembler::jmp(Mem8 mem)
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << (void*)ip() << " jnz   " << (void*)mem.addr << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     *m_bytes << 0xE9;
     *m_bytes << Rip32(mem.addr, ip() + 4);
 }
@@ -505,7 +505,7 @@ void Assembler::jnz(Mem8 mem)
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << (void*)ip() << " jnz    " << (void*)mem.addr << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     *m_bytes << 0x0F << 0x85;
     *m_bytes << Rip32(mem.addr, ip() + 4);
 }
@@ -516,7 +516,7 @@ void Assembler::jz(Mem8 mem)
 #ifdef R64FX_DEBUG_JIT_STDOUT
     std::cout << (void*)ip() << " jz    " << (void*)mem.addr << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
-    
+
     *m_bytes << 0x0F << 0x84;
     *m_bytes << Rip32(mem.addr, ip() + 4);
 }

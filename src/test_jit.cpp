@@ -872,6 +872,28 @@ bool test_sse(Assembler &as)
 }
 
 
+bool test_jumps(Assembler &as)
+{
+    auto jitfun = (JitFun) as.codeBegin();
+
+    cout << "jnz\n";
+    {
+        as.rewindIp();
+        as.mov(rax, Imm32S(0));
+        as.mov(rcx, Imm32S(1234));
+        auto loop1 = as.ip();
+        as.add(rax, Imm32S(2));
+        as.sub(rcx, Imm32S(1));
+        as.jnz(Mem8(loop1));
+        as.ret();
+        R64FX_EXPECT_EQ(2468, jitfun());
+    }
+
+    cout << "\n";
+    return true;
+}
+
+
 int main()
 {
     g_data = alloc_aligned_memory(memory_page_size(), memory_page_size());
@@ -889,7 +911,8 @@ int main()
         test_add(as) &&
         test_sub(as) &&
         test_sse(as) &&
-        test_push_pop(as)
+        test_push_pop(as) &&
+        test_jumps(as);
     ;
 
     free(g_data);
