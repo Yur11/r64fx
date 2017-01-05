@@ -543,6 +543,177 @@ bool test_sse(Assembler &as)
         }
     }
 
+    cout << "p(add|sub)d + rex\n";
+    {
+        int* buff = (int*) g_data;
+        auto a = buff + 4;
+        auto b = buff + 8;
+        auto f = buff + 20;
+        auto r = buff + 24;
+        auto n = buff + 28;
+
+        for(int i=0; i<4; i++)
+        {
+            n[i] = 0.0f;
+            a[i] = rand();
+            b[i] = rand();
+            r[i] = a[i] + a[i] + a[i] - b[i] - b[i] - b[i];
+            f[i] = rand();
+        }
+
+        as.rewindIp();
+
+        as.movaps(xmm0,  Mem128(n));
+        as.movaps(xmm1,  Mem128(f));
+        as.movaps(xmm2,  Mem128(n));
+        as.movaps(xmm3,  Mem128(n));
+
+        as.movaps(xmm8,  Mem128(n));
+        as.movaps(xmm9,  Mem128(n));
+        as.movaps(xmm10, Mem128(n));
+        as.movaps(xmm11, Mem128(n));
+
+        as.mov(r9, ImmAddr(buff));
+
+        as.paddd(xmm8, Mem128(a));
+        as.paddd(xmm0, Mem128(f));
+        as.paddd(xmm8, Base(r9), Disp8(4 * 4));
+        as.movaps(xmm9, Mem128(a));
+        as.paddd(xmm8, xmm9);
+        as.paddd(xmm0, xmm1);
+
+        as.psubd(xmm8, Mem128(b));
+        as.psubd(xmm0, Mem128(f));
+        as.psubd(xmm8, Base(r9), Disp8(4 * 8));
+        as.movaps(xmm9, Mem128(b));
+        as.psubd(xmm8, xmm9);
+        as.psubd(xmm0, xmm1);
+
+        as.movaps(Mem128(n), xmm8);
+        as.ret();
+        jitfun();
+
+        if(!vec4_eq(r, n))
+        {
+            return false;
+        }
+    }
+
+    cout << "(and|andn|or|xor)ps + rex\n";
+    {
+        int* buff = (int*) g_data;
+        auto a = buff + 4;
+        auto b = buff + 8;
+        auto c = buff + 12;
+        auto d = buff + 16;
+        auto f = buff + 20;
+        auto r = buff + 24;
+        auto n = buff + 28;
+        auto u = buff + 32;
+
+        int num = 1 + 4 + 16 + 32 + 128 + 1024 + 2048 + 8196;
+        for(int i=0; i<4; i++)
+        {
+            n[i] = 0;
+            u[i] = num;
+            a[i] = rand();
+            b[i] = rand();
+            c[i] = rand();
+            d[i] = rand();
+
+            r[i] = u[i];
+            r[i] = r[i] & a[i];
+            r[i] += num;
+            r[i] = r[i] & a[i];
+            r[i] += num;
+            r[i] = r[i] & a[i];
+            r[i] += num;
+            r[i] = (~r[i]) & b[i];
+            r[i] += num;
+            r[i] = (~r[i]) & b[i];
+            r[i] += num;
+            r[i] = (~r[i]) & b[i];
+            r[i] += num;
+            r[i] = r[i] | c[i];
+            r[i] += num;
+            r[i] = r[i] | c[i];
+            r[i] += num;
+            r[i] = r[i] | c[i];
+            r[i] += num;
+            r[i] = r[i] ^ d[i];
+            r[i] += num;
+            r[i] = r[i] ^ d[i];
+            r[i] += num;
+            r[i] = r[i] ^ d[i];
+            r[i] += num;
+
+            f[i] = rand();
+        }
+
+        as.rewindIp();
+
+        as.movaps(xmm0,  Mem128(n));
+        as.movaps(xmm1,  Mem128(f));
+        as.movaps(xmm2,  Mem128(n));
+        as.movaps(xmm3,  Mem128(n));
+
+        as.movaps(xmm8,  Mem128(u));
+        as.movaps(xmm9,  Mem128(u));
+        as.movaps(xmm10, Mem128(u));
+        as.movaps(xmm11, Mem128(u));
+
+        as.mov(r9, ImmAddr(buff));
+
+        as.andps(xmm8, Mem128(a));
+        as.paddd(xmm8, Mem128(u));
+        as.andps(xmm0, Mem128(f));
+        as.andps(xmm8, Base(r9), Disp8(4 * 4));
+        as.paddd(xmm8, Mem128(u));
+        as.movaps(xmm9, Mem128(a));
+        as.andps(xmm8, xmm9);
+        as.paddd(xmm8, Mem128(u));
+        as.andps(xmm0, xmm1);
+
+        as.andnps(xmm8, Mem128(b));
+        as.paddd(xmm8, Mem128(u));
+        as.andnps(xmm0, Mem128(f));
+        as.andnps(xmm8, Base(r9), Disp8(4 * 8));
+        as.paddd(xmm8, Mem128(u));
+        as.movaps(xmm9, Mem128(b));
+        as.andnps(xmm8, xmm9);
+        as.paddd(xmm8, Mem128(u));
+        as.andnps(xmm0, xmm1);
+
+        as.orps(xmm8, Mem128(c));
+        as.paddd(xmm8, Mem128(u));
+        as.orps(xmm0, Mem128(f));
+        as.orps(xmm8, Base(r9), Disp8(4 * 12));
+        as.paddd(xmm8, Mem128(u));
+        as.movaps(xmm9, Mem128(c));
+        as.orps(xmm8, xmm9);
+        as.paddd(xmm8, Mem128(u));
+        as.orps(xmm0, xmm1);
+
+        as.xorps(xmm8, Mem128(d));
+        as.paddd(xmm8, Mem128(u));
+        as.xorps(xmm0, Mem128(f));
+        as.xorps(xmm8, Base(r9), Disp8(4 * 16));
+        as.paddd(xmm8, Mem128(u));
+        as.movaps(xmm9, Mem128(d));
+        as.xorps(xmm8, xmm9);
+        as.paddd(xmm8, Mem128(u));
+        as.xorps(xmm0, xmm1);
+
+        as.movaps(Mem128(n), xmm8);
+        as.ret();
+        jitfun();
+
+        if(!vec4_eq(r, n))
+        {
+            return false;
+        }
+    }
+
     cout << "\n";
     return true;
 }
