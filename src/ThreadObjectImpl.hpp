@@ -1,7 +1,6 @@
 #ifndef R64FX_THREAD_OBJECT_IMPL_HPP
 #define R64FX_THREAD_OBJECT_IMPL_HPP
 
-#include "LinkedList.hpp"
 #include "ThreadObjectMessage.hpp"
 
 namespace r64fx{
@@ -64,7 +63,8 @@ protected:
     void readMessagesFromIface();
 };
 
-class ThreadObjectImpl : public LinkedList<ThreadObjectImpl>::Node{
+
+class ThreadObjectImpl{
     friend class ThreadObjectManagerImpl;
     ThreadObjectManagerImpl*       m_manager  = nullptr;
     ThreadObjectIface*             m_iface    = nullptr;

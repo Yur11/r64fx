@@ -106,19 +106,19 @@ public:
     virtual SoundDriverIOPort_MidiInput* newMidiInput(const std::string &name = "") = 0;
 
     virtual SoundDriverIOPort_MidiOutput* newMidiOutput(const std::string &name = "") = 0;
-    
+
     virtual SoundDriverIOPort* findPort(const std::string &name) = 0;
-    
+
     virtual void deletePort(SoundDriverIOPort* port) = 0;
 
     virtual SoundDriverIOStatusPort* newStatusPort() = 0;
-    
+
     virtual void deletePort(SoundDriverIOStatusPort* port) = 0;
-    
+
     virtual bool connect(const std::string &src, const std::string &dst) = 0;
 
     virtual bool disconnect(const std::string &src, const std::string &dst) = 0;
-    
+
     static SoundDriver* newInstance(SoundDriver::Type type);
 
     static void deleteInstance(SoundDriver* driver);
