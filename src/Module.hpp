@@ -47,7 +47,12 @@ protected:
 
     virtual ~Module();
 
-    virtual void forEachPort(ModulePortCallback callback);
+    virtual void forEachPort(ModulePortCallback callback) = 0;
+
+public:
+    virtual void engage() = 0;
+
+    virtual void disengage() = 0;
 };
 
 

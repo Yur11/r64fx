@@ -6,6 +6,8 @@
 
 namespace r64fx{
 
+class SoundDriver;
+
 class ModuleThreadObjectIface : public ThreadObjectIface{
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg);
 
@@ -37,31 +39,16 @@ class ModuleThreadObjectWithdrawalAgent : public ThreadObjectWithdrawalAgent{
 };
 
 
-class ModuleThreadObjectExecAgent : public ThreadObjectExecAgent{
-    bool m_running = true;
-
-    virtual void exec();
-
-    virtual void terminate();
-};
-
-
 struct ModuleGlobal{
     ModuleThreadObjectIface* root = nullptr;
+
+    static SoundDriver* soundDriver();
 };
 
 #ifndef R64FX_MODULE_PRIVATE_IMPL
 extern
 #endif//R64FX_MODULE_PRIVATE_IMPL
 ModuleGlobal g_module;
-
-
-class ModulePrivate{
-public:
-    static void setModulePayload(Module* module, void* payload);
-
-    static void* getModulePayload(Module* module);
-};
 
 }//namespace r64fx
 
