@@ -9,6 +9,7 @@
 #include "TimeUtils.hpp"
 
 #include "Player.hpp"
+#include "Module_Oscillator.hpp"
 
 #include <iostream>
 
@@ -35,11 +36,16 @@ struct ProgramPrivate : public MainViewEventIface{
 
         newProject();
 
+        Module_Oscillator osc;
+        osc.engage();
+
         while(running)
         {
             auto time = Timer::runTimers();
             sleep_nanoseconds(time);
         }
+
+        osc.disengage();
 
         main_view->closeWindow();
         closeAllProjects();

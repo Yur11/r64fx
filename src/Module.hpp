@@ -42,17 +42,16 @@ class Module{
     friend class ModulePrivate;
     void* m = nullptr;
 
-protected:
+public:
     Module();
 
     virtual ~Module();
 
-    virtual void forEachPort(ModulePortCallback callback) = 0;
-
-public:
     virtual void engage() = 0;
 
     virtual void disengage() = 0;
+
+    virtual bool isEngaged() = 0;
 };
 
 

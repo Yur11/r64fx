@@ -6,12 +6,18 @@
 namespace r64fx{
 
 class Module_Oscillator : public Module{
+    void* m = nullptr;
+
 public:
     Module_Oscillator();
 
     virtual ~Module_Oscillator();
 
-    void changeFrequency(float freq, ModuleCallback done, void* done_arg);
+    virtual void engage();
+
+    virtual void disengage();
+
+    virtual bool isEngaged();
 };
 
 }//namespace r64fx

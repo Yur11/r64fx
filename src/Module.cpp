@@ -16,19 +16,6 @@ namespace{
 }//namespace
 
 
-ThreadObjectImpl* ModuleThreadObjectDeploymentAgent::deployImpl(ThreadObjectIface* public_iface)
-{
-    auto impl = new ModuleThreadObjectImpl(public_iface);
-    return impl;
-}
-
-
-void ModuleThreadObjectWithdrawalAgent::withdrawImpl(ThreadObjectImpl* impl)
-{
-    delete impl;
-}
-
-
 struct ModuleThreadObjectExecAgent : public ThreadObjectExecAgent{
     bool m_running;
     SoundDriverIOStatusPort* m_status_port;
@@ -37,7 +24,7 @@ struct ModuleThreadObjectExecAgent : public ThreadObjectExecAgent{
     {
         if(g_module_exec_agent_count == 0)
         {
-            g_SoundDriver = SoundDriver::newInstance(SoundDriver::Type::Jack);
+            g_SoundDriver = SoundDriver::newInstance(SoundDriver::Type::Stub);
         }
         g_module_exec_agent_count++;
         m_status_port = g_SoundDriver->newStatusPort();
@@ -82,10 +69,10 @@ void ModuleThreadObjectImpl::messageFromIfaceRecieved(const ThreadObjectMessage 
 }
 
 
-void ModuleThreadObjectIface::messageFromImplRecieved(const ThreadObjectMessage &msg)
-{
-    
-}
+// void ModuleThreadObjectIface::messageFromImplRecieved(const ThreadObjectMessage &msg)
+// {
+//     
+// }
 
 
 void ModuleThreadObjectIface::deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent)
@@ -130,12 +117,6 @@ Module::Module()
 Module::~Module()
 {
 
-}
-
-
-void Module::forEachPort(ModulePortCallback callback)
-{
-    
 }
 
 

@@ -9,7 +9,7 @@ namespace r64fx{
 class SoundDriver;
 
 class ModuleThreadObjectIface : public ThreadObjectIface{
-    virtual void messageFromImplRecieved(const ThreadObjectMessage &msg);
+//     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg);
 
     virtual void deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent);
 
@@ -19,6 +19,17 @@ class ModuleThreadObjectIface : public ThreadObjectIface{
 
     virtual void deleteExecAgent(ThreadObjectExecAgent* agent);
 };
+
+#define R64FX_MODULE_AGENTS(name)\
+    virtual ThreadObjectDeploymentAgent* newDeploymentAgent()\
+    {\
+        return new name##DeploymentAgent;\
+    }\
+\
+    virtual ThreadObjectWithdrawalAgent* newWithdrawalAgent()\
+    {\
+        return new name##WithdrawalAgent;\
+    }\
 
 
 class ModuleThreadObjectImpl : public ThreadObjectImpl{
@@ -30,12 +41,12 @@ public:
 
 
 class ModuleThreadObjectDeploymentAgent : public ThreadObjectDeploymentAgent{
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface);
+//     virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface);
 };
 
 
 class ModuleThreadObjectWithdrawalAgent : public ThreadObjectWithdrawalAgent{
-    virtual void withdrawImpl(ThreadObjectImpl* impl);
+//     virtual void withdrawImpl(ThreadObjectImpl* impl);
 };
 
 
