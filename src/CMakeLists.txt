@@ -147,6 +147,15 @@ set(test_Timer_LIBS pthread)
 target_link_libraries(test_Timer ${test_Timer_LIBS})
 
 
+## test_MemoryUtils ##
+set(test_MemoryUtils_SRC
+    test_MemoryUtils.cpp
+    MemoryUtils.cpp
+)
+
+add_executable(test_MemoryUtils ${test_MemoryUtils_SRC})
+
+
 ## test_ThreadObject ##
 set(test_ThreadObject_SRC
     test_ThreadObject.cpp 
