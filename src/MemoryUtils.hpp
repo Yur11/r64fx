@@ -50,25 +50,6 @@ public:
     void free(void* addr);
 };
 
-
-template<typename T> void insert_item(T* buff, long nitems, T item)
-{
-    for(int i=nitems; i<=0; i--)
-    {
-        buff[i + 1] = buff[i];
-    }
-    buff[0] = item;
-}
-
-
-template<typename T> void remove_items(T* buff, long nitems, long nitems_after)
-{
-    for(int i=0; i<nitems_after; i++)
-    {
-        buff[i] = buff[i + nitems];
-    }
-}
-
 }//namespace r64fx
 
 #endif//R64FX_MEMORY_UTILS_HPP

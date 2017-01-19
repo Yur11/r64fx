@@ -1,7 +1,7 @@
 #include "MemoryUtils.hpp"
 #include <iostream>
 
-#define R64FX_CHECK_ALIGNMENT(addr) if((long(a) % 8) != 0){ cout << "Alignment Fail!\n"; return false; }
+#define R64FX_CHECK_ALIGNMENT(addr) if((long(addr) % 8) != 0){ cout << "Alignment Fail!\n"; return false; }
 
 #define R64FX_CHECK_HEADER(...)\
 {\
@@ -45,7 +45,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     auto buffuchar = (unsigned char*) hb->buffer();
     auto buffend = buffuchar + hb->size();
 
-    cout << "Create Buffer\n";
+    cout << "Testing HeapBuffer\n";
     {
         if(!cmp_buffs<unsigned char>(buffend - sizeof(HeapBuffer), hb, sizeof(HeapBuffer)))
             return false;
@@ -365,7 +365,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "free c\n";
-    hb->free(c);
+    hb->free(c); c = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         sizeof(HeapBuffer)/8 + 1,            //a
@@ -375,16 +375,184 @@ bool test_HeapBuffer(HeapBuffer* hb)
         0
     );
 
+    cout << "free a, e, f\n";
+    hb->free(a); a = nullptr;
+    hb->free(e); e = nullptr;
+    hb->free(f); f = nullptr;
+    R64FX_CHECK_HEADER(sizeof(HeapBuffer)/8, 0);
+
+    return true;
+}
+
+
+
+bool testha(
+    HeapAllocator* ha, int depth
+)
+{
+    static const int nbufs = 3;
+
+    if(depth == 0)
+        return true;
+
+    unsigned long*  ptr[nbufs];
+    unsigned long*  buf[nbufs];
+    int             len[nbufs];
+    for(int i=0; i<nbufs; i++)
+    {
+        len[i] = ((rand() % 64) + 1);
+        ptr[i] = (unsigned long*) ha->alloc(len[i] * 8);
+//         ptr[i] = new unsigned long[len[i]];
+        if(!ptr[i])
+        {
+            cout << "\nAllocation Failed!\n";
+            abort();
+            return false;
+        }
+        R64FX_CHECK_ALIGNMENT(ptr[i]);
+
+        buf[i] = new unsigned long[len[i]];
+        for(int j=0; j<len[i]; j++)
+        {
+            buf[i][j] = (unsigned long)rand();
+            ptr[i][j] = buf[i][j];
+        }
+    }
+
+    int act = rand() % 5;
+    switch(act)
+    {
+        case 0:
+        {
+            for(int i=0; i<((rand() % 16) + 1); i++)
+            {
+                if(!testha(ha, depth - 1))
+                {
+                    return false;
+                }
+            }
+            break;
+        }
+
+        case 1:
+        {
+            for(int i=0; i<nbufs; i++)
+            {
+                auto tmp = (unsigned long*) ha->alloc((len[i])*8);
+//                 auto tmp = new unsigned long[len[i]];
+                if(!tmp)
+                {
+                    cout << "1: Failed to allocate tmp!\n";
+                    return false;
+                }
+                for(int j=0; j<len[i]; j++)
+                {
+                    tmp[j] = ptr[i][j];
+                }
+
+                ha->free(ptr[i]); 
+//                 delete[] ptr[i];
+                ptr[i] = nullptr;
+
+//                 if(!testha(ha, depth - 1))
+//                 {
+//                     return false;
+//                 }
+
+                ptr[i] = (unsigned long*) ha->alloc(len[i] * 8);
+//                 ptr[i] = new unsigned long[len[i]];
+                if(!ptr[i])
+                {
+                    cout << "1: Failed to reallocate ptr!\n";
+                    return false;
+                }
+
+                for(int j=0; j<len[i]; j++)
+                {
+                    ptr[i][j] = buf[i][j];
+                }
+//                 delete[] tmp;
+                ha->free(tmp);
+            }
+            break;
+        }
+
+        case 2:
+        {
+            break;
+        }
+
+        case 3:
+        {
+            break;
+        }
+
+        case 4:
+        {
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    for(int i=0; i<nbufs; i++)
+    {
+        for(int j=0; j<len[i]; j++)
+        {
+            if(ptr[i][j] != buf[i][j])
+            {
+                cout << "\nData Corrupted!\n";
+                cout << i << ":" << j << " -> " << ptr[i][j] << " -- " << buf[i][j] << " :: " << depth << "\n";
+                for(int i=0; i<nbufs; i++)
+                    delete[] buf[i];
+                return false;
+            }
+        }
+        ha->free(ptr[i]);
+//         delete[] ptr[i];
+        
+    }
+
+    for(int i=0; i<nbufs; i++)
+        delete[] buf[i];
+    return true;
+}
+
+
+bool test_HeapAllocator(HeapAllocator* ha)
+{
+    cout << "Testing HeapAllocator";
+    cout.flush();
+    for(int n=0; n<32; n++)
+    {
+        cout << ".";
+        cout.flush();
+        if(!testha(ha, 16))
+        {
+            return false;
+        }
+    }
+
+    cout << "\n";
     return true;
 }
 
 
 int main()
 {
-    auto hb = HeapBuffer::newInstance(128);
-    auto ok = test_HeapBuffer(hb);
+    srand(time(nullptr));
 
+    auto ok = true;
+
+    auto hb = HeapBuffer::newInstance(128);
+    ok = ok && test_HeapBuffer(hb);
     HeapBuffer::deleteInstance(hb);
+
+    auto ha = new HeapAllocator;
+    ok = ok && test_HeapAllocator(ha);
+    delete ha;
+
     if(ok)
     {
         cout << "OK!\n";

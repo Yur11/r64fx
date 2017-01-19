@@ -36,6 +36,7 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
     {
         if(wordbuff[i] == 0)
         {
+            std::cout << "A\n";
             long header_bytes = (i + 2) * 2;
 
             long data_bytes = 0;
@@ -60,17 +61,22 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
             long avail_bytes = ((wordbuff[i + 1] & 0x7FFF) - (wordbuff[i] & 0x7FFF)) << 3;
             if(avail_bytes == chunk_bytes)
             {
+                std::cout << "B\n";
                 wordbuff[i] &= 0x7FFF;
                 return (((unsigned char*)buff) + buff_bytes - (wordbuff[i] << 3));
             }
             else if(avail_bytes > chunk_bytes)
             {
+                std::cout << "C\n";
                 int n = i;
                 while(wordbuff[n] != 0)
                     n++;
                 long middle_bytes = buff_bytes - ((n + 2) * 2) - (wordbuff[n] << 3);
                 if(middle_bytes < 2)
+                {
                     return nullptr;//No space to grow header!
+                }
+
                 for(int j=(n + 1); j>i; j--)
                 {
                     wordbuff[j + 1] = wordbuff[j];
@@ -86,10 +92,28 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
 
 bool free_chunk(void* buff, long buff_bytes, void* chunk)
 {
+#ifdef R64FX_DEBUG
+    assert((long(buff)  % 8) == 0);
+    assert((buff_bytes  % 8) == 0);
+    assert((long(chunk) % 8) == 0);
+#endif//R64FX_DEBUG
+
     auto wordbuff = (unsigned short*)buff;
     long offset = ((long(buff) + buff_bytes - long(chunk)) >> 3);
     for(int i=0;; i++)
     {
+//         if(wordbuff[i] == 0)
+//         {
+//             return false;
+//         }
+// 
+//         void* addr = ((unsigned char*)buff) + buff_bytes - (wordbuff[i] << 3);
+//         if(addr == chunk)
+//         {
+//             wordbuff[i] |= 0x8000;
+//             return true;
+//         }
+
         if(wordbuff[i] == offset)
         {
             if(wordbuff[i + 1] == 0)
@@ -128,6 +152,11 @@ bool free_chunk(void* buff, long buff_bytes, void* chunk)
 HeapBuffer* HeapBuffer::newInstance(long nbytes)
 {
     auto buff = (unsigned short*) alloc_aligned(nbytes, nbytes);
+    if(long(buff) % 8)
+    {
+        std::cerr << "alloc_aligned broken!\n";
+        abort();
+    }
     buff[0] = 0;
     for(int i=0; i<(nbytes/2); i++)
         buff[i] = 0;
@@ -203,8 +232,12 @@ void HeapAllocator::free(void* addr)
     HeapBuffer* buff_to_remove = nullptr;
     for(auto buff : m_buffers)
     {
-        if(buff->free(addr))
+        unsigned char* first_addr = (unsigned char*) buff->buffer();
+        unsigned char* last_addr = first_addr + buff->size();
+        
+        if(addr > first_addr && addr < last_addr)
         {
+            buff->free(addr);
             if(buff->isEmpty())
                 buff_to_remove = buff;
             break;
