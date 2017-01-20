@@ -186,7 +186,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     hb->free(b); b = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
-        (sizeof(HeapBuffer)/8 + 1) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 7,            //z
         0
     );
@@ -197,7 +197,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         sizeof(HeapBuffer)/8 + 1,            //a
-        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 7,            //z
         0
     );
@@ -209,7 +209,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
         sizeof(HeapBuffer)/8,                //self
         sizeof(HeapBuffer)/8 + 1,            //a
         sizeof(HeapBuffer)/8 + 2,            //b
-        (sizeof(HeapBuffer)/8 + 3) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 7,            //z
         0
     );
@@ -222,7 +222,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
         sizeof(HeapBuffer)/8 + 1,            //a
         sizeof(HeapBuffer)/8 + 2,            //b
         sizeof(HeapBuffer)/8 + 3,            //c
-        (sizeof(HeapBuffer)/8 + 4) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 7,            //z
         0
     );
@@ -236,7 +236,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
         sizeof(HeapBuffer)/8 + 2,            //b
         sizeof(HeapBuffer)/8 + 3,            //c
         sizeof(HeapBuffer)/8 + 4,            //d
-        (sizeof(HeapBuffer)/8 + 5) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 7,            //z
         0
     );
@@ -290,7 +290,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     hb->free(a); a = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
-        (sizeof(HeapBuffer)/8 + 1) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 3,            //c
         (sizeof(HeapBuffer)/8 + 4) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 5,            //e
@@ -303,9 +303,9 @@ bool test_HeapBuffer(HeapBuffer* hb)
     hb->free(e); e = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
-        (sizeof(HeapBuffer)/8 + 1) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 3,            //c
-        (sizeof(HeapBuffer)/8 + 4) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 5) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 6,            //f
         sizeof(HeapBuffer)/8 + 7,            //z
         0
@@ -333,9 +333,9 @@ bool test_HeapBuffer(HeapBuffer* hb)
     hb->free(z); z = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
-        (sizeof(HeapBuffer)/8 + 1) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 3,            //c
-        (sizeof(HeapBuffer)/8 + 4) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 5) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 6,            //f
         0
     );
@@ -347,7 +347,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
         sizeof(HeapBuffer)/8 + 1,            //a
         (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 3,            //c
-        (sizeof(HeapBuffer)/8 + 4) | 0x8000, //free
+        (sizeof(HeapBuffer)/8 + 5) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 6,            //f
         0
     );
@@ -359,7 +359,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
         sizeof(HeapBuffer)/8 + 1,            //a
         (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
         sizeof(HeapBuffer)/8 + 3,            //c
-        sizeof(HeapBuffer)/8 + 4,            //e
+        sizeof(HeapBuffer)/8 + 5,            //e
         sizeof(HeapBuffer)/8 + 6,            //f
         0
     );
@@ -369,8 +369,8 @@ bool test_HeapBuffer(HeapBuffer* hb)
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         sizeof(HeapBuffer)/8 + 1,            //a
-        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 4,            //e
+        (sizeof(HeapBuffer)/8 + 3) | 0x8000, //free
+        sizeof(HeapBuffer)/8 + 5,            //e
         sizeof(HeapBuffer)/8 + 6,            //f
         0
     );
@@ -390,7 +390,7 @@ bool testha(
     HeapAllocator* ha, int depth
 )
 {
-    static const int nbufs = 3;
+    static const int nbufs = 24;
 
     if(depth == 0)
         return true;
@@ -401,7 +401,7 @@ bool testha(
     for(int i=0; i<nbufs; i++)
     {
         len[i] = ((rand() % 64) + 1);
-        ptr[i] = (unsigned long*) ha->alloc(len[i] * 8);
+        ptr[i] = (unsigned long*) ha->alloc(len[i] * 8); cout << "\n";
 //         ptr[i] = new unsigned long[len[i]];
         if(!ptr[i])
         {
@@ -424,13 +424,13 @@ bool testha(
     {
         case 0:
         {
-            for(int i=0; i<((rand() % 16) + 1); i++)
-            {
-                if(!testha(ha, depth - 1))
-                {
-                    return false;
-                }
-            }
+//             for(int i=0; i<((rand() % 16) + 1); i++)
+//             {
+//                 if(!testha(ha, depth - 1))
+//                 {
+//                     return false;
+//                 }
+//             }
             break;
         }
 
@@ -438,20 +438,23 @@ bool testha(
         {
             for(int i=0; i<nbufs; i++)
             {
-                auto tmp = (unsigned long*) ha->alloc((len[i])*8);
-//                 auto tmp = new unsigned long[len[i]];
-                if(!tmp)
-                {
-                    cout << "1: Failed to allocate tmp!\n";
-                    return false;
-                }
-                for(int j=0; j<len[i]; j++)
-                {
-                    tmp[j] = ptr[i][j];
-                }
+                cout << "\n---iter--- " << (i+1) << "\n\n";
+
+                cout << ">>> alloc tmp\n";
+                auto tmp = (unsigned long*) ha->alloc(len[i] * 8);
+                cout << "<<< alloc tmp\n";
+                
+//                 if(!tmp)
+//                 {
+//                     cout << "1: Failed to allocate tmp!\n";
+//                     return false;
+//                 }
+//                 for(int j=0; j<len[i]; j++)
+//                 {
+//                     tmp[j] = ptr[i][j];
+//                 }
 
                 ha->free(ptr[i]); 
-//                 delete[] ptr[i];
                 ptr[i] = nullptr;
 
 //                 if(!testha(ha, depth - 1))
@@ -460,7 +463,6 @@ bool testha(
 //                 }
 
                 ptr[i] = (unsigned long*) ha->alloc(len[i] * 8);
-//                 ptr[i] = new unsigned long[len[i]];
                 if(!ptr[i])
                 {
                     cout << "1: Failed to reallocate ptr!\n";
@@ -471,8 +473,10 @@ bool testha(
                 {
                     ptr[i][j] = buf[i][j];
                 }
-//                 delete[] tmp;
+                
+                cout << ">>> free tmp\n";
                 ha->free(tmp);
+                cout << "<<< free tmp\n";
             }
             break;
         }
@@ -503,7 +507,7 @@ bool testha(
             if(ptr[i][j] != buf[i][j])
             {
                 cout << "\nData Corrupted!\n";
-                cout << i << ":" << j << " -> " << ptr[i][j] << " -- " << buf[i][j] << " :: " << depth << "\n";
+                cout << i << ":" << j << " -> " << ((unsigned long)ptr[i]) << " :: " << depth << "\n";
                 for(int i=0; i<nbufs; i++)
                     delete[] buf[i];
                 return false;
@@ -526,9 +530,9 @@ bool test_HeapAllocator(HeapAllocator* ha)
     cout.flush();
     for(int n=0; n<32; n++)
     {
-        cout << ".";
+        cout << "\n\n---------------\n";
         cout.flush();
-        if(!testha(ha, 16))
+        if(!testha(ha, 1024 * 1024))
         {
             return false;
         }
