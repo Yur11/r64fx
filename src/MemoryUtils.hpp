@@ -35,8 +35,6 @@ public:
 
 #ifdef R64FX_DEBUG
     void dumpHeader();
-
-    int headerItemCount(); //Including terminating zero!
 #endif//R64FX_DEBUG
 };
 
@@ -48,6 +46,12 @@ public:
     void* alloc(long nbytes);
 
     void free(void* addr);
+
+    bool isEmpty() const;
+
+#ifdef R64FX_DEBUG
+    void dumpHeaders();
+#endif//R64FX_DEBUG
 };
 
 }//namespace r64fx

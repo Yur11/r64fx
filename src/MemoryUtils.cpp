@@ -18,7 +18,13 @@ int memory_page_size()
 void* alloc_aligned(int alignment, int nbytes)
 {
     void* memptr = nullptr;
-    posix_memalign(&memptr, alignment, nbytes);
+    if(posix_memalign(&memptr, alignment, nbytes) != 0)
+    {
+#ifndef R64FX_DEBUG
+        std::cerr << "posix_memalign() failed!\n";
+#endif//R64FX_DEBUG
+        return nullptr;
+    }
     return memptr;
 }
 
@@ -36,7 +42,7 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
     {
         if(wordbuff[i] == 0)
         {
-            long header_bytes = (i + 1) * 2;
+            long header_bytes = (i + 2) * 2;
 
             long data_bytes = 0;
             if(i > 0)
@@ -46,13 +52,18 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
             if(avail_bytes >= chunk_bytes)
             {
                 long new_offset = chunk_bytes + data_bytes;
+#ifdef R64FX_DEBUG
+                assert((new_offset >> 3) < 32767);
+#endif//R64FX_DEBUG
                 wordbuff[i] = (new_offset >> 3);
                 wordbuff[i + 1] = 0;
                 auto addr = (((unsigned char*)buff) + buff_bytes - new_offset);
+                std::cout << "alloc A: " << wordbuff[i] << "\n";
                 return addr;
             }
             else
             {
+                std::cout << "alloc A: No room!\n";
                 return nullptr;
             }
         }
@@ -69,6 +80,7 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
             {
                 wordbuff[i] &= 0x7FFF;
                 auto addr = (((unsigned char*)buff) + buff_bytes - (wordbuff[i] << 3));
+                std::cout << "alloc B: " << wordbuff[i] << "\n";
                 return addr;
             }
             else if(avail_bytes > chunk_bytes)
@@ -81,6 +93,7 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
                 long middle_bytes = buff_bytes - header_bytes - data_bytes;
                 if(middle_bytes <= 0)
                 {
+                    std::cout << "alloc C: No space for header!\n";
                     return nullptr;//No space to grow header!
                 }
 
@@ -92,10 +105,13 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
                 wordbuff[i] = (new_offset >> 3);
 
                 auto addr = (((unsigned char*)buff) + buff_bytes - new_offset);
+                std::cout << "alloc C: " << wordbuff[i] << "\n";
                 return addr;
             }
         }
     }
+    std::cout << "alloc_chunk: Should Not Reach Here!\n";
+    abort();
 }
 
 
@@ -144,6 +160,7 @@ bool free_chunk(void* buff, long buff_bytes, void* chunk)
                         wordbuff[j] = wordbuff[j + shift];
                 }
             }
+            std::cout << "free: " << offset << "\n";
             return true;
         }
         else if(wordbuff[i] == 0)
@@ -151,6 +168,8 @@ bool free_chunk(void* buff, long buff_bytes, void* chunk)
             return false;
         }
     }
+    std::cout << "free_chunk: Should Not Reach Here!\n";
+    abort();
 }
 
 
@@ -158,19 +177,23 @@ long g_HeapBuffer_count = 0;
 
 HeapBuffer* HeapBuffer::newInstance(long nbytes)
 {
+    g_HeapBuffer_count++;
+    std::cout << "new HeapBuffer: " << g_HeapBuffer_count << "\n";
     auto buff = (unsigned short*) alloc_aligned(nbytes, nbytes);
+    if(!buff)
+        return nullptr;
     buff[0] = 0;
-    for(int i=0; i<(nbytes/2); i++)
-        buff[i] = 0;
+//     for(int i=0; i<(nbytes/2); i++)
+//         buff[i] = 0;
     auto chunk = alloc_chunk(buff, nbytes, sizeof(HeapBuffer));
     auto obj = new(chunk) HeapBuffer(buff, nbytes);
-    g_HeapBuffer_count++;
     return obj;
 }
 
 
 void HeapBuffer::deleteInstance(HeapBuffer* buffer)
 {
+    std::cout << "free HeapBuffer: " << g_HeapBuffer_count << "\n";
     auto buff = buffer->m_buffer;
     buffer->~HeapBuffer();
     ::free(buff);
@@ -196,6 +219,7 @@ bool HeapBuffer::isEmpty() const
 }
 
 
+#ifdef R64FX_DEBUG
 void HeapBuffer::dumpHeader()
 {
     auto wordbuff = (unsigned short*)m_buffer;
@@ -203,6 +227,7 @@ void HeapBuffer::dumpHeader()
         std::cout << (wordbuff[i] & 0x7FFF) << (wordbuff[i] & 0x8000 ? "*" : "") << "\n";
     std::cout << "0\n";
 }
+#endif//R64FX_DEBUG
 
 
 void* HeapAllocator::alloc(long nbytes)
@@ -217,6 +242,7 @@ void* HeapAllocator::alloc(long nbytes)
 
     if(!chunk)
     {
+        std::cout << "Make New Buffer!\n";
         long buff_size = 0;
         while(buff_size < nbytes)
         {
@@ -235,13 +261,9 @@ void HeapAllocator::free(void* addr)
 {
     HeapBuffer* buff_to_remove = nullptr;
     for(auto buff : m_buffers)
-    {
-        unsigned char* first_addr = (unsigned char*) buff->buffer();
-        unsigned char* last_addr = first_addr + buff->size();
-        
-        if(addr > first_addr && addr < last_addr)
+    {        
+        if(buff->free(addr))
         {
-            buff->free(addr);
             if(buff->isEmpty())
                 buff_to_remove = buff;
             break;
@@ -254,5 +276,26 @@ void HeapAllocator::free(void* addr)
         HeapBuffer::deleteInstance(buff_to_remove);
     }
 }
+
+
+bool HeapAllocator::isEmpty() const
+{
+    return m_buffers.isEmpty();
+}
+
+
+#ifdef R64FX_DEBUG
+void HeapAllocator::dumpHeaders()
+{
+    int i=0;
+    for(auto buff : m_buffers)
+    {
+        i++;
+        std::cout << "HeapBuffer: " << i << "\n";
+        buff->dumpHeader();
+        std::cout << "\n";
+    }
+}
+#endif//R64FX_DEBUG
 
 }//namespace r64fx
