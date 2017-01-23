@@ -51,6 +51,8 @@ public:
 
 #ifdef R64FX_DEBUG
     void dumpHeaders();
+
+    void debugAddr(void* addr);
 #endif//R64FX_DEBUG
 };
 
