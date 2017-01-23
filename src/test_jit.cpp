@@ -896,7 +896,7 @@ bool test_jumps(Assembler &as)
 
 int main()
 {
-    g_data = alloc_aligned_memory(memory_page_size(), memory_page_size());
+    g_data = alloc_aligned(memory_page_size(), memory_page_size());
     for(int i=0; i<memory_page_size(); i++)
     {
         auto buff = (unsigned char*) g_data;

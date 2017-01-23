@@ -1,30 +1,16 @@
 #include "jit.hpp"
-#include <stdlib.h>
-#include <unistd.h>
 #include <sys/mman.h>
 #include <limits>
+#include <cstdlib>
 
 using namespace std;
 
 namespace r64fx{
 
-void* alloc_aligned_memory(int alignment, int nbytes)
-{
-    void* memptr = nullptr;
-    posix_memalign(&memptr, alignment, nbytes);
-    return memptr;
-}
-
-
-int memory_page_size()
-{
-    return getpagesize();
-}
-
     
 CodeBuffer::CodeBuffer(int page_count) : m_page_count(page_count)
 {
-    m_begin = m_end = (unsigned char*) alloc_aligned_memory(memory_page_size(), byteCount());
+    m_begin = m_end = (unsigned char*) alloc_aligned(memory_page_size(), byteCount());
     mprotect(m_begin, byteCount(), PROT_READ | PROT_WRITE | PROT_EXEC);
 }
 

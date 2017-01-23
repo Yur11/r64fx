@@ -177,6 +177,7 @@ target_link_libraries(test_ThreadObject ${test_ThreadObject_LIBS})
 set(test_jit_SRC
     test_jit.cpp
     jit.cpp
+    MemoryUtils.cpp
 )
 
 add_executable(test_jit ${test_jit_SRC})

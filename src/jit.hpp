@@ -9,14 +9,10 @@
 #include <iostream>
 #endif//R64FX_DEBUG_JIT_STDOUT_JIT_STDOUT
 
+#include "MemoryUtils.hpp"
 #include "binary_constants.hpp"
 
 namespace r64fx{
-
-void* alloc_aligned_memory(int alignment, int nbytes);
-
-int memory_page_size();
-
 
 union Imm8{
     signed char    s;
