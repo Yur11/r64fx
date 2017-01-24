@@ -27,9 +27,9 @@ public:
 
     static void deleteInstance(HeapBuffer* buffer);
 
-    void* alloc(long nbytes);
+    void* allocChunk(long nbytes);
 
-    bool free(void* addr);
+    bool freeChunk(void* addr);
 
     bool isEmpty() const;
 
@@ -43,9 +43,9 @@ class HeapAllocator{
     LinkedList<HeapBuffer> m_buffers;
 
 public:
-    void* alloc(long nbytes);
+    void* allocChunk(long nbytes);
 
-    void free(void* addr);
+    void freeChunk(void* addr);
 
     bool isEmpty() const;
 
@@ -54,6 +54,23 @@ public:
 
     void debugAddr(void* addr);
 #endif//R64FX_DEBUG
+
+    template<typename T, typename... CtorArgs> inline T* allocObj(CtorArgs... ctor_args)
+    {
+        int chunksize = sizeof(T);
+        while(chunksize & 7)
+            chunksize++;
+        void* memchunk = allocChunk(chunksize);
+        if(!chunksize)
+            return nullptr;
+        return new(memchunk) T(ctor_args...);
+    }
+
+    template<typename T> inline void freeObj(T* obj)
+    {
+        obj->~T();
+        HeapAllocator::freeChunk(obj);
+    }
 };
 
 }//namespace r64fx

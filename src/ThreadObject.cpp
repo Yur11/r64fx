@@ -119,12 +119,23 @@ struct ThreadObjectManagerImpl{
     ThreadObjectImpl*  m_dst_impl  = nullptr;
 
     ThreadObjectExecAgent* m_exec_agent = nullptr;
+    HeapAllocator*         m_heap_allocator = nullptr;
 
-    ThreadObjectManagerImpl(CircularBuffer<ThreadObjectMessage>* to_iface, CircularBuffer<ThreadObjectMessage>* from_iface)
+    ThreadObjectManagerImpl(
+        CircularBuffer<ThreadObjectMessage>* to_iface,
+        CircularBuffer<ThreadObjectMessage>* from_iface,
+        HeapAllocator* heap_allocator
+    )
     : m_to_iface(to_iface)
     , m_from_iface(from_iface)
+    , m_heap_allocator(heap_allocator)
     {
         
+    }
+
+    inline HeapAllocator* heapAllocator() const
+    {
+        return m_heap_allocator;
     }
 
     void sendMessagesToIface(ThreadObjectIface* dst_iface, ThreadObjectMessage* msgs, int nmsgs);
@@ -430,14 +441,22 @@ inline void ThreadObjectManagerIface::deployThread(ThreadObjectIface* root_iface
     m_thread->run([](void* arg) -> void* {
         auto args = (Args*) arg;
         auto agent = args->agent;
-        auto manager = new ThreadObjectManagerImpl(args->impl_to_iface, args->iface_to_impl);
+
+        HeapAllocator ha;
+        auto manager = ha.allocObj<ThreadObjectManagerImpl>(args->impl_to_iface, args->iface_to_impl, &ha);
         delete args;
+
         agent->m_manager_impl = manager;
         manager->m_exec_agent = agent;
         agent->exec();
+
         ThreadObjectMessage msg(ThreadTerminating, agent);
         manager->sendMessagesToIface(nullptr, &msg, 1);
-        delete manager;
+        ha.freeObj(manager);
+
+#ifdef R64FX_DEBUG
+        assert(ha.isEmpty());
+#endif//R64FX_DEBUG
         return nullptr;
     }, args);
 
@@ -525,6 +544,12 @@ ThreadObjectImpl::ThreadObjectImpl(ThreadObjectIface* iface)
 ThreadObjectImpl::~ThreadObjectImpl()
 {
     
+}
+
+
+inline HeapAllocator* ThreadObjectImpl::heapAllocator() const
+{
+    return m_manager->heapAllocator();
 }
 
 

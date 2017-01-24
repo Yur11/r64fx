@@ -2,6 +2,7 @@
 #define R64FX_THREAD_OBJECT_IMPL_HPP
 
 #include "ThreadObjectMessage.hpp"
+#include "MemoryUtils.hpp"
 
 namespace r64fx{
 
@@ -58,7 +59,7 @@ class ThreadObjectExecAgent{
 
 public:
     virtual ~ThreadObjectExecAgent() {}
-    
+
 protected:
     void readMessagesFromIface();
 };
@@ -75,6 +76,18 @@ public:
     virtual ~ThreadObjectImpl();
 
 protected:
+    HeapAllocator* heapAllocator() const;
+
+    template<typename T, typename... CtorArgs> inline T* allocObj(CtorArgs... ctor_args)
+    {
+        return heapAllocator()->allocObj<T, CtorArgs...>(ctor_args...);
+    }
+
+    template<typename T> inline void freeObj(T* obj)
+    {
+        heapAllocator()->freeObj<T>(obj);
+    }
+
     void sendMessagesToIface(ThreadObjectMessage* msgs, int nmsgs);
 
 private:

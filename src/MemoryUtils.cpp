@@ -179,17 +179,17 @@ void HeapBuffer::deleteInstance(HeapBuffer* buffer)
 {
     auto buff = buffer->m_buffer;
     buffer->~HeapBuffer();
-    ::free(buff);
+    free(buff);
 }
 
 
-void* HeapBuffer::alloc(long nbytes)
+void* HeapBuffer::allocChunk(long nbytes)
 {
     return alloc_chunk(m_buffer, m_size, nbytes);
 }
 
 
-bool HeapBuffer::free(void* addr)
+bool HeapBuffer::freeChunk(void* addr)
 {
     return free_chunk(m_buffer, m_size, addr);
 }
@@ -212,12 +212,12 @@ void HeapBuffer::dumpHeader()
 #endif//R64FX_DEBUG
 
 
-void* HeapAllocator::alloc(long nbytes)
+void* HeapAllocator::allocChunk(long nbytes)
 {
     void* chunk = nullptr;
     for(auto buff : m_buffers)
     {
-        chunk = buff->alloc(nbytes);
+        chunk = buff->allocChunk(nbytes);
         if(chunk)
             break;
     }
@@ -231,19 +231,19 @@ void* HeapAllocator::alloc(long nbytes)
         }
         auto buff = HeapBuffer::newInstance(buff_size);
         m_buffers.append(buff);
-        chunk = buff->alloc(nbytes);
+        chunk = buff->allocChunk(nbytes);
     }
 
     return chunk;
 }
 
 
-void HeapAllocator::free(void* addr)
+void HeapAllocator::freeChunk(void* addr)
 {
     HeapBuffer* buff_to_remove = nullptr;
     for(auto buff : m_buffers)
     {        
-        if(buff->free(addr))
+        if(buff->freeChunk(addr))
         {
             if(buff->isEmpty())
                 buff_to_remove = buff;

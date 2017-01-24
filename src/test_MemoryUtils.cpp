@@ -58,7 +58,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     unsigned long num4 = 0xFEDFEDFEDCAB123;
 
     cout << "alloc a\n";
-    auto a = (unsigned long*) hb->alloc(8);
+    auto a = (unsigned long*) hb->allocChunk(8);
     {
         R64FX_CHECK_ALIGNMENT(a);
         *a = num1;
@@ -71,7 +71,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     }
 
     cout << "alloc b\n";
-    auto b = (unsigned long*) hb->alloc(16);
+    auto b = (unsigned long*) hb->allocChunk(16);
     {
         R64FX_CHECK_ALIGNMENT(b);
         b[0] = num2;
@@ -87,7 +87,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     }
 
     cout << "alloc c\n";
-    auto c = (unsigned long*) hb->alloc(8);
+    auto c = (unsigned long*) hb->allocChunk(8);
     {
         R64FX_CHECK_ALIGNMENT(c);
         *c = num4;
@@ -102,7 +102,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     }
 
     cout << "free b\n";
-    hb->free(b); b = nullptr;
+    hb->freeChunk(b); b = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                 //self
         sizeof(HeapBuffer)/8 + 1,             //a
@@ -112,7 +112,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "free c\n";
-    hb->free(c); c = nullptr;
+    hb->freeChunk(c); c = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,     //self
         sizeof(HeapBuffer)/8 + 1, //a
@@ -120,7 +120,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "realloc b\n";
-    b = (unsigned long*) hb->alloc(24);
+    b = (unsigned long*) hb->allocChunk(24);
     R64FX_CHECK_ALIGNMENT(b);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,     //self
@@ -130,7 +130,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "realloc c\n";
-    c = (unsigned long*) hb->alloc(16);
+    c = (unsigned long*) hb->allocChunk(16);
     R64FX_CHECK_ALIGNMENT(c);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,     //self
@@ -141,7 +141,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "alloc z\n";
-    auto z = (unsigned long*) hb->alloc(8);
+    auto z = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(z);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,     //self
@@ -153,7 +153,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "free a\n";
-    hb->free(a);
+    hb->freeChunk(a);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         (sizeof(HeapBuffer)/8 + 1) | 0x8000, //free
@@ -164,7 +164,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "double free a\n";
-    if(hb->free(a))
+    if(hb->freeChunk(a))
     {
         cout << "Failed!\n";
         return false;
@@ -172,7 +172,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     a = nullptr;
 
     cout << "free c\n";
-    hb->free(c); c = nullptr;
+    hb->freeChunk(c); c = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         (sizeof(HeapBuffer)/8 + 1) | 0x8000, //free
@@ -183,7 +183,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "free b (Merge Free Space)\n";
-    hb->free(b); b = nullptr;
+    hb->freeChunk(b); b = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
@@ -192,7 +192,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "realloc a\n";
-    a = (unsigned long*) hb->alloc(8);
+    a = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(a);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
@@ -203,7 +203,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "realloc b\n";
-    b = (unsigned long*) hb->alloc(8);
+    b = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(b);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
@@ -215,7 +215,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "realloc c\n";
-    c = (unsigned long*) hb->alloc(8);
+    c = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(c);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
@@ -228,7 +228,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "alloc d\n";
-    auto d = (unsigned long*) hb->alloc(8);
+    auto d = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(d);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
@@ -242,7 +242,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "alloc e\n";
-    auto e = (unsigned long*) hb->alloc(8);
+    auto e = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(e);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
@@ -257,7 +257,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "alloc f\n";
-    auto f = (unsigned long*) hb->alloc(8);
+    auto f = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(f);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,     //self
@@ -272,8 +272,8 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "free b & d\n";
-    hb->free(b); b = nullptr;
-    hb->free(d); d = nullptr;
+    hb->freeChunk(b); b = nullptr;
+    hb->freeChunk(d); d = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         sizeof(HeapBuffer)/8 + 1,            //a
@@ -287,7 +287,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "free a (Merge Down)\n";
-    hb->free(a); a = nullptr;
+    hb->freeChunk(a); a = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
@@ -300,7 +300,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "free e (Merge Up)\n";
-    hb->free(e); e = nullptr;
+    hb->freeChunk(e); e = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
@@ -313,7 +313,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
 
     cout << "free nullptr\n";
     {
-        if(hb->free(a))
+        if(hb->freeChunk(a))
         {
             cout << "Failed!\n";
             return false;
@@ -322,7 +322,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
 
     cout << "Alloc Too Much\n";
     {
-        if(hb->alloc(hb->size()) != nullptr)
+        if(hb->allocChunk(hb->size()) != nullptr)
         {
             cout << "Failed!\n";
             return false;
@@ -330,7 +330,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     }
 
     cout << "free z\n";
-    hb->free(z); z = nullptr;
+    hb->freeChunk(z); z = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
@@ -341,7 +341,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "realloc a\n";
-    a = (unsigned long*) hb->alloc(8);
+    a = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         sizeof(HeapBuffer)/8 + 1,            //a
@@ -353,7 +353,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "realloc e\n";
-    e = (unsigned long*) hb->alloc(16);
+    e = (unsigned long*) hb->allocChunk(16);
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         sizeof(HeapBuffer)/8 + 1,            //a
@@ -365,7 +365,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "free c\n";
-    hb->free(c); c = nullptr;
+    hb->freeChunk(c); c = nullptr;
     R64FX_CHECK_HEADER(
         sizeof(HeapBuffer)/8,                //self
         sizeof(HeapBuffer)/8 + 1,            //a
@@ -376,9 +376,9 @@ bool test_HeapBuffer(HeapBuffer* hb)
     );
 
     cout << "free a, e, f\n";
-    hb->free(a); a = nullptr;
-    hb->free(e); e = nullptr;
-    hb->free(f); f = nullptr;
+    hb->freeChunk(a); a = nullptr;
+    hb->freeChunk(e); e = nullptr;
+    hb->freeChunk(f); f = nullptr;
     R64FX_CHECK_HEADER(sizeof(HeapBuffer)/8, 0);
 
     return true;
@@ -400,7 +400,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
     for(int i=0; i<nbufs; i++)
     {
         len[i] = ((rand() % maxbuflen) + 1);
-        ptr[i] = (unsigned long*) ha->alloc(len[i] * 8);
+        ptr[i] = (unsigned long*) ha->allocChunk(len[i] * 8);
         if(!ptr[i])
         {
             cout << "\nAllocation Failed!\n";
@@ -438,7 +438,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
                 int extraoffset = rand() % 16;
                 int extralen = rand() % 16;
 
-                auto tmpbuf = (unsigned long*) ha->alloc((len[i] + extralen + extraoffset) * 8); 
+                auto tmpbuf = (unsigned long*) ha->allocChunk((len[i] + extralen + extraoffset) * 8); 
                 if(!ptr[i])
                 {
                     cout << "\n1.1 Allocation Failed!\n";
@@ -449,14 +449,14 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
                     tmpbuf[j + extraoffset] = ptr[i][j];
                 }
 
-                ha->free(ptr[i]);
+                ha->freeChunk(ptr[i]);
                 ptr[i] = nullptr;
 
                 if(!testha(ha, depth - 1))
                     return false;
 
-                ha->free(ptr[i]);
-                ptr[i] = (unsigned long*) ha->alloc(len[i] * 8);
+                ha->freeChunk(ptr[i]);
+                ptr[i] = (unsigned long*) ha->allocChunk(len[i] * 8);
                 if(!ptr[i])
                 {
                     cout << "\n1.2 Reallocation Failed!\n";
@@ -466,7 +466,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
                 {
                     ptr[i][j] = tmpbuf[j + extraoffset];
                 }
-                ha->free(tmpbuf);
+                ha->freeChunk(tmpbuf);
 
                 for(int j=0; j<len[i]; j++)
                 {
@@ -493,7 +493,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
         case 3:
         {
             int extralen = 16 + (rand() % 64);
-            auto extrabuf = (unsigned long*) ha->alloc(extralen * 8);
+            auto extrabuf = (unsigned long*) ha->allocChunk(extralen * 8);
             if(depth > 1)
             {
                 if(!testha(ha, depth - 1, ha, extrabuf))
@@ -504,7 +504,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
             }
             else
             {
-                ha->free(extrabuf);
+                ha->freeChunk(extrabuf);
             }
             break;
         }
@@ -515,7 +515,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
 
     if(freeha && freeptr)
     {
-        freeha->free(freeptr);
+        freeha->freeChunk(freeptr);
     }
 
     for(int i=0; i<nbufs; i++)
@@ -528,7 +528,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
                 return false;
             }
         }
-        ha->free(ptr[i]);
+        ha->freeChunk(ptr[i]);
     }
 
     return true;

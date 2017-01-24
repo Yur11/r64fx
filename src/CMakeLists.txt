@@ -53,6 +53,7 @@ set(SRC
 #     MachinePort.cpp
 #     MachinePortImpl.cpp
     MainView.cpp
+    MemoryUtils.cpp
     Midi.cpp
     MidiDispatcher.cpp
     Module.cpp
@@ -164,6 +165,7 @@ set(test_ThreadObject_SRC
     Mutex.cpp 
     Timer.cpp 
     TimeUtils.cpp
+    MemoryUtils.cpp
 )
 
 add_executable(test_ThreadObject ${test_ThreadObject_SRC})
