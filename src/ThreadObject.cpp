@@ -242,11 +242,6 @@ void ThreadObjectManagerIface::objectDeployed(ThreadObjectDeploymentAgent* agent
                 else
                 {
                     object = parent_agent->object_iface;
-                    if(!parent_agent->parent_agent)
-                    {
-                        done_fun = parent_agent->done_fun;
-                        done_arg = parent_agent->done_arg;  
-                    }
                     agent = parent_agent;
                     parent_agent = parent_agent->parent_agent;
                     continue;
@@ -254,6 +249,8 @@ void ThreadObjectManagerIface::objectDeployed(ThreadObjectDeploymentAgent* agent
             }
             else
             {
+                done_fun = agent->done_fun;
+                done_arg = agent->done_arg;
                 done = true;
                 break;
             }
