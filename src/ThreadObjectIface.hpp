@@ -10,10 +10,8 @@ class ThreadObjectIface;
 class ThreadObjectImpl;
 class ThreadObjectMessage;
 class ThreadObjectManagerIface;
-class ThreadObjectManagerImpl;
 class ThreadObjectDeploymentAgent;
 class ThreadObjectWithdrawalAgent;
-class ThreadObjectExecAgent;
 
 typedef void (*ThreadObjectCallbackFun)(ThreadObjectIface* iface, void* arg);
 typedef LinkedList<ThreadObjectIface>::Iterator ThreadObjectIfaceIterator;
@@ -44,12 +42,12 @@ public:
     bool isDeployed() const;
 
     bool isPending() const;
-    
+
     bool deploymentPending() const;
 
     bool withdrawalPending() const;
 
-    bool isThreadRoot() const;
+//     bool isThreadRoot() const;
 
 protected:
     void sendMessagesToImpl(ThreadObjectMessage* msgs, int nmsgs);
@@ -62,12 +60,8 @@ private:
     virtual void deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent) = 0;
 
     virtual ThreadObjectWithdrawalAgent* newWithdrawalAgent() = 0;
-    
+
     virtual void deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent) = 0;
-    
-    virtual ThreadObjectExecAgent* newExecAgent() = 0;
-    
-    virtual void deleteExecAgent(ThreadObjectExecAgent* agent) = 0;
 };
 
 }//namespace r64fx

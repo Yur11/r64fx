@@ -9,15 +9,13 @@ namespace r64fx{
 class SoundDriver;
 
 class ModuleThreadObjectIface : public ThreadObjectIface{
-//     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg);
-
     virtual void deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent);
 
     virtual void deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent);
-
+/*
     virtual ThreadObjectExecAgent* newExecAgent();
 
-    virtual void deleteExecAgent(ThreadObjectExecAgent* agent);
+    virtual void deleteExecAgent(ThreadObjectExecAgent* agent);*/
 };
 
 #define R64FX_MODULE_AGENTS(name)\
@@ -32,27 +30,32 @@ class ModuleThreadObjectIface : public ThreadObjectIface{
     }\
 
 
-class ModuleThreadObjectImpl : public ThreadObjectImpl{
-    virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg);
+class ModuleThreadObjectImpl : public ThreadObjectImpl, public LinkedList<ModuleThreadObjectImpl>::Node{
+    ModuleThreadObjectImpl* m_parent = nullptr;
+    LinkedList<ModuleThreadObjectImpl> m_children;
 
 public:
+//     ModuleThreadObjectImpl(ModuleThreadObjectIface* iface, ModuleThreadObjectImpl* parent);
     using ThreadObjectImpl::ThreadObjectImpl;
+
+private:
+    virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg);
+
+    virtual void runThread();
+
+    virtual void exitThread();
 };
 
 
 class ModuleThreadObjectDeploymentAgent : public ThreadObjectDeploymentAgent{
-//     virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface);
 };
 
 
 class ModuleThreadObjectWithdrawalAgent : public ThreadObjectWithdrawalAgent{
-//     virtual void withdrawImpl(ThreadObjectImpl* impl);
 };
 
 
 struct ModuleGlobal{
-    ModuleThreadObjectIface* root = nullptr;
-
     static SoundDriver* soundDriver();
 };
 

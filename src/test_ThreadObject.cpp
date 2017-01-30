@@ -4,49 +4,112 @@
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
 
+#define R64FX_TEST(testname)\
+    case testname:\
+    {\
+        if(msg.value() != m_num)\
+        {\
+            cout <<  #testname ": Got:" << msg.value() << ", Expected: " << m_num << "\n";\
+            g_failed = true;\
+            return;\
+        }\
+        break;\
+    }
+
+
 using namespace std;
 using namespace r64fx;
 
+long g_test_depth = 0;
+bool g_failed = false;
+
 enum{
-    Ping
+    SetNum,
+    AddNum,
+    SubNum
+};
+
+enum{
+    NumSet,
+    NumAdded,
+    NumSubbed
 };
 
 
-struct TestObjectImpl : public ThreadObjectImpl{
-    int m_num = 0;
+class TestObjImpl : public ThreadObjectImpl{
+    bool m_thread_running = true;
+    unsigned long m_num = 0;
 
-    TestObjectImpl(int num, ThreadObjectIface* iface) : ThreadObjectImpl(iface)
+public:
+    TestObjImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl)
+    : ThreadObjectImpl(iface, manager_impl)
     {
-        m_num = num;
-        cout << "1: " << m_num << " -> TestObjectImpl\n";
+        
     }
 
-    ~TestObjectImpl()
-    {
-        cout << "1: " << m_num << " <- TestObjectImpl\n";
-    }
-
+private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg)
     {
-        if(msg.key() == Ping)
+        unsigned long num = msg.value();
+        switch(msg.key())
         {
-            cout << "Ping: " << (int)msg.value() << "\n";
+            case SetNum:
+            {
+                m_num = num;
+                ThreadObjectMessage response_msg(NumSet, m_num);
+                sendMessagesToIface(&response_msg, 1);
+                break;
+            }
+
+            case AddNum:
+            {
+                m_num += num;
+                ThreadObjectMessage response_msg(NumAdded, m_num);
+                sendMessagesToIface(&response_msg, 1);
+                break;
+            }
+
+            case SubNum:
+            {
+                m_num -= num;
+                ThreadObjectMessage response_msg(NumSubbed, m_num);
+                sendMessagesToIface(&response_msg, 1);
+                break;
+            }
+
+            default:
+            {
+                cout << "Impl: Bad Message Key!\n";
+                g_failed = true;
+            }
         }
     }
-};
 
-
-struct TestObjectDeploymentAgent : ThreadObjectDeploymentAgent{
-    int num = 0;
-
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface)
+    virtual void runThread()
     {
-        return new TestObjectImpl(num, public_iface);
+        while(m_thread_running)
+        {
+            readMessagesFromIface();
+            sleep_nanoseconds(1000 * 1000);
+        }
+    }
+
+    virtual void exitThread()
+    {
+        m_thread_running = false;
     }
 };
 
 
-struct TestObjectWithdrawalAgent : ThreadObjectWithdrawalAgent{
+class TestObjDeploymentAgent : public ThreadObjectDeploymentAgent{
+    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* object_iface, ThreadObjectManagerImpl* manager_impl)
+    {
+        return new TestObjImpl(object_iface, manager_impl);
+    }
+};
+
+
+class TestObjWithdrawalAgent : public ThreadObjectWithdrawalAgent{
     virtual void withdrawImpl(ThreadObjectImpl* impl)
     {
         delete impl;
@@ -54,52 +117,91 @@ struct TestObjectWithdrawalAgent : ThreadObjectWithdrawalAgent{
 };
 
 
-struct TestObjectExecAgent : ThreadObjectExecAgent{
-    bool m_running = true;
-
-    virtual void exec()
-    {
-        while(m_running)
-        {
-            readMessagesFromIface();
-            sleep_nanoseconds(1500 * 1000);
-        }
-    }
-
-    virtual void terminate()
-    {
-        m_running = false;
-    }
-};
-
-
-class TestObject : public ThreadObjectIface{
-    int m_num = 0;
+class TestObjIface : public ThreadObjectIface{
+    unsigned long m_num = 0;
 
 public:
-    TestObject(int num)
-    : m_num(num)
+    void run(TestObjIface* parent = nullptr)
     {
-        
-    }
-
-    void ping(int num)
-    {
-        ThreadObjectMessage msg(Ping, num);
-        sendMessagesToImpl(&msg, 1);
+        g_test_depth++;
+        deploy(parent, [](ThreadObjectIface* iface, void* arg){
+            auto self = (TestObjIface*) arg;
+            self->test();
+        }, this);
     }
 
 private:
+    void test()
+    {
+        long act = (rand() % 16) + 1;
+        switch(act)
+        {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            {
+                m_num = rand();
+                ThreadObjectMessage msg(SetNum, m_num);
+                sendMessagesToImpl(&msg, 1);
+                break;
+            }
+
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            {
+                unsigned long num = rand();
+                m_num += num;
+                ThreadObjectMessage msg(AddNum, num);
+                sendMessagesToImpl(&msg, 1);
+                break;
+            }
+
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            {
+                unsigned long num = rand();
+                m_num -= num;
+                ThreadObjectMessage msg(SubNum, num);
+                sendMessagesToImpl(&msg, 1);
+                break;
+            }
+
+            default:
+            {
+                withdraw([](ThreadObjectIface* iface, void* arg){
+                    g_test_depth--;
+                }, this);
+                break;
+            }
+        }
+    }
+
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg)
     {
-        
+        switch(msg.key())
+        {
+            R64FX_TEST(NumSet)
+            R64FX_TEST(NumAdded)
+            R64FX_TEST(NumSubbed)
+
+            default:
+                break;
+        }
+
+        test();
     }
 
     virtual ThreadObjectDeploymentAgent* newDeploymentAgent()
     {
-        auto agent = new TestObjectDeploymentAgent;
-        agent->num = m_num;
-        return agent;
+        return new TestObjDeploymentAgent;
     }
 
     virtual void deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent)
@@ -109,94 +211,167 @@ private:
 
     virtual ThreadObjectWithdrawalAgent* newWithdrawalAgent()
     {
-        return new TestObjectWithdrawalAgent;
+        return new TestObjWithdrawalAgent;
     }
-    
+
     virtual void deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent)
     {
         delete agent;
     }
-    
-    virtual ThreadObjectExecAgent* newExecAgent()
-    {
-        return new TestObjectExecAgent;
-    }
-    
-    virtual void deleteExecAgent(ThreadObjectExecAgent* agent)
-    {
-        delete agent;
-    }
 };
 
 
-class Test{
-    bool m_running = true;
+bool gate1 = false;
+bool gate2 = false;
+bool gate3 = false;
 
-    TestObject m_obj1 = 1;
-    TestObject m_obj2 = 2;
-    TestObject m_obj3 = 3;
-    TestObject m_obj4 = 4;
-    TestObject m_obj5 = 5;
-    TestObject m_obj6 = 6;
-    TestObject m_obj7 = 7;
-    TestObject m_obj8 = 8;
-    TestObject m_obj9 = 9;
+#define R64FX_CHECK_OBJ(num, obj, pending, deployed) { if(!check_obj(num, obj, #obj, pending, deployed)) return false; }
 
-    void deployBunch()
+bool check_obj(const char* num, const TestObjIface &obj, const char* name, bool pending, bool deployed)
+{
+    if(obj.isPending() != pending)
     {
-        cout << "Deploy Bunch\n";
-
-        m_obj2.deploy(&m_obj1);
-        m_obj3.deploy(&m_obj1);
-        m_obj4.deploy(&m_obj1);
-        m_obj5.deploy(&m_obj2);
-        m_obj6.deploy(&m_obj2);
-        m_obj7.deploy(&m_obj3);
-        m_obj8.deploy(&m_obj7);
-        m_obj9.deploy(&m_obj5);
-        m_obj1.deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
-            auto m = (Test*) arg;
-            m->m_obj1.ping(123);
-            m->m_obj2.ping(123);
-            m->m_obj3.ping(123);
-            m->m_obj4.ping(123);
-            m->m_obj5.ping(123);
-            m->m_obj6.ping(123);
-            m->m_obj7.ping(123);
-            m->m_obj8.ping(123);
-            m->m_obj9.ping(123);
-            m->withdrawBunch();
-        }, this);
+        cout << num << ": Object " << name << " should" << (pending ? "" : " not") << " be pending!\n";
+        return false;
     }
-
-    void withdrawBunch()
+    if(obj.isDeployed() != deployed)
     {
-        cout << "Withdraw Bunch\n";
-        m_obj1.withdraw([](ThreadObjectIface* iface, void* arg){
-            auto m = (Test*) arg;
-            m->m_running = false;
-        }, this);
+        cout << num << ": Object " << name <<  " should" << (deployed ? "" : " not") << " be deployed!\n";
+        return false;
     }
+    return true;
+}
 
-public:
-    int exec()
+
+bool test_deployment()
+{
+    /* Deploy One */
+    TestObjIface a;
+    R64FX_CHECK_OBJ("1", a, false, false);
+
+    gate1 = false;
+    a.deploy(nullptr, [](ThreadObjectIface* iface, void* arg){ gate1 = true; });
+    R64FX_CHECK_OBJ("2", a, true, false);
+    while(!gate1)
     {
-        deployBunch();
+        long timeout = Timer::runTimers();
+        sleep_nanoseconds(timeout);
+    }
+    R64FX_CHECK_OBJ("3", a, false, true);
 
-        while(m_running)
+    /* Deploy Child */
+    TestObjIface b;
+    R64FX_CHECK_OBJ("4", b, false, false);
+    
+    gate1 = false;
+    b.deploy(&a, [](ThreadObjectIface* iface, void* arg){ gate1 = true; });
+    R64FX_CHECK_OBJ("5", b, true, false);
+    while(!gate1)
+    {
+        long timeout = Timer::runTimers();
+        sleep_nanoseconds(timeout);
+    }
+    R64FX_CHECK_OBJ("6", b, false, true);
+
+    /* Withdraw Child */
+    gate1 = false;
+    b.withdraw([](ThreadObjectIface* iface, void* arg){ gate1 = true; });
+    R64FX_CHECK_OBJ("7", b, true, true);
+    while(!gate1)
+    {
+        long timeout = Timer::runTimers();
+        sleep_nanoseconds(timeout);
+    }
+    R64FX_CHECK_OBJ("8", b, false, false);
+
+    /* ReDeploy Child */
+    gate1 = false;
+    b.deploy(&a, [](ThreadObjectIface* iface, void* arg){ gate1 = true; });
+    R64FX_CHECK_OBJ("9", b, true, false);
+    while(!gate1)
+    {
+        long timeout = Timer::runTimers();
+        sleep_nanoseconds(timeout);
+    }
+    R64FX_CHECK_OBJ("10", b, false, true);
+
+    /* Deploy More Children */
+    TestObjIface c, d, e;
+    c.deploy(&a, [](ThreadObjectIface* iface, void* arg){ gate1 = true; });
+    d.deploy(&b, [](ThreadObjectIface* iface, void* arg){ gate2 = true; });
+    e.deploy(&b, [](ThreadObjectIface* iface, void* arg){ gate3 = true; });
+
+    gate1 = gate2 = gate3 = false;
+    while((!gate1) && (!gate2) && (!gate3))
+    {
+        long timeout = Timer::runTimers();
+        sleep_nanoseconds(timeout);
+    }
+    R64FX_CHECK_OBJ("11.c", c, false, true);
+    R64FX_CHECK_OBJ("11.d", d, false, true);
+    R64FX_CHECK_OBJ("11.e", e, false, true);
+
+    /* Withdraw All */
+    gate1 = false;
+    a.withdraw([](ThreadObjectIface* iface, void* arg){ gate1 = true; });
+    R64FX_CHECK_OBJ("12.a", a, true, true);
+    R64FX_CHECK_OBJ("12.b", b, true, true);
+    R64FX_CHECK_OBJ("12.c", c, true, true);
+    R64FX_CHECK_OBJ("12.d", d, true, true);
+    R64FX_CHECK_OBJ("12.e", e, true, true);
+    while(!gate1)
+    {
+        long timeout = Timer::runTimers();
+        sleep_nanoseconds(timeout);
+    }
+    R64FX_CHECK_OBJ("13.a", a, false, false);
+    R64FX_CHECK_OBJ("13.b", b, false, false);
+    R64FX_CHECK_OBJ("13.c", c, false, false);
+    R64FX_CHECK_OBJ("13.d", d, false, false);
+    R64FX_CHECK_OBJ("13.e", e, false, false);
+
+    return true;
+}
+
+
+bool test_messages()
+{
+    for(int i=0; i<32; i++)
+    {
+        TestObjIface obj;
+        obj.run();
+
+        while(g_test_depth > 0)
         {
-            Timer::runTimers();
-            sleep_nanoseconds(1500 * 1000);
+            long timeout = Timer::runTimers();
+            sleep_nanoseconds(timeout);
+            if(g_failed)
+            {
+                return false;
+            }
         }
-        Timer::cleanup();
-
-        return 0;
     }
-};
+    return true;
+}
 
 
 int main()
 {
-    Test test;
-    return test.exec();
+    srand(time(nullptr));
+
+    bool ok = true
+        && test_deployment()
+        && test_messages()
+    ;
+
+    if(ok)
+    {
+        cout << "OK!\n";
+        return 0;
+    }
+    else
+    {
+        cout << "Fail!\n";
+        return 1;
+    }
 }

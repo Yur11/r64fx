@@ -16,11 +16,11 @@ class ThreadObjectDeploymentAgent{
     ThreadObjectImpl*   deployed_impl  = nullptr;
 
     ThreadObjectDeploymentAgent* parent_agent = nullptr;
-    
+
     ThreadObjectCallbackFun  done_fun  = nullptr;
     void*                    done_arg  = nullptr;
 
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface) = 0;
+    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface, ThreadObjectManagerImpl* manager_impl) = 0;
 
 public:
     virtual ~ThreadObjectDeploymentAgent() {}
@@ -46,36 +46,21 @@ public:
 };
 
 
-class ThreadObjectExecAgent{
-    friend class ThreadObjectManagerIface;
-    friend class ThreadObjectManagerImpl;
-
-    ThreadObjectIface*       root_iface   = nullptr;
-    ThreadObjectManagerImpl* m_manager_impl = nullptr;
-
-    virtual void exec() = 0;
-
-    virtual void terminate() = 0;
-
-public:
-    virtual ~ThreadObjectExecAgent() {}
-
-protected:
-    void readMessagesFromIface();
-};
-
-
 class ThreadObjectImpl{
     friend class ThreadObjectManagerImpl;
-    ThreadObjectManagerImpl*       m_manager  = nullptr;
-    ThreadObjectIface*             m_iface    = nullptr;
+    ThreadObjectIface*             m_iface         = nullptr;
+    ThreadObjectManagerImpl*       m_manager_impl  = nullptr;
 
 public:
-    ThreadObjectImpl(ThreadObjectIface* iface);
+    ThreadObjectImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl);
 
     virtual ~ThreadObjectImpl();
 
 protected:
+    void sendMessagesToIface(ThreadObjectMessage* msgs, int nmsgs);
+
+    void readMessagesFromIface();
+
     HeapAllocator* heapAllocator() const;
 
     template<typename T, typename... CtorArgs> inline T* allocObj(CtorArgs... ctor_args)
@@ -88,10 +73,12 @@ protected:
         heapAllocator()->freeObj<T>(obj);
     }
 
-    void sendMessagesToIface(ThreadObjectMessage* msgs, int nmsgs);
-
 private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) = 0;
+
+    virtual void runThread() = 0;
+
+    virtual void exitThread() = 0;
 };
 
 }//namespace r64fx

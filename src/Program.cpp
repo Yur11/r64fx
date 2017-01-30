@@ -45,8 +45,6 @@ struct ProgramPrivate : public MainViewEventIface{
             sleep_nanoseconds(time);
         }
 
-        osc.disengage();
-
         main_view->closeWindow();
         closeAllProjects();
         delete main_view;

@@ -1,5 +1,8 @@
 #include "Module_Oscillator.hpp"
 #include "ModulePrivate.hpp"
+#include "Timer.hpp"
+#include "TimeUtils.hpp"
+#include "SoundDriver.hpp"
 
 #include <iostream>
 using namespace std;
@@ -8,15 +11,29 @@ namespace r64fx{
 
 class OscillatorThreadObjectImpl : public ModuleThreadObjectImpl{
 public:
-    using ModuleThreadObjectImpl::ModuleThreadObjectImpl;
+    OscillatorThreadObjectImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl)
+    : ModuleThreadObjectImpl(iface, manager_impl)
+    {
+        cout << "OscillatorThreadObjectImpl\n";
+    }
+
+    ~OscillatorThreadObjectImpl()
+    {
+        cout << "~OscillatorThreadObjectImpl\n";
+    }
+
+private:
+    virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg)
+    {
+        cout << "msg: " << long(msg.value()) << "\n";
+    }
 };
 
 
 class OscillatorDeploymentAgent : public ModuleThreadObjectDeploymentAgent{
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface)
+    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface, ThreadObjectManagerImpl* manager_impl)
     {
-        cout << "Osc Deploy!\n";
-        return new OscillatorThreadObjectImpl(public_iface);
+        return new OscillatorThreadObjectImpl(public_iface, manager_impl);
     }
 };
 
@@ -26,7 +43,6 @@ class OscillatorWithdrawalAgent : public ModuleThreadObjectWithdrawalAgent{
     {
         auto osc_impl = (OscillatorThreadObjectImpl*) impl;
         delete osc_impl;
-        cout << "Osc Withdraw!\n";
     }
 };
 
@@ -37,6 +53,13 @@ struct OscillatorThreadObjectIface : public ModuleThreadObjectIface{
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg)
     {
         
+    }
+
+    inline void engaged()
+    {
+        cout << "engaged!\n";
+        auto sd = ModuleGlobal::soundDriver();
+        auto port = sd->newAudioOutput("out");
     }
 };
 
@@ -53,20 +76,30 @@ Module_Oscillator::~Module_Oscillator()
 {
     if(isEngaged())
     {
-        
+        disengage();
+        while(m_thread_object_iface->isPending())
+        {
+            Timer::runTimers();
+            sleep_nanoseconds(1500 * 1000);
+        }
     }
 }
 
 
 void Module_Oscillator::engage()
 {
-    m_thread_object_iface->deploy(nullptr);
+    m_thread_object_iface->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
+        auto otobi = (OscillatorThreadObjectIface*) arg;
+        otobi->engaged();
+    }, m_thread_object_iface);
 }
 
 
 void Module_Oscillator::disengage()
 {
-    m_thread_object_iface->withdraw();
+    m_thread_object_iface->withdraw([](ThreadObjectIface* iface, void* arg){
+        cout << "disengaged!\n";
+    });
 }
 
 
