@@ -10,8 +10,10 @@ namespace r64fx{
 class SoundDriver;
 
 
-class SoundDriverIOPort{
+class SoundDriverPort{
 public:
+    virtual ~SoundDriverPort() {}
+
     enum class Type{
         Audio,
         Midi
@@ -24,13 +26,11 @@ public:
         Output
     };
 
-    virtual ~SoundDriverIOPort() {}
-
     virtual Direction direction() = 0;
 };
 
 
-class SoundDriverAudioPort : public SoundDriverIOPort{
+class SoundDriverAudioPort : public SoundDriverPort{
 
 };
 
@@ -45,7 +45,7 @@ public:
 };
 
 
-class SoundDriverMidiPort : public SoundDriverIOPort{
+class SoundDriverMidiPort : public SoundDriverPort{
 
 };
 
@@ -109,17 +109,17 @@ public:
 
     virtual SoundDriverMidiOutput* newMidiOutput(const std::string &name = "") = 0;
 
-    virtual SoundDriverIOPort* findPort(const std::string &name) = 0;
+    virtual SoundDriverPort* findPort(const std::string &name) = 0;
 
-    virtual void deletePort(SoundDriverIOPort* port) = 0;
+    virtual void deletePort(SoundDriverPort* port) = 0;
 
     virtual SoundDriverSyncPort* newSyncPort() = 0;
 
     virtual void deleteSyncPort(SoundDriverSyncPort* port) = 0;
 
-    virtual void setPortName(SoundDriverIOPort* port, const std::string &name) = 0;
+    virtual void setPortName(SoundDriverPort* port, const std::string &name) = 0;
 
-    virtual void getPortName(SoundDriverIOPort* port, std::string &name) = 0;
+    virtual void getPortName(SoundDriverPort* port, std::string &name) = 0;
 
     virtual bool connect(const std::string &src, const std::string &dst) = 0;
 

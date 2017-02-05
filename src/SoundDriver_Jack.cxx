@@ -2,13 +2,6 @@
 
 #include <jack/jack.h>
 #include <jack/midiport.h>
-#include "CircularBuffer.hpp"
-#include "LinkedList.hpp"
-
-#define R64FX_PORT_IS_AUDIO_INPUT   0
-#define R64FX_PORT_IS_AUDIO_OUTPUT  1
-#define R64FX_PORT_IS_MIDI_INPUT    2
-#define R64FX_PORT_IS_MIDI_OUTPUT   3
 
 #define R64FX_JACK_SYNC_PORT_ENABLED     1
 
@@ -16,10 +9,6 @@ namespace r64fx{
 
 class Jack;
 class JackImpl;
-class JackIOPort;
-class JackIOPortHandle;
-class JackIOPortImpl;
-class JackIOPortImplHandle;
 class JackSyncPort;
 class JackSyncPortHande;
 
@@ -350,8 +339,8 @@ private:
         port_impl->jack_port = port_iface->jack_port = jack_port_register(
             m_jack_client,
             name.c_str(),
-            (port_iface->type() == SoundDriverIOPort::Type::Audio) ?  JACK_DEFAULT_AUDIO_TYPE : JACK_DEFAULT_MIDI_TYPE,
-            (port_iface->direction() == SoundDriverIOPort::Direction::Input) ?  JackPortIsInput : JackPortIsOutput,
+            (port_iface->type() == SoundDriverPort::Type::Audio) ?  JACK_DEFAULT_AUDIO_TYPE : JACK_DEFAULT_MIDI_TYPE,
+            (port_iface->direction() == SoundDriverPort::Direction::Input) ?  JackPortIsInput : JackPortIsOutput,
             0
         );
 
@@ -383,7 +372,7 @@ private:
         return newPort<JackMidiOutput, JackMidiPortImpl>(name, 32);
     }
 
-    virtual SoundDriverIOPort* findPort(const std::string &name)
+    virtual SoundDriverPort* findPort(const std::string &name)
     {
 //         for(auto port : m_io_ports)
 //         {
@@ -395,7 +384,7 @@ private:
         return nullptr;
     }
 
-    virtual void deletePort(SoundDriverIOPort* port)
+    virtual void deletePort(SoundDriverPort* port)
     {
         auto io_port = dynamic_cast<JackIOPort*>(port);
         if(io_port)
@@ -423,13 +412,13 @@ private:
         
     }
 
-    virtual void setPortName(SoundDriverIOPort* port, const std::string &name)
+    virtual void setPortName(SoundDriverPort* port, const std::string &name)
     {
         auto port_iface = dynamic_cast<JackIOPort*>(port);
         jack_port_rename(m_jack_client, port_iface->jackPort(), name.c_str());
     }
 
-    virtual void getPortName(SoundDriverIOPort* port, std::string &name)
+    virtual void getPortName(SoundDriverPort* port, std::string &name)
     {
         auto port_iface = dynamic_cast<JackIOPort*>(port);
         name = std::string(jack_port_short_name(port_iface->jackPort()));
