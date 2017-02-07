@@ -8,6 +8,8 @@
 using namespace std;
 
 namespace r64fx{
+    
+/*======= Worker Thread =======*/
 
 class OscillatorThreadObjectImpl : public ModuleThreadObjectImpl{
 public:
@@ -30,36 +32,41 @@ private:
 };
 
 
+
+/*======= Agents =======*/
+
 class OscillatorDeploymentAgent : public ModuleThreadObjectDeploymentAgent{
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface, ThreadObjectManagerImpl* manager_impl)
+    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl)
     {
-        return new OscillatorThreadObjectImpl(public_iface, manager_impl);
+        return new(std::nothrow) OscillatorThreadObjectImpl(iface, manager_impl);
     }
 };
-
 
 class OscillatorWithdrawalAgent : public ModuleThreadObjectWithdrawalAgent{
     virtual void withdrawImpl(ThreadObjectImpl* impl)
     {
-        auto osc_impl = (OscillatorThreadObjectImpl*) impl;
-        delete osc_impl;
+        auto obj_impl = static_cast<OscillatorThreadObjectImpl*>(impl);
+        delete obj_impl;
     }
 };
 
 
-struct OscillatorThreadObjectIface : public ModuleThreadObjectIface{
-    R64FX_MODULE_AGENTS(Oscillator)
+/*======= Main Thread =======*/
+
+class OscillatorThreadObjectIface : public ModuleThreadObjectIface{
+    virtual ThreadObjectDeploymentAgent* newDeploymentAgent()
+    {
+        return new(std::nothrow) OscillatorDeploymentAgent;
+    }
+
+    virtual ThreadObjectWithdrawalAgent* newWithdrawalAgent()
+    {
+        return new(std::nothrow) OscillatorWithdrawalAgent;
+    }
 
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg)
     {
         
-    }
-
-    inline void engaged()
-    {
-        cout << "engaged!\n";
-        auto sd = ModuleGlobal::soundDriver();
-        auto port = sd->newAudioOutput("out");
     }
 };
 
@@ -68,30 +75,30 @@ struct OscillatorThreadObjectIface : public ModuleThreadObjectIface{
 
 Module_Oscillator::Module_Oscillator()
 {
-    m = new OscillatorThreadObjectIface;
+
 }
 
 
 Module_Oscillator::~Module_Oscillator()
 {
-    if(isEngaged())
-    {
-        disengage();
-        while(m_thread_object_iface->isPending())
-        {
-            Timer::runTimers();
-            sleep_nanoseconds(1500 * 1000);
-        }
-    }
+
 }
 
 
-void Module_Oscillator::engage()
+bool Module_Oscillator::engage()
 {
+#ifdef R64FX_DEBUG
+    assert(!isEngaged());
+    assert(!engagementPending());
+#endif//R64FX_DEBUG
+    m = new(std::nothrow) OscillatorThreadObjectIface;
+    if(!m)
+        return false;
+
     m_thread_object_iface->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
-        auto otobi = (OscillatorThreadObjectIface*) arg;
-        otobi->engaged();
+        cout << "engaged!\n";
     }, m_thread_object_iface);
+    return true;
 }
 
 
@@ -105,7 +112,13 @@ void Module_Oscillator::disengage()
 
 bool Module_Oscillator::isEngaged()
 {
-    return m_thread_object_iface->isDeployed() && (!m_thread_object_iface->isPending());
+    return m != nullptr && m_thread_object_iface->isDeployed() && (!m_thread_object_iface->isPending());
+}
+
+
+bool Module_Oscillator::engagementPending()
+{
+    return m_thread_object_iface->isPending();
 }
 
 }//namespace r64fx

@@ -7,9 +7,6 @@
 
 namespace r64fx{
 
-class SoundDriver;
-
-
 class SoundDriverPort{
 public:
     virtual ~SoundDriverPort() {}
@@ -124,6 +121,8 @@ public:
     virtual bool connect(const std::string &src, const std::string &dst) = 0;
 
     virtual bool disconnect(const std::string &src, const std::string &dst) = 0;
+
+    virtual void processEvents() = 0;
 
     static SoundDriver* newInstance(SoundDriver::Type type);
 

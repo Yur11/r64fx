@@ -124,6 +124,7 @@ class ThreadObjectManagerImpl{
     ThreadObjectImpl*                     m_root_impl         = nullptr;
     HeapAllocator*                        m_heap_allocator    = nullptr;
     ThreadObjectWithdrawalAgent*          m_withdrawal_agent  = nullptr;
+    void*                                 m_payload           = nullptr;
 
 public:
     ThreadObjectManagerImpl(
@@ -148,6 +149,16 @@ public:
     inline HeapAllocator* heapAllocator() const
     {
         return m_heap_allocator;
+    }
+
+    inline void setPayload(void* payload)
+    {
+        m_payload = payload;
+    }
+
+    inline void* payload() const
+    {
+        return m_payload;
     }
 
     void sendMessagesToIface(ThreadObjectIface* dst_iface, ThreadObjectMessage* msgs, int nmsgs);
@@ -255,11 +266,6 @@ bool ThreadObjectIface::withdrawalPending() const
 {
     return isDeployed() && isPending();
 }
-
-
-// bool ThreadObjectIface::isThreadRoot() const
-// {
-// }
 
 
 void ThreadObjectIface::sendMessagesToImpl(ThreadObjectMessage* msgs, int nmsgs)
@@ -579,9 +585,21 @@ void ThreadObjectImpl::readMessagesFromIface()
 }
 
 
-inline HeapAllocator* ThreadObjectImpl::heapAllocator() const
+HeapAllocator* ThreadObjectImpl::heapAllocator() const
 {
     return m_manager_impl->heapAllocator();
+}
+
+
+void ThreadObjectImpl::setPayload(void* payload)
+{
+    m_manager_impl->setPayload(payload);
+}
+
+
+void* ThreadObjectImpl::payload() const
+{
+    return m_manager_impl->payload();
 }
 
 

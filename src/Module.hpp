@@ -47,11 +47,13 @@ public:
 
     virtual ~Module();
 
-    virtual void engage() = 0;
+    virtual bool engage() = 0;
 
     virtual void disengage() = 0;
 
     virtual bool isEngaged() = 0;
+
+    virtual bool engagementPending() = 0;
 };
 
 

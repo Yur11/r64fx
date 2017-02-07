@@ -47,8 +47,6 @@ public:
 
     bool withdrawalPending() const;
 
-//     bool isThreadRoot() const;
-
 protected:
     void sendMessagesToImpl(ThreadObjectMessage* msgs, int nmsgs);
 

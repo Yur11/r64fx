@@ -20,7 +20,7 @@ class ThreadObjectDeploymentAgent{
     ThreadObjectCallbackFun  done_fun  = nullptr;
     void*                    done_arg  = nullptr;
 
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* public_iface, ThreadObjectManagerImpl* manager_impl) = 0;
+    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl) = 0;
 
 public:
     virtual ~ThreadObjectDeploymentAgent() {}
@@ -72,6 +72,10 @@ protected:
     {
         heapAllocator()->freeObj<T>(obj);
     }
+
+    void setPayload(void* payload);
+
+    void* payload() const;
 
 private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) = 0;

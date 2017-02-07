@@ -3,210 +3,39 @@
 #include <jack/jack.h>
 #include <jack/midiport.h>
 
-#define R64FX_JACK_SYNC_PORT_ENABLED     1
-
 namespace r64fx{
 
-class Jack;
-class JackImpl;
-class JackSyncPort;
-class JackSyncPortHande;
+R64FX_SOUND_DRIVER_PORT_CLASSES(Jack, jack_port_t*)
 
+class JackThreadImplHandle;
 
-struct JackSyncPortImpl : public LinkedList<JackSyncPortImpl>::Node{
-    JackSyncPortHande*                       iface       = nullptr;
-    CircularBuffer<SoundDriverSyncMessage>*  to_iface    = nullptr;
-    CircularBuffer<SoundDriverSyncMessage>*  from_iface  = nullptr;
-
-    JackSyncPortImpl(int buffer_size)
-    {
-        to_iface   = new(std::nothrow) CircularBuffer<SoundDriverSyncMessage>(4);
-        from_iface = new(std::nothrow) CircularBuffer<SoundDriverSyncMessage>(4);
-    }
-
-    ~JackSyncPortImpl()
-    {
-        delete to_iface;
-        delete from_iface;
-    }
-};
-
-
-class JackSyncPort : public SoundDriverSyncPort, public LinkedList<JackSyncPort>::Node{
-    JackSyncPortImpl*                        m_impl       = nullptr;
-    CircularBuffer<SoundDriverSyncMessage>*  m_to_impl    = nullptr;
-    CircularBuffer<SoundDriverSyncMessage>*  m_from_impl  = nullptr;
-
+class JackThreadImpl : public SoundDriverThreadImpl<jack_port_t*>{
 public:
-    JackSyncPort(JackSyncPortImpl* impl)
-    : m_impl(impl)
-    , m_to_impl(impl->from_iface)
-    , m_from_impl(impl->to_iface)
-    {
-        
-    }
-
-    virtual void enable()
-    {
-        SoundDriverSyncMessage msg(1);
-        m_to_impl->write(&msg, 1);
-    }
-
-    virtual void disable()
-    {
-        SoundDriverSyncMessage msg(0);
-        m_to_impl->write(&msg, 1);
-    }
-
-    virtual int readMessages(SoundDriverSyncMessage* msgs, int nmsgs)
-    {
-        return m_from_impl->read(msgs, nmsgs);
-    }
-};
-
-
-class JackMessage{
-    unsigned long m_key    = 0;
-    void* m_value  = 0;
-
-public:
-    JackMessage(){}
-
-    JackMessage(unsigned long key, void* value)
-    : m_key(key)
-    , m_value(value)
-    {}
-
-    inline unsigned long key() const { return m_key; }
-
-    inline void* value() const { return m_value; }
-};
-
-
-enum{
-    AddIOPort,
-    RemoveIOPort,
-    AddSyncPort,
-    RemoveSyncPort
-};
-
-enum{
-    IOPortAdded,
-    IOPortRemoved,
-    SyncPortAdded,
-    SyncPortRemoved
-};
-
-
-class JackImpl{
-    LinkedList<JackIOPortImpl>    m_io_ports;
-    LinkedList<JackSyncPortImpl>  m_sync_ports;
-    CircularBuffer<JackMessage>*  m_from_iface   = nullptr;
-    CircularBuffer<JackMessage>*  m_to_iface     = nullptr;
-
-public:
-    JackImpl(
-        CircularBuffer<JackMessage>* to_impl,
-        CircularBuffer<JackMessage>* from_impl
-    )
-    : m_from_iface(to_impl)
-    , m_to_iface(from_impl)
-    {
-        
-    }
-
-    inline void msgAddIOPort(JackIOPortImpl* port_impl)
-    {
-        m_io_ports.append(port_impl);
-        JackMessage msg(IOPortAdded, port_impl->iface);
-        int nwritten = m_to_iface->write(&msg, 1);
-#ifdef R64FX_DEBUG
-        assert(nwritten == 1);
-#endif//R64FX_DEBUG
-    }
-
-    inline void msgRemoveIOPort(JackIOPortImpl* port_impl)
-    {
-        m_io_ports.remove(port_impl);
-        JackMessage msg(IOPortRemoved, port_impl->iface);
-        int nwritten = m_to_iface->write(&msg, 1);
-#ifdef R64FX_DEBUG
-        assert(nwritten == 1);
-#endif//R64FX_DEBUG
-    }
-
-    inline void msgAddSyncPort(JackSyncPortImpl* port_impl)
-    {
-        m_sync_ports.append(port_impl);
-        JackMessage msg(SyncPortAdded, port_impl->iface);
-        int nwritten = m_to_iface->write(&msg, 1);
-#ifdef R64FX_DEBUG
-        assert(nwritten == 1);
-#endif//R64FX_DEBUG
-    }
-
-    inline void msgRemoveSyncPort(JackSyncPortImpl* port_impl)
-    {
-        m_sync_ports.remove(port_impl);
-        JackMessage msg(SyncPortRemoved, port_impl->iface);
-        int nwritten = m_to_iface->write(&msg, 1);
-#ifdef R64FX_DEBUG
-        assert(nwritten == 1);
-#endif//R64FX_DEBUG
-    }
+    using SoundDriverThreadImpl<jack_port_t*>::SoundDriverThreadImpl;
 
     int process(int nframes)
     {
-        JackMessage msg;
-        while(m_from_iface->read(&msg, 1))
+        prologue();
+
+        for(auto port : ports())
         {
-            switch(msg.key())
-            {
-                case AddIOPort:
-                {
-                    msgAddIOPort((JackIOPortImpl*) msg.value());
-                    break;
-                }
+            void* port_buffer = jack_port_get_buffer(port->handle(), nframes);
 
-                case RemoveIOPort:
-                {
-                    msgRemoveIOPort((JackIOPortImpl*) msg.value());
-                    break;
-                }
-
-                case AddSyncPort:
-                {
-                    msgAddSyncPort((JackSyncPortImpl*) msg.value());
-                    break;
-                }
-
-                case RemoveSyncPort:
-                {
-                    msgRemoveSyncPort((JackSyncPortImpl*) msg.value());
-                    break;
-                }
-            }
-        }
-
-        for(auto port : m_io_ports)
-        {
-            void* port_buffer = jack_port_get_buffer(port->jack_port, nframes);
-
-            unsigned long option = port->flags & 3;
+            unsigned long option = port->flags() & R64FX_PORT_OPTION_MASK;
             switch(option)
             {
                 case R64FX_PORT_IS_AUDIO_INPUT:
                 {
-                    auto audio_in_port = (JackAudioPortImpl*)(port);
-                    int nsamples = audio_in_port->buffer->write((float*)port_buffer, nframes);
+                    auto audio_in_port = (InputPortImpl<float, jack_port_t*>*)(port);
+                    int nsamples = audio_in_port->write((float*)port_buffer, nframes);
                     (void)nsamples;
                     break;
                 }
 
                 case R64FX_PORT_IS_AUDIO_OUTPUT:
                 {
-                    auto audio_out_port = (JackAudioPortImpl*)(port);
-                    int nsamples = audio_out_port->buffer->read((float*)port_buffer, nframes);
+                    auto audio_out_port = (OutputPortImpl<float, jack_port_t*>*)(port);
+                    int nsamples = audio_out_port->read((float*)port_buffer, nframes);
                     (void)nsamples;
                     break;
                 }
@@ -219,10 +48,9 @@ public:
                         jack_midi_event_t event;
                         jack_midi_event_get(&event, port_buffer, i);
 
-                        auto midi_in_port = (JackMidiPortImpl*)(port);
-                        midi_in_port->buffer->write(MidiEvent(
-                            MidiMessage(event.buffer, event.size), event.time
-                        ));
+                        auto midi_in_port = (InputPortImpl<MidiEvent, jack_port_t*>*)(port);
+                        MidiEvent midi_event(MidiMessage(event.buffer, event.size), event.time);
+                        midi_in_port->write(&midi_event, 1);
                     }
                     break;
                 }
@@ -231,14 +59,14 @@ public:
                 {
                     jack_midi_clear_buffer(port_buffer);
                     
-                    auto midi_out_port = (JackMidiPortImpl*)(port);
+                    auto midi_out_port = (OutputPortImpl<MidiEvent, jack_port_t*>*)(port);
                     
                     MidiEvent midi_event;
-                    while(midi_out_port->buffer->read(&midi_event, 1))
+                    while(midi_out_port->read(&midi_event, 1))
                     {
                         if(midi_event.message().byteCount() > 0)
                         {
-                            cout << jack_midi_event_write(
+                            jack_midi_event_write(
                                 port_buffer, 
                                 midi_event.time(), 
                                 midi_event.message().bytes(), 
@@ -253,18 +81,16 @@ public:
                     break;
             }
         }
+        
+        epilogue();
         return 0;
     }
 };
 
 
-class Jack : public SoundDriver{
-    jack_client_t*                           m_jack_client  = nullptr;
-    JackImpl*                                m_impl         = nullptr;
-    CircularBuffer<JackMessage>*  m_to_impl      = nullptr;
-    CircularBuffer<JackMessage>*  m_from_impl    = nullptr;
-    LinkedList<JackIOPort>                   m_io_ports;
-    LinkedList<JackSyncPort>                 m_sync_ports;
+class Jack : public SoundDriverPartial<jack_port_t*>{
+    jack_client_t*         m_jack_client  = nullptr;
+    JackThreadImplHandle*  m_impl         = nullptr;
 
 public:
     Jack()
@@ -274,21 +100,24 @@ public:
             return;
 
         jack_set_error_function([](const char* message){
-            cout << "Jack Error: " << message << "\n";
+            std::cout << "Jack Error: " << message << "\n";
         });
 
+        m_impl = (JackThreadImplHandle*) new(std::nothrow) JackThreadImpl(toImpl(), fromImpl());
+        if(!m_impl)
+        {
+            jack_client_close(m_jack_client);
+            return;
+        }
+
         if(jack_set_process_callback(m_jack_client, [](jack_nframes_t nframes, void* arg) -> int {
-            auto self = (JackImpl*) arg;
+            auto self = (JackThreadImpl*) arg;
             return self->process(nframes);
         }, this) != 0)
         {
             jack_client_close(m_jack_client);
             return;
         }
-
-        m_to_impl    = new(std::nothrow) CircularBuffer<JackMessage>(8);
-        m_from_impl  = new(std::nothrow) CircularBuffer<JackMessage>(8);
-        m_impl       = new(std::nothrow) JackImpl(m_to_impl, m_from_impl);
     }
 
     virtual ~Jack()
@@ -331,45 +160,54 @@ private:
         return jack_get_sample_rate(m_jack_client);
     }
 
-    template<typename PortT, typename PortImplT> PortT* newPort(const std::string &name, int buffer_size)
+    template<typename PortT> PortT* newPort(const std::string &name, int buffer_size)
     {
-        auto port_impl  = new(std::nothrow) PortImplT(buffer_size);
-        auto port_iface = new(std::nothrow) PortT(this, port_impl);
-
-        port_impl->jack_port = port_iface->jack_port = jack_port_register(
-            m_jack_client,
-            name.c_str(),
-            (port_iface->type() == SoundDriverPort::Type::Audio) ?  JACK_DEFAULT_AUDIO_TYPE : JACK_DEFAULT_MIDI_TYPE,
-            (port_iface->direction() == SoundDriverPort::Direction::Input) ?  JackPortIsInput : JackPortIsOutput,
+        auto jack_port = jack_port_register(
+            m_jack_client, name.c_str(),
+            PortTypeTraits<float>::type() == SoundDriverPort::Type::Audio ? JACK_DEFAULT_AUDIO_TYPE : JACK_DEFAULT_MIDI_TYPE,
+            PortT::portDirectionFlag() == R64FX_PORT_IS_AUDIO_INPUT ?  JackPortIsInput : JackPortIsOutput,
             0
         );
+        if(!jack_port)
+        {
+            return nullptr;
+        }
 
-        JackMessage msg(AddIOPort, port_impl);
-        m_to_impl->write(&msg, 1);
+        auto port = new(std::nothrow) PortT(jack_port, buffer_size);
+        if(!port)
+        {
+            jack_port_unregister(m_jack_client, jack_port);
+            return nullptr;
+        }
 
-        m_io_ports.append(port_iface);
+        if(!addPort(port))
+        {
+            jack_port_unregister(m_jack_client, jack_port);
+            delete port;
+            return nullptr;
+        }
 
-        return port_iface;
+        return port;
     }
 
     virtual SoundDriverAudioInput* newAudioInput(const std::string &name)
     {
-        return newPort<JackAudioInput, JackAudioPortImpl>(name, bufferSize() * 2);
+        return newPort<JackAudioInput>(name, bufferSize() * 2);
     }
 
     virtual SoundDriverAudioOutput* newAudioOutput(const std::string &name)
     {
-        return newPort<JackAudioOutput, JackAudioPortImpl>(name, bufferSize() * 2);
+        return newPort<JackAudioOutput>(name, bufferSize() * 2);
     }
 
     virtual SoundDriverMidiInput* newMidiInput(const std::string &name)
     {
-        return newPort<JackMidiInput, JackMidiPortImpl>(name, 32);
+        return newPort<JackMidiInput>(name, 32);
     }
 
     virtual SoundDriverMidiOutput* newMidiOutput(const std::string &name)
     {
-        return newPort<JackMidiOutput, JackMidiPortImpl>(name, 32);
+        return newPort<JackMidiOutput>(name, 32);
     }
 
     virtual SoundDriverPort* findPort(const std::string &name)
@@ -386,42 +224,29 @@ private:
 
     virtual void deletePort(SoundDriverPort* port)
     {
-        auto io_port = dynamic_cast<JackIOPort*>(port);
-        if(io_port)
+        auto p = dynamic_cast<BasePortIface<jack_port_t*>*>(port);
+        if(p)
         {
-            JackMessage msg(RemoveIOPort, io_port->impl());
-            m_to_impl->write(&msg, 1);
+            removePort(p);
         }
-    }
-
-    virtual SoundDriverSyncPort* newSyncPort()
-    {
-        auto port_impl  = new(std::nothrow) JackSyncPortImpl(32);
-        auto port_iface = new(std::nothrow) JackSyncPort(port_impl);
-
-        JackMessage msg(AddSyncPort, port_impl);
-        m_to_impl->write(&msg, 1);
-
-        m_sync_ports.append(port_iface);
-
-        return port_iface;
-    }
-
-    virtual void deleteSyncPort(SoundDriverSyncPort* port)
-    {
-        
     }
 
     virtual void setPortName(SoundDriverPort* port, const std::string &name)
     {
-        auto port_iface = dynamic_cast<JackIOPort*>(port);
-        jack_port_rename(m_jack_client, port_iface->jackPort(), name.c_str());
+        auto p = dynamic_cast<BasePortIface<jack_port_t*>*>(port);
+        if(p)
+        {
+            jack_port_rename(m_jack_client, p->handle(), name.c_str());
+        }
     }
 
     virtual void getPortName(SoundDriverPort* port, std::string &name)
     {
-        auto port_iface = dynamic_cast<JackIOPort*>(port);
-        name = std::string(jack_port_short_name(port_iface->jackPort()));
+        auto p = dynamic_cast<BasePortIface<jack_port_t*>*>(port);
+        if(p)
+        {
+            name = std::string(jack_port_short_name(p->handle()));
+        }
     }
 
     virtual bool connect(const std::string &src, const std::string &dst)

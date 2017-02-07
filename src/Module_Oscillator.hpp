@@ -13,11 +13,13 @@ public:
 
     virtual ~Module_Oscillator();
 
-    virtual void engage();
+    virtual bool engage();
 
     virtual void disengage();
 
     virtual bool isEngaged();
+
+    virtual bool engagementPending();
 };
 
 }//namespace r64fx

@@ -5,7 +5,7 @@ using namespace std;
 
 namespace r64fx{
     
-SignalNode_BufferReader::SignalNode_BufferReader(SoundDriverIOPort_AudioInput* input, int buffer_size)
+SignalNode_BufferReader::SignalNode_BufferReader(SoundDriverAudioInput* input, int buffer_size)
 {
     m_input = input;
     m_buffer = new float[buffer_size];
@@ -56,7 +56,7 @@ void SignalNode_BufferReader::processSample(int i)
 
 
 
-SignalNode_BufferWriter::SignalNode_BufferWriter(SoundDriverIOPort_AudioOutput* output, int buffer_size)
+SignalNode_BufferWriter::SignalNode_BufferWriter(SoundDriverAudioOutput* output, int buffer_size)
 {
     m_output = output;
     m_buffer = new float[buffer_size];
