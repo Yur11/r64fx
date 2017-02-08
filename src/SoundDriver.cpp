@@ -48,7 +48,7 @@ template<typename HandleT> class BasePortImpl : public LinkedList<BasePortImpl<H
 
 protected:
     unsigned long  m_flags   = 0;
-    
+
 public:
     BasePortImpl(HandleT handle, PortIfaceHandle* iface, unsigned long flags) : m_handle(handle), m_iface(iface), m_flags(flags) {}
 
@@ -106,9 +106,13 @@ protected:
 public:
     BasePortIface(HandleT handle) : m_handle(handle) {}
 
+    virtual ~BasePortIface() {}
+
     inline HandleT handle() const { return m_handle; }
 
     inline PortImplHandle* impl() const { return m_impl; }
+
+    virtual void freeImpl() = 0;
 };
 
 
@@ -123,7 +127,7 @@ public:
         m_buffer = new(std::nothrow) CircularBuffer<T>(nitems);
     }
 
-    ~PortIface()
+    virtual ~PortIface()
     {
         delete m_buffer;
     }
@@ -156,6 +160,12 @@ public:
         return new_impl;
     }
 
+    virtual void freeImpl()
+    {
+        delete (InputPortImpl<T, HandleT>*) this->impl();
+        this->setImpl(nullptr);
+    }
+
     inline static const unsigned long portDirectionFlag() { return R64FX_PORT_IS_AUDIO_INPUT; }
 };
 
@@ -182,6 +192,12 @@ public:
         if(new_impl)
             this->setImpl(new_impl);
         return new_impl;
+    }
+
+    virtual void freeImpl()
+    {
+        delete (OutputPortImpl<T, HandleT>*) this->impl();
+        this->setImpl(nullptr);
     }
 
     inline static const unsigned long portDirectionFlag() { return R64FX_PORT_IS_AUDIO_OUTPUT; }
@@ -432,40 +448,28 @@ private:
     {
         m_ports.append(port_impl);
         SoundDriverMessage msg(PortAdded, port_impl->iface());
-        int nwritten = m_to_iface->write(&msg, 1);
-#ifdef R64FX_DEBUG
-        assert(nwritten == 1);
-#endif//R64FX_DEBUG
+        m_to_iface->write(&msg, 1);
     }
 
     inline void msgRemovePort(BasePortImpl<HandleT>* port_impl)
     {
         m_ports.remove(port_impl);
         SoundDriverMessage msg(PortRemoved, port_impl->iface());
-        int nwritten = m_to_iface->write(&msg, 1);
-#ifdef R64FX_DEBUG
-        assert(nwritten == 1);
-#endif//R64FX_DEBUG
+        m_to_iface->write(&msg, 1);
     }
 
     inline void msgAddSyncPort(SyncPortImpl* port_impl)
     {
         m_sync_ports.append(port_impl);
         SoundDriverMessage msg(SyncPortAdded, port_impl->iface());
-        int nwritten = m_to_iface->write(&msg, 1);
-#ifdef R64FX_DEBUG
-        assert(nwritten == 1);
-#endif//R64FX_DEBUG
+        m_to_iface->write(&msg, 1);
     }
 
     inline void msgRemoveSyncPort(SyncPortImpl* port_impl)
     {
         m_sync_ports.remove(port_impl);
         SoundDriverMessage msg(SyncPortRemoved, port_impl->iface());
-        int nwritten = m_to_iface->write(&msg, 1);
-#ifdef R64FX_DEBUG
-        assert(nwritten == 1);
-#endif//R64FX_DEBUG
+        m_to_iface->write(&msg, 1);
     }
 };
 
@@ -483,7 +487,7 @@ protected:
         m_from_impl = new(std::nothrow) CircularBuffer<SoundDriverMessage>(16);
     }
 
-    ~SoundDriverPartial()
+    virtual ~SoundDriverPartial()
     {
         if(m_to_impl)
             delete m_to_impl;
@@ -508,9 +512,8 @@ protected:
 
     void removePort(BasePortIface<HandleT>* port)
     {
-        SoundDriverMessage msg(AddPort, port->impl());
+        SoundDriverMessage msg(RemovePort, port->impl());
         m_to_impl->write(&msg, 1);
-        m_ports.remove(port);
     }
 
     virtual void portAdded(BasePortIface<HandleT>* port)
@@ -552,6 +555,11 @@ private:
         m_sync_ports.remove(port_iface);
     }
 
+    virtual bool hasPorts()
+    {
+        return !m_ports.isEmpty();
+    }
+
     virtual void processEvents()
     {
         SoundDriverMessage msg;
@@ -567,7 +575,10 @@ private:
 
                 case PortRemoved:
                 {
-                    portRemoved((BasePortIface<HandleT>*) msg.value());
+                    auto port = (BasePortIface<HandleT>*) msg.value();
+                    port->freeImpl();
+                    m_ports.remove(port);
+                    portRemoved(port);
                     break;
                 }
 

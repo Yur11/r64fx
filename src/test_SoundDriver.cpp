@@ -17,15 +17,21 @@ int main()
 {
     auto sd = SoundDriver::newInstance(SoundDriver::Type::Jack);
     sd->enable();
+
     g_mutex.lock();
-    g_sync_port = sd->newSyncPort();
-    auto audio_out = sd->newAudioOutput("out");
-    auto midi_in = sd->newMidiInput("in");
+    g_sync_port    = sd->newSyncPort();
+    auto audio_in  = sd->newAudioInput  ("in");
+    auto audio_out = sd->newAudioOutput ("out");
+    auto midi_in   = sd->newMidiInput   ("midi_in");
+    auto midi_out  = sd->newMidiOutput  ("midi_out");
+    sd->connect("r64fx:out", "system:playback_1");
+    sd->connect("r64fx:out", "system:playback_2");
+    sd->connect("alsa_midi:Midi Through Port-0 (out)", "r64fx:midi_in");
     g_mutex.unlock();
 
     Thread cmd_thread;
     cmd_thread.run([](void*) -> void*{
-        for(;;)
+        while(g_running)
         {
             string cmd = "";
             cin >> cmd;
@@ -50,14 +56,22 @@ int main()
         return nullptr;
     }, nullptr);
 
-    float freq1 = 441.0f;
-    float freq2 = 439.0f;
-    float osc1 = 0.0f;
-    float osc2 = 0.0f;
-    float srrcp = 1.0f / float(sd->sampleRate());
-    float* buff = new float[sd->bufferSize()];
-    long noteon_time = 0;
-    long noteoff_time = 0;
+    const int max_partials  = 32;
+    int     npartials       = max_partials;
+    float   npartials_rcp   = 1.0f / float(npartials);
+    float   osc[max_partials];
+    for(int i=0; i<max_partials; i++)
+    {
+        osc[i] = 0.0f;
+    }
+    float   freq            = 440.0f;
+    float   nyquist         = float(sd->sampleRate() / 2);
+    float   srrcp           = 1.0f / float(sd->sampleRate());
+    float*  buff            = new float[sd->bufferSize()];
+    long    note_period     = sd->sampleRate();
+    long    sample_count    = 0;
+    bool    note_on         = false;
+
     g_mutex.lock();
     g_sync_port->enable();
     g_mutex.unlock();
@@ -77,23 +91,26 @@ int main()
                 {
                     case MidiMessage::Type::NoteOn:
                     {
-                        noteon_time = sync_msg.bits * sd->bufferSize() + midi_event.time();
                         cout << "NoteOn:  "  << msg.channel() << ", note: " << msg.noteNumber() << ", vel: " << msg.velocity() << "\n";
+                        freq = pow(2, (msg.noteNumber() - 69) / 12.0f) * 440.0f;
                         break;
                     }
 
                     case MidiMessage::Type::NoteOff:
                     {
-                        noteoff_time = sync_msg.bits * sd->bufferSize() + midi_event.time();
                         cout << "NoteOff: "  << msg.channel() << ", note: " << msg.noteNumber() << ", vel: " << msg.velocity() << "\n";
-                        cout << "diff: " << (noteoff_time - noteon_time) << "\n";
                         break;
                     }
 
-                    case MidiMessage::Type::ChanAft:
+                    case MidiMessage::Type::ControlChange:
                     {
-//                         cout << "ChanAft: " << msg.channel() << ", " << msg.channelPressure() << "\n";
-                        break;
+                        cout << "CC: " << msg.channel() << ", " << msg.controllerNumber() << ", " << msg.controllerValue() << "\n";
+                        if(msg.controllerNumber() == 19)
+                        {
+                            auto val = (msg.controllerValue() >> 2) + 1;
+                            cout << "val: " << val << "\n";
+                            npartials = val;
+                        }
                     }
 
                     default:
@@ -103,21 +120,46 @@ int main()
                 }
             }
 
-            for(int i=0; i<sd->bufferSize(); i++)
+            sample_count += sd->bufferSize();
+            if(sample_count >= note_period)
             {
-                osc2 += freq2 * srrcp;
-                if(osc2 >= 1.0f)
+                sample_count -= note_period;
+                if(note_on)
                 {
-                    osc2 -= 1.0f;
+                    MidiEvent event(MidiMessage::NoteOff(0, 69, 127), 1);
+                    midi_out->writeEvents(&event, 1);
                 }
-
-                osc1 += freq1 * srrcp;
-                if(osc1 >= 1.0f)
+                else
                 {
-                    osc1 -= 1.0f;
+                    MidiEvent event(MidiMessage::NoteOn(0, 69, 0), 1);
+                    midi_out->writeEvents(&event, 1);
                 }
+                note_on = !note_on;
+            }
 
-                buff[i] = (sin((osc1 * 2.0f - 1.0f) * M_PI) + sin((osc2 * 2.0f - 1.0f) * M_PI)) * 0.35f;
+            audio_in->readSamples(buff, sd->bufferSize());
+            if(freq > 0)
+            {
+                for(int i=0; i<sd->bufferSize(); i++)
+                {
+                    for(int j=0; j<npartials; j++)
+                    {
+                        osc[j] += freq * srrcp * float(j + 1);
+                        if(osc[j] >= 1.0f)
+                        {
+                            osc[j] -= 2.0f;
+                        }
+
+                        if(freq <= nyquist)
+                        {
+                            buff[i] += sin(osc[j] * M_PI) * (1.0f/float(j + 1)) * npartials_rcp;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
             }
             audio_out->writeSamples(buff, sd->bufferSize());
         }
@@ -126,13 +168,26 @@ int main()
         sleep_nanoseconds(1000 * 1000);
     }
 
+    if(note_on)
+    {
+        MidiEvent event(MidiMessage::NoteOff(0, 69, 0), 0);
+        midi_out->writeEvents(&event, 1);
+    }
+
     delete[] buff;
+    sd->deletePort(audio_in);
     sd->deletePort(audio_out);
     sd->deletePort(midi_in);
+    sd->deletePort(midi_out);
     sd->deleteSyncPort(g_sync_port);
+    while(sd->hasPorts())
+    {
+        sd->processEvents();
+        sleep_nanoseconds(1000 * 1000);
+    }
     sd->disable();
     SoundDriver::deleteInstance(sd);
     cmd_thread.join();
-    cout << "Exit!\n";
+    cout << "Done!\n";
     return 0;
 }

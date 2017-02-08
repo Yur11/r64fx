@@ -123,10 +123,10 @@ public:
     virtual ~Jack()
     {
         if(m_jack_client)
-        {
             jack_client_close(m_jack_client);
-            m_jack_client = nullptr;
-        }
+
+        if(m_impl)
+            delete (JackThreadImpl*)m_impl;
     }
 
 private:
@@ -210,18 +210,6 @@ private:
         return newPort<JackMidiOutput>(name, 32);
     }
 
-    virtual SoundDriverPort* findPort(const std::string &name)
-    {
-//         for(auto port : m_io_ports)
-//         {
-//             std::string port_name;
-//             getPortName(port->iface, port_name);
-//             if(port_name == name)
-//                 return port->iface;
-//         }
-        return nullptr;
-    }
-
     virtual void deletePort(SoundDriverPort* port)
     {
         auto p = dynamic_cast<BasePortIface<jack_port_t*>*>(port);
@@ -229,6 +217,12 @@ private:
         {
             removePort(p);
         }
+    }
+
+    virtual void portRemoved(BasePortIface<jack_port_t*>* port)
+    {
+        jack_port_unregister(m_jack_client, port->handle());
+        delete port;
     }
 
     virtual void setPortName(SoundDriverPort* port, const std::string &name)

@@ -106,8 +106,6 @@ public:
 
     virtual SoundDriverMidiOutput* newMidiOutput(const std::string &name = "") = 0;
 
-    virtual SoundDriverPort* findPort(const std::string &name) = 0;
-
     virtual void deletePort(SoundDriverPort* port) = 0;
 
     virtual SoundDriverSyncPort* newSyncPort() = 0;
@@ -121,6 +119,8 @@ public:
     virtual bool connect(const std::string &src, const std::string &dst) = 0;
 
     virtual bool disconnect(const std::string &src, const std::string &dst) = 0;
+
+    virtual bool hasPorts() = 0;
 
     virtual void processEvents() = 0;
 
