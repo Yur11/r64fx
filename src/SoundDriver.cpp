@@ -27,9 +27,7 @@ class SyncPortImplHandle;
 class SyncPortIfaceHandle;
 
 
-template<typename> struct PortTypeTraits{
-};
-
+template<typename> struct PortTypeTraits{};
 
 template<> struct PortTypeTraits<float>{
     static const SoundDriverPort::Type  type()  { return SoundDriverPort::Type::Audio; }
@@ -45,9 +43,7 @@ template<> struct PortTypeTraits<MidiEvent>{
 template<typename HandleT> class BasePortImpl : public LinkedList<BasePortImpl<HandleT>>::Node{
     HandleT           m_handle  = nullptr;
     PortIfaceHandle*  m_iface   = nullptr;
-
-protected:
-    unsigned long  m_flags   = 0;
+    unsigned long     m_flags   = 0;
 
 public:
     BasePortImpl(HandleT handle, PortIfaceHandle* iface, unsigned long flags) : m_handle(handle), m_iface(iface), m_flags(flags) {}
@@ -69,14 +65,18 @@ public:
     : BasePortImpl<HandleT>(handle, iface, flags)
     , m_buffer(buffer)
     {
-        
+
     }
 };
 
 
 template<typename T, typename HandleT>  class InputPortImpl : public PortImpl<T, HandleT>{
 public:
-    using PortImpl<T, HandleT>::PortImpl;
+    InputPortImpl(HandleT handle, PortIfaceHandle* iface, CircularBuffer<T>* buffer)
+    : PortImpl<T, HandleT>(handle, iface, R64FX_PORT_IS_INPUT | PortTypeTraits<T>::flags(), buffer)
+    {
+
+    }
 
     inline int write(T* items, int nitems)
     {
@@ -87,7 +87,11 @@ public:
 
 template<typename T, typename HandleT>  class OutputPortImpl : public PortImpl<T, HandleT>{
 public:
-    using PortImpl<T, HandleT>::PortImpl;
+    OutputPortImpl(HandleT handle, PortIfaceHandle* iface, CircularBuffer<T>* buffer)
+    : PortImpl<T, HandleT>(handle, iface, R64FX_PORT_IS_OUTPUT | PortTypeTraits<T>::flags(), buffer)
+    {
+
+    }
 
     inline int read(T* items, int nitems)
     {
@@ -98,10 +102,9 @@ public:
 
 template<typename HandleT> class BasePortIface : public LinkedList<BasePortIface<HandleT>>::Node{
     HandleT          m_handle  = nullptr;
-    PortImplHandle*  m_impl    = nullptr;
 
 protected:
-    inline void setImpl(PortImplHandle* impl) { m_impl = impl; } 
+    PortImplHandle*  m_impl    = nullptr;
 
 public:
     BasePortIface(HandleT handle) : m_handle(handle) {}
@@ -111,12 +114,10 @@ public:
     inline HandleT handle() const { return m_handle; }
 
     inline PortImplHandle* impl() const { return m_impl; }
-
-    virtual void freeImpl() = 0;
 };
 
 
-template<typename T, typename HandleT>  class PortIface : public BasePortIface<HandleT>{
+template<typename T, typename HandleT, typename PortImplT>  class PortIface : public BasePortIface<HandleT>{
 protected:
     CircularBuffer<T>*  m_buffer  = nullptr;
 
@@ -125,79 +126,39 @@ public:
     : BasePortIface<HandleT>(handle)
     {
         m_buffer = new(std::nothrow) CircularBuffer<T>(nitems);
+        this->m_impl = (PortImplHandle*) new(std::nothrow) PortImplT(this->handle(), (PortIfaceHandle*)this, m_buffer);
     }
 
     virtual ~PortIface()
     {
         delete m_buffer;
+        delete (InputPortImpl<T, HandleT>*) this->impl();
     }
 
-    inline static const PortTypeTraits<T> traits() { return PortTypeTraits<T>(); }
+    inline static const PortTypeTraits<T> typeTraits() { return PortTypeTraits<T>(); }
 };
 
 
-template<typename T, typename HandleT> class InputPortIface : public PortIface<T, HandleT>{
+template<typename T, typename HandleT> class InputPortIface : public PortIface<T, HandleT, InputPortImpl<T, HandleT>>{
 public:
-    using PortIface<T, HandleT>::PortIface;
+    using PortIface<T, HandleT, InputPortImpl<T, HandleT>>::PortIface;
 
     inline int read(T* items, int nitems)
     {
         return this->m_buffer->read(items, nitems);
     }
 
-    inline PortImplHandle* newImpl()
-    {
-#ifdef R64FX_DEBUG
-        assert(this->impl() == nullptr);
-#endif//R64FX_DEBUG
-        auto new_impl = (PortImplHandle*) new(std::nothrow) InputPortImpl<T, HandleT>(
-            this->handle(), (PortIfaceHandle*)this,
-            R64FX_PORT_IS_INPUT | PortTypeTraits<T>::flags(),
-            this->m_buffer
-        );
-        if(new_impl)
-            this->setImpl(new_impl);
-        return new_impl;
-    }
-
-    virtual void freeImpl()
-    {
-        delete (InputPortImpl<T, HandleT>*) this->impl();
-        this->setImpl(nullptr);
-    }
-
     inline static const unsigned long portDirectionFlag() { return R64FX_PORT_IS_AUDIO_INPUT; }
 };
 
 
-template<typename T, typename HandleT> class OutputPortIface : public PortIface<T, HandleT>{
+template<typename T, typename HandleT> class OutputPortIface : public PortIface<T, HandleT, OutputPortImpl<T, HandleT>>{
 public:
-    using PortIface<T, HandleT>::PortIface;
+    using PortIface<T, HandleT, OutputPortImpl<T, HandleT>>::PortIface;
 
     inline int write(T* items, int nitems)
     {
         return this->m_buffer->write(items, nitems);
-    }
-
-    inline PortImplHandle* newImpl()
-    {
-#ifdef R64FX_DEBUG
-        assert(this->impl() == nullptr);
-#endif//R64FX_DEBUG
-        auto new_impl = (PortImplHandle*) new(std::nothrow) OutputPortImpl<T, HandleT>(
-            this->handle(), (PortIfaceHandle*)this, 
-            R64FX_PORT_IS_OUTPUT | PortTypeTraits<T>::flags(),
-            this->m_buffer
-        );
-        if(new_impl)
-            this->setImpl(new_impl);
-        return new_impl;
-    }
-
-    virtual void freeImpl()
-    {
-        delete (OutputPortImpl<T, HandleT>*) this->impl();
-        this->setImpl(nullptr);
     }
 
     inline static const unsigned long portDirectionFlag() { return R64FX_PORT_IS_AUDIO_OUTPUT; }
@@ -501,10 +462,9 @@ protected:
 
     template<typename PortT> bool addPort(PortT* port)
     {
-        auto impl = port->newImpl();
-        if(!impl)
+        if(!port->impl())
             return false;
-        SoundDriverMessage msg(AddPort, impl);
+        SoundDriverMessage msg(AddPort, port->impl());
         m_to_impl->write(&msg, 1);
         m_ports.append(port);
         return true;
@@ -576,7 +536,6 @@ private:
                 case PortRemoved:
                 {
                     auto port = (BasePortIface<HandleT>*) msg.value();
-                    port->freeImpl();
                     m_ports.remove(port);
                     portRemoved(port);
                     break;
