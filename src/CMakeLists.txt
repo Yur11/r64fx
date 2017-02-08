@@ -189,3 +189,20 @@ set(test_jit_SRC
 )
 
 add_executable(test_jit ${test_jit_SRC})
+
+
+## test_SoundDriver ##
+set(test_SoundDriver_SRC
+    test_SoundDriver.cpp
+    SoundDriver.cpp
+    Midi.cpp
+    TimeUtils.cpp
+    Thread.cpp
+    Mutex.cpp
+)
+
+add_executable(test_SoundDriver ${test_SoundDriver_SRC})
+
+set(test_SoundDriver_LIBS jack pthread)
+
+target_link_libraries(test_SoundDriver ${test_SoundDriver_LIBS})

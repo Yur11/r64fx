@@ -127,6 +127,8 @@ public:
     {
         delete m_buffer;
     }
+
+    inline static const PortTypeTraits<T> traits() { return PortTypeTraits<T>(); }
 };
 
 
@@ -219,6 +221,8 @@ class SyncPortImpl : public LinkedList<SyncPortImpl>::Node{
     CircularBuffer<SoundDriverSyncMessage>*  m_from_iface  = nullptr;
 
 public:
+    bool is_enabled = false;
+
     SyncPortImpl(SyncPortIfaceHandle* iface, CircularBuffer<SoundDriverSyncMessage>* to_iface, CircularBuffer<SoundDriverSyncMessage>* from_iface)
     : m_iface((SyncPortIfaceHandle*)iface)
     , m_to_iface(to_iface)
@@ -346,6 +350,7 @@ template<typename HandleT> class SoundDriverThreadImpl{
     LinkedList<SyncPortImpl>             m_sync_ports;
     CircularBuffer<SoundDriverMessage>*  m_from_iface  = nullptr;
     CircularBuffer<SoundDriverMessage>*  m_to_iface    = nullptr;
+    unsigned long                        m_counter     = 0;
 
 protected:
     inline const LinkedList<BasePortImpl<HandleT>> &ports() const { return m_ports; }
@@ -355,12 +360,18 @@ public:
     : m_from_iface(to_impl)
     , m_to_iface(from_impl)
     {
-        
+#ifdef R64FX_DEBUG
+        assert(m_from_iface != nullptr);
+        assert(m_to_iface != nullptr);
+#endif//R64FX_DEBUG
     }
 
 protected:
     void prologue()
     {
+#ifdef R64FX_DEBUG
+        assert(m_from_iface != nullptr);
+#endif//R64FX_DEBUG
         SoundDriverMessage msg;
         while(m_from_iface->read(&msg, 1))
         {
@@ -395,9 +406,27 @@ protected:
 
     void epilogue()
     {
-        
+        for(auto sync_port : m_sync_ports)
+        {
+            SoundDriverSyncMessage msg;
+            while(sync_port->readMessages(&msg, 1))
+            {
+                if(msg.bits == 0)
+                    sync_port->is_enabled = false;
+                else if(msg.bits == 1)
+                    sync_port->is_enabled = true;
+                    
+            }
+
+            if(sync_port->is_enabled)
+            {
+                SoundDriverSyncMessage msg(m_counter);
+                sync_port->writeMessages(&msg, 1);
+            }
+        }
+        m_counter++;
     }
-    
+
 private:
     inline void msgAddPort(BasePortImpl<HandleT>* port_impl)
     {

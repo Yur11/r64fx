@@ -113,7 +113,7 @@ public:
         if(jack_set_process_callback(m_jack_client, [](jack_nframes_t nframes, void* arg) -> int {
             auto self = (JackThreadImpl*) arg;
             return self->process(nframes);
-        }, this) != 0)
+        }, m_impl) != 0)
         {
             jack_client_close(m_jack_client);
             return;
@@ -164,7 +164,7 @@ private:
     {
         auto jack_port = jack_port_register(
             m_jack_client, name.c_str(),
-            PortTypeTraits<float>::type() == SoundDriverPort::Type::Audio ? JACK_DEFAULT_AUDIO_TYPE : JACK_DEFAULT_MIDI_TYPE,
+            PortT::traits().type() == SoundDriverPort::Type::Audio ? JACK_DEFAULT_AUDIO_TYPE : JACK_DEFAULT_MIDI_TYPE,
             PortT::portDirectionFlag() == R64FX_PORT_IS_AUDIO_INPUT ?  JackPortIsInput : JackPortIsOutput,
             0
         );
