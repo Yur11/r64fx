@@ -13,18 +13,19 @@ template<typename T> void copy_items(T* dst, const T* src, int nitems)
 
 
 template<typename T> class CircularBuffer{
-    T*            m_buffer = nullptr;
+    T*            m_buffer      = nullptr;
 
     // Must be >= 2
-    unsigned int  m_size   = 0;
+    unsigned int  m_size        = 0;
+    bool          m_owns_buffer = false;
 
     // Read and Write pointers.
     //
     // MSBs are used as flags to distinguish
     // between full and empty states
-    // when read pointer is equal to write pointer.
-    volatile unsigned int mw = 0;
-    volatile unsigned int mr = 0;
+    // when read pointer is equal to the write pointer.
+    volatile unsigned int mw    = 0;
+    volatile unsigned int mr    = 0;
 
 public:
     CircularBuffer(int size, T* storage = nullptr)
@@ -41,12 +42,18 @@ public:
             m_buffer = new(std::nothrow) T[size];
             if(!m_buffer)
                 return;
+            m_owns_buffer = true;
         }
 
         m_size = size;
         mw = mr = 0;
     }
 
+    ~CircularBuffer()
+    {
+        if(m_owns_buffer && m_buffer != nullptr)
+            delete[] m_buffer;
+    }
 
     int size() const
     {
