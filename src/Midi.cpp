@@ -163,11 +163,11 @@ int MidiMessage::byteCount() const
         case MidiMessage::Type::PolyAft:
         case MidiMessage::Type::ControlChange:
             return 3;
-            
+
         case MidiMessage::Type::ProgramChange:
         case MidiMessage::Type::ChanAft:
             return 2;
-            
+
         case MidiMessage::Type::PitchBend:
         case MidiMessage::Type::AllSoundOff:
         case MidiMessage::Type::ResetAllCtrls:
@@ -180,16 +180,16 @@ int MidiMessage::byteCount() const
         case MidiMessage::Type::PolyMode:
         case MidiMessage::Type::SysEx:
             return 3;
-            
+
         case MidiMessage::Type::TimeCode:
             return 2;
-            
+
         case MidiMessage::Type::SongPosition:
             return 3;
-            
+
         case MidiMessage::Type::SongSelect:
             return 2;
-            
+
         case MidiMessage::Type::TuneRequest:
         case MidiMessage::Type::SysExEnd:
         case MidiMessage::Type::Clock:
@@ -199,7 +199,7 @@ int MidiMessage::byteCount() const
         case MidiMessage::Type::ActiveSensing:
         case MidiMessage::Type::Reset:
             return 1;
-        
+
         default:
             return -1;
     }
@@ -279,7 +279,7 @@ int MidiMessage::songPosition() const
 MidiMessage MidiMessage::NoteOn(int channel, int note, int velocity)
 {
     MidiMessage msg;
-    msg.bytes()[0] = 0x80 + channel - 1;
+    msg.bytes()[0] = 0x80 + channel;
     msg.bytes()[1] = note;
     msg.bytes()[2] = velocity;
     return msg;
@@ -289,7 +289,7 @@ MidiMessage MidiMessage::NoteOn(int channel, int note, int velocity)
 MidiMessage MidiMessage::NoteOff(int channel, int note, int velocity)
 {
     MidiMessage msg;
-    msg.bytes()[0] = 0x90 + channel - 1;
+    msg.bytes()[0] = 0x90 + channel;
     msg.bytes()[1] = note;
     msg.bytes()[2] = velocity;
     return msg;
