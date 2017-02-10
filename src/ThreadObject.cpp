@@ -363,10 +363,9 @@ void ThreadObjectManagerIface::objectDeployed(ThreadObjectDeploymentAgent* agent
         auto parent_agent = agent->parent_agent;
         for(;;)
         {
-            object->deleteDeploymentAgent(agent);
-
             if(parent_agent)
             {
+                object->deleteDeploymentAgent(agent);
                 auto sibling = object->next();
                 if(sibling)
                 {
@@ -386,6 +385,7 @@ void ThreadObjectManagerIface::objectDeployed(ThreadObjectDeploymentAgent* agent
                 done_fun = agent->done_fun;
                 done_arg = agent->done_arg;
                 done = true;
+                object->deleteDeploymentAgent(agent);
                 break;
             }
         }
