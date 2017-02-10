@@ -374,13 +374,20 @@ void WindowX11::xdndStatusEvent()
     const long int* msg_data = in.data.l;
 
     ::Window target_xwindow = (::Window) msg_data[0];
+    (void) target_xwindow;
     bool drop_accepted = (msg_data[1] & 0x1);
     bool target_wants_more_events = (msg_data[1] & 0x2);
+    (void) target_wants_more_events;
     int x = ((msg_data[2] >> 16) & 0xFF);
+    (void) x;
     int y = (msg_data[2] & 0xFF);
+    (void) y;
     int w = ((msg_data[3] >> 16) & 0xFF);
+    (void) w;
     int h = (msg_data[3] & 0xFF);
+    (void) h;
     Atom xdnd_action = (Atom) msg_data[4];
+    (void) xdnd_action;
 
     if(drop_accepted)
     {
