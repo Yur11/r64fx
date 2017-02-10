@@ -129,13 +129,14 @@ target_link_libraries(r64fx ${LIBS})
 #########################################################################################
 ## Some Tests ###########################################################################
 #########################################################################################
+add_custom_target(tests DEPENDS test_LinkedList test_Timer test_MemoryUtils test_ThreadObject test_jit test_SoundDriver)
 
 ## test_LinkedList ##
 set(test_LinkedList_SRC
     test_LinkedList.cpp
 )
 
-add_executable(test_LinkedList ${test_LinkedList_SRC})
+add_executable(test_LinkedList EXCLUDE_FROM_ALL ${test_LinkedList_SRC})
 
 
 ## test_Timer ##
@@ -147,7 +148,7 @@ set(test_Timer_SRC
     TimeUtils.cpp
 )
 
-add_executable(test_Timer ${test_Timer_SRC})
+add_executable(test_Timer EXCLUDE_FROM_ALL ${test_Timer_SRC})
 
 set(test_Timer_LIBS pthread)
 
@@ -160,7 +161,7 @@ set(test_MemoryUtils_SRC
     MemoryUtils.cpp
 )
 
-add_executable(test_MemoryUtils ${test_MemoryUtils_SRC})
+add_executable(test_MemoryUtils EXCLUDE_FROM_ALL ${test_MemoryUtils_SRC})
 
 
 ## test_ThreadObject ##
@@ -174,7 +175,7 @@ set(test_ThreadObject_SRC
     MemoryUtils.cpp
 )
 
-add_executable(test_ThreadObject ${test_ThreadObject_SRC})
+add_executable(test_ThreadObject EXCLUDE_FROM_ALL ${test_ThreadObject_SRC})
 
 set(test_ThreadObject_LIBS pthread)
 
@@ -188,7 +189,7 @@ set(test_jit_SRC
     MemoryUtils.cpp
 )
 
-add_executable(test_jit ${test_jit_SRC})
+add_executable(test_jit EXCLUDE_FROM_ALL ${test_jit_SRC})
 
 
 ## test_SoundDriver ##
@@ -201,7 +202,7 @@ set(test_SoundDriver_SRC
     Mutex.cpp
 )
 
-add_executable(test_SoundDriver ${test_SoundDriver_SRC})
+add_executable(test_SoundDriver EXCLUDE_FROM_ALL ${test_SoundDriver_SRC})
 
 set(test_SoundDriver_LIBS jack pthread)
 
