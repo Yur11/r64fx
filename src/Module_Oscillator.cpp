@@ -87,13 +87,14 @@ Module_Oscillator::~Module_Oscillator()
 
 bool Module_Oscillator::engage()
 {
+    if(!m)
+        m = new(std::nothrow) OscillatorThreadObjectIface;
+    if(!m)
+        return false;
 #ifdef R64FX_DEBUG
     assert(!isEngaged());
     assert(!engagementPending());
 #endif//R64FX_DEBUG
-    m = new(std::nothrow) OscillatorThreadObjectIface;
-    if(!m)
-        return false;
 
     m_thread_object_iface->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
         cout << "engaged!\n";
