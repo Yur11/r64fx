@@ -13,9 +13,9 @@ public:
 
     virtual ~Module_Oscillator();
 
-    virtual bool engage();
+    virtual bool engage(ModuleCallback done = nullptr, void* done_arg = nullptr);
 
-    virtual void disengage();
+    virtual void disengage(ModuleCallback done = nullptr, void* done_arg = nullptr);
 
     virtual bool isEngaged();
 

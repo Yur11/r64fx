@@ -27,6 +27,8 @@ struct ProgramPrivate : public MainViewEventIface{
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
 
+    Module_Oscillator* m_osc = nullptr;
+
     int exec(int argc, char** argv)
     {
         initActions();
@@ -36,8 +38,11 @@ struct ProgramPrivate : public MainViewEventIface{
 
         newProject();
 
-        Module_Oscillator osc;
-        osc.engage();
+        m_osc = new Module_Oscillator;
+        m_osc->engage([](Module* module, void* arg){
+            auto p = (ProgramPrivate*) arg;
+            p->oscEngaged(static_cast<Module_Oscillator*>(module));
+        }, this);
 
         while(running)
         {
@@ -52,6 +57,18 @@ struct ProgramPrivate : public MainViewEventIface{
         cleanupActions();
 
         return 0;
+    }
+
+    void oscEngaged(Module_Oscillator* osc)
+    {
+        cout << "oscEngaged: " << m_osc << ", " << osc << "\n";
+    }
+
+    void oscDisengaged(Module_Oscillator* osc)
+    {
+        cout << "oscDisengaged: " << m_osc << ", " << osc << "\n";
+        delete m_osc;
+        running = false;
     }
 
     void newSession()
@@ -76,7 +93,13 @@ struct ProgramPrivate : public MainViewEventIface{
 
     void quit()
     {
-        running = false;
+        if(m_osc)
+        {
+            m_osc->disengage([](Module* module, void* arg){
+                auto p = (ProgramPrivate*) arg;
+                p->oscDisengaged(static_cast<Module_Oscillator*>(module));
+            }, this);
+        }
     }
 
     void newProject()

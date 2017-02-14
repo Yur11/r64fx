@@ -47,9 +47,9 @@ public:
 
     virtual ~Module();
 
-    virtual bool engage() = 0;
+    virtual bool engage(ModuleCallback done = nullptr, void* done_arg = nullptr) = 0;
 
-    virtual void disengage() = 0;
+    virtual void disengage(ModuleCallback done = nullptr, void* done_arg = nullptr) = 0;
 
     virtual bool isEngaged() = 0;
 

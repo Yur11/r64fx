@@ -54,6 +54,11 @@ class OscillatorWithdrawalAgent : public ModuleWithdrawalAgent{
 /*======= Main Thread =======*/
 
 class OscillatorThreadObjectIface : public ModuleThreadObjectIface{
+public:
+    ModuleCallback  done      = nullptr;
+    void*           done_arg  = nullptr;
+
+private:
     virtual ModuleDeploymentAgent* newModuleDeploymentAgent()  override final
     {
         return new OscillatorDeploymentAgent;
@@ -95,7 +100,7 @@ Module_Oscillator::~Module_Oscillator()
 }
 
 
-bool Module_Oscillator::engage()
+bool Module_Oscillator::engage(ModuleCallback done, void* done_arg)
 {
     if(!m)
         m = new(std::nothrow) OscillatorThreadObjectIface;
@@ -106,18 +111,30 @@ bool Module_Oscillator::engage()
     assert(!engagementPending());
 #endif//R64FX_DEBUG
 
+    m_thread_object_iface->done = done;
+    m_thread_object_iface->done_arg = done_arg;
     m_thread_object_iface->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
-        cout << "engaged!\n";
-    }, m_thread_object_iface);
+        auto osc_iface = static_cast<OscillatorThreadObjectIface*>(iface);
+        if(osc_iface->done)
+        {
+            osc_iface->done((Module*)arg, osc_iface->done_arg);
+        }
+    }, this);
     return true;
 }
 
 
-void Module_Oscillator::disengage()
+void Module_Oscillator::disengage(ModuleCallback done, void* done_arg)
 {
+    m_thread_object_iface->done = done;
+    m_thread_object_iface->done_arg = done_arg;
     m_thread_object_iface->withdraw([](ThreadObjectIface* iface, void* arg){
-        cout << "disengaged!\n";
-    });
+        auto osc_iface = static_cast<OscillatorThreadObjectIface*>(iface);
+        if(osc_iface->done)
+        {
+            osc_iface->done((Module*)arg, osc_iface->done_arg);
+        }
+    }, this);
 }
 
 

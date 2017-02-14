@@ -13,7 +13,7 @@ namespace r64fx{
 namespace{
     SoundDriver* g_SoundDriver = nullptr;
 
-    struct MouleImplSharedAssets{
+    struct ModuleImplSharedAssets{
         
     };
 }//namespace
