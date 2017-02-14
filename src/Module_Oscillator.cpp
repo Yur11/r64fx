@@ -13,8 +13,8 @@ namespace r64fx{
 
 class OscillatorThreadObjectImpl : public ModuleThreadObjectImpl{
 public:
-    OscillatorThreadObjectImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl)
-    : ModuleThreadObjectImpl(iface, manager_impl)
+    OscillatorThreadObjectImpl(R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
+    : ModuleThreadObjectImpl(R64FX_THREAD_OBJECT_IMPL_ARGS)
     {
         cout << "OscillatorThreadObjectImpl\n";
     }
@@ -35,18 +35,18 @@ private:
 
 /*======= Agents =======*/
 
-class OscillatorDeploymentAgent : public ModuleThreadObjectDeploymentAgent{
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl)
+class OscillatorDeploymentAgent : public ModuleDeploymentAgent{
+    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* parent_impl, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final
     {
-        return new(std::nothrow) OscillatorThreadObjectImpl(iface, manager_impl);
+        return ha->allocObj<OscillatorThreadObjectImpl>(R64FX_THREAD_OBJECT_IMPL_ARGS);
     }
 };
 
-class OscillatorWithdrawalAgent : public ModuleThreadObjectWithdrawalAgent{
-    virtual void withdrawImpl(ThreadObjectImpl* impl)
+class OscillatorWithdrawalAgent : public ModuleWithdrawalAgent{
+    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl, ModuleThreadObjectImpl* parent_impl) override final
     {
-        auto obj_impl = static_cast<OscillatorThreadObjectImpl*>(impl);
-        delete obj_impl;
+        auto osc_impl = static_cast<OscillatorThreadObjectImpl*>(impl);
+        ha->freeObj(osc_impl);
     }
 };
 
@@ -54,17 +54,27 @@ class OscillatorWithdrawalAgent : public ModuleThreadObjectWithdrawalAgent{
 /*======= Main Thread =======*/
 
 class OscillatorThreadObjectIface : public ModuleThreadObjectIface{
-    virtual ThreadObjectDeploymentAgent* newDeploymentAgent()
+    virtual ModuleDeploymentAgent* newModuleDeploymentAgent()  override final
     {
-        return new(std::nothrow) OscillatorDeploymentAgent;
+        return new OscillatorDeploymentAgent;
     }
 
-    virtual ThreadObjectWithdrawalAgent* newWithdrawalAgent()
+    virtual void deleteModuleDeploymentAgent(ModuleDeploymentAgent* agent) override final
     {
-        return new(std::nothrow) OscillatorWithdrawalAgent;
+        delete agent;
     }
 
-    virtual void messageFromImplRecieved(const ThreadObjectMessage &msg)
+    virtual ModuleWithdrawalAgent* newModuleWithdrawalAgent() override final
+    {
+        return new OscillatorWithdrawalAgent;
+    }
+
+    virtual void deleteModuleWithdrawalAgent(ModuleWithdrawalAgent* agent) override final
+    {
+        delete agent;
+    }
+
+    virtual void messageFromImplRecieved(const ThreadObjectMessage &msg) override final
     {
         
     }

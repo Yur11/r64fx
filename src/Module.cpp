@@ -4,51 +4,54 @@
 #include "SoundDriver.hpp"
 #include "TimeUtils.hpp"
 
+#ifdef R64FX_DEBUG
 #include <iostream>
-
-using namespace std;
+#endif//R64FX_DEBUG
 
 namespace r64fx{
 
 namespace{
     SoundDriver* g_SoundDriver = nullptr;
+
+    struct MouleImplSharedAssets{
+        
+    };
 }//namespace
 
 
-/*======= Worker Thread =======*/
+/*
+ * === Impl ===================================================================
+ */
 
-ModuleThreadObjectImpl::ModuleThreadObjectImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl)
-: ThreadObjectImpl(iface, manager_impl)
+ModuleThreadObjectImpl::ModuleThreadObjectImpl(ThreadObjectIfaceHandle* iface_handle, ThreadObjectManagerImpl* manager_impl)
+: ThreadObjectImpl(iface_handle, manager_impl)
 {
-    if(payload() == nullptr)
-    {
-        setPayload(new ModuleThreadAssets);
-    }
-
-    auto assets = threadAssets();
-    assets->count++;
+//     if(asset() == nullptr)
+//     {
+//         asset = allocObj<ModuleThreadAssets>();
+//     }
 }
 
 
 ModuleThreadObjectImpl::~ModuleThreadObjectImpl()
 {
-    auto assets = threadAssets();
-#ifdef R64FX_DEBUG
-    assert(assets != nullptr);
-#endif//R64FX_DEBUG
-    assets->count--;
-    if(assets->count == 0)
-    {
-        delete assets;
-        setPayload(nullptr);
-    }
+//     auto assets = threadAssets();
+// #ifdef R64FX_DEBUG
+//     assert(assets != nullptr);
+// #endif//R64FX_DEBUG
+//     assets->count--;
+//     if(assets->count == 0)
+//     {
+//         delete assets;
+//         setPayload(nullptr);
+//     }
 }
 
 
-ModuleThreadAssets* ModuleThreadObjectImpl::threadAssets() const
-{
-    return (ModuleThreadAssets*) payload();
-}
+// ModuleThreadAssets* ModuleThreadObjectImpl::threadAssets() const
+// {
+//     return (ModuleThreadAssets*) payload();
+// }
 
 
 void ModuleThreadObjectImpl::messageFromIfaceRecieved(const ThreadObjectMessage &msg)
@@ -64,7 +67,7 @@ void ModuleThreadObjectImpl::runThread()
     {
         readMessagesFromIface();
         //Do Stuff!!
-        sleep_nanoseconds(1000 * 1000);
+        sleep_nanoseconds(5000 * 1000);
     }
 }
 
@@ -75,43 +78,79 @@ void ModuleThreadObjectImpl::exitThread()
 }
 
 
-/*======= Agents =======*/
+/*
+ * === Agents =================================================================
+ */
 
-ModuleThreadObjectDeploymentAgent::ModuleThreadObjectDeploymentAgent()
+ThreadObjectImpl* ModuleDeploymentAgent::deployImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
 {
-    auto sd = ModuleGlobal::soundDriver();
-#ifdef R64FX_DEBUG
-    assert(sd != nullptr);
-#endif//R64FX_DEBUG
-    m_sync_port = sd->newSyncPort();
-#ifdef R64FX_DEBUG
-    assert(m_sync_port != nullptr);
-#endif//R64FX_DEBUG
+    auto impl = deployModuleImpl(ha, (ModuleThreadObjectImpl*)parent_impl_handle, R64FX_THREAD_OBJECT_IMPL_ARGS);
+    return impl;
 }
 
 
-
-/*======= Main Thread =======*/
-
-void ModuleThreadObjectIface::deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent)
+void ModuleWithdrawalAgent::withdrawImpl(HeapAllocator* ha, ThreadObjectImpl* impl)
 {
-    delete agent;
+    withdrawModuleImpl(ha, static_cast<ModuleThreadObjectImpl*>(impl), (ModuleThreadObjectImpl*)parent_impl_handle);
 }
 
+/*
+ * === Iface ==================================================================
+ */
 
-void ModuleThreadObjectIface::deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent)
-{
-    delete agent;
-}
-
-
-SoundDriver* ModuleGlobal::soundDriver()
+SoundDriver* ModuleThreadObjectIface::soundDriver()
 {
     if(!g_SoundDriver)
     {
         g_SoundDriver = SoundDriver::newInstance(SoundDriver::Type::Jack);
     }
     return g_SoundDriver;
+}
+
+
+ThreadObjectDeploymentAgent* ModuleThreadObjectIface::newDeploymentAgent()
+{
+    auto agent = newModuleDeploymentAgent();
+    auto p = parent();
+    if(p)
+    {
+#ifdef R64FX_DEBUG
+        assert(!dynamic_cast<ModuleThreadObjectIface*>(p));
+#endif//R64FX_DEBUG
+        agent->parent_impl_handle = (ModuleThreadObjectImplHandle*) p;
+    }
+    else
+    {
+        auto sd = soundDriver();
+#ifdef R64FX_DEBUG
+        assert(sd != nullptr);
+#endif//R64FX_DEBUG
+        auto sp = sd->newSyncPort();
+#ifdef R64FX_DEBUG
+        assert(sp != nullptr);
+#endif//R64FX_DEBUG
+        agent->sync_port = sp;
+    }
+    return agent;
+}
+
+
+void ModuleThreadObjectIface::deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent)
+{
+    deleteModuleDeploymentAgent(static_cast<ModuleDeploymentAgent*>(agent));
+}
+
+
+ThreadObjectWithdrawalAgent* ModuleThreadObjectIface::newWithdrawalAgent()
+{
+    auto agent = newModuleWithdrawalAgent();
+    return agent;
+}
+
+
+void ModuleThreadObjectIface::deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent)
+{
+    deleteModuleWithdrawalAgent(static_cast<ModuleWithdrawalAgent*>(agent));
 }
 
 

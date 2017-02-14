@@ -1,22 +1,19 @@
 #ifndef R64FX_MODULE_PRIVATE_HPP
 #define R64FX_MODULE_PRIVATE_HPP
 
-#include "ThreadObjectIface.hpp"
-#include "ThreadObjectImpl.hpp"
+#include "ThreadObject.hpp"
 #include "ModuleFlags.hpp"
 
 namespace r64fx{
 
 class SoundDriver;
 class SoundDriverSyncPort;
+class ModuleThreadObjectIfaceHandle;
+class ModuleThreadObjectImplHandle;
 
-
-class ModuleThreadAssets{
-    friend class ModuleThreadObjectImpl;
-    unsigned long         count      = 0;
-    SoundDriverSyncPort*  sync_port  = nullptr;
-};
-
+/*
+ * === Impl ===================================================================
+ */
 
 class ModuleThreadObjectImpl : public ThreadObjectImpl, public LinkedList<ModuleThreadObjectImpl>::Node{
     ModuleThreadObjectImpl*             m_parent    = nullptr;
@@ -26,49 +23,74 @@ protected:
     unsigned long m_flags = 0;
 
 public:
-    ModuleThreadObjectImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl);
+    ModuleThreadObjectImpl(ThreadObjectIfaceHandle* iface_handle, ThreadObjectManagerImpl* manager_impl);
 
     virtual ~ModuleThreadObjectImpl();
 
 protected:
-    ModuleThreadAssets* threadAssets() const;
 
 private:
-    virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg);
+    virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override;
 
-    virtual void runThread();
+    virtual void runThread() override final;
 
-    virtual void exitThread();
+    virtual void exitThread() override final;
 };
 
 
-class ModuleThreadObjectDeploymentAgent : public ThreadObjectDeploymentAgent{
-    SoundDriverSyncPort* m_sync_port = nullptr;
+/*
+ * === Agents =================================================================
+ */
 
-public:
-    ModuleThreadObjectDeploymentAgent();
+class ModuleDeploymentAgent : public ThreadObjectDeploymentAgent{
+    friend class ModuleThreadObjectIface;
+
+    SoundDriverSyncPort*           sync_port           = nullptr;
+    ModuleThreadObjectImplHandle*  parent_impl_handle  = nullptr;
+
+    virtual ThreadObjectImpl* deployImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final;
+
+    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* parent_impl, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) = 0;
 };
 
 
-class ModuleThreadObjectWithdrawalAgent : public ThreadObjectWithdrawalAgent{
+class ModuleWithdrawalAgent : public ThreadObjectWithdrawalAgent{
+    ModuleThreadObjectImplHandle*  parent_impl_handle  = nullptr;
+
+    virtual void withdrawImpl(HeapAllocator* ha, ThreadObjectImpl* impl) override final;
+
+    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl, ModuleThreadObjectImpl* parent_impl) = 0;
 };
 
+
+/*
+ * === Iface ==================================================================
+ */
 
 class ModuleThreadObjectIface : public ThreadObjectIface{
-    virtual void deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent);
+protected:
+    SoundDriver* soundDriver();
 
-    virtual void deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent);
+private:
+    virtual ThreadObjectDeploymentAgent* newDeploymentAgent() override final;
+
+    virtual ModuleDeploymentAgent* newModuleDeploymentAgent() = 0;
+
+
+    virtual void deleteDeploymentAgent(ThreadObjectDeploymentAgent* agent) override final;
+
+    virtual void deleteModuleDeploymentAgent(ModuleDeploymentAgent* agent) = 0;
+
+
+    virtual ThreadObjectWithdrawalAgent* newWithdrawalAgent() override final;
+
+    virtual ModuleWithdrawalAgent* newModuleWithdrawalAgent() = 0;
+
+
+    virtual void deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent) override final;
+
+    virtual void deleteModuleWithdrawalAgent(ModuleWithdrawalAgent* agent) = 0;
 };
-
-
-struct ModuleGlobal{
-    static SoundDriver* soundDriver();
-};
-
-#ifndef R64FX_MODULE_PRIVATE_IMPL
-extern
-#endif//R64FX_MODULE_PRIVATE_IMPL
-ModuleGlobal g_module;
 
 }//namespace r64fx
 

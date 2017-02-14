@@ -10,6 +10,9 @@
 #include "IteratorPair.hpp"
 #include "MemoryUtils.hpp"
 
+#define R64FX_DEF_THREAD_OBJECT_IMPL_ARGS ThreadObjectIfaceHandle* iface_handle, ThreadObjectManagerImpl* manager_impl
+#define R64FX_THREAD_OBJECT_IMPL_ARGS iface_handle, manager_impl
+
 namespace r64fx{
 
 /*
@@ -189,7 +192,7 @@ class ThreadObjectDeploymentAgent{
     void*                         done_arg       = nullptr;
 
     /* Create and return a ThreadObjectImpl instance. */
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl) = 0;
+    virtual ThreadObjectImpl* deployImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) = 0;
 
 public:
     virtual ~ThreadObjectDeploymentAgent() {}
@@ -210,7 +213,7 @@ class ThreadObjectWithdrawalAgent{
 
     /* Destroy the ThreadObjectImpl instance.
      * If needed gather and return any additional information to the main thread. */
-    virtual void withdrawImpl(ThreadObjectImpl* impl) = 0;
+    virtual void withdrawImpl(HeapAllocator* ha, ThreadObjectImpl* impl) = 0;
 
 public:
     virtual ~ThreadObjectWithdrawalAgent() {}
@@ -226,11 +229,11 @@ public:
 
 class ThreadObjectImpl{
     friend class ThreadObjectManagerImpl;
-    ThreadObjectIface*             m_iface         = nullptr;
-    ThreadObjectManagerImpl*       m_manager_impl  = nullptr;
+    ThreadObjectIfaceHandle*  m_iface_handle  = nullptr;
+    ThreadObjectManagerImpl*  m_manager_impl  = nullptr;
 
 public:
-    ThreadObjectImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl);
+    ThreadObjectImpl(R64FX_DEF_THREAD_OBJECT_IMPL_ARGS);
 
     virtual ~ThreadObjectImpl();
 

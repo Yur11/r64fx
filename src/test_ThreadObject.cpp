@@ -40,8 +40,8 @@ class TestObjImpl : public ThreadObjectImpl{
     unsigned long m_num = 0;
 
 public:
-    TestObjImpl(ThreadObjectIface* iface, ThreadObjectManagerImpl* manager_impl)
-    : ThreadObjectImpl(iface, manager_impl)
+    TestObjImpl(R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
+    : ThreadObjectImpl(R64FX_THREAD_OBJECT_IMPL_ARGS)
     {
         
     }
@@ -101,17 +101,17 @@ private:
 
 
 class TestObjDeploymentAgent : public ThreadObjectDeploymentAgent{
-    virtual ThreadObjectImpl* deployImpl(ThreadObjectIface* object_iface, ThreadObjectManagerImpl* manager_impl)
+    virtual ThreadObjectImpl* deployImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
     {
-        return new TestObjImpl(object_iface, manager_impl);
+        return ha->allocObj<TestObjImpl>(R64FX_THREAD_OBJECT_IMPL_ARGS);
     }
 };
 
 
 class TestObjWithdrawalAgent : public ThreadObjectWithdrawalAgent{
-    virtual void withdrawImpl(ThreadObjectImpl* impl)
+    virtual void withdrawImpl(HeapAllocator* ha, ThreadObjectImpl* impl)
     {
-        delete impl;
+        ha->freeObj(static_cast<TestObjImpl*>(impl));
     }
 };
 
