@@ -1,6 +1,5 @@
 #include <iostream>
-#include "ThreadObjectIface.hpp"
-#include "ThreadObjectImpl.hpp"
+#include "ThreadObject.hpp"
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
 

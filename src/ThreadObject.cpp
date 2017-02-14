@@ -1,5 +1,4 @@
-#include "ThreadObjectIface.hpp"
-#include "ThreadObjectImpl.hpp"
+#include "ThreadObject.hpp"
 #include "ThreadObjectFlags.hpp"
 #include "CircularBuffer.hpp"
 #include "Thread.hpp"
@@ -11,18 +10,7 @@ using std::cout;
 using std::cerr;
 #endif//R64FX_DEBUG
 
-/*
- * Framework for objects that have their implementations in another thread.
- *
- * There are two main classes ThreadObjectIface and ThreadObjectImpl.
- * ThreadObjectIface lives in the main thread and provides the public interface for the user.
- * ThreadObjectImpl is deployed in another thread and does the work.
- * A communication link is established between the interface and the implementation
- * that allows for asyncronous non-blocking passing of ThreadObjectMessage instances between the two.
- *
- * ThreadObjectIface instances can form parent/child hierarchies. The communication link is created
- * once when the root object is deployed and is shared with all children in the tree.
- */
+
 namespace r64fx{
 
 namespace{
@@ -42,17 +30,13 @@ enum{
 
 
 class ThreadObjectManagerIface{
-    Thread* m_thread = nullptr;
-
-    Timer* m_timer = nullptr;
-
-    CircularBuffer<ThreadObjectMessage>* m_to_impl   = nullptr;
-    CircularBuffer<ThreadObjectMessage>* m_from_impl = nullptr;
-
-    ThreadObjectImpl*  m_dst_impl  = nullptr;
-    ThreadObjectIface* m_dst_iface = nullptr;
-
-    ThreadObjectIface* m_root_iface = nullptr;
+    Thread*                               m_thread           = nullptr;
+    Timer*                                m_timer            = nullptr;
+    CircularBuffer<ThreadObjectMessage>*  m_to_impl          = nullptr;
+    CircularBuffer<ThreadObjectMessage>*  m_from_impl        = nullptr;
+    ThreadObjectImplHandle*               m_dst_impl_handle  = nullptr;
+    ThreadObjectIface*                    m_dst_iface        = nullptr;
+    ThreadObjectIface*                    m_root_iface       = nullptr;
 
 public:
     void createThreadAndDeployRoot(
@@ -68,7 +52,7 @@ public:
 
     void objectDeployed(ThreadObjectDeploymentAgent* agent);
 
-    void sendMessagesToImpl(ThreadObjectImpl* dst_impl, ThreadObjectMessage* msgs, int nmsgs);
+    void sendMessagesToImpl(ThreadObjectImplHandle* dst_impl, ThreadObjectMessage* msgs, int nmsgs);
 
     void readMessagesFromImpl();
 
@@ -124,7 +108,7 @@ class ThreadObjectManagerImpl{
     ThreadObjectImpl*                     m_root_impl         = nullptr;
     HeapAllocator*                        m_heap_allocator    = nullptr;
     ThreadObjectWithdrawalAgent*          m_withdrawal_agent  = nullptr;
-    void*                                 m_payload           = nullptr;
+    void*                                 m_asset             = nullptr;
 
 public:
     ThreadObjectManagerImpl(
@@ -151,14 +135,9 @@ public:
         return m_heap_allocator;
     }
 
-    inline void setPayload(void* payload)
+    inline void* &asset()
     {
-        m_payload = payload;
-    }
-
-    inline void* payload() const
-    {
-        return m_payload;
+        return m_asset;
     }
 
     void sendMessagesToIface(ThreadObjectIface* dst_iface, ThreadObjectMessage* msgs, int nmsgs);
@@ -191,12 +170,18 @@ void ThreadObjectIface::deploy(ThreadObjectIface* parent, ThreadObjectCallbackFu
     assert(!isPending());
     assert(!isDeployed());
     assert(m_parent == nullptr);
+#else
+    if(isPending() || isDeployed() || m_parent != nullptr)
+        return;
 #endif//R64FX_DEBUG
 
     if(parent)
     {
 #ifdef R64FX_DEBUG
         assert(!parent->isPending());
+#else
+        if(parent->isPending())
+            return;
 #endif//R64FX_DEBUG
         parent->m_children.append(this);
         m_parent = parent;
@@ -272,9 +257,9 @@ void ThreadObjectIface::sendMessagesToImpl(ThreadObjectMessage* msgs, int nmsgs)
 {
 #ifdef R64FX_DEBUG
     assert(m_manager != nullptr);
-    assert(m_deployed_impl != nullptr);
+    assert(m_impl_handle != nullptr);
 #endif//R64FX_DEBUG
-    m_manager->sendMessagesToImpl(m_deployed_impl, msgs, nmsgs);
+    m_manager->sendMessagesToImpl(m_impl_handle, msgs, nmsgs);
 }
 
 
@@ -357,7 +342,7 @@ void ThreadObjectManagerIface::objectDeployed(ThreadObjectDeploymentAgent* agent
     void* done_arg = nullptr;
 
     auto object =  agent->object_iface;
-    object->m_deployed_impl = agent->deployed_impl;
+    object->m_impl_handle = agent->deployed_impl;
     if(object->m_children.isEmpty())
     {
         auto parent_agent = agent->parent_agent;
@@ -413,12 +398,12 @@ void ThreadObjectManagerIface::objectDeployed(ThreadObjectDeploymentAgent* agent
 }
 
 
-inline void ThreadObjectManagerIface::sendMessagesToImpl(ThreadObjectImpl* dst_impl, ThreadObjectMessage* msgs, int nmsgs)
+inline void ThreadObjectManagerIface::sendMessagesToImpl(ThreadObjectImplHandle* dst_impl, ThreadObjectMessage* msgs, int nmsgs)
 {
-    if(m_dst_impl != dst_impl)
+    if(m_dst_impl_handle != dst_impl)
     {
         ThreadObjectMessage msg(PickDestination, dst_impl);
-        m_dst_impl = dst_impl;
+        m_dst_impl_handle = dst_impl;
         m_to_impl->write(&msg, 1);
     }
     m_to_impl->write(msgs, nmsgs);
@@ -469,7 +454,7 @@ void ThreadObjectManagerIface::withdrawObject(
         assert(agent != nullptr);
 #endif//R64FX_DEBUG
         agent->object_iface    =  object;
-        agent->withdrawn_impl  =  object->m_deployed_impl;
+        agent->withdrawn_impl  =  object->m_impl_handle;
         agent->done_fun        =  done_fun;
         agent->done_arg        =  done_arg;
         agent->parent_agent    =  parent_agent;
@@ -591,15 +576,9 @@ HeapAllocator* ThreadObjectImpl::heapAllocator() const
 }
 
 
-void ThreadObjectImpl::setPayload(void* payload)
+void* &ThreadObjectImpl::asset()
 {
-    m_manager_impl->setPayload(payload);
-}
-
-
-void* ThreadObjectImpl::payload() const
-{
-    return m_manager_impl->payload();
+    return m_manager_impl->asset();
 }
 
 
@@ -660,10 +639,11 @@ inline void ThreadObjectManagerImpl::dispatchMessageFromIface(const ThreadObject
         case WithdrawObject:
         {
             auto agent = (ThreadObjectWithdrawalAgent*) msg.value();
-            if(agent->withdrawn_impl == m_root_impl)
+            auto withdrawn_impl = (ThreadObjectImpl*) agent->withdrawn_impl;
+            if(withdrawn_impl == m_root_impl)
             {
                 m_withdrawal_agent = agent;
-                agent->withdrawn_impl->exitThread();
+                withdrawn_impl->exitThread();
             }
             else
             {
@@ -687,7 +667,7 @@ inline void ThreadObjectManagerImpl::dispatchMessageFromIface(const ThreadObject
 ThreadObjectImpl* ThreadObjectManagerImpl::doDeployObject(ThreadObjectDeploymentAgent* agent)
 {
     auto impl = agent->deployImpl(agent->object_iface, this);
-    agent->deployed_impl = impl;
+    agent->deployed_impl = (ThreadObjectImplHandle*) impl;
     ThreadObjectMessage response_msg(ObjectDeployed, agent);
     sendMessagesToIface(nullptr, &response_msg, 1);
     return impl;
@@ -696,7 +676,7 @@ ThreadObjectImpl* ThreadObjectManagerImpl::doDeployObject(ThreadObjectDeployment
 
 void ThreadObjectManagerImpl::doWithdrawObject(ThreadObjectWithdrawalAgent* agent)
 {
-    agent->withdrawImpl(agent->withdrawn_impl);
+    agent->withdrawImpl((ThreadObjectImpl*)agent->withdrawn_impl);
     ThreadObjectMessage response_msg(ObjectWithdrawn, agent);
     sendMessagesToIface(nullptr, &response_msg, 1);
 }
