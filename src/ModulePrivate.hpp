@@ -4,6 +4,9 @@
 #include "ThreadObject.hpp"
 #include "ModuleFlags.hpp"
 
+#define R64FX_DEF_MODULE_IMPL_ARGS ModuleThreadObjectImpl* parent_impl, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS
+#define R64FX_MODULE_IMPL_ARGS parent_impl, R64FX_THREAD_OBJECT_IMPL_ARGS
+
 namespace r64fx{
 
 class SoundDriver;
@@ -23,7 +26,7 @@ protected:
     unsigned long m_flags = 0;
 
 public:
-    ModuleThreadObjectImpl(ThreadObjectIfaceHandle* iface_handle, ThreadObjectManagerImpl* manager_impl);
+    ModuleThreadObjectImpl(R64FX_DEF_MODULE_IMPL_ARGS);
 
     virtual ~ModuleThreadObjectImpl();
 
@@ -50,7 +53,7 @@ class ModuleDeploymentAgent : public ThreadObjectDeploymentAgent{
 
     virtual ThreadObjectImpl* deployImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final;
 
-    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* parent_impl, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) = 0;
+    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, R64FX_DEF_MODULE_IMPL_ARGS) = 0;
 };
 
 
@@ -59,7 +62,7 @@ class ModuleWithdrawalAgent : public ThreadObjectWithdrawalAgent{
 
     virtual void withdrawImpl(HeapAllocator* ha, ThreadObjectImpl* impl) override final;
 
-    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl, ModuleThreadObjectImpl* parent_impl) = 0;
+    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl) = 0;
 };
 
 

@@ -11,11 +11,11 @@
 namespace r64fx{
 
 namespace{
-    SoundDriver* g_SoundDriver = nullptr;
 
-    struct ModuleImplSharedAssets{
-        
-    };
+struct ModuleImplSharedAssets{
+    
+};
+
 }//namespace
 
 
@@ -23,8 +23,9 @@ namespace{
  * === Impl ===================================================================
  */
 
-ModuleThreadObjectImpl::ModuleThreadObjectImpl(ThreadObjectIfaceHandle* iface_handle, ThreadObjectManagerImpl* manager_impl)
-: ThreadObjectImpl(iface_handle, manager_impl)
+ModuleThreadObjectImpl::ModuleThreadObjectImpl(R64FX_DEF_MODULE_IMPL_ARGS)
+: ThreadObjectImpl(R64FX_THREAD_OBJECT_IMPL_ARGS)
+, m_parent(parent_impl)
 {
 //     if(asset() == nullptr)
 //     {
@@ -91,12 +92,18 @@ ThreadObjectImpl* ModuleDeploymentAgent::deployImpl(HeapAllocator* ha, R64FX_DEF
 
 void ModuleWithdrawalAgent::withdrawImpl(HeapAllocator* ha, ThreadObjectImpl* impl)
 {
-    withdrawModuleImpl(ha, static_cast<ModuleThreadObjectImpl*>(impl), (ModuleThreadObjectImpl*)parent_impl_handle);
+    withdrawModuleImpl(ha, static_cast<ModuleThreadObjectImpl*>(impl));
 }
 
 /*
  * === Iface ==================================================================
  */
+namespace{
+
+SoundDriver* g_SoundDriver = nullptr;
+
+}//namespace
+
 
 SoundDriver* ModuleThreadObjectIface::soundDriver()
 {

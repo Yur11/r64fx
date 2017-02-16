@@ -13,15 +13,13 @@ namespace r64fx{
 
 class OscillatorThreadObjectImpl : public ModuleThreadObjectImpl{
 public:
-    OscillatorThreadObjectImpl(R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
-    : ModuleThreadObjectImpl(R64FX_THREAD_OBJECT_IMPL_ARGS)
+    OscillatorThreadObjectImpl(R64FX_DEF_MODULE_IMPL_ARGS)
+    : ModuleThreadObjectImpl(R64FX_MODULE_IMPL_ARGS)
     {
-        cout << "OscillatorThreadObjectImpl\n";
     }
 
     ~OscillatorThreadObjectImpl()
     {
-        cout << "~OscillatorThreadObjectImpl\n";
     }
 
 private:
@@ -36,14 +34,14 @@ private:
 /*======= Agents =======*/
 
 class OscillatorDeploymentAgent : public ModuleDeploymentAgent{
-    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* parent_impl, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final
+    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, R64FX_DEF_MODULE_IMPL_ARGS) override final
     {
-        return ha->allocObj<OscillatorThreadObjectImpl>(R64FX_THREAD_OBJECT_IMPL_ARGS);
+        return ha->allocObj<OscillatorThreadObjectImpl>(R64FX_MODULE_IMPL_ARGS);
     }
 };
 
 class OscillatorWithdrawalAgent : public ModuleWithdrawalAgent{
-    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl, ModuleThreadObjectImpl* parent_impl) override final
+    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl) override final
     {
         auto osc_impl = static_cast<OscillatorThreadObjectImpl*>(impl);
         ha->freeObj(osc_impl);
