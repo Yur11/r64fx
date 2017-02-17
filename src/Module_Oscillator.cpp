@@ -11,10 +11,12 @@ namespace r64fx{
 
 struct OscillatorDeploymentArgs{
     SoundDriverAudioOutput* audio_output_port = nullptr;
+    SoundDriverMidiInput*   midi_input_port   = nullptr;
 };
 
 struct OscillatorWithdrawalArgs{
     SoundDriverAudioOutput* audio_output_port = nullptr;
+    SoundDriverMidiInput*   midi_input_port   = nullptr;
 };
 
 R64FX_DECL_MODULE_AGENTS(Oscillator)
@@ -24,12 +26,14 @@ R64FX_DECL_MODULE_AGENTS(Oscillator)
 
 class OscillatorThreadObjectImpl : public ModuleThreadObjectImpl{
     SoundDriverAudioOutput* m_audio_output_port = nullptr;
+    SoundDriverMidiInput*   m_midi_input_port   = nullptr;
 
 public:
     OscillatorThreadObjectImpl(OscillatorDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
     : ModuleThreadObjectImpl(agent, R64FX_THREAD_OBJECT_IMPL_ARGS)
     {
-        m_audio_output_port = agent->audio_output_port;
+        m_audio_output_port  = agent->audio_output_port;
+        m_midi_input_port    = agent->midi_input_port;
 
         setPrologue([](void* arg){
             auto self = (OscillatorThreadObjectImpl*) arg;
@@ -48,7 +52,8 @@ public:
 
     void storeWithdrawalArgs(OscillatorWithdrawalAgent* agent)
     {
-        agent->audio_output_port = m_audio_output_port;
+        agent->audio_output_port  = m_audio_output_port;
+        agent->midi_input_port    = m_midi_input_port;
     }
 
 private:
@@ -59,14 +64,42 @@ private:
 
     inline void prologue()
     {
-        float buff[256];
-        auto bs = bufferSize();
-        auto hbs = bs/2;
-        for(int i=0; i<bs; i++)
+        MidiEvent midi_event;
+        while(m_midi_input_port->readEvents(&midi_event, 1))
         {
-            buff[i] = (i < hbs ? 1.0f : -1.0f) * 0.3f;
-        }
-        m_audio_output_port->writeSamples(buff, 256);
+            MidiMessage msg = midi_event.message();
+            switch(msg.type())
+            {
+                case MidiMessage::Type::NoteOn:
+                {
+                    cout << "NoteOn:  "  << msg.channel() << ", note: " << msg.noteNumber() << ", vel: " << msg.velocity() << "\n";
+                    break;
+                }
+
+                case MidiMessage::Type::NoteOff:
+                {
+                    cout << "NoteOff: "  << msg.channel() << ", note: " << msg.noteNumber() << ", vel: " << msg.velocity() << "\n";
+                    break;
+                }
+
+                case MidiMessage::Type::ControlChange:
+                {
+                    cout << "CC: " << msg.channel() << ", " << msg.controllerNumber() << ", " << msg.controllerValue() << "\n";
+                    break;
+                }
+
+                default:
+                {
+                    break;
+                }
+            }
+        }//while
+
+//         float val = 0.0f;
+//         for(int i=0; i<bufferSize(); i++)
+//         {
+//             m_audio_output_port->writeSamples(&val, 1);
+//         }
     }
 
     inline void epilogue()
@@ -93,14 +126,19 @@ private:
         assert(sd != nullptr);
 #endif//R64FX_DEBUG
 
-        auto agent = new OscillatorDeploymentAgent;
-        agent->audio_output_port = sd->newAudioOutput("osc_out");
+        auto osc_agent = new OscillatorDeploymentAgent;
+        osc_agent->audio_output_port = sd->newAudioOutput("osc_out");
 #ifdef R64FX_DEBUG
-        assert(agent->audio_output_port != nullptr);
+        assert(osc_agent->audio_output_port != nullptr);
+#endif//R64FX_DEBUG
+        osc_agent->midi_input_port = sd->newMidiInput("midi_in");
+#ifdef R64FX_DEBUG
+        assert(osc_agent->midi_input_port != nullptr);
 #endif//R64FX_DEBUG
         sd->connect("r64fx:osc_out", "system:playback_1");
         sd->connect("r64fx:osc_out", "system:playback_2");
-        return agent;
+        sd->connect("alsa_midi:Midi Through Port-0 (out)", "r64fx:midi_in");
+        return osc_agent;
     }
 
     virtual void deleteModuleDeploymentAgent(ModuleDeploymentAgent* agent) override final
@@ -120,7 +158,11 @@ private:
         assert(sd != nullptr);
 #endif//R64FX_DEBUG
 
-        delete agent;
+        auto osc_agent = static_cast<OscillatorWithdrawalAgent*>(agent);
+        sd->deletePort(osc_agent->audio_output_port);
+        sd->deletePort(osc_agent->midi_input_port);
+
+        delete osc_agent;
     }
 
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg) override final
