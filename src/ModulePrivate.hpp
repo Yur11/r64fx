@@ -64,7 +64,9 @@ protected:
 
     void setEpilogue(void (*fun)(void* arg), void* arg = nullptr);
 
-    long bufferSize();
+    long bufferSize() const;
+
+    long sampleRate() const;
 
 private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override;

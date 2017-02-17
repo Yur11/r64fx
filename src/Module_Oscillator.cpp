@@ -95,11 +95,11 @@ private:
             }
         }//while
 
-//         float val = 0.0f;
-//         for(int i=0; i<bufferSize(); i++)
-//         {
-//             m_audio_output_port->writeSamples(&val, 1);
-//         }
+        float val = 0.0f;
+        for(int i=0; i<bufferSize(); i++)
+        {
+            m_audio_output_port->writeSamples(&val, 1);
+        }
     }
 
     inline void epilogue()

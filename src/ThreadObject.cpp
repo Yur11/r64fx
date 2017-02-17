@@ -135,7 +135,12 @@ public:
         return m_heap_allocator;
     }
 
-    inline void* &asset()
+    inline void setAsset(void* asset)
+    {
+        m_asset = asset;
+    }
+
+    inline void* asset() const
     {
         return m_asset;
     }
@@ -575,7 +580,13 @@ HeapAllocator* ThreadObjectImpl::heapAllocator() const
 }
 
 
-void* &ThreadObjectImpl::asset()
+void ThreadObjectImpl::setAsset(void* asset)
+{
+    m_manager_impl->setAsset(asset);
+}
+
+
+void* ThreadObjectImpl::asset() const
 {
     return m_manager_impl->asset();
 }

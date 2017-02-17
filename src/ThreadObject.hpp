@@ -260,7 +260,9 @@ protected:
     /*
      * Extra asset shared by all ThreadObjectImpl instances of a worker thread.
      */
-    void* &asset();
+    void setAsset(void* asset);
+
+    void* asset() const;
 
 private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) = 0;

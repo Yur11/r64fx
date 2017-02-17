@@ -50,7 +50,7 @@ ModuleThreadObjectImpl::ModuleThreadObjectImpl(ModuleDeploymentAgent* agent, R64
         shared->sync_port    = agent->sync_port;
         shared->buffer_size  = agent->buffer_size;
         shared->sample_rate  = agent->sample_rate;
-        asset() = shared;
+        setAsset(shared);
     }
 }
 
@@ -65,7 +65,7 @@ ModuleThreadObjectImpl::~ModuleThreadObjectImpl()
         assert(asset() != nullptr);
 #endif//R64FX_DEBUG
         freeObj((ModuleImplSharedAssets*)asset());
-        asset() = nullptr;
+        setAsset(nullptr);
     }
 }
 
@@ -125,13 +125,23 @@ void ModuleThreadObjectImpl::setEpilogue(void (*fun)(void* arg), void* arg)
 }
 
 
-long ModuleThreadObjectImpl::bufferSize()
+long ModuleThreadObjectImpl::bufferSize() const
 {
 #ifdef R64FX_DEBUG
     assert(asset() != nullptr);
 #endif//R64FX_DEBUG
     auto shared = (ModuleImplSharedAssets*) asset();
     return shared->buffer_size;
+}
+
+
+long ModuleThreadObjectImpl::sampleRate() const
+{
+#ifdef R64FX_DEBUG
+    assert(asset() != nullptr);
+#endif//R64FX_DEBUG
+    auto shared = (ModuleImplSharedAssets*) asset();
+    return shared->sample_rate;
 }
 
 
