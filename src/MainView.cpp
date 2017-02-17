@@ -28,7 +28,7 @@ IconColors g_colors;
 
 struct MainViewPrivate{
     MainViewEventIface* event  = nullptr;
-    
+
     MainView*    main_view     = nullptr;
 
     TopBar*      top_bar       = nullptr;
@@ -43,18 +43,18 @@ struct MainViewPrivate{
     Widget_Menu* menu_edit     = nullptr;
     Widget_Menu* menu_view     = nullptr;
     Widget_Menu* menu_help     = nullptr;
-    
+
     Widget_TabBar* main_tab_bar = nullptr;
-    
+
     int gap = 1;
-    
+
     bool left_dock_expanded    = true;
     bool right_dock_expanded   = true;
 
     Widget* currently_resized_dock = nullptr;
 
     Widget* findDockAt(Point<int> p);
-    
+
     Image* icon10 = nullptr;
     Image* icon16 = nullptr;
     Image* icon18 = nullptr;
@@ -65,7 +65,7 @@ struct MainViewPrivate{
     Image* icon28 = nullptr;
     Image* icon30 = nullptr;
     Image* icon32 = nullptr;
-    
+
     PainterTexture2D* icon10_tex = nullptr;
     PainterTexture2D* icon16_tex = nullptr;
     PainterTexture2D* icon18_tex = nullptr;
@@ -81,32 +81,30 @@ struct MainViewPrivate{
     
 class TopBar : public Widget{
     MainViewPrivate* m = nullptr;
-    
-    
-    
+
 public:
     TopBar(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
     {
-        
+
     }
-    
+
     virtual ~TopBar()
     {
-        
+
     }
-    
+
 protected:
     virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
-        
+
         childrenPaintEvent(event);
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
     {
-        
+
     }
     
     virtual void mouseMoveEvent(MouseMoveEvent* event)
