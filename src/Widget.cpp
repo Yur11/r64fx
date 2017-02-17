@@ -963,7 +963,7 @@ void Widget::openWindow(
                 g_gui_timer = new (std::nothrow) Timer;
                 if(g_gui_timer)
                 {
-                    g_gui_timer->setInterval(1000);
+                    g_gui_timer->setInterval(5000 * 1000);
                     g_gui_timer->onTimeout([](Timer* timer, void* data){
 
                         WindowEventDispatcher events;

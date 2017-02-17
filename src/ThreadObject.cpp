@@ -277,7 +277,6 @@ inline void ThreadObjectManagerIface::createThreadAndDeployRoot(
     agent->done_arg      = done_arg;
     agent->parent_agent  = nullptr;
 
-
     auto iface_to_impl  =  m_to_impl    = new CircularBuffer<ThreadObjectMessage>(32);
     auto impl_to_iface  =  m_from_impl  = new CircularBuffer<ThreadObjectMessage>(32);
     ThreadObjectMessage argmsg((unsigned long) impl_to_iface, (unsigned long) agent);
@@ -308,7 +307,7 @@ inline void ThreadObjectManagerIface::createThreadAndDeployRoot(
         auto self = (ThreadObjectManagerIface*) arg;
         self->readMessagesFromImpl();
     }, this);
-    m_timer->setInterval(1000);
+    m_timer->setInterval(5000 * 1000);
     m_timer->start();
 }
 
