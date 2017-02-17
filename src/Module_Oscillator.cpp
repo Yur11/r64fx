@@ -8,18 +8,55 @@
 using namespace std;
 
 namespace r64fx{
-    
+
+class OscillatorDeploymentAgent : public ModuleDeploymentAgent{
+    friend class OscillatorThreadObjectImpl;
+    friend class OscillatorThreadObjectIface;
+
+    SoundDriverAudioOutput* audio_output_port = nullptr;// ->
+
+    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final;
+};
+
+class OscillatorWithdrawalAgent : public ModuleWithdrawalAgent{
+    friend class OscillatorThreadObjectImpl;
+    friend class OscillatorThreadObjectIface;
+
+    SoundDriverAudioOutput* audio_output_port = nullptr;// <-
+
+    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl) override final;
+};
+
+
 /*======= Worker Thread =======*/
 
 class OscillatorThreadObjectImpl : public ModuleThreadObjectImpl{
+    SoundDriverAudioOutput* m_audio_output_port = nullptr;
+
 public:
-    OscillatorThreadObjectImpl(R64FX_DEF_MODULE_IMPL_ARGS)
-    : ModuleThreadObjectImpl(R64FX_MODULE_IMPL_ARGS)
+    OscillatorThreadObjectImpl(OscillatorDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
+    : ModuleThreadObjectImpl(agent, R64FX_THREAD_OBJECT_IMPL_ARGS)
     {
+        m_audio_output_port = agent->audio_output_port;
+
+        setPrologue([](void* arg){
+            auto self = (OscillatorThreadObjectImpl*) arg;
+            self->prologue();
+        }, this);
+
+        setEpilogue([](void* arg){
+            auto self = (OscillatorThreadObjectImpl*) arg;
+            self->epilogue();
+        }, this);
     }
 
     ~OscillatorThreadObjectImpl()
     {
+    }
+
+    void storeWithdrawalArgs(OscillatorWithdrawalAgent* agent)
+    {
+        agent->audio_output_port = m_audio_output_port;
     }
 
 private:
@@ -27,26 +64,40 @@ private:
     {
         cout << "msg: " << long(msg.value()) << "\n";
     }
+
+    inline void prologue()
+    {
+        float buff[256];
+        auto bs = bufferSize();
+        auto hbs = bs/2;
+        for(int i=0; i<bs; i++)
+        {
+            buff[i] = (i < hbs ? 1.0f : -1.0f) * 0.3f;
+        }
+        m_audio_output_port->writeSamples(buff, 256);
+    }
+
+    inline void epilogue()
+    {
+        
+    }
 };
 
 
 
 /*======= Agents =======*/
+ModuleThreadObjectImpl* OscillatorDeploymentAgent::deployModuleImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
+{
+    return ha->allocObj<OscillatorThreadObjectImpl>(this, R64FX_THREAD_OBJECT_IMPL_ARGS);
+}
 
-class OscillatorDeploymentAgent : public ModuleDeploymentAgent{
-    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, R64FX_DEF_MODULE_IMPL_ARGS) override final
-    {
-        return ha->allocObj<OscillatorThreadObjectImpl>(R64FX_MODULE_IMPL_ARGS);
-    }
-};
 
-class OscillatorWithdrawalAgent : public ModuleWithdrawalAgent{
-    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl) override final
-    {
-        auto osc_impl = static_cast<OscillatorThreadObjectImpl*>(impl);
-        ha->freeObj(osc_impl);
-    }
-};
+void OscillatorWithdrawalAgent::withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl)
+{
+    auto osc_impl = static_cast<OscillatorThreadObjectImpl*>(impl);
+    osc_impl->storeWithdrawalArgs(this);
+    ha->freeObj(osc_impl);
+}
 
 
 /*======= Main Thread =======*/
@@ -59,7 +110,19 @@ public:
 private:
     virtual ModuleDeploymentAgent* newModuleDeploymentAgent()  override final
     {
-        return new OscillatorDeploymentAgent;
+        auto sd = soundDriver();
+#ifdef R64FX_DEBUG
+        assert(sd != nullptr);
+#endif//R64FX_DEBUG
+
+        auto agent = new OscillatorDeploymentAgent;
+        agent->audio_output_port = sd->newAudioOutput("osc_out");
+#ifdef R64FX_DEBUG
+        assert(agent->audio_output_port != nullptr);
+#endif//R64FX_DEBUG
+        sd->connect("r64fx:osc_out", "system:playback_1");
+        sd->connect("r64fx:osc_out", "system:playback_2");
+        return agent;
     }
 
     virtual void deleteModuleDeploymentAgent(ModuleDeploymentAgent* agent) override final
@@ -74,6 +137,11 @@ private:
 
     virtual void deleteModuleWithdrawalAgent(ModuleWithdrawalAgent* agent) override final
     {
+        auto sd = soundDriver();
+#ifdef R64FX_DEBUG
+        assert(sd != nullptr);
+#endif//R64FX_DEBUG
+
         delete agent;
     }
 

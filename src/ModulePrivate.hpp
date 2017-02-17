@@ -4,8 +4,6 @@
 #include "ThreadObject.hpp"
 #include "ModuleFlags.hpp"
 
-#define R64FX_DEF_MODULE_IMPL_ARGS ModuleThreadObjectImpl* parent_impl, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS
-#define R64FX_MODULE_IMPL_ARGS parent_impl, R64FX_THREAD_OBJECT_IMPL_ARGS
 
 namespace r64fx{
 
@@ -13,6 +11,7 @@ class SoundDriver;
 class SoundDriverSyncPort;
 class ModuleThreadObjectIfaceHandle;
 class ModuleThreadObjectImplHandle;
+class ModuleDeploymentAgent;
 
 /*
  * === Impl ===================================================================
@@ -26,11 +25,18 @@ protected:
     unsigned long m_flags = 0;
 
 public:
-    ModuleThreadObjectImpl(R64FX_DEF_MODULE_IMPL_ARGS);
+    ModuleThreadObjectImpl(ModuleDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS);
 
     virtual ~ModuleThreadObjectImpl();
 
+    SoundDriverSyncPort* syncPort();
+
 protected:
+    void setPrologue(void (*fun)(void* arg), void* arg = nullptr);
+
+    void setEpilogue(void (*fun)(void* arg), void* arg = nullptr);
+
+    long bufferSize();
 
 private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override;
@@ -47,18 +53,22 @@ private:
 
 class ModuleDeploymentAgent : public ThreadObjectDeploymentAgent{
     friend class ModuleThreadObjectIface;
+    friend class ModuleThreadObjectImpl;
 
-    SoundDriverSyncPort*           sync_port           = nullptr;
-    ModuleThreadObjectImplHandle*  parent_impl_handle  = nullptr;
+    SoundDriverSyncPort*     sync_port    = nullptr; // ->
+    ModuleThreadObjectImpl*  parent_impl  = nullptr; // ->
 
     virtual ThreadObjectImpl* deployImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final;
 
-    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, R64FX_DEF_MODULE_IMPL_ARGS) = 0;
+    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) = 0;
 };
 
 
 class ModuleWithdrawalAgent : public ThreadObjectWithdrawalAgent{
-    ModuleThreadObjectImplHandle*  parent_impl_handle  = nullptr;
+    friend class ModuleThreadObjectIface;
+    friend class ModuleThreadObjectImpl;
+
+    SoundDriverSyncPort*     sync_port    = nullptr; // <-
 
     virtual void withdrawImpl(HeapAllocator* ha, ThreadObjectImpl* impl) override final;
 
@@ -75,6 +85,9 @@ protected:
     SoundDriver* soundDriver();
 
 private:
+    inline ModuleThreadObjectImplHandle* impl() const { return (ModuleThreadObjectImplHandle*) ThreadObjectIface::impl(); }
+
+
     virtual ThreadObjectDeploymentAgent* newDeploymentAgent() override final;
 
     virtual ModuleDeploymentAgent* newModuleDeploymentAgent() = 0;
