@@ -490,7 +490,7 @@ protected:
 private:
     virtual SoundDriverSyncPort* newSyncPort()
     {
-        auto port_iface = new(std::nothrow) SyncPortIface(16);
+        auto port_iface = new(std::nothrow) SyncPortIface(R64FX_SOUND_DRIVER_SYNC_PORT_BUFFER_SIZE);
         auto port_impl = port_iface->newImpl();
         if(!port_impl)
         {

@@ -4,6 +4,7 @@
 #include <string>
 #include "Midi.hpp"
 
+#define R64FX_SOUND_DRIVER_SYNC_PORT_BUFFER_SIZE 16
 
 namespace r64fx{
 
