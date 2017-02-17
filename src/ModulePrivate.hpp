@@ -5,6 +5,34 @@
 #include "ModuleFlags.hpp"
 
 
+#define R64FX_DECL_MODULE_AGENTS(NAME)\
+class NAME##DeploymentAgent : public ModuleDeploymentAgent, public NAME##DeploymentArgs{\
+    friend class NAME##ThreadObjectImpl;\
+    friend class NAME##ThreadObjectIface;\
+    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final;\
+};\
+\
+class NAME##WithdrawalAgent : public ModuleWithdrawalAgent, public NAME##WithdrawalArgs{\
+    friend class NAME##ThreadObjectImpl;\
+    friend class NAME##ThreadObjectIface;\
+    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl) override final;\
+};
+
+
+#define R64FX_DEF_MODULE_AGENTS(NAME)\
+ModuleThreadObjectImpl* NAME##DeploymentAgent::deployModuleImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)\
+{\
+    return ha->allocObj<NAME##ThreadObjectImpl>(this, R64FX_THREAD_OBJECT_IMPL_ARGS);\
+}\
+\
+void NAME##WithdrawalAgent::withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl)\
+{\
+    auto osc_impl = static_cast<NAME##ThreadObjectImpl*>(impl);\
+    osc_impl->storeWithdrawalArgs(this);\
+    ha->freeObj(osc_impl);\
+}
+
+
 namespace r64fx{
 
 class SoundDriver;
@@ -57,6 +85,8 @@ class ModuleDeploymentAgent : public ThreadObjectDeploymentAgent{
 
     SoundDriverSyncPort*     sync_port    = nullptr; // ->
     ModuleThreadObjectImpl*  parent_impl  = nullptr; // ->
+    long                     buffer_size  = 0;
+    long                     sample_rate  = 0;
 
     virtual ThreadObjectImpl* deployImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final;
 

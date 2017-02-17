@@ -26,7 +26,8 @@ struct ModuleImplSharedAssets{
     SoundDriverSyncPort*       sync_port      = nullptr;
     LinkedList<ModuleImplFun>  prologue_list;
     LinkedList<ModuleImplFun>  epilogue_list;
-    long                       buffer_size    = 256;//!!!
+    long                       buffer_size    = 0;
+    long                       sample_rate    = 0;
 };
 
 }//namespace
@@ -46,7 +47,9 @@ ModuleThreadObjectImpl::ModuleThreadObjectImpl(ModuleDeploymentAgent* agent, R64
         assert(asset() == nullptr);
 #endif//R64FX_DEBUG
         auto shared = allocObj<ModuleImplSharedAssets>();
-        shared->sync_port = agent->sync_port;
+        shared->sync_port    = agent->sync_port;
+        shared->buffer_size  = agent->buffer_size;
+        shared->sample_rate  = agent->sample_rate;
         asset() = shared;
     }
 }
@@ -253,6 +256,8 @@ ThreadObjectDeploymentAgent* ModuleThreadObjectIface::newDeploymentAgent()
         assert(sp != nullptr);
 #endif//R64FX_DEBUG
         agent->sync_port = sp;
+        agent->buffer_size = sd->bufferSize();
+        agent->sample_rate = sd->sampleRate();
         g_SoundDriverUserCount++;
     }
     return agent;

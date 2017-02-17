@@ -9,23 +9,15 @@ using namespace std;
 
 namespace r64fx{
 
-class OscillatorDeploymentAgent : public ModuleDeploymentAgent{
-    friend class OscillatorThreadObjectImpl;
-    friend class OscillatorThreadObjectIface;
-
-    SoundDriverAudioOutput* audio_output_port = nullptr;// ->
-
-    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final;
+struct OscillatorDeploymentArgs{
+    SoundDriverAudioOutput* audio_output_port = nullptr;
 };
 
-class OscillatorWithdrawalAgent : public ModuleWithdrawalAgent{
-    friend class OscillatorThreadObjectImpl;
-    friend class OscillatorThreadObjectIface;
-
-    SoundDriverAudioOutput* audio_output_port = nullptr;// <-
-
-    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl) override final;
+struct OscillatorWithdrawalArgs{
+    SoundDriverAudioOutput* audio_output_port = nullptr;
 };
+
+R64FX_DECL_MODULE_AGENTS(Oscillator)
 
 
 /*======= Worker Thread =======*/
@@ -79,25 +71,11 @@ private:
 
     inline void epilogue()
     {
-        
+
     }
 };
 
-
-
-/*======= Agents =======*/
-ModuleThreadObjectImpl* OscillatorDeploymentAgent::deployModuleImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
-{
-    return ha->allocObj<OscillatorThreadObjectImpl>(this, R64FX_THREAD_OBJECT_IMPL_ARGS);
-}
-
-
-void OscillatorWithdrawalAgent::withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl)
-{
-    auto osc_impl = static_cast<OscillatorThreadObjectImpl*>(impl);
-    osc_impl->storeWithdrawalArgs(this);
-    ha->freeObj(osc_impl);
-}
+R64FX_DEF_MODULE_AGENTS(Oscillator)
 
 
 /*======= Main Thread =======*/
