@@ -82,7 +82,7 @@ public:
 class SoundDriver{
 public:
     enum class Type{
-        Bad,
+        Default,
         Stub,
         Jack
     };

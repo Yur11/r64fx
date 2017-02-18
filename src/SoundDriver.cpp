@@ -571,12 +571,12 @@ SoundDriver* SoundDriver::newInstance(SoundDriver::Type type)
 {
     switch(type)
     {
-//         case SoundDriver::Type::Stub:
-//         {
-//             cout << "stub!\n";
-//             driver = new(std::nothrow) SoundDriver_Stub;
-//             break;
-//         }
+        case SoundDriver::Type::Default:
+        case SoundDriver::Type::Stub:
+        {
+            return new(std::nothrow) Stub;
+            break;
+        }
 
         case SoundDriver::Type::Jack:
         {
