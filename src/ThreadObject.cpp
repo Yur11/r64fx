@@ -536,7 +536,6 @@ void ThreadObjectManagerIface::suicide()
 {
     m_timer->stop();
     m_timer->suicide();
-    delete m_timer;
     m_thread->join();
     delete m_thread;
     delete m_to_impl;

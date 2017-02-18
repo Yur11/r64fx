@@ -199,6 +199,7 @@ void Timer::suicide()
         m_impl->init();
         m = nullptr;
     }
+    delete this;
 }
 
 

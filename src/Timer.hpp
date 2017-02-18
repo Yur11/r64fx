@@ -13,7 +13,7 @@ class Timer{
 public:
     Timer(unsigned long interval = 0);
 
-    /* When in need to delete the timer from within it's own callback call suicide() before deleting. */
+    /* When in need to delete the timer from within its own callback use suicide(). */
     ~Timer();
 
     bool isGood() const;
@@ -22,7 +22,7 @@ public:
 
     unsigned long interval() const;
 
-    void onTimeout(void (*callback)(Timer* timer, void* arg), void* arg);
+    void onTimeout(void (*callback)(Timer* timer, void* arg), void* arg = nullptr);
 
     void start(unsigned long start_delay = 0);
 
