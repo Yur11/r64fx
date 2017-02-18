@@ -2,6 +2,7 @@
 #define R64FX_MODULE_PRIVATE_IMPL
 #include "ModulePrivate.hpp"
 #include "SoundDriver.hpp"
+#include "Timer.hpp"
 #include "TimeUtils.hpp"
 
 #ifdef R64FX_DEBUG
@@ -9,6 +10,10 @@
 #endif//R64FX_DEBUG
 
 namespace r64fx{
+
+/*
+ * === Impl ===================================================================
+ */
 
 namespace{
 
@@ -32,10 +37,6 @@ struct ModuleImplSharedAssets{
 
 }//namespace
 
-
-/*
- * === Impl ===================================================================
- */
 
 ModuleThreadObjectImpl::ModuleThreadObjectImpl(ModuleDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
 : ThreadObjectImpl(R64FX_THREAD_OBJECT_IMPL_ARGS)
@@ -147,7 +148,7 @@ long ModuleThreadObjectImpl::sampleRate() const
 
 void ModuleThreadObjectImpl::messageFromIfaceRecieved(const ThreadObjectMessage &msg)
 {
-    
+
 }
 
 
@@ -219,8 +220,9 @@ void ModuleWithdrawalAgent::withdrawImpl(HeapAllocator* ha, ThreadObjectImpl* im
  */
 namespace{
 
-SoundDriver* g_SoundDriver = nullptr;
-long g_SoundDriverUserCount = 0;
+SoundDriver*  g_SoundDriver            = nullptr;
+Timer*        g_SoundDriverEventTimer  = nullptr;
+long          g_SoundDriverUserCount   = 0;
 
 }//namespace
 
@@ -229,7 +231,7 @@ SoundDriver* ModuleThreadObjectIface::soundDriver()
 {
     if(!g_SoundDriver)
     {
-        g_SoundDriver = SoundDriver::newInstance(SoundDriver::Type::Jack);
+        g_SoundDriver = SoundDriver::newInstance(SoundDriver::Type::Default);
         g_SoundDriver->enable();
     }
     return g_SoundDriver;
@@ -241,6 +243,26 @@ void freeSoundDriver()
     g_SoundDriver->disable();
     SoundDriver::deleteInstance(g_SoundDriver);
     g_SoundDriver = nullptr;
+}
+
+
+void initSoundDriverEventTimer()
+{
+    if(g_SoundDriverEventTimer != nullptr)
+        return;
+
+    g_SoundDriverEventTimer = new(std::nothrow) Timer;
+    g_SoundDriverEventTimer->setInterval(5000 * 1000);
+    g_SoundDriverEventTimer->onTimeout([](Timer* timer, void* arg){
+        g_SoundDriver->processEvents();
+        if(g_SoundDriverUserCount == 0)
+        {
+            freeSoundDriver();
+            g_SoundDriverEventTimer->stop();
+            g_SoundDriverEventTimer->suicide();
+            g_SoundDriverEventTimer = nullptr;
+        }
+    });
 }
 
 
@@ -269,6 +291,7 @@ ThreadObjectDeploymentAgent* ModuleThreadObjectIface::newDeploymentAgent()
         agent->buffer_size = sd->bufferSize();
         agent->sample_rate = sd->sampleRate();
         g_SoundDriverUserCount++;
+        initSoundDriverEventTimer();
     }
     return agent;
 }
@@ -297,11 +320,6 @@ void ModuleThreadObjectIface::deleteWithdrawalAgent(ThreadObjectWithdrawalAgent*
     }
 
     deleteModuleWithdrawalAgent(module_agent);
-
-    if(g_SoundDriverUserCount == 0)
-    {
-        freeSoundDriver();
-    }
 }
 
 
