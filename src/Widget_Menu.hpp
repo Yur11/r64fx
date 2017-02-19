@@ -32,7 +32,7 @@ public:
 
     void resizeAndRealign();
 
-    
+
     void showAt(Point<int> position, Widget* parent);
 
     void closeAll();

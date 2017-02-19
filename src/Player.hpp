@@ -6,7 +6,7 @@ namespace r64fx{
 class Player{
 public:
     Player();
-    
+
     virtual ~Player();
 };
 

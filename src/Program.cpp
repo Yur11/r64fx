@@ -3,7 +3,7 @@
 #define R64FX_PROGRAM_ACTIONS_IMPL
 #include "ProgramActions.hpp"
 
-#include "MainView.hpp"
+#include "View_Program.hpp"
 #include "Project.hpp"
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
@@ -19,10 +19,10 @@ namespace r64fx{
 
 ProgramActions*  g_acts     = nullptr;
 
-struct ProgramPrivate : public MainViewEventIface{
+struct ProgramPrivate : public View_ProgramEventIface{
     bool running = true;
 
-    MainView* main_view = nullptr;
+    View_Program* view_program = nullptr;
 
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
@@ -33,8 +33,8 @@ struct ProgramPrivate : public MainViewEventIface{
     {
         initActions();
 
-        main_view = new MainView(this);
-        main_view->openWindow();
+        view_program = new View_Program(this);
+        view_program->openWindow();
 
         newProject();
 
@@ -50,9 +50,9 @@ struct ProgramPrivate : public MainViewEventIface{
             sleep_nanoseconds(time);
         }
 
-        main_view->closeWindow();
+        view_program->closeWindow();
         closeAllProjects();
-        delete main_view;
+        delete view_program;
 
         cleanupActions();
 
@@ -73,12 +73,12 @@ struct ProgramPrivate : public MainViewEventIface{
 
     void newSession()
     {
-        
+
     }
 
     void openSession()
     {
-        
+
     }
 
     void saveSession()
@@ -88,7 +88,7 @@ struct ProgramPrivate : public MainViewEventIface{
 
     void saveSessionAs()
     {
-        
+
     }
 
     void quit()
@@ -108,9 +108,9 @@ struct ProgramPrivate : public MainViewEventIface{
         open_projects.append(project);
         setCurrentProject(project);
 
-        main_view->addMainPartOption(project, "Untitled");
-        main_view->setMainPartWidget(project->view());
-        main_view->repaint();
+        view_program->addMainPartOption(project, "Untitled");
+        view_program->setMainPartWidget(project->view());
+        view_program->repaint();
     }
 
     void setCurrentProject(Project* project)
@@ -120,17 +120,17 @@ struct ProgramPrivate : public MainViewEventIface{
 
     void openProject()
     {
-        
+
     }
 
     void saveProject()
     {
-        
+
     }
 
     void saveProjectAs()
     {
-        
+
     }
 
     void closeAllProjects()
@@ -150,27 +150,27 @@ struct ProgramPrivate : public MainViewEventIface{
 
     void cut()
     {
-        
+
     }
 
     void copy()
     {
-        
+
     }
 
     void paste()
     {
-        
+
     }
 
     void undo()
     {
-        
+
     }
 
     void redo()
     {
-        
+
     }
 
     void initActions();
@@ -179,7 +179,7 @@ struct ProgramPrivate : public MainViewEventIface{
 
     virtual void mainPartOptionSelected(void* option)
     {
-        
+
     }
 };
 
@@ -349,7 +349,7 @@ class Action_NoView : public Action{
 
 public:
     Action_NoView(ProgramPrivate* pp) : Action("No View"), m(pp) {}
-    
+
     virtual void exec() {}
 };
 
@@ -388,7 +388,7 @@ void ProgramPrivate::initActions()
     g_acts->redo_act             = new Action_Redo(this);
 
     g_acts->no_view_act          = new Action_NoView(this);
-    
+
     g_acts->no_help_act          = new Action_NoHelp(this);
 }
 

@@ -62,10 +62,10 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //     struct Extremum{
 //         int index = 0;
 //         bool is_minimum = true;
-// 
+//
 //         Extremum(int index, bool is_minimum) : index(index), is_minimum(is_minimum) {}
 //     };
-// 
+//
 //     vector<Extremum> extrema;
 //     extrema.push_back({0, true});
 //     for(int i=0; i<width(); i++)
@@ -84,8 +84,8 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //         extrema[0].is_minimum = !extrema[1].is_minimum;
 //     }
 //     extrema.push_back({int(extrema.size()) - 1, !extrema.back().is_minimum});
-// 
-// 
+//
+//
 //     /* Generate line. */
 //     vector<PlotPoint> pvec(width());
 //     int curr_extremum = 0;
@@ -107,7 +107,7 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //             }
 //             curr_extremum++;
 //         }
-// 
+//
 //         float dy1;
 //         float extra1;
 //         {
@@ -118,7 +118,7 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //             }
 //             extra1 = sqrt(dy1 * dy1 + 1) * half_thickness;
 //         }
-// 
+//
 //         float dy2;
 //         float extra2;
 //         {
@@ -129,7 +129,7 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //             }
 //             extra2 = sqrt(dy2 * dy2 + 1) * half_thickness;
 //         }
-// 
+//
 //         PlotPoint pp;
 //         if(dy1 < 0)
 //         {
@@ -157,19 +157,19 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //                 pp.maxval = vec[i] + (extra1 + extra2) * 0.5f;
 //             }
 //         }
-// 
+//
 //         pp.minval = int(max(pp.minval, minimum));
 //         pp.maxval = int(min(pp.maxval, maximum));
 //         pvec[i] = pp;
 //     }
-// 
+//
 //     for(int i=0; i<width(); i++)
 //     {
 //         pvec[i].minblend = pvec[i].minval;
 //         pvec[i].maxblend = pvec[i].maxval;
 //     }
-// 
-// 
+//
+//
 //     /* Blend top part. */
 //     int segment_length = 0;
 //     int curr_y = pvec[0].minval;
@@ -180,7 +180,7 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //         if((i + 1) == width() || int(pvec[i].minval) != int(pvec[i + 1].minval))
 //         {
 //             int curr_y = pvec[i].minval;
-// 
+//
 //             int next_y;
 //             if((i + 1) < width())
 //             {
@@ -190,14 +190,14 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //             {
 //                 next_y = curr_y - 1;
 //             }
-// 
+//
 //             int prev_h = curr_y - prev_y;
 //             int next_h = curr_y - next_y;
-//             
+//
 //             if(segment_length > 1)
 //             {
 //                 float rcp = 1.0f / float(segment_length + 1);
-//                 
+//
 //                 if(next_y < curr_y)
 //                 {
 //                     if(prev_y > curr_y)
@@ -216,10 +216,10 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //                             {
 //                                 int x1 = j + i - segment_length + 1;
 //                                 int x2 = i - j;
-//                                 pvec[x1].minblend = pvec[x2].minblend 
+//                                 pvec[x1].minblend = pvec[x2].minblend
 //                                     = curr_y - (segment_length - j) * rcp;
 //                             }
-//                             
+//
 //                             if(segment_length & 1)
 //                             {
 //                                 int x = i - (segment_length >> 1);
@@ -273,13 +273,13 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //                     }
 //                 }
 //             }
-// 
+//
 //             segment_length = 0;
 //             prev_y = curr_y;
 //         }
 //     }
-// 
-//     
+//
+//
 //     /* Blend bottom part. */
 //     segment_length = 0;
 //     curr_y = pvec[0].minval;
@@ -290,7 +290,7 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //         if((i + 1) == width() || int(pvec[i].maxval) != int(pvec[i + 1].maxval))
 //         {
 //             int curr_y = pvec[i].maxval;
-// 
+//
 //             int next_y;
 //             if((i + 1) < width())
 //             {
@@ -300,14 +300,14 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //             {
 //                 next_y = curr_y - 1;
 //             }
-// 
+//
 //             int prev_h = curr_y - prev_y;
 //             int next_h = curr_y - next_y;
-//             
+//
 //             if(segment_length > 1)
 //             {
 //                 float rcp = 1.0f / (segment_length + 1);
-//                 
+//
 //                 if(next_y > curr_y)
 //                 {
 //                     if(prev_y < curr_y)
@@ -326,10 +326,10 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //                             {
 //                                 int x1 = j + i - segment_length + 1;
 //                                 int x2 = i - j;
-//                                 pvec[x1].maxblend = pvec[x2].maxblend 
+//                                 pvec[x1].maxblend = pvec[x2].maxblend
 //                                     = curr_y + (segment_length - j) * rcp;
 //                             }
-//                             
+//
 //                             if(segment_length & 1)
 //                             {
 //                                 int x = i - (segment_length >> 1);
@@ -383,13 +383,13 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
 //                     }
 //                 }
 //             }
-// 
+//
 //             segment_length = 0;
 //             prev_y = curr_y;
 //         }
 //     }
-//     
-//     
+//
+//
 //     for(int x=0; x<width(); x++)
 //     {
 //         auto &pp = pvec[x];

@@ -52,7 +52,7 @@ set(SRC
 #     MachinePoolThread.cpp
 #     MachinePort.cpp
 #     MachinePortImpl.cpp
-    MainView.cpp
+    View_Program.cpp
     MemoryUtils.cpp
     Midi.cpp
     MidiDispatcher.cpp
@@ -70,7 +70,7 @@ set(SRC
     PlayerView.cpp
     Program.cpp
     Project.cpp
-    ProjectView.cpp
+    View_Project.cpp
     SignalGraph.cpp
     SignalNodeCollection.cpp
 #     SignalNode_BufferIO.cpp
@@ -166,11 +166,11 @@ add_executable(test_MemoryUtils EXCLUDE_FROM_ALL ${test_MemoryUtils_SRC})
 
 ## test_ThreadObject ##
 set(test_ThreadObject_SRC
-    test_ThreadObject.cpp 
+    test_ThreadObject.cpp
     ThreadObject.cpp
-    Thread.cpp 
-    Mutex.cpp 
-    Timer.cpp 
+    Thread.cpp
+    Mutex.cpp
+    Timer.cpp
     TimeUtils.cpp
     MemoryUtils.cpp
 )

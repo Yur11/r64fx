@@ -5,16 +5,16 @@
 #define R64FX_PORT_IS_SINK         4
 
 namespace r64fx{
-    
+
 MachinePort::MachinePort(MachineIface* machine, const std::string &name, int component_count)
 : m_machine(machine)
 , m_name(name)
 , m_component_count(component_count)
 {
-    
+
 }
-    
-    
+
+
 MachineIface* MachinePort::machine() const
 {
     return m_machine;
@@ -32,7 +32,7 @@ std::string MachinePort::name() const
     return m_name;
 }
 
-    
+
 int MachinePort::componentCount() const
 {
     return m_component_count;
@@ -43,8 +43,8 @@ bool MachinePort::isSignalPort() const
 {
     return m_flags & R64FX_PORT_IS_SIGNAL;
 }
-    
-    
+
+
 bool MachinePort::isSequencerPort() const
 {
     return m_flags & R64FX_PORT_IS_SEQUENCER;
@@ -61,5 +61,5 @@ bool MachinePort::isSource() const
 {
     return !(m_flags & R64FX_PORT_IS_SINK);
 }
- 
+
 }///namespace r64fx

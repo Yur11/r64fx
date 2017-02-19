@@ -7,9 +7,9 @@
 #include "MaybeExtern.hpp"
 
 namespace r64fx{
-    
+
 namespace gl{
-      
+
 void InitIfNeeded();
 
 #ifdef R64FX_DEBUG_GL_ERRORS
@@ -388,10 +388,10 @@ inline void ActiveTexture(GLenum texture)
     CHECK_FOR_GL_ERRORS("glActiveTexture");
 }
 
-inline void GenTextures(GLsizei n, GLuint* textures) 
-{ 
-    glGenTextures(n, textures); 
-    CHECK_FOR_GL_ERRORS("glGenTextures"); 
+inline void GenTextures(GLsizei n, GLuint* textures)
+{
+    glGenTextures(n, textures);
+    CHECK_FOR_GL_ERRORS("glGenTextures");
 }
 
 inline void DeleteTextures(GLsizei n, const GLuint* textures)
@@ -538,13 +538,13 @@ inline void Finish()
     glFinish();
     CHECK_FOR_GL_ERRORS("glFinish");
 }
-    
+
 #ifdef R64FX_DEBUG_GL_ERRORS
 #undef CHECK_FOR_GL_ERRORS
 #endif//R64FX_DEBUG_GL_ERRORS
 
 }//namespace gl
-    
+
 }//namespace r64fx
 
 #endif//R64FX_GL_HPP

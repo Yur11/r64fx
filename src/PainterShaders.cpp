@@ -14,7 +14,7 @@
 #endif//R64FX_DEBUG
 
 namespace r64fx{
-    
+
 namespace{
 
 const char* shader_text_position =
@@ -49,7 +49,7 @@ FragmentShader g_shader_color;
 FragmentShader g_shader_texture;
 FragmentShader g_shader_blend_color;
 FragmentShader g_shader_waveform;
-    
+
 }//namespace
 
 
@@ -57,8 +57,8 @@ PainterShader::PainterShader()
 {
 
 }
-    
-    
+
+
 PainterShader::~PainterShader()
 {
 
@@ -142,20 +142,20 @@ void PainterShader_Texture::fetchCommonIndices()
 
 
 PainterShader_ColorBlend::PainterShader_ColorBlend()
-{    
+{
     if(!load(g_shader_pos_and_tex_coord, g_shader_blend_color))
         return;
 
     PainterShader_Texture::fetchCommonIndices();
-    
+
     R64FX_GET_UNIFORM_LOCATION(color);
     R64FX_GET_UNIFORM_LOCATION(texture_component);
 }
 
-    
+
 PainterShader_ColorBlend::~PainterShader_ColorBlend()
 {
-    
+
 }
 
 
@@ -175,7 +175,7 @@ PainterShader_Waveform::PainterShader_Waveform()
 {
     if(!load(g_shader_pos_and_tex_coord, g_shader_waveform))
         return;
-    
+
     PainterShader_Texture::fetchCommonIndices();
     R64FX_GET_UNIFORM_LOCATION(color);
     R64FX_GET_UNIFORM_LOCATION(gain);
@@ -184,7 +184,7 @@ PainterShader_Waveform::PainterShader_Waveform()
 
 PainterShader_Waveform::~PainterShader_Waveform()
 {
-    
+
 }
 
 
@@ -204,12 +204,12 @@ void init_painter_shaders()
 {
     g_shader_position           = VertexShader(shader_text_position);
     g_shader_pos_and_tex_coord  = VertexShader(shader_text_pos_and_tex_coord);
-    
+
     g_shader_color              = FragmentShader(shader_text_color);
     g_shader_texture            = FragmentShader(shader_text_texture);
     g_shader_blend_color        = FragmentShader(shader_text_blend_color);
     g_shader_waveform           = FragmentShader(shader_text_waveform);
-    
+
     g_PainterShader_Color = new PainterShader_Color;
     if(!g_PainterShader_Color->isGood())
         abort();
@@ -221,7 +221,7 @@ void init_painter_shaders()
     g_PainterShader_ColorBlend = new PainterShader_ColorBlend;
     if(!g_PainterShader_ColorBlend->isGood())
         abort();
-    
+
     g_PainterShader_Waveform = new PainterShader_Waveform;
     if(!g_PainterShader_ColorBlend->isGood())
         abort();
@@ -237,10 +237,10 @@ void cleanup_painter_shaders()
 
     if(g_PainterShader_ColorBlend)
         delete g_PainterShader_ColorBlend;
-    
+
     if(g_PainterShader_Waveform)
         delete g_PainterShader_Waveform;
-    
+
     g_shader_position.free();
     g_shader_pos_and_tex_coord.free();
     g_shader_color.free();

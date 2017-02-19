@@ -2,7 +2,7 @@
 #define R64FX_BINARY_CONSTANTS_HPP
 
 namespace r64fx{
-    
+
 /* Usefull binary constants. */
 const unsigned int b00 = 0;
 const unsigned int b01 = 1;
@@ -512,7 +512,7 @@ const unsigned int b11111100 = 252;
 const unsigned int b11111101 = 253;
 const unsigned int b11111110 = 254;
 const unsigned int b11111111 = 255;
-    
+
 }//namespace r64fx
 
 #endif//R64FX_BINARY_CONSTANTS_HPP

@@ -2,7 +2,7 @@
 #ifdef R64FX_USE_GL
 
 namespace r64fx{
-    
+
 void PainterVertexArray::init(int nbytes)
 {
     gl::GenVertexArrays(1, &m_vao);
@@ -19,7 +19,7 @@ void PainterVertexArray::cleanup()
 }
 
 void PainterVertexArray::setRect(float left, float top, float right, float bottom)
-{ 
+{
     float buff[8];
 
     buff[0] = left;
@@ -43,7 +43,7 @@ void PainterVertexArray::draw()
     gl::BindVertexArray(m_vao);
     gl::DrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
-    
+
 }//namespace r64fx
 
 #endif//R64FX_USE_GL

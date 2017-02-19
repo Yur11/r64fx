@@ -18,11 +18,11 @@ public:
     ~Image();
 
     bool ownsData() const;
-    
+
     void load(int w, int h, int c, unsigned char* data = nullptr, bool copy_data = false);
-    
+
     void free();
-    
+
     inline bool isGood() const { return m_data != nullptr; }
 
     inline unsigned char* data() const { return m_data; }

@@ -306,10 +306,10 @@ const CmpCode
 ;
 
 
-/* Pack four 0..3 values into a sigle byte. To be used with shuffle instructions. 
- 
+/* Pack four 0..3 values into a sigle byte. To be used with shuffle instructions.
+
     Each parameter defines the source scalar from which to read the data into the current position.
-    For example 
+    For example
        Setting s3 to 0, means moving the first scalar form the source vector into the last scalar of the destination vector.
        - shuf(0, 1, 2, 3) - no shuffle.
        - shuf(3, 2, 1, 0) - reverse order.
@@ -328,7 +328,7 @@ public:
 
     ~CodeBuffer();
 
-    inline void rewind() 
+    inline void rewind()
     {
         m_end = m_begin;
     }
@@ -401,7 +401,7 @@ public:
     /* Insert one or more nop instructions. */
     inline void nop(int count = 1)
     {
-        while(count--) 
+        while(count--)
         {
 #ifdef R64FX_DEBUG_JIT_STDOUT
             std::cout << (void*)ip() << " nop\n";
@@ -426,8 +426,8 @@ public:
         *m_bytes << 0x0F << 0x31;
     }
 
-    inline void rdpmc() 
-    { 
+    inline void rdpmc()
+    {
 #ifdef R64FX_DEBUG_JIT_STDOUT
         std::cout << (void*)ip() << " rdpmc\n";
 #endif//R64FX_DEBUG_JIT_STDOUT

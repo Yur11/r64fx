@@ -312,7 +312,7 @@ bool Widget_MenuItem::showSubMenu()
         return false;
 
     auto root_widget = parent_menu->root();
-    
+
     auto parent_window = root_widget->window();
     if(!parent_window)
         return false;
@@ -380,7 +380,7 @@ bool Widget_MenuItem::showSubMenu()
             );
         }
     }
-    
+
     m_sub_menu->openWindow(Window::WmType::Menu, Window::Type::Image);
     m_sub_menu->window()->setPosition(sub_menu_position);
 //     if(parent_menu == parent_menu->rootMenu() && parent_menu != root_widget)

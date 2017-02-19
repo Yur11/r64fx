@@ -7,7 +7,7 @@
 namespace r64fx{
 
 class Image;
-    
+
 class Font{
     void* p[2];
     int   m_ascender;
@@ -17,20 +17,20 @@ class Font{
 public:
     class Glyph{
         friend class Font;
-        
+
         std::string m_text;
-        
+
         Image m_image;
-        
+
         int m_bearing_x  = 0;
         int m_width      = 0;
         int m_advance    = 0;
         int m_bearing_y  = 0;
         int m_height     = 0;
-        
+
     public:
         inline std::string text() const { return m_text; }
-        
+
         inline Image* image() { return &m_image; }
 
         /* Glyph metrics expressed in pixels. */
@@ -40,9 +40,9 @@ public:
         inline int bearing_y() const { return m_bearing_y; }
         inline int height()    const { return m_height; }
     };
-    
+
     Font(std::string name = "", float size = 16.0f, int dpy = 72);
-    
+
     ~Font();
 
     /* Global font metrics expressed in pixels. */

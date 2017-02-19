@@ -43,7 +43,7 @@ public:
     TestObjImpl(R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
     : ThreadObjectImpl(R64FX_THREAD_OBJECT_IMPL_ARGS)
     {
-        
+
     }
 
 private:
@@ -261,7 +261,7 @@ bool test_deployment()
     /* Deploy Child */
     TestObjIface b;
     R64FX_CHECK_OBJ("4", b, false, false);
-    
+
     gate1 = false;
     b.deploy(&a, [](ThreadObjectIface* iface, void* arg){ gate1 = true; });
     R64FX_CHECK_OBJ("5", b, true, false);

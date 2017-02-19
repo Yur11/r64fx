@@ -4,20 +4,20 @@
 #include <string>
 
 namespace r64fx{
-    
-/** @brief Fetch next utf-8 sequence from a byte string, 
+
+/** @brief Fetch next utf-8 sequence from a byte string,
  *         starting at a specific position.
- * 
+ *
  *  @param str Byte string to scan.
- * 
+ *
  *  @param pos Position to start scanning at. Expressed in bytes.
- * 
+ *
  *  @return Returns the number of bytes in a code point or a negative error code.
 */
 int next_utf8(const std::string &str, int pos);
 
 
-/** @brief Convert utf-8 byte sequence to utf-32. 
+/** @brief Convert utf-8 byte sequence to utf-32.
  *
  *  Assuming valid utf-8 input.
  */

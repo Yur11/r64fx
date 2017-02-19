@@ -14,7 +14,7 @@ namespace r64fx{
 namespace{
 
 unsigned long g_tab_bar_count = 0;
-    
+
 Font* g_tab_bar_font = nullptr;
 
 IconColors g_icon_colors;
@@ -53,7 +53,7 @@ class TabHandle : public Widget{
     Image* m_selected_icon_img  = nullptr;
 
 public:
-    TabHandle(Widget* parent, const std::string &caption, IconName icon_name, void* tab_payload) 
+    TabHandle(Widget* parent, const std::string &caption, IconName icon_name, void* tab_payload)
     : Widget(parent)
     , m_caption(caption)
     , m_icon_name(icon_name)
@@ -167,8 +167,8 @@ protected:
 
     }
 };
-    
-    
+
+
 Widget_TabBar::Widget_TabBar(Widget* parent) : Widget(parent)
 {
     if(g_tab_bar_count == 0)

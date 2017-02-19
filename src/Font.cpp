@@ -55,7 +55,7 @@ namespace{
         {
             clear();
         }
-        
+
         void clear()
         {
             for(auto &pair : *this)
@@ -92,7 +92,7 @@ Font::Font(string name, float size, int dpy)
 #endif//R64FX_USE_BUILTIN_FONTS
 
     p[1] = new GlyphCache;
-    
+
     font_instance_count++;
 
     int code = FT_Set_Char_Size(
@@ -116,7 +116,7 @@ Font::Font(string name, float size, int dpy)
 Font::~Font()
 {
     delete m_glyph_cache;
-    
+
     font_instance_count--;
     if(font_instance_count == 0)
         cleanup_freetype();

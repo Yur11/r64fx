@@ -15,7 +15,7 @@ bool operator!=(const IconColors &a, const IconColors &b)
 
 
 namespace{
-    
+
 struct IconEntry : public LinkedList<IconEntry>::Node{
     unsigned long user_count = 0;
 
@@ -115,14 +115,14 @@ void gen_icon_Page(Image* img, int size, IconColors* ic)
 {
     if(size < 8)
         return;
-    
+
     int page_x = 1;
     int page_y = 0;
     int page_w = size - 2;
     int page_h = size;
-    
+
     draw_rect_with_border(img, page_x, page_y, page_w, page_h, ic->stroke1, ic->fill2);
-    
+
     int corner_size = size / 3;
     draw_page_folded_corner(img, page_x, page_y, page_w, page_h, corner_size, ic->stroke1, ic->fill1);
 }
@@ -132,17 +132,17 @@ void gen_icon_DoublePage(Image* img, int size, IconColors* ic)
 {
     if(size < 8)
         return;
-    
+
     int page_x = 1;
     int page_y = 0;
     int page_w = size - 2;
     int page_h = size;
-    
+
     int offset = size / 8;
-    
+
     draw_rect_with_border(img, page_x         , page_y         , page_w - offset, page_h - offset, ic->stroke1, ic->fill2);
     draw_rect_with_border(img, page_x + offset, page_y + offset, page_w - offset, page_h - offset, ic->stroke1, ic->fill2);
-    
+
     int corner_size = size / 3;
     draw_page_folded_corner(img, page_x, page_y, page_w, page_h, corner_size, ic->stroke1, ic->fill1);
 }
@@ -169,9 +169,9 @@ void draw_diskette_corner(Image* img, int dsk_x, int dsk_y, int dsk_w, int dsk_h
 void draw_diskette(Image* img, int dsk_x, int dsk_y, int dsk_w, int dsk_h, IconColors* ic)
 {
     draw_rect_with_border(img, dsk_x, dsk_y, dsk_w, dsk_h, ic->stroke1, ic->fill1);
-    
+
     draw_diskette_corner(img, dsk_x, dsk_y, dsk_w, dsk_h, dsk_w / 5, ic->stroke1, ic->fill1);
-    
+
     /* Diskette Label */
     if(dsk_w >= 14)
     {
@@ -179,7 +179,7 @@ void draw_diskette(Image* img, int dsk_x, int dsk_y, int dsk_w, int dsk_h, IconC
         int height = dsk_h / 2;
         draw_rect_with_border(img, dsk_x + offset, dsk_y + dsk_h - height, dsk_w - offset*2, height, ic->stroke1, ic->fill2);
     }
-    
+
     /* Diskette Shutter */
     if(dsk_w >= 14)
     {
@@ -196,12 +196,12 @@ void gen_icon_Diskette(Image* img, int size, IconColors* ic)
 {
     if(size < 8)
         return;
-    
+
     int dsk_x = 0;
     int dsk_y = 1;
     int dsk_w = size;
     int dsk_h = size - 2;
-    
+
     draw_diskette(img, dsk_x, dsk_y, dsk_w, dsk_h, ic);
 }
 
@@ -210,19 +210,19 @@ void gen_icon_DoubleDiskette(Image* img, int size, IconColors* ic)
 {
     if(size < 8)
         return;
-    
+
     int dsk_x = 0;
     int dsk_y = 1;
     int dsk_w = size;
     int dsk_h = size - 2;
-    
+
     int offset = size / 8;
-    
+
     draw_rect_with_border(img, dsk_x, dsk_y, dsk_w - offset, dsk_h - offset, ic->stroke1, ic->fill1);
-    
+
     int corner_size = size / 5;
     draw_diskette_corner(img, dsk_x, dsk_y, dsk_w - offset, dsk_h - offset, corner_size, ic->stroke1, ic->fill1);
-    
+
     draw_diskette(img, dsk_x + offset, dsk_y + offset, dsk_w - offset, dsk_h - offset, ic);
 }
 
@@ -231,17 +231,17 @@ void gen_icon_Folder(Image* img, int size, IconColors* ic)
 {
     if(size < 8)
         return;
-    
+
     int folder_x = 0;
     int folder_y = size / 3;
     int folder_w = size;
     int folder_h = size / 2;
-    
+
     draw_rect_with_border(img, folder_x, folder_y, folder_w, folder_h, ic->stroke1, ic->fill1);
-    
+
     int tab_width = folder_w / 2;
     int tab_x = folder_x + folder_w / 5;
-    
+
     for(int x=1; x<(tab_width - 1); x++)
     {
         int xx = x + tab_x;
@@ -250,12 +250,12 @@ void gen_icon_Folder(Image* img, int size, IconColors* ic)
             img->pixel(xx, folder_y)[c] = ic->fill1[c];
         }
     }
-    
+
     for(int c=0; c<4; c++)
     {
         img->pixel(tab_x, folder_y - 1)[c] = img->pixel(tab_x + tab_width - 1, folder_y - 1)[c] = ic->stroke1[c];
     }
-    
+
     for(int x=0; x<tab_width; x++)
     {
         int xx = x + tab_x;
@@ -264,14 +264,14 @@ void gen_icon_Folder(Image* img, int size, IconColors* ic)
             img->pixel(xx, folder_y - 2)[c] = ic->stroke1[c];
         }
     }
-    
+
     if(tab_x >= 3)
     {
         for(int c=0; c<4; c++)
         {
             img->pixel(folder_x, folder_y - 1)[c] = img->pixel(folder_x + folder_w - 1, folder_y - 1)[c] = ic->stroke2[c];
         }
-        
+
         for(int x=0; x<(tab_x - 1); x++)
         {
             int xx = x + folder_x;
@@ -280,7 +280,7 @@ void gen_icon_Folder(Image* img, int size, IconColors* ic)
                 img->pixel(xx, folder_y - 2)[c] = ic->stroke2[c];
             }
         }
-        
+
         for(int x=(tab_x + tab_width + 1); x<folder_w; x++)
         {
             for(int c=0; c<4; c++)
@@ -288,7 +288,7 @@ void gen_icon_Folder(Image* img, int size, IconColors* ic)
                 img->pixel(x, folder_y - 2)[c] = ic->stroke2[c];
             }
         }
-        
+
         for(int x=(tab_x - 2); x<=(tab_x + tab_width + 1); x++)
         {
             int xx = x + folder_x;
@@ -297,13 +297,13 @@ void gen_icon_Folder(Image* img, int size, IconColors* ic)
                 img->pixel(xx, folder_y - 4)[c] = ic->stroke2[c];
             }
         }
-        
+
         for(int c=0; c<4; c++)
         {
             img->pixel(tab_x - 2, folder_y - 3)[c] = img->pixel(tab_x + tab_width + 1, folder_y - 3)[c] = ic->stroke2[c];
         }
-        
-        
+
+
         for(int x=1; x<(tab_x); x++)
         {
             int xx = x + folder_x;
@@ -312,7 +312,7 @@ void gen_icon_Folder(Image* img, int size, IconColors* ic)
                 img->pixel(xx, folder_y - 1)[c] = ic->fill2[c];
             }
         }
-        
+
         for(int x=(tab_x + tab_width); x<(folder_w - 1); x++)
         {
             for(int c=0; c<4; c++)
@@ -320,7 +320,7 @@ void gen_icon_Folder(Image* img, int size, IconColors* ic)
                 img->pixel(x, folder_y - 1)[c] = ic->fill2[c];
             }
         }
-        
+
         for(int x=(tab_x - 1); x<=(tab_x + tab_width); x++)
         {
             int xx = x + folder_x;
@@ -329,7 +329,7 @@ void gen_icon_Folder(Image* img, int size, IconColors* ic)
                 img->pixel(xx, folder_y - 3)[c] = ic->fill2[c];
             }
         }
-        
+
         for(int c=0; c<4; c++)
         {
             img->pixel(tab_x - 1, folder_y - 2)[c] = img->pixel(tab_x + tab_width, folder_y - 2)[c] = ic->fill2[c];
@@ -342,7 +342,7 @@ IconEntry* gen_new_icon(IconName name, int size, IconColors* ic)
 {
     if(size <= 0)
         return nullptr;
-    
+
     auto entry = new IconEntry;
     entry->name = name;
     entry->size = size;
@@ -416,5 +416,5 @@ void free_icon(Image** icon_image)
         }
     }
 }
-    
+
 }//namespace r64fx

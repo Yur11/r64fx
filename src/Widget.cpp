@@ -27,7 +27,7 @@ Point<int> g_prev_mouse_position = {0, 0};
 
 MouseButton g_pressed_buttons = MouseButton::None();
 
-/* Widget that currently recieves mouse move events. 
+/* Widget that currently recieves mouse move events.
    Needed for doing mouse enter/leave events.
  */
 Widget* g_moused_over_widget = nullptr;
@@ -145,11 +145,11 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
             {
                 Widget* root_widget = nullptr;
                 auto widget_offset = widget->toRootCoords({0, 0}, &root_widget);
-                
+
                 auto widget_root_window = root_widget->window();
                 if(!widget_root_window)
                     continue;
-                 
+
                 Rect<int> rect(widget_root_window->position() + widget_offset, widget->size());
                 if(rect.overlaps(mouse_screen_position))
                 {
@@ -201,11 +201,11 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
             {
                 Widget* root_widget = nullptr;
                 auto widget_offset = widget->toRootCoords({0, 0}, &root_widget);
-                
+
                 auto widget_root_window = root_widget->window();
                 if(!widget_root_window)
                     continue;
-                 
+
                 Rect<int> rect(widget_root_window->position() + widget_offset, widget->size());
                 if(rect.overlaps(mouse_screen_position))
                 {
@@ -263,11 +263,11 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
             {
                 Widget* root_widget = nullptr;
                 auto widget_offset = widget->toRootCoords({0, 0}, &root_widget);
-                
+
                 auto widget_root_window = root_widget->window();
                 if(!widget_root_window)
                     continue;
-                 
+
                 Rect<int> rect(widget_root_window->position() + widget_offset, widget->size());
                 if(rect.overlaps(mouse_screen_position))
                 {
@@ -595,7 +595,7 @@ void Widget::setParent(Widget* parent, bool insert_after, Widget* existing_child
             else
                 parent->m_children.preppend(this);
         }
-        
+
         if(parent->isShownInWindow())
         {
             m_flags |= R64FX_WIDGET_BELONGS_TO_WINDOW;
@@ -985,7 +985,7 @@ void Widget::openWindow(
                 }
 #endif//R64FX_DEBUG
             }
-            
+
             window->setSize(size());
             if(modal_parent)
                 m_parent.window->setModalTo(modal_parent);
@@ -1012,7 +1012,7 @@ void Widget::closeWindow()
     {
         WidgetRemovedFromWindowEvent event(m_parent.window, textureManager());
         removedFromWindowEvent(&event);
-        
+
         auto d = (WidgetImpl*) m_parent.window->data();
         auto painter = d->painter;
         Painter::deleteInstance(painter);
@@ -1496,7 +1496,7 @@ PainterTextureManager* Widget::textureManager()
     if(!root_window)
         return nullptr;
     auto d = (WidgetImpl*) root_window->data();
-    return d->painter;    
+    return d->painter;
 }
 
 

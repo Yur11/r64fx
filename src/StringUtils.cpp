@@ -2,7 +2,7 @@
 
 namespace r64fx{
 
-    
+
 bool is_ascii(unsigned char byte)
 {
     return (byte & 128) == 0;
@@ -13,8 +13,8 @@ bool is_utf8_secodary(unsigned char byte)
 {
     return (byte & (128 + 64)) == 128;
 }
-    
-    
+
+
 int utf8_byte_count(unsigned char first_byte)
 {
     int i=5;
@@ -25,22 +25,22 @@ int utf8_byte_count(unsigned char first_byte)
             return 7 - i;
         i--;
     }
-    
+
     return 0;
 }
-    
+
 
 int next_utf8(const std::string &str, int pos)
 {
     if(pos >= (int)str.size())
         return -1;
-        
+
     if(is_ascii(str[pos]))
         return 1;
-    
+
     if(is_utf8_secodary(str[pos]))
         return -2;
-    
+
     int byte_count = utf8_byte_count(str[pos]);
     if(byte_count > 0)
     {
@@ -67,14 +67,14 @@ int to_utf32(const std::string &str, int pos, int size)
     else if(size > 1)
     {
         result = (int(str[pos]) & ((1<<(7-size)) - 1));
-        
+
         for(int i=1; i<size; i++)
         {
             result <<= 6;
             result |= (int(str[pos+i]) & 63);
         }
     }
-    
+
     return result;
 }
 

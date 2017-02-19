@@ -11,7 +11,7 @@ struct MachineMessage{
     : opcode(opcode)
     , value(value)
     {}
-    
+
     explicit MachineMessage(unsigned long opcode, void* value)
     : opcode(opcode)
     , value((unsigned long)value)

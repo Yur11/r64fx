@@ -58,18 +58,18 @@ public:
                 case R64FX_PORT_IS_MIDI_OUTPUT:
                 {
                     jack_midi_clear_buffer(port_buffer);
-                    
+
                     auto midi_out_port = (OutputPortImpl<MidiEvent, jack_port_t*>*)(port);
-                    
+
                     MidiEvent midi_event;
                     while(midi_out_port->read(&midi_event, 1))
                     {
                         if(midi_event.message().byteCount() > 0)
                         {
                             jack_midi_event_write(
-                                port_buffer, 
-                                midi_event.time(), 
-                                midi_event.message().bytes(), 
+                                port_buffer,
+                                midi_event.time(),
+                                midi_event.message().bytes(),
                                 midi_event.message().byteCount()
                             );
                         }
@@ -81,7 +81,7 @@ public:
                     break;
             }
         }
-        
+
         epilogue();
         return 0;
     }

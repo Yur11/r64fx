@@ -35,9 +35,9 @@ public:
     void readMessagesFromImpl();
 
     void deployImpl(MachineImplDeploymentFun fun, MachineIface* iface);
-    
+
     void withdrawImpl(MachineImplWithdrawalFun fun, MachineImpl* impl);
-    
+
 private:
     void pickDestinationImpl(MachineImpl* dst_impl);
 

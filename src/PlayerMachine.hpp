@@ -45,8 +45,8 @@ public:
     virtual void forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg);
 
 public:
-    
-    
+
+
     virtual void messageRecievedFromImpl(const MachineMessage &msg);
 };
 

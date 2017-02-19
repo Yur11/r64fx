@@ -61,7 +61,7 @@ protected:
     CircularBuffer<T>*  m_buffer  = nullptr;
 
 public:
-    PortImpl(HandleT handle, PortIfaceHandle* iface, unsigned long flags, CircularBuffer<T>* buffer) 
+    PortImpl(HandleT handle, PortIfaceHandle* iface, unsigned long flags, CircularBuffer<T>* buffer)
     : BasePortImpl<HandleT>(handle, iface, flags)
     , m_buffer(buffer)
     {
@@ -392,7 +392,7 @@ protected:
                     sync_port->is_enabled = false;
                 else if(msg.bits == 1)
                     sync_port->is_enabled = true;
-                    
+
             }
 
             if(sync_port->is_enabled)
@@ -478,15 +478,15 @@ protected:
 
     virtual void portAdded(BasePortIface<HandleT>* port)
     {
-        
+
     }
 
     virtual void portRemoved(BasePortIface<HandleT>* port)
     {
-        
+
     }
 
-    
+
 private:
     virtual SoundDriverSyncPort* newSyncPort()
     {

@@ -8,22 +8,22 @@ struct DummyMachineImpl : public MachineImpl{
     DummyMachineImpl(MachineIface* machine_iface, MachinePoolThreadImpl* thread)
     : MachineImpl(machine_iface, thread)
     {
-        
+
     }
-    
+
     virtual void messageRecievedFromIface(const MachineMessage &msg)
     {
-        
+
     }
 };
 
 
 void DummyMachine::forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg)
 {
-    
+
 }
 
-    
+
 void DummyMachine::deploymentEvent()
 {
     deploymentThread()->deployImpl([](MachineIface* iface,  MachinePoolThreadImpl* thread) -> MachineImpl* {
@@ -43,7 +43,7 @@ void DummyMachine::withdrawalEvent()
 
 void DummyMachine::messageRecievedFromImpl(const MachineMessage &msg)
 {
-    
+
 }
 
 }//namespace r64fx

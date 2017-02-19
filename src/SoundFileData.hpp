@@ -32,7 +32,7 @@ public:
     void setSampleRate(int rate);
 
     int sampleRate() const;
-    
+
     bool isGood() const;
 };
 

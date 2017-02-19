@@ -1,15 +1,15 @@
-#ifndef R64FX_PROJECT_VIEW_HPP
-#define R64FX_PROJECT_VIEW_HPP
+#ifndef R64FX_VIEW_PROJECT_HPP
+#define R64FX_VIEW_PROJECT_HPP
 
 #include "Widget.hpp"
 
 namespace r64fx{
 
-class ProjectView : public Widget{
+class View_Project : public Widget{
 public:
-    ProjectView(Widget* parent = nullptr);
+    View_Project(Widget* parent = nullptr);
 
-    virtual ~ProjectView();
+    virtual ~View_Project();
     
 public:
     virtual void paintEvent(WidgetPaintEvent* event);
@@ -19,4 +19,4 @@ public:
 
 }//namespace r64fx
 
-#endif//R64FX_PROJECT_VIEW_HPP
+#endif//R64FX_VIEW_PROJECT_HPP

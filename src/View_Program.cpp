@@ -1,4 +1,4 @@
-#include "MainView.hpp"
+#include "View_Program.hpp"
 #include "Painter.hpp"
 #include "ImageUtils.hpp"
 #include "SystemUtils.hpp"
@@ -26,10 +26,10 @@ class MainPart;
 
 IconColors g_colors;
 
-struct MainViewPrivate{
-    MainViewEventIface* event  = nullptr;
+struct View_ProgramPrivate{
+    View_ProgramEventIface* event  = nullptr;
 
-    MainView*    main_view     = nullptr;
+    View_Program*    main_view     = nullptr;
 
     TopBar*      top_bar       = nullptr;
     LeftDock*    left_dock     = nullptr;
@@ -78,12 +78,12 @@ struct MainViewPrivate{
     PainterTexture2D* icon32_tex = nullptr;
 };
 
-    
+
 class TopBar : public Widget{
-    MainViewPrivate* m = nullptr;
+    View_ProgramPrivate* m = nullptr;
 
 public:
-    TopBar(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
+    TopBar(View_ProgramPrivate* m, Widget* parent) : Widget(parent), m(m)
     {
 
     }
@@ -106,7 +106,7 @@ protected:
     {
 
     }
-    
+
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
         auto window = Widget::rootWindow();
@@ -119,11 +119,11 @@ protected:
 
 
 class LeftDock : public Widget{
-    MainViewPrivate* m = nullptr;
+    View_ProgramPrivate* m = nullptr;
     Widget_ItemBrowser* m_browser = nullptr;
-    
+
 public:
-    LeftDock(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
+    LeftDock(View_ProgramPrivate* m, Widget* parent) : Widget(parent), m(m)
     {
         std::string name = "home";
         auto path = home_dir();
@@ -136,24 +136,24 @@ public:
         {
             path.push_back('/');
         }
-        
+
         auto wd = new Widget_DirectoryItem(name, path);
-        
+
         m_browser = new Widget_ItemBrowser(this);
         m_browser->addItem(wd);
     }
-    
+
     virtual ~LeftDock()
     {
         delete m_browser;
     }
-    
+
 protected:
     virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
-        
+
         childrenPaintEvent(event);
     }
 
@@ -161,7 +161,7 @@ protected:
     {
         m_browser->setSize(event->size());
     }
-    
+
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
         auto window = Widget::rootWindow();
@@ -174,20 +174,20 @@ protected:
 
 
 class RightDock : public Widget{
-    MainViewPrivate* m = nullptr;
-    
+    View_ProgramPrivate* m = nullptr;
+
 public:
-    RightDock(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
+    RightDock(View_ProgramPrivate* m, Widget* parent) : Widget(parent), m(m)
     {
-        
+
     }
-    
+
 protected:
     virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
-        
+
         p->putImage(m->icon10_tex, {10, 10});
         p->putImage(m->icon16_tex, {10, 24});
         p->putImage(m->icon18_tex, {10, 45});
@@ -202,9 +202,9 @@ protected:
 
     virtual void resizeEvent(WidgetResizeEvent* event)
     {
-        
+
     }
-    
+
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
         auto window = Widget::rootWindow();
@@ -217,14 +217,14 @@ protected:
 
 
 class BottomDock : public Widget{
-    MainViewPrivate* m = nullptr;
-    
+    View_ProgramPrivate* m = nullptr;
+
 public:
-    BottomDock(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
+    BottomDock(View_ProgramPrivate* m, Widget* parent) : Widget(parent), m(m)
     {
-        
+
     }
-    
+
 protected:
     virtual void paintEvent(WidgetPaintEvent* event)
     {
@@ -234,9 +234,9 @@ protected:
 
     virtual void resizeEvent(WidgetResizeEvent* event)
     {
-        
+
     }
-    
+
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
         auto window = Widget::rootWindow();
@@ -249,12 +249,12 @@ protected:
 
 
 class MainPart : public Widget{
-    MainViewPrivate* m = nullptr;
-    
+    View_ProgramPrivate* m = nullptr;
+
 public:
-    MainPart(MainViewPrivate* m, Widget* parent) : Widget(parent), m(m)
+    MainPart(View_ProgramPrivate* m, Widget* parent) : Widget(parent), m(m)
     {
-        
+
     }
 
 protected:
@@ -273,7 +273,7 @@ protected:
             break;
         }
     }
-    
+
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
         auto window = Widget::rootWindow();
@@ -284,13 +284,13 @@ protected:
     }
 };
 
-        
-MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(parent)
+
+View_Program::View_Program(View_ProgramEventIface* event_iface, Widget* parent) : Widget(parent)
 {
-    m = new MainViewPrivate;
+    m = new View_ProgramPrivate;
     m->event = event_iface;
     m->main_view = this;
-    
+
     m->top_bar      = new TopBar      (m, this);
     m->left_dock    = new LeftDock    (m, this);
     m->right_dock   = new RightDock   (m, this);
@@ -305,7 +305,7 @@ MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(par
     m->menu_session->addAction(g_acts->save_session_as_act);
     m->menu_session->addAction(g_acts->quit_act);
     m->menu_session->resizeAndRealign();
-    
+
     m->menu_project = new Widget_Menu(m->menu);
     m->menu_project->setOrientation(Orientation::Vertical);
     m->menu_project->addAction(g_acts->new_project_act);
@@ -315,7 +315,7 @@ MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(par
     m->menu_project->addAction(g_acts->create_player_act);
     m->menu_project->addAction(g_acts->close_project_act);
     m->menu_project->resizeAndRealign();
-    
+
     m->menu_edit = new Widget_Menu(m->menu);
     m->menu_edit->setOrientation(Orientation::Vertical);
     m->menu_edit->addAction(g_acts->cut_act);
@@ -324,17 +324,17 @@ MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(par
     m->menu_edit->addAction(g_acts->undo_act);
     m->menu_edit->addAction(g_acts->redo_act);
     m->menu_edit->resizeAndRealign();
-    
+
     m->menu_view = new Widget_Menu(m->menu);
     m->menu_view->setOrientation(Orientation::Vertical);
     m->menu_view->addAction(g_acts->no_view_act);
     m->menu_view->resizeAndRealign();
-    
+
     m->menu_help = new Widget_Menu(m->menu);
     m->menu_help->setOrientation(Orientation::Vertical);
     m->menu_help->addAction(g_acts->no_help_act);
     m->menu_help->resizeAndRealign();
-    
+
     m->menu = new Widget_Menu(m->top_bar);
     m->menu->setOrientation(Orientation::Horizontal);
     m->menu->addSubMenu(m->menu_session,  "Session");
@@ -349,21 +349,21 @@ MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(par
     m->main_tab_bar->resizeAndRealign();
     m->main_tab_bar->setY(0);
     m->main_tab_bar->onTabSelected([](TabHandle* handle, void* payload, void* arg){
-        auto m = (MainViewPrivate*)arg;
+        auto m = (View_ProgramPrivate*)arg;
         m->event->mainPartOptionSelected(payload);
     }, m);
-    
+
     m->top_bar->setHeight(m->menu->height());
-    
+
     m->left_dock->setWidth(300);
     m->right_dock->setWidth(100);
     m->bottom_dock->setHeight(256);
-    
+
     g_colors.stroke1 = Color(31, 31, 31, 0);
     g_colors.fill1   = Color(0, 0, 0, 255);
     g_colors.stroke2 = Color(63, 63, 63, 0);
     g_colors.fill2   = Color(223, 223, 223, 0);
-    
+
     auto name = IconName::DoublePage;
     m->icon10 = get_icon(name, 10, &g_colors);
     m->icon16 = get_icon(name, 16, &g_colors);
@@ -375,12 +375,12 @@ MainView::MainView(MainViewEventIface* event_iface, Widget* parent) : Widget(par
     m->icon28 = get_icon(name, 28, &g_colors);
     m->icon30 = get_icon(name, 30, &g_colors);
     m->icon32 = get_icon(name, 32, &g_colors);
-    
+
     setSize({800, 600});
 }
 
 
-MainView::~MainView()
+View_Program::~View_Program()
 {
     free_icon(&m->icon10);
     free_icon(&m->icon16);
@@ -391,28 +391,28 @@ MainView::~MainView()
     free_icon(&m->icon28);
     free_icon(&m->icon30);
     free_icon(&m->icon32);
-    
+
     m->main_tab_bar->setParent(nullptr);
     delete m->main_tab_bar;
-    
+
     m->menu_session->setParent(nullptr);
     delete m->menu_session;
-    
+
     m->menu_project->setParent(nullptr);
     delete m->menu_project;
-    
+
     m->menu_edit->setParent(nullptr);
     delete m->menu_edit;
-    
+
     m->menu_view->setParent(nullptr);
     delete m->menu_view;
-    
+
     m->menu_help->setParent(nullptr);
     delete m->menu_help;
 }
 
 
-void MainView::addMainPartOption(void* option, const std::string &name)
+void View_Program::addMainPartOption(void* option, const std::string &name)
 {
     m->main_tab_bar->addTab(option, name, IconName::Page);
     m->main_tab_bar->resizeAndRealign();
@@ -420,23 +420,23 @@ void MainView::addMainPartOption(void* option, const std::string &name)
 }
 
 
-void MainView::setMainPartWidget(Widget* widget)
+void View_Program::setMainPartWidget(Widget* widget)
 {
     widget->setParent(m->main_part);
 }
 
 
-void MainView::paintEvent(WidgetPaintEvent* event)
+void View_Program::paintEvent(WidgetPaintEvent* event)
 {
     childrenPaintEvent(event);
-    
+
     auto p = event->painter();
-    
+
     p->fillRect(
-        {0, m->top_bar->height(), width(), m->gap}, 
+        {0, m->top_bar->height(), width(), m->gap},
         Color(0, 0, 0, 0)
     );
-    
+
     if(m->left_dock->parent() == this)
     {
         p->fillRect(
@@ -452,7 +452,7 @@ void MainView::paintEvent(WidgetPaintEvent* event)
             Color(0, 0, 0, 0)
         );
     }
-    
+
     if(m->bottom_dock->parent() == this)
     {
         p->fillRect(
@@ -460,11 +460,11 @@ void MainView::paintEvent(WidgetPaintEvent* event)
             Color(0, 0, 0, 0)
         );
     }
-    
+
     {
         int x = m->main_tab_bar->x() + m->main_tab_bar->currentTabX();
         int w = m->main_tab_bar->currentTabWidth();
-        
+
         p->fillRect(
             {x, m->top_bar->height(), w, m->gap},
             Color(191, 191, 191, 0)
@@ -473,17 +473,17 @@ void MainView::paintEvent(WidgetPaintEvent* event)
 }
 
 
-void MainView::resizeEvent(WidgetResizeEvent* event)
+void View_Program::resizeEvent(WidgetResizeEvent* event)
 {
     m->top_bar->setWidth(event->width());
     m->top_bar->setPosition({0, 0});
-    
+
     m->main_part->setY(m->top_bar->height() + m->gap);
-    
+
     if(m->bottom_dock->parent() == this)
     {
         m->bottom_dock->setY(event->height() - m->bottom_dock->height());
-        
+
         if(m->left_dock->parent() == this && m->left_dock_expanded)
         {
             m->bottom_dock->setX(m->left_dock->width() + m->gap);
@@ -492,7 +492,7 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
         {
             m->bottom_dock->setX(0);
         }
-        
+
         if(m->right_dock->parent() == this && m->right_dock_expanded)
         {
             m->bottom_dock->setWidth(event->width() - m->bottom_dock->x() - m->right_dock->width() - m->gap);
@@ -501,7 +501,7 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
         {
             m->bottom_dock->setWidth(event->width() - m->bottom_dock->x());
         }
-        
+
         m->main_part->setHeight(
             event->height() - m->top_bar->height() - m->bottom_dock->height() - m->gap - m->gap
         );
@@ -512,12 +512,12 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
             event->height() - m->top_bar->height() - m->gap
         );
     }
-    
+
     if(m->left_dock->parent() == this)
     {
         m->left_dock->setX(0);
         m->left_dock->setY(m->top_bar->height() + m->gap);
-        
+
         if(m->bottom_dock->parent() == this && !m->left_dock_expanded)
         {
             m->left_dock->setHeight(event->height() - m->left_dock->y() - m->bottom_dock->height());
@@ -526,19 +526,19 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
         {
             m->left_dock->setHeight(event->height() - m->left_dock->y());
         }
-        
+
         m->main_part->setX(m->left_dock->width() + m->gap);
     }
     else
     {
         m->main_part->setX(0);
     }
-    
+
     if(m->right_dock->parent() == this)
     {
         m->right_dock->setX(event->width() - m->right_dock->width());
         m->right_dock->setY(m->top_bar->height() + m->gap);
-        
+
         if(m->bottom_dock->parent() == this && !m->right_dock_expanded)
         {
             m->right_dock->setHeight(event->height() - m->right_dock->y() - m->bottom_dock->height());
@@ -547,7 +547,7 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
         {
             m->right_dock->setHeight(event->height() - m->right_dock->y());
         }
-        
+
         if(m->left_dock->parent() == this)
         {
             m->main_part->setWidth(
@@ -574,14 +574,14 @@ void MainView::resizeEvent(WidgetResizeEvent* event)
             m->main_part->setWidth(event->width());
         }
     }
-    
+
     m->main_tab_bar->setX(
         (m->main_part->x() + m->main_part->width()) - m->main_tab_bar->width() + 1
     );
 }
 
 
-void MainView::addedToWindowEvent(WidgetAddedToWindowEvent* event)
+void View_Program::addedToWindowEvent(WidgetAddedToWindowEvent* event)
 {
     auto tm = event->textureManager();
     m->icon10_tex = tm->newTexture(m->icon10);
@@ -599,7 +599,7 @@ void MainView::addedToWindowEvent(WidgetAddedToWindowEvent* event)
 }
 
 
-void MainView::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
+void View_Program::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
 {
     childrenRemovedFromWindowEvent(event);
 
@@ -617,7 +617,7 @@ void MainView::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
 }
 
 
-void MainView::mousePressEvent(MousePressEvent* event)
+void View_Program::mousePressEvent(MousePressEvent* event)
 {
     if(!childrenMousePressEvent(event))
     {
@@ -634,7 +634,7 @@ void MainView::mousePressEvent(MousePressEvent* event)
 }
 
 
-void MainView::mouseReleaseEvent(MouseReleaseEvent* event)
+void View_Program::mouseReleaseEvent(MouseReleaseEvent* event)
 {
     if(isMouseFocusOwner())
     {
@@ -648,7 +648,7 @@ void MainView::mouseReleaseEvent(MouseReleaseEvent* event)
 }
 
 
-void MainView::mouseMoveEvent(MouseMoveEvent* event)
+void View_Program::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(m->currently_resized_dock && event->button() == MouseButton::Left())
     {
@@ -688,7 +688,7 @@ void MainView::mouseMoveEvent(MouseMoveEvent* event)
             {
                 new_main_part_width -= (m->left_dock->width() + m->gap);
             }
-            
+
             if(new_main_part_width >= 10)
             {
                 m->right_dock->setWidth(new_width);
@@ -716,7 +716,7 @@ void MainView::mouseMoveEvent(MouseMoveEvent* event)
 }
 
 
-Widget* MainViewPrivate::findDockAt(Point<int> p)
+Widget* View_ProgramPrivate::findDockAt(Point<int> p)
 {
     if(p.y() <= (top_bar->height() + gap))
     {
@@ -751,9 +751,9 @@ Widget* MainViewPrivate::findDockAt(Point<int> p)
 }
 
 
-void MainView::closeEvent()
+void View_Program::closeEvent()
 {
     g_acts->quit_act->exec();
 }
-    
+
 }//namespace r64fx

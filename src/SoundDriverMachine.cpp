@@ -29,57 +29,57 @@ namespace{
     constexpr unsigned long DestroyMidiOutput  = 12;
     constexpr unsigned long Connect    = 13;
     constexpr unsigned long Disconnect = 14;
-    
+
     constexpr unsigned long SignalSourceCreated   = 15;
     constexpr unsigned long SignalSinkCreated     = 16;
-    
+
     struct CreatePortSpec{
         std::string port_name  = "";
         unsigned long component_count = 0;
-        
+
         void* impl = nullptr;
         void* port = nullptr;
     };
-    
+
     struct PortConnectionSpec{
         std::string src = "";
         std::string dst = "";
     };
 }//namespace
-    
-    
+
+
 class SoundDriverSignalSource : public SignalSource{
-    
+
 };
 
 
 class SoundDriverSignalSink : public SignalSink{
-    
+
 };
-    
-    
+
+
 struct SoundDriverMachineImpl : public MachineImpl{
 
     SoundDriverMachineImpl(MachineIface* iface)
     : MachineImpl(iface)
     {
-        
+
     }
-    
+
     ~SoundDriverMachineImpl()
     {
-        
+
     }
-    
+
     virtual void messageRecievedFromIface(const MachineMessage &msg)
     {
-        
+
     }
-    
+
 //     virtual void dispatchMessage(const MachineMessage &msg)
 //     {
 //         auto sound_driver  = ctx()->sound_driver;
-//         
+//
 //         if(msg.opcode == Enable)
 //         {
 //             sound_driver->enable();
@@ -99,7 +99,7 @@ struct SoundDriverMachineImpl : public MachineImpl{
 //         else if(msg.opcode == CreateAudioInput)
 //         {
 //             auto spec = (CreatePortSpec*) msg.value;
-//             
+//
 //             auto source_impl = new MachineSourceImpl;
 //             source_impl->sources.resize(spec->component_count);
 //             for(unsigned long i=0; i<spec->component_count; i++)
@@ -109,20 +109,20 @@ struct SoundDriverMachineImpl : public MachineImpl{
 //                 {
 //                     name += "_" + num2str(i + 1);
 //                 }
-// 
+//
 //                 auto input = sound_driver->newAudioInput(name);
 //                 auto node =  new SignalNode_BufferReader(input, sound_driver->bufferSize());
 //                 ctx()->input_subgraph->addItem(node);
 //                 source_impl->sources.at(i) = node->source();
 //             }
-//             
+//
 //             spec->impl = source_impl;
 //             sendMessage(SignalSourceCreated, (unsigned long)spec);
 //         }
 //         else if(msg.opcode == CreateAudioOutput)
 //         {
 //             auto spec = (CreatePortSpec*) msg.value;
-//             
+//
 //             auto sink_impl = new MachineSinkImpl;
 //             sink_impl->sinks.resize(spec->component_count);
 //             for(unsigned long i=0; i<spec->component_count; i++)
@@ -132,13 +132,13 @@ struct SoundDriverMachineImpl : public MachineImpl{
 //                 {
 //                     name += "_" + num2str(i + 1);
 //                 }
-// 
+//
 //                 auto output = sound_driver->newAudioOutput(name);
 //                 auto node =  new SignalNode_BufferWriter(output, sound_driver->bufferSize());
 //                 ctx()->output_subgraph->addItem(node);
 //                 sink_impl->sinks.at(i) = node->sink();
 //             }
-//             
+//
 //             spec->impl = sink_impl;
 //             sendMessage(SignalSourceCreated, (unsigned long)spec);
 //         }
@@ -191,15 +191,15 @@ struct SoundDriverMachineImpl : public MachineImpl{
 //             sound_driver->disconnect(spec->src, spec->dst);
 //         }
 //     }
-//     
+//
 //     virtual void cycleStarted()
 //     {
-//         
+//
 //     }
-//     
+//
 //     virtual void cycleEnded()
 //     {
-//         
+//
 //     }
 };
 
@@ -222,8 +222,8 @@ SoundDriverMachine::SoundDriverMachine(MachinePool* pool)
 {
 
 }
-    
-    
+
+
 SoundDriverMachine::~SoundDriverMachine()
 {
 
@@ -237,14 +237,14 @@ void SoundDriverMachine::forEachPort(void (*fun)(MachinePort* port, MachineIface
         fun(port, this, arg);
     }
 }
-    
-    
+
+
 void SoundDriverMachine::enable()
 {
 //     sendMessage(Enable, 0);
 }
-    
-    
+
+
 void SoundDriverMachine::disable()
 {
 //     sendMessage(Disable, 0);
@@ -266,29 +266,29 @@ void SoundDriverMachine::setBufferSize(int buffer_size)
 MachineSignalSource* SoundDriverMachine::createAudioInput(const std::string &name, int component_count)
 {
 //     auto source = new MachineSignalSource(this, name, component_count);
-//     
+//
 //     auto spec = new CreatePortSpec;
 //     spec->port = source;
 //     spec->port_name = name;
 //     spec->component_count = component_count;
 //     sendMessage(CreateAudioInput, (unsigned long)spec);
-//     
+//
 //     m_ports.append(source);
 //     return source;
     return nullptr;
 }
-    
-    
+
+
 MachineSignalSink* SoundDriverMachine::createAudioOutput(const std::string &name, int component_count)
 {
 //     auto sink = new MachineSignalSink(this, name, component_count);
-//     
+//
 //     auto spec = new CreatePortSpec;
 //     spec->port = sink;
 //     spec->port_name = name;
 //     spec->component_count = component_count;
 //     sendMessage(CreateAudioOutput, (unsigned long)spec);
-//     
+//
 //     m_ports.append(sink);
 //     return sink;
     return nullptr;
@@ -332,7 +332,7 @@ void SoundDriverMachine::destroyPort(MachinePort* port)
 //     }
 //     else if(port->isSequencerPort())
 //     {
-//         
+//
 //     }
 }
 
@@ -353,8 +353,8 @@ void SoundDriverMachine::disconnect(const std::string &src, const std::string &d
 //     spec->dst = dst;
 //     sendMessage(Disconnect, (unsigned long)spec);
 }
-      
-    
+
+
 void SoundDriverMachine::dispatchMessage(const MachineMessage &msg)
 {
 //     if(msg.opcode == SignalSourceCreated)

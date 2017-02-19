@@ -2,7 +2,7 @@
 #define R64FX_WIDGET_EVENTS_HPP
 
 namespace r64fx{
-    
+
 class Painter;
 class PainterTextureManager;
 class WidgetImpl;
@@ -100,20 +100,20 @@ public:
 class WidgetWindowAvailabilityEvent{
     Window* m_window = nullptr;
     PainterTextureManager* m_ptm = nullptr;
-    
+
 public:
-    WidgetWindowAvailabilityEvent(Window* window, PainterTextureManager* ptm) 
+    WidgetWindowAvailabilityEvent(Window* window, PainterTextureManager* ptm)
     : m_window(window)
     , m_ptm(ptm)
     {
-        
+
     }
-    
+
     inline Window* window() const
     {
         return m_window;
     }
-    
+
     inline PainterTextureManager* textureManager() const
     {
         return m_ptm;

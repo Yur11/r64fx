@@ -4,7 +4,7 @@ namespace r64fx{
 
 Project::Project()
 {
-    m_view = new ProjectView;
+    m_view = new View_Project;
 }
 
 
@@ -15,7 +15,7 @@ Project::~Project()
 }
 
 
-ProjectView* Project::view() const
+View_Project* Project::view() const
 {
     return m_view;
 }

@@ -9,13 +9,13 @@
 using namespace std;
 
 namespace r64fx{
-        
+
 std::string Translation::operator()(std::string key)
 {
     auto it = find(key);
     if(it != end())
         return it->second;
-    
+
     auto file = fopen((lang_dir + key).c_str(), "r");
     if(file == nullptr)
     {
@@ -26,7 +26,7 @@ std::string Translation::operator()(std::string key)
         operator[](key) = key;
         return key;
     }
-    
+
     auto &str = operator[](key);
     char ch;
     while(fread(&ch, 1, 1, file) == 1)
@@ -34,7 +34,7 @@ std::string Translation::operator()(std::string key)
         str.push_back(ch);
     }
     fclose(file);
-    
+
     return str;
 }
 
@@ -43,5 +43,5 @@ void Translation::loadLanguage(std::string lang_dir)
 {
     this->lang_dir = lang_dir;
 }
-    
+
 }//namespace r64fx

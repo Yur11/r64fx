@@ -62,8 +62,8 @@ JsonValue Json::parse()
     if(ok) return JsonValue(obj);
     return JsonValue(array(ok));
 }
-   
-   
+
+
 JsonObject* Json::object(bool &ok)
 {
     if(!open_object())
@@ -71,17 +71,17 @@ JsonObject* Json::object(bool &ok)
         ok = false;
         return nullptr;
     }
-    
+
     auto obj = new JsonObject;
-    
+
     bool got_comma = false;
     for(;;)
     {
         skip_whitespace();
-        
+
         if(end_of_text())
             throw Json::Error("Unexpected end of text!");
-        
+
         if(close_object())
         {
             if(got_comma)
@@ -91,10 +91,10 @@ JsonObject* Json::object(bool &ok)
             ok = true;
             return obj;
         }
-        
+
         auto pair = key_value_pair();
         (*obj)[pair.first] = pair.second;
-        
+
         if(end_of_text())
             throw Json::Error("Unexpected end of text!");
         else if(comma())
@@ -112,17 +112,17 @@ JsonArray* Json::array(bool &ok)
         ok = false;
         return nullptr;
     }
-    
+
     auto arr = new JsonArray;
-    
+
     bool got_comma = false;
     for(;;)
     {
         skip_whitespace();
-        
+
         if(end_of_text())
             throw Json::Error("Unexpected end of text!");
-        
+
         if(close_array())
         {
             if(got_comma)
@@ -132,10 +132,10 @@ JsonArray* Json::array(bool &ok)
             ok = true;
             return arr;
         }
-        
+
         JsonValue variant = value();
         arr->push_back(variant);
-        
+
         if(end_of_text())
             throw Json::Error("Unexpected end of text!");
         else if(comma())
@@ -174,22 +174,22 @@ JsonValue Json::value()
     auto str = quoted_string(ok);
     if(ok)
         return str;
-    
+
     ok = true;
     auto num = number(ok);
     if(ok)
         return num;
-    
+
     ok = true;
     auto obj = object(ok);
     if(ok)
         return obj;
-    
+
     ok = true;
     auto arr = array(ok);
     if(ok)
         return arr;
-    
+
     return boolean_or_null();
 }
 
@@ -204,19 +204,19 @@ double Json::number(bool &ok)
     long int whole_part;
     long int fraction_part;
     long int exponent_part;
-    
+
     if(next_byte_is<'-'>())
         mantissa_sign = -1;
     else
         next_byte_is<'+'>();
-    
+
     whole_part = integer('0', '9');
     if(number_text.empty())
     {
         ok = false;
         return 0.0;
     }
-    
+
     if(next_byte_is<'.'>())
         goto _fraction;
     if(next_byte_is<'e'>() || next_byte_is<'E'>())
@@ -226,7 +226,7 @@ double Json::number(bool &ok)
         ok = true;
         return long(whole_part * mantissa_sign);
     }
-    
+
  _fraction:
     fraction_part = integer('0', '9');
     if(number_text.empty())
@@ -234,7 +234,7 @@ double Json::number(bool &ok)
     result = (double(whole_part) + double(fraction_part) / pow(10, number_text.size())) * mantissa_sign;
     ok = true;
     return double(result);
- 
+
  _scientific:
     if(next_byte_is<'+'>())
         exponent_sign = 1;
@@ -242,31 +242,31 @@ double Json::number(bool &ok)
         exponent_sign = -1;
     else
         throw Json::Error("Missing exponent sign!");
-    
+
     exponent_part = integer('0', '9');
     result = whole_part * pow(10, exponent_part * exponent_sign) * mantissa_sign;
-    
+
     ok = true;
     return double(result);
 }
 
-    
+
 long int Json::integer(char min_code, char max_code)
 {
     number_text = "";
     long int num = 0;
-    
+
     while(text[index] >= min_code && text[index] <= max_code)
     {
         num *= 10;
         num += text[index] - 48;
         number_text.push_back(text[index]);
         index++;
-        
+
         if(end_of_text())
             throw Json::Error("Unexpected end of text!");
     }
-    
+
     return num;
 }
 
@@ -274,7 +274,7 @@ long int Json::integer(char min_code, char max_code)
 std::string Json::quoted_string(bool &ok)
 {
     skip_whitespace();
-    
+
     if(!next_byte_is<'"'>())
     {
         ok = false;
@@ -282,15 +282,15 @@ std::string Json::quoted_string(bool &ok)
     }
 
     std::string result;
-    
+
     bool escaped = false;
     for(;;)
     {
         if(end_of_text())
             throw Json::Error("Unexpected end of text!");
-        
+
         char ch = text[index++];
-        
+
         if(escaped)
         {
             if(ch == '"')
@@ -312,7 +312,7 @@ std::string Json::quoted_string(bool &ok)
                 result.push_back('\\');
                 result.push_back(ch);
             }
-            
+
             escaped = false;
         }
         else
@@ -334,28 +334,28 @@ std::string Json::quoted_string(bool &ok)
 JsonValue Json::boolean_or_null()
 {
     skip_whitespace();
-    if(text[index] == 't' 
+    if(text[index] == 't'
         && index + 4 < text.size()
-        && text[index+1] == 'r' 
-        && text[index+2] == 'u' 
+        && text[index+1] == 'r'
+        && text[index+2] == 'u'
         && text[index+3] == 'e'
     ){ index+=4; return true; }
-    
-    if(text[index] == 'f' 
+
+    if(text[index] == 'f'
        && index + 5 < text.size()
-       && text[index+1] == 'a' 
-       && text[index+2] == 'l' 
+       && text[index+1] == 'a'
+       && text[index+2] == 'l'
        && text[index+3] == 's'
        && text[index+4] == 'e'
     ){ index+=5; return false; }
-    
-    if(text[index] == 'n' 
+
+    if(text[index] == 'n'
         && index + 4 < text.size()
-        && text[index+1] == 'u' 
-        && text[index+2] == 'l' 
+        && text[index+1] == 'u'
+        && text[index+2] == 'l'
         && text[index+3] == 'l'
     ){ index+=4; return JsonValue(); }
-    
+
     throw Json::Error("Bad json value!");
 }
 
@@ -416,9 +416,9 @@ bool Json::end_of_text()
 void Json::skip_whitespace()
 {
     while(
-        !end_of_text() && 
+        !end_of_text() &&
         (text[index] == ' ' || text[index] == '\t' || text[index] == '\n')
-    ) index++;    
+    ) index++;
 }
 
 
@@ -428,7 +428,7 @@ JsonValue Json::readText(std::string &text)
     return reader.parse();
 }
 
-    
+
 JsonValue Json::readFile(std::string file_name)
 {
     FILE* file = fopen(file_name.c_str(), "r");
@@ -436,7 +436,7 @@ JsonValue Json::readFile(std::string file_name)
     {
         throw Json::Error("Failed to open file \"" + file_name + "\" !");
     }
-    
+
     string text;
     char c;
     while(fread(&c, 1, 1, file))
@@ -469,7 +469,7 @@ void Json::_write(JsonValue variant, int &indent_level, string &indent_item)
             text += "null";
             break;
         }
-        
+
         case JsonValue::Type::Boolean:
         {
             if(variant.asBoolean())
@@ -478,19 +478,19 @@ void Json::_write(JsonValue variant, int &indent_level, string &indent_item)
                 text += "false";
             break;
         }
-        
+
         case JsonValue::Type::String:
         {
             text += "\"" + variant.asString() + "\"";
             break;
         }
-        
+
         case JsonValue::Type::Number:
         {
             text += str(variant.asNumber());
             break;
         }
-        
+
         case JsonValue::Type::Object:
         {
             text += "{\n";
@@ -512,7 +512,7 @@ void Json::_write(JsonValue variant, int &indent_level, string &indent_item)
             text += "}";
             break;
         }
-        
+
         case JsonValue::Type::Array:
         {
             text += "{\n";

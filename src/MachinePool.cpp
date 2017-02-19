@@ -10,7 +10,7 @@ MachinePool::MachinePool()
 
 MachinePool::~MachinePool()
 {
-    
+
 }
 
 
@@ -19,12 +19,12 @@ void MachinePool::deployMachine(MachineIface* machine)
 #ifdef R64FX_DEBUG
     assert(machine != nullptr);
 #endif//R64FX_DEBUG
-    
+
     auto thread = getThread();
 #ifdef R64FX_DEBUG
     assert(thread != nullptr);
 #endif//R64FX_DEBUG
-    
+
     machine->m_deployment_thread = thread;
     machine->deploymentEvent();
 }

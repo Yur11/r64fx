@@ -3,7 +3,7 @@
 #include "PainterVertexArrays.hpp"
 
 namespace r64fx{
-    
+
 namespace
 {
     int PainterImplGL_count = 0;
@@ -21,7 +21,7 @@ namespace
             abort();
         }
 
-        gl::InitIfNeeded();        
+        gl::InitIfNeeded();
         init_painter_shaders();
 
         gl::Enable(GL_PRIMITIVE_RESTART);
@@ -42,18 +42,18 @@ struct PainterTextureImplGL{
     PainterImplGL*  m_parent_painter   = nullptr;
     GLuint          m_texture          = 0;
     int             m_component_count  = 0;
-    
+
     PainterTextureImplGL(PainterImplGL* parent_painter)
     : m_parent_painter(parent_painter)
     {}
-    
+
     bool formats(int component_count, GLenum &internal_format, GLenum &format)
     {
 #ifdef R64FX_DEBUG
         assert(component_count >= 1);
         assert(component_count <= 4);
 #endif//R64FX_DEBUG
-        
+
         if(component_count == 1)
         {
             internal_format = GL_R8;
@@ -78,7 +78,7 @@ struct PainterTextureImplGL{
         {
             return false;
         }
-        
+
         return true;
     }
 };
@@ -96,7 +96,7 @@ public:
     PainterTexture1DImplGL(PainterImplGL* parent_painter)
     : PainterTextureImplGL(parent_painter)
     {}
-    
+
     Type dataType()
     {
         return m_data_type;
@@ -122,7 +122,7 @@ public:
         gl::DeleteTextures(1, &m_texture);
         m_texture = 0;
     }
-    
+
     inline void bind()
     {
         gl::BindTexture(GL_TEXTURE_1D, m_texture);
@@ -132,7 +132,7 @@ public:
     {
         return 0;
     }
-    
+
     virtual float lengthRcp()
     {
         return m_length_rcp;
@@ -145,25 +145,25 @@ public:
         assert(length > 0);
         assert(component_count > 0);
 #endif//R64FX_DEBUG
-        
+
         free();
 
         gl::GenTextures(1, &m_texture);
         gl::BindTexture(GL_TEXTURE_1D, m_texture);
         gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        
+
         m_component_count = component_count;
         GLenum internal_format = 0, format = 0;
         formats(m_component_count, internal_format, format);
-        
+
         gl::TexStorage1D(
             GL_TEXTURE_1D,
             1,
             internal_format,
             length
         );
-        
+
         gl::PixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
         gl::TexSubImage1D(
@@ -175,17 +175,17 @@ public:
             type,
             data
         );
-        
+
         m_length = length;
-        m_length_rcp = 1.0f / float(length);        
+        m_length_rcp = 1.0f / float(length);
     }
-    
+
     virtual void load(unsigned char* data, int length, int component_count)
     {
         loadData(data, length, component_count, GL_UNSIGNED_BYTE);
         m_data_type = PainterTexture1D::Type::UnsignedChar;
     }
-    
+
     virtual void load(unsigned short*  data, int length, int component_count)
     {
         loadData(data, length, component_count, GL_UNSIGNED_SHORT);
@@ -215,46 +215,46 @@ class PainterTexture2DImplGL
     Size<int>       m_size;
     float           m_wrcp             = 1.0f;
     float           m_hrcp             = 1.0f;
-    
+
 public:
     PainterTexture2DImplGL(PainterImplGL* parent_painter)
     : PainterTextureImplGL(parent_painter)
     {
-        
+
     }
 
     inline PainterImplGL* painter() const
     {
         return m_parent_painter;
     }
-    
+
     inline int width() const
     {
         return m_size.width();
     }
-    
+
     inline int height() const
     {
         return m_size.height();
     }
-    
+
     inline float wrcp() const
     {
         return m_wrcp;
     }
-    
+
     inline float hrcp() const
     {
         return m_hrcp;
     }
-    
+
     inline void bind()
     {
         gl::BindTexture(GL_TEXTURE_2D, m_texture);
     }
-    
+
     virtual Painter* parentPainter();
-    
+
     virtual bool isGood()
     {
         return m_texture != 0;
@@ -264,17 +264,17 @@ public:
     {
         return m_component_count;
     }
-    
+
     virtual Point<int> position()
     {
         return m_posision;
     }
-    
+
     virtual Size<int> size()
     {
         return m_size;
     }
-    
+
     virtual void loadImage(Image* teximg)
     {
 #ifdef R64FX_DEBUG
@@ -320,7 +320,7 @@ public:
         m_wrcp = 1.0f / float(teximg->width());
         m_hrcp = 1.0f / float(teximg->height());
     }
-    
+
     virtual void readImage(Image* teximg)
     {
 
@@ -340,7 +340,7 @@ public:
 
 struct PainterImplGL : public PainterImpl{
     PainterShader* m_current_shader = nullptr;
-    
+
     PainterVertexArray_ColoredRect   m_colored_rect;
     PainterVertexArray_TexturedRect  m_textured_rect;
     PainterVertexArray_ColorBlend    m_color_blend;
@@ -363,7 +363,7 @@ struct PainterImplGL : public PainterImpl{
     , m_spare_2d_texture(this)
     {
         window->makeCurrent();
-        
+
         if(PainterImplGL_count == 0)
         {
             init_gl_stuff();
@@ -378,10 +378,10 @@ struct PainterImplGL : public PainterImpl{
 
         m_color_blend.init();
         m_color_blend.setRect(0.0f, 0.0f, 1.0f, -1.0f);
-        
+
         m_waveform_rect.init();
         m_waveform_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f);
-        
+
         gl::Enable(GL_BLEND);
         gl::BlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
     }
@@ -391,7 +391,7 @@ struct PainterImplGL : public PainterImpl{
         m_colored_rect.cleanup();
         m_textured_rect.cleanup();
         m_color_blend.cleanup();
-        
+
         PainterImplGL_count--;
         if(PainterImplGL_count == 0)
         {
@@ -549,19 +549,19 @@ struct PainterImplGL : public PainterImpl{
         m_spare_1d_texture.load(waveform, rect.width(), 2);
         PainterImplGL::drawWaveform(rect, color, &m_spare_1d_texture);
     }
-    
+
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned short* waveform)
     {
         m_spare_1d_texture.load(waveform, rect.width(), 2);
         PainterImplGL::drawWaveform(rect, color, &m_spare_1d_texture);
     }
-    
+
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned int* waveform)
     {
         m_spare_1d_texture.load(waveform, rect.width(), 2);
         PainterImplGL::drawWaveform(rect, color, &m_spare_1d_texture);
     }
-    
+
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform)
     {
         m_spare_1d_texture.load(waveform, rect.width(), 2);
@@ -574,9 +574,9 @@ struct PainterImplGL : public PainterImpl{
         assert(waveform_texture->parentPainter() == this);
         assert(waveform_texture->componentCount() == 2);
 #endif//R64FX_DEBUG
-        
+
         auto waveform_texture_impl = static_cast<PainterTexture1DImplGL*>(waveform_texture);
-        
+
         RectIntersection<int> intersection(
             current_clip_rect,
             {rect.x() + offsetX(), rect.y() + offsetY(), rect.width(), rect.height()}
@@ -588,30 +588,30 @@ struct PainterImplGL : public PainterImpl{
             setShaderScaleAndShift(
                 g_PainterShader_Waveform, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
             );
-            
+
             g_PainterShader_Waveform->setColor(
                 float(color[0]) * uchar2float_rcp,
                 float(color[1]) * uchar2float_rcp,
                 float(color[2]) * uchar2float_rcp,
                 float(color[3]) * uchar2float_rcp
             );
-            
+
 //             g_PainterShader_Waveform->setGain(gain);
-            
+
             gl::ActiveTexture(GL_TEXTURE0);
             waveform_texture_impl->bind();
             g_PainterShader_Waveform->setSampler(0);
-            
+
             float wrcp = waveform_texture_impl->lengthRcp();
             float hrcp = 1.0f / float(rect.height());
-            
+
             m_waveform_rect.setTexCoords(
                 intersection.srcx() * wrcp,
                 intersection.srcy() * hrcp,
                 (intersection.srcx() + intersection.width())  * wrcp,
                 (intersection.srcy() + intersection.height()) * hrcp
             );
-            
+
             m_waveform_rect.draw();
         }
     }
@@ -691,7 +691,7 @@ struct PainterImplGL : public PainterImpl{
     }
 
     virtual void repaint(Rect<int>* rects, int numrects)
-    {        
+    {
         window->repaint(rects, numrects);
         gl::Finish();
     }
@@ -723,5 +723,5 @@ Painter* PainterTexture2DImplGL::parentPainter()
 {
     return m_parent_painter;
 }
-    
+
 }//namespace r64fx

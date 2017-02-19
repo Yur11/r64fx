@@ -76,7 +76,7 @@ void init_atoms()
         R64FX_INTERN_ATOM( CLIPBOARD,        true  );
 
         R64FX_INTERN_ATOM( _NET_WM_NAME,     true  );
-        
+
         R64FX_INTERN_ATOM( _NET_WM_STATE,        true );
         R64FX_INTERN_ATOM( _NET_WM_STATE_MODAL,  true );
 

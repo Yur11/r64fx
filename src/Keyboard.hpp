@@ -12,7 +12,7 @@ namespace r64fx{
 namespace Keyboard{
 namespace Key{
     const char* toString(int key);
-    
+
 }//namespace Key
 }//namespace Keyboard
 

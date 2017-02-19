@@ -242,5 +242,5 @@ private:
         return false;
     }
 };
-    
+
 }//namespace r64fx

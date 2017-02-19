@@ -19,13 +19,13 @@ public:
     virtual ~MachinePool();
 
     void deployMachine(MachineIface* machine);
-    
+
     void withdrawMachine(MachineIface* machine);
-    
+
     void withdrawAllMachines();
 
     IteratorPair<LinkedList<MachineIface>::Iterator> machines() const;
-    
+
     MachinePoolThread* getThread() const;
 
 private:

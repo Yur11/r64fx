@@ -14,7 +14,7 @@ using namespace std;
 
 namespace{
 
-constexpr float uchar2float_rcp = 1.0f / 255.0f;    
+constexpr float uchar2float_rcp = 1.0f / 255.0f;
 
 }//namespace
 

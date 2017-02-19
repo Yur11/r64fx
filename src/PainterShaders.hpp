@@ -14,38 +14,38 @@
 #endif
 
 namespace r64fx{
-    
+
 class PainterShader : public ShadingProgram{
     GLint unif_sxsytxty;
     GLint attr_position;
-    
+
 public:
     PainterShader();
-    
+
     ~PainterShader();
-    
+
     void setScaleAndShift(float sx, float sy, float tx, float ty);
-    
+
     void bindPositionAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer);
-    
+
 protected:
     void fetchCommonIndices();
 };
-    
+
 class PainterShader_Color : public PainterShader{
     GLint unif_color;
-    
+
 public:
     PainterShader_Color();
 
     ~PainterShader_Color();
-    
+
     void setColor(float r, float g, float b, float a);
 };
 
 R64FX_PAINTER_SHADER_EXTERN PainterShader_Color* g_PainterShader_Color R64FX_PAINTER_SHADER_NULLPTR;
 
-    
+
 class PainterShader_Texture : public PainterShader{
     GLint unif_sampler;
     GLint attr_tex_coord;
@@ -56,9 +56,9 @@ public:
     ~PainterShader_Texture();
 
     void setSampler(int sampler);
-    
+
     void bindTexCoordAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer);
-    
+
 protected:
     void fetchCommonIndices();
 };
@@ -69,14 +69,14 @@ R64FX_PAINTER_SHADER_EXTERN PainterShader_Texture* g_PainterShader_Texture R64FX
 class PainterShader_ColorBlend : public PainterShader_Texture{
     GLint unif_color;
     GLint unif_texture_component;
-    
+
 public:
     PainterShader_ColorBlend();
-    
+
     ~PainterShader_ColorBlend();
-    
+
     void setColor(float r, float g, float b, float a);
-    
+
     void setTextureComponent(int component);
 };
 
@@ -86,14 +86,14 @@ R64FX_PAINTER_SHADER_EXTERN PainterShader_ColorBlend* g_PainterShader_ColorBlend
 class PainterShader_Waveform : public PainterShader_Texture{
     GLint unif_color;
     GLint unif_gain;
-    
+
 public:
     PainterShader_Waveform();
-    
+
     ~PainterShader_Waveform();
-    
+
     void setColor(float r, float g, float b, float a);
-    
+
     void setGain(float gain);
 };
 

@@ -185,12 +185,12 @@ private:
     {
         Image textimg;
         text2image("Drop Samples Here", TextWrap::None, g_LargeFont, &textimg);
-        
+
         Point<int> pos(width()/2 - textimg.width()/2, height()/2 - textimg.height()/2 + g_LargeFont->height());
         Size<int> s(textimg.width(), textimg.height());
-        
+
         p->fillRect({pos, s}, Color(127, 127, 127, 0));
-        
+
         unsigned char fg[4] = {0, 0, 0, 0};
         unsigned char* colors[1] = {fg};
         p->blendColors(pos, colors, &textimg);

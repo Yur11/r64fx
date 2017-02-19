@@ -6,7 +6,7 @@
 #include "PainterShaders.hpp"
 
 namespace r64fx{
-    
+
 class PainterVertexArray{
 protected:
     GLuint m_vao;
@@ -14,11 +14,11 @@ protected:
 
 public:
     void init(int nbytes);
-    
+
     void cleanup();
-    
+
     void setRect(float left, float top, float right, float bottom);
-    
+
     void draw();
 };
 
@@ -43,7 +43,7 @@ public:
     }
 
     void setTexCoords(float left, float top, float right, float bottom)
-    { 
+    {
         float buff[8];
 
         buff[0] = left;
@@ -84,7 +84,7 @@ public:
         g_PainterShader_Waveform->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
     }
 };
-    
+
 }//namespace r64x
 
 #endif//PAINTER_VERTEX_ARRAYS_HPP

@@ -6,7 +6,7 @@ SignalNode_BufferReader::SignalNode_BufferReader(float* buffer)
 : m_buffer(buffer)
 , m_source(this)
 {
-    
+
 }
 
 
@@ -20,7 +20,7 @@ SignalNode_BufferWriter::SignalNode_BufferWriter(float* buffer)
 : m_buffer(buffer)
 , m_sink(this)
 {
-    
+
 }
 
 

@@ -1,4 +1,4 @@
-#include "ProjectView.hpp"
+#include "View_Project.hpp"
 #include "Painter.hpp"
 #include "Color.hpp"
 
@@ -7,26 +7,26 @@ using namespace std;
 
 namespace r64fx{
 
-ProjectView::ProjectView(Widget* parent) : Widget(parent)
+View_Project::View_Project(Widget* parent) : Widget(parent)
 {
     
 }
 
 
-ProjectView::~ProjectView()
+View_Project::~View_Project()
 {
     
 }
 
 
-void ProjectView::paintEvent(WidgetPaintEvent* event)
+void View_Project::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 }
 
 
-void ProjectView::mouseMoveEvent(MouseMoveEvent* event)
+void View_Project::mouseMoveEvent(MouseMoveEvent* event)
 {
     auto window = Widget::rootWindow();
     if(window)

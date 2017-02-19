@@ -137,54 +137,54 @@ public:
 /** @brief Json reader/writer. */
 class Json{
     unsigned long int index = 0; //Current position in the text, when parsing.
-    
+
     std::string &text;
-    
+
     std::string number_text;
-    
+
     Json(std::string &text) : text(text) {}
-    
+
     JsonValue parse();
-    
+
     JsonObject* object(bool &ok);
-    
+
     JsonArray* array(bool &ok);
-    
+
     std::pair<std::string, JsonValue> key_value_pair();
-    
+
     /* Should return String or Error. */
     std::string key();
-    
+
     JsonValue value();
-    
+
     double number(bool &ok);
-    
+
     /* Use min_code and max_code to switch between 0..9 and 1..9 digit ranges. */
     long int integer(char min_code, char max_code);
-    
+
     std::string quoted_string(bool &ok);
 
     JsonValue boolean_or_null();
-    
+
     bool open_object();
-    
+
     bool close_object();
-    
+
     bool open_array();
-    
+
     bool close_array();
-    
+
     bool colon();
-    
+
     bool comma();
-    
+
     bool period();
 
     bool end_of_text();
-    
+
     void skip_whitespace();
-    
-    
+
+
     template<char ch> bool next_byte_is()
     {
         if(text[index] == ch){ index++; return true; }
@@ -192,14 +192,14 @@ class Json{
     }
 
     void _write(JsonValue value, int &indent_level, std::string &indent_item);
-    
+
 public:
     static JsonValue readText(std::string &text);
-    
+
     static JsonValue readFile(std::string file_name);
 
     static std::string write(JsonValue value, std::string indent_item = "    ");
-    
+
     static std::string readString(JsonValue value, std::string alternative);
 
     static double readNumber(JsonValue value, double alternative);
@@ -212,10 +212,10 @@ public:
 
     class Error{
         std::string _message;
-        
+
     public:
         Error(std::string message) : _message(message) {}
-        
+
         inline std::string message() const { return _message; }
     };
 };

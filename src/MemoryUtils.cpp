@@ -242,7 +242,7 @@ void HeapAllocator::freeChunk(void* addr)
 {
     HeapBuffer* buff_to_remove = nullptr;
     for(auto buff : m_buffers)
-    {        
+    {
         if(buff->freeChunk(addr))
         {
             if(buff->isEmpty())

@@ -8,7 +8,7 @@
 #define R64FX_OWNS_DATA 1
 
 namespace r64fx{
-    
+
 Image::Image(int w, int h, int c, unsigned char* data, bool copy_data)
 {
     load(w, h, c, data, copy_data);
@@ -69,7 +69,7 @@ void Image::free()
     {
         delete[] m_data;
     }
-    
+
     m_data = nullptr;
     m_width = 0;
     m_height = 0;
@@ -101,5 +101,5 @@ void Image::setPixel(int x, int y, unsigned char* px)
         pixel(x, y)[c] = px[c];
     }
 }
-    
+
 }//namespace r64fx

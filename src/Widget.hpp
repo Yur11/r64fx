@@ -161,7 +161,7 @@ public:
     bool isWindow() const;
 
     bool isShownInWindow() const;
-    
+
     void setWindowTitle(std::string title);
 
     std::string windowTitle() const;
@@ -181,7 +181,7 @@ public:
     bool wantsMultiGrabs(bool yes);
 
     bool wantsMultiGrabs();
-    
+
     static Widget* mouseMultiGrabber();
 
     static MouseButton pressedButtons();
@@ -219,29 +219,29 @@ public:
 
     /* Request a repaint for this widget. */
     void repaint();
-    
+
     PainterTextureManager* textureManager();
 
 protected:
     void childrenPaintEvent(WidgetPaintEvent* event);
 
     void childrenAddedToWindowEvent(WidgetAddedToWindowEvent* event);
-    
+
     void childrenRemovedFromWindowEvent(WidgetRemovedFromWindowEvent* event);
 
     bool childrenMousePressEvent(MousePressEvent* event);
 
     bool childrenMouseReleaseEvent(MouseReleaseEvent* event);
-    
+
 private:
     virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void resizeEvent(WidgetResizeEvent* event);
 
     virtual void clipEvent(WidgetClipEvent* event);
-    
+
     virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event);
-    
+
     virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
@@ -249,7 +249,7 @@ private:
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
-    
+
     virtual void mouseEnterEvent();
 
     virtual void mouseLeaveEvent();

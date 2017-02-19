@@ -14,7 +14,7 @@ using namespace std;
 #endif//R64FX_DEBUG_GL_ERRORS
 
 namespace r64fx{
-    
+
 namespace{
     bool gl_is_setup = false;
 
@@ -72,7 +72,7 @@ void InitIfNeeded()
     }
 }
 
-    
+
 #ifdef R64FX_DEBUG_GL_ERRORS
 void CheckForErrors(const char* fun_name)
 {
@@ -84,47 +84,47 @@ void CheckForErrors(const char* fun_name)
             case GL_INVALID_ENUM:
                 cerr << "GL_INVALID_ENUM";
             break;
-            
+
             case GL_INVALID_VALUE:
                 cerr << "GL_INVALID_VALUE";
             break;
-            
+
             case GL_INVALID_OPERATION:
                 cerr << "GL_INVALID_OPERATION";
             break;
-            
+
             case GL_INVALID_FRAMEBUFFER_OPERATION:
                 cerr << "GL_INVALID_FRAMEBUFFER_OPERATION";
             break;
-            
+
             case GL_OUT_OF_MEMORY:
                 cerr << "GL_OUT_OF_MEMORY";
             break;
-            
+
             case GL_STACK_UNDERFLOW:
                 cerr << "GL_STACK_UNDERFLOW";
             break;
-            
+
             case GL_STACK_OVERFLOW:
                 cerr << "GL_STACK_OVERFLOW";
             break;
-            
+
             default:
                 cerr << "Unknown error\n";
             break;
         }
-        
+
         cerr << " in " << fun_name << " !\n";
-        
+
 #ifdef R64FX_ABORT_ON_GL_ERROR
         abort();
 #endif//R64FX_ABORT_ON_GL_ERROR
     }
 }
 #endif//R64FX_DEBUG_GL_ERRORS
-    
+
 }//namespace gl
-    
+
 }//namespace r64fx
 
 #endif//R64FX_USE_GL

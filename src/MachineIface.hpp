@@ -25,7 +25,7 @@ protected:
 
     virtual ~MachineIface();
 
-public: 
+public:
     MachinePool* parentPool() const;
 
     bool isDeployed() const;
@@ -33,21 +33,21 @@ public:
     void withdraw();
 
     virtual void forEachPort(void (*fun)(MachinePort* port, MachineIface* machine, void* arg), void* arg) = 0;
-    
+
 protected:
-    inline MachinePoolThread* deploymentThread() const 
+    inline MachinePoolThread* deploymentThread() const
     {
         return m_deployment_thread;
     }
-    
+
     virtual void deploymentEvent() = 0;
-    
+
     virtual void withdrawalEvent() = 0;
 
     void sendMessagesToImpl(MachineMessage* msgs, int nmsgs);
-    
+
     virtual void messageRecievedFromImpl(const MachineMessage &msg) = 0;
-    
+
 private:
     void implDeployed(MachineImpl* impl);
 };

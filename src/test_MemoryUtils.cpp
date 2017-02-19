@@ -438,7 +438,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
                 int extraoffset = rand() % 16;
                 int extralen = rand() % 16;
 
-                auto tmpbuf = (unsigned long*) ha->allocChunk((len[i] + extralen + extraoffset) * 8); 
+                auto tmpbuf = (unsigned long*) ha->allocChunk((len[i] + extralen + extraoffset) * 8);
                 if(!ptr[i])
                 {
                     cout << "\n1.1 Allocation Failed!\n";

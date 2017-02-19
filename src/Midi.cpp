@@ -284,8 +284,8 @@ MidiMessage MidiMessage::NoteOn(int channel, int note, int velocity)
     msg.bytes()[2] = velocity;
     return msg;
 }
-    
-    
+
+
 MidiMessage MidiMessage::NoteOff(int channel, int note, int velocity)
 {
     MidiMessage msg;

@@ -57,7 +57,7 @@ struct PlayerMachineImpl : public MachineImpl{
 
     virtual void messageRecievedFromIface(const MachineMessage &msg)
     {
-        
+
     }
 
 //     void replaceSample(SoundFileData* data)
@@ -108,7 +108,7 @@ struct PlayerMachineImpl : public MachineImpl{
 //             m_sampler->setPlayheadTime(MsgVal(msg.value).f(0));
 //         }
 //     }
-// 
+//
 //     void resizeOutput(int size)
 //     {
 //         m_sampler->resizeOutput(size);
@@ -117,15 +117,15 @@ struct PlayerMachineImpl : public MachineImpl{
 //         {
 //             m_output_impl->sources.at(i) = m_sampler->output(i);
 //         }
-// 
+//
 //         sendMessage(OutputSizeChanged, (unsigned long)m_output_impl);
 //     }
-// 
+//
 //     virtual void cycleStarted()
 //     {
-// 
+//
 //     }
-// 
+//
 //     virtual void cycleEnded()
 //     {
 //         if(m_sampler->playheadTime() != m_playhead_time)
@@ -170,16 +170,16 @@ void PlayerMachine::replaceSample(SoundFileDataPtr new_sample)
 {
 //     if(!new_sample)
 //         return;
-// 
+//
 // #ifdef R64FX_DEBUG
 //     assert(isReady());
 // #endif//R64FX_DEBUG
-// 
+//
 //     m_flags &= ~R64FX_MACHINE_IS_READY;
 //     m_new_sample = new_sample;
-// 
+//
 //     MachineMessage msg(ReplaceSample, (unsigned long)new_sample->data());
-// 
+//
 //     if(!m_sample || new_sample->componentCount() != m_sample->componentCount())
 //     {
 //         packMessage(msg);
@@ -264,7 +264,7 @@ void PlayerMachine::forEachPort(void (*fun)(MachinePort* port, MachineIface* mac
 
 void PlayerMachine::messageRecievedFromImpl(const MachineMessage &msg)
 {
-    
+
 }
 
 // void PlayerMachine::dispatchMessage(const MachineMessage &msg)

@@ -7,7 +7,7 @@ namespace r64fx{
 
 SignalGraphElement::~SignalGraphElement()
 {
-    
+
 }
 
 
@@ -31,7 +31,7 @@ SignalPort::SignalPort(SignalNode* parent)
 : m_addr(new float)
 , m_parent(parent)
 {
-    
+
 }
 
 
@@ -43,43 +43,43 @@ SignalPort::~SignalPort()
 
 SignalNode::SignalNode()
 {
-    
+
 }
 
 
 SignalNode::~SignalNode()
 {
-    
+
 }
 
 
 void SignalNode::prologue()
 {
-    
+
 }
 
 
 void SignalNode::routine(int i)
 {
-    
+
 }
 
 
 void SignalNode::epilogue()
 {
-    
+
 }
 
 
 SignalEdge::SignalEdge(SignalSource* source, SignalSink* sink, SignalNode* parent)
 {
-    
+
 }
 
 
 SignalEdge::~SignalEdge()
 {
-    
+
 }
 
 

@@ -337,7 +337,7 @@ Module::~Module()
 
 ModuleConnection::ModuleConnection(Module* source_module, ModuleSource* source_port, Module* sink_module, ModuleSink* sink_port)
 {
-    
+
 }
 
 }//namespace r64fx

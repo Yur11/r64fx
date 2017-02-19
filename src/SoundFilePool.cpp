@@ -8,18 +8,18 @@
 using namespace std;
 
 namespace r64fx{
-    
+
 struct SoundFileDataPtrPrivate : public LinkedList<SoundFileDataPtrPrivate>::Node{
     SoundFileData data;
     unsigned long frames_loaded = 0;
     unsigned long user_count = 0;
     SoundFilePoolPrivate* pool = nullptr;
     std::string path = "";
-    
+
     SoundFileDataPtrPrivate(SoundFilePoolPrivate* pool);
-    
+
     ~SoundFileDataPtrPrivate();
-    
+
     void loadMoreFrames(SoundFile* file, unsigned long nframes);
 };
 
@@ -37,8 +37,8 @@ SoundFileDataPtrPrivate::SoundFileDataPtrPrivate(SoundFilePoolPrivate* pool)
     this->pool = pool;
     pool->ptrs.append(this);
 }
-    
-    
+
+
 SoundFileDataPtrPrivate::~SoundFileDataPtrPrivate()
 {
     pool->ptrs.remove(this);
@@ -48,7 +48,7 @@ SoundFileDataPtrPrivate::~SoundFileDataPtrPrivate()
 
 SoundFileDataPtr::SoundFileDataPtr()
 {
-    
+
 }
 
 
@@ -98,7 +98,7 @@ SoundFileData* SoundFileDataPtr::operator->()
     return &(m->data);
 }
 
-    
+
 SoundFilePool::SoundFilePool()
 {
     m = new SoundFilePoolPrivate;
@@ -123,7 +123,7 @@ SoundFileDataPtr SoundFilePool::load(const std::string &path)
         cerr << "\"" << path << "\"\n";
         return SoundFileDataPtr();
     }
-    
+
     auto ptrp = new SoundFileDataPtrPrivate(m);
     ptrp->user_count = 1;
     ptrp->path = path;
@@ -133,20 +133,20 @@ SoundFileDataPtr SoundFilePool::load(const std::string &path)
         cerr << "Failed to load \"" << path << "\"!\n";
         return SoundFileDataPtr();
     }
-    
+
     if(m->file.frameCount() <= 0 || m->file.componentCount() <= 0)
     {
         cerr << "Bad sound file specs!\n";
         m->file.close();
         return SoundFileDataPtr();
     }
-    
+
     ptrp->data.load(m->file.frameCount(), m->file.componentCount());
     ptrp->data.setSampleRate(m->file.sampleRate());
     ptrp->loadMoreFrames(&(m->file), m->file.frameCount());
-    
+
     m->file.close();
-    
+
     return SoundFileDataPtr(ptrp);
 }
 
@@ -171,8 +171,8 @@ SoundFileDataPtr SoundFilePool::find(const std::string &path)
             return SoundFileDataPtr(ptr);
         }
     }
-    
+
     return SoundFileDataPtr();
 }
-    
+
 }//namespace

@@ -124,7 +124,7 @@ public:
 //         zeros.push_back({1.0f, 0.0f});
 //         zeros.push_back({1.0f, 0.0f});
 //         zeros.push_back({1.0f, 0.0f});
-//         
+//
 //         poles.push_back({0.0f, 0.7f});
         poles.push_back({0.0f, 0.7f});
 //         poles.push_back({0.0f, 0.7f});
@@ -238,7 +238,7 @@ private:
 //                 g_circle_img
 //             );
 //         }
-// 
+//
 //         for(auto pole : poles)
 //         {
 //             p->blendColors(

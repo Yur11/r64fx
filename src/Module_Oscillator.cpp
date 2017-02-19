@@ -167,7 +167,7 @@ private:
 
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg) override final
     {
-        
+
     }
 };
 

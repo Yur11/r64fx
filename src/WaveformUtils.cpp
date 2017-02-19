@@ -14,15 +14,15 @@ template<> float normalize(float num)
     return num;
 }
 
-    
+
 template<typename T> void gen_waveform(
-    float*  data, 
+    float*  data,
     int     begin_frame,
     int     end_frame,
-    int     component_count, 
+    int     component_count,
     int     component,
     float   gain,
-    
+
     int pixel_count,
     T* out
 )
@@ -30,7 +30,7 @@ template<typename T> void gen_waveform(
     int range = end_frame - begin_frame;
     int frames_per_pixel = range / pixel_count;
     int base = begin_frame * component_count;
-    
+
     for(int p=0; p<pixel_count; p++)
     {
         float min_value = 0;
@@ -44,28 +44,28 @@ template<typename T> void gen_waveform(
             if(value < min_value)
                 min_value = value;
         }
-        
+
         min_value *= gain;
         max_value *= gain;
         min_value = std::max(min_value, -1.0f);
         max_value = std::min(max_value, 1.0f);
         min_value = min_value * 0.5f + 0.5f;
         max_value = max_value * 0.5f + 0.5f;
-        
+
         out[p*2]     = normalize<T>(min_value);
         out[p*2 + 1] = normalize<T>(max_value);
     }
 }
-    
-    
+
+
 void gen_waveform(
-    float*  data, 
+    float*  data,
     int     begin_frame,
     int     end_frame,
-    int     component_count, 
+    int     component_count,
     int     component,
     float   gain,
-    
+
     int pixel_count,
     unsigned char* out
 )
@@ -75,13 +75,13 @@ void gen_waveform(
 
 
 void gen_waveform(
-    float*  data, 
+    float*  data,
     int     begin_frame,
     int     end_frame,
-    int     component_count, 
+    int     component_count,
     int     component,
     float   gain,
-    
+
     int pixel_count,
     unsigned short* out
 )
@@ -91,13 +91,13 @@ void gen_waveform(
 
 
 void gen_waveform(
-    float*  data, 
+    float*  data,
     int     begin_frame,
     int     end_frame,
-    int     component_count, 
+    int     component_count,
     int     component,
     float   gain,
-    
+
     int pixel_count,
     unsigned int* out
 )
@@ -106,13 +106,13 @@ void gen_waveform(
 }
 
 void gen_waveform(
-    float*  data, 
+    float*  data,
     int     begin_frame,
     int     end_frame,
-    int     component_count, 
+    int     component_count,
     int     component,
     float   gain,
-    
+
     int pixel_count,
     float* out
 )

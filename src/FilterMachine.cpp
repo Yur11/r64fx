@@ -34,37 +34,37 @@ struct FilterMachineImpl : public MachineImpl{
     {
 //         m_filter = new SignalNode_Filter;
 //         ctx()->main_subgraph->addItem(m_filter);
-// 
+//
 //         m_sink_impl    = new MachineSinkImpl;
 //         sendMessage(SinkCreated, (unsigned long) m_sink_impl);
-// 
+//
 //         m_source_impl  = new MachineSourceImpl;
 //         sendMessage(SourceCreated, (unsigned long) m_source_impl);
-// 
+//
 //         cout << "Filter Deployed!\n";
     }
-    
+
     virtual ~FilterMachineImpl()
     {
 //         setSize(0);
-// 
+//
 //         if(m_filter)
 //             delete m_filter;
-// 
+//
 //         if(m_sink_impl)
 //             delete m_sink_impl;
-// 
+//
 //         if(m_source_impl)
 //             delete m_source_impl;
-// 
+//
 //         cout << "Filter Withdrawn!\n";
     }
 
     virtual void messageRecievedFromIface(const MachineMessage &msg)
     {
-        
+
     }
-    
+
 //     virtual void messageRecieved(const MachineMessage &msg)
 //     {
 // //         if(msg.opcode == SetSize)
@@ -76,11 +76,11 @@ struct FilterMachineImpl : public MachineImpl{
 // //             m_filter->setPole(MsgVal(msg.value).f(0));
 // //         }
 //     }
-// 
+//
 //     void setSize(int size)
 //     {
 // //         m_filter->setSize(size);
-// // 
+// //
 // //         m_sink_impl->sinks.resize(size);
 // //         m_source_impl->sources.resize(size);
 // //         for(int i=0; i<size; i++)
@@ -88,18 +88,18 @@ struct FilterMachineImpl : public MachineImpl{
 // //             m_sink_impl->sinks.at(i) = m_filter->sink(i);
 // //             m_source_impl->sources.at(i) = m_filter->source(i);
 // //         }
-// // 
+// //
 // //         sendMessage(SizeSet, (unsigned long)size);
 //     }
-// 
+//
 //     virtual void cycleStarted()
 //     {
-// 
+//
 //     }
-// 
+//
 //     virtual void cycleEnded()
 //     {
-// 
+//
 //     }
 };
 
@@ -141,7 +141,7 @@ FilterMachine::~FilterMachine()
 void FilterMachine::setSize(int size)
 {
 //     m_flags &= ~R64FX_MACHINE_IS_READY;
-// 
+//
 //     packMessage(SetSize, (unsigned long)size);
 // //     RouterMachine::singletonInstance(pool())->packConnectionUpdatesFor(&m_sink);
 // //     RouterMachine::singletonInstance(pool())->packConnectionUpdatesFor(&m_source);

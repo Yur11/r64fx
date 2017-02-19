@@ -51,7 +51,7 @@ public:
 
 class SignalSink : public SignalPort{
 public:
-    using SignalPort::SignalPort;    
+    using SignalPort::SignalPort;
 };
 
 

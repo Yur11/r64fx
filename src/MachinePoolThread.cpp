@@ -19,7 +19,7 @@ enum MachineMessageProtocol{
     DeployMachine,
     MachineToBeWithdrawn,
     WithdrawMachine,
-    
+
     ImplDeployed,
     ImplWithdrawn
 };
@@ -38,18 +38,18 @@ MachinePoolThread::~MachinePoolThread()
     delete m_from_thread;
 }
 
-    
+
 void MachinePoolThread::start()
 {
     struct ThreadStartArgs{
         CircularBuffer<MachineMessage>* to_thread;
         CircularBuffer<MachineMessage>* from_thread;
     };
-    
+
     auto args = new ThreadStartArgs;
     args->to_thread    = m_to_thread;
     args->from_thread  = m_from_thread;
-    
+
     run([](void* arg) -> void* {
         auto args = (ThreadStartArgs*) arg;
         MachinePoolThreadImpl impl;
@@ -86,7 +86,7 @@ void MachinePoolThread::readMessagesFromImpl()
             }
             else
             {
-                
+
             }
         }
     }
@@ -97,7 +97,7 @@ void MachinePoolThread::readMessagesFromImpl()
 void MachinePoolThread::deployImpl(MachineImplDeploymentFun fun, MachineIface* iface)
 {
     pickDestinationImpl(nullptr);
-    
+
     MachineMessage msgs[2] = {
         MachineMessage(MachineToBeDeployed, (void*)iface),
         MachineMessage(DeployMachine,       (void*)fun)
@@ -109,7 +109,7 @@ void MachinePoolThread::deployImpl(MachineImplDeploymentFun fun, MachineIface* i
 void MachinePoolThread::withdrawImpl(MachineImplWithdrawalFun fun, MachineImpl* impl)
 {
     pickDestinationImpl(nullptr);
-    
+
     MachineMessage msgs[2] = {
         MachineMessage(MachineToBeWithdrawn, (void*)impl),
         MachineMessage(WithdrawMachine,      (void*)fun)
@@ -137,7 +137,7 @@ void MachinePoolThread::sendMessagesToImpl(MachineImpl* dst, MachineMessage* msg
     assert(nmsgs > 0);
     assert(nmsgs < R64FX_MESSAGE_BUFFER_SIZE);
 #endif//R64FX_DEBUG
-    
+
     pickDestinationImpl(dst);
     m_to_thread->write(msgs, nmsgs);
 }
@@ -150,10 +150,10 @@ void MachinePoolThreadImpl::run(CircularBuffer<MachineMessage>* to_thread, Circu
     m_to_thread    = to_thread;
     m_from_thread  = from_thread;
     m_running      = true;
-    
+
     MachineIface*  machine_to_be_deployed   = nullptr;
     MachineImpl*   machine_to_be_withdrawn  = nullptr;
-    
+
     while(m_running)
     {
         MachineMessage msg;
@@ -206,7 +206,7 @@ void MachinePoolThreadImpl::run(CircularBuffer<MachineMessage>* to_thread, Circu
                 }
             }
         }
-        
+
         /* Do Work Here! */
     }
 }
@@ -221,7 +221,7 @@ void MachinePoolThreadImpl::pickDestinationIface(MachineIface* dst)
         m_dst_iface = dst;
     }
 }
-    
+
 void MachinePoolThreadImpl::sendMessagesToIface(MachineIface* dst, MachineMessage* msgs, int nmsgs)
 {
 #ifdef R64FX_DEBUG
@@ -230,9 +230,9 @@ void MachinePoolThreadImpl::sendMessagesToIface(MachineIface* dst, MachineMessag
     assert(nmsgs > 0);
     assert(nmsgs < R64FX_MESSAGE_BUFFER_SIZE);
 #endif//R64FX_DEBUG
-    
+
     pickDestinationIface(dst);
     m_from_thread->write(msgs, nmsgs);
 }
-    
+
 }//namespace r64fx

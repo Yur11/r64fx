@@ -866,9 +866,9 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
 {
     if(!img || !data || !color || rect.width() <= 0 || rect.height() <= 0 || thickness <= 0.0f || scale <= 0.0f)
         return;
-    
+
     float half_thickness = thickness * 0.5;
-    
+
     /* Find extrema. */
     struct Extremum{
         int index = 0;
@@ -890,7 +890,7 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
             extrema.push_back({i, false});
         }
     }
-    
+
     if(extrema.size() == 1)
     {
         extrema[0].is_minimum = (data[0] < data[rect.width() - 1]);
@@ -1013,11 +1013,11 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
             {
                 next_y = curr_y - 1;
             }
-            
+
             if(segment_length > 1)
             {
                 float rcp = 1.0f / float(segment_length + 1);
-                
+
                 if(next_y < curr_y)
                 {
                     if(prev_y > curr_y)
@@ -1036,10 +1036,10 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
                             {
                                 int x1 = j + i - segment_length + 1;
                                 int x2 = i - j;
-                                pvec[x1].minblend = pvec[x2].minblend 
+                                pvec[x1].minblend = pvec[x2].minblend
                                     = curr_y - (segment_length - j) * rcp;
                             }
-                            
+
                             if(segment_length & 1)
                             {
                                 int x = i - (segment_length >> 1);
@@ -1099,7 +1099,7 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
         }
     }
 
-    
+
     /* Blend bottom part. */
     segment_length = 0;
     curr_y = pvec[0].minval;
@@ -1120,11 +1120,11 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
             {
                 next_y = curr_y - 1;
             }
-            
+
             if(segment_length > 1)
             {
                 float rcp = 1.0f / (segment_length + 1);
-                
+
                 if(next_y > curr_y)
                 {
                     if(prev_y < curr_y)
@@ -1143,10 +1143,10 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
                             {
                                 int x1 = j + i - segment_length + 1;
                                 int x2 = i - j;
-                                pvec[x1].maxblend = pvec[x2].maxblend 
+                                pvec[x1].maxblend = pvec[x2].maxblend
                                     = curr_y + (segment_length - j) * rcp;
                             }
-                            
+
                             if(segment_length & 1)
                             {
                                 int x = i - (segment_length >> 1);
@@ -1205,8 +1205,8 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
             prev_y = curr_y;
         }
     }
-    
-    
+
+
     for(int x=0; x<rect.width(); x++)
     {
         auto &pp = pvec[x];

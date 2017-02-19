@@ -178,7 +178,7 @@ public:
 
 
 class DndFinishedEvent{
-    
+
 };
 
 }//namespace r64fx

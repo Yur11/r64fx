@@ -208,7 +208,7 @@ public:
     inline T srcy() const { return m_src_offset.y(); }
 //     inline Rect<int> srcRect() const { return {srcOffset(), size()}; }
 };
-    
+
 }//namespace r64fx
 
 #endif//R64FX_GUI_RECT_H

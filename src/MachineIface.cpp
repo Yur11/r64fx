@@ -7,13 +7,13 @@ using namespace std;
 
 namespace r64fx{
 
-    
+
 MachineIface::MachineIface()
 {
 
 }
 
-    
+
 MachineIface::~MachineIface()
 {
     if(isDeployed())

@@ -17,19 +17,19 @@ class PainterTexture2D;
 class PainterTextureManager{
 public:
     virtual PainterTexture1D* newTexture() = 0;
-    
+
     virtual PainterTexture1D* newTexture(unsigned char*  data, int length, int component_count) = 0;
-    
+
     virtual PainterTexture1D* newTexture(unsigned short* data, int length, int component_count) = 0;
-    
+
     virtual PainterTexture1D* newTexture(unsigned int*   data, int length, int component_count) = 0;
-    
+
     virtual PainterTexture1D* newTexture(float* data, int length, int component_count) = 0;
 
     virtual PainterTexture2D* newTexture(Image* image = nullptr) = 0;
 
     virtual void deleteTexture(PainterTexture1D** texture) = 0;
-    
+
     virtual void deleteTexture(PainterTexture2D** texture) = 0;
 };
 
@@ -53,7 +53,7 @@ public:
     virtual void setClipRect(Rect<int> rect) = 0;
 
     virtual void setClipRectAtCurrentOffset(Size<int> size) = 0;
-    
+
     virtual Rect<int> clipRect() = 0;
 
     virtual void clear(unsigned char* color) = 0;
@@ -113,10 +113,10 @@ public:
 class PainterTexture{
 protected:
     virtual ~PainterTexture() {};
-    
+
 public:
     virtual Painter* parentPainter() = 0;
-    
+
     virtual bool isGood() = 0;
 
     virtual int componentCount() = 0;
@@ -136,9 +136,9 @@ public:
         UnsignedInt,
         Float
     };
-    
+
     virtual Type dataType() = 0;
-    
+
     virtual int length() = 0;
 
     virtual void load(unsigned char*   data, int length, int component_count) = 0;
@@ -155,7 +155,7 @@ class PainterTexture2D : public PainterTexture{
 protected:
     virtual ~PainterTexture2D() {};
 
-public:    
+public:
     virtual Point<int> position() = 0;
 
     virtual Size<int> size() = 0;

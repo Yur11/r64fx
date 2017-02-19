@@ -11,7 +11,7 @@ uniform int texture_component;
 void main()
 {
     vec4 texel = texture(sampler, frag_tex_coord);
-    
+
     gl_FragColor = vec4(
         color[0],
         color[1],

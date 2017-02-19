@@ -6,13 +6,13 @@
 using namespace std;
 
 namespace r64fx{
-    
+
 Shader::Shader(const char* text, GLenum shader_type)
 {
     m_shader = gl::CreateShader(shader_type);
     if(!m_shader)
         return;
-    
+
     gl::ShaderSource(m_shader, 1, &text, nullptr);
     gl::CompileShader(m_shader);
 
@@ -41,7 +41,7 @@ bool Shader::isOk()
 {
     if(!m_shader)
         return false;
-    
+
     int param;
     gl::GetShaderiv(m_shader, GL_COMPILE_STATUS, &param);
     return param == GL_TRUE;
@@ -58,7 +58,7 @@ const char* Shader::infoLog()
 
 
 void Shader::free()
-{ 
+{
     gl::DeleteShader(m_shader);
 }
 
@@ -68,7 +68,7 @@ bool ShadingProgram::load(VertexShader vs, FragmentShader fs)
     m_program = gl::CreateProgram();
     if(!m_program)
         return false;
-    
+
     gl::AttachShader(m_program, vs.id());
     gl::AttachShader(m_program, fs.id());
     gl::LinkProgram(m_program);
@@ -78,7 +78,7 @@ bool ShadingProgram::load(VertexShader vs, FragmentShader fs)
         cerr << infoLog() << "\n";
         return false;
     }
-    
+
     return true;
 }
 
@@ -87,7 +87,7 @@ void ShadingProgram::free()
 {
     if(!isGood())
         return;
-    
+
     gl::DeleteProgram(m_program);
 }
 
@@ -96,7 +96,7 @@ bool ShadingProgram::isGood()
 {
     if(!m_program)
         return false;
-    
+
     int param;
     gl::GetProgramiv(m_program, GL_LINK_STATUS, &param);
     return param == GL_TRUE;
@@ -149,7 +149,7 @@ void ShadingProgram::bindAttribute(GLuint attr, GLint size, GLenum type, GLboole
     gl::EnableVertexAttribArray(attr);
     gl::VertexAttribPointer(attr, size, type, normalized, stride, pointer);
 }
-    
+
 }//namespace r64x
 
 #endif//R64FX_USE_GL

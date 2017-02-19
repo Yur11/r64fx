@@ -120,7 +120,7 @@ public:
     , m_from_iface(from_iface)
     , m_heap_allocator(heap_allocator)
     {
-        
+
     }
 
     void execThread(ThreadObjectDeploymentAgent* agent);
@@ -159,13 +159,13 @@ public:
 
 ThreadObjectIface::ThreadObjectIface()
 {
-    
+
 }
 
 
 ThreadObjectIface::~ThreadObjectIface()
 {
-    
+
 }
 
 
@@ -389,8 +389,8 @@ void ThreadObjectManagerIface::objectDeployed(ThreadObjectDeploymentAgent* agent
     if(done)
     {
         alterTreeFlags(
-            object, 
-            R64FX_THREAD_OBJECT_DEPLOYED, true, 
+            object,
+            R64FX_THREAD_OBJECT_DEPLOYED, true,
             R64FX_THREAD_OBJECT_PENDING, false
         );
 

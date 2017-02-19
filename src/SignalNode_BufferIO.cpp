@@ -4,7 +4,7 @@
 using namespace std;
 
 namespace r64fx{
-    
+
 SignalNode_BufferReader::SignalNode_BufferReader(SoundDriverAudioInput* input, int buffer_size)
 {
     m_input = input;
@@ -25,20 +25,20 @@ SignalNode_BufferReader::~SignalNode_BufferReader()
     delete m_source.addr();
     removeFromGraph();
 }
-    
-    
+
+
 void SignalNode_BufferReader::addedToGraph(SignalGraph* graph)
 {
-    
+
 }
-    
-    
+
+
 void SignalNode_BufferReader::aboutToBeRemovedFromGraph(SignalGraph* graph)
 {
-    
+
 }
-    
-    
+
+
 void SignalNode_BufferReader::prepare()
 {
     int nsamples = m_input->readSamples(m_buffer, m_buffer_size);
@@ -68,8 +68,8 @@ SignalNode_BufferWriter::SignalNode_BufferWriter(SoundDriverAudioOutput* output,
     m_sink = BufferWriterSignalSink(this, new float);
     m_sink[0] = 0.0f;
 }
-    
-    
+
+
 SignalNode_BufferWriter::~SignalNode_BufferWriter()
 {
     delete[] m_buffer;
@@ -80,13 +80,13 @@ SignalNode_BufferWriter::~SignalNode_BufferWriter()
 
 void SignalNode_BufferWriter::addedToGraph(SignalGraph* graph)
 {
-    
+
 }
-    
-    
+
+
 void SignalNode_BufferWriter::aboutToBeRemovedFromGraph(SignalGraph* graph)
 {
-    
+
 }
 
 
@@ -101,5 +101,5 @@ void SignalNode_BufferWriter::finish()
 {
     m_output->writeSamples(m_buffer, m_buffer_size);
 }
-    
+
 }//namespace r64fx

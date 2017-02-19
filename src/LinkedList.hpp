@@ -10,7 +10,7 @@ namespace r64fx{
 template<typename T> class LinkedList{
     T* first_node = nullptr;
     T* last_node  = nullptr;
-    
+
 public:
     class Node{
         friend class LinkedList<T>;
@@ -131,15 +131,15 @@ public:
     {
         return first_node == nullptr && last_node == nullptr;
     }
-    
+
     T* first() const { return first_node; }
-    
+
     T* last() const { return last_node; }
-    
+
     LinkedList<T>::Iterator begin() const { return first_node; }
-    
+
     LinkedList<T>::Iterator end() const { return last_node ? last_node->next() : nullptr; }
-    
+
 
     T* preppend(T* node)
     {
@@ -241,7 +241,7 @@ public:
 
         return node;
     }
-    
+
 
     T* remove(T* node)
     {
@@ -265,7 +265,7 @@ public:
 
         return node;
     }
-    
+
 
     void clear()
     {
@@ -274,7 +274,7 @@ public:
     }
 
 };
-    
+
 }//namespace r64fx
 
 #endif//R64FX_LINKED_LIST_H
