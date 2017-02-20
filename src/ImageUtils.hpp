@@ -45,7 +45,6 @@ void blend(Image* dst, Point<int> pos, unsigned char* color, Image* mask);
 
 void blend(Image* dst, const RectIntersection<int> &intersection, unsigned char* color, Image* mask);
 
-
 inline float normalize_angle(float angle)
 {
     while(angle > (2.0f * M_PI))
@@ -109,6 +108,8 @@ void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int cor
 void stroke_plot(
     Image* img, unsigned char* color, Rect<int> rect, float* data, float thickness, float scale = 1.0f, float offset = 0.0f
 );
+
+void fill_gradient_vert(Image* img, Rect<int> rect, unsigned char color, unsigned char color_step);
 
 }//namespace r64fx
 

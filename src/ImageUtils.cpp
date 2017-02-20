@@ -274,7 +274,7 @@ void blend(Image* dst, Point<int> pos, unsigned char** colors, Image* mask)
 
 void blend(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> mask_offset, unsigned char** colors, Image* mask)
 {
-    #ifdef R64FX_DEBUG
+#ifdef R64FX_DEBUG
     assert(dst != nullptr);
     assert(mask != nullptr);
 #endif//R64FX_DEBUG
@@ -1263,6 +1263,30 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
                 }
             }
         }
+    }
+}
+
+void fill_gradient_vert(Image* img, Rect<int> rect, unsigned char color, unsigned char color_step)
+{
+#ifdef R64FX_DEBUG
+    assert(img != nullptr);
+    assert((int(color) + int(color_step) * rect.height()) <= 255);
+    assert(rect.x() >= 0);
+    assert(rect.y() >= 0);
+    assert(rect.right()  <= img->width());
+    assert(rect.bottom() <= img->height());
+#endif//R64FX_DEBUG
+
+    for(int y=rect.y(); y<rect.bottom(); y++)
+    {
+        for(int x=rect.x(); x<rect.right(); x++)
+        {
+            for(int c=0; c<img->componentCount(); c++)
+            {
+                img->pixel(x, y)[c] = color;
+            }
+        }
+        color += color_step;
     }
 }
 
