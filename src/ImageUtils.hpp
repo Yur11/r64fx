@@ -88,7 +88,7 @@ void draw_waveform(Image* dst, unsigned char* color, float*          data, const
 void stroke_circle(Image* dst, unsigned char* color, Point<float> center, float radius, float thickness);
 
 
-void draw_circle(Image* dst, unsigned char* color, Point<int> center, float radius);
+void fill_circle(Image* dst, unsigned char* color, Point<int> center, float radius);
 
 
 void subtract_image(Image* dst, Point<int> pos, Image* src);
