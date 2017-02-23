@@ -17,15 +17,14 @@ void fill(Image* dst, int component, unsigned char value, Rect<int> rect);
 void fill(Image* dst, int component, unsigned char value);
 
 
-void implant(Image* dst, Point<int> pos, Image* src);
+void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect);
 
-void implant(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> src_offset, Image* src);
+void copy(Image* dst, Point<int> dstpos, Image* src);
 
-void implant(Image* dst, const RectIntersection<int> &intersection, Image* src);
 
-void implant(Image* dst, Transform2D<float> transform, Image* src, Rect<int> rect);
+void copy(Image* dst, Transform2D<float> transform, Image* src, Rect<int> dst_rect);
 
-void implant(Image* dst, Transform2D<float> transform, Image* src);
+void copy(Image* dst, Transform2D<float> transform, Image* src);
 
 
 void implant_alpha(Image* dst, Point<int> pos, Image* src);

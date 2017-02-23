@@ -126,7 +126,7 @@ void Widget_MenuItem::setSizeAndOffset(Size<int> size, Point<int> offset)
 
     auto new_image = new Image(size.width(), size.height(), m_image->componentCount());
     fill(new_image, Color(0));
-    implant(new_image, offset, m_image);
+    copy(new_image, offset, m_image);
     delete m_image;
     m_image = new_image;
 

@@ -40,8 +40,6 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     fill(&combined_img, Color(0));
     combine(&combined_img, &circle_img, {0, 0}, &gradient_img, {0, 0}, 1);
 
-//     blend(&img, Point<int>(0, 0), Colors(Color(255, 0, 0, 0)), &combined_img);
-
     p->blendColors({20, 20}, Colors(Color(255, 0, 0, 0)), &combined_img);
 }
 

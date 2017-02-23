@@ -103,29 +103,23 @@ void fill(Image* dst, int component, unsigned char value)
 }
 
 
-void implant(Image* dst, Point<int> pos, Image* src)
-{
-    implant(dst, RectIntersection<int>(
-        {0,       0,       dst->width(), dst->height()},
-        {pos.x(), pos.y(), src->width(), src->height()}
-    ), src);
-}
-
-
-void implant(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> src_offset, Image* src)
+void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
     assert(src != nullptr);
+    assert(dst->componentCount() == src->componentCount());
 #endif//R64FX_DEBUG
 
-    for(int y=0; y<size.height(); y++)
-    {
-        for(int x=0; x<size.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + dst_offset.x(), y + dst_offset.y());
-            auto srcpx = src->pixel(x + src_offset.x(), y + src_offset.y());
+    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
+    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
 
+    for(int y=0; y<dst_isec.height(); y++)
+    {
+        for(int x=0; x<dst_isec.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
+            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
             for(int c=0; c<dst->componentCount(); c++)
             {
                 dstpx[c] = srcpx[c];
@@ -135,13 +129,13 @@ void implant(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> src_o
 }
 
 
-void implant(Image* dst, const RectIntersection<int> &intersection, Image* src)
+void copy(Image* dst, Point<int> dstpos, Image* src)
 {
-    implant(dst, intersection.dstOffset(), intersection.size(), intersection.srcOffset(), src);
+    copy(dst, dstpos, src, Rect<int>(0, 0, src->width(), src->height()));
 }
 
 
-void implant(Image* dst, Transform2D<float> transform, Image* src, Rect<int> rect)
+void copy(Image* dst, Transform2D<float> transform, Image* src, Rect<int> dst_rect)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -149,21 +143,21 @@ void implant(Image* dst, Transform2D<float> transform, Image* src, Rect<int> rec
     assert(src->componentCount() == dst->componentCount());
 #endif//R64FX_DEBUG
 
-    if(rect.left() < 0)
-    rect.setLeft(0);
+    if(dst_rect.left() < 0)
+        dst_rect.setLeft(0);
 
-    if(rect.top() < 0)
-        rect.setTop(0);
+    if(dst_rect.top() < 0)
+        dst_rect.setTop(0);
 
-    if(rect.right() >= dst->width())
-        rect.setRight(dst->width() - 1);
+    if(dst_rect.right() >= dst->width())
+        dst_rect.setRight(dst->width() - 1);
 
-    if(rect.bottom() >= dst->height())
-        rect.setBottom(dst->height() - 1);
+    if(dst_rect.bottom() >= dst->height())
+        dst_rect.setBottom(dst->height() - 1);
 
-    for(int y=rect.top(); y<rect.bottom(); y++)
+    for(int y=dst_rect.top(); y<dst_rect.bottom(); y++)
     {
-        for(int x=rect.left(); x<rect.right(); x++)
+        for(int x=dst_rect.left(); x<dst_rect.right(); x++)
         {
             auto dstpx = dst->pixel(x, y);
 
@@ -218,15 +212,15 @@ void implant(Image* dst, Transform2D<float> transform, Image* src, Rect<int> rec
 }
 
 
-void implant(Image* dst, Transform2D<float> transform, Image* src)
+void copy(Image* dst, Transform2D<float> transform, Image* src)
 {
-    implant(dst, transform, src, {0, 0, dst->width(), dst->height()});
+    copy(dst, transform, src, {0, 0, dst->width(), dst->height()});
 }
 
 
 void implant_alpha(Image* dst, Point<int> pos, Image* src)
 {
-    implant(dst, RectIntersection<int>(
+    implant_alpha(dst, RectIntersection<int>(
         {0,       0,       dst->width(), dst->height()},
         {pos.x(), pos.y(), src->width(), src->height()}
     ), src);
@@ -529,7 +523,7 @@ void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b,
         0, 0, dst->width(), dst->height()
     };
 
-    implant(dst, t, &src, r);
+    copy(dst, t, &src, r);
 }
 
 

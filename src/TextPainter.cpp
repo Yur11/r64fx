@@ -452,7 +452,7 @@ void TextPainter::paint(Image* image, Point<int> offset)
                     offset.y() - glyph->bearing_y() + (l*font->height()) + font->ascender()
                 };
 
-                implant(image, p, glyph->image());
+                copy(image, p, glyph->image());
             }
             x += glyph->advance();
         }
