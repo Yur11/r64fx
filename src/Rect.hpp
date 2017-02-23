@@ -167,25 +167,17 @@ template<typename StreamT, typename T> StreamT &operator<<(StreamT &stream, Rect
 
 
 template<typename T> class RectIntersection{
-    Size<T>  m_size;
+    Rect<T>  m_rect;
     Point<T> m_dst_offset;
     Point<T> m_src_offset;
 
 public:
-    RectIntersection(Point<T> dst_offset, Size<T> size, Point<T> src_offset)
-    : m_size(size)
-    , m_dst_offset(dst_offset)
-    , m_src_offset(src_offset)
-    {
-
-    }
-
     RectIntersection(const Rect<T> &dst_rect, const Rect<T> &src_rect)
     {
         Rect<int> rect = intersection(src_rect, dst_rect);
         if(rect.width() > 0 && rect.height() > 0)
         {
-            m_size = rect.size();
+            m_rect = rect;
             m_dst_offset = rect.position() - dst_rect.position();
             m_src_offset = rect.position() - src_rect.position();
         }
@@ -193,20 +185,23 @@ public:
 
     RectIntersection(){}
 
-    inline Size<T> size() const { return m_size; }
-    inline T width()  const { return m_size.width(); }
-    inline T height() const { return m_size.height(); }
+    inline Rect<T>   rect()       const { return m_rect; }
 
-    inline Point<T> dstOffset() const { return m_dst_offset; }
-    inline T dstx() const { return m_dst_offset.x(); }
-    inline T dsty() const { return m_dst_offset.y(); }
-//     inline Rect<int> dstRect() const { return {dstOffset(), size()}; }
+    inline Point<T>  position()   const { return m_rect.position(); }
+    inline T         x()          const { return m_rect.x(); }
+    inline T         y()          const { return m_rect.y(); }
 
+    inline Size<T>   size()       const { return m_rect.size(); }
+    inline T         width()      const { return m_rect.width(); }
+    inline T         height()     const { return m_rect.height(); }
 
-    inline Point<T> srcOffset() const { return m_src_offset; }
-    inline T srcx() const { return m_src_offset.x(); }
-    inline T srcy() const { return m_src_offset.y(); }
-//     inline Rect<int> srcRect() const { return {srcOffset(), size()}; }
+    inline Point<T>  dstOffset()  const { return m_dst_offset; }
+    inline T         dstx()       const { return m_dst_offset.x(); }
+    inline T         dsty()       const { return m_dst_offset.y(); }
+
+    inline Point<T>  srcOffset()  const { return m_src_offset; }
+    inline T         srcx()       const { return m_src_offset.x(); }
+    inline T         srcy()       const { return m_src_offset.y(); }
 };
 
 }//namespace r64fx
