@@ -11,84 +11,66 @@ template<typename T> T max(const T &a, const T &b) { return a > b ? a : b; }
 
 
 template<typename T> class Rect{
-    T mx;
-    T my;
-    T mw;
-    T mh;
+    T vec[4];
 
 public:
-    Rect(T x, T y, T w, T h)
-    : mx(x)
-    , my(y)
-    , mw(w)
-    , mh(h)
-    {}
+    Rect(T x, T y, T w, T h) : vec{x, y, w, h} {}
 
-    Rect(Point<T> pos, Size<T> size)
-    : mx(pos.x())
-    , my(pos.y())
-    , mw(size.width())
-    , mh(size.height())
-    {}
+    Rect(Point<T> pos, Size<T> size) : vec{pos.x(), pos.y(), size.width(), size.height()} {}
 
-    Rect()
-    : mx(T())
-    , my(T())
-    , mw(T())
-    , mh(T())
-    {}
+    Rect() : vec{T(), T(), T(), T()} {}
 
-    inline T x() const { return mx; }
-    inline T y() const { return my; }
-    inline T width()  const  { return mw; }
-    inline T height() const  { return mh; }
+    inline T  x()       const { return vec[0]; }
+    inline T  y()       const { return vec[1]; }
+    inline T  width()   const { return vec[2]; }
+    inline T  height()  const { return vec[3]; }
 
-    inline void setX(T val) { mx = val; }
-    inline void setY(T val) { my = val; }
-    inline void setWidth(T val)  { mw = val; }
-    inline void setHeight(T val) { mh = val; }
+    inline void setX(T val)       { vec[0] = val; }
+    inline void setY(T val)       { vec[1] = val; }
+    inline void setWidth(T val)   { vec[2] = val; }
+    inline void setHeight(T val)  { vec[3] = val; }
 
     inline Point<T> position() const { return {x(), y()}; }
-    inline void setPosition(Point<T> pos) { mx = pos.x(); my = pos.y(); }
+    inline void setPosition(Point<T> pos) { setX(pos.x()); setY(pos.y()); }
 
-    inline T left()   const { return mx; }
-    inline T top()    const { return my; }
-    inline T right()  const { return mx + mw; }
-    inline T bottom() const { return my + mh; }
+    inline T left()   const { return x(); }
+    inline T top()    const { return y(); }
+    inline T right()  const { return x() + width(); }
+    inline T bottom() const { return y() + height(); }
 
     inline void setLeft(T val)
     {
-        T d = mx - val;
-        mx -= d;
-        mw += d;
+        T d = x() - val;
+        setX(x() - d) ;
+        setWidth(width() + d);
     }
 
     inline void setTop(T val)
     {
-        T d = my - val;
-        my -= d;
-        mw += d;
+        T d = y() - val;
+        setY(y() - d);
+        setHeight(height() + d);
     }
 
-    inline void setRight(T val) { mw = val - mx; }
+    inline void setRight(T val) { setWidth(val - x()); }
 
-    inline void setBottom(T val) { mh = val - my; }
+    inline void setBottom(T val) { setHeight(val - y()); }
 
-    inline Size<T> size() const { return { mw, mh }; }
+    inline Size<T> size() const { return {width(), height()}; }
 
-    inline void setSize(Size<T> size) { mw = size.width(); mh = size.height(); }
+    inline void setSize(Size<T> size) { setWidth(size.width()); setHeight(size.height()); }
 
-    inline void setSize(T w, T h) { mw = w; mh = h; }
+    inline void setSize(T w, T h) { setSize({w, h}); }
 
-    inline Point<T> topLeft()     { return { mx,    my    }; }
-    inline Point<T> bottomLeft()  { return { mx,    my+mh }; }
-    inline Point<T> topRight()    { return { mx+mw, my    }; }
-    inline Point<T> bottomRight() { return { mx+mw, my+mh }; }
+    inline Point<T> topLeft()     { return { left(),  top()    }; }
+    inline Point<T> bottomLeft()  { return { left(),  bottom() }; }
+    inline Point<T> topRight()    { return { right(), top()    }; }
+    inline Point<T> bottomRight() { return { right(), bottom() }; }
 
-    inline T halfWidth()  { return mw/2; }
-    inline T halfHeight() { return mh/2; }
+    inline T halfWidth()  { return width()/2; }
+    inline T halfHeight() { return height()/2; }
 
-    inline Point<T> center() { return { mx + halfWidth(), my + halfHeight() }; }
+    inline Point<T> center() { return { x() + halfWidth(), y() + halfHeight() }; }
 
     inline bool overlaps(Point<int> p) const
     {
@@ -97,17 +79,19 @@ public:
 
     inline Rect<T> &operator+=(const Point<T> &other)
     {
-        mx += other.x();
-        my += other.y();
+        setX(x() + other.x());
+        setY(y() + other.y());
         return *this;
     }
 
     inline Rect<T> &operator-=(const Point<T> &other)
     {
-        mx -= other.x();
-        my -= other.y();
+        setX(x() - other.x());
+        setY(y() - other.y());
         return *this;
     }
+
+    inline T* vec4() const { return vec; }
 };
 
 
@@ -157,12 +141,6 @@ template<typename T> Rect<T> intersection(const Rect<T> &a, const Rect<T> &b)
     T h = (intersec_height < a.height() + b.height() ? intersec_height : T());
 
     return { x, y, w, h };
-}
-
-
-template<typename T> inline Rect<T> operator&(const Rect<T> &a, const Rect<T> &b)
-{
-    return intersection(a, b);
 }
 
 

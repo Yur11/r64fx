@@ -72,13 +72,15 @@ template<typename T> struct Point{
         return (*this) = (*this) * p;
     }
 
-    inline bool operator==(const Point<T> &other) { return this->x() == other.x() && this->y() == other.y(); }
-    inline bool operator!=(const Point<T> &other) { return this->x() != other.x() || this->y() != other.y(); }
+    inline bool operator==(const Point<T> &other) { return x() == other.x() && y() == other.y(); }
+    inline bool operator!=(const Point<T> &other) { return x() != other.x() || y() != other.y(); }
 
     template<typename OtherT> Point<OtherT> to() const
     {
         return Point<OtherT>(OtherT(x()), OtherT(y()));
     }
+
+    inline T* vec2() const { return vec; }
 };
 
 

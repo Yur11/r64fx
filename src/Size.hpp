@@ -4,40 +4,36 @@
 namespace r64fx{
 
 template<typename T> class Size{
-    T mw, mh;
+    T vec[2];
 
 public:
-    Size<T>(T w, T h)
-    : mw(w)
-    , mh(h)
-    {}
+    Size<T>(T w, T h) : vec{w, h} {}
 
-    Size<T>()
-    : mw(T())
-    , mh(T())
-    {}
+    Size<T>() : vec{T(), T()} {}
 
-    inline void setWidth(T width) { mw = width; }
+    inline void setWidth(T width) { vec[0] = width; }
 
-    inline T width() const { return mw; }
+    inline T width() const { return vec[0]; }
 
-    inline void setHeight(T height) { mh = height; }
+    inline void setHeight(T height) { vec[1] = height; }
 
-    inline T height() const { return mh; }
+    inline T height() const { return vec[1]; }
 
     inline Size<T> &operator+=(const Size<T> &other)
     {
-        mw += other.width();
-        mh += other.height();
+        setWidth(width() + other.width());
+        setHeight(height() + other.height());
         return *this;
     }
 
     inline Size<T> &operator-=(const Size<T> &other)
     {
-        mw -= other.width();
-        mh -= other.height();
+        setWidth(width() - other.width());
+        setHeight(height() - other.height());
         return *this;
     }
+
+    inline T* vec2() const { return vec; }
 };
 
 
