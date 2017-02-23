@@ -89,7 +89,7 @@ public:
 
         Image circle_mask_img(width(), height(), 1);
         fill_circle(&circle_mask_img, Color(255), Point<float>(cx, cy), radius - 1);
-        invert_image(&circle_mask_img, &circle_mask_img);
+        invert(&circle_mask_img, &circle_mask_img);
 
         Image radius_img(width(), height(), 1);
 
@@ -166,7 +166,7 @@ public:
 
         Image circle_mask_img(width(), height(), 1);
         fill_circle(&circle_mask_img, Color(255), Point<float>(cx, cy), radius - 1);
-        invert_image(&circle_mask_img, &circle_mask_img);
+        invert(&circle_mask_img, &circle_mask_img);
 
         Image radius_img(width(), height(), 1);
 

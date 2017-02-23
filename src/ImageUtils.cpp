@@ -218,6 +218,27 @@ void copy(Image* dst, Transform2D<float> transform, Image* src)
 }
 
 
+void invert(Image* dst, Image* src)
+{
+#ifdef R64FX_DEBUG
+    assert(dst->width() == src->width());
+    assert(dst->height() == src->height());
+    assert(dst->componentCount() == src->componentCount());
+#endif//R64FX_DEBUG
+
+    for(int y=0; y<dst->height(); y++)
+    {
+        for(int x=0; x<dst->width(); x++)
+        {
+            for(int c=0; c<dst->componentCount(); c++)
+            {
+                dst->pixel(x, y)[c] = 255 - src->pixel(x, y)[c];
+            }
+        }
+    }
+}
+
+
 void implant_alpha(Image* dst, Point<int> pos, Image* src)
 {
     implant_alpha(dst, RectIntersection<int>(
@@ -814,27 +835,6 @@ void subtract_image(Image* dst, Point<int> pos, Image* src)
 }
 
 
-void invert_image(Image* dst, Image* src)
-{
-#ifdef R64FX_DEBUG
-    assert(dst->width() == src->width());
-    assert(dst->height() == src->height());
-    assert(dst->componentCount() == src->componentCount());
-#endif//R64FX_DEBUG
-
-    for(int y=0; y<dst->height(); y++)
-    {
-        for(int x=0; x<dst->width(); x++)
-        {
-            for(int c=0; c<dst->componentCount(); c++)
-            {
-                dst->pixel(x, y)[c] = 255 - src->pixel(x, y)[c];
-            }
-        }
-    }
-}
-
-
 void flip_vertically(Image* img)
 {
     int hh = img->height() / 2;
@@ -886,7 +886,7 @@ void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int cor
 
         Image arc(corner_radius, corner_radius);
         fill_circle(&arc, &c, Point<float>(corner_radius - 1, corner_radius - 1), corner_radius);
-        invert_image(&arc, &arc);
+        invert(&arc, &arc);
         subtract_image(&mask, {0, 0}, &arc);
 
         flip_vertically(&arc);

@@ -21,10 +21,12 @@ void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect);
 
 void copy(Image* dst, Point<int> dstpos, Image* src);
 
-
 void copy(Image* dst, Transform2D<float> transform, Image* src, Rect<int> dst_rect);
 
 void copy(Image* dst, Transform2D<float> transform, Image* src);
+
+
+void invert(Image* dst, Image* src);
 
 
 void implant_alpha(Image* dst, Point<int> pos, Image* src);
@@ -94,9 +96,6 @@ void fill_circle(Image* dst, unsigned char* color, Point<float> center, float ra
 
 
 void subtract_image(Image* dst, Point<int> pos, Image* src);
-
-
-void invert_image(Image* dst, Image* src);
 
 
 void flip_vertically(Image* img);
