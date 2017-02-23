@@ -169,7 +169,7 @@ void copy_rgba(Image* dst, Point<int> dstpos, Image* src)
 }
 
 
-void copy_transformed(Image* dst, Transform2D<float> transform, Image* src, Rect<int> dst_rect)
+void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src, Rect<int> dst_rect)
 {
 #ifdef R64FX_DEBUG
     assert(src->componentCount() == dst->componentCount());
@@ -244,7 +244,7 @@ void copy_transformed(Image* dst, Transform2D<float> transform, Image* src, Rect
 }
 
 
-void copy_transformed(Image* dst, Transform2D<float> transform, Image* src)
+void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src)
 {
     copy_transformed(dst, transform, src, {0, 0, dst->width(), dst->height()});
 }
@@ -567,7 +567,7 @@ void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b,
         fill(&src, color);
     }
 
-    Transform2D<float> t;
+    Transformation2D<float> t;
     t.translate(a.x(), a.y());
     t.rotate(sinang, cosang);
     t.translate(0.0f, -int(float(thickness) * 0.5));

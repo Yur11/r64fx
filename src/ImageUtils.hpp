@@ -3,7 +3,7 @@
 
 #include "Image.hpp"
 #include "Rect.hpp"
-#include "Transform2D.hpp"
+#include "Transformation2D.hpp"
 #include "Color.hpp"
 
 namespace r64fx{
@@ -27,9 +27,9 @@ void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect);
 void copy_rgba(Image* dst, Point<int> dstpos, Image* src);
 
 
-void copy_transformed(Image* dst, Transform2D<float> transform, Image* src, Rect<int> dst_rect);
+void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src, Rect<int> dst_rect);
 
-void copy_transformed(Image* dst, Transform2D<float> transform, Image* src);
+void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src);
 
 
 void invert(Image* dst, Image* src);

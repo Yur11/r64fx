@@ -34,7 +34,7 @@ void init()
             fill(&img, Color(255), {0, img_size/2, img_size, 1});
             fill(&img, Color(255), {img_size/2, 0, 1, img_size});
 
-            Transform2D<float> t;
+            Transformation2D<float> t;
             t.translate(img_size/2, img_size/2);
             t.rotate(M_PI/4);
             t.translate(-img_size/2, -img_size/2);

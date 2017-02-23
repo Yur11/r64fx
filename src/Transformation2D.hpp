@@ -1,11 +1,11 @@
-#ifndef R64FX_TRANSFORM2D_HPP
-#define R64FX_TRANSFORM2D_HPP
+#ifndef R64FX_TRANSFORMATION2D_HPP
+#define R64FX_TRANSFORMATION2D_HPP
 
 #include <cmath>
 
 namespace r64fx{
 
-template<typename T> class Transform2D{
+template<typename T> class Transformation2D{
 /*
     Let's keep only relevant parts of the matrix.
 
@@ -71,4 +71,4 @@ public:
 
 }//namespace r64fx
 
-#endif //R64FX_TRANSFORM2D_HPP
+#endif //R64FX_Transformation2D_HPP
