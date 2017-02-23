@@ -106,8 +106,6 @@ void fill(Image* dst, int component, unsigned char value)
 void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
 {
 #ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(src != nullptr);
     assert(dst->componentCount() == src->componentCount());
 #endif//R64FX_DEBUG
 
@@ -135,11 +133,45 @@ void copy(Image* dst, Point<int> dstpos, Image* src)
 }
 
 
-void copy(Image* dst, Transform2D<float> transform, Image* src, Rect<int> dst_rect)
+void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
 {
 #ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(src != nullptr);
+    assert(dst->componentCount() == 4);
+    assert(src->componentCount() == 4);
+#endif//R64FX_DEBUG
+
+    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
+    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
+
+    for(int y=0; y<dst_isec.height(); y++)
+    {
+        for(int x=0; x<dst_isec.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
+            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
+
+            float alpha = float(srcpx[3]) * rcp255;
+            for(int c=0; c<3; c++)
+            {
+                float dst_val = float(dstpx[c]) * rcp255;
+                float src_val = float(srcpx[c]) * rcp255;
+                float res_val = (dst_val * alpha) + (src_val * (1.0f - alpha));
+                dstpx[c] = (unsigned char)(res_val * 255.0f);
+            }
+        }
+    }
+}
+
+
+void copy_rgba(Image* dst, Point<int> dstpos, Image* src)
+{
+    copy_rgba(dst, dstpos, src, Rect<int>(0, 0, src->width(), src->height()));
+}
+
+
+void copy_transformed(Image* dst, Transform2D<float> transform, Image* src, Rect<int> dst_rect)
+{
+#ifdef R64FX_DEBUG
     assert(src->componentCount() == dst->componentCount());
 #endif//R64FX_DEBUG
 
@@ -212,9 +244,9 @@ void copy(Image* dst, Transform2D<float> transform, Image* src, Rect<int> dst_re
 }
 
 
-void copy(Image* dst, Transform2D<float> transform, Image* src)
+void copy_transformed(Image* dst, Transform2D<float> transform, Image* src)
 {
-    copy(dst, transform, src, {0, 0, dst->width(), dst->height()});
+    copy_transformed(dst, transform, src, {0, 0, dst->width(), dst->height()});
 }
 
 
@@ -544,7 +576,7 @@ void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b,
         0, 0, dst->width(), dst->height()
     };
 
-    copy(dst, t, &src, r);
+    copy_transformed(dst, t, &src, r);
 }
 
 
