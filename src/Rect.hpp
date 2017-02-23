@@ -17,7 +17,7 @@ template<typename T> class Rect{
     T mh;
 
 public:
-    Rect(T x = T(), T y = T(), T w = T(), T h = T())
+    Rect(T x, T y, T w, T h)
     : mx(x)
     , my(y)
     , mw(w)
@@ -29,6 +29,13 @@ public:
     , my(pos.y())
     , mw(size.width())
     , mh(size.height())
+    {}
+
+    Rect()
+    : mx(T())
+    , my(T())
+    , mw(T())
+    , mh(T())
     {}
 
     inline T x() const { return mx; }

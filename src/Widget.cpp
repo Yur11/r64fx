@@ -110,7 +110,7 @@ struct WidgetImpl{
 
     Point<int> parent_global_position = {0, 0};
 
-    Rect<int> visible_rect = {0, 0};
+    Rect<int> visible_rect = {0, 0, 0, 0};
 
     void clip();
 
