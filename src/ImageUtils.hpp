@@ -27,23 +27,17 @@ void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect);
 void copy_rgba(Image* dst, Point<int> dstpos, Image* src);
 
 
+void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, Rect<int> src_rect);
+
+void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src);
+
+
 void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src, Rect<int> dst_rect);
 
 void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src);
 
 
 void invert(Image* dst, Image* src);
-
-
-void blend(Image* dst, Point<int> pos, unsigned char** colors, Image* mask);
-
-void blend(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> mask_offset, unsigned char** colors, Image* mask);
-
-void blend(Image* dst, const RectIntersection<int> &intersection, unsigned char** colors, Image* mask);
-
-void blend(Image* dst, Point<int> pos, unsigned char* color, Image* mask);
-
-void blend(Image* dst, const RectIntersection<int> &intersection, unsigned char* color, Image* mask);
 
 
 void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> pos2, int component_count);

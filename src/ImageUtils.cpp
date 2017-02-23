@@ -150,13 +150,11 @@ void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
             auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
             auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
 
-            float alpha = float(srcpx[3]) * rcp255;
+            float alpha            = float(      srcpx[3]) * rcp255;
+            float one_minus_alpha  = float(255 - srcpx[3]) * rcp255;
             for(int c=0; c<3; c++)
             {
-                float dst_val = float(dstpx[c]) * rcp255;
-                float src_val = float(srcpx[c]) * rcp255;
-                float res_val = (dst_val * alpha) + (src_val * (1.0f - alpha));
-                dstpx[c] = (unsigned char)(res_val * 255.0f);
+                dstpx[c] = (unsigned char)(float(dstpx[c]) * alpha + float(srcpx[c]) * one_minus_alpha);
             }
         }
     }
@@ -166,6 +164,40 @@ void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
 void copy_rgba(Image* dst, Point<int> dstpos, Image* src)
 {
     copy_rgba(dst, dstpos, src, Rect<int>(0, 0, src->width(), src->height()));
+}
+
+
+void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, Rect<int> src_rect)
+{
+    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
+    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
+
+    for(int y=0; y<dst_isec.height(); y++)
+    {
+        for(int x=0; x<dst_isec.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
+            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
+
+            for(int m=0; m<src->componentCount(); m++)
+            {
+                float alpha            = float(      srcpx[m]) * rcp255;
+                float one_minus_alpha  = float(255 - srcpx[m]) * rcp255;
+
+                for(int c=0; c<dst->componentCount(); c++)
+                {
+                    float result = float(dstpx[c]) * one_minus_alpha + float(colors[m][c]) * alpha;
+                    dstpx[c] = (unsigned char)result;
+                }
+            }
+        }
+    }
+}
+
+
+void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src)
+{
+    blend_colors(dst, dstpos, colors, src, Rect<int>(0, 0, src->width(), src->height()));
 }
 
 
@@ -268,101 +300,6 @@ void invert(Image* dst, Image* src)
             }
         }
     }
-}
-
-
-void blend(Image* dst, Point<int> pos, unsigned char** colors, Image* mask)
-{
-    blend(dst, RectIntersection<int>(
-        {0,       0,       dst->width(),  dst->height()},
-        {pos.x(), pos.y(), mask->width(), mask->height()}
-    ), colors, mask);
-}
-
-
-void blend(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> mask_offset, unsigned char** colors, Image* mask)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(mask != nullptr);
-#endif//R64FX_DEBUG
-
-    static const float rcp = 1.0f / float(255);
-
-    for(int y=0; y<size.height(); y++)
-    {
-        for(int x=0; x<size.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + dst_offset.x(), y + dst_offset.y());
-            auto mskpx = mask->pixel(x + mask_offset.x(), y + mask_offset.y());
-
-            for(int m=0; m<mask->componentCount(); m++)
-            {
-                float alpha            = float(      mskpx[m]) * rcp;
-                float one_minus_alpha  = float(255 - mskpx[m]) * rcp;
-
-                for(int c=0; c<dst->componentCount(); c++)
-                {
-                    float result = float(dstpx[c]) * one_minus_alpha + float(colors[m][c]) * alpha;
-                    dstpx[c] = (unsigned char)result;
-                }
-            }
-        }
-    }
-}
-
-
-void blend(Image* dst, const RectIntersection<int> &intersection, unsigned char** colors, Image* mask)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(mask != nullptr);
-#endif//R64FX_DEBUG
-
-    static const float rcp = 1.0f / float(255);
-
-    if(intersection.width() <= 0 || intersection.height() <= 0)
-        return;
-
-    for(int y=0; y<intersection.height(); y++)
-    {
-        for(int x=0; x<intersection.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + intersection.dstx(), y + intersection.dsty());
-            auto mskpx = mask->pixel(x + intersection.srcx(), y + intersection.srcy());
-
-            for(int m=0; m<mask->componentCount(); m++)
-            {
-                float alpha            = float(      mskpx[m]) * rcp;
-                float one_minus_alpha  = float(255 - mskpx[m]) * rcp;
-
-                for(int c=0; c<dst->componentCount(); c++)
-                {
-                    float result = float(dstpx[c]) * one_minus_alpha + float(colors[m][c]) * alpha;
-                    dstpx[c] = (unsigned char)result;
-                }
-            }
-        }
-    }
-}
-
-
-void blend(Image* dst, Point<int> pos, unsigned char* color, Image* mask)
-{
-    blend(dst, RectIntersection<int>(
-        {0,       0,       dst->width(),  dst->height()},
-        {pos.x(), pos.y(), mask->width(), mask->height()}
-    ), color, mask);
-}
-
-
-void blend(Image* dst, const RectIntersection<int> &intersection, unsigned char* color, Image* mask)
-{
-#ifdef R64FX_DEBUG
-    assert(mask != nullptr);
-    assert(mask->componentCount() == 1);
-#endif//R64FX_DEBUG
-    blend(dst, intersection, &color, mask);
 }
 
 
@@ -887,7 +824,7 @@ void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int cor
     }
 
     unsigned char* colors[1] = {color};
-    blend(dst, rect.position(), colors, &mask);
+    blend_colors(dst, rect.position(), colors, &mask);
 }
 
 

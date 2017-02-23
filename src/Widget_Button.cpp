@@ -228,9 +228,9 @@ ButtonAnimation* ButtonAnimation::CenteredImageMask(Size<int> size, Image* mask)
         Image img;
         anim->pickFrame(&img, 0);
         fill(&img, c0);
-        blend(&img, Point<int>(0, 0), Colors(black), &bg);
-        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
-        blend(
+        blend_colors(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend_colors(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
+        blend_colors(
             &img,
             Point<int>(img.width()/2 - mask->width()/2, img.height()/2 - mask->height()/2),
             Colors(fg_depressed),
@@ -243,9 +243,9 @@ ButtonAnimation* ButtonAnimation::CenteredImageMask(Size<int> size, Image* mask)
         Image img;
         anim->pickFrame(&img, 1);
         fill(&img, c0);
-        blend(&img, Point<int>(0, 0), Colors(black), &bg);
-        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
-        blend(
+        blend_colors(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend_colors(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
+        blend_colors(
             &img,
             Point<int>(img.width()/2 - mask->width()/2, img.height()/2 - mask->height()/2),
             Colors(fg_pressed),
@@ -306,16 +306,16 @@ ButtonAnimation* ButtonAnimation::Colored(Size<int> size, unsigned char** rgbas,
         {
             Image img;
             anim->pickFrame(&img, i*2);
-            blend(&img, Point<int>(0, 0), Colors(black), &bg);
-            blend(&img, Point<int>(0, 0), rgbas + i, &depressed);
+            blend_colors(&img, Point<int>(0, 0), Colors(black), &bg);
+            blend_colors(&img, Point<int>(0, 0), rgbas + i, &depressed);
         }
 
         /* Pressed */
         {
             Image img;
             anim->pickFrame(&img, i*2 + 1);
-            blend(&img, Point<int>(0, 0), Colors(black), &bg);
-            blend(&img, Point<int>(0, 0), rgbas + i, &pressed);
+            blend_colors(&img, Point<int>(0, 0), Colors(black), &bg);
+            blend_colors(&img, Point<int>(0, 0), rgbas + i, &pressed);
         }
     }
 
@@ -374,9 +374,9 @@ ButtonAnimation* ButtonAnimation::PlayPause(Size<int> size)
         Image img;
         anim->pickFrame(&img, PlayDepressed);
         fill(&img, c0);
-        blend(&img, Point<int>(0, 0), Colors(black), &bg);
-        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
-        blend(&img, Point<int>(size.width()/4 - size.width()/20, size.height()/4), Colors(fg_depressed), &triangle);
+        blend_colors(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend_colors(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
+        blend_colors(&img, Point<int>(size.width()/4 - size.width()/20, size.height()/4), Colors(fg_depressed), &triangle);
     }
 
     /* 1 Play Pressed */
@@ -384,9 +384,9 @@ ButtonAnimation* ButtonAnimation::PlayPause(Size<int> size)
         Image img;
         anim->pickFrame(&img, PlayPressed);
         fill(&img, c0);
-        blend(&img, Point<int>(0, 0), Colors(black), &bg);
-        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
-        blend(&img, Point<int>(size.width()/4 - size.width()/20, size.height()/4), Colors(fg_pressed), &triangle);
+        blend_colors(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend_colors(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
+        blend_colors(&img, Point<int>(size.width()/4 - size.width()/20, size.height()/4), Colors(fg_pressed), &triangle);
     }
 
     /* 2 Pause Depressed */
@@ -394,9 +394,9 @@ ButtonAnimation* ButtonAnimation::PlayPause(Size<int> size)
         Image img;
         anim->pickFrame(&img, PauseDepressed);
         fill(&img, Color(127, 127, 127, 0));
-        blend(&img, Point<int>(0, 0), Colors(black), &bg);
-        blend(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
-        blend(&img, Point<int>(
+        blend_colors(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend_colors(&img, Point<int>(0, 0), Colors(bg_depressed), &depressed);
+        blend_colors(&img, Point<int>(
             img.width() / 2 - bars.width() / 2,
             img.height() / 2 - bars.height() / 2
         ), Colors(fg_depressed), &bars);
@@ -407,9 +407,9 @@ ButtonAnimation* ButtonAnimation::PlayPause(Size<int> size)
         Image img;
         anim->pickFrame(&img, PausePressed);
         fill(&img, Color(127, 127, 127, 0));
-        blend(&img, Point<int>(0, 0), Colors(black), &bg);
-        blend(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
-        blend(&img, Point<int>(
+        blend_colors(&img, Point<int>(0, 0), Colors(black), &bg);
+        blend_colors(&img, Point<int>(0, 0), Colors(bg_pressed), &pressed);
+        blend_colors(&img, Point<int>(
             img.width() / 2 - bars.width() / 2,
             img.height() / 2 - bars.height() / 2
         ), Colors(fg_pressed), &bars);

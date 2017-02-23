@@ -138,7 +138,7 @@ public:
                         colors[0] = color1;
                     else
                         colors[0] = color2;
-                    blend(
+                    blend_colors(
                         &img, Point<int>(0, 0), colors, &radius_img
                     );
                 }
@@ -253,7 +253,7 @@ public:
                         else
                             colors[0] = color2;
                     }
-                    blend(
+                    blend_colors(
                         &img, Point<int>(0, 0), colors, &radius_img
                     );
                 }
