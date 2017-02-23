@@ -45,6 +45,10 @@ void blend(Image* dst, Point<int> pos, unsigned char* color, Image* mask);
 
 void blend(Image* dst, const RectIntersection<int> &intersection, unsigned char* color, Image* mask);
 
+
+void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> pos2, int component_count);
+
+
 inline float normalize_angle(float angle)
 {
     while(angle > (2.0f * M_PI))

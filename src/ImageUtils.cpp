@@ -14,6 +14,12 @@ using namespace std;
 
 namespace r64fx{
 
+namespace{
+
+constexpr float rcp255 = 1.0f / 255.0f;
+
+}//namespace
+
 struct MatchedRects{
     Point<int> dst_offset;
     Point<int> src_offset;
@@ -355,6 +361,56 @@ void blend(Image* dst, const RectIntersection<int> &intersection, unsigned char*
     assert(mask->componentCount() == 1);
 #endif//R64FX_DEBUG
     blend(dst, intersection, &color, mask);
+}
+
+
+void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> pos2, int component_count)
+{
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(src1 != nullptr);
+    assert(src2 != nullptr);
+    assert(src1->componentCount() == dst->componentCount());
+    assert(src2->componentCount() == dst->componentCount());
+    assert(component_count <= dst->componentCount());
+#endif//R64FX_DEBUG
+
+    RectIntersection<int> src_isec(
+        {pos1.x(), pos1.y(), src1->width(), src1->height()},
+        {pos2.x(), pos2.y(), src2->width(), src2->height()}
+    );
+    if(src_isec.width() <= 0 || src_isec.height() <= 0)
+        return;
+
+    auto p1 = src_isec.dstOffset();
+    auto p2 = src_isec.srcOffset();
+
+    RectIntersection<int> dst_isec(
+        {0, 0, dst->width(), dst->height()},
+        src_isec.rect()
+    );
+    if(dst_isec.width() <=0 || dst_isec.height() <= 0)
+        return;
+
+    p1 += dst_isec.srcOffset();
+    p2 += dst_isec.srcOffset();
+
+    for(int y=0; y<dst_isec.height(); y++)
+    {
+        for(int x=0; x<dst_isec.width(); x++)
+        {
+            auto srcpx1 = src1->pixel(x + p1.x(), y + p1.y());
+            auto srcpx2 = src2->pixel(x + p2.x(), y + p2.y());
+            auto dstpx = dst->pixel(x + dst_isec.dstx(), y + dst_isec.dsty());
+            for(auto c=0; c<component_count; c++)
+            {
+                auto val1 = float(srcpx1[c]) * rcp255;
+                auto val2 = float(srcpx2[c]) * rcp255;
+                auto val = val1 * val2;
+                dstpx[c] = (unsigned char)(val * 255.0f);
+            }
+        }
+    }
 }
 
 
