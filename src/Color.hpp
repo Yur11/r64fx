@@ -8,19 +8,19 @@ union Color{
     unsigned int  m_bits = 0;
 
 public:
-    Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+    explicit Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
     : m_color{r, g, b, a}
     {}
 
-    Color(unsigned char r, unsigned char g, unsigned char b)
+    explicit Color(unsigned char r, unsigned char g, unsigned char b)
     : m_color{r, g, b, 0}
     {}
 
-    Color(unsigned char r, unsigned char g)
+    explicit Color(unsigned char r, unsigned char g)
     : m_color{r, g, 0, 0}
     {}
 
-    Color(unsigned char r)
+    explicit Color(unsigned char r)
     : m_color{r, 0, 0, 0}
     {}
 
@@ -47,19 +47,19 @@ class Colors{
     unsigned char* m_colors[4];
 
 public:
-    Colors(unsigned char* r, unsigned char* g, unsigned char* b, unsigned char* a)
+    explicit Colors(unsigned char* r, unsigned char* g, unsigned char* b, unsigned char* a)
     : m_colors{r, g, b, a}
     {}
 
-    Colors(unsigned char* r, unsigned char* g, unsigned char* b)
+    explicit Colors(unsigned char* r, unsigned char* g, unsigned char* b)
     : m_colors{r, g, b, nullptr}
     {}
 
-    Colors(unsigned char* r, unsigned char* g)
+    explicit Colors(unsigned char* r, unsigned char* g)
     : m_colors{r, g, nullptr, nullptr}
     {}
 
-    Colors(unsigned char* r)
+    explicit Colors(unsigned char* r)
     : m_colors{r, nullptr, nullptr, nullptr}
     {}
 

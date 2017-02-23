@@ -9,10 +9,10 @@ namespace r64fx{
 class Image;
 
 struct IconColors{
-    Color stroke1 = {0, 0, 0, 0};
-    Color fill1   = {255, 255, 255, 0};
-    Color stroke2 = {31, 31, 31, 0};
-    Color fill2   = {223, 223, 223, 0};
+    Color stroke1 = Color(0, 0, 0, 0);
+    Color fill1   = Color(255, 255, 255, 0);
+    Color stroke2 = Color(31, 31, 31, 0);
+    Color fill2   = Color(223, 223, 223, 0);
 };
 
 bool operator!=(const IconColors &a, const IconColors &b);
