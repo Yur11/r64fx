@@ -35,13 +35,6 @@ void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src)
 void invert(Image* dst, Image* src);
 
 
-void implant_alpha(Image* dst, Point<int> pos, Image* src);
-
-void implant_alpha(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> src_offset, Image* src);
-
-void implant_alpha(Image* dst, const RectIntersection<int> &intersection, Image* src);
-
-
 void blend(Image* dst, Point<int> pos, unsigned char** colors, Image* mask);
 
 void blend(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> mask_offset, unsigned char** colors, Image* mask);

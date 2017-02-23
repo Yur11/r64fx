@@ -271,51 +271,6 @@ void invert(Image* dst, Image* src)
 }
 
 
-void implant_alpha(Image* dst, Point<int> pos, Image* src)
-{
-    implant_alpha(dst, RectIntersection<int>(
-        {0,       0,       dst->width(), dst->height()},
-        {pos.x(), pos.y(), src->width(), src->height()}
-    ), src);
-}
-
-
-void implant_alpha(Image* dst, Point<int> dst_offset, Size<int> size, Point<int> src_offset, Image* src)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(src != nullptr);
-    assert(dst->componentCount() == 4);
-    assert(src->componentCount() == 4);
-#endif//R64FX_DEBUG
-
-    static const float rcp = 1.0f / 255.f;
-
-    for(int y=0; y<size.height(); y++)
-    {
-        for(int x=0; x<size.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + dst_offset.x(), y + dst_offset.y());
-            auto srcpx = src->pixel(x + src_offset.x(), y + src_offset.y());
-
-            float dst_coeff = float(srcpx[3]) * rcp;
-            float src_coeff = 1.0f - dst_coeff;
-
-            for(int c=0; c<3; c++)
-            {
-                dstpx[c] = (unsigned char)(float(dstpx[c]) * dst_coeff + float(srcpx[c]) * src_coeff);
-            }
-        }
-    }
-}
-
-
-void implant_alpha(Image* dst, const RectIntersection<int> &intersection, Image* src)
-{
-    implant_alpha(dst, intersection.dstOffset(), intersection.size(), intersection.srcOffset(), src);
-}
-
-
 void blend(Image* dst, Point<int> pos, unsigned char** colors, Image* mask)
 {
     blend(dst, RectIntersection<int>(

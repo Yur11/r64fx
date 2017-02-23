@@ -286,21 +286,7 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void putImage(Image* img, Point<int> dst_pos)
     {
-        RectIntersection<int> intersection(
-            current_clip_rect,
-            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), img->width(), img->height()}
-        );
-
-        if(intersection.width() > 0 && intersection.height() > 0)
-        {
-            implant_alpha(
-                window->image(),
-                intersection.dstOffset() + current_clip_rect.position(),
-                intersection.size(),
-                intersection.srcOffset(),
-                img
-            );
-        }
+        copy_rgba(window->image(), dst_pos + offset(), img);
     }
 
     virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos)
