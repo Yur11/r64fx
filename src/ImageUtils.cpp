@@ -891,7 +891,7 @@ void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int cor
         fill(&mask, &c);
 
         Image arc(corner_radius, corner_radius);
-        fill_circle(&arc, &c, {corner_radius - 1, corner_radius - 1}, corner_radius);
+        fill_circle(&arc, &c, Point<float>(corner_radius - 1, corner_radius - 1), corner_radius);
         invert_image(&arc, &arc);
         subtract_image(&mask, {0, 0}, &arc);
 
