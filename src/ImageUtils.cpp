@@ -749,9 +749,9 @@ void stroke_circle(Image* dst, unsigned char* color, Point<float> center, float 
 }
 
 
-void fill_circle(Image* dst, unsigned char* color, Point<int> center, float radius)
+void fill_circle(Image* dst, unsigned char* color, Point<float> center, float radius)
 {
-    Rect<int> rect(center.x() - radius - 1, center.y() - radius - 1, radius * 2 + 1, radius * 2 + 1);
+    Rect<float> rect(center.x() - radius - 1, center.y() - radius - 1, radius * 2 + 1, radius * 2 + 1);
 
     for(int y=0; y<rect.height(); y++)
     {
