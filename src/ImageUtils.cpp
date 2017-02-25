@@ -81,7 +81,7 @@ void fill(Image* dst, unsigned char* components)
 }
 
 
-void fill(Image* dst, int component, unsigned char value, Rect<int> rect)
+void fill_component(Image* dst, int component, unsigned char value, Rect<int> rect)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -97,9 +97,34 @@ void fill(Image* dst, int component, unsigned char value, Rect<int> rect)
 }
 
 
-void fill(Image* dst, int component, unsigned char value)
+void fill_component(Image* dst, int component, unsigned char value)
 {
-    fill(dst, component, value, {0, 0, dst->width(), dst->height()});
+    fill_component(dst, component, value, {0, 0, dst->width(), dst->height()});
+}
+
+
+void fill_gradient_vert(Image* img, unsigned char color, unsigned char color_step, Rect<int> rect)
+{
+#ifdef R64FX_DEBUG
+    assert(img != nullptr);
+    assert((int(color) + int(color_step) * rect.height()) <= 255);
+    assert(rect.x() >= 0);
+    assert(rect.y() >= 0);
+    assert(rect.right()  <= img->width());
+    assert(rect.bottom() <= img->height());
+#endif//R64FX_DEBUG
+
+    for(int y=rect.y(); y<rect.bottom(); y++)
+    {
+        for(int x=rect.x(); x<rect.right(); x++)
+        {
+            for(int c=0; c<img->componentCount(); c++)
+            {
+                img->pixel(x, y)[c] = color;
+            }
+        }
+        color += color_step;
+    }
 }
 
 
@@ -130,6 +155,29 @@ void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
 void copy(Image* dst, Point<int> dstpos, Image* src)
 {
     copy(dst, dstpos, src, Rect<int>(0, 0, src->width(), src->height()));
+}
+
+
+void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src, int src_component, Rect<int> src_rect)
+{
+    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
+    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
+
+    for(int y=0; y<dst_isec.height(); y++)
+    {
+        for(int x=0; x<dst_isec.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
+            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
+            dstpx[dst_component] = srcpx[src_component];
+        }
+    }
+}
+
+
+void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src, int src_component)
+{
+    copy_component(dst, dst_component, dstpos, src, src_component, {0, 0, dst->width(), dst->height()});
 }
 
 
@@ -282,6 +330,48 @@ void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src)
 }
 
 
+void flip_vert(Image* img)
+{
+    int hh = img->height() / 2;
+
+    for(int y=0; y<hh; y++)
+    {
+        for(int x=0; x<img->width(); x++)
+        {
+            auto px1 = img->pixel(x, y);
+            auto px2 = img->pixel(x, img->height() - y - 1);
+            for(int c=0; c<img->componentCount(); c++)
+            {
+                unsigned char tmp = px1[c];
+                px1[c] = px2[c];
+                px2[c] = tmp;
+            }
+        }
+    }
+}
+
+
+void flip_hori(Image* img)
+{
+    int hw = img->width() / 2;
+
+    for(int y=0; y<img->height(); y++)
+    {
+        for(int x=0; x<hw; x++)
+        {
+            auto px1 = img->pixel(x, y);
+            auto px2 = img->pixel(img->width() - x - 1, y);
+            for(int c=0; c<img->componentCount(); c++)
+            {
+                unsigned char tmp = px1[c];
+                px1[c] = px2[c];
+                px2[c] = tmp;
+            }
+        }
+    }
+}
+
+
 void invert(Image* dst, Image* src)
 {
 #ifdef R64FX_DEBUG
@@ -303,7 +393,7 @@ void invert(Image* dst, Image* src)
 }
 
 
-void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> pos2, int component_count)
+void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> pos2)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -311,7 +401,6 @@ void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> p
     assert(src2 != nullptr);
     assert(src1->componentCount() == dst->componentCount());
     assert(src2->componentCount() == dst->componentCount());
-    assert(component_count <= dst->componentCount());
 #endif//R64FX_DEBUG
 
     RectIntersection<int> src_isec(
@@ -341,7 +430,7 @@ void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> p
             auto srcpx1 = src1->pixel(x + p1.x(), y + p1.y());
             auto srcpx2 = src2->pixel(x + p2.x(), y + p2.y());
             auto dstpx = dst->pixel(x + dst_isec.dstx(), y + dst_isec.dsty());
-            for(auto c=0; c<component_count; c++)
+            for(auto c=0; c<dst->componentCount(); c++)
             {
                 auto val1 = float(srcpx1[c]) * rcp255;
                 auto val2 = float(srcpx2[c]) * rcp255;
@@ -690,7 +779,7 @@ void stroke_circle(Image* dst, unsigned char* color, Point<float> center, float 
 
 void fill_circle(Image* dst, unsigned char* color, Point<float> center, float radius)
 {
-    Rect<float> rect(center.x() - radius - 1, center.y() - radius - 1, radius * 2 + 1, radius * 2 + 1);
+    Rect<float> rect(center.x() - radius - 1, center.y() - radius - 1, radius * 2 + 2, radius * 2 + 2);
 
     for(int y=0; y<rect.height(); y++)
     {
@@ -759,48 +848,6 @@ void subtract_image(Image* dst, Point<int> pos, Image* src)
 }
 
 
-void flip_vertically(Image* img)
-{
-    int hh = img->height() / 2;
-
-    for(int y=0; y<hh; y++)
-    {
-        for(int x=0; x<img->width(); x++)
-        {
-            auto px1 = img->pixel(x, y);
-            auto px2 = img->pixel(x, img->height() - y - 1);
-            for(int c=0; c<img->componentCount(); c++)
-            {
-                unsigned char tmp = px1[c];
-                px1[c] = px2[c];
-                px2[c] = tmp;
-            }
-        }
-    }
-}
-
-
-void flip_horizontally(Image* img)
-{
-    int hw = img->width() / 2;
-
-    for(int y=0; y<img->height(); y++)
-    {
-        for(int x=0; x<hw; x++)
-        {
-            auto px1 = img->pixel(x, y);
-            auto px2 = img->pixel(img->width() - x - 1, y);
-            for(int c=0; c<img->componentCount(); c++)
-            {
-                unsigned char tmp = px1[c];
-                px1[c] = px2[c];
-                px2[c] = tmp;
-            }
-        }
-    }
-}
-
-
 void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int corner_radius)
 {
     Image mask(rect.width(), rect.height(), 1);
@@ -813,13 +860,13 @@ void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int cor
         invert(&arc, &arc);
         subtract_image(&mask, {0, 0}, &arc);
 
-        flip_vertically(&arc);
+        flip_vert(&arc);
         subtract_image(&mask, {0, mask.height() - corner_radius}, &arc);
 
-        flip_horizontally(&arc);
+        flip_hori(&arc);
         subtract_image(&mask, {mask.width() - arc.width(), mask.height() - arc.height()}, &arc);
 
-        flip_vertically(&arc);
+        flip_vert(&arc);
         subtract_image(&mask, {mask.width() - arc.width(), 0}, &arc);
     }
 
@@ -1237,30 +1284,6 @@ void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, 
                 }
             }
         }
-    }
-}
-
-void fill_gradient_vert(Image* img, Rect<int> rect, unsigned char color, unsigned char color_step)
-{
-#ifdef R64FX_DEBUG
-    assert(img != nullptr);
-    assert((int(color) + int(color_step) * rect.height()) <= 255);
-    assert(rect.x() >= 0);
-    assert(rect.y() >= 0);
-    assert(rect.right()  <= img->width());
-    assert(rect.bottom() <= img->height());
-#endif//R64FX_DEBUG
-
-    for(int y=rect.y(); y<rect.bottom(); y++)
-    {
-        for(int x=rect.x(); x<rect.right(); x++)
-        {
-            for(int c=0; c<img->componentCount(); c++)
-            {
-                img->pixel(x, y)[c] = color;
-            }
-        }
-        color += color_step;
     }
 }
 

@@ -12,14 +12,23 @@ void fill(Image* dst, unsigned char* components, Rect<int> rect);
 
 void fill(Image* dst, unsigned char* components);
 
-void fill(Image* dst, int component, unsigned char value, Rect<int> rect);
 
-void fill(Image* dst, int component, unsigned char value);
+void fill_component(Image* dst, int component, unsigned char value, Rect<int> rect);
+
+void fill_component(Image* dst, int component, unsigned char value);
+
+
+void fill_gradient_vert(Image* img, unsigned char color, unsigned char color_step, Rect<int> rect);
 
 
 void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect);
 
 void copy(Image* dst, Point<int> dstpos, Image* src);
+
+
+void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src, int src_component, Rect<int> src_rect);
+
+void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src, int src_component);
 
 
 void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect);
@@ -37,10 +46,15 @@ void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src,
 void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src);
 
 
+void flip_vert(Image* img);
+
+void flip_hori(Image* img);
+
+
 void invert(Image* dst, Image* src);
 
 
-void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> pos2, int component_count);
+void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> pos2);
 
 
 inline float normalize_angle(float angle)
@@ -91,20 +105,12 @@ void fill_circle(Image* dst, unsigned char* color, Point<float> center, float ra
 void subtract_image(Image* dst, Point<int> pos, Image* src);
 
 
-void flip_vertically(Image* img);
-
-
-void flip_horizontally(Image* img);
-
-
 void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int corner_radius);
 
 
 void stroke_plot(
     Image* img, unsigned char* color, Rect<int> rect, float* data, float thickness, float scale = 1.0f, float offset = 0.0f
 );
-
-void fill_gradient_vert(Image* img, Rect<int> rect, unsigned char color, unsigned char color_step);
 
 }//namespace r64fx
 
