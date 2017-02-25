@@ -25,7 +25,7 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
-
+/*
     Point<float> center(22.0f, 22.0f);
 
     Image c1(44, 44, 1);
@@ -68,7 +68,12 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
     p->blendColors({20, 20}, Colors(Color(31, 31, 31, 0)), &c1);
     p->putImage(&g1, {20, 20});
-    p->putImage(&g2, {20, 20});
+    p->putImage(&g2, {20, 20});*/
+
+    Image img(128, 4, 4);
+    fill_gradient_vert(&img, 63, 127, 0, 3);
+    fill_component(&img, 3, 0);
+    p->putImage(&img, {20, 20});
 }
 
 

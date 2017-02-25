@@ -103,28 +103,45 @@ void fill_component(Image* dst, int component, unsigned char value)
 }
 
 
-void fill_gradient_vert(Image* img, unsigned char color, unsigned char color_step, Rect<int> rect)
+void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_val, int component, int component_count, Rect<int> rect)
 {
 #ifdef R64FX_DEBUG
     assert(img != nullptr);
-    assert((int(color) + int(color_step) * rect.height()) <= 255);
     assert(rect.x() >= 0);
     assert(rect.y() >= 0);
     assert(rect.right()  <= img->width());
     assert(rect.bottom() <= img->height());
 #endif//R64FX_DEBUG
 
+    float bc = float(begin_val) * rcp255;
+    float ec = float(end_val) * rcp255;
+    float cd = ec - bc;
+#ifdef R64FX_DEBUG
+    assert(!(cd > 255.0f || cd < -255.0f));
+#endif//R64FX_DEBUG
+
+    if(rect.height() <= 0)
+        return;
+    float cs = cd / float(rect.height());
+
+    float color = bc;
     for(int y=rect.y(); y<rect.bottom(); y++)
     {
         for(int x=rect.x(); x<rect.right(); x++)
         {
-            for(int c=0; c<img->componentCount(); c++)
+            for(int c=0; c<component_count; c++)
             {
-                img->pixel(x, y)[c] = color;
+                img->pixel(x, y)[c + component] = (unsigned char)(color * 255);
             }
         }
-        color += color_step;
+        color += cs;
     }
+}
+
+
+void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_val, int component, int component_count)
+{
+    fill_gradient_vert(img, begin_val, end_val, component, component_count, {0, 0, img->width(), img->height()});
 }
 
 

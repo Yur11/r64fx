@@ -18,7 +18,9 @@ void fill_component(Image* dst, int component, unsigned char value, Rect<int> re
 void fill_component(Image* dst, int component, unsigned char value);
 
 
-void fill_gradient_vert(Image* img, unsigned char color, unsigned char color_step, Rect<int> rect);
+void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_val, int component, int component_count, Rect<int> rect);
+
+void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_val, int component, int component_count);
 
 
 void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect);
