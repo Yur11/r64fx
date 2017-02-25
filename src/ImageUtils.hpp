@@ -103,6 +103,7 @@ void stroke_circle(Image* dst, unsigned char* color, Point<float> center, float 
 
 void fill_circle(Image* dst, unsigned char* color, Point<float> center, float radius);
 
+void fill_bottom_triangle(Image* dst, unsigned char* color, Point<int> square_pos, int square_size);
 
 void subtract_image(Image* dst, Point<int> pos, Image* src);
 

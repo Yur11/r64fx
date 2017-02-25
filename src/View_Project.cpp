@@ -9,6 +9,28 @@ using namespace std;
 
 namespace r64fx{
 
+void draw_solid_horse_shoe(Image* dst, Point<int> dstpos, int size, bool middle_notch = true)
+{
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(dst->componentCount() == 1);
+#endif//R64FX_DEBUG
+    int hs = size / 2;
+
+    Point<float> center(dstpos.x() + hs - 0.5f, dstpos.y() + hs - 0.5f);
+    fill(dst, Color(255), {dstpos.x(), dstpos.y(), size, size});
+    fill_circle(dst, Color(0),   center, hs - 1 + 0.5f);
+    fill_circle(dst, Color(255), center, hs - 4 + 0.5f);
+    fill_bottom_triangle(dst, Color(255), dstpos, size);
+
+    if(middle_notch)
+    {
+        fill(dst, Color(255), {dstpos.x() + hs - 2, dstpos.y(), 4, 5});
+        fill(dst, Color(0), {dstpos.x() + hs - 1, dstpos.y(), 2, 5});
+    }
+}
+
+
 View_Project::View_Project(Widget* parent) : Widget(parent)
 {
     
@@ -25,55 +47,20 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
-/*
-    Point<float> center(22.0f, 22.0f);
 
-    Image c1(44, 44, 1);
-    fill        (&c1, Color(0));
-    fill_circle (&c1, Color(255), center, 21.0f);
+    for(int i=0; i<12; i++)
+    {
+        int size = 32 + i * 2;
+        Image horse_shoe(size, size, 1);
+        draw_solid_horse_shoe(&horse_shoe, {0, 0}, size);
 
-    Image c2(44, 44, 1);
-    fill        (&c2, Color(0));
-    fill_circle (&c2, Color(255), center, 18.0f);
-    invert      (&c2, &c2);
+        Image img(size, size, 4);
+        fill(&img, Color(255, 255, 255, 0));
+        copy_component(&img, 3, {0, 0}, &horse_shoe, 0);
 
-    combine(&c1, &c1, {0, 0}, &c2, {0, 0});
-
-    fill(&c1, Color(0), {10, 22, 25, 22});
-    fill(&c1, Color(0), {0, 37, 44, 7});
-
-    fill(&c1, Color(0), {20, 0, 4, 8});
-    fill(&c1, Color(255), {21, 1, 2, 5});
-
-    Image c3(44, 44, 1);
-    fill        (&c3, Color(0));
-    fill_circle (&c3, Color(255), center, 15.0f);
-    invert      (&c3, &c3);
-
-    Image g1(44, 44, 4);
-    fill_gradient_vert (&g1, 39, 4, {0, 0, g1.width(), g1.height()});
-    flip_vert          (&g1);
-    copy_component     (&g1, 3, {0, 0}, &c3, 0);
-
-    Image c4(44, 44, 1);
-    fill        (&c4, Color(0));
-    fill_circle (&c4, Color(255), center, 14.0f);
-    invert      (&c4, &c4);
-
-    Image g2(44, 44, 4);
-    fill_gradient_vert (&g2, 105, 1, {0, 0, g2.width(), g2.height()});
-    flip_vert          (&g2);
-    copy_component     (&g2, 3, {0, 0}, &c4, 0);
-
-
-    p->blendColors({20, 20}, Colors(Color(31, 31, 31, 0)), &c1);
-    p->putImage(&g1, {20, 20});
-    p->putImage(&g2, {20, 20});*/
-
-    Image img(128, 4, 4);
-    fill_gradient_vert(&img, 63, 127, 0, 3);
-    fill_component(&img, 3, 0);
-    p->putImage(&img, {20, 20});
+        p->fillRect({20 + (i * size + 20), 20, size, size}, Color(127, 0, 0, 0));
+        p->putImage(&img, {20 + (i * size + 20), 20});
+    }
 }
 
 

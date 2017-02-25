@@ -824,9 +824,40 @@ void fill_circle(Image* dst, unsigned char* color, Point<float> center, float ra
             else if(dd > 1.0f)
                 dd = 1.0f;
 
+            float alpha = dd;
+            float one_minus_alpha  = 1.0f - alpha;
+
+            auto dstpx = dst->pixel(xx, yy);
             for(int c=0; c<dst->componentCount(); c++)
             {
-                dst->pixel(xx, yy)[c] = (unsigned char)(float(color[c]) * dd);
+                dstpx[c] = (unsigned char)(float(dstpx[c]) * one_minus_alpha + float(color[c]) * alpha);
+            }
+        }
+    }
+}
+
+
+void fill_bottom_triangle(Image* dst, unsigned char* color, Point<int> square_pos, int square_size)
+{
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+#endif//R64FX_DEBUG
+
+    for(int y=0; y<(square_size/2); y++)
+    {
+        for(int x=0; x<(square_size/2); x++)
+        {
+            float alpha = 1.0f;
+            if(x >= y)
+                alpha = 0.0f;
+            float one_minus_alpha = 1.0f - alpha;
+
+            auto px1 = dst->pixel(x,                   square_size - y - 1);
+            auto px2 = dst->pixel(square_size - x - 1, square_size - y - 1);
+            for(int c=0; c<dst->componentCount(); c++)
+            {
+                px1[c] = (unsigned char)(float(px1[c]) * alpha + float(color[c] * one_minus_alpha));
+                px2[c] = (unsigned char)(float(px2[c]) * alpha + float(color[c] * one_minus_alpha));
             }
         }
     }
