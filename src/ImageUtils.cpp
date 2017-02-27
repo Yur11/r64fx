@@ -194,10 +194,11 @@ void fill_circle(Image* dst, unsigned char* color, Point<int> topleft, int diame
             float alpha = dd;
             float one_minus_alpha  = 1.0f - alpha;
 
-            auto px0 = dst->pixel(x + topleft.x(),                  y + topleft.y());
-            auto px1 = dst->pixel(diameter - (x + topleft.x()) - 1, y + topleft.y());
-            auto px2 = dst->pixel(x + topleft.x(),                  diameter - (y + topleft.y()) - 1);
-            auto px3 = dst->pixel(diameter - (x + topleft.x()) - 1, diameter - (y + topleft.y()) - 1);
+            auto px0 = dst->pixel(topleft.x() + x,                topleft.y() + y);
+            auto px1 = dst->pixel(topleft.x() + diameter - x - 1, topleft.y() + y);
+            auto px2 = dst->pixel(topleft.x() + x,                topleft.y() + diameter - y - 1);
+            auto px3 = dst->pixel(topleft.x() + diameter - x - 1, topleft.y() + diameter - y - 1);
+
             for(int c=0; c<component_count; c++)
             {
                 px0[c + component] = (unsigned char)(float(px0[c + component]) * one_minus_alpha + float(color[c]) * alpha);
