@@ -302,22 +302,7 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
     {
-//         RectIntersection<int> intersection(
-//             current_clip_rect,
-//             {pos.x() + offsetX(), pos.y() + offsetY(), mask->width(), mask->height()}
-//         );
-// 
-//         if(intersection.width() > 0 && intersection.height() > 0)
-//         {
-//             blend(
-//                 window->image(),
-//                 intersection.dstOffset() + current_clip_rect.position(),
-//                 intersection.size(),
-//                 intersection.srcOffset(),
-//                 colors, mask
-//             );
-//         }
-        blend_colors(window->image(), pos + offset(), colors, mask);
+        blend_colors(window->image(), pos + offset(), colors, mask, false);
     }
 
     virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture2D* mask)

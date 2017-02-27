@@ -23,6 +23,9 @@ void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_v
 void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_val, int component, int component_count);
 
 
+void fill_circle(Image* dst, unsigned char* color, Point<int> topleft, int diameter, int component, int component_count);
+
+
 void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect);
 
 void copy(Image* dst, Point<int> dstpos, Image* src);
@@ -33,14 +36,14 @@ void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src
 void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src, int src_component);
 
 
-void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect);
+void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect, const bool accurate = true);
 
-void copy_rgba(Image* dst, Point<int> dstpos, Image* src);
+void copy_rgba(Image* dst, Point<int> dstpos, Image* src, const bool accurate = true);
 
 
-void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, Rect<int> src_rect);
+void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, Rect<int> src_rect, const bool accurate = true);
 
-void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src);
+void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, const bool accurate = true);
 
 
 void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src, Rect<int> dst_rect);
@@ -100,8 +103,6 @@ void draw_waveform(Image* dst, unsigned char* color, float*          data, const
 
 void stroke_circle(Image* dst, unsigned char* color, Point<float> center, float radius, float thickness);
 
-
-void fill_circle(Image* dst, unsigned char* color, Point<float> center, float radius);
 
 void fill_bottom_triangle(Image* dst, unsigned char* color, Point<int> square_pos, int square_size);
 

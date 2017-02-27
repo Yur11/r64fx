@@ -88,7 +88,7 @@ public:
         float frame_count_rcp = 1.0f / float(frameCount() - 1);
 
         Image circle_mask_img(width(), height(), 1);
-        fill_circle(&circle_mask_img, Color(255), Point<float>(cx, cy), radius - 1);
+//         fill_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
         invert(&circle_mask_img, &circle_mask_img);
 
         Image radius_img(width(), height(), 1);
@@ -165,7 +165,7 @@ public:
         float frame_count_rcp = 1.0f / float(frameCount() - 1);
 
         Image circle_mask_img(width(), height(), 1);
-        fill_circle(&circle_mask_img, Color(255), Point<float>(cx, cy), radius - 1);
+//         fill_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
         invert(&circle_mask_img, &circle_mask_img);
 
         Image radius_img(width(), height(), 1);

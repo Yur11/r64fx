@@ -477,7 +477,7 @@ void TextPainter::paintText(Image* image, unsigned char* fg, unsigned char* bg, 
                     offset.y() - glyph->bearing_y() + (l*font->height()) + font->ascender()
                 };
 
-                blend_colors(image, p, Colors(fg), glyph->image());
+                blend_colors(image, p, Colors(fg), glyph->image(), false);
             }
             x += glyph->advance();
         }

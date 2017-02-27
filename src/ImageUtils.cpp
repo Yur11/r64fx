@@ -55,6 +55,24 @@ struct MatchedRects{
 };
 
 
+unsigned char mix_lazy(unsigned char c1, float f1, unsigned char c2, float f2)
+{
+    float v1 = float(c1) * rcp255;
+    float v2 = float(c2) * rcp255;
+    return (unsigned char)((v1*f1 + v2*f2) * 255.0f);
+}
+
+
+unsigned char mix_accurate(unsigned char c1, float f1, unsigned char c2, float f2)
+{
+    float v1 = float(c1) * rcp255;
+    float v2 = float(c2) * rcp255;
+    v1 = v1 * v1;
+    v2 = v2 * v2;
+    return (unsigned char)(sqrt(v1*f1 + v2*f2) * 255.0f);
+}
+
+
 void fill(Image* dst, unsigned char* components, Rect<int> rect)
 {
 #ifdef R64FX_DEBUG
@@ -145,6 +163,74 @@ void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_v
 }
 
 
+void fill_circle(Image* dst, unsigned char* color, Point<int> topleft, int diameter, int component, int component_count)
+{
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(diameter > 0);
+    assert(topleft.x() >= 0);
+    assert(topleft.y() >= 0);
+    assert((topleft.x() + diameter) <= dst->width());
+    assert((topleft.y() + diameter) <= dst->height());
+#endif//R64FX_DEBUG
+
+    int radius = diameter >> 1;
+    int is_odd = diameter & 1;
+    int range  = radius + is_odd;
+
+    for(int y=0; y<range; y++)
+    {
+        for(int x=0; x<range; x++)
+        {
+            float dx = x - radius;
+            float dy = y - radius;
+            float rr = sqrt(dx*dx + dy*dy);
+            float dd = radius - rr;
+            if(dd < 0.0f)
+                dd = 0.0f;
+            else if(dd > 1.0f)
+                dd = 1.0f;
+
+            float alpha = dd;
+            float one_minus_alpha  = 1.0f - alpha;
+
+            auto px0 = dst->pixel(x + topleft.x(),                  y + topleft.y());
+            auto px1 = dst->pixel(diameter - (x + topleft.x()) - 1, y + topleft.y());
+            auto px2 = dst->pixel(x + topleft.x(),                  diameter - (y + topleft.y()) - 1);
+            auto px3 = dst->pixel(diameter - (x + topleft.x()) - 1, diameter - (y + topleft.y()) - 1);
+            for(int c=0; c<component_count; c++)
+            {
+                px0[c + component] = (unsigned char)(float(px0[c + component]) * one_minus_alpha + float(color[c]) * alpha);
+            }
+
+            if(x < radius)
+            {
+                for(int c=0; c<component_count; c++)
+                {
+                    px1[c + component] = (unsigned char)(float(px1[c + component]) * one_minus_alpha + float(color[c]) * alpha);
+                }
+
+                if(y < radius)
+                {
+                    for(int c=0; c<component_count; c++)
+                    {
+                        px3[c + component] = (unsigned char)(float(px3[c + component]) * one_minus_alpha + float(color[c]) * alpha);
+                    }
+                }
+            }
+
+            if(y < radius)
+            {
+                for(int c=0; c<component_count; c++)
+                {
+                    px2[c + component] = (unsigned char)(float(px2[c + component]) * one_minus_alpha + float(color[c]) * alpha);
+                }
+            }
+        }
+    }
+}
+
+
 void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
 {
 #ifdef R64FX_DEBUG
@@ -198,7 +284,7 @@ void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src
 }
 
 
-void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
+void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect, const bool accurate)
 {
 #ifdef R64FX_DEBUG
     assert(dst->componentCount() == 4);
@@ -219,20 +305,23 @@ void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
             float one_minus_alpha  = float(255 - srcpx[3]) * rcp255;
             for(int c=0; c<3; c++)
             {
-                dstpx[c] = (unsigned char)(float(dstpx[c]) * alpha + float(srcpx[c]) * one_minus_alpha);
+                if(accurate)
+                    dstpx[c] = mix_accurate(dstpx[c], alpha, srcpx[c], one_minus_alpha);
+                else
+                    dstpx[c] = mix_lazy(dstpx[c], alpha, srcpx[c], one_minus_alpha);
             }
         }
     }
 }
 
 
-void copy_rgba(Image* dst, Point<int> dstpos, Image* src)
+void copy_rgba(Image* dst, Point<int> dstpos, Image* src, bool accurate)
 {
-    copy_rgba(dst, dstpos, src, Rect<int>(0, 0, src->width(), src->height()));
+    copy_rgba(dst, dstpos, src, Rect<int>(0, 0, src->width(), src->height()), accurate);
 }
 
 
-void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, Rect<int> src_rect)
+void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, Rect<int> src_rect, const bool accurate)
 {
     RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
     RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
@@ -246,13 +335,15 @@ void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* 
 
             for(int m=0; m<src->componentCount(); m++)
             {
-                float alpha            = float(      srcpx[m]) * rcp255;
-                float one_minus_alpha  = float(255 - srcpx[m]) * rcp255;
+                float alpha = float(srcpx[m]) * rcp255;
+                float one_minus_alpha = 1.0f - alpha;
 
                 for(int c=0; c<dst->componentCount(); c++)
                 {
-                    float result = float(dstpx[c]) * one_minus_alpha + float(colors[m][c]) * alpha;
-                    dstpx[c] = (unsigned char)result;
+                    if(accurate)
+                        dstpx[c] = mix_accurate(dstpx[c], one_minus_alpha, colors[m][c], alpha);
+                    else
+                        dstpx[c] = mix_lazy(dstpx[c], one_minus_alpha, colors[m][c], alpha);
                 }
             }
         }
@@ -260,9 +351,9 @@ void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* 
 }
 
 
-void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src)
+void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, const bool accurate)
 {
-    blend_colors(dst, dstpos, colors, src, Rect<int>(0, 0, src->width(), src->height()));
+    blend_colors(dst, dstpos, colors, src, Rect<int>(0, 0, src->width(), src->height()), accurate);
 }
 
 
@@ -794,49 +885,6 @@ void stroke_circle(Image* dst, unsigned char* color, Point<float> center, float 
 }
 
 
-void fill_circle(Image* dst, unsigned char* color, Point<float> center, float radius)
-{
-    Rect<float> rect(center.x() - radius - 1, center.y() - radius - 1, radius * 2 + 2, radius * 2 + 2);
-
-    for(int y=0; y<rect.height(); y++)
-    {
-        float yy = y + rect.y();
-        if(yy >= dst->height())
-            break;
-        if(yy < 0)
-            continue;
-
-        for(int x=0; x<rect.width(); x++)
-        {
-            float xx = x + rect.x();
-            if(xx >= dst->width())
-                break;
-
-            if(xx < 0)
-                continue;
-
-            float dx = xx - center.x();
-            float dy = yy - center.y();
-            float rr = sqrt(dx*dx + dy*dy);
-            float dd = radius - rr;
-            if(dd < 0.0f)
-                dd = 0.0f;
-            else if(dd > 1.0f)
-                dd = 1.0f;
-
-            float alpha = dd;
-            float one_minus_alpha  = 1.0f - alpha;
-
-            auto dstpx = dst->pixel(xx, yy);
-            for(int c=0; c<dst->componentCount(); c++)
-            {
-                dstpx[c] = (unsigned char)(float(dstpx[c]) * one_minus_alpha + float(color[c]) * alpha);
-            }
-        }
-    }
-}
-
-
 void fill_bottom_triangle(Image* dst, unsigned char* color, Point<int> square_pos, int square_size)
 {
 #ifdef R64FX_DEBUG
@@ -898,28 +946,28 @@ void subtract_image(Image* dst, Point<int> pos, Image* src)
 
 void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int corner_radius)
 {
-    Image mask(rect.width(), rect.height(), 1);
-    {
-        unsigned char c = 255;
-        fill(&mask, &c);
-
-        Image arc(corner_radius, corner_radius);
-        fill_circle(&arc, &c, Point<float>(corner_radius - 1, corner_radius - 1), corner_radius);
-        invert(&arc, &arc);
-        subtract_image(&mask, {0, 0}, &arc);
-
-        flip_vert(&arc);
-        subtract_image(&mask, {0, mask.height() - corner_radius}, &arc);
-
-        flip_hori(&arc);
-        subtract_image(&mask, {mask.width() - arc.width(), mask.height() - arc.height()}, &arc);
-
-        flip_vert(&arc);
-        subtract_image(&mask, {mask.width() - arc.width(), 0}, &arc);
-    }
-
-    unsigned char* colors[1] = {color};
-    blend_colors(dst, rect.position(), colors, &mask);
+//     Image mask(rect.width(), rect.height(), 1);
+//     {
+//         unsigned char c = 255;
+//         fill(&mask, &c);
+// 
+//         Image arc(corner_radius, corner_radius);
+//         fill_circle(&arc, &c, Point<int>(corner_radius - 1, corner_radius - 1), corner_radius);
+//         invert(&arc, &arc);
+//         subtract_image(&mask, {0, 0}, &arc);
+// 
+//         flip_vert(&arc);
+//         subtract_image(&mask, {0, mask.height() - corner_radius}, &arc);
+// 
+//         flip_hori(&arc);
+//         subtract_image(&mask, {mask.width() - arc.width(), mask.height() - arc.height()}, &arc);
+// 
+//         flip_vert(&arc);
+//         subtract_image(&mask, {mask.width() - arc.width(), 0}, &arc);
+//     }
+// 
+//     unsigned char* colors[1] = {color};
+//     blend_colors(dst, rect.position(), colors, &mask);
 }
 
 
