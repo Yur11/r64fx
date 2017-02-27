@@ -137,6 +137,22 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         draw_knob_marker(&marker, {0, 0}, size);
         p->putImage(&marker, {10 + (i * size + 20), 20});
     }
+
+    Image c(8, 8, 4);
+    fill(&c, Color(255, 0, 0, 0));
+
+    Image img(44, 44, 4);
+    fill(&img, Color(0, 0, 255, 0));
+
+    copy(&img, {18, 0}, &c);
+    copy(&img, {18, 36}, &c);
+
+    Transformation2D<float> t1;
+    t1.rotate(-(M_PI * (1.0f/ 3.0f)));
+    t1.translate(-4, 18);
+    copy_transformed(&img, t1, &c);
+
+    p->putImage(&img, {20, 100});
 }
 
 

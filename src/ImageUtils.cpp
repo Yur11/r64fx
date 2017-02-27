@@ -371,10 +371,10 @@ void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src,
         dst_rect.setTop(0);
 
     if(dst_rect.right() >= dst->width())
-        dst_rect.setRight(dst->width() - 1);
+        dst_rect.setRight(dst->width());
 
     if(dst_rect.bottom() >= dst->height())
-        dst_rect.setBottom(dst->height() - 1);
+        dst_rect.setBottom(dst->height());
 
     for(int y=dst_rect.top(); y<dst_rect.bottom(); y++)
     {
