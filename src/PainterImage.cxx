@@ -79,7 +79,7 @@ public:
 
     inline unsigned char* dataUnsignedChar() const
     {
-#ifdef R64Fx_DEBUG
+#ifdef R64FX_DEBUG
         assert(m_data_type == Type::UnsignedShort);
 #endif//R64FX_DEBUG
         return m_data.uc;
@@ -286,7 +286,41 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void putImage(Image* img, Point<int> dst_pos)
     {
-        copy_rgba(window->image(), dst_pos + offset(), img, false);
+#ifdef R64FX_DEBUG
+        assert(img != nullptr);
+#endif//R64FX_DEBUG
+
+        switch(img->componentCount())
+        {
+            case 1:
+            {
+                copy_component(window->image(), 0, 3, dst_pos + offset(), img, 0);
+                break;
+            }
+
+            case 2:
+            {
+                copy_ra2rgba(window->image(), dst_pos + offset(), img, false);
+                break;
+            }
+
+            case 3:
+            {
+                copy(window->image(), dst_pos + offset(), img, 3);
+                break;
+            }
+
+            case 4:
+            {
+                copy_rgba(window->image(), dst_pos + offset(), img, false);
+                break;
+            }
+
+            default:
+            {
+                break;
+            }
+        }
     }
 
     virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos)

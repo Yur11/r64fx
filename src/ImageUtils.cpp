@@ -232,10 +232,11 @@ void fill_circle(Image* dst, unsigned char* color, Point<int> topleft, int diame
 }
 
 
-void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
+void copy(Image* dst, Point<int> dstpos, Image* src, int component_count, Rect<int> src_rect)
 {
 #ifdef R64FX_DEBUG
-    assert(dst->componentCount() == src->componentCount());
+    assert(dst != nullptr);
+    assert(src != nullptr);
 #endif//R64FX_DEBUG
 
     RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
@@ -247,7 +248,7 @@ void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
         {
             auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
             auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
-            for(int c=0; c<dst->componentCount(); c++)
+            for(int c=0; c<component_count; c++)
             {
                 dstpx[c] = srcpx[c];
             }
@@ -256,13 +257,13 @@ void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect)
 }
 
 
-void copy(Image* dst, Point<int> dstpos, Image* src)
+void copy(Image* dst, Point<int> dstpos, Image* src, int component_count)
 {
-    copy(dst, dstpos, src, Rect<int>(0, 0, src->width(), src->height()));
+    copy(dst, dstpos, src, component_count, Rect<int>(0, 0, src->width(), src->height()));
 }
 
 
-void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src, int src_component, Rect<int> src_rect)
+void copy_component(Image* dst, int dst_component, int dst_component_count, Point<int> dstpos, Image* src, int src_component, Rect<int> src_rect)
 {
     RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
     RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
@@ -273,15 +274,55 @@ void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src
         {
             auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
             auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
-            dstpx[dst_component] = srcpx[src_component];
+            for(auto c=0; c<dst_component_count; c++)
+            {
+                dstpx[dst_component + c] = srcpx[src_component];
+            }
         }
     }
 }
 
 
-void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src, int src_component)
+void copy_component(Image* dst, int dst_component, int dst_component_count, Point<int> dstpos, Image* src, int src_component)
 {
-    copy_component(dst, dst_component, dstpos, src, src_component, {0, 0, dst->width(), dst->height()});
+    copy_component(dst, dst_component, dst_component_count, dstpos, src, src_component, {0, 0, dst->width(), dst->height()});
+}
+
+
+void copy_ra2rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect, const bool accurate)
+{
+#ifdef R64FX_DEBUG
+    assert(dst->componentCount() == 4);
+    assert(src->componentCount() == 2);
+#endif//R64FX_DEBUG
+
+    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
+    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
+
+    for(int y=0; y<dst_isec.height(); y++)
+    {
+        for(int x=0; x<dst_isec.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
+            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
+
+            float alpha            = float(      srcpx[1]) * rcp255;
+            float one_minus_alpha  = float(255 - srcpx[1]) * rcp255;
+            for(int c=0; c<3; c++)
+            {
+                if(accurate)
+                    dstpx[c] = mix_accurate(dstpx[c], alpha, srcpx[0], one_minus_alpha);
+                else
+                    dstpx[c] = mix_lazy(dstpx[c], alpha, srcpx[0], one_minus_alpha);
+            }
+        }
+    }
+}
+
+
+void copy_ra2rgba(Image* dst, Point<int> dstpos, Image* src, const bool accurate)
+{
+    copy_ra2rgba(dst, dstpos, src, Rect<int>(0, 0, src->width(), src->height()), accurate);
 }
 
 

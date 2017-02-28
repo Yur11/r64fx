@@ -26,14 +26,19 @@ void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_v
 void fill_circle(Image* dst, unsigned char* color, Point<int> topleft, int diameter, int component, int component_count);
 
 
-void copy(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect);
+void copy(Image* dst, Point<int> dstpos, Image* src, int component_count, Rect<int> src_rect);
 
-void copy(Image* dst, Point<int> dstpos, Image* src);
+void copy(Image* dst, Point<int> dstpos, Image* src, int component_count);
 
 
-void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src, int src_component, Rect<int> src_rect);
+void copy_component(Image* dst, int dst_component, int dst_component_count, Point<int> dstpos, Image* src, int src_component, Rect<int> src_rect);
 
-void copy_component(Image* dst, int dst_component, Point<int> dstpos, Image* src, int src_component);
+void copy_component(Image* dst, int dst_component, int dst_component_count, Point<int> dstpos, Image* src, int src_component);
+
+
+void copy_ra2rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect, const bool accurate = true);
+
+void copy_ra2rgba(Image* dst, Point<int> dstpos, Image* src, const bool accurate = true);
 
 
 void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect, const bool accurate = true);

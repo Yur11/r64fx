@@ -63,21 +63,21 @@ void draw_knob_handle(Image* dst, Point<int> dstpos, int size)
 
     Image g1(size, size, 4);
     fill_gradient_vert(&g1, 127, 31, 0, 3, {0, 7, size, size - 7});
-    copy_component(&g1, 3, {0, 0}, &c1, 0);
+    copy_component(&g1, 3, 1, {0, 0}, &c1, 0);
 
     Image g2(size, size, 4);
     fill_gradient_vert(&g2, 223, 31, 0, 3, {0, 10, size, size - 10});
-    copy_component(&g2, 3, {0, 0}, &c2, 0);
+    copy_component(&g2, 3, 1, {0, 0}, &c2, 0);
 
     Image g3(size, size, 4);
     fill_gradient_vert(&g3, 147, 107, 0, 3, {0, 11, size, size - 11});
-    copy_component(&g3, 3, {0, 0}, &c3, 0);
+    copy_component(&g3, 3, 1, {0, 0}, &c3, 0);
 
     fill(dst, Color(0, 0, 0, 255));
     copy_rgba(dst, {0, 0}, &g1);
     copy_rgba(dst, {0, 0}, &g2);
     copy_rgba(dst, {0, 0}, &g3);
-    copy_component(dst, 3, dstpos, &c1, 0);
+    copy_component(dst, 3, 1, dstpos, &c1, 0);
 }
 
 
@@ -121,7 +121,7 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
         Image img(size, size, 4);
         fill(&img, Color(95, 95, 95, 0));
-        copy_component(&img, 3, {0, 0}, &horse_shoe, 0);
+        copy_component(&img, 3, 1, {0, 0}, &horse_shoe, 0);
 
         p->putImage(&img, {10 + (i * size + 20), 20});
 
@@ -138,21 +138,27 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         p->putImage(&marker, {10 + (i * size + 20), 20});
     }
 
-    Image c(8, 8, 4);
-    fill(&c, Color(255, 0, 0, 0));
+    Image img1(44, 44, 1);
+    fill(&img1, Color(0));
+    fill(&img1, Color(127), {11, 11, 22, 12});
+    fill(&img1, Color(255), {11, 22, 22, 12});
+    p->putImage(&img1, {20, 100});
 
-    Image img(44, 44, 4);
-    fill(&img, Color(0, 0, 255, 0));
+    Image img3(44, 44, 3);
+    fill(&img3, Color(255,  0, 0),   {0,   0, 22, 22});
+    fill(&img3, Color(0,  255, 0),   {22,  0, 22, 22});
+    fill(&img3, Color(255,  0, 255), {0,  22, 22, 22});
+    fill(&img3, Color(0,    0, 0),   {22, 22, 22, 22});
+    p->putImage(&img3, {53, 144});
 
-    copy(&img, {18, 0}, &c);
-    copy(&img, {18, 36}, &c);
+    Image img2(44, 44, 2);
+    fill(&img2, Color(0, 127));
+    p->putImage(&img2, {42, 110});
 
-    Transformation2D<float> t1;
-    t1.rotate(-(M_PI * (1.0f/ 3.0f)));
-    t1.translate(-4, 18);
-    copy_transformed(&img, t1, &c);
-
-    p->putImage(&img, {20, 100});
+    Image img4(44, 44, 4);
+    fill(&img4, Color(255, 255, 255, 255));
+    fill_circle(&img4, Color(0), {0, 0}, 44, 3, 1);
+    p->putImage(&img4, {20, 170});
 }
 
 
