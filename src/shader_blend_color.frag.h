@@ -11,7 +11,7 @@
 "void main()\n"
 "{\n"
 "    vec4 texel = texture(sampler, frag_tex_coord);\n"
-"    \n"
+"\n"
 "    gl_FragColor = vec4(\n"
 "        color[0],\n"
 "        color[1],\n"

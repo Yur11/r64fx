@@ -48,6 +48,7 @@ R64FX_PAINTER_SHADER_EXTERN PainterShader_Color* g_PainterShader_Color R64FX_PAI
 
 class PainterShader_Texture : public PainterShader{
     GLint unif_sampler;
+    GLint unif_component_count;
     GLint attr_tex_coord;
 
 public:
@@ -58,6 +59,8 @@ public:
     void setSampler(int sampler);
 
     void bindTexCoordAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer);
+
+    void setComponentCount(int component_count);
 
 protected:
     void fetchCommonIndices();

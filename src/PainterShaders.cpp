@@ -112,6 +112,7 @@ PainterShader_Texture::PainterShader_Texture()
         return;
 
     fetchCommonIndices();
+    R64FX_GET_UNIFORM_LOCATION(component_count);
 }
 
 
@@ -130,6 +131,12 @@ void PainterShader_Texture::setSampler(int sampler)
 void PainterShader_Texture::bindTexCoordAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
 {
     bindAttribute(attr_tex_coord, 2, type, normalized, stride, pointer);
+}
+
+
+void PainterShader_Texture::setComponentCount(int component_count)
+{
+    gl::Uniform1i(unif_component_count, component_count);
 }
 
 

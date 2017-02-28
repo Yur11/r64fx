@@ -480,6 +480,7 @@ struct PainterImplGL : public PainterImpl{
             gl::ActiveTexture(GL_TEXTURE0);
             tex->bind();
             g_PainterShader_Texture->setSampler(0);
+            g_PainterShader_Texture->setComponentCount(texture->componentCount());
 
             m_textured_rect.setTexCoords(
                 intersection.srcx() * tex->wrcp(),

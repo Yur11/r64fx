@@ -12,7 +12,7 @@
 "{\n"
 "    vec4 texel = texture(sampler, frag_tex_coord[0]);\n"
 "    float min_value = texel[0] * gain;\n"
-"    float max_value = texel[1] * gain; \n"
+"    float max_value = texel[1] * gain;\n"
 "    float value = frag_tex_coord[1];\n"
 "    if(value > min_value && value < max_value)\n"
 "    {\n"
