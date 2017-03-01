@@ -1,9 +1,12 @@
 #version 130
 
-/* Scale and shift. */
+in  vec2 position;
+in  vec2 tex_coord;
+
+// Scale and shift.
 uniform vec4 sxsytxty = vec4(1.0, 1.0, 0.0, 0.0);
 
-in vec2 position;
+out vec2 frag_tex_coord;
 
 void main()
 {
@@ -13,4 +16,6 @@ void main()
         0.0,
         1.0
     );
+
+    frag_tex_coord = tex_coord;
 }

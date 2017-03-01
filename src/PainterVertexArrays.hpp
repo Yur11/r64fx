@@ -23,13 +23,13 @@ public:
 };
 
 
-class PainterVertexArray_UberRect : public PainterVertexArray{
+class PainterVertexArray_CommonRect : public PainterVertexArray{
 public:
     void init()
     {
         PainterVertexArray::init(64);
-        g_PainterShader_Uber->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
-        g_PainterShader_Uber->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
+        g_PainterShader_Common->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
+        g_PainterShader_Common->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
     }
 
     void setTexCoords(float left, float top, float right, float bottom)

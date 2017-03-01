@@ -17,23 +17,16 @@ namespace r64fx{
 
 namespace{
 
-const char* shader_text_position =
-#include "shader_position.vert.h"
+const char* text_shader_common_vert =
+#include "shader_common.vert.h"
 ;
 
-const char* shader_text_pos_and_tex_coord =
-#include "shader_pos_and_tex_coord.vert.h"
+const char* text_shader_common_frag =
+#include "shader_common.frag.h"
 ;
 
-const char* shader_text_uber =
-#include "shader_uber.frag.h"
-;
-
-VertexShader g_shader_position;
-VertexShader g_shader_pos_and_tex_coord;
-
-FragmentShader g_shader_uber;
-FragmentShader g_shader_waveform;
+VertexShader    g_shader_common_vert;
+FragmentShader  g_shader_common_frag;
 
 }//namespace
 
@@ -54,8 +47,8 @@ PainterShader::~PainterShader()
 }
 
 
-PainterShader_Uber::PainterShader_Uber()
-: PainterShader(g_shader_pos_and_tex_coord, g_shader_uber)
+PainterShader_Common::PainterShader_Common()
+: PainterShader(g_shader_common_vert, g_shader_common_frag)
 {
     if(isGood())
     {
@@ -69,24 +62,22 @@ PainterShader_Uber::PainterShader_Uber()
 
 void init_painter_shaders()
 {
-    g_shader_position           = VertexShader(shader_text_position);
-    g_shader_pos_and_tex_coord  = VertexShader(shader_text_pos_and_tex_coord);
+    g_shader_common_vert = VertexShader(text_shader_common_vert);
+    g_shader_common_frag = FragmentShader(text_shader_common_frag);
 
-    g_shader_uber               = FragmentShader(shader_text_uber);
-
-    g_PainterShader_Uber = new PainterShader_Uber;
-    if(!g_PainterShader_Uber->isGood())
+    g_PainterShader_Common = new PainterShader_Common;
+    if(!g_PainterShader_Common->isGood())
         abort();
 }
 
 
 void cleanup_painter_shaders()
 {
-    if(g_PainterShader_Uber)
-        delete g_PainterShader_Uber;
+    if(g_PainterShader_Common)
+        delete g_PainterShader_Common;
 
-    g_shader_position.free();
-    g_shader_pos_and_tex_coord.free();
+    g_shader_common_vert.free();
+    g_shader_common_frag.free();
 }
 
 }//namespace r64fx

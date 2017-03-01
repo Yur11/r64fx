@@ -341,7 +341,7 @@ public:
 struct PainterImplGL : public PainterImpl{
     PainterShader* m_current_shader = nullptr;
 
-    PainterVertexArray_UberRect      m_uber_rect;
+    PainterVertexArray_CommonRect      m_uber_rect;
 
     LinkedList<PainterTexture1DImplGL> m_1d_textures;
     LinkedList<PainterTexture2DImplGL> m_2d_textures;
@@ -423,11 +423,11 @@ struct PainterImplGL : public PainterImpl{
         auto intersection_rect = clip(rect + offset());
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
-            useShader(g_PainterShader_Uber);
-            setShaderScaleAndShift(g_PainterShader_Uber, intersection_rect);
-            g_PainterShader_Uber->setMode(PainterShader_Uber::ModeColor());
+            useShader(g_PainterShader_Common);
+            setShaderScaleAndShift(g_PainterShader_Common, intersection_rect);
+            g_PainterShader_Common->setMode(PainterShader_Common::ModeColor());
 
-            g_PainterShader_Uber->setColor(
+            g_PainterShader_Common->setColor(
                 float(color[0]) * uchar2float_rcp,
                 float(color[1]) * uchar2float_rcp,
                 float(color[2]) * uchar2float_rcp,
@@ -459,15 +459,15 @@ struct PainterImplGL : public PainterImpl{
 
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            useShader(g_PainterShader_Uber);
+            useShader(g_PainterShader_Common);
             setShaderScaleAndShift(
-                g_PainterShader_Uber, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+                g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
             );
 
-            g_PainterShader_Uber->setMode(PainterShader_Uber::ModePutImage(texture->componentCount()));
+            g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
             gl::ActiveTexture(GL_TEXTURE0);
             tex->bind();
-            g_PainterShader_Uber->setSampler(0);
+            g_PainterShader_Common->setSampler(0);
 
             m_uber_rect.setTexCoords(
                 intersection.srcx() * tex->wrcp(),
@@ -500,14 +500,14 @@ struct PainterImplGL : public PainterImpl{
 
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            useShader(g_PainterShader_Uber);
+            useShader(g_PainterShader_Common);
             setShaderScaleAndShift(
-                g_PainterShader_Uber, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+                g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
             );
 
             gl::ActiveTexture(GL_TEXTURE0);
             mask_texture_impl->bind();
-            g_PainterShader_Uber->setSampler(0);
+            g_PainterShader_Common->setSampler(0);
 
             m_uber_rect.setTexCoords(
                 intersection.srcx() * mask_texture_impl->wrcp(),
@@ -518,8 +518,8 @@ struct PainterImplGL : public PainterImpl{
 
             for(int c=0; c<mask_texture_impl->componentCount(); c++)
             {
-                g_PainterShader_Uber->setMode(PainterShader_Uber::ModeBlendColors(mask_texture->componentCount()));
-                g_PainterShader_Uber->setColor(
+                g_PainterShader_Common->setMode(PainterShader_Common::ModeBlendColors(mask_texture->componentCount()));
+                g_PainterShader_Common->setColor(
                     float(colors[c][0]) * uchar2float_rcp,
                     float(colors[c][1]) * uchar2float_rcp,
                     float(colors[c][2]) * uchar2float_rcp,
@@ -571,14 +571,14 @@ struct PainterImplGL : public PainterImpl{
 // 
 //         if(intersection.width() > 0 && intersection.height() > 0)
 //         {
-//             useShader(g_PainterShader_Uber);
+//             useShader(g_PainterShader_Common);
 //             setShaderScaleAndShift(
-//                 g_PainterShader_Uber, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+//                 g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
 //             );
 // 
 //             
 // 
-//             g_PainterShader_Uber->setColor(
+//             g_PainterShader_Common->setColor(
 //                 float(color[0]) * uchar2float_rcp,
 //                 float(color[1]) * uchar2float_rcp,
 //                 float(color[2]) * uchar2float_rcp,
@@ -587,7 +587,7 @@ struct PainterImplGL : public PainterImpl{
 // 
 //             gl::ActiveTexture(GL_TEXTURE0);
 //             waveform_texture_impl->bind();
-//             g_PainterShader_Uber->setSampler(0);
+//             g_PainterShader_Common->setSampler(0);
 // 
 //             float wrcp = waveform_texture_impl->lengthRcp();
 //             float hrcp = 1.0f / float(rect.height());

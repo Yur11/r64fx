@@ -39,14 +39,14 @@ public:
 };
 
 
-class PainterShader_Uber : public PainterShader{
+class PainterShader_Common : public PainterShader{
     GLint attr_tex_coord;
     GLint unif_mode;
     GLint unif_color;
     GLint unif_sampler;
 
 public:
-    PainterShader_Uber();
+    PainterShader_Common();
 
     inline void bindTexCoordAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
     {
@@ -84,7 +84,7 @@ public:
     }
 };
 
-R64FX_DEF_PAINTER_SHADER(PainterShader_Uber)
+R64FX_DEF_PAINTER_SHADER(PainterShader_Common)
 
 
 void init_painter_shaders();
