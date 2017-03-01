@@ -33,13 +33,13 @@ public:
 };
 
 
-class PainterVertexArray_TexturedRect : public PainterVertexArray{
+class PainterVertexArray_UberRect : public PainterVertexArray{
 public:
     void init()
     {
         PainterVertexArray::init(64);
-        g_PainterShader_Texture->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
-        g_PainterShader_Texture->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
+        g_PainterShader_Uber->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
+        g_PainterShader_Uber->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
     }
 
     void setTexCoords(float left, float top, float right, float bottom)
@@ -60,28 +60,6 @@ public:
 
         gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
         gl::BufferSubData(GL_ARRAY_BUFFER, 32, 32, buff);
-    }
-};
-
-
-class PainterVertexArray_ColorBlend : public PainterVertexArray_TexturedRect{
-public:
-    void init()
-    {
-        PainterVertexArray::init(64);
-        g_PainterShader_ColorBlend->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
-        g_PainterShader_ColorBlend->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
-    }
-};
-
-
-class PainterVertexArray_Waveform : public PainterVertexArray_TexturedRect{
-public:
-    void init()
-    {
-        PainterVertexArray::init(64);
-        g_PainterShader_Waveform->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
-        g_PainterShader_Waveform->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
     }
 };
 
