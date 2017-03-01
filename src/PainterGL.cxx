@@ -341,7 +341,6 @@ public:
 struct PainterImplGL : public PainterImpl{
     PainterShader* m_current_shader = nullptr;
 
-    PainterVertexArray_ColoredRect   m_colored_rect;
     PainterVertexArray_UberRect      m_uber_rect;
 
     LinkedList<PainterTexture1DImplGL> m_1d_textures;
@@ -368,9 +367,6 @@ struct PainterImplGL : public PainterImpl{
         }
         PainterImplGL_count++;
 
-        m_colored_rect.init();
-        m_colored_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f);
-
         m_uber_rect.init();
         m_uber_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f);
 
@@ -380,7 +376,6 @@ struct PainterImplGL : public PainterImpl{
 
     virtual ~PainterImplGL()
     {
-        m_colored_rect.cleanup();
         m_uber_rect.cleanup();
 
         PainterImplGL_count--;
@@ -428,17 +423,18 @@ struct PainterImplGL : public PainterImpl{
         auto intersection_rect = clip(rect + offset());
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
-            useShader(g_PainterShader_Color);
-            setShaderScaleAndShift(g_PainterShader_Color, intersection_rect);
+            useShader(g_PainterShader_Uber);
+            setShaderScaleAndShift(g_PainterShader_Uber, intersection_rect);
+            g_PainterShader_Uber->setMode(PainterShader_Uber::ModeColor());
 
-            g_PainterShader_Color->setColor(
+            g_PainterShader_Uber->setColor(
                 float(color[0]) * uchar2float_rcp,
                 float(color[1]) * uchar2float_rcp,
                 float(color[2]) * uchar2float_rcp,
                 float(color[3]) * uchar2float_rcp
             );
 
-            m_colored_rect.draw();
+            m_uber_rect.draw();
         }
     }
 

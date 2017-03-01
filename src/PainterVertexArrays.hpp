@@ -23,16 +23,6 @@ public:
 };
 
 
-class PainterVertexArray_ColoredRect : public PainterVertexArray{
-public:
-    void init()
-    {
-        PainterVertexArray::init(32);
-        g_PainterShader_Color->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
-    }
-};
-
-
 class PainterVertexArray_UberRect : public PainterVertexArray{
 public:
     void init()

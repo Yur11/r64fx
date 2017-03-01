@@ -68,6 +68,11 @@ public:
         return 4 | tex_component;
     }
 
+    inline int static ModeColor()
+    {
+        return 9;
+    }
+
     inline void setColor(float r, float g, float b, float a)
     {
         gl::Uniform4f(unif_color, r, g, b, a);
@@ -80,21 +85,6 @@ public:
 };
 
 R64FX_DEF_PAINTER_SHADER(PainterShader_Uber)
-
-
-class PainterShader_Color : public PainterShader{
-    GLint unif_color;
-
-public:
-    PainterShader_Color();
-
-    inline void setColor(float r, float g, float b, float a)
-    {
-        gl::Uniform4f(unif_color, r, g, b, a);
-    }
-};
-
-R64FX_DEF_PAINTER_SHADER(PainterShader_Color)
 
 
 void init_painter_shaders();

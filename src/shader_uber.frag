@@ -61,6 +61,13 @@ void main()
             break;
         }
 
+        //fillRect();
+        case 9:
+        {
+            gl_FragColor = color;
+            break;
+        }
+
         default:
             discard;
     }
