@@ -159,6 +159,23 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     fill(&img4, Color(255, 255, 255, 255));
     fill_circle(&img4, Color(0), {0, 0}, 44, 3, 1);
     p->putImage(&img4, {20, 170});
+
+    const int waveform_length = 100;
+    unsigned short waveform[waveform_length * 2];
+    for(int i=0; i<waveform_length; i++)
+    {
+        if(i & 1)
+        {
+            waveform[i*2 + 0] = 0;
+            waveform[i*2 + 1] = 65535;
+        }
+        else
+        {
+            waveform[i*2 + 0] = 0;
+            waveform[i*2 + 1] = 32817;
+        }
+    }
+    p->drawWaveform({120, 100, waveform_length, 50}, Color(255, 0, 0, 0), waveform);
 }
 
 

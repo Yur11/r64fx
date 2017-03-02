@@ -43,7 +43,8 @@ class PainterShader_Common : public PainterShader{
     GLint attr_tex_coord;
     GLint unif_mode;
     GLint unif_color;
-    GLint unif_sampler;
+    GLint unif_sampler1d;
+    GLint unif_sampler2d;
 
 public:
     PainterShader_Common();
@@ -58,19 +59,24 @@ public:
         gl::Uniform1i(unif_mode, mode);
     }
 
-    inline int static ModePutImage(int component_count)
+    inline static const int ModePutImage(int component_count)
     {
         return component_count;
     }
 
-    inline int static ModeBlendColors(int tex_component)
+    inline static const int ModeBlendColors(int tex_component)
     {
         return 4 | tex_component;
     }
 
-    inline int static ModeColor()
+    inline static const int ModeColor()
     {
         return 9;
+    }
+
+    inline static const int ModeWaveform()
+    {
+        return 10;
     }
 
     inline void setColor(float r, float g, float b, float a)
@@ -78,9 +84,14 @@ public:
         gl::Uniform4f(unif_color, r, g, b, a);
     }
 
-    inline void setSampler(int sampler)
+    inline void setSampler1D(int sampler)
     {
-        gl::Uniform1i(unif_sampler, sampler);
+        gl::Uniform1i(unif_sampler1d, sampler);
+    }
+
+    inline void setSampler2D(int sampler)
+    {
+        gl::Uniform1i(unif_sampler2d, sampler);
     }
 };
 

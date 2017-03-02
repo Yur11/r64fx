@@ -339,8 +339,6 @@ public:
 
 
 struct PainterImplGL : public PainterImpl{
-    PainterShader* m_current_shader = nullptr;
-
     PainterVertexArray_CommonRect      m_uber_rect;
 
     LinkedList<PainterTexture1DImplGL> m_1d_textures;
@@ -372,6 +370,10 @@ struct PainterImplGL : public PainterImpl{
 
         gl::Enable(GL_BLEND);
         gl::BlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+
+        g_PainterShader_Common->use();
+        g_PainterShader_Common->setSampler2D(0);
+        g_PainterShader_Common->setSampler1D(1);
     }
 
     virtual ~PainterImplGL()
@@ -388,24 +390,15 @@ struct PainterImplGL : public PainterImpl{
     virtual void clear(unsigned char* color)
     {
         gl::ClearColor(
-            float(color[0]) * uchar2float_rcp,
-            float(color[1]) * uchar2float_rcp,
-            float(color[2]) * uchar2float_rcp,
-            float(color[3]) * uchar2float_rcp
+            float(color[0]) * rcp255,
+            float(color[1]) * rcp255,
+            float(color[2]) * rcp255,
+            float(color[3]) * rcp255
         );
         gl::Clear(GL_COLOR_BUFFER_BIT);
     }
 
-    void useShader(PainterShader* shader)
-    {
-        if(m_current_shader != shader)
-        {
-            m_current_shader = shader;
-            m_current_shader->use();
-        }
-    }
-
-    void setShaderScaleAndShift(PainterShader* shader, const Rect<int> &rect)
+    void setScaleAndShift(PainterShader* shader, const Rect<int> &rect)
     {
         float rw = rect.width()  * m_window_double_width_rcp;
         float rh = rect.height() * m_window_double_hrcp;
@@ -418,20 +411,31 @@ struct PainterImplGL : public PainterImpl{
         );
     }
 
+    inline void setTexture1D(PainterTexture1DImplGL* texture)
+    {
+        gl::ActiveTexture(GL_TEXTURE1);
+        texture->bind();
+    }
+
+    inline void setTexture2D(PainterTexture2DImplGL* texture)
+    {
+        gl::ActiveTexture(GL_TEXTURE0);
+        texture->bind();
+    }
+
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
     {
         auto intersection_rect = clip(rect + offset());
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
-            useShader(g_PainterShader_Common);
-            setShaderScaleAndShift(g_PainterShader_Common, intersection_rect);
+            setScaleAndShift(g_PainterShader_Common, intersection_rect);
             g_PainterShader_Common->setMode(PainterShader_Common::ModeColor());
 
             g_PainterShader_Common->setColor(
-                float(color[0]) * uchar2float_rcp,
-                float(color[1]) * uchar2float_rcp,
-                float(color[2]) * uchar2float_rcp,
-                float(color[3]) * uchar2float_rcp
+                float(color[0]) * rcp255,
+                float(color[1]) * rcp255,
+                float(color[2]) * rcp255,
+                float(color[3]) * rcp255
             );
 
             m_uber_rect.draw();
@@ -459,15 +463,13 @@ struct PainterImplGL : public PainterImpl{
 
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            useShader(g_PainterShader_Common);
-            setShaderScaleAndShift(
+            setScaleAndShift(
                 g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
             );
 
             g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
-            gl::ActiveTexture(GL_TEXTURE0);
-            tex->bind();
-            g_PainterShader_Common->setSampler(0);
+
+            setTexture2D(tex);
 
             m_uber_rect.setTexCoords(
                 intersection.srcx() * tex->wrcp(),
@@ -491,39 +493,36 @@ struct PainterImplGL : public PainterImpl{
         assert(mask_texture->parentPainter() == this);
 #endif//R64FX_DEBUG
 
-        auto mask_texture_impl = static_cast<PainterTexture2DImplGL*>(mask_texture);
+        auto mask_tex = static_cast<PainterTexture2DImplGL*>(mask_texture);
 
         RectIntersection<int> intersection(
             current_clip_rect,
-            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), mask_texture_impl->width(), mask_texture_impl->height()}
+            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), mask_tex->width(), mask_tex->height()}
         );
 
         if(intersection.width() > 0 && intersection.height() > 0)
         {
-            useShader(g_PainterShader_Common);
-            setShaderScaleAndShift(
+            setScaleAndShift(
                 g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
             );
 
-            gl::ActiveTexture(GL_TEXTURE0);
-            mask_texture_impl->bind();
-            g_PainterShader_Common->setSampler(0);
+            setTexture2D(mask_tex);
 
             m_uber_rect.setTexCoords(
-                intersection.srcx() * mask_texture_impl->wrcp(),
-                intersection.srcy() * mask_texture_impl->hrcp(),
-                (intersection.srcx() + intersection.width())  * mask_texture_impl->wrcp(),
-                (intersection.srcy() + intersection.height()) * mask_texture_impl->hrcp()
+                intersection.srcx() * mask_tex->wrcp(),
+                intersection.srcy() * mask_tex->hrcp(),
+                (intersection.srcx() + intersection.width())  * mask_tex->wrcp(),
+                (intersection.srcy() + intersection.height()) * mask_tex->hrcp()
             );
 
-            for(int c=0; c<mask_texture_impl->componentCount(); c++)
+            for(int c=0; c<mask_tex->componentCount(); c++)
             {
                 g_PainterShader_Common->setMode(PainterShader_Common::ModeBlendColors(mask_texture->componentCount()));
                 g_PainterShader_Common->setColor(
-                    float(colors[c][0]) * uchar2float_rcp,
-                    float(colors[c][1]) * uchar2float_rcp,
-                    float(colors[c][2]) * uchar2float_rcp,
-                    float(colors[c][3]) * uchar2float_rcp
+                    float(colors[c][0]) * rcp255,
+                    float(colors[c][1]) * rcp255,
+                    float(colors[c][2]) * rcp255,
+                    float(colors[c][3]) * rcp255
                 );
 
                 m_uber_rect.draw();
@@ -557,50 +556,47 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform_texture)
     {
-// #ifdef R64FX_DEBUG
-//         assert(waveform_texture->parentPainter() == this);
-//         assert(waveform_texture->componentCount() == 2);
-// #endif//R64FX_DEBUG
-// 
-//         auto waveform_texture_impl = static_cast<PainterTexture1DImplGL*>(waveform_texture);
-// 
-//         RectIntersection<int> intersection(
-//             current_clip_rect,
-//             {rect.x() + offsetX(), rect.y() + offsetY(), rect.width(), rect.height()}
-//         );
-// 
-//         if(intersection.width() > 0 && intersection.height() > 0)
-//         {
-//             useShader(g_PainterShader_Common);
-//             setShaderScaleAndShift(
-//                 g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
-//             );
-// 
-//             
-// 
-//             g_PainterShader_Common->setColor(
-//                 float(color[0]) * uchar2float_rcp,
-//                 float(color[1]) * uchar2float_rcp,
-//                 float(color[2]) * uchar2float_rcp,
-//                 float(color[3]) * uchar2float_rcp
-//             );
-// 
-//             gl::ActiveTexture(GL_TEXTURE0);
-//             waveform_texture_impl->bind();
-//             g_PainterShader_Common->setSampler(0);
-// 
-//             float wrcp = waveform_texture_impl->lengthRcp();
-//             float hrcp = 1.0f / float(rect.height());
-// 
-//             m_uber_rect.setTexCoords(
-//                 intersection.srcx() * wrcp,
-//                 intersection.srcy() * hrcp,
-//                 (intersection.srcx() + intersection.width())  * wrcp,
-//                 (intersection.srcy() + intersection.height()) * hrcp
-//             );
-// 
-//             m_uber_rect.draw();
-//         }
+#ifdef R64FX_DEBUG
+        assert(waveform_texture->parentPainter() == this);
+        assert(waveform_texture->componentCount() == 2);
+#endif//R64FX_DEBUG
+
+        auto waveform_tex = static_cast<PainterTexture1DImplGL*>(waveform_texture);
+
+        RectIntersection<int> intersection(
+            current_clip_rect,
+            {rect.x() + offsetX(), rect.y() + offsetY(), rect.width(), rect.height()}
+        );
+
+        if(intersection.width() > 0 && intersection.height() > 0)
+        {
+            setScaleAndShift(
+                g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+            );
+
+            g_PainterShader_Common->setMode(PainterShader_Common::ModeWaveform());
+
+            g_PainterShader_Common->setColor(
+                float(color[0]) * rcp255,
+                float(color[1]) * rcp255,
+                float(color[2]) * rcp255,
+                float(color[3]) * rcp255
+            );
+
+            setTexture1D(waveform_tex);
+
+            float wrcp = waveform_tex->lengthRcp();
+            float hrcp = 1.0f / float(rect.height());
+
+            m_uber_rect.setTexCoords(
+                intersection.srcx() * wrcp,
+                intersection.srcy() * hrcp,
+                (intersection.srcx() + intersection.width())  * wrcp,
+                (intersection.srcy() + intersection.height()) * hrcp
+            );
+
+            m_uber_rect.draw();
+        }
     }
 
     virtual PainterTexture1D* newTexture()

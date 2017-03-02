@@ -1,7 +1,7 @@
 #version 130
 
-in  vec2 position;
-in  vec2 tex_coord;
+in vec2 position;
+in vec2 tex_coord;
 
 // Scale and shift.
 uniform vec4 sxsytxty = vec4(1.0, 1.0, 0.0, 0.0);
