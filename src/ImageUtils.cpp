@@ -18,50 +18,12 @@ namespace{
 
 constexpr float rcp255 = 1.0f / 255.0f;
 
-}//namespace
-
-struct MatchedRects{
-    Point<int> dst_offset;
-    Point<int> src_offset;
-    Size<int>  size;
-
-    MatchedRects(const Rect<int> &dst_rect, const Rect<int> &src_rect)
-    {
-        match(dst_rect, src_rect);
-    }
-
-    MatchedRects(const Image* dst, const Point<int> &src_pos, const Image* src)
-    {
-        match(dst, src_pos, src);
-    }
-
-    inline void match(const Rect<int> &dst_rect, const Rect<int> &src_rect)
-    {
-        size = intersection(src_rect, dst_rect).size();
-        src_offset.setX(src_rect.x() < 0 ? -src_rect.x() : 0);
-        src_offset.setY(src_rect.y() < 0 ? -src_rect.y() : 0);
-        dst_offset.setX(src_rect.x() > 0 ?  src_rect.x() : 0);
-        dst_offset.setY(src_rect.y() > 0 ?  src_rect.y() : 0);
-    }
-
-    inline void match(const Image* dst, const Point<int> &src_pos, const Image* src)
-    {
-        match(
-            {0, 0, dst->width(), dst->height()},
-            {src_pos.x(), src_pos.y(), src->width(), src->height()}
-        );
-    }
-
-};
-
-
 unsigned char mix_lazy(unsigned char c1, float f1, unsigned char c2, float f2)
 {
     float v1 = float(c1) * rcp255;
     float v2 = float(c2) * rcp255;
     return (unsigned char)((v1*f1 + v2*f2) * 255.0f);
 }
-
 
 unsigned char mix_accurate(unsigned char c1, float f1, unsigned char c2, float f2)
 {
@@ -72,10 +34,13 @@ unsigned char mix_accurate(unsigned char c1, float f1, unsigned char c2, float f
     return (unsigned char)(sqrt(v1*f1 + v2*f2) * 255.0f);
 }
 
+}//namespace
 
-void fill(Image* dst, unsigned char* components, Rect<int> rect)
+
+
+void fill(Image* dst, unsigned char* components, const Rect<int> &rect)
 {
-#ifdef R64FX_DEBUG
+    #ifdef R64FX_DEBUG
     assert(dst != nullptr);
     assert(components != nullptr);
 #endif//R64FX_DEBUG
@@ -84,55 +49,50 @@ void fill(Image* dst, unsigned char* components, Rect<int> rect)
     {
         for(int x=0; x<rect.width(); x++)
         {
+            auto px = dst->pixel(x + rect.x(), y + rect.y());
             for(int c=0; c<dst->componentCount(); c++)
             {
-                dst->pixel(x + rect.x(), y + rect.y())[c] = components[c];
+                px[c] = components[c];
             }
         }
     }
 }
 
 
-void fill(Image* dst, unsigned char* components)
-{
-    fill(dst, components, {0, 0, dst->width(), dst->height()});
-}
-
-
-void fill_component(Image* dst, int component, unsigned char value, Rect<int> rect)
+void fill(Image* dst, int dstc, int ndstc, unsigned char value, const Rect<int> &rect)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
+    assert((dstc + ndstc) <= dst->componentCount());
 #endif//R64FX_DEBUG
 
     for(int y=0; y<rect.height(); y++)
     {
         for(int x=0; x<rect.width(); x++)
         {
-            dst->pixel(x + rect.x(), y + rect.y())[component] = value;
+            auto px = dst->pixel(x + rect.x(), y + rect.y());
+            for(int c=0; c<ndstc; c++)
+            {
+                px[dstc + c] = value;
+            }
         }
     }
 }
 
 
-void fill_component(Image* dst, int component, unsigned char value)
-{
-    fill_component(dst, component, value, {0, 0, dst->width(), dst->height()});
-}
-
-
-void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_val, int component, int component_count, Rect<int> rect)
+void fill_gradient_vert(Image* dst, int dstc, int ndstc, unsigned char val1, unsigned char val2, const Rect<int> &rect)
 {
 #ifdef R64FX_DEBUG
-    assert(img != nullptr);
+    assert(dst != nullptr);
     assert(rect.x() >= 0);
     assert(rect.y() >= 0);
-    assert(rect.right()  <= img->width());
-    assert(rect.bottom() <= img->height());
+    assert(rect.right()  <= dst->width());
+    assert(rect.bottom() <= dst->height());
+    assert((dstc + ndstc) <= dst->componentCount());
 #endif//R64FX_DEBUG
 
-    float bc = float(begin_val) * rcp255;
-    float ec = float(end_val) * rcp255;
+    float bc = float(val1) * rcp255;
+    float ec = float(val2) * rcp255;
     float cd = ec - bc;
 #ifdef R64FX_DEBUG
     assert(!(cd > 255.0f || cd < -255.0f));
@@ -147,9 +107,10 @@ void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_v
     {
         for(int x=rect.x(); x<rect.right(); x++)
         {
-            for(int c=0; c<component_count; c++)
+            auto px = dst->pixel(x, y);
+            for(int c=0; c<ndstc; c++)
             {
-                img->pixel(x, y)[c + component] = (unsigned char)(color * 255);
+                px[dstc + c] = (unsigned char)(color * 255.0f);
             }
         }
         color += cs;
@@ -157,13 +118,7 @@ void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_v
 }
 
 
-void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_val, int component, int component_count)
-{
-    fill_gradient_vert(img, begin_val, end_val, component, component_count, {0, 0, img->width(), img->height()});
-}
-
-
-void fill_circle(Image* dst, unsigned char* color, Point<int> topleft, int diameter, int component, int component_count)
+void fill_circle(Image* dst,  int dstc, int ndstc, unsigned char* components, Point<int> topleft, int diameter)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -199,32 +154,32 @@ void fill_circle(Image* dst, unsigned char* color, Point<int> topleft, int diame
             auto px2 = dst->pixel(topleft.x() + x,                topleft.y() + diameter - y - 1);
             auto px3 = dst->pixel(topleft.x() + diameter - x - 1, topleft.y() + diameter - y - 1);
 
-            for(int c=0; c<component_count; c++)
+            for(int c=0; c<ndstc; c++)
             {
-                px0[c + component] = (unsigned char)(float(px0[c + component]) * one_minus_alpha + float(color[c]) * alpha);
+                px0[dstc + c] = (unsigned char)(float(px0[dstc + c]) * one_minus_alpha + float(components[c]) * alpha);
             }
 
             if(x < radius)
             {
-                for(int c=0; c<component_count; c++)
+                for(int c=0; c<ndstc; c++)
                 {
-                    px1[c + component] = (unsigned char)(float(px1[c + component]) * one_minus_alpha + float(color[c]) * alpha);
+                    px1[dstc + c] = (unsigned char)(float(px1[dstc + c]) * one_minus_alpha + float(components[c]) * alpha);
                 }
 
                 if(y < radius)
                 {
-                    for(int c=0; c<component_count; c++)
+                    for(int c=0; c<ndstc; c++)
                     {
-                        px3[c + component] = (unsigned char)(float(px3[c + component]) * one_minus_alpha + float(color[c]) * alpha);
+                        px3[dstc + c] = (unsigned char)(float(px3[dstc + c]) * one_minus_alpha + float(components[c]) * alpha);
                     }
                 }
             }
 
             if(y < radius)
             {
-                for(int c=0; c<component_count; c++)
+                for(int c=0; c<ndstc; c++)
                 {
-                    px2[c + component] = (unsigned char)(float(px2[c + component]) * one_minus_alpha + float(color[c]) * alpha);
+                    px2[dstc + c] = (unsigned char)(float(px2[dstc + c]) * one_minus_alpha + float(components[c]) * alpha);
                 }
             }
         }
@@ -232,12 +187,22 @@ void fill_circle(Image* dst, unsigned char* color, Point<int> topleft, int diame
 }
 
 
-void copy(Image* dst, Point<int> dstpos, Image* src, int component_count, Rect<int> src_rect)
+void copy(Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc, const Rect<int> &src_rect)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
     assert(src != nullptr);
+    assert((dstc + ndstc) <= dst->componentCount());
+    assert((srcc + nsrcc) <= src->componentCount());
 #endif//R64FX_DEBUG
+    if(nsrcc != 1)
+    {
+#ifdef R64FX_DEBUG
+        assert(ndstc == nsrcc);
+#endif//R64FX_DEBUG
+        if(ndstc != nsrcc)
+            return;
+    }
 
     RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
     RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
@@ -248,52 +213,21 @@ void copy(Image* dst, Point<int> dstpos, Image* src, int component_count, Rect<i
         {
             auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
             auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
-            for(int c=0; c<component_count; c++)
+            for(auto c=0; c<ndstc; c++)
             {
-                dstpx[c] = srcpx[c];
+                dstpx[dstc + c] = srcpx[srcc + (nsrcc == 1 ? 0 : c)];
             }
         }
     }
 }
 
 
-void copy(Image* dst, Point<int> dstpos, Image* src, int component_count)
-{
-    copy(dst, dstpos, src, component_count, Rect<int>(0, 0, src->width(), src->height()));
-}
-
-
-void copy_component(Image* dst, int dst_component, int dst_component_count, Point<int> dstpos, Image* src, int src_component, Rect<int> src_rect)
-{
-    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
-    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
-
-    for(int y=0; y<dst_isec.height(); y++)
-    {
-        for(int x=0; x<dst_isec.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
-            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
-            for(auto c=0; c<dst_component_count; c++)
-            {
-                dstpx[dst_component + c] = srcpx[src_component];
-            }
-        }
-    }
-}
-
-
-void copy_component(Image* dst, int dst_component, int dst_component_count, Point<int> dstpos, Image* src, int src_component)
-{
-    copy_component(dst, dst_component, dst_component_count, dstpos, src, src_component, {0, 0, dst->width(), dst->height()});
-}
-
-
-void copy_ra2rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect, const bool accurate)
+void copy(Image* dst, Point<int> dstpos, Image* src, const Rect<int> &src_rect, const bool accurate)
 {
 #ifdef R64FX_DEBUG
-    assert(dst->componentCount() == 4);
-    assert(src->componentCount() == 2);
+    assert(dst != nullptr);
+    assert(src != nullptr);
+    assert(dst->componentCount() >= src->componentCount());
 #endif//R64FX_DEBUG
 
     RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
@@ -306,86 +240,54 @@ void copy_ra2rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect,
             auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
             auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
 
-            float alpha            = float(      srcpx[1]) * rcp255;
-            float one_minus_alpha  = float(255 - srcpx[1]) * rcp255;
-            for(int c=0; c<3; c++)
+            switch(src->componentCount())
             {
-                if(accurate)
-                    dstpx[c] = mix_accurate(dstpx[c], alpha, srcpx[0], one_minus_alpha);
-                else
-                    dstpx[c] = mix_lazy(dstpx[c], alpha, srcpx[0], one_minus_alpha);
-            }
-        }
-    }
-}
-
-
-void copy_ra2rgba(Image* dst, Point<int> dstpos, Image* src, const bool accurate)
-{
-    copy_ra2rgba(dst, dstpos, src, Rect<int>(0, 0, src->width(), src->height()), accurate);
-}
-
-
-void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect, const bool accurate)
-{
-#ifdef R64FX_DEBUG
-    assert(dst->componentCount() == 4);
-    assert(src->componentCount() == 4);
-#endif//R64FX_DEBUG
-
-    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
-    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
-
-    for(int y=0; y<dst_isec.height(); y++)
-    {
-        for(int x=0; x<dst_isec.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
-            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
-
-            float alpha            = float(      srcpx[3]) * rcp255;
-            float one_minus_alpha  = float(255 - srcpx[3]) * rcp255;
-            for(int c=0; c<3; c++)
-            {
-                if(accurate)
-                    dstpx[c] = mix_accurate(dstpx[c], alpha, srcpx[c], one_minus_alpha);
-                else
-                    dstpx[c] = mix_lazy(dstpx[c], alpha, srcpx[c], one_minus_alpha);
-            }
-        }
-    }
-}
-
-
-void copy_rgba(Image* dst, Point<int> dstpos, Image* src, bool accurate)
-{
-    copy_rgba(dst, dstpos, src, Rect<int>(0, 0, src->width(), src->height()), accurate);
-}
-
-
-void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, Rect<int> src_rect, const bool accurate)
-{
-    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
-    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
-
-    for(int y=0; y<dst_isec.height(); y++)
-    {
-        for(int x=0; x<dst_isec.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
-            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
-
-            for(int m=0; m<src->componentCount(); m++)
-            {
-                float alpha = float(srcpx[m]) * rcp255;
-                float one_minus_alpha = 1.0f - alpha;
-
-                for(int c=0; c<dst->componentCount(); c++)
+                case 1:
                 {
-                    if(accurate)
-                        dstpx[c] = mix_accurate(dstpx[c], one_minus_alpha, colors[m][c], alpha);
-                    else
-                        dstpx[c] = mix_lazy(dstpx[c], one_minus_alpha, colors[m][c], alpha);
+                    for(int c=0; c<dst->componentCount() - (1 - (dst->componentCount() & 1)); c++)
+                    {
+                        dstpx[c] = srcpx[0];
+                    }
+                    break;
+                }
+
+                case 2:
+                {
+                    for(int c=0; c<dst->componentCount() - (1 - (dst->componentCount() & 1)); c++)
+                    {
+                        float alpha            = float(      srcpx[1]) * rcp255;
+                        float one_minus_alpha  = float(255 - srcpx[1]) * rcp255;
+                        if(accurate)
+                            dstpx[c] = mix_accurate
+                                (dstpx[c], alpha, srcpx[0], one_minus_alpha);
+                        else
+                            dstpx[c] = mix_lazy
+                                (dstpx[c], alpha, srcpx[0], one_minus_alpha);
+                    }
+                    break;
+                }
+
+                case 3:
+                {
+                    for(int c=0; c<3; c++)
+                    {
+                        dstpx[c] = srcpx[c];
+                    }
+                    break;
+                }
+
+                case 4:
+                {
+                    float alpha            = float(      srcpx[3]) * rcp255;
+                    float one_minus_alpha  = float(255 - srcpx[3]) * rcp255;
+                    for(int c=0; c<3; c++)
+                    {
+                        if(accurate)
+                            dstpx[c] = mix_accurate(dstpx[c], alpha, srcpx[c], one_minus_alpha);
+                        else
+                            dstpx[c] = mix_lazy(dstpx[c], alpha, srcpx[c], one_minus_alpha);
+                    }
+                    break;
                 }
             }
         }
@@ -393,15 +295,11 @@ void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* 
 }
 
 
-void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, const bool accurate)
-{
-    blend_colors(dst, dstpos, colors, src, Rect<int>(0, 0, src->width(), src->height()), accurate);
-}
-
-
-void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src, Rect<int> dst_rect)
+void copy(Image* dst, Transformation2D<float> transform, Image* src, Rect<int> dst_rect)
 {
 #ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(src != nullptr);
     assert(src->componentCount() == dst->componentCount());
 #endif//R64FX_DEBUG
 
@@ -474,14 +372,47 @@ void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src,
 }
 
 
-void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src)
+void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, const Rect<int> &src_rect, const bool accurate)
 {
-    copy_transformed(dst, transform, src, {0, 0, dst->width(), dst->height()});
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(colors != nullptr);
+#endif//R64FX_DEBUG
+
+    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
+    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
+
+    for(int y=0; y<dst_isec.height(); y++)
+    {
+        for(int x=0; x<dst_isec.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
+            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
+
+            for(int m=0; m<src->componentCount(); m++)
+            {
+                float alpha = float(srcpx[m]) * rcp255;
+                float one_minus_alpha = 1.0f - alpha;
+
+                for(int c=0; c<dst->componentCount(); c++)
+                {
+                    if(accurate)
+                        dstpx[c] = mix_accurate(dstpx[c], one_minus_alpha, colors[m][c], alpha);
+                    else
+                        dstpx[c] = mix_lazy(dstpx[c], one_minus_alpha, colors[m][c], alpha);
+                }
+            }
+        }
+    }
 }
 
 
 void flip_vert(Image* img)
 {
+#ifdef R64FX_DEBUG
+    assert(img != nullptr);
+#endif//R64FX_DEBUG
+
     int hh = img->height() / 2;
 
     for(int y=0; y<hh; y++)
@@ -503,6 +434,10 @@ void flip_vert(Image* img)
 
 void flip_hori(Image* img)
 {
+#ifdef R64FX_DEBUG
+    assert(img != nullptr);
+#endif//R64FX_DEBUG
+
     int hw = img->width() / 2;
 
     for(int y=0; y<img->height(); y++)
@@ -543,185 +478,39 @@ void invert(Image* dst, Image* src)
 }
 
 
-void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> pos2)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(src1 != nullptr);
-    assert(src2 != nullptr);
-    assert(src1->componentCount() == dst->componentCount());
-    assert(src2->componentCount() == dst->componentCount());
-#endif//R64FX_DEBUG
+struct MatchedRects{
+    Point<int> dst_offset;
+    Point<int> src_offset;
+    Size<int>  size;
 
-    RectIntersection<int> src_isec(
-        {pos1.x(), pos1.y(), src1->width(), src1->height()},
-        {pos2.x(), pos2.y(), src2->width(), src2->height()}
-    );
-    if(src_isec.width() <= 0 || src_isec.height() <= 0)
-        return;
-
-    auto p1 = src_isec.dstOffset();
-    auto p2 = src_isec.srcOffset();
-
-    RectIntersection<int> dst_isec(
-        {0, 0, dst->width(), dst->height()},
-        src_isec.rect()
-    );
-    if(dst_isec.width() <=0 || dst_isec.height() <= 0)
-        return;
-
-    p1 += dst_isec.srcOffset();
-    p2 += dst_isec.srcOffset();
-
-    for(int y=0; y<dst_isec.height(); y++)
+    MatchedRects(const Rect<int> &dst_rect, const Rect<int> &src_rect)
     {
-        for(int x=0; x<dst_isec.width(); x++)
-        {
-            auto srcpx1 = src1->pixel(x + p1.x(), y + p1.y());
-            auto srcpx2 = src2->pixel(x + p2.x(), y + p2.y());
-            auto dstpx = dst->pixel(x + dst_isec.dstx(), y + dst_isec.dsty());
-            for(auto c=0; c<dst->componentCount(); c++)
-            {
-                auto val1 = float(srcpx1[c]) * rcp255;
-                auto val2 = float(srcpx2[c]) * rcp255;
-                auto val = val1 * val2;
-                dstpx[c] = (unsigned char)(val * 255.0f);
-            }
-        }
-    }
-}
-
-
-void draw_arc(
-    Image* dst, unsigned char* color, Point<float> center, float radius, float arca, float arcb, float thickness, Rect<int> rect
-)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-#endif//R64FX_DEBUG
-
-    float rcp = 1.0f / 255.0f;
-    bool flip_arc = false;
-    if(arca > arcb)
-    {
-        swap(arca, arcb);
-        flip_arc = true;
+        match(dst_rect, src_rect);
     }
 
-    for(int y=rect.top(); y<rect.bottom(); y++)
+    MatchedRects(const Image* dst, const Point<int> &src_pos, const Image* src)
     {
-        for(int x=rect.left(); x<rect.right(); x++)
-        {
-            float dx = float(center.x() - x);
-            float dy = float(center.y() - y);
-            float distance = sqrt(dx*dx + dy*dy);
-            if(distance >= (radius - thickness) && distance < radius)
-            {
-                float angle = atan2(dy, dx) + M_PI;
-
-                bool in_arc = (angle > arca && angle < arcb);
-                if(flip_arc)
-                    in_arc = !in_arc;
-
-                if(in_arc)
-                {
-                    for(int c=0; c<dst->componentCount(); c++)
-                    {
-                        dst->pixel(x, y)[c] = color[c];
-                    }
-                }
-            }
-            else
-            {
-                float d;
-                if(distance < (radius - thickness))
-                {
-                    d = (radius - thickness) - distance;
-                }
-                else
-                {
-                    d = distance - radius;
-                }
-
-                if(d < 1.0f)
-                {
-                    float angle = atan2(dy, dx) + M_PI;
-
-                    bool in_arc = (angle > arca && angle < arcb);
-                    if(flip_arc)
-                        in_arc = !in_arc;
-
-                    if(in_arc)
-                    {
-                        for(int c=0; c<dst->componentCount(); c++)
-                        {
-                            auto px = dst->pixel(x, y);
-                            float val = float(px[c]) * rcp * d + float(color[c]) * rcp * (1.0f - d);
-                            px[c] = (unsigned char)(val * 255.0f);
-                        }
-                    }
-                }
-            }
-        }
+        match(dst, src_pos, src);
     }
 
-    draw_radius(dst, color, center, arca, radius, (radius - thickness), 1);
-    draw_radius(dst, color, center, arcb, radius, (radius - thickness), 1);
-}
-
-
-void draw_arc(Image* dst, unsigned char* color, Point<float> center, float radius, float arca, float arcb, float thickness)
-{
-    draw_arc(dst, color, center, radius, arca, arcb, thickness, {0, 0, dst->width(), dst->height()});
-}
-
-
-void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b, float thickness)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(color != nullptr);
-#endif//R64FX_DEBUG
-
-    float dx = b.x() - a.x();
-    float dy = b.y() - a.y();
-    float length = sqrt(dx*dx + dy*dy);
-    float length_rcp = 1.0f / length;
-    float cosang = dx * length_rcp;
-    float sinang = dy * length_rcp;
-
-//     int min_x = min(a.x(), b.x());
-//     int min_y = min(a.y(), b.y());
-
-    Image src(max(1, int(length)), max(1, int(thickness)), dst->componentCount());
+    inline void match(const Rect<int> &dst_rect, const Rect<int> &src_rect)
     {
-        fill(&src, color);
+        size = intersection(src_rect, dst_rect).size();
+        src_offset.setX(src_rect.x() < 0 ? -src_rect.x() : 0);
+        src_offset.setY(src_rect.y() < 0 ? -src_rect.y() : 0);
+        dst_offset.setX(src_rect.x() > 0 ?  src_rect.x() : 0);
+        dst_offset.setY(src_rect.y() > 0 ?  src_rect.y() : 0);
     }
 
-    Transformation2D<float> t;
-    t.translate(a.x(), a.y());
-    t.rotate(sinang, cosang);
-    t.translate(0.0f, -int(float(thickness) * 0.5));
+    inline void match(const Image* dst, const Point<int> &src_pos, const Image* src)
+    {
+        match(
+            {0, 0, dst->width(), dst->height()},
+            {src_pos.x(), src_pos.y(), src->width(), src->height()}
+        );
+    }
 
-    Rect<int> r = {
-        0, 0, dst->width(), dst->height()
-    };
-
-    copy_transformed(dst, t, &src, r);
-}
-
-
-void draw_radius(Image* dst, unsigned char* color, Point<float> center, float angle, float outer, float inner, float thickness)
-{
-    float sinang = sin(angle);
-    float cosang = cos(angle);
-    draw_line(
-        dst, color,
-        {center.x() + cosang * inner, center.y() + sinang * inner},
-        {center.x() + cosang * outer, center.y() + sinang * outer},
-        thickness
-    );
-}
+};
 
 
 void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
@@ -804,7 +593,7 @@ void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
 
 template<typename T> inline float denormalize(T num)
 {
-    static const float rcp = 1.0f / float(std::numeric_limits<T>::max());
+    constexpr float rcp = 1.0f / float(std::numeric_limits<T>::max());
     return float(num) * rcp;
 }
 

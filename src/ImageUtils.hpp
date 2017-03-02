@@ -8,88 +8,73 @@
 
 namespace r64fx{
 
-void fill(Image* dst, unsigned char* components, Rect<int> rect);
-
-void fill(Image* dst, unsigned char* components);
+inline const Rect<int> ImgRect(Image* img) { return Rect<int>(0, 0, img->width(), img->height()); }
 
 
-void fill_component(Image* dst, int component, unsigned char value, Rect<int> rect);
+void fill
+    (Image* dst, unsigned char* components, const Rect<int> &rect);
 
-void fill_component(Image* dst, int component, unsigned char value);
-
-
-void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_val, int component, int component_count, Rect<int> rect);
-
-void fill_gradient_vert(Image* img, unsigned char begin_val, unsigned char end_val, int component, int component_count);
-
-
-void fill_circle(Image* dst, unsigned char* color, Point<int> topleft, int diameter, int component, int component_count);
+inline void fill
+    (Image* dst, unsigned char* components)
+{
+    fill(dst, components, ImgRect(dst));
+}
 
 
-void copy(Image* dst, Point<int> dstpos, Image* src, int component_count, Rect<int> src_rect);
+void fill
+    (Image* dst, int dstc, int ndstc, unsigned char value, const Rect<int> &rect);
 
-void copy(Image* dst, Point<int> dstpos, Image* src, int component_count);
+void fill_gradient_vert
+    (Image* dst, int dstc, int ndstc, unsigned char val1, unsigned char val2, const Rect<int> &rect);
 
-
-void copy_component(Image* dst, int dst_component, int dst_component_count, Point<int> dstpos, Image* src, int src_component, Rect<int> src_rect);
-
-void copy_component(Image* dst, int dst_component, int dst_component_count, Point<int> dstpos, Image* src, int src_component);
-
-
-void copy_ra2rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect, const bool accurate = true);
-
-void copy_ra2rgba(Image* dst, Point<int> dstpos, Image* src, const bool accurate = true);
+void fill_circle
+    (Image* dst,  int dstc, int ndstc, unsigned char* components, Point<int> topleft, int diameter);
 
 
-void copy_rgba(Image* dst, Point<int> dstpos, Image* src, Rect<int> src_rect, const bool accurate = true);
+void copy
+    (Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc, const Rect<int> &src_rect);
 
-void copy_rgba(Image* dst, Point<int> dstpos, Image* src, const bool accurate = true);
+inline void copy
+    (Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc) 
+{
+    copy(dst, dstc, ndstc, dstpos, src, srcc, nsrcc, ImgRect(src));
+}
 
 
-void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, Rect<int> src_rect, const bool accurate = true);
+void copy
+    (Image* dst, Point<int> dstpos, Image* src, const Rect<int> &src_rect, const bool accurate = true);
 
-void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, const bool accurate = true);
+inline void copy
+    (Image* dst, Point<int> dstpos, Image* src, const bool accurate = true)
+{
+    copy(dst, dstpos, src, ImgRect(src), accurate);
+}
 
 
-void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src, Rect<int> dst_rect);
+void copy
+    (Image* dst, Transformation2D<float> transform, Image* src, Rect<int> dst_rect);
 
-void copy_transformed(Image* dst, Transformation2D<float> transform, Image* src);
+inline void copy
+    (Image* dst, Transformation2D<float> transform, Image* src)
+{
+    copy(dst, transform, src, ImgRect(dst));
+}
 
+
+void blend_colors
+    (Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, const Rect<int> &src_rect, const bool accurate = true);
+
+inline void blend_colors
+    (Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, const bool accurate = true)
+{
+    blend_colors(dst, dstpos, colors, src, ImgRect(src), accurate);
+}
 
 void flip_vert(Image* img);
 
 void flip_hori(Image* img);
 
-
 void invert(Image* dst, Image* src);
-
-
-void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> pos2);
-
-
-inline float normalize_angle(float angle)
-{
-    while(angle > (2.0f * M_PI))
-        angle -= (2.0f * M_PI);
-
-    while(angle < 0.0f)
-        angle += (2.0f * M_PI);
-
-    return angle;
-}
-
-void draw_arc(
-    Image* dst, unsigned char* color, Point<float> center, float radius, float arca, float arcb, float thickness, Rect<int> rect
-);
-
-void draw_arc(Image* dst, unsigned char* color, Point<float> center, float radius, float arca, float arcb, float thickness);
-
-
-void draw_line(Image* dst, unsigned char* color, Point<float> a, Point<float> b, float thickness);
-
-
-void draw_radius(Image* dst, unsigned char* color, Point<float> center, float angle, float outer, float inner, float thickness);
-
 
 
 /* Draw a bunch of triangles that point in four different directions

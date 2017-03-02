@@ -74,193 +74,193 @@ public:
 
     void genUnipolar()
     {
-        unsigned char color1[2] = {255, 0};
-        unsigned char color2[2] = {0, 255};
-
-        float cx = width() >> 1;
-        float cy = height() >> 1;
-
-        float thickness = 2;
-        float radius = (width() >> 1);
-
-        float rotation = M_PI * 0.75f;
-        float full_arc = M_PI * 1.5f;
-        float frame_count_rcp = 1.0f / float(frameCount() - 1);
-
-        Image circle_mask_img(width(), height(), 1);
-//         fill_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
-        invert(&circle_mask_img, &circle_mask_img);
-
-        Image radius_img(width(), height(), 1);
-
-        for(int frame=0; frame<frameCount(); frame++)
-        {
-            float percent = float(frame) * frame_count_rcp;
-
-            Image img;
-            pickFrame(&img, frame);
-            {
-                unsigned char color[2] = {0, 0};
-                fill(&img, color);
-            }
-
-            if(frame > 0)
-            {
-                draw_arc(
-                    &img, color2, {cx, cy}, radius - 2,
-                    normalize_angle(rotation),
-                    normalize_angle(rotation + full_arc * percent),
-                    thickness
-                );
-            }
-
-            if(frame < (frameCount() - 1))
-            {
-                draw_arc(
-                    &img, color1, {cx, cy}, radius  - 2,
-                    normalize_angle(rotation + full_arc * percent),
-                    normalize_angle(rotation + full_arc),
-                    thickness
-                );
-            }
-
-            {
-                fill(&radius_img, Color(0));
-                draw_radius(
-                    &radius_img, Color(255), {cx, cy},
-                    normalize_angle(rotation + full_arc * percent),
-                    (width() * 2) - 1, 0, thickness + 1
-                );
-                subtract_image(&radius_img, {0, 0}, &circle_mask_img);
-                {
-                    unsigned char* colors[1];
-                    if(frame == 0)
-                        colors[0] = color1;
-                    else
-                        colors[0] = color2;
-                    blend_colors(
-                        &img, Point<int>(0, 0), colors, &radius_img
-                    );
-                }
-            }
-        }
-
-        m_is_bipolar = false;
+//         unsigned char color1[2] = {255, 0};
+//         unsigned char color2[2] = {0, 255};
+// 
+//         float cx = width() >> 1;
+//         float cy = height() >> 1;
+// 
+//         float thickness = 2;
+//         float radius = (width() >> 1);
+// 
+//         float rotation = M_PI * 0.75f;
+//         float full_arc = M_PI * 1.5f;
+//         float frame_count_rcp = 1.0f / float(frameCount() - 1);
+// 
+//         Image circle_mask_img(width(), height(), 1);
+// //         fill_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
+//         invert(&circle_mask_img, &circle_mask_img);
+// 
+//         Image radius_img(width(), height(), 1);
+// 
+//         for(int frame=0; frame<frameCount(); frame++)
+//         {
+//             float percent = float(frame) * frame_count_rcp;
+// 
+//             Image img;
+//             pickFrame(&img, frame);
+//             {
+//                 unsigned char color[2] = {0, 0};
+//                 fill(&img, color);
+//             }
+// 
+//             if(frame > 0)
+//             {
+//                 draw_arc(
+//                     &img, color2, {cx, cy}, radius - 2,
+//                     normalize_angle(rotation),
+//                     normalize_angle(rotation + full_arc * percent),
+//                     thickness
+//                 );
+//             }
+// 
+//             if(frame < (frameCount() - 1))
+//             {
+//                 draw_arc(
+//                     &img, color1, {cx, cy}, radius  - 2,
+//                     normalize_angle(rotation + full_arc * percent),
+//                     normalize_angle(rotation + full_arc),
+//                     thickness
+//                 );
+//             }
+// 
+//             {
+//                 fill(&radius_img, Color(0));
+//                 draw_radius(
+//                     &radius_img, Color(255), {cx, cy},
+//                     normalize_angle(rotation + full_arc * percent),
+//                     (width() * 2) - 1, 0, thickness + 1
+//                 );
+//                 subtract_image(&radius_img, {0, 0}, &circle_mask_img);
+//                 {
+//                     unsigned char* colors[1];
+//                     if(frame == 0)
+//                         colors[0] = color1;
+//                     else
+//                         colors[0] = color2;
+//                     blend_colors(
+//                         &img, Point<int>(0, 0), colors, &radius_img
+//                     );
+//                 }
+//             }
+//         }
+// 
+//         m_is_bipolar = false;
     }
 
 
     void genBipolar()
     {
-        unsigned char color1[2] = {255, 0};
-        unsigned char color2[2] = {0, 255};
-
-        float cx = width() >> 1;
-        float cy = height() >> 1;
-
-        float thickness = 2;
-        float radius = (width() >> 1);
-
-        float rotation = M_PI * 0.75f;
-        float full_arc = M_PI * 1.5f;
-        float frame_count_rcp = 1.0f / float(frameCount() - 1);
-
-        Image circle_mask_img(width(), height(), 1);
-//         fill_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
-        invert(&circle_mask_img, &circle_mask_img);
-
-        Image radius_img(width(), height(), 1);
-
-        for(int frame=0; frame<frameCount(); frame++)
-        {
-            float percent = float(frame) * frame_count_rcp;
-
-            Image img;
-            pickFrame(&img, frame);
-            {
-                unsigned char color[2] = {0, 0};
-                fill(&img, color);
-            }
-
-            if(frame < (frameCount()/2))
-            {
-                draw_arc(
-                    &img, color1, {cx, cy}, radius  - 2,
-                    normalize_angle(rotation),
-                    normalize_angle(rotation + full_arc * percent),
-                    thickness
-                );
-
-                draw_arc(
-                    &img, color2, {cx, cy}, radius  - 2,
-                    normalize_angle(rotation + full_arc * percent),
-                    normalize_angle(rotation + full_arc * 0.5),
-                    thickness
-                );
-
-                draw_arc(
-                    &img, color1, {cx, cy}, radius  - 2,
-                    normalize_angle(rotation + full_arc * 0.5),
-                    normalize_angle(rotation + full_arc),
-                    thickness
-                );
-            }
-            else if(frame == (frameCount()/2))
-            {
-                draw_arc(
-                    &img, color1, {cx, cy}, radius  - 2,
-                    normalize_angle(rotation),
-                    normalize_angle(rotation + full_arc),
-                    thickness
-                );
-            }
-            else
-            {
-                draw_arc(
-                    &img, color1, {cx, cy}, radius  - 2,
-                    normalize_angle(rotation),
-                    normalize_angle(rotation + full_arc * 0.5),
-                    thickness
-                );
-
-                draw_arc(
-                    &img, color2, {cx, cy}, radius  - 2,
-                    normalize_angle(rotation + full_arc * 0.5),
-                    normalize_angle(rotation + full_arc * percent),
-                    thickness
-                );
-
-                draw_arc(
-                    &img, color1, {cx, cy}, radius  - 2,
-                    normalize_angle(rotation + full_arc * percent),
-                    normalize_angle(rotation + full_arc),
-                    thickness
-                );
-            }
-
-            {
-                fill(&radius_img, Color(0));
-                draw_radius(
-                    &radius_img, Color(255), {cx, cy},
-                    normalize_angle(rotation + full_arc * percent),
-                    (width() * 2) - 1, 0, thickness + 1
-                );
-                subtract_image(&radius_img, {0, 0}, &circle_mask_img);
-                {
-                    unsigned char* colors[1];
-                    {
-                        if(frame == (frameCount()/2))
-                            colors[0] = color1;
-                        else
-                            colors[0] = color2;
-                    }
-                    blend_colors(
-                        &img, Point<int>(0, 0), colors, &radius_img
-                    );
-                }
-            }
-        }
-
-        m_is_bipolar = true;
+//         unsigned char color1[2] = {255, 0};
+//         unsigned char color2[2] = {0, 255};
+// 
+//         float cx = width() >> 1;
+//         float cy = height() >> 1;
+// 
+//         float thickness = 2;
+//         float radius = (width() >> 1);
+// 
+//         float rotation = M_PI * 0.75f;
+//         float full_arc = M_PI * 1.5f;
+//         float frame_count_rcp = 1.0f / float(frameCount() - 1);
+// 
+//         Image circle_mask_img(width(), height(), 1);
+// //         fill_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
+//         invert(&circle_mask_img, &circle_mask_img);
+// 
+//         Image radius_img(width(), height(), 1);
+// 
+//         for(int frame=0; frame<frameCount(); frame++)
+//         {
+//             float percent = float(frame) * frame_count_rcp;
+// 
+//             Image img;
+//             pickFrame(&img, frame);
+//             {
+//                 unsigned char color[2] = {0, 0};
+//                 fill(&img, color);
+//             }
+// 
+//             if(frame < (frameCount()/2))
+//             {
+//                 draw_arc(
+//                     &img, color1, {cx, cy}, radius  - 2,
+//                     normalize_angle(rotation),
+//                     normalize_angle(rotation + full_arc * percent),
+//                     thickness
+//                 );
+// 
+//                 draw_arc(
+//                     &img, color2, {cx, cy}, radius  - 2,
+//                     normalize_angle(rotation + full_arc * percent),
+//                     normalize_angle(rotation + full_arc * 0.5),
+//                     thickness
+//                 );
+// 
+//                 draw_arc(
+//                     &img, color1, {cx, cy}, radius  - 2,
+//                     normalize_angle(rotation + full_arc * 0.5),
+//                     normalize_angle(rotation + full_arc),
+//                     thickness
+//                 );
+//             }
+//             else if(frame == (frameCount()/2))
+//             {
+//                 draw_arc(
+//                     &img, color1, {cx, cy}, radius  - 2,
+//                     normalize_angle(rotation),
+//                     normalize_angle(rotation + full_arc),
+//                     thickness
+//                 );
+//             }
+//             else
+//             {
+//                 draw_arc(
+//                     &img, color1, {cx, cy}, radius  - 2,
+//                     normalize_angle(rotation),
+//                     normalize_angle(rotation + full_arc * 0.5),
+//                     thickness
+//                 );
+// 
+//                 draw_arc(
+//                     &img, color2, {cx, cy}, radius  - 2,
+//                     normalize_angle(rotation + full_arc * 0.5),
+//                     normalize_angle(rotation + full_arc * percent),
+//                     thickness
+//                 );
+// 
+//                 draw_arc(
+//                     &img, color1, {cx, cy}, radius  - 2,
+//                     normalize_angle(rotation + full_arc * percent),
+//                     normalize_angle(rotation + full_arc),
+//                     thickness
+//                 );
+//             }
+// 
+//             {
+//                 fill(&radius_img, Color(0));
+//                 draw_radius(
+//                     &radius_img, Color(255), {cx, cy},
+//                     normalize_angle(rotation + full_arc * percent),
+//                     (width() * 2) - 1, 0, thickness + 1
+//                 );
+//                 subtract_image(&radius_img, {0, 0}, &circle_mask_img);
+//                 {
+//                     unsigned char* colors[1];
+//                     {
+//                         if(frame == (frameCount()/2))
+//                             colors[0] = color1;
+//                         else
+//                             colors[0] = color2;
+//                     }
+//                     blend_colors(
+//                         &img, Point<int>(0, 0), colors, &radius_img
+//                     );
+//                 }
+//             }
+//         }
+// 
+//         m_is_bipolar = true;
     }
 
 

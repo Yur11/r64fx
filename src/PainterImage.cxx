@@ -286,41 +286,7 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void putImage(Image* img, Point<int> dst_pos)
     {
-#ifdef R64FX_DEBUG
-        assert(img != nullptr);
-#endif//R64FX_DEBUG
-
-        switch(img->componentCount())
-        {
-            case 1:
-            {
-                copy_component(window->image(), 0, 3, dst_pos + offset(), img, 0);
-                break;
-            }
-
-            case 2:
-            {
-                copy_ra2rgba(window->image(), dst_pos + offset(), img, false);
-                break;
-            }
-
-            case 3:
-            {
-                copy(window->image(), dst_pos + offset(), img, 3);
-                break;
-            }
-
-            case 4:
-            {
-                copy_rgba(window->image(), dst_pos + offset(), img, false);
-                break;
-            }
-
-            default:
-            {
-                break;
-            }
-        }
+        copy(window->image(), dst_pos + offset(), img, false);
     }
 
     virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos)
@@ -336,7 +302,7 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
     {
-        blend_colors(window->image(), pos + offset(), colors, mask, false);
+        blend_colors(window->image(), pos + offset(), colors, mask, ImgRect(mask), false);
     }
 
     virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture2D* mask)
