@@ -70,6 +70,7 @@ inline void blend_colors
     blend_colors(dst, dstpos, colors, src, ImgRect(src), accurate);
 }
 
+
 void flip_vert(Image* img);
 
 void flip_hori(Image* img);
@@ -81,6 +82,8 @@ void invert(Image* dst, Image* src);
  * and fit in a square with the given size. */
 void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right);
 
+void fill_bottom_triangle(Image* dst, int dstc, int ndstc, unsigned char* color, Point<int> square_pos, int square_size);
+
 
 void draw_waveform(Image* dst, unsigned char* color, unsigned char*  data, const Rect<int> &rect);
 
@@ -89,17 +92,6 @@ void draw_waveform(Image* dst, unsigned char* color, unsigned short* data, const
 void draw_waveform(Image* dst, unsigned char* color, unsigned int*   data, const Rect<int> &rect);
 
 void draw_waveform(Image* dst, unsigned char* color, float*          data, const Rect<int> &rect);
-
-
-void stroke_circle(Image* dst, unsigned char* color, Point<float> center, float radius, float thickness);
-
-
-void fill_bottom_triangle(Image* dst, unsigned char* color, Point<int> square_pos, int square_size);
-
-void subtract_image(Image* dst, Point<int> pos, Image* src);
-
-
-void fill_rounded_rect(Image* dst, unsigned char* color, Rect<int> rect, int corner_radius);
 
 
 void stroke_plot(

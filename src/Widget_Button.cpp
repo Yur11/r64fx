@@ -178,23 +178,23 @@ void ButtonAnimation::pickFrame(Image* img, int frame_num)
 
 void generate_masks(Size<int> size, Image* bg, Image* depressed, Image* pressed)
 {
-    bg->load(size.width(), size.height(), 1);
-    {
-        fill(bg, Color(0));
-        fill_rounded_rect(bg, Color(255), {0, 0, size.width(), size.height()}, 4);
-    }
-
-    depressed->load(size.width(), size.height(), 1);
-    {
-        fill(depressed, Color(0));
-        fill_rounded_rect(depressed, Color(255), {1, 1, size.width() - 2, size.height() - 2}, 4);
-    }
-
-    pressed->load(size.width(), size.height(), 1);
-    {
-        fill(pressed, Color(0));
-        fill_rounded_rect(pressed, Color(255), {2, 2, size.width() - 4, size.height() - 4}, 4);
-    }
+//     bg->load(size.width(), size.height(), 1);
+//     {
+//         fill(bg, Color(0));
+//         fill_rounded_rect(bg, Color(255), {0, 0, size.width(), size.height()}, 4);
+//     }
+// 
+//     depressed->load(size.width(), size.height(), 1);
+//     {
+//         fill(depressed, Color(0));
+//         fill_rounded_rect(depressed, Color(255), {1, 1, size.width() - 2, size.height() - 2}, 4);
+//     }
+// 
+//     pressed->load(size.width(), size.height(), 1);
+//     {
+//         fill(pressed, Color(0));
+//         fill_rounded_rect(pressed, Color(255), {2, 2, size.width() - 4, size.height() - 4}, 4);
+//     }
 }
 
 
