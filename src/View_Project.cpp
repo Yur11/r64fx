@@ -108,7 +108,7 @@ public:
     , g1(size, size, 2)
     , g2(size, size, 2)
     , g3(size, size, 2)
-    , marker(size/2 - 8, 4, 2)
+    , marker(size, size, 2)
     {
         fill(&c1, Color(255));
         fill_circle(&c1, 0, 1, Color(0), Point<int>(7, 7), size - 14);
@@ -120,8 +120,8 @@ public:
         fill_circle(&c3, 0, 1, Color(0), Point<int>(11, 11), size - 22);
 
         fill(&marker, Color(0, 255));
-        fill(&marker, Color(0, 127));
-        fill(&marker, Color(255, 31), {1, 1, marker.width() - 2, 2});
+        fill(&marker, Color(0, 127),  {size/2 - 2, 10, 4, size/2 - 10});
+        fill(&marker, Color(255, 31), {size/2 - 1, 11, 2, size/2 - 12});
     }
 
     void genBackground(Image* dst, Point<int> dstpos, bool middle_notch)
@@ -129,17 +129,29 @@ public:
 #ifdef R64FX_DEBUG
         assert(dst->componentCount() == 2);
 #endif//R64FX_DEBUG
+        int hs = m_size / 2;
 
         fill(dst, Color(95, 255), {dstpos.x(), dstpos.y(), m_size, m_size});
         fill_circle(dst, 1, 1, Color(0),   dstpos, m_size);
         fill_circle(dst, 1, 1, Color(255), dstpos + Point<int>(3, 3), m_size - 6);
         fill_bottom_triangle(dst, 1, 1, Color(255), dstpos, m_size);
 
-        int hs = m_size / 2;
         if(middle_notch)
         {
             fill(dst, Color(0, 255), {dstpos.x() + hs - 2, dstpos.y(), 4, 5});
             fill(dst, Color(95, 0),  {dstpos.x() + hs - 1, dstpos.y(), 2, 5});
+        }
+
+        {
+            Image img(m_size, m_size, 1);
+            fill(&img, 0, 1, 255);
+            fill(&img, 0, 1, 0, {hs - 1, 2, 3, 10});
+
+            Transformation2D<float> t;
+            t.translate(+hs - 0.5f, +hs - 0.5f);
+            t.rotate(-M_PI * 0.75f);
+            t.translate(-hs + 0.5f, -hs + 0.5f);
+            copy(dst, 1, 1, t, &img, 0, 1);
         }
     }
 
@@ -175,10 +187,10 @@ public:
 
         int hs = m_size / 2;
         Transformation2D<float> t;
-        t.translate(hs, hs - 2);
+        t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
         t.rotate(-(M_PI * 0.5f + angle));
-        t.translate(0, -2);
-        copy(dst, t, &marker);
+        t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
+        copy(dst, 0, 2, t, &marker, 0, 2);
     }
 };
 
@@ -200,13 +212,30 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
-    for(int i=0; i<14; i++)
+    for(int i=0; i<8; i++)
     {
-        int size = 38 + i * 2;
+        int size = 40 + i * 2;
+        int hs = size / 2;
+
         KnobAnimGenerator kanimg(size);
 
+        {
+            Image img(size, size, 2);
+            fill(&img, Color(95, 255));
+            fill(&img, 1, 1, 0, {size/2 - 2, 2, 3, 10});
+
+            Image timg(size, size, 2);
+            fill(&timg, Color(95, 255));
+            Transformation2D<float> t;
+            t.translate(+hs - 0.5f, +hs - 0.5f);
+            t.rotate(+M_PI * 0.75f);
+            t.translate(-hs + 0.5f, -hs + 0.5f);
+            copy(&timg, 0, 2, t, &img, 0, 2);
+            p->putImage(&timg, {10 + (i * size + 20), 20});
+        }
+
         Image bg(size, size, 2);
-        kanimg.genBackground(&bg, {0, 0}, true);
+        kanimg.genBackground(&bg, {0, 0}, false);
         p->putImage(&bg, {10 + (i * size + 20), 20});
 
         Image knob_base(size, size, 2);
@@ -218,54 +247,20 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         p->putImage(&knob, {10 + (i * size + 20), 20});
 
         Image marker(size, size, 2);
-        kanimg.genMarker(&marker, {0, 0}, 1.5f * M_PI);
+        kanimg.genMarker(&marker, {0, 0}, m_angle);
         p->putImage(&marker, {10 + (i * size + 20), 20});
     }
-
-
-    Image img1(44, 44, 1);
-    fill(&img1, Color(0),   ImgRect(&img1));
-    fill(&img1, Color(127), {11, 11, 22, 12});
-    fill(&img1, Color(255), {11, 22, 22, 12});
-    p->putImage(&img1, {20, 100});
-
-    Image img3(44, 44, 3);
-    fill(&img3, Color(255,  0, 0),   {0,   0, 22, 22});
-    fill(&img3, Color(0,  255, 0),   {22,  0, 22, 22});
-    fill(&img3, Color(255,  0, 255), {0,  22, 22, 22});
-    fill(&img3, Color(0,    0, 0),   {22, 22, 22, 22});
-    p->putImage(&img3, {53, 144});
-
-    Image img2(44, 44, 2);
-    fill(&img2, Color(0, 127), ImgRect(&img2));
-    p->putImage(&img2, {42, 110});
-
-    Image img4(44, 44, 4);
-    fill(&img4, Color(255, 255, 255, 255));
-    fill_circle(&img4, 3, 1, Color(0), {0, 0}, 44);
-    p->putImage(&img4, {20, 170});
-
-    const int waveform_length = 100;
-    unsigned short waveform[waveform_length * 2];
-    for(int i=0; i<waveform_length; i++)
-    {
-        if(i & 1)
-        {
-            waveform[i*2 + 0] = 0;
-            waveform[i*2 + 1] = 32817;
-        }
-        else
-        {
-            waveform[i*2 + 0] = 32817;
-            waveform[i*2 + 1] = 65535;
-        }
-    }
-    p->drawWaveform({120, 100, waveform_length, 50}, Color(255, 0, 0, 0), waveform);
 }
 
 
 void View_Project::mouseMoveEvent(MouseMoveEvent* event)
 {
+    if(event->button() & MouseButton::Left())
+    {
+        m_angle += event->dy() * 0.025f;
+        repaint();
+    }
+
     auto window = Widget::rootWindow();
     if(window)
     {

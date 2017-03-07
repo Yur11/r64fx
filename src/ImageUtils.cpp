@@ -187,41 +187,6 @@ void fill_circle(Image* dst,  int dstc, int ndstc, unsigned char* components, Po
 }
 
 
-void copy(Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc, const Rect<int> &src_rect)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(src != nullptr);
-    assert((dstc + ndstc) <= dst->componentCount());
-    assert((srcc + nsrcc) <= src->componentCount());
-#endif//R64FX_DEBUG
-    if(nsrcc != 1)
-    {
-#ifdef R64FX_DEBUG
-        assert(ndstc == nsrcc);
-#endif//R64FX_DEBUG
-        if(ndstc != nsrcc)
-            return;
-    }
-
-    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
-    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
-
-    for(int y=0; y<dst_isec.height(); y++)
-    {
-        for(int x=0; x<dst_isec.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
-            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
-            for(auto c=0; c<ndstc; c++)
-            {
-                dstpx[dstc + c] = srcpx[srcc + (nsrcc == 1 ? 0 : c)];
-            }
-        }
-    }
-}
-
-
 void copy(Image* dst, Point<int> dstpos, Image* src, const Rect<int> &src_rect, const bool accurate)
 {
 #ifdef R64FX_DEBUG
@@ -295,13 +260,54 @@ void copy(Image* dst, Point<int> dstpos, Image* src, const Rect<int> &src_rect, 
 }
 
 
-void copy(Image* dst, Transformation2D<float> transform, Image* src, Rect<int> dst_rect)
+void copy(Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc, const Rect<int> &src_rect)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
     assert(src != nullptr);
-    assert(src->componentCount() == dst->componentCount());
+    assert((dstc + ndstc) <= dst->componentCount());
+    assert((srcc + nsrcc) <= src->componentCount());
 #endif//R64FX_DEBUG
+    if(nsrcc != 1)
+    {
+#ifdef R64FX_DEBUG
+        assert(ndstc == nsrcc);
+#endif//R64FX_DEBUG
+        if(ndstc != nsrcc)
+            return;
+    }
+
+    RectIntersection<int> src_isec({0, 0, src->width(), src->height()}, src_rect);
+    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
+
+    for(int y=0; y<dst_isec.height(); y++)
+    {
+        for(int x=0; x<dst_isec.width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
+            auto srcpx = src->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
+            for(auto c=0; c<ndstc; c++)
+            {
+                dstpx[dstc + c] = srcpx[srcc + (nsrcc == 1 ? 0 : c)];
+            }
+        }
+    }
+}
+
+
+void copy(Image* dst, int dstc, int ndstc, Transformation2D<float> transform, Image* src, int srcc, int nsrcc, Rect<int> dst_rect)
+{
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(src != nullptr);
+    assert((dstc + ndstc) <= dst->componentCount());
+    assert((srcc + nsrcc) <= src->componentCount());
+    if(ndstc != 1)
+    {
+        assert(nsrcc == ndstc);
+    }
+#endif//R64FX_DEBUG
+    int srccinc = (nsrcc == 1 ? 0 : 1);
 
     if(dst_rect.left() < 0)
         dst_rect.setLeft(0);
@@ -332,31 +338,32 @@ void copy(Image* dst, Transformation2D<float> transform, Image* src, Rect<int> d
 
             float fracx = x2 - p.x();
             float fracy = y2 - p.y();
-            for(int c=0; c<dst->componentCount(); c++)
+            int srci = srcc;
+            for(int dsti=dstc; dsti<(dstc+ndstc); dsti++)
             {
-                float p11 = dstpx[c];
-                float p12 = dstpx[c];
-                float p21 = dstpx[c];
-                float p22 = dstpx[c];
+                float p11 = dstpx[dsti];
+                float p12 = dstpx[dsti];
+                float p21 = dstpx[dsti];
+                float p22 = dstpx[dsti];
 
                 if(x1 >=0 && x1 < src->width() && y1 >=0 && y1 < src->height())
                 {
-                    p11 = src->pixel(x1, y1)[c];
+                    p11 = src->pixel(x1, y1)[srci];
                 }
 
                 if(x1 >=0 && x1 < src->width() && y2 >=0 && y2 < src->height())
                 {
-                    p12 = src->pixel(x1, y2)[c];
+                    p12 = src->pixel(x1, y2)[srci];
                 }
 
                 if(x2 >=0 && x2 < src->width() && y1 >=0 && y1 < src->height())
                 {
-                    p21 = src->pixel(x2, y1)[c];
+                    p21 = src->pixel(x2, y1)[srci];
                 }
 
                 if(x2 >=0 && x2 < src->width() && y2 >=0 && y2 < src->height())
                 {
-                    p22 = src->pixel(x2, y2)[c];
+                    p22 = src->pixel(x2, y2)[srci];
                 }
 
                 float val =
@@ -365,7 +372,8 @@ void copy(Image* dst, Transformation2D<float> transform, Image* src, Rect<int> d
                     p21 * (1-fracx) * fracy     +
                     p11 * fracx     * fracy;
 
-                dstpx[c] = (unsigned char)(val);
+                dstpx[dsti] = (unsigned char)(val);
+                srci += srccinc;
             }
         }
     }

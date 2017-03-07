@@ -20,8 +20,6 @@ template<typename T> class Transformation2D{
     T e = T(1);
     T f = T(0);
 
-
-
 public:
     void translate(T x, T y)
     {

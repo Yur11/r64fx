@@ -6,6 +6,8 @@
 namespace r64fx{
 
 class View_Project : public Widget{
+    float m_angle = 0.0f;
+
 public:
     View_Project(Widget* parent = nullptr);
 

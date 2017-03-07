@@ -24,21 +24,18 @@ inline void fill
 void fill
     (Image* dst, int dstc, int ndstc, unsigned char value, const Rect<int> &rect);
 
+inline void fill
+    (Image* dst, int dstc, int ndstc, unsigned char value)
+{
+    fill(dst, dstc, ndstc, value, ImgRect(dst));
+}
+
+
 void fill_gradient_vert
     (Image* dst, int dstc, int ndstc, unsigned char val1, unsigned char val2, const Rect<int> &rect);
 
 void fill_circle
     (Image* dst,  int dstc, int ndstc, unsigned char* components, Point<int> topleft, int diameter);
-
-
-void copy
-    (Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc, const Rect<int> &src_rect);
-
-inline void copy
-    (Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc) 
-{
-    copy(dst, dstc, ndstc, dstpos, src, srcc, nsrcc, ImgRect(src));
-}
 
 
 void copy
@@ -52,12 +49,22 @@ inline void copy
 
 
 void copy
-    (Image* dst, Transformation2D<float> transform, Image* src, Rect<int> dst_rect);
+    (Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc, const Rect<int> &src_rect);
 
 inline void copy
-    (Image* dst, Transformation2D<float> transform, Image* src)
+    (Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc) 
 {
-    copy(dst, transform, src, ImgRect(dst));
+    copy(dst, dstc, ndstc, dstpos, src, srcc, nsrcc, ImgRect(src));
+}
+
+
+void copy
+    (Image* dst, int dstc, int ndstc, Transformation2D<float> transform, Image* src, int srcc, int nsrcc, Rect<int> dst_rect);
+
+inline void copy
+    (Image* dst, int dstc, int ndstc, Transformation2D<float> transform, Image* src, int srcc, int nsrcc)
+{
+    copy(dst, dstc, ndstc, transform, src, srcc, nsrcc, ImgRect(dst));
 }
 
 
