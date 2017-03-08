@@ -9,26 +9,6 @@ using namespace std;
 
 namespace r64fx{
 
-void draw_solid_horse_shoe(Image* dst, Point<int> dstpos, int size, bool middle_notch = true)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(dst->componentCount() == 1);
-#endif//R64FX_DEBUG
-
-    fill(dst, Color(255), {dstpos.x(), dstpos.y(), size, size});
-    fill_circle(dst, 0, 1, Color(0),   dstpos, size);
-    fill_circle(dst, 0, 1, Color(255), dstpos + Point<int>(3, 3), size - 6);
-    fill_bottom_triangle(dst, 0, 1, Color(255), dstpos, size);
-
-    int hs = size / 2;
-    if(middle_notch)
-    {
-        fill(dst, Color(255), {dstpos.x() + hs - 2, dstpos.y(), 4, 5});
-        fill(dst, Color(0), {dstpos.x() + hs - 1, dstpos.y(), 2, 5});
-    }
-}
-
 
 void draw_knob_base(Image* dst, Point<int> dstpos, int size)
 {
@@ -39,59 +19,6 @@ void draw_knob_base(Image* dst, Point<int> dstpos, int size)
 
     fill(dst, Color(31, 255), {dstpos.x(), dstpos.y(), size, size});
     fill_circle(dst, 1, 1, Color(0), dstpos + Point<int>(6, 6), size - 12);
-}
-
-
-// void draw_knob_handle(Image* dst, Point<int> dstpos, int size)
-// {
-// #ifdef R64FX_DEBUG
-//     assert(dst != nullptr);
-//     assert(dst->componentCount() == 2);
-// #endif//R64FX_DEBUG
-// 
-//     Image c1(size, size, 1);
-//     fill(&c1, Color(255), {dstpos.x(), dstpos.y(), size, size});
-//     fill_circle(&c1, 0, 1, Color(0), dstpos + Point<int>(7, 7), size - 14);
-// 
-//     Image c2(size, size, 1);
-//     fill(&c2, Color(255), {dstpos.x(), dstpos.y(), size, size});
-//     fill_circle(&c2, 0, 1, Color(0), dstpos + Point<int>(10, 10), size - 20);
-// 
-//     Image c3(size, size, 1);
-//     fill(&c3, Color(255), {dstpos.x(), dstpos.y(), size, size});
-//     fill_circle(&c3, 0, 1, Color(0), dstpos + Point<int>(11, 11), size - 22);
-// 
-//     Image g1(size, size, 2);
-//     fill_gradient_vert(&g1, 0, 1, 127, 31, {0, 7, size, size - 7});
-//     copy(&g1, 1, 1, {0, 0}, &c1, 0, 1);
-// 
-//     Image g2(size, size, 2);
-//     fill_gradient_vert(&g2, 0, 1, 223, 31, {0, 10, size, size - 10});
-//     copy(&g2, 1, 1, {0, 0}, &c2, 0, 1);
-// 
-//     Image g3(size, size, 2);
-//     fill_gradient_vert(&g3, 0, 1, 147, 107, {0, 11, size, size - 11});
-//     copy(&g3, 1, 1, {0, 0}, &c3, 0, 1);
-// 
-//     fill(dst, Color(0, 255));
-//     copy(dst, {0, 0}, &g1);
-//     copy(dst, {0, 0}, &g2);
-//     copy(dst, {0, 0}, &g3);
-//     copy(dst, 1, 1, dstpos, &c1, 0, 1);
-// }
-
-
-void draw_knob_marker(Image* dst, Point<int> dstpos, int size)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(dst->componentCount() == 2);
-#endif//R64FX_DEBUG
-
-    fill(dst, Color(0, 255), ImgRect(dst));
-    int hs = size / 2;
-    fill(dst, Color(0, 127), {dstpos.x() + hs - 2, 10, 4, hs - 9});
-    fill(dst, Color(255, 0), {dstpos.x() + hs - 1, 11, 2, hs - 11});
 }
 
 
@@ -135,16 +62,30 @@ public:
 #endif//R64FX_DEBUG
         int hs = m_size / 2;
 
-        fill(dst, Color(95, 255), {dstpos.x(), dstpos.y(), m_size, m_size});
-        fill_circle(dst, 1, 1, Color(0),   dstpos, m_size);
-        fill_circle(dst, 1, 1, Color(255), dstpos + Point<int>(3, 3), m_size - 6);
-        fill_bottom_triangle(dst, 1, 1, Color(255), dstpos, m_size);
+        Image horse_shoe(m_size, m_size, 1);
+        fill(&horse_shoe, 0, 1, 0);
 
-        if(middle_notch)
-        {
-            fill(dst, Color(0, 255), {dstpos.x() + hs - 2, dstpos.y(), 4, 5});
-            fill(dst, Color(95, 0),  {dstpos.x() + hs - 1, dstpos.y(), 2, 5});
-        }
+//         fill(dst, Color(95, 255), {dstpos.x(), dstpos.y(), m_size, m_size});
+        fill_circle(
+            &horse_shoe, 0, 1, Color(255), {0, 0}, m_size
+        );
+        fill_circle(
+            &horse_shoe, 0, 1, Color(0), {3, 3}, m_size - 6
+        );
+        fill_bottom_triangle(
+            &horse_shoe, 1, 1, Color(0), {0, 0}, m_size
+        );
+
+        invert(&horse_shoe, &horse_shoe);
+
+        fill(dst, 0, 1, 63, {dstpos.x(), dstpos.y(), m_size, m_size});
+        copy(dst, dstpos, &horse_shoe, ChanShuf(1, 1, 0, 1));
+
+//         if(middle_notch)
+//         {
+//             fill(dst, Color(0, 255), {dstpos.x() + hs - 2, dstpos.y(), 4, 5});
+//             fill(dst, Color(95, 0),  {dstpos.x() + hs - 1, dstpos.y(), 2, 5});
+//         }
 
 //         {
 //             Image img(m_size, m_size, 1);
