@@ -10,6 +10,26 @@ namespace r64fx{
 
 inline const Rect<int> ImgRect(Image* img) { return Rect<int>(0, 0, img->width(), img->height()); }
 
+class PixelOperation{
+    unsigned int m_bits;
+
+public:
+    PixelOperation(unsigned int bits) : m_bits(bits) {}
+
+    inline unsigned int bits() const { return m_bits; }
+};
+
+inline const PixelOperation operator|(const PixelOperation a, const PixelOperation b) { return a.bits() | b.bits(); }
+
+PixelOperation PixOpReplace();
+PixelOperation PixOpAdd();
+PixelOperation PixOpSub();
+PixelOperation PixOpMul();
+PixelOperation PixOpMin();
+PixelOperation PixOpMax();
+
+PixelOperation ChanShuf(int dstc, int ndstc, int srcc, int nsrcc);
+
 
 void fill
     (Image* dst, unsigned char* components, const Rect<int> &rect);
@@ -49,22 +69,22 @@ inline void copy
 
 
 void copy
-    (Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc, const Rect<int> &src_rect);
+    (Image* dst, Point<int> dstpos, Image* src, const PixelOperation pixop, const Rect<int> &src_rect);
 
 inline void copy
-    (Image* dst, int dstc, int ndstc, Point<int> dstpos, Image* src, int srcc, int nsrcc) 
+    (Image* dst, Point<int> dstpos, Image* src, const PixelOperation pixop) 
 {
-    copy(dst, dstc, ndstc, dstpos, src, srcc, nsrcc, ImgRect(src));
+    copy(dst, dstpos, src, pixop, ImgRect(src));
 }
 
 
 void copy
-    (Image* dst, int dstc, int ndstc, Transformation2D<float> transform, Image* src, int srcc, int nsrcc, Rect<int> dst_rect);
+    (Image* dst, Transformation2D<float> transform, Image* src, const PixelOperation pixop, Rect<int> dst_rect);
 
 inline void copy
-    (Image* dst, int dstc, int ndstc, Transformation2D<float> transform, Image* src, int srcc, int nsrcc)
+    (Image* dst, Transformation2D<float> transform, Image* src, const PixelOperation pixop)
 {
-    copy(dst, dstc, ndstc, transform, src, srcc, nsrcc, ImgRect(dst));
+    copy(dst, transform, src, pixop, ImgRect(dst));
 }
 
 

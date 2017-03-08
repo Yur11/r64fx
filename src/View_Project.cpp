@@ -42,43 +42,43 @@ void draw_knob_base(Image* dst, Point<int> dstpos, int size)
 }
 
 
-void draw_knob_handle(Image* dst, Point<int> dstpos, int size)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(dst->componentCount() == 2);
-#endif//R64FX_DEBUG
-
-    Image c1(size, size, 1);
-    fill(&c1, Color(255), {dstpos.x(), dstpos.y(), size, size});
-    fill_circle(&c1, 0, 1, Color(0), dstpos + Point<int>(7, 7), size - 14);
-
-    Image c2(size, size, 1);
-    fill(&c2, Color(255), {dstpos.x(), dstpos.y(), size, size});
-    fill_circle(&c2, 0, 1, Color(0), dstpos + Point<int>(10, 10), size - 20);
-
-    Image c3(size, size, 1);
-    fill(&c3, Color(255), {dstpos.x(), dstpos.y(), size, size});
-    fill_circle(&c3, 0, 1, Color(0), dstpos + Point<int>(11, 11), size - 22);
-
-    Image g1(size, size, 2);
-    fill_gradient_vert(&g1, 0, 1, 127, 31, {0, 7, size, size - 7});
-    copy(&g1, 1, 1, {0, 0}, &c1, 0, 1);
-
-    Image g2(size, size, 2);
-    fill_gradient_vert(&g2, 0, 1, 223, 31, {0, 10, size, size - 10});
-    copy(&g2, 1, 1, {0, 0}, &c2, 0, 1);
-
-    Image g3(size, size, 2);
-    fill_gradient_vert(&g3, 0, 1, 147, 107, {0, 11, size, size - 11});
-    copy(&g3, 1, 1, {0, 0}, &c3, 0, 1);
-
-    fill(dst, Color(0, 255));
-    copy(dst, {0, 0}, &g1);
-    copy(dst, {0, 0}, &g2);
-    copy(dst, {0, 0}, &g3);
-    copy(dst, 1, 1, dstpos, &c1, 0, 1);
-}
+// void draw_knob_handle(Image* dst, Point<int> dstpos, int size)
+// {
+// #ifdef R64FX_DEBUG
+//     assert(dst != nullptr);
+//     assert(dst->componentCount() == 2);
+// #endif//R64FX_DEBUG
+// 
+//     Image c1(size, size, 1);
+//     fill(&c1, Color(255), {dstpos.x(), dstpos.y(), size, size});
+//     fill_circle(&c1, 0, 1, Color(0), dstpos + Point<int>(7, 7), size - 14);
+// 
+//     Image c2(size, size, 1);
+//     fill(&c2, Color(255), {dstpos.x(), dstpos.y(), size, size});
+//     fill_circle(&c2, 0, 1, Color(0), dstpos + Point<int>(10, 10), size - 20);
+// 
+//     Image c3(size, size, 1);
+//     fill(&c3, Color(255), {dstpos.x(), dstpos.y(), size, size});
+//     fill_circle(&c3, 0, 1, Color(0), dstpos + Point<int>(11, 11), size - 22);
+// 
+//     Image g1(size, size, 2);
+//     fill_gradient_vert(&g1, 0, 1, 127, 31, {0, 7, size, size - 7});
+//     copy(&g1, 1, 1, {0, 0}, &c1, 0, 1);
+// 
+//     Image g2(size, size, 2);
+//     fill_gradient_vert(&g2, 0, 1, 223, 31, {0, 10, size, size - 10});
+//     copy(&g2, 1, 1, {0, 0}, &c2, 0, 1);
+// 
+//     Image g3(size, size, 2);
+//     fill_gradient_vert(&g3, 0, 1, 147, 107, {0, 11, size, size - 11});
+//     copy(&g3, 1, 1, {0, 0}, &c3, 0, 1);
+// 
+//     fill(dst, Color(0, 255));
+//     copy(dst, {0, 0}, &g1);
+//     copy(dst, {0, 0}, &g2);
+//     copy(dst, {0, 0}, &g3);
+//     copy(dst, 1, 1, dstpos, &c1, 0, 1);
+// }
 
 
 void draw_knob_marker(Image* dst, Point<int> dstpos, int size)
@@ -142,17 +142,17 @@ public:
             fill(dst, Color(95, 0),  {dstpos.x() + hs - 1, dstpos.y(), 2, 5});
         }
 
-        {
-            Image img(m_size, m_size, 1);
-            fill(&img, 0, 1, 255);
-            fill(&img, 0, 1, 0, {hs - 1, 2, 3, 10});
-
-            Transformation2D<float> t;
-            t.translate(+hs - 0.5f, +hs - 0.5f);
-            t.rotate(-M_PI * 0.75f);
-            t.translate(-hs + 0.5f, -hs + 0.5f);
-            copy(dst, 1, 1, t, &img, 0, 1);
-        }
+//         {
+//             Image img(m_size, m_size, 1);
+//             fill(&img, 0, 1, 255);
+//             fill(&img, 0, 1, 0, {hs - 1, 2, 3, 10});
+// 
+//             Transformation2D<float> t;
+//             t.translate(+hs - 0.5f, +hs - 0.5f);
+//             t.rotate(-M_PI * 0.75f);
+//             t.translate(-hs + 0.5f, -hs + 0.5f);
+//             copy(dst, 1, 1, t, &img, 0, 1);
+//         }
     }
 
     void genKnob(Image* dst, Point<int> dstpos, float angle)
@@ -162,19 +162,19 @@ public:
 #endif//R64FX_DEBUG
 
         fill_gradient_vert(&g1, 0, 1, 127, 31, {0, 7, m_size, m_size - 7});
-        copy(&g1, 1, 1, {0, 0}, &c1, 0, 1);
+        copy(&g1, {0, 0}, &c1, ChanShuf(1, 1, 0, 1));
 
         fill_gradient_vert(&g2, 0, 1, 223, 31, {0, 10, m_size, m_size - 10});
-        copy(&g2, 1, 1, {0, 0}, &c2, 0, 1);
+        copy(&g2, {0, 0}, &c2, ChanShuf(1, 1, 0, 1));
 
         fill_gradient_vert(&g3, 0, 1, 147, 107, {0, 11, m_size, m_size - 11});
-        copy(&g3, 1, 1, {0, 0}, &c3, 0, 1);
+        copy(&g3, {0, 0}, &c3, ChanShuf(1, 1, 0, 1));
 
         fill(dst, Color(0, 255));
         copy(dst, {0, 0}, &g1);
         copy(dst, {0, 0}, &g2);
         copy(dst, {0, 0}, &g3);
-        copy(dst, 1, 1, dstpos, &c1, 0, 1);
+        copy(dst, dstpos, &c1, ChanShuf(1, 1, 0, 1));
     }
 
     void genMarker(Image* dst, Point<int> dstpos, float angle)
@@ -190,7 +190,7 @@ public:
         t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
         t.rotate(-(M_PI * 0.5f + angle));
         t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
-        copy(dst, 0, 2, t, &marker, 0, 2);
+        copy(dst, t, &marker, ChanShuf(0, 2, 0, 2));
     }
 };
 
@@ -219,20 +219,20 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
         KnobAnimGenerator kanimg(size);
 
-        {
-            Image img(size, size, 2);
-            fill(&img, Color(95, 255));
-            fill(&img, 1, 1, 0, {size/2 - 2, 2, 3, 10});
-
-            Image timg(size, size, 2);
-            fill(&timg, Color(95, 255));
-            Transformation2D<float> t;
-            t.translate(+hs - 0.5f, +hs - 0.5f);
-            t.rotate(+M_PI * 0.75f);
-            t.translate(-hs + 0.5f, -hs + 0.5f);
-            copy(&timg, 0, 2, t, &img, 0, 2);
-            p->putImage(&timg, {10 + (i * size + 20), 20});
-        }
+//         {
+//             Image img(size, size, 2);
+//             fill(&img, Color(95, 255));
+//             fill(&img, 1, 1, 0, {size/2 - 2, 2, 3, 10});
+// 
+//             Image timg(size, size, 2);
+//             fill(&timg, Color(95, 255));
+//             Transformation2D<float> t;
+//             t.translate(+hs - 0.5f, +hs - 0.5f);
+//             t.rotate(+M_PI * 0.75f);
+//             t.translate(-hs + 0.5f, -hs + 0.5f);
+//             copy(&timg, 0, 2, t, &img, 0, 2);
+//             p->putImage(&timg, {10 + (i * size + 20), 20});
+//         }
 
         Image bg(size, size, 2);
         kanimg.genBackground(&bg, {0, 0}, false);
