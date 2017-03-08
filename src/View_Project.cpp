@@ -120,8 +120,12 @@ public:
         fill_circle(&c3, 0, 1, Color(0), Point<int>(11, 11), size - 22);
 
         fill(&marker, Color(0, 255));
-        fill(&marker, Color(0, 127),  {size/2 - 2, 10, 4, size/2 - 10});
-        fill(&marker, Color(255, 31), {size/2 - 1, 11, 2, size/2 - 12});
+        fill(&marker, Color(0, 127),  {size/2 - 2, 7, 4, size/2 - 7});
+        fill(&marker, Color(255, 31), {size/2 - 1, 8, 2, size/2 - 9});
+        for(int i=0; i<4; i++)
+        {
+            fill(&marker, 1, 1, 191 - 24 * i,  {size/2 - 1, 7 + i, 2, 1});
+        }
     }
 
     void genBackground(Image* dst, Point<int> dstpos, bool middle_notch)
@@ -215,7 +219,6 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     for(int i=0; i<8; i++)
     {
         int size = 40 + i * 2;
-        int hs = size / 2;
 
         KnobAnimGenerator kanimg(size);
 
