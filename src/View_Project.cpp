@@ -55,7 +55,7 @@ public:
         }
     }
 
-    void genBackground(Image* dst, Point<int> dstpos, bool middle_notch)
+    void genBackground(Image* dst, Point<int> dstpos)
     {
 #ifdef R64FX_DEBUG
         assert(dst->componentCount() == 2);
@@ -65,7 +65,6 @@ public:
         Image horse_shoe(m_size, m_size, 1);
         fill(&horse_shoe, 0, 1, 0);
 
-//         fill(dst, Color(95, 255), {dstpos.x(), dstpos.y(), m_size, m_size});
         fill_circle(
             &horse_shoe, 0, 1, Color(255), {0, 0}, m_size
         );
@@ -87,16 +86,28 @@ public:
 //             fill(dst, Color(95, 0),  {dstpos.x() + hs - 1, dstpos.y(), 2, 5});
 //         }
 
+        {
+            Image tick(m_size, m_size, 1);
+            fill(&tick, 0, 1, 255);
+            fill(&tick, 0, 1, 0, {hs - 1, 2, 3, 10});
+
+            Transformation2D<float> t;
+            t.translate(+hs - 0.5f, +hs - 0.5f);
+            t.rotate(-M_PI * 0.75f);
+            t.translate(-hs + 0.5f, -hs + 0.5f);
+            copy(dst, t, &tick, PixOpMin() | ChanShuf(1, 1, 0, 1));
+        }
+
 //         {
-//             Image img(m_size, m_size, 1);
-//             fill(&img, 0, 1, 255);
-//             fill(&img, 0, 1, 0, {hs - 1, 2, 3, 10});
+//             Image tick(m_size, m_size, 1);
+//             fill(&tick, 0, 1, 255);
+//             fill(&tick, 0, 1, 0, {hs - 2, 2, 3, 10});
 // 
 //             Transformation2D<float> t;
 //             t.translate(+hs - 0.5f, +hs - 0.5f);
-//             t.rotate(-M_PI * 0.75f);
+//             t.rotate(+M_PI * 0.75f);
 //             t.translate(-hs + 0.5f, -hs + 0.5f);
-//             copy(dst, 1, 1, t, &img, 0, 1);
+//             copy(dst, t, &tick, PixOpMin() | ChanShuf(1, 1, 0, 1));
 //         }
     }
 
@@ -157,29 +168,14 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
-    for(int i=0; i<8; i++)
+    for(int i=0; i<13; i++)
     {
         int size = 40 + i * 2;
 
         KnobAnimGenerator kanimg(size);
 
-//         {
-//             Image img(size, size, 2);
-//             fill(&img, Color(95, 255));
-//             fill(&img, 1, 1, 0, {size/2 - 2, 2, 3, 10});
-// 
-//             Image timg(size, size, 2);
-//             fill(&timg, Color(95, 255));
-//             Transformation2D<float> t;
-//             t.translate(+hs - 0.5f, +hs - 0.5f);
-//             t.rotate(+M_PI * 0.75f);
-//             t.translate(-hs + 0.5f, -hs + 0.5f);
-//             copy(&timg, 0, 2, t, &img, 0, 2);
-//             p->putImage(&timg, {10 + (i * size + 20), 20});
-//         }
-
         Image bg(size, size, 2);
-        kanimg.genBackground(&bg, {0, 0}, false);
+        kanimg.genBackground(&bg, {0, 0});
         p->putImage(&bg, {10 + (i * size + 20), 20});
 
         Image knob_base(size, size, 2);
