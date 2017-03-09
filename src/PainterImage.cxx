@@ -272,7 +272,7 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void clear(unsigned char* color)
     {
-        fill(window->image(), color, {0, 0, window->width(), window->height()});
+        fill(window->image(), color);
     }
 
     virtual void fillRect(const Rect<int> &rect, unsigned char* color)
@@ -280,7 +280,7 @@ struct PainterImplImage : public PainterImpl{
         auto intersection_rect = clip(rect + offset());
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
         {
-            fill(window->image(), color, intersection_rect);
+            fill({window->image(), intersection_rect}, color);
         }
     }
 
@@ -302,7 +302,7 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
     {
-        blend_colors(window->image(), pos + offset(), colors, mask, ImgRect(mask), false);
+        blend_colors(window->image(), pos + offset(), colors, mask, false);
     }
 
     virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture2D* mask)

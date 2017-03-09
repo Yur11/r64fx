@@ -8,7 +8,17 @@
 
 namespace r64fx{
 
-inline const Rect<int> ImgRect(Image* img) { return Rect<int>(0, 0, img->width(), img->height()); }
+struct ImgRect{
+    Image* img = nullptr;
+    Rect<int> rect;
+
+    ImgRect(Image* img, const Rect<int> &rect) : img(img), rect(rect) { crop(); }
+    ImgRect(Image* img) : img(img), rect(0, 0, img->width(), img->height()) { crop(); }
+
+private:
+    void crop();
+};
+
 
 class PixelOperation{
     unsigned int m_bits;
@@ -31,76 +41,36 @@ PixelOperation PixOpMax();
 PixelOperation ChanShuf(int dstc, int ndstc, int srcc, int nsrcc);
 
 
-void fill
-    (Image* dst, unsigned char* components, const Rect<int> &rect);
+void fill(const ImgRect &dst, unsigned char* components);
 
-inline void fill
-    (Image* dst, unsigned char* components)
-{
-    fill(dst, components, ImgRect(dst));
-}
+void fill(const ImgRect &dst, int dstc, int ndstc, unsigned char value);
 
+void fill_gradient_vert(Image* dst, int dstc, int ndstc, unsigned char val1, unsigned char val2, const Rect<int> &rect);
 
-void fill
-    (Image* dst, int dstc, int ndstc, unsigned char value, const Rect<int> &rect);
-
-inline void fill
-    (Image* dst, int dstc, int ndstc, unsigned char value)
-{
-    fill(dst, dstc, ndstc, value, ImgRect(dst));
-}
-
-
-void fill_gradient_vert
-    (Image* dst, int dstc, int ndstc, unsigned char val1, unsigned char val2, const Rect<int> &rect);
-
-void fill_circle
-    (Image* dst,  int dstc, int ndstc, unsigned char* components, Point<int> topleft, int diameter);
+void fill_circle(Image* dst,  int dstc, int ndstc, unsigned char* components, Point<int> topleft, int diameter);
 
 
 void copy
-    (Image* dst, Point<int> dstpos, Image* src, const Rect<int> &src_rect, const bool accurate = true);
-
-inline void copy
-    (Image* dst, Point<int> dstpos, Image* src, const bool accurate = true)
-{
-    copy(dst, dstpos, src, ImgRect(src), accurate);
-}
+    (Image* dst, Point<int> dstpos, const ImgRect &src);
 
 
 void copy
-    (Image* dst, Point<int> dstpos, Image* src, const PixelOperation pixop, const Rect<int> &src_rect);
-
-inline void copy
-    (Image* dst, Point<int> dstpos, Image* src, const PixelOperation pixop) 
-{
-    copy(dst, dstpos, src, pixop, ImgRect(src));
-}
+    (Image* dst, Point<int> dstpos, const ImgRect &src, const PixelOperation pixop);
 
 
 void copy
-    (Image* dst, Transformation2D<float> transform, Image* src, const PixelOperation pixop, Rect<int> dst_rect);
-
-inline void copy
-    (Image* dst, Transformation2D<float> transform, Image* src, const PixelOperation pixop)
-{
-    copy(dst, transform, src, pixop, ImgRect(dst));
-}
+    (const ImgRect &dst, Transformation2D<float> transform, Image* src, const PixelOperation pixop);
 
 
 void blend_colors
-    (Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, const Rect<int> &src_rect, const bool accurate = true);
-
-inline void blend_colors
-    (Image* dst, Point<int> dstpos, unsigned char** colors, Image* src, const bool accurate = true)
-{
-    blend_colors(dst, dstpos, colors, src, ImgRect(src), accurate);
-}
+    (Image* dst, Point<int> dstpos, unsigned char** colors, const ImgRect &src, const bool accurate = true);
 
 
 void flip_vert(Image* img);
 
 void flip_hori(Image* img);
+
+void mirror_left2right(Image* img, PixelOperation pixop = 0);
 
 void invert(Image* dst, Image* src);
 

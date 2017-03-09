@@ -186,8 +186,8 @@ void draw_diskette(Image* img, int dsk_x, int dsk_y, int dsk_w, int dsk_h, IconC
         int width  = (dsk_w / 2) - 1;
         int height = (dsk_h / 3) + 1;
         int offset = dsk_w / 4;
-        fill(img, ic->stroke1, {dsk_x + offset, dsk_y, width, height});
-        fill(img, ic->fill1, {dsk_x + offset + 1, dsk_y + 1, (width / 2) - 1, height - 2});
+        fill({img, {dsk_x + offset, dsk_y, width, height}}, ic->stroke1);
+        fill({img, {dsk_x + offset + 1, dsk_y + 1, (width / 2) - 1, height - 2}}, ic->fill1);
     }
 }
 

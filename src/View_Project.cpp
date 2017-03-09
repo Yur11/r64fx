@@ -17,7 +17,7 @@ void draw_knob_base(Image* dst, Point<int> dstpos, int size)
     assert(dst->componentCount() == 2);
 #endif//R64FX_DEBUG
 
-    fill(dst, Color(31, 255), {dstpos.x(), dstpos.y(), size, size});
+    fill({dst, {dstpos.x(), dstpos.y(), size, size}}, Color(31, 255));
     fill_circle(dst, 1, 1, Color(0), dstpos + Point<int>(6, 6), size - 12);
 }
 
@@ -47,11 +47,11 @@ public:
         fill_circle(&c3, 0, 1, Color(0), Point<int>(11, 11), size - 22);
 
         fill(&marker, Color(0, 255));
-        fill(&marker, Color(0, 127),  {size/2 - 2, 7, 4, size/2 - 7});
-        fill(&marker, Color(255, 31), {size/2 - 1, 8, 2, size/2 - 9});
+        fill({&marker, {size/2 - 2, 7, 4, size/2 - 7}}, Color(0, 127));
+        fill({&marker, {size/2 - 1, 8, 2, size/2 - 9}}, Color(255, 31));
         for(int i=0; i<4; i++)
         {
-            fill(&marker, 1, 1, 191 - 24 * i,  {size/2 - 1, 7 + i, 2, 1});
+            fill({&marker, {size/2 - 1, 7 + i, 2, 1}}, 1, 1, 191 - 24 * i);
         }
     }
 
@@ -75,39 +75,28 @@ public:
             &horse_shoe, 1, 1, Color(0), {0, 0}, m_size
         );
 
+        {
+            Image tick(m_size, m_size, 1);
+            fill(&tick, 0, 1, 0);
+            fill({&tick, {hs - 1, 2, 3, 10}}, 0, 1, 255);
+
+            Transformation2D<float> t;
+            t.translate(+hs - 0.5f, +hs - 0.5f);
+            t.rotate(-M_PI * 0.75f);
+            t.translate(-hs + 0.5f, -hs + 0.5f);
+            copy(&horse_shoe, t, &tick, PixOpMax());
+        }
+        mirror_left2right(&horse_shoe);
+
         invert(&horse_shoe, &horse_shoe);
 
-        fill(dst, 0, 1, 63, {dstpos.x(), dstpos.y(), m_size, m_size});
+        fill({dst, {dstpos.x(), dstpos.y(), m_size, m_size}}, 0, 1, 63);
         copy(dst, dstpos, &horse_shoe, ChanShuf(1, 1, 0, 1));
 
 //         if(middle_notch)
 //         {
 //             fill(dst, Color(0, 255), {dstpos.x() + hs - 2, dstpos.y(), 4, 5});
 //             fill(dst, Color(95, 0),  {dstpos.x() + hs - 1, dstpos.y(), 2, 5});
-//         }
-
-        {
-            Image tick(m_size, m_size, 1);
-            fill(&tick, 0, 1, 255);
-            fill(&tick, 0, 1, 0, {hs - 1, 2, 3, 10});
-
-            Transformation2D<float> t;
-            t.translate(+hs - 0.5f, +hs - 0.5f);
-            t.rotate(-M_PI * 0.75f);
-            t.translate(-hs + 0.5f, -hs + 0.5f);
-            copy(dst, t, &tick, PixOpMin() | ChanShuf(1, 1, 0, 1));
-        }
-
-//         {
-//             Image tick(m_size, m_size, 1);
-//             fill(&tick, 0, 1, 255);
-//             fill(&tick, 0, 1, 0, {hs - 2, 2, 3, 10});
-// 
-//             Transformation2D<float> t;
-//             t.translate(+hs - 0.5f, +hs - 0.5f);
-//             t.rotate(+M_PI * 0.75f);
-//             t.translate(-hs + 0.5f, -hs + 0.5f);
-//             copy(dst, t, &tick, PixOpMin() | ChanShuf(1, 1, 0, 1));
 //         }
     }
 

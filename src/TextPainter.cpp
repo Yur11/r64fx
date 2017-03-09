@@ -491,7 +491,7 @@ void TextPainter::paintSelectionBackground(Image* image, unsigned char* color, P
     {
         rect += offset;
         rect = intersection(rect, {0, 0, image->width(), image->height()});
-        fill(image, color, rect);
+        fill({image, rect}, color);
     }
 }
 

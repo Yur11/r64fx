@@ -364,9 +364,9 @@ ButtonAnimation* ButtonAnimation::PlayPause(Size<int> size)
         fill(&bars, Color(0));
         int w = bars.width() / 3;
         int h = bars.height();
-        fill(&bars, 0, 1, 255, {0,   0, w, h});
-        fill(&bars, 0, 1, 0,   {w,   0, w, h});
-        fill(&bars, 0, 1, 255, {w*2, 0, w, h});
+        fill({&bars, {0,   0, w, h}}, 0, 1, 255);
+        fill({&bars, {w,   0, w, h}}, 0, 1, 0);
+        fill({&bars, {w*2, 0, w, h}}, 0, 1, 255);
     }
 
     /* 0 Play Depressed */
