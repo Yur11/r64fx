@@ -53,15 +53,17 @@ void ImgRect::crop()
 }
 
 
-#define R64FX_PIXOP_TYPE_MASK 0xFF000000
-#define R64FX_PIXOP_REPLACE   0x00000000
-#define R64FX_PIXOP_ADD       0x01000000
-#define R64FX_PIXOP_SUB       0x02000000
-#define R64FX_PIXOP_MUL       0x03000000
-#define R64FX_PIXOP_MIN       0x04000000
-#define R64FX_PIXOP_MAX       0x05000000
+#define R64FX_PIXOP_TYPE_MASK           0xFF000000
+#define R64FX_PIXOP_REPLACE             0x00000000
+#define R64FX_PIXOP_ADD                 0x01000000
+#define R64FX_PIXOP_SUB                 0x02000000
+#define R64FX_PIXOP_MUL                 0x03000000
+#define R64FX_PIXOP_MIN                 0x04000000
+#define R64FX_PIXOP_MAX                 0x05000000
+#define R64FX_PIXOP_SRC_ALPHA           0x06000000
+#define R64FX_PIXOP_SRC_ALPHA_ACCURATE  0x07000000
 
-#define R64FX_PIXOP_SHUF      0x00100000
+#define R64FX_PIXOP_SHUF                0x00100000
 
 
 PixelOperation PixOpReplace()
@@ -92,6 +94,16 @@ PixelOperation PixOpMin()
 PixelOperation PixOpMax()
 {
     return R64FX_PIXOP_MAX;
+}
+
+PixelOperation PixOpBlendWithSrcAlpha()
+{
+    return R64FX_PIXOP_SRC_ALPHA;
+}
+
+PixelOperation PixOpBlendWithSrcAlphaAccurate()
+{
+    return R64FX_PIXOP_SRC_ALPHA_ACCURATE;
 }
 
 PixelOperation ChanShuf(int dstc, int ndstc, int srcc, int nsrcc)
@@ -160,6 +172,16 @@ template<> inline unsigned char pix_op<R64FX_PIXOP_MIN>(unsigned char dst, unsig
 }
 
 template<> inline unsigned char pix_op<R64FX_PIXOP_MAX>(unsigned char dst, unsigned char src)
+{
+    return dst > src ? dst : src;
+}
+
+template<> inline unsigned char pix_op<R64FX_PIXOP_SRC_ALPHA>(unsigned char dst, unsigned char src)
+{
+    return dst > src ? dst : src;
+}
+
+template<> inline unsigned char pix_op<R64FX_PIXOP_SRC_ALPHA_ACCURATE>(unsigned char dst, unsigned char src)
 {
     return dst > src ? dst : src;
 }
@@ -318,6 +340,35 @@ void fill_circle(Image* dst, int dstc, int ndstc, unsigned char* components, Poi
                 for(int c=0; c<ndstc; c++)
                 {
                     px2[dstc + c] = (unsigned char)(float(px2[dstc + c]) * one_minus_alpha + float(components[c]) * alpha);
+                }
+            }
+        }
+    }
+}
+
+
+void fill_masked(Image* dst, int dstc, int ndstc, unsigned char val, Point<int> dstpos, Image* src)
+{
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(dstpos.x() >= 0);
+    assert(dstpos.y() >= 0);
+    assert((dstpos.x() + src->width()) <= dst->width());
+    assert((dstpos.y() + src->height()) <= dst->height());
+    assert((dstc + ndstc) <= dst->componentCount());
+#endif//R64FX_DEBUG
+
+    for(int y=0; y<src->height(); y++)
+    {
+        for(int x=0; x<src->width(); x++)
+        {
+            auto srcpx = src->pixel(x, y);
+            auto dstpx = dst->pixel(x + dstpos.x(), y + dstpos.y());
+            for(int c=0; c<ndstc; c++)
+            {
+                if(srcpx[c] > 0)
+                {
+                    dstpx[c + dstc] = val;
                 }
             }
         }

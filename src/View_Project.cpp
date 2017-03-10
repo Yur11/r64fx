@@ -9,43 +9,15 @@ using namespace std;
 
 namespace r64fx{
 
-
-void draw_knob_base(Image* dst, Point<int> dstpos, int size)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(dst->componentCount() == 2);
-#endif//R64FX_DEBUG
-
-    fill({dst, {dstpos.x(), dstpos.y(), size, size}}, Color(31, 255));
-    fill_circle(dst, 1, 1, Color(0), dstpos + Point<int>(6, 6), size - 12);
-}
-
-
 class KnobAnimGenerator{
     int m_size;
-    Image c1, c2, c3, g1, g2, g3, marker;
+    Image marker;
 
 public:
     KnobAnimGenerator(int size)
     : m_size(size)
-    , c1(size, size, 1)
-    , c2(size, size, 1)
-    , c3(size, size, 1)
-    , g1(size, size, 2)
-    , g2(size, size, 2)
-    , g3(size, size, 2)
     , marker(size, size, 2)
     {
-        fill(&c1, Color(255));
-        fill_circle(&c1, 0, 1, Color(0), Point<int>(7, 7), size - 14);
-
-        fill(&c2, Color(255));
-        fill_circle(&c2, 0, 1, Color(0), Point<int>(10, 10), size - 20);
-
-        fill(&c3, Color(255));
-        fill_circle(&c3, 0, 1, Color(0), Point<int>(11, 11), size - 22);
-
         fill(&marker, Color(0, 255));
         fill({&marker, {size/2 - 2, 7, 4, size/2 - 7}}, Color(0, 127));
         fill({&marker, {size/2 - 1, 8, 2, size/2 - 9}}, Color(255, 31));
@@ -55,71 +27,99 @@ public:
         }
     }
 
-    void genBackground(Image* dst, Point<int> dstpos)
+    void genKnob(Image* dst, Point<int> dstpos)
     {
 #ifdef R64FX_DEBUG
         assert(dst->componentCount() == 2);
 #endif//R64FX_DEBUG
         int hs = m_size / 2;
 
-        Image horse_shoe(m_size, m_size, 1);
-        fill(&horse_shoe, 0, 1, 0);
+        fill({dst, {dstpos.x(), dstpos.y(), m_size, m_size}}, Color(63, 255));
 
-        fill_circle(
-            &horse_shoe, 0, 1, Color(255), {0, 0}, m_size
-        );
-        fill_circle(
-            &horse_shoe, 0, 1, Color(0), {3, 3}, m_size - 6
-        );
-        fill_bottom_triangle(
-            &horse_shoe, 1, 1, Color(0), {0, 0}, m_size
-        );
+        Image alpha_mask(m_size, m_size, 1);
+        fill(&alpha_mask, 0, 1, 255);
+
+        Image horse_shoe(m_size, m_size, 1);
+        {
+            fill(&horse_shoe, 0, 1, 255);
+
+            fill_circle(
+                &horse_shoe, 0, 1, Color(0), {0, 0}, m_size
+            );
+            fill_circle(
+                &horse_shoe, 0, 1, Color(255), {3, 3}, m_size - 6
+            );
+            fill_bottom_triangle(
+                &horse_shoe, 1, 1, Color(255), {0, 0}, m_size
+            );
+
+            {
+                Image tick(m_size, m_size, 1);
+                fill(&tick, 0, 1, 255);
+                fill({&tick, {hs - 1, 2, 3, 10}}, 0, 1, 0);
+
+                Transformation2D<float> t;
+                t.translate(+hs - 0.5f, +hs - 0.5f);
+                t.rotate(-M_PI * 0.75f);
+                t.translate(-hs + 0.5f, -hs + 0.5f);
+                copy(&horse_shoe, t, &tick, PixOpMin());
+            }
+            mirror_left2right(&horse_shoe);
+            copy(&alpha_mask, {0, 0}, &horse_shoe, PixOpMin());
+        }
+
 
         {
-            Image tick(m_size, m_size, 1);
-            fill(&tick, 0, 1, 0);
-            fill({&tick, {hs - 1, 2, 3, 10}}, 0, 1, 255);
+            Image c0(m_size, m_size, 1);
+            fill(&c0, Color(255));
+            fill_circle(&c0, 0, 1, Color(0), {6, 6}, m_size - 12);
 
-            Transformation2D<float> t;
-            t.translate(+hs - 0.5f, +hs - 0.5f);
-            t.rotate(-M_PI * 0.75f);
-            t.translate(-hs + 0.5f, -hs + 0.5f);
-            copy(&horse_shoe, t, &tick, PixOpMax());
+            copy(&alpha_mask, {0, 0}, &c0, PixOpMin());
+
+            Image layer(m_size, m_size, 2);
+            fill(&layer, Color(0, 255));
+            copy(&layer, {0, 0}, &c0, ChanShuf(1, 1, 0, 1));
+
+            copy(dst, dstpos, &layer);
         }
-        mirror_left2right(&horse_shoe);
 
-        invert(&horse_shoe, &horse_shoe);
+        {
+            Image c1(m_size, m_size, 1);
+            fill(&c1, Color(255));
+            fill_circle(&c1, 0, 1, Color(0), {7, 7}, m_size - 14);
 
-        fill({dst, {dstpos.x(), dstpos.y(), m_size, m_size}}, 0, 1, 63);
-        copy(dst, dstpos, &horse_shoe, ChanShuf(1, 1, 0, 1));
+            Image layer(m_size, m_size, 2);
+            fill_gradient_vert(&layer, 0, 1, 127, 31, {0, 7, m_size, m_size - 7});
+            copy(&layer, {0, 0}, &c1, ChanShuf(1, 1, 0, 1));
 
-//         if(middle_notch)
-//         {
-//             fill(dst, Color(0, 255), {dstpos.x() + hs - 2, dstpos.y(), 4, 5});
-//             fill(dst, Color(95, 0),  {dstpos.x() + hs - 1, dstpos.y(), 2, 5});
-//         }
-    }
+            copy(dst, dstpos, &layer);
+        }
 
-    void genKnob(Image* dst, Point<int> dstpos, float angle)
-    {
-#ifdef R64FX_DEBUG
-        assert(dst->componentCount() == 2);
-#endif//R64FX_DEBUG
+        {
+            Image c2(m_size, m_size, 1);
+            fill(&c2, Color(255));
+            fill_circle(&c2, 0, 1, Color(0), {10, 10}, m_size - 20);
 
-        fill_gradient_vert(&g1, 0, 1, 127, 31, {0, 7, m_size, m_size - 7});
-        copy(&g1, {0, 0}, &c1, ChanShuf(1, 1, 0, 1));
+            Image layer(m_size, m_size, 2);
+            fill_gradient_vert(&layer, 0, 1, 223, 31, {0, 10, m_size, m_size - 10});
+            copy(&layer, {0, 0}, &c2, ChanShuf(1, 1, 0, 1));
 
-        fill_gradient_vert(&g2, 0, 1, 223, 31, {0, 10, m_size, m_size - 10});
-        copy(&g2, {0, 0}, &c2, ChanShuf(1, 1, 0, 1));
+            copy(dst, dstpos, &layer);
+        }
 
-        fill_gradient_vert(&g3, 0, 1, 147, 107, {0, 11, m_size, m_size - 11});
-        copy(&g3, {0, 0}, &c3, ChanShuf(1, 1, 0, 1));
+        {
+            Image c3(m_size, m_size, 1);
+            fill(&c3, Color(255));
+            fill_circle(&c3, 0, 1, Color(0), {11, 11}, m_size - 22);
 
-        fill(dst, Color(0, 255));
-        copy(dst, {0, 0}, &g1);
-        copy(dst, {0, 0}, &g2);
-        copy(dst, {0, 0}, &g3);
-        copy(dst, dstpos, &c1, ChanShuf(1, 1, 0, 1));
+            Image layer(m_size, m_size, 2);
+            fill_gradient_vert(&layer, 0, 1, 147, 107, {0, 11, m_size, m_size - 11});
+            copy(&layer, {0, 0}, &c3, ChanShuf(1, 1, 0, 1));
+
+            copy(dst, dstpos, &layer);
+        }
+
+        copy(dst, dstpos, &alpha_mask, ChanShuf(1, 1, 0, 1));
     }
 
     void genMarker(Image* dst, Point<int> dstpos, float angle)
@@ -163,16 +163,8 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
         KnobAnimGenerator kanimg(size);
 
-        Image bg(size, size, 2);
-        kanimg.genBackground(&bg, {0, 0});
-        p->putImage(&bg, {10 + (i * size + 20), 20});
-
-        Image knob_base(size, size, 2);
-        draw_knob_base(&knob_base, {0, 0}, size);
-        p->putImage(&knob_base, {10 + (i * size + 20), 20});
-
         Image knob(size, size, 2);
-        kanimg.genKnob(&knob, {0, 0}, 0.0f);
+        kanimg.genKnob(&knob, {0, 0});
         p->putImage(&knob, {10 + (i * size + 20), 20});
 
         Image marker(size, size, 2);
