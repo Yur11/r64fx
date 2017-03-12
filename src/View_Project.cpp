@@ -9,9 +9,17 @@ using namespace std;
 
 namespace r64fx{
 
+enum class KnobDecoration{
+    SolidHorseShoe,
+    DashedHorseShoe
+};
+
+
 class KnobAnimGenerator{
     int m_size;
     Image marker;
+
+    inline int halfSize() const { return m_size >> 1; }
 
 public:
     KnobAnimGenerator(int size)
@@ -27,54 +35,48 @@ public:
         }
     }
 
-    void genKnob(Image* dst, Point<int> dstpos)
+    void genKnob(Image* dst, Point<int> dstpos, KnobDecoration kd)
     {
 #ifdef R64FX_DEBUG
         assert(dst->componentCount() == 2);
 #endif//R64FX_DEBUG
-        int hs = m_size / 2;
 
-        fill({dst, {dstpos.x(), dstpos.y(), m_size, m_size}}, Color(63, 255));
+        fill({dst, {dstpos.x(), dstpos.y(), m_size, m_size}}, Color(31, 255));
 
         Image alpha_mask(m_size, m_size, 1);
         fill(&alpha_mask, 0, 1, 255);
 
-        Image horse_shoe(m_size, m_size, 1);
+        switch(kd)
         {
-            fill(&horse_shoe, 0, 1, 255);
-
-            fill_circle(
-                &horse_shoe, 0, 1, Color(0), {0, 0}, m_size
-            );
-            fill_circle(
-                &horse_shoe, 0, 1, Color(255), {3, 3}, m_size - 6
-            );
-            fill_bottom_triangle(
-                &horse_shoe, 1, 1, Color(255), {0, 0}, m_size
-            );
-
+            case KnobDecoration::SolidHorseShoe:
             {
-                Image tick(m_size, m_size, 1);
-                fill(&tick, 0, 1, 255);
-                fill({&tick, {hs - 1, 2, 3, 10}}, 0, 1, 0);
-
-                Transformation2D<float> t;
-                t.translate(+hs - 0.5f, +hs - 0.5f);
-                t.rotate(-M_PI * 0.75f);
-                t.translate(-hs + 0.5f, -hs + 0.5f);
-                copy(&horse_shoe, t, &tick, PixOpMin());
+                genDecorationSolidHorseShoe(&alpha_mask, dstpos);
+                break;
             }
-            mirror_left2right(&horse_shoe);
-            copy(&alpha_mask, {0, 0}, &horse_shoe, PixOpMin());
+
+            case KnobDecoration::DashedHorseShoe:
+            {
+                genDecorationDashedHorseShoe(&alpha_mask, dstpos, 10);
+                break;
+            }
+
+            default:
+                break;
         }
 
+        genKnobCenter(dst, &alpha_mask, dstpos);
+        copy(dst, dstpos, &alpha_mask, ChanShuf(1, 1, 0, 1));
+    }
 
+private:
+    void genKnobCenter(Image* dst, Image* alpha_mask, Point<int> dstpos)
+    {
         {
             Image c0(m_size, m_size, 1);
             fill(&c0, Color(255));
             fill_circle(&c0, 0, 1, Color(0), {6, 6}, m_size - 12);
 
-            copy(&alpha_mask, {0, 0}, &c0, PixOpMin());
+            copy(alpha_mask, {0, 0}, &c0, PixOpMin());
 
             Image layer(m_size, m_size, 2);
             fill(&layer, Color(0, 255));
@@ -118,10 +120,73 @@ public:
 
             copy(dst, dstpos, &layer);
         }
-
-        copy(dst, dstpos, &alpha_mask, ChanShuf(1, 1, 0, 1));
     }
 
+    void genDecorationSolidHorseShoe(Image* alpha_mask, Point<int> dstpos)
+    {
+        Image horse_shoe(m_size, m_size, 1);
+        fill(&horse_shoe, 0, 1, 255);
+
+        fill_circle(
+            &horse_shoe, 0, 1, Color(0), {0, 0}, m_size
+        );
+        fill_circle(
+            &horse_shoe, 0, 1, Color(255), {3, 3}, m_size - 6
+        );
+        fill_bottom_triangle(
+            &horse_shoe, 1, 1, Color(255), {0, 0}, m_size
+        );
+
+        Image tick(m_size, m_size, 1);
+        fill(&tick, 0, 1, 255);
+        fill({&tick, {m_size/2 - 1, 2, 3, 10}}, 0, 1, 0);
+        copyTick(&horse_shoe, &tick, -M_PI * 0.75f);
+
+        mirror_left2right(&horse_shoe);
+        copy(alpha_mask, {0, 0}, &horse_shoe, PixOpMin());
+
+        fill({alpha_mask, {halfSize() - 2, 0, 4, 6}}, 0, 1, 255);
+        fill({alpha_mask, {halfSize() - 1, 0, 2, 5}}, 0, 1, 0);
+    }
+
+    void genDecorationDashedHorseShoe(Image* alpha_mask, Point<int> dstpos, int nticks)
+    {
+        Image horse_shoe(m_size, m_size, 1);
+        fill(&horse_shoe, 0, 1, 255);
+
+        Image long_tick(m_size, m_size, 1);
+        fill(&long_tick, 0, 1, 255);
+        fill({&long_tick, {m_size/2 - 1, 2, 2, 4}}, 0, 1, 0);
+
+        Image short_tick(m_size, m_size, 1);
+        fill(&short_tick, 0, 1, 255);
+        fill({&short_tick, {m_size/2 - 1, 2, 2, 4}}, 0, 1, 0);
+
+        float angle_range = M_PI * 0.75;
+        float angle = -angle_range;
+        float angle_step = angle_range / float(nticks);
+
+        for(int i=0; i<nticks; i++)
+        {
+            copyTick(&horse_shoe, i > 0 ? &short_tick : &long_tick, angle);
+            angle += angle_step;
+        }
+        copy(&horse_shoe, {0, 0}, &long_tick, PixOpMin());
+
+        mirror_left2right(&horse_shoe);
+        copy(alpha_mask, {0, 0}, &horse_shoe, PixOpMin());
+    }
+
+    void copyTick(Image* horse_shoe, Image* tick, float angle)
+    {
+        Transformation2D<float> t;
+        t.translate(+halfSize() - 0.5f, +halfSize() - 0.5f);
+        t.rotate(angle);
+        t.translate(-halfSize() + 0.5f, -halfSize() + 0.5f);
+        copy(horse_shoe, t, tick, PixOpMin());
+    }
+
+public:
     void genMarker(Image* dst, Point<int> dstpos, float angle)
     {
 #ifdef R64FX_DEBUG
@@ -174,7 +239,7 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         KnobAnimGenerator kanimg(size);
 
         Image knob(size, size, 2);
-        kanimg.genKnob(&knob, {0, 0});
+        kanimg.genKnob(&knob, {0, 0}, (i & 1) ? KnobDecoration::SolidHorseShoe : KnobDecoration::DashedHorseShoe);
         p->putImage(&knob, {10 + (i * size + 20), 20});
 
         Image marker(size, size, 2);
