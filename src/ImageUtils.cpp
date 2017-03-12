@@ -278,6 +278,49 @@ void fill_gradient_vert(Image* dst, int dstc, int ndstc, unsigned char val1, uns
 }
 
 
+void fill_gradient_radial(Image* dst, int dstc, int ndstc, unsigned char val1, unsigned char val2, const Rect<int> &rect)
+{
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(rect.x() >= 0);
+    assert(rect.y() >= 0);
+    assert(rect.right()  <= dst->width());
+    assert(rect.bottom() <= dst->height());
+    assert((dstc + ndstc) <= dst->componentCount());
+    assert(val1 < val2);
+#endif//R64FX_DEBUG
+
+    float bc = float(val1) * rcp255;
+    float ec = float(val2) * rcp255;
+    float cd = ec - bc;
+    int cx = rect.width() / 2 + rect.x();
+    int cy = rect.height() / 2 + rect.y();
+
+    float ang1 = 0.0f;
+    float ang2 = 2.0f * M_PI;
+    float ang_rcp = 1.0f / (ang2 - ang1);
+
+    for(int y=rect.y(); y<rect.bottom(); y++)
+    {
+        for(int x=rect.x(); x<rect.right(); x++)
+        {
+            float pxang = atan2(x - cx, cy - y) + M_PI;
+            float val = 0.0f;
+            if(pxang >= ang1 && pxang <= ang2)
+            {
+                val = (pxang - ang1) * ang_rcp * cd;
+            }
+
+            auto px = dst->pixel(x, y);
+            for(int c=0; c<ndstc; c++)
+            {
+                px[dstc + c] = (unsigned char)(val * 255.0f);
+            }
+        }
+    }
+}
+
+
 void fill_circle(Image* dst, int dstc, int ndstc, unsigned char* components, Point<int> topleft, int diameter)
 {
 #ifdef R64FX_DEBUG
@@ -340,35 +383,6 @@ void fill_circle(Image* dst, int dstc, int ndstc, unsigned char* components, Poi
                 for(int c=0; c<ndstc; c++)
                 {
                     px2[dstc + c] = (unsigned char)(float(px2[dstc + c]) * one_minus_alpha + float(components[c]) * alpha);
-                }
-            }
-        }
-    }
-}
-
-
-void fill_masked(Image* dst, int dstc, int ndstc, unsigned char val, Point<int> dstpos, Image* src)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(dstpos.x() >= 0);
-    assert(dstpos.y() >= 0);
-    assert((dstpos.x() + src->width()) <= dst->width());
-    assert((dstpos.y() + src->height()) <= dst->height());
-    assert((dstc + ndstc) <= dst->componentCount());
-#endif//R64FX_DEBUG
-
-    for(int y=0; y<src->height(); y++)
-    {
-        for(int x=0; x<src->width(); x++)
-        {
-            auto srcpx = src->pixel(x, y);
-            auto dstpx = dst->pixel(x + dstpos.x(), y + dstpos.y());
-            for(int c=0; c<ndstc; c++)
-            {
-                if(srcpx[c] > 0)
-                {
-                    dstpx[c + dstc] = val;
                 }
             }
         }
@@ -603,6 +617,35 @@ void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, const I
                     else
                         dstpx[c] = mix_lazy(dstpx[c], one_minus_alpha, colors[m][c], alpha);
                 }
+            }
+        }
+    }
+}
+
+
+void threshold(Image* dst, int dstc, int ndstc, Point<int> dstpos, unsigned char* c1, unsigned char* c2, Image* src, unsigned char threshold)
+{
+    for(int y=0; y<dst->height(); y++)
+    {
+        for(int x=0; x<dst->width(); x++)
+        {
+            auto dstpx = dst->pixel(x + dstpos.x(), y + dstpos.y());
+            auto srcpx = src->pixel(x, y);
+
+            float valm = float(srcpx[0]);
+            float vald = float(threshold) - valm;
+            float alpha = 0.0f;
+            if(vald < 0.0f)
+            {
+                alpha = 1.0f;
+            }
+            float one_minus_alpha = 1.0f - alpha;
+
+            for(int c=0; c<ndstc; c++)
+            {
+                float val1 = float(c1[c]);
+                float val2 = float(c2[c]);
+                dstpx[c + dstc] = (val1 * alpha + val2 * one_minus_alpha);
             }
         }
     }

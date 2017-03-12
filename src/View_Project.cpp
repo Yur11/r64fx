@@ -152,6 +152,16 @@ View_Project::~View_Project()
 }
 
 
+float normalize_angle(float angle)
+{
+    while(angle >= (M_PI * 2.0f))
+        angle -= (M_PI * 2.0f);
+    while(angle < 0)
+        angle += (M_PI * 2.0f);
+    return angle;
+}
+
+
 void View_Project::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
@@ -171,6 +181,36 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         kanimg.genMarker(&marker, {0, 0}, m_angle);
         p->putImage(&marker, {10 + (i * size + 20), 20});
     }
+
+    Image gradimg(50, 50, 1);
+    fill(&gradimg, Color(0));
+    fill_gradient_radial(&gradimg, 0, 1, 0, 255, {0, 0, 50, 50});
+
+    Image circleimg(50, 50, 1);
+    fill(&circleimg, Color(0));
+    fill_circle(&circleimg, 0, 1, Color(255), {0, 0}, 50);
+    copy(&gradimg, {0, 0}, &circleimg, PixOpMul());
+
+    Image img(50, 50, 4);
+    fill(&img, Color(0, 0, 0, 0));
+
+    threshold(&img, 0, 4, {0, 0}, Color(255, 0, 0, 0), Color(255, 0, 0, 255), &gradimg, 255.0f * ((normalize_angle(m_angle - M_PI * 0.5f) / (2.0f * M_PI))));
+    flip_hori(&img);
+    p->putImage(&img, {100, 100});
+
+    Image tick(50, 50, 4);
+    fill(&tick, Color(255, 0, 0, 255));
+    fill({&tick, {23, 0, 4, 27}}, Color(255, 0, 0, 0));
+    Image tickimg(50, 50, 4);
+    fill(&tickimg, Color(0, 0, 0, 255));
+    Transformation2D<float> t;
+    t.translate(float(25) - 0.5f, float(25) - 0.5f);
+    t.rotate(-(M_PI * 0.5f + m_angle));
+    t.translate(float(-25) + 0.5f, float(-25) + 0.5f);
+    copy(&tickimg, t, &tick, PixOpReplace());
+
+    p->putImage(&tickimg, {100, 100});
+
 }
 
 
@@ -179,6 +219,10 @@ void View_Project::mouseMoveEvent(MouseMoveEvent* event)
     if(event->button() & MouseButton::Left())
     {
         m_angle += event->dy() * 0.025f;
+        while(m_angle < 0.0f)
+            m_angle += M_PI * 2.0f;
+        while(m_angle > (M_PI * 2.0f))
+            m_angle -= M_PI * 2.0f;
         repaint();
     }
 
