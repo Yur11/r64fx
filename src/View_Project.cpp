@@ -197,13 +197,13 @@ public:
 
 View_Project::View_Project(Widget* parent) : Widget(parent)
 {
-    
+
 }
 
 
 View_Project::~View_Project()
 {
-    
+
 }
 
 
@@ -235,6 +235,30 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         Image marker(size, size, 2);
         kanimg.genMarker(&marker, {0, 0}, m_angle);
         p->putImage(&marker, {10 + (i * size + 20), 20});
+    }
+
+    {
+//         int size = 50;
+//         int hs = size >> 2;
+// 
+//         Image img(size, size, 2);
+//         fill(&img, Color(0, 255));
+// 
+//         Image tick(size, size, 2);
+//         fill(&tick, Color(0, 255));
+// 
+//         int nticks = 64;
+//         float angle_range = M_PI * 2.0f;
+//         for(int i=0; i<nticks; i++)
+//         {
+//             fill({&tick, {hs - 1, 1, 2, 4}}, Color(i + 1, 255));
+// 
+//             Transformation2D<float> t;
+//             t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
+//             t.rotate(-(M_PI * 0.5f + angle));
+//             t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
+//             copy(&tick, );
+//         }
     }
 }
 

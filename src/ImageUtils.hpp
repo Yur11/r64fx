@@ -44,7 +44,7 @@ PixelOperation PixOpMax();
 
 /* Incompatible with ChanShuf(). */
 PixelOperation PixOpBlendAlpha();
-PixelOperation PixOpBlendAccurate();
+PixelOperation PixOpBlendAlphaAccurate();
 
 
 void fill(const ImgRect &dst, unsigned char* components);
@@ -59,11 +59,7 @@ void fill_circle(Image* dst, int dstc, int ndstc, unsigned char* components, Poi
 
 
 void copy
-    (Image* dst, Point<int> dstpos, const ImgRect &src);
-
-
-void copy
-    (Image* dst, Point<int> dstpos, const ImgRect &src, const PixelOperation pixop);
+    (Image* dst, Point<int> dstpos, const ImgRect &src, const PixelOperation pixop = PixOpBlendAlpha());
 
 
 void copy

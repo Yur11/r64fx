@@ -30,14 +30,14 @@ namespace{
 
 constexpr float rcp255 = 1.0f / 255.0f;
 
-inline unsigned char mix_lazy(unsigned char c1, float f1, unsigned char c2, float f2)
+inline unsigned char mix_colors(unsigned char c1, float f1, unsigned char c2, float f2)
 {
     float v1 = float(c1) * rcp255;
     float v2 = float(c2) * rcp255;
     return (unsigned char)((v1*f1 + v2*f2) * 255.0f);
 }
 
-inline unsigned char mix_accurate(unsigned char c1, float f1, unsigned char c2, float f2)
+inline unsigned char mix_colors_accurate(unsigned char c1, float f1, unsigned char c2, float f2)
 {
     float v1 = float(c1) * rcp255;
     float v2 = float(c2) * rcp255;
@@ -187,18 +187,12 @@ template<unsigned int PixOpType> unsigned char pix_op_alpha(unsigned char c1, fl
 
 template<> unsigned char pix_op_alpha<R64FX_PIXOP_SRC_ALPHA>(unsigned char c1, float f1, unsigned char c2, float f2)
 {
-    float v1 = float(c1) * rcp255;
-    float v2 = float(c2) * rcp255;
-    return (unsigned char)((v1*f1 + v2*f2) * 255.0f);
+    return mix_colors(c1, f1, c2, f2);
 }
 
 template<> unsigned char pix_op_alpha<R64FX_PIXOP_SRC_ALPHA_ACCURATE>(unsigned char c1, float f1, unsigned char c2, float f2)
 {
-    float v1 = float(c1) * rcp255;
-    float v2 = float(c2) * rcp255;
-    v1 = v1 * v1;
-    v2 = v2 * v2;
-    return (unsigned char)(sqrt(v1*f1 + v2*f2) * 255.0f);
+    return mix_colors_accurate(c1, f1, c2, f2);
 }
 
 
@@ -486,30 +480,6 @@ void fill_circle(Image* dst, int dstc, int ndstc, unsigned char* components, Poi
 }
 
 
-void copy(Image* dst, Point<int> dstpos, const ImgRect &src)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(src.img != nullptr);
-    assert(dst->componentCount() >= src.img->componentCount());
-#endif//R64FX_DEBUG
-
-    RectIntersection<int> src_isec({0, 0, src.img->width(), src.img->height()}, src.rect);
-    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
-
-    UnpackPixopChanShuf shuf(R64FX_PIXOP_SRC_ALPHA, dst, src.img);
-    for(int y=0; y<dst_isec.height(); y++)
-    {
-        for(int x=0; x<dst_isec.width(); x++)
-        {
-            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
-            auto srcpx = src.img->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
-            shuf_components<R64FX_PIXOP_SRC_ALPHA>(shuf, dstpx, srcpx);
-        }
-    }
-}
-
-
 template<unsigned int PixOpType> void perform_copy(Image* dst, Point<int> dstpos, const ImgRect &src, const PixelOperation pixop)
 {
 #ifdef R64FX_DEBUG
@@ -544,6 +514,8 @@ void copy(Image* dst, Point<int> dstpos, const ImgRect &src, const PixelOperatio
         SWITCH_PIXOP (R64FX_PIXOP_MUL);
         SWITCH_PIXOP (R64FX_PIXOP_MIN);
         SWITCH_PIXOP (R64FX_PIXOP_MAX);
+        SWITCH_PIXOP (R64FX_PIXOP_SRC_ALPHA);
+        SWITCH_PIXOP (R64FX_PIXOP_SRC_ALPHA_ACCURATE);
         default: break;
 #undef SWITCH_PIXOP
     }
@@ -648,9 +620,9 @@ void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, const I
                 for(int c=0; c<dst->componentCount(); c++)
                 {
                     if(accurate)
-                        dstpx[c] = mix_accurate(dstpx[c], one_minus_alpha, colors[m][c], alpha);
+                        dstpx[c] = mix_colors_accurate(dstpx[c], one_minus_alpha, colors[m][c], alpha);
                     else
-                        dstpx[c] = mix_lazy(dstpx[c], one_minus_alpha, colors[m][c], alpha);
+                        dstpx[c] = mix_colors(dstpx[c], one_minus_alpha, colors[m][c], alpha);
                 }
             }
         }
