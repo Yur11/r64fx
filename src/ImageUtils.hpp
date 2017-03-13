@@ -31,6 +31,10 @@ public:
 
 inline const PixelOperation operator|(const PixelOperation a, const PixelOperation b) { return a.bits() | b.bits(); }
 
+/* nsrcc must be equal to ndstc or be 1. */
+PixelOperation ChanShuf(int dstc, int ndstc, int srcc, int nsrcc);
+
+/* Compatible with ChanShuf(). */
 PixelOperation PixOpReplace();
 PixelOperation PixOpAdd();
 PixelOperation PixOpSub();
@@ -38,7 +42,9 @@ PixelOperation PixOpMul();
 PixelOperation PixOpMin();
 PixelOperation PixOpMax();
 
-PixelOperation ChanShuf(int dstc, int ndstc, int srcc, int nsrcc);
+/* Incompatible with ChanShuf(). */
+PixelOperation PixOpBlendAlpha();
+PixelOperation PixOpBlendAccurate();
 
 
 void fill(const ImgRect &dst, unsigned char* components);

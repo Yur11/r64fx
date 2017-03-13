@@ -10,7 +10,19 @@
 #include <iostream>
 using namespace std;
 
-using namespace std;
+
+#define R64FX_PIXOP_TYPE_MASK           0xFF000000
+#define R64FX_PIXOP_REPLACE             0x00000000
+#define R64FX_PIXOP_ADD                 0x01000000
+#define R64FX_PIXOP_SUB                 0x02000000
+#define R64FX_PIXOP_MUL                 0x03000000
+#define R64FX_PIXOP_MIN                 0x04000000
+#define R64FX_PIXOP_MAX                 0x05000000
+#define R64FX_PIXOP_SRC_ALPHA           0x06000000
+#define R64FX_PIXOP_SRC_ALPHA_ACCURATE  0x07000000
+
+#define R64FX_PIXOP_SHUF                0x00100000
+
 
 namespace r64fx{
 
@@ -53,17 +65,34 @@ void ImgRect::crop()
 }
 
 
-#define R64FX_PIXOP_TYPE_MASK           0xFF000000
-#define R64FX_PIXOP_REPLACE             0x00000000
-#define R64FX_PIXOP_ADD                 0x01000000
-#define R64FX_PIXOP_SUB                 0x02000000
-#define R64FX_PIXOP_MUL                 0x03000000
-#define R64FX_PIXOP_MIN                 0x04000000
-#define R64FX_PIXOP_MAX                 0x05000000
-#define R64FX_PIXOP_SRC_ALPHA           0x06000000
-#define R64FX_PIXOP_SRC_ALPHA_ACCURATE  0x07000000
+PixelOperation ChanShuf(int dstc, int ndstc, int srcc, int nsrcc)
+{
+#ifdef R64FX_DEBUG
+    assert(dstc >= 0);
+    assert(dstc <= 3);
+    assert(srcc >= 0);
+    assert(srcc <= 3);
+    assert(dstc + ndstc <= 4);
+    assert(srcc + nsrcc <= 4);
+    if(ndstc > 1)
+    {
+        assert(nsrcc == ndstc);
+    }
+#endif//R64FX_DEBUG
+    return R64FX_PIXOP_SHUF | dstc | (ndstc << 2) | (srcc << 4) | (nsrcc << 6);
+}
 
-#define R64FX_PIXOP_SHUF                0x00100000
+struct UnpackPixopChanShuf{
+    short dstc, ndstc, srcc, nsrcc;
+
+    UnpackPixopChanShuf(unsigned int bits, Image* dst, Image* src)
+    : dstc  ((bits & R64FX_PIXOP_SHUF) ? (bits & 3) : 0)
+    , ndstc ((bits & R64FX_PIXOP_SHUF) ? ((bits & (3 << 2)) >> 2) : dst->componentCount())
+    , srcc  ((bits & R64FX_PIXOP_SHUF) ? ((bits & (3 << 4)) >> 4) : 0)
+    , nsrcc ((bits & R64FX_PIXOP_SHUF) ? ((bits & (3 << 6)) >> 6) : src->componentCount())
+    {
+    }
+};
 
 
 PixelOperation PixOpReplace()
@@ -96,50 +125,21 @@ PixelOperation PixOpMax()
     return R64FX_PIXOP_MAX;
 }
 
-PixelOperation PixOpBlendWithSrcAlpha()
+PixelOperation PixOpBlendAlpha()
 {
     return R64FX_PIXOP_SRC_ALPHA;
 }
 
-PixelOperation PixOpBlendWithSrcAlphaAccurate()
+PixelOperation PixOpBlendAlphaAccurate()
 {
     return R64FX_PIXOP_SRC_ALPHA_ACCURATE;
 }
-
-PixelOperation ChanShuf(int dstc, int ndstc, int srcc, int nsrcc)
-{
-#ifdef R64FX_DEBUG
-    assert(dstc >= 0);
-    assert(dstc <= 3);
-    assert(srcc >= 0);
-    assert(srcc <= 3);
-    assert(dstc + ndstc <= 4);
-    assert(srcc + nsrcc <= 4);
-    if(ndstc > 1)
-    {
-        assert(nsrcc == ndstc);
-    }
-#endif//R64FX_DEBUG
-    return R64FX_PIXOP_SHUF | dstc | (ndstc << 2) | (srcc << 4) | (nsrcc << 6);
-}
-
-struct UnpackPixopChanShuf{
-    int dstc, ndstc, srcc, nsrcc;
-
-    UnpackPixopChanShuf(unsigned int bits, Image* dst, Image* src)
-    : dstc  ((bits & R64FX_PIXOP_SHUF) ? (bits & 3) : 0)
-    , ndstc ((bits & R64FX_PIXOP_SHUF) ? ((bits & (3 << 2)) >> 2) : dst->componentCount())
-    , srcc  ((bits & R64FX_PIXOP_SHUF) ? ((bits & (3 << 4)) >> 4) : 0)
-    , nsrcc ((bits & R64FX_PIXOP_SHUF) ? ((bits & (3 << 6)) >> 6) : src->componentCount())
-    {
-    }
-};
 
 
 template<unsigned int PixOpType> inline unsigned char pix_op(unsigned char dst, unsigned char src)
 {
 #ifdef R64FX_DEBUG
-    cerr << "Warning: Undefined PixOpType '" << PixOpType << "'!\n";
+    cerr << "Warning: Undefined PixOpType '" << PixOpType << "' in pix_op() !\n";
 #endif//R64FX_DEBUG
     return 0;
 }
@@ -177,6 +177,31 @@ template<> inline unsigned char pix_op<R64FX_PIXOP_MAX>(unsigned char dst, unsig
 }
 
 
+template<unsigned int PixOpType> unsigned char pix_op_alpha(unsigned char c1, float f1, unsigned char c2, float f2)
+{
+#ifdef R64FX_DEBUG
+    cerr << "Warning: Undefined PixOpType '" << PixOpType << "' in pix_op_alpha!\n";
+#endif//R64FX_DEBUG
+    return 0;
+}
+
+template<> unsigned char pix_op_alpha<R64FX_PIXOP_SRC_ALPHA>(unsigned char c1, float f1, unsigned char c2, float f2)
+{
+    float v1 = float(c1) * rcp255;
+    float v2 = float(c2) * rcp255;
+    return (unsigned char)((v1*f1 + v2*f2) * 255.0f);
+}
+
+template<> unsigned char pix_op_alpha<R64FX_PIXOP_SRC_ALPHA_ACCURATE>(unsigned char c1, float f1, unsigned char c2, float f2)
+{
+    float v1 = float(c1) * rcp255;
+    float v2 = float(c2) * rcp255;
+    v1 = v1 * v1;
+    v2 = v2 * v2;
+    return (unsigned char)(sqrt(v1*f1 + v2*f2) * 255.0f);
+}
+
+
 template<unsigned int PixOpType> inline void shuf_components(UnpackPixopChanShuf shuf, unsigned char* dstpx, unsigned char* srcpx)
 {
     for(auto c=0; c<shuf.ndstc; c++)
@@ -186,6 +211,66 @@ template<unsigned int PixOpType> inline void shuf_components(UnpackPixopChanShuf
         dstref = pix_op<PixOpType>(dstref, srcref);
     }
 }
+
+
+template<unsigned int PixOpType> inline void shuf_components_alpha(unsigned char* dstpx, unsigned char* srcpx, int ndstc, int nsrcc)
+{
+    switch(nsrcc)
+    {
+        case 1:
+        {
+            for(int c=0; c<ndstc - (1 - (ndstc & 1)); c++)
+            {
+                dstpx[c] = srcpx[0];
+            }
+            break;
+        }
+
+        case 2:
+        {
+            for(int c=0; c<ndstc - (1 - (ndstc & 1)); c++)
+            {
+                float alpha            = float(      srcpx[1]) * rcp255;
+                float one_minus_alpha  = float(255 - srcpx[1]) * rcp255;
+                dstpx[c] = pix_op_alpha<PixOpType>(dstpx[c], alpha, srcpx[0], one_minus_alpha);
+            }
+            break;
+        }
+
+        case 3:
+        {
+            for(int c=0; c<3; c++)
+            {
+                dstpx[c] = srcpx[c];
+            }
+            break;
+        }
+
+        case 4:
+        {
+            float alpha            = float(      srcpx[3]) * rcp255;
+            float one_minus_alpha  = float(255 - srcpx[3]) * rcp255;
+            for(int c=0; c<3; c++)
+            {
+                dstpx[c] = pix_op_alpha<PixOpType>(dstpx[c], alpha, srcpx[c], one_minus_alpha);
+            }
+            break;
+        }
+    }
+}
+
+
+template<> inline void shuf_components<R64FX_PIXOP_SRC_ALPHA>(UnpackPixopChanShuf shuf, unsigned char* dstpx, unsigned char* srcpx)
+{
+    shuf_components_alpha<R64FX_PIXOP_SRC_ALPHA>(dstpx, srcpx, shuf.ndstc, shuf.nsrcc);
+}
+
+
+template<> inline void shuf_components<R64FX_PIXOP_SRC_ALPHA_ACCURATE>(UnpackPixopChanShuf shuf, unsigned char* dstpx, unsigned char* srcpx)
+{
+    shuf_components_alpha<R64FX_PIXOP_SRC_ALPHA_ACCURATE>(dstpx, srcpx, shuf.ndstc, shuf.nsrcc);
+}
+
 
 template<unsigned int PixOpType> inline void shuf_components_bilinear(
     UnpackPixopChanShuf shuf,
@@ -412,63 +497,14 @@ void copy(Image* dst, Point<int> dstpos, const ImgRect &src)
     RectIntersection<int> src_isec({0, 0, src.img->width(), src.img->height()}, src.rect);
     RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
 
+    UnpackPixopChanShuf shuf(R64FX_PIXOP_SRC_ALPHA, dst, src.img);
     for(int y=0; y<dst_isec.height(); y++)
     {
         for(int x=0; x<dst_isec.width(); x++)
         {
             auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
             auto srcpx = src.img->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
-
-            switch(src.img->componentCount())
-            {
-                case 1:
-                {
-                    for(int c=0; c<dst->componentCount() - (1 - (dst->componentCount() & 1)); c++)
-                    {
-                        dstpx[c] = srcpx[0];
-                    }
-                    break;
-                }
-
-                case 2:
-                {
-                    for(int c=0; c<dst->componentCount() - (1 - (dst->componentCount() & 1)); c++)
-                    {
-                        float alpha            = float(      srcpx[1]) * rcp255;
-                        float one_minus_alpha  = float(255 - srcpx[1]) * rcp255;
-//                         if(accurate)
-//                             dstpx[c] = mix_accurate
-//                                 (dstpx[c], alpha, srcpx[0], one_minus_alpha);
-//                         else
-                            dstpx[c] = mix_lazy
-                                (dstpx[c], alpha, srcpx[0], one_minus_alpha);
-                    }
-                    break;
-                }
-
-                case 3:
-                {
-                    for(int c=0; c<3; c++)
-                    {
-                        dstpx[c] = srcpx[c];
-                    }
-                    break;
-                }
-
-                case 4:
-                {
-                    float alpha            = float(      srcpx[3]) * rcp255;
-                    float one_minus_alpha  = float(255 - srcpx[3]) * rcp255;
-                    for(int c=0; c<3; c++)
-                    {
-//                         if(accurate)
-//                             dstpx[c] = mix_accurate(dstpx[c], alpha, srcpx[c], one_minus_alpha);
-//                         else
-                            dstpx[c] = mix_lazy(dstpx[c], alpha, srcpx[c], one_minus_alpha);
-                    }
-                    break;
-                }
-            }
+            shuf_components<R64FX_PIXOP_SRC_ALPHA>(shuf, dstpx, srcpx);
         }
     }
 }
