@@ -130,7 +130,7 @@ private:
         Image tick(m_size, m_size, 1);
         fill(&tick, 0, 1, 255);
         fill({&tick, {m_size/2 - 1, 2, 3, 10}}, 0, 1, 0);
-        copyTick(&horse_shoe, &tick, -M_PI * 0.75f, PixOpMin());
+        rotateAndCopy(&horse_shoe, &tick, -M_PI * 0.75f, PixOpMin());
 
         mirror_left2right(&horse_shoe);
         copy(alpha_mask, {0, 0}, &horse_shoe, PixOpMin());
@@ -152,20 +152,20 @@ private:
         float angle = -M_PI;
         for(int i=0; i<nsegments; i++)
         {
-            copyTick(&ring, &tick, angle, PixOpAdd());
+            rotateAndCopy(&ring, &tick, angle, PixOpAdd());
             angle += angle_step;
         }
 
         copy(alpha_mask, {0, 0}, &ring, PixOpMin());
     }
 
-    void copyTick(Image* horse_shoe, Image* tick, float angle, PixelOperation pixop)
+    void rotateAndCopy(Image* dst, Image* src, float angle, PixelOperation pixop)
     {
         Transformation2D<float> t;
         t.translate(+halfSize() - 0.5f, +halfSize() - 0.5f);
         t.rotate(angle);
         t.translate(-halfSize() + 0.5f, -halfSize() + 0.5f);
-        copy(horse_shoe, t, tick, pixop);
+        copy(dst, t, src, pixop);
     }
 
 public:
@@ -183,6 +183,14 @@ public:
         t.rotate(-(M_PI * 0.5f + angle));
         t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
         copy(dst, t, &marker, ChanShuf(0, 2, 0, 2));
+    }
+
+    void genIndicationFrame(Image* dst, Point<int> dstpos, float min_angle, float max_angle)
+    {
+#ifdef R64FX_DEBUG
+        assert(dst->componentCount() == 2);
+#endif//R64FX_DEBUG
+        fill(dst, Color(255, 255));
     }
 };
 
