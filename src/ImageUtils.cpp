@@ -176,16 +176,6 @@ template<> inline unsigned char pix_op<R64FX_PIXOP_MAX>(unsigned char dst, unsig
     return dst > src ? dst : src;
 }
 
-template<> inline unsigned char pix_op<R64FX_PIXOP_SRC_ALPHA>(unsigned char dst, unsigned char src)
-{
-    return dst > src ? dst : src;
-}
-
-template<> inline unsigned char pix_op<R64FX_PIXOP_SRC_ALPHA_ACCURATE>(unsigned char dst, unsigned char src)
-{
-    return dst > src ? dst : src;
-}
-
 
 template<unsigned int PixOpType> inline void shuf_components(UnpackPixopChanShuf shuf, unsigned char* dstpx, unsigned char* srcpx)
 {
@@ -194,6 +184,27 @@ template<unsigned int PixOpType> inline void shuf_components(UnpackPixopChanShuf
         auto &dstref = dstpx[shuf.dstc + c];
         auto &srcref = srcpx[shuf.srcc + (shuf.nsrcc == 1 ? 0 : c)];
         dstref = pix_op<PixOpType>(dstref, srcref);
+    }
+}
+
+template<unsigned int PixOpType> inline void shuf_components_bilinear(
+    UnpackPixopChanShuf shuf,
+    unsigned char* dstpx, unsigned char* p11, unsigned char* p12, unsigned char* p21, unsigned char* p22,
+    float fracx, float fracy
+)
+{
+    int srcinc = (shuf.nsrcc == 1 ? 0 : 1);
+    int srci = shuf.srcc;
+    for(int dsti=shuf.dstc; dsti<(shuf.dstc+shuf.ndstc); dsti++)
+    {
+        float val =
+            float(p22[srci]) * (1-fracx) * (1-fracy) +
+            float(p12[srci]) * fracx     * (1-fracy) +
+            float(p21[srci]) * (1-fracx) * fracy     +
+            float(p11[srci]) * fracx     * fracy;
+
+        dstpx[dsti] = pix_op<PixOpType>(dstpx[dsti], (unsigned char)(val));
+        srci += srcinc;
     }
 }
 
@@ -510,13 +521,16 @@ template<unsigned int PixOpType> void perform_copy(const ImgRect &dst, Transform
     assert(src != nullptr);
 #endif//R64FX_DEBUG
     UnpackPixopChanShuf shuf(pixop.bits(), dst.img, src);
-    int srccinc = (shuf.nsrcc == 1 ? 0 : 1);
 
     for(int y=dst.rect.top(); y<dst.rect.bottom(); y++)
     {
         for(int x=dst.rect.left(); x<dst.rect.right(); x++)
         {
             auto dstpx = dst.img->pixel(x, y);
+            auto p11 = dstpx;
+            auto p12 = dstpx;
+            auto p21 = dstpx;
+            auto p22 = dstpx;
 
             Point<float> p(x, y);
             transform(p);
@@ -529,43 +543,28 @@ template<unsigned int PixOpType> void perform_copy(const ImgRect &dst, Transform
 
             float fracx = x2 - p.x();
             float fracy = y2 - p.y();
-            int srci = shuf.srcc;
-            for(int dsti=shuf.dstc; dsti<(shuf.dstc+shuf.ndstc); dsti++)
+
+            if(x1 >=0 && x1 < src->width() && y1 >=0 && y1 < src->height())
             {
-                float p11 = dstpx[dsti];
-                float p12 = dstpx[dsti];
-                float p21 = dstpx[dsti];
-                float p22 = dstpx[dsti];
-
-                if(x1 >=0 && x1 < src->width() && y1 >=0 && y1 < src->height())
-                {
-                    p11 = src->pixel(x1, y1)[srci];
-                }
-
-                if(x1 >=0 && x1 < src->width() && y2 >=0 && y2 < src->height())
-                {
-                    p12 = src->pixel(x1, y2)[srci];
-                }
-
-                if(x2 >=0 && x2 < src->width() && y1 >=0 && y1 < src->height())
-                {
-                    p21 = src->pixel(x2, y1)[srci];
-                }
-
-                if(x2 >=0 && x2 < src->width() && y2 >=0 && y2 < src->height())
-                {
-                    p22 = src->pixel(x2, y2)[srci];
-                }
-
-                float val =
-                    p22 * (1-fracx) * (1-fracy) +
-                    p12 * fracx     * (1-fracy) +
-                    p21 * (1-fracx) * fracy     +
-                    p11 * fracx     * fracy;
-
-                dstpx[dsti] = pix_op<PixOpType>(dstpx[dsti], (unsigned char)(val));
-                srci += srccinc;
+                p11 = src->pixel(x1, y1);
             }
+
+            if(x1 >=0 && x1 < src->width() && y2 >=0 && y2 < src->height())
+            {
+                p12 = src->pixel(x1, y2);
+            }
+
+            if(x2 >=0 && x2 < src->width() && y1 >=0 && y1 < src->height())
+            {
+                p21 = src->pixel(x2, y1);
+            }
+
+            if(x2 >=0 && x2 < src->width() && y2 >=0 && y2 < src->height())
+            {
+                p22 = src->pixel(x2, y2);
+            }
+
+            shuf_components_bilinear<PixOpType>(shuf, dstpx, p11, p12, p21, p22, fracx, fracy);
         }
     }
 }
