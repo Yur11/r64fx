@@ -222,43 +222,63 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
-    for(int i=0; i<13; i++)
+//     for(int i=0; i<13; i++)
+//     {
+//         int size = 40 + i * 2;
+// 
+//         KnobAnimGenerator kanimg(size);
+// 
+//         Image knob(size, size, 2);
+//         kanimg.genKnob(&knob, {0, 0});
+//         p->putImage(&knob, {10 + (i * size + 20), 20});
+// 
+//         Image marker(size, size, 2);
+//         kanimg.genMarker(&marker, {0, 0}, m_angle);
+//         p->putImage(&marker, {10 + (i * size + 20), 20});
+//     }
+
+    int nticks = 32;
+    float angle_range = M_PI * 2.0f;
+    float angle_step = angle_range / float(nticks);
+    float angle_shift_step = angle_range / float(nticks * 4);
+    float angle_shift = 0.0f;
+    for(int n=0; n<4; n++)
     {
-        int size = 40 + i * 2;
+        int size = 50;
+        int hs = size / 2;
 
-        KnobAnimGenerator kanimg(size);
+        Image img(size, size, 2);
+        fill(&img, Color(0, 255));
 
-        Image knob(size, size, 2);
-        kanimg.genKnob(&knob, {0, 0});
-        p->putImage(&knob, {10 + (i * size + 20), 20});
+        Image tick(size, size, 1);
+        fill(&tick, Color(0));
 
-        Image marker(size, size, 2);
-        kanimg.genMarker(&marker, {0, 0}, m_angle);
-        p->putImage(&marker, {10 + (i * size + 20), 20});
-    }
+        Image color(size, size, 1);
+        Image alpha(size, size, 1);
 
-    {
-//         int size = 50;
-//         int hs = size >> 2;
-// 
-//         Image img(size, size, 2);
-//         fill(&img, Color(0, 255));
-// 
-//         Image tick(size, size, 2);
-//         fill(&tick, Color(0, 255));
-// 
-//         int nticks = 64;
-//         float angle_range = M_PI * 2.0f;
-//         for(int i=0; i<nticks; i++)
-//         {
-//             fill({&tick, {hs - 1, 1, 2, 4}}, Color(i + 1, 255));
-// 
-//             Transformation2D<float> t;
-//             t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
-//             t.rotate(-(M_PI * 0.5f + angle));
-//             t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
-//             copy(&tick, );
-//         }
+        float angle = 0.0f;
+        for(int i=0; i<nticks; i++)
+        {
+            fill({&tick, {hs - 1, 0, 2, hs}}, Color(255));
+            fill(&alpha, Color(0));
+
+            Transformation2D<float> t;
+            t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
+            t.rotate(angle + angle_shift);
+            t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
+            copy(&alpha, t, &tick, PixOpAdd());
+            threshold(&color, &alpha, Color(0), Color(i * 3 + 32), 0);
+            invert(&alpha, &alpha);
+            copy(&img, {0, 0}, &color, ChanShuf(0, 1, 0, 1) | PixOpAdd());
+            copy(&img, {0, 0}, &alpha, ChanShuf(1, 1, 0, 1) | PixOpMin());
+
+            angle += angle_step;
+            if(angle >= m_angle)
+                break;
+        }
+
+        p->putImage(&img, {100 + n * size, 100});
+        angle_shift += angle_shift_step;
     }
 }
 
