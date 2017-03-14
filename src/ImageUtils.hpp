@@ -63,14 +63,11 @@ void copy
 
 
 void copy
-    (const ImgRect &dst, Transformation2D<float> transform, Image* src, const PixelOperation pixop);
+    (const ImgRect &dst, Transformation2D<float> transform, Image* src, const PixelOperation pixop = PixOpReplace());
 
 
 void blend_colors
     (Image* dst, Point<int> dstpos, unsigned char** colors, const ImgRect &src, const bool accurate = true);
-
-
-void threshold(Image* dst, int dstc, int ndstc, Point<int> dstpos, unsigned char* c1, unsigned char* c2, Image* src, unsigned char threshold);
 
 
 void flip_vert(Image* img);
@@ -79,7 +76,10 @@ void flip_hori(Image* img);
 
 void mirror_left2right(Image* img, PixelOperation pixop = 0);
 
+
 void invert(Image* dst, Image* src);
+
+void threshold(Image* dst, Image* src, unsigned char* below_or_eq, unsigned char* above, unsigned char threshold);
 
 
 /* Draw a bunch of triangles that point in four different directions

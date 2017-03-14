@@ -630,29 +630,26 @@ void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, const I
 }
 
 
-void threshold(Image* dst, int dstc, int ndstc, Point<int> dstpos, unsigned char* c1, unsigned char* c2, Image* src, unsigned char threshold)
+void threshold(Image* dst, Image* src, unsigned char* below_or_eq, unsigned char* above, unsigned char threshold)
 {
+#ifdef R64FX_DEBUG
+    assert(dst != nullptr);
+    assert(src != nullptr);
+    assert(dst->width() == src->width());
+    assert(dst->height() == src->height());
+    assert(dst->componentCount() == src->componentCount());
+#endif//R64FX_DEBUG
+
     for(int y=0; y<dst->height(); y++)
     {
         for(int x=0; x<dst->width(); x++)
         {
-            auto dstpx = dst->pixel(x + dstpos.x(), y + dstpos.y());
+            auto dstpx = dst->pixel(x, y);
             auto srcpx = src->pixel(x, y);
 
-            float valm = float(srcpx[0]);
-            float vald = float(threshold) - valm;
-            float alpha = 0.0f;
-            if(vald < 0.0f)
+            for(int c=0; c<dst->componentCount(); c++)
             {
-                alpha = 1.0f;
-            }
-            float one_minus_alpha = 1.0f - alpha;
-
-            for(int c=0; c<ndstc; c++)
-            {
-                float val1 = float(c1[c]);
-                float val2 = float(c2[c]);
-                dstpx[c + dstc] = (val1 * alpha + val2 * one_minus_alpha);
+                dstpx[c] = (srcpx[c] <= threshold ? below_or_eq[c] : above[c]);
             }
         }
     }
