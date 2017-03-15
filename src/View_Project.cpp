@@ -237,6 +237,13 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 //         p->putImage(&marker, {10 + (i * size + 20), 20});
 //     }
 
+    int size = 64;
+    int hs = size/2;
+
+    Image maskimg(size*2, size, 4);
+    fill({&maskimg, {0, 0, size, size}}, Color(0, 0, 0, 0));
+    fill({&maskimg, {size, 0, size, size}}, Color(255, 255, 255, 255));
+
     int nticks = 32;
     float angle_range = M_PI * 2.0f;
     float angle_step = angle_range / float(nticks);
@@ -244,12 +251,6 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     float angle_shift = 0.0f;
     for(int n=0; n<4; n++)
     {
-        int size = 50;
-        int hs = size / 2;
-
-        Image img(size, size, 2);
-        fill(&img, Color(0, 255));
-
         Image tick(size, size, 1);
         fill(&tick, Color(0));
 
@@ -259,7 +260,7 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         float angle = 0.0f;
         for(int i=0; i<nticks; i++)
         {
-            fill({&tick, {hs - 1, 0, 2, hs}}, Color(255));
+            fill({&tick, {hs - 1, 0, 2, 5}}, Color(255));
             fill(&alpha, Color(0));
 
             Transformation2D<float> t;
@@ -267,19 +268,107 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
             t.rotate(angle + angle_shift);
             t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
             copy(&alpha, t, &tick, PixOpAdd());
-            threshold(&color, &alpha, Color(0), Color(i * 3 + 32), 0);
+            threshold(&color, &alpha, Color(0), Color((i + 1)), 0);
             invert(&alpha, &alpha);
-            copy(&img, {0, 0}, &color, ChanShuf(0, 1, 0, 1) | PixOpAdd());
-            copy(&img, {0, 0}, &alpha, ChanShuf(1, 1, 0, 1) | PixOpMin());
+            copy(&maskimg, {0, 0},    &color, ChanShuf(n, 1, 0, 1) | PixOpAdd());
+            copy(&maskimg, {size, 0}, &alpha, ChanShuf(n, 1, 0, 1) | PixOpMin());
 
             angle += angle_step;
-            if(angle >= m_angle)
-                break;
         }
 
-        p->putImage(&img, {100 + n * size, 100});
         angle_shift += angle_shift_step;
     }
+
+    for(int n=0; n<4; n++)
+    {
+        Image img(size, size, 2);
+        fill(&img, Color(0, 255));
+        copy(&img, {0, 0}, {&maskimg, {0, 0, size, size}},    ChanShuf(0, 1, n, 1));
+        copy(&img, {0, 0}, {&maskimg, {size, 0, size, size}}, ChanShuf(1, 1, n, 1));
+        p->putImage(&img, {100, 100});
+        p->putImage(&img, {110 + size + (size + 10) * n, 100});
+    }
+
+    unsigned int val = 72;
+    unsigned char res_color[4] = {255, 0, 0, 0};
+    Image resimg(size, size, 4);
+    fill(&resimg, Color(0, 0, 0, 255));
+    for(int y=0; y<resimg.height(); y++)
+    {
+        for(int x=0; x<resimg.width(); x++)
+        {
+            auto colorpx = maskimg.pixel(x, y);
+            auto alphapx = maskimg.pixel(x + size, y);
+
+            int nlayers = 0;
+            int layer = 0;
+            for(int m=0; m<4; m++)
+            {
+                unsigned int imgval = colorpx[m];
+                imgval = (imgval << 2) + m;
+                if(imgval >= val)
+                {
+                    nlayers++;
+                    layer = m;
+                }
+            }
+
+
+            unsigned char alpha = 255;
+            if(nlayers > 0)
+                alpha = (nlayers == 1 ? alphapx[layer] : 0);
+
+            resimg(x, y)[0] = res_color[0];
+            resimg(x, y)[1] = res_color[1];
+            resimg(x, y)[2] = res_color[2];
+            resimg(x, y)[3] = alpha;
+        }
+    }
+
+//     Image ring(size, size, 1);
+//     fill(
+//         &ring, 0, 1, 255
+//     );
+//     fill_circle(
+//         &ring, 0, 1, Color(0), {0, 0}, size
+//     );
+//     fill_circle(
+//         &ring, 0, 1, Color(255), {3, 3}, size - 6
+//     );
+//     copy(&resimg, {0, 0}, &ring, ChanShuf(3, 1, 0, 1) | PixOpMul());
+
+    p->putImage(&resimg, {100, 330});
+
+//     int size = 50;
+//     Image src(size*2, size, 4);
+//     for(int y=0; y<src.height(); y++)
+//     {
+//         for(int x=0; x<src.width(); x++)
+//         {
+//             unsigned char color[4];
+//             color[0] = 0;
+//             color[1] = 0;
+//             color[2] = 0;
+//             color[3] = 0;
+// 
+//             if((x & 1) ^ (y & 1))
+//                 color[x<size ? 0 : 1] = 255;
+// 
+//             for(int c=0; c<4; c++)
+//             {
+//                 src(x, y)[c] = color[c];
+//             }
+//         }
+//     }
+// 
+//     p->putImage(&src, {100, 100});
+// 
+//     for(int n=0; n<2; n++)
+//     {
+//         Image dst(size, size, 4);
+//         copy(&dst, {0, 0}, {&src, {(n & 1) ? size : 0, 0, size, size}}, PixOpReplace());
+//         p->putImage(&dst, {100 + size * n, 160});
+//     }
 }
 
 
@@ -301,5 +390,6 @@ void View_Project::mouseMoveEvent(MouseMoveEvent* event)
         window->setCursorType(Window::CursorType::Arrow);
     }
 }
+
 
 }//namespace r64fx

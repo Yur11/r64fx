@@ -57,10 +57,10 @@ void ImgRect::crop()
     if(rect.top() < 0)
         rect.setTop(0);
 
-    if(rect.right() >= img->width())
+    if(rect.right() > img->width())
         rect.setRight(img->width());
 
-    if(rect.bottom() >= img->height())
+    if(rect.bottom() > img->height())
         rect.setBottom(img->height());
 }
 
@@ -495,8 +495,8 @@ template<unsigned int PixOpType> void perform_copy(Image* dst, Point<int> dstpos
     {
         for(int x=0; x<dst_isec.width(); x++)
         {
-            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
-            auto srcpx = src.img->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
+            auto dstpx = dst->pixel     (x + dst_isec.dstx(),                   y + dst_isec.dsty());
+            auto srcpx = src.img->pixel (x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
             shuf_components<PixOpType>(shuf, dstpx, srcpx);
         }
     }
