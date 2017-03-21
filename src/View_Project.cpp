@@ -245,72 +245,92 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 //         p->putImage(&knob, {10 + (i * size + 20), 20});
 // 
 //         Image marker(size, size, 2);
-//         kanimg.genMarker(&marker, {0, 0}, m_angle);
+//         kanimg.genMarker(&marker, {0, 0}, 0.0f);
 //         p->putImage(&marker, {10 + (i * size + 20), 20});
 //     }
 
     int size = 64;
     int hs = size/2;
-    int nquadticks = 64;
-
-    Image circle(size, size, 1);
-    fill(&circle, Color(0));
-    fill_circle(&circle, 0, 1, Color(255), {0, 0}, size);
-
-    Image tick(hs, hs, 1);
-    fill(&tick, Color(0));
-    fill({&tick, {0, 0, 1, hs}}, Color(255));
-
-    Image quadrant(hs, hs, 1);
-    fill(&quadrant, Color(0));
-//     copy(&quadrant, {0, 0}, &tick, PixOpReplace());
-
-    float angle_step = (-M_PI * 0.5f) / (nquadticks);
-    float angle = 0.0f;
-    for(int i=0; i<=nquadticks; i++)
-    {
-        Transformation2D<float> t;
-        t.rotate(angle);
-        copy(&quadrant, t, &tick, PixOpAdd());
-        angle += angle_step;
-        if(i > mi)
-            break;
-    }
-//     copy(&quadrant, {0, 0}, {&circle, {hs, hs, hs, hs}}, PixOpMul());
-
-    p->putImage(&quadrant, {100, 100});
 
     auto textimg = text2image(num2str(mi), TextWrap::None, g_font);
     p->blendColors({200, 100}, Colors(Color(0)), textimg);
     delete textimg;
 
+    double pircp = 0.5 / M_PI;
+    Image atanimg(hs, hs, 1);
+    for(int y=0; y<hs; y++)
+    {
+        for(int x=0; x<hs; x++)
+        {
+            auto ang = 0.0;
+            if(x || y)
+                ang = atan2(y, x) * pircp * 255.0;
+            atanimg(x, y)[0] = (unsigned char) ang;
+        }
+    }
+    flip_hori(&atanimg);
+    flip_vert(&atanimg);
+    p->putImage(&atanimg, {300, 100});
 
-    Image octoimg(size, size, 1);
-    fill(&octoimg, Color(0));
+    Image thrimg(hs, hs, 1);
+    for(int y=0; y<hs; y++)
+    {
+        for(int x=0; x<hs; x++)
+        {
+            if(atanimg(x, y)[0] < mi)
+                thrimg(x, y)[0] = 255;
+            else
+                thrimg(x, y)[0] = 0;
+        }
+    }
+    p->putImage(&thrimg, {400, 100});
 
+
+    Image tick(hs, hs, 1);
+    fill(&tick, Color(0));
+    fill({&tick, {0, 0, 1, hs}}, Color(255));
+
+    int offset = 32;
+    Image resimg(size, size, 1);
     for(int y=0; y<size; y++)
     {
         for(int x=0; x<size; x++)
         {
-            auto px = octoimg(x, y);
-            bool xh  = x >= hs;
-            bool yh  = y >= hs;
-            int sx   = size - x - 1;
-            int sy   = size - y - 1;
-            int xx   = (xh ? sx : x);
-            int yy   = (yh ? sy : y);
-            bool oct1 = (xx >= yy);
-            bool oct2 = (xx <= yy);
-            bool oct  = ((xh ^ yh) ? oct2 : oct1);
-
-            if(oct)
-            {
-                px[0] = 255;
-            }
+            int sx = size - x - 1;
+            int sy = size - y - 1;
+            int hx = (x >= hs ? 1 : 0);
+            int hy = (y >= hs ? 1 : 0);
+            int tx = (hx ? sx : x);
+            int ty = (hy ? sy : y);
+            int xx = (hx ^ hy ? ty : tx);
+            int yy = (hx ^ hy ? tx : ty);
+            hy = hy | (hy << 1);
+            int val = (((hx ^ hy) & 3) << 6) | atanimg(xx, yy)[0];
+            resimg(x, y)[0] = (((val + offset) & 255) < mi ? 255 : 0);
         }
     }
 
-    p->putImage(&octoimg, {400, 100});
+    Image tickimg(size, size, 1);
+    fill(&tickimg, Color(0));
+    fill({&tickimg, {0, hs-1, hs,2}},Color(255));
+    p->putImage(&tickimg, {500, 200});
+
+    Image trimg(size, size, 1);
+    {
+        constexpr float ang_coeff = (2.0f * M_PI) / 256.0f;
+
+        fill(&trimg, Color(0));
+        Transformation2D<float> t;
+        t.translate(+hs - 0.5f, +hs - 0.5f);
+        t.rotate(((mi + 255 - offset) & 255) * ang_coeff);
+        t.translate(-hs + 0.5f, -hs + 0.5f);
+        copy(&trimg, t, &tickimg, PixOpReplace());
+    }
+
+    copy(&resimg, {0, 0}, &trimg, PixOpAdd());
+
+    p->putImage(&resimg, {500, 100});
+    p->putImage(&trimg, {500, 200});
 }
 
 
@@ -318,7 +338,7 @@ void View_Project::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(event->button() & MouseButton::Left())
     {
-        mi += (event->dy() > 0 ? -1 : +1);
+        mi -= event->dy();
         if(mi < 0)
             mi = 0;
         repaint();
