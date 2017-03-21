@@ -45,8 +45,8 @@ public:
         Image alpha_mask(m_size, m_size, 1);
         fill(&alpha_mask, 0, 1, 255);
 
-//         genDecorationSolidHorseShoe(&alpha_mask);
-        genDecorationSegmentedRing(&alpha_mask, 8);
+        genDecorationSolidHorseShoe(&alpha_mask);
+//         genDecorationSegmentedRing(&alpha_mask, 8);
 
         genKnobCenter(dst, &alpha_mask, dstpos);
         copy(dst, dstpos, &alpha_mask, ChanShuf(1, 1, 0, 1));
@@ -231,26 +231,33 @@ float normalize_angle(float angle)
 
 void View_Project::paintEvent(WidgetPaintEvent* event)
 {
+    constexpr float ang_coeff = (2.0f * M_PI) / 256.0f;
+
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
-//     for(int i=0; i<13; i++)
-//     {
-//         int size = 40 + i * 2;
-// 
-//         KnobAnimGenerator kanimg(size);
-// 
-//         Image knob(size, size, 2);
-//         kanimg.genKnob(&knob, {0, 0});
-//         p->putImage(&knob, {10 + (i * size + 20), 20});
-// 
-//         Image marker(size, size, 2);
-//         kanimg.genMarker(&marker, {0, 0}, 0.0f);
-//         p->putImage(&marker, {10 + (i * size + 20), 20});
-//     }
+    for(int i=0; i<13; i++)
+    {
+        int size = 40 + i * 2;
+
+        KnobAnimGenerator kanimg(size);
+
+        Image knob(size, size, 2);
+        kanimg.genKnob(&knob, {0, 0});
+        p->putImage(&knob, {10 + (i * size + 20), 20});
+
+        Image marker(size, size, 2);
+        kanimg.genMarker(&marker, {0, 0}, mi * -ang_coeff + M_PI * 0.5f);
+        p->putImage(&marker, {10 + (i * size + 20), 20});
+    }
 
     int size = 64;
     int hs = size/2;
+
+    Image circleimg(size, size, 1);
+    fill(&circleimg, Color(0));
+    fill_circle(&circleimg, 0, 1, Color(255), {0, 0}, size);
+    fill_circle(&circleimg, 0, 1, Color(0), {hs - 4, hs - 4}, 8);
 
     auto textimg = text2image(num2str(mi), TextWrap::None, g_font);
     p->blendColors({200, 100}, Colors(Color(0)), textimg);
@@ -290,7 +297,7 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     fill(&tick, Color(0));
     fill({&tick, {0, 0, 1, hs}}, Color(255));
 
-    int offset = 32;
+    int offset = 63;
     Image resimg(size, size, 1);
     for(int y=0; y<size; y++)
     {
@@ -312,22 +319,18 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
     Image tickimg(size, size, 1);
     fill(&tickimg, Color(0));
-    fill({&tickimg, {0, hs-1, hs,2}},Color(255));
-    p->putImage(&tickimg, {500, 200});
+    fill({&tickimg, {0, hs-1, hs, 2}},Color(255));
 
     Image trimg(size, size, 1);
-    {
-        constexpr float ang_coeff = (2.0f * M_PI) / 256.0f;
-
-        fill(&trimg, Color(0));
-        Transformation2D<float> t;
-        t.translate(+hs - 0.5f, +hs - 0.5f);
-        t.rotate(((mi + 255 - offset) & 255) * ang_coeff);
-        t.translate(-hs + 0.5f, -hs + 0.5f);
-        copy(&trimg, t, &tickimg, PixOpReplace());
-    }
+    fill(&trimg, Color(0));
+    Transformation2D<float> t;
+    t.translate(+hs - 0.5f, +hs - 0.5f);
+    t.rotate(((mi + 255 - offset) & 255) * ang_coeff);
+    t.translate(-hs + 0.5f, -hs + 0.5f);
+    copy(&trimg, t, &tickimg, PixOpReplace());
 
     copy(&resimg, {0, 0}, &trimg, PixOpAdd());
+    copy(&resimg, {0, 0}, &circleimg, PixOpMin());
 
     p->putImage(&resimg, {500, 100});
     p->putImage(&trimg, {500, 200});
