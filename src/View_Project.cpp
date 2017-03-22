@@ -317,23 +317,70 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         }
     }
 
+
     Image tickimg(size, size, 1);
     fill(&tickimg, Color(0));
     fill({&tickimg, {0, hs-1, hs, 2}},Color(255));
 
     Image trimg(size, size, 1);
-    fill(&trimg, Color(0));
-    Transformation2D<float> t;
-    t.translate(+hs - 0.5f, +hs - 0.5f);
-    t.rotate(((mi + 255 - offset) & 255) * ang_coeff);
-    t.translate(-hs + 0.5f, -hs + 0.5f);
-    copy(&trimg, t, &tickimg, PixOpReplace());
+    {
+        fill(&trimg, Color(0));
+        Transformation2D<float> t;
+        t.translate(+hs - 0.5f, +hs - 0.5f);
+        t.rotate(((mi + 255 - offset) & 255) * ang_coeff);
+        t.translate(-hs + 0.5f, -hs + 0.5f);
+        copy(&trimg, t, &tickimg, PixOpReplace());
+    }
+
+    Image trtex(size * 8, size, 2);
+    {
+        fill(&trtex, Color(0, 255));
+        for(int i=0; i<256; i++)
+        {
+            Transformation2D<float> t;
+            t.translate(+hs - 0.5f, +hs - 0.5f);
+            t.rotate(((i + 255 - offset) & 255) * ang_coeff);
+            t.translate(-hs + 0.5f, -hs + 0.5f);
+
+            Image trtick(size, size, 1);
+            fill(&trtick, Color(0));
+            copy(&trtick, t, &tickimg, PixOpReplace());
+
+            invert(&trtick, &trtick);
+            copy(&trtex, {size * (i & 7), 0}, &trtick, PixOpMin() | ChanShuf(1, 1, 0, 1));
+            threshold(&trtick, &trtick, Color(i), Color(0), 254);
+            copy(&trtex, {size * (i & 7), 0}, &trtick, PixOpMax() | ChanShuf(0, 1, 0, 1));
+        }
+    }
+
+    Image trteximg(size, size, 1);
+    {
+        fill(&trteximg, Color(0));
+        for(int y=0; y<size; y++)
+        {
+            for(int x=0; x<size; x++)
+            {
+                auto texel = trtex(x + (size * (mi & 7)), y);
+                auto dstpx = trteximg(x, y);
+
+                if(texel[0] == mi)
+                {
+                    float alpha = float(texel[1]) / 255.0f;
+                    float one_minus_alpha = 1.0f - alpha;
+                    float val = float(dstpx[0]) * alpha + 255.0f * one_minus_alpha;
+                    trteximg(x, y)[0] = (unsigned char) val;
+                }
+            }
+        }
+    }
 
     copy(&resimg, {0, 0}, &trimg, PixOpAdd());
     copy(&resimg, {0, 0}, &circleimg, PixOpMin());
 
     p->putImage(&resimg, {500, 100});
     p->putImage(&trimg, {500, 200});
+    p->putImage(&trtex, {500, 300});
+    p->putImage(&trteximg, {400, 300});
 }
 
 
