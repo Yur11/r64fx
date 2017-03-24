@@ -14,6 +14,8 @@ template<typename T> class Rect{
     T vec[4];
 
 public:
+    Rect(const Rect<T> &other) : vec{other.x(), other.y(), other.width(), other.height()} {}
+
     Rect(T x, T y, T w, T h) : vec{x, y, w, h} {}
 
     Rect(Point<T> pos, Size<T> size) : vec{pos.x(), pos.y(), size.width(), size.height()} {}
@@ -75,6 +77,15 @@ public:
     inline bool overlaps(Point<int> p) const
     {
         return p.x() >= left() && p.x() < right() && p.y() >= top() && p.y() < bottom();
+    }
+
+    inline Rect<T> &operator=(const Rect<T> &other)
+    {
+        setX(other.x());
+        setY(other.y());
+        setWidth(other.width());
+        setHeight(other.height());
+        return *this;
     }
 
     inline Rect<T> &operator+=(const Point<T> &other)
