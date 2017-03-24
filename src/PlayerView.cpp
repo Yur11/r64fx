@@ -265,21 +265,20 @@ class LeftPart : public Widget{
 public:
     LeftPart(PlayerViewPrivate* p, Widget* parent = nullptr) : Widget(parent), m(p)
     {
-        m->knob_gain = new Widget_BipolarKnob(this);
-        m->knob_gain->setMinValue(-1.0f);
-        m->knob_gain->setMidValue(0.0f);
-        m->knob_gain->setMaxValue(+1.0f);
-        m->knob_gain->setValue(m->knob_gain->midValue());
-        m->knob_gain->onValueChanged([](void* arg, Widget_Knob* knob, float new_value){
-            auto m = (PlayerViewPrivate*) arg;
-            if(new_value < 0)
-            {
-                new_value *= 2.7f;
-            }
-            float gain = pow(5, new_value);
-            m->gainChanged(gain);
-            knob->setText(gain);
-        }, m);
+//         m->knob_gain = new Widget_BipolarKnob(this);
+//         m->knob_gain->setMinValue(-1.0f);
+//         m->knob_gain->setMidValue(0.0f);
+//         m->knob_gain->setMaxValue(+1.0f);
+//         m->knob_gain->setValue(m->knob_gain->midValue());
+//         m->knob_gain->onValueChanged([](void* arg, Widget_Knob* knob, float new_value){
+//             auto m = (PlayerViewPrivate*) arg;
+//             if(new_value < 0)
+//             {
+//                 new_value *= 2.7f;
+//             }
+//             float gain = pow(5, new_value);
+//             m->gainChanged(gain);
+//         }, m);
 
         m->button_cue = new Widget_Button(ButtonAnimation::Text({48, 48}, "CUE", g_LargeFont), true, this);
         m->button_cue->onStateChanged([](void* arg, Widget_Button* button, unsigned long state){
@@ -323,37 +322,37 @@ public:
             delete m->button_cue;
         }
 
-        if(m->knob_gain)
-        {
-            delete m->knob_gain;
-        }
+//         if(m->knob_gain)
+//         {
+//             delete m->knob_gain;
+//         }
     }
 
 protected:
     void resizeEvent(WidgetResizeEvent* event)
     {
-        int buttons_height = m->button_cue->height() + m->button_play->height();
-        int total_height = buttons_height + m->knob_gain->height() + padding;
-        int avail_height = event->height() - padding * 2;
-
-        if(total_height < avail_height)
-        {
-            m->knob_gain->setPosition({padding, 0});
-
-            m->button_cue->setPosition({padding, event->height() - m->button_cue->height() - m->button_play->height() - 1});
-            m->button_play->setPosition({padding, event->height() - m->button_cue->height()});
-
-            setWidth(padding + max(m->knob_gain->width(), m->button_cue->width()) + padding, false);
-        }
-        else
-        {
-            m->knob_gain->setPosition({padding + m->button_cue->width() + 1, height() - padding - m->knob_gain->height()});
-
-            m->button_cue->setPosition({padding, event->height() - m->button_cue->height() - m->button_play->height() - 1});
-            m->button_play->setPosition({padding, event->height() - m->button_cue->height()});
-
-            setWidth(padding + 1 + m->button_cue->width() + m->knob_gain->width() + padding, false);
-        }
+//         int buttons_height = m->button_cue->height() + m->button_play->height();
+//         int total_height = buttons_height + m->knob_gain->height() + padding;
+//         int avail_height = event->height() - padding * 2;
+// 
+//         if(total_height < avail_height)
+//         {
+// //             m->knob_gain->setPosition({padding, 0});
+// 
+//             m->button_cue->setPosition({padding, event->height() - m->button_cue->height() - m->button_play->height() - 1});
+//             m->button_play->setPosition({padding, event->height() - m->button_cue->height()});
+// 
+//             setWidth(padding + max(m->knob_gain->width(), m->button_cue->width()) + padding, false);
+//         }
+//         else
+//         {
+// //             m->knob_gain->setPosition({padding + m->button_cue->width() + 1, height() - padding - m->knob_gain->height()});
+// 
+//             m->button_cue->setPosition({padding, event->height() - m->button_cue->height() - m->button_play->height() - 1});
+//             m->button_play->setPosition({padding, event->height() - m->button_cue->height()});
+// 
+//             setWidth(padding + 1 + m->button_cue->width() + m->knob_gain->width() + padding, false);
+//         }
     }
 };
 

@@ -7,19 +7,23 @@ namespace r64fx{
 
 class KnobAnimation;
 
+enum class KnobStyle{
+    Bipolar,
+    Unipolar
+};
+
 class Widget_Knob : public Widget{
 protected:
-    float m_min_value = 0.0f;
-    float m_max_value = 1.0f;
-    float m_value_step = 0.005f;
-    float m_value = 0.0f;
-    KnobAnimation* m_animation = nullptr;
-    std::string m_text = "";
+    float           m_min_value = 0.0f;
+    float           m_max_value = 1.0f;
+    float           m_value_step = 0.005f;
+    float           m_value = 0.0f;
+    KnobAnimation*  m_animation = nullptr;
     void (*m_on_value_changed)(void* arg, Widget_Knob* knob, float new_value) = nullptr;
     void* m_on_value_changed_arg = nullptr;
 
 public:
-    Widget_Knob(Widget* parent = nullptr);
+    Widget_Knob(KnobStyle style, int size, Widget* parent = nullptr);
 
     virtual ~Widget_Knob();
 
@@ -41,72 +45,16 @@ public:
 
     float valueRange() const;
 
-    bool showsText(bool yes);
-
-    bool showsText() const;
-
-    void setText(const std::string &text);
-
-    void setText(float value, std::string prefix = "", std::string suffix = "");
-
-    std::string text() const;
-
     void onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob* knob, float new_value), void* arg = nullptr);
 
-    virtual bool isBipolar() = 0;
-
-    void resizeAndRealign();
-
 protected:
-    void setAnimation(KnobAnimation* animation);
-
     void paintAnimation(Painter* painter, int frame_num);
-
-    void paintText(Painter* painter);
 
     virtual void mousePressEvent(MousePressEvent* event);
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event);
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
-};
-
-
-class Widget_UnipolarKnob : public Widget_Knob{
-public:
-    Widget_UnipolarKnob(Widget* parent = nullptr);
-
-    virtual void setValue(float value, bool notify = false);
-
-    virtual bool isBipolar();
-
-protected:
-    virtual void paintEvent(WidgetPaintEvent* event);
-};
-
-
-class Widget_BipolarKnob : public Widget_Knob{
-    float m_mid_value = 0.5f;
-
-public:
-    Widget_BipolarKnob(Widget* parent = nullptr);
-
-    virtual void setValue(float value, bool notify = false);
-
-    void setMidValue(float value);
-
-    float midValue() const;
-
-    float lowerRange() const;
-
-    float upperRange() const;
-
-    virtual bool isBipolar();
-
-protected:
-    virtual void paintEvent(WidgetPaintEvent* event);
-
-    virtual void mousePressEvent(MousePressEvent* event);
 };
 
 }//namespace r64fx
