@@ -190,7 +190,7 @@ public:
         t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
         t.rotate(-(M_PI * 0.5f + angle));
         t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
-        copy(dst, t, &marker, ChanShuf(0, 2, 0, 2));
+        copy(dst, t, &marker);
     }
 
     void genIndicationFrame(Image* dst, Point<int> dstpos, float min_angle, float max_angle)
@@ -213,7 +213,7 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     for(int i=0; i<8; i++)
     {
         auto knob = new Widget_Knob(KnobStyle::Unipolar, 44 + i*4, this);
-        knob->setPosition({50 + i*70, 200});
+        knob->setPosition({50 + i*70, 350});
     }
 }
 
@@ -240,157 +240,8 @@ float normalize_angle(float angle)
 
 void View_Project::paintEvent(WidgetPaintEvent* event)
 {
-    constexpr float ang_coeff = (2.0f * M_PI) / 256.0f;
-
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
-
-    for(int i=0; i<13; i++)
-    {
-        int size = 40 + i * 2;
-
-        KnobAnimGenerator kanimg(size);
-
-        Image knob(size, size, 2);
-        kanimg.genKnob(&knob, {0, 0});
-        p->putImage(&knob, {10 + (i * size + 20), 20});
-
-        Image marker(size, size, 2);
-        kanimg.genMarker(&marker, {0, 0}, mi * -ang_coeff + M_PI * 0.5f);
-        p->putImage(&marker, {10 + (i * size + 20), 20});
-    }
-
-//     int size = 64;
-//     int hs = size/2;
-// 
-//     Image circleimg(size, size, 1);
-//     fill(&circleimg, Color(0));
-//     fill_circle(&circleimg, 0, 1, Color(255), {0, 0}, size);
-//     fill_circle(&circleimg, 0, 1, Color(0), {hs - 4, hs - 4}, 8);
-// 
-//     auto textimg = text2image(num2str(mi), TextWrap::None, g_font);
-//     p->blendColors({200, 100}, Colors(Color(0)), textimg);
-//     delete textimg;
-// 
-//     double pircp = 0.5 / M_PI;
-//     Image atanimg(hs, hs, 1);
-//     for(int y=0; y<hs; y++)
-//     {
-//         for(int x=0; x<hs; x++)
-//         {
-//             auto ang = 0.0;
-//             if(x || y)
-//                 ang = atan2(y, x) * pircp * 255.0;
-//             atanimg(x, y)[0] = (unsigned char) ang;
-//         }
-//     }
-//     flip_hori(&atanimg);
-//     flip_vert(&atanimg);
-//     p->putImage(&atanimg, {300, 100});
-// 
-//     Image thrimg(hs, hs, 1);
-//     for(int y=0; y<hs; y++)
-//     {
-//         for(int x=0; x<hs; x++)
-//         {
-//             if(atanimg(x, y)[0] < mi)
-//                 thrimg(x, y)[0] = 255;
-//             else
-//                 thrimg(x, y)[0] = 0;
-//         }
-//     }
-//     p->putImage(&thrimg, {400, 100});
-// 
-// 
-//     Image tick(hs, hs, 1);
-//     fill(&tick, Color(0));
-//     fill({&tick, {0, 0, 1, hs}}, Color(255));
-// 
-//     int offset = 63;
-//     Image resimg(size, size, 1);
-//     for(int y=0; y<size; y++)
-//     {
-//         for(int x=0; x<size; x++)
-//         {
-//             int sx = size - x - 1;
-//             int sy = size - y - 1;
-//             int hx = (x >= hs ? 1 : 0);
-//             int hy = (y >= hs ? 1 : 0);
-//             int tx = (hx ? sx : x);
-//             int ty = (hy ? sy : y);
-//             int xx = (hx ^ hy ? ty : tx);
-//             int yy = (hx ^ hy ? tx : ty);
-//             hy = hy | (hy << 1);
-//             int val = (((hx ^ hy) & 3) << 6) | atanimg(xx, yy)[0];
-//             resimg(x, y)[0] = (((val + offset) & 255) < mi ? 255 : 0);
-//         }
-//     }
-// 
-// 
-//     Image tickimg(size, size, 1);
-//     fill(&tickimg, Color(0));
-//     fill({&tickimg, {0, hs-1, hs, 2}},Color(255));
-// 
-//     Image trimg(size, size, 1);
-//     {
-//         fill(&trimg, Color(0));
-//         Transformation2D<float> t;
-//         t.translate(+hs - 0.5f, +hs - 0.5f);
-//         t.rotate(((mi + 255 - offset) & 255) * ang_coeff);
-//         t.translate(-hs + 0.5f, -hs + 0.5f);
-//         copy(&trimg, t, &tickimg, PixOpReplace());
-//     }
-// 
-//     Image trtex(size * 8, size, 2);
-//     {
-//         fill(&trtex, Color(0, 255));
-//         for(int i=0; i<256; i++)
-//         {
-//             Transformation2D<float> t;
-//             t.translate(+hs - 0.5f, +hs - 0.5f);
-//             t.rotate(((i + 255 - offset) & 255) * ang_coeff);
-//             t.translate(-hs + 0.5f, -hs + 0.5f);
-// 
-//             Image trtick(size, size, 1);
-//             fill(&trtick, Color(0));
-//             copy(&trtick, t, &tickimg, PixOpReplace());
-// 
-//             invert(&trtick, &trtick);
-//             copy(&trtex, {size * (i & 7), 0}, &trtick, PixOpMin() | ChanShuf(1, 1, 0, 1));
-//             threshold(&trtick, &trtick, Color(i), Color(0), 254);
-//             copy(&trtex, {size * (i & 7), 0}, &trtick, PixOpMax() | ChanShuf(0, 1, 0, 1));
-//         }
-//     }
-// 
-//     Image trteximg(size, size, 1);
-//     {
-//         fill(&trteximg, Color(0));
-//         for(int y=0; y<size; y++)
-//         {
-//             for(int x=0; x<size; x++)
-//             {
-//                 auto texel = trtex(x + (size * (mi & 7)), y);
-//                 auto dstpx = trteximg(x, y);
-// 
-//                 if(texel[0] == mi)
-//                 {
-//                     float alpha = float(texel[1]) / 255.0f;
-//                     float one_minus_alpha = 1.0f - alpha;
-//                     float val = float(dstpx[0]) * alpha + 255.0f * one_minus_alpha;
-//                     trteximg(x, y)[0] = (unsigned char) val;
-//                 }
-//             }
-//         }
-//     }
-// 
-//     copy(&resimg, {0, 0}, &trimg, PixOpAdd());
-//     copy(&resimg, {0, 0}, &circleimg, PixOpMin());
-// 
-//     p->putImage(&resimg, {500, 100});
-//     p->putImage(&trimg, {500, 200});
-//     p->putImage(&trtex, {500, 300});
-//     p->putImage(&trteximg, {400, 300});
-
 //     Image img(256, 256, 3);
 //     fill(&img, Color(0, 0, 0));
 // 
@@ -426,6 +277,25 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     {
         atlas.freeRect(rect);
     }*/
+
+    constexpr float rcp = 1.0f / 32.0f;
+
+    int size = 64;
+    KnobAnimGenerator kanimg(size);
+
+    Image teximg(size*8, size*4, 2);
+    Image subimg(size, size, 2);
+    fill(&teximg, Color(0, 255));
+    for(int y=0; y<4; y++)
+    {
+        for(int x=0; x<8; x++)
+        {
+            fill(&subimg, Color(0, 255));
+            kanimg.genMarker(&subimg, {0, 0}, (x + y*8) * rcp * M_PI * 0.5f - M_PI * 0.5f);
+            copy(&teximg, {x*size, y*size}, &subimg, PixOpReplace());
+        }
+    }
+    p->putImage(&teximg, {10, 10});
 
     childrenPaintEvent(event);
 }
