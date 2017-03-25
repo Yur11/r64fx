@@ -27,7 +27,7 @@ public:
 
     virtual ~Widget_Knob();
 
-    virtual void setValue(float value, bool notify = false) = 0;
+    void setValue(float value, bool notify = false);
 
     float value() const;
 
@@ -47,8 +47,8 @@ public:
 
     void onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob* knob, float new_value), void* arg = nullptr);
 
-protected:
-    void paintAnimation(Painter* painter, int frame_num);
+private:
+    virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
 

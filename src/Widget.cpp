@@ -1607,7 +1607,7 @@ void WidgetImpl::paintChildren(Widget* parent)
         if(child_flags & R64FX_WIDGET_WANTS_REPAINT)
         {
             got_rect = true; //The child will read this value as it's parent_got_rect
-                               //and will know not to add any rects of it's own.
+                             //and will know not to add any rects of it's own.
 
             WidgetPaintEvent event(this);
             child->paintEvent(&event);

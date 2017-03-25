@@ -19,19 +19,146 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     KnobStyle       m_style;
     int             m_size         = 0;
     int             m_frame_count  = 0;
-    unsigned char*  m_data         = nullptr;
+    Image           m_image;
 
     KnobAnimation(KnobStyle style, int size, int frame_count)
     : m_style(style)
     , m_size(size)
     , m_frame_count(frame_count)
+    , m_image(size, size, 2)
     {
+        genKnob(&m_image, {0, 0});
     }
+
+    void genKnob(Image* dst, Point<int> dstpos)
+    {
+#ifdef R64FX_DEBUG
+        assert(dst->componentCount() == 2);
+#endif//R64FX_DEBUG
+
+        fill({dst, {dstpos.x(), dstpos.y(), m_size, m_size}}, Color(63, 255));
+
+        Image alpha_mask(m_size, m_size, 1);
+        fill(&alpha_mask, 0, 1, 255);
+
+        genDecorationSolidHorseShoe(&alpha_mask);
+
+        genKnobCenter(dst, &alpha_mask, dstpos);
+        copy(dst, dstpos, &alpha_mask, ChanShuf(1, 1, 0, 1));
+    }
+
+    void genKnobCenter(Image* dst, Image* alpha_mask, Point<int> dstpos)
+    {
+        {
+            Image c0(m_size, m_size, 1);
+            fill(&c0, Color(255));
+            fill_circle(&c0, 0, 1, Color(0), {5, 5}, m_size - 10);
+
+            copy(alpha_mask, {0, 0}, &c0, PixOpMin());
+
+            Image layer(m_size, m_size, 2);
+            fill(&layer, Color(0, 255));
+            copy(&layer, {0, 0}, &c0, ChanShuf(1, 1, 0, 1));
+
+            copy(dst, dstpos, &layer);
+        }
+
+        {
+            Image c1(m_size, m_size, 1);
+            fill(&c1, Color(255));
+            fill_circle(&c1, 0, 1, Color(0), {6, 6}, m_size - 12);
+
+            Image layer(m_size, m_size, 2);
+            fill_gradient_vert(&layer, 0, 1, 127, 31, {0, 6, m_size, m_size - 6});
+            copy(&layer, {0, 0}, &c1, ChanShuf(1, 1, 0, 1));
+
+            copy(dst, dstpos, &layer);
+        }
+
+        {
+            Image c2(m_size, m_size, 1);
+            fill(&c2, Color(255));
+            fill_circle(&c2, 0, 1, Color(0), {8, 8}, m_size - 16);
+
+            Image layer(m_size, m_size, 2);
+            fill_gradient_vert(&layer, 0, 1, 223, 31, {0, 8, m_size, m_size - 8});
+            copy(&layer, {0, 0}, &c2, ChanShuf(1, 1, 0, 1));
+
+            copy(dst, dstpos, &layer);
+        }
+
+        {
+            Image c3(m_size, m_size, 1);
+            fill(&c3, Color(255));
+            fill_circle(&c3, 0, 1, Color(0), {9, 9}, m_size - 18);
+
+            Image layer(m_size, m_size, 2);
+            fill_gradient_vert(&layer, 0, 1, 147, 107, {0, 9, m_size, m_size - 9});
+            copy(&layer, {0, 0}, &c3, ChanShuf(1, 1, 0, 1));
+
+            copy(dst, dstpos, &layer);
+        }
+    }
+
+    void genBaseHorseShoe(Image* horse_shoe)
+    {
+        genBaseRing(horse_shoe);
+        fill_bottom_triangle(
+            horse_shoe, 0, 1, Color(255), {0, 0}, m_size
+        );
+    }
+
+    void genDecorationSolidHorseShoe(Image* alpha_mask)
+    {
+        Image horse_shoe(m_size, m_size, 1);
+        genBaseHorseShoe(&horse_shoe);
+
+//         Image tick(m_size, m_size, 1);
+//         fill(&tick, 0, 1, 255);
+//         fill({&tick, {m_size/2 - 1, 2, 3, 5}}, 0, 1, 0);
+//         rotateAndCopy(&horse_shoe, &tick, -M_PI * 0.75f, PixOpMin());
+// 
+        mirror_left2right(&horse_shoe);
+        copy(alpha_mask, {0, 0}, &horse_shoe, PixOpMin());
+/*
+        fill({alpha_mask, {halfSize() - 2, 0, 4, 6}}, 0, 1, 255);
+        fill({alpha_mask, {halfSize() - 1, 0, 2, 5}}, 0, 1, 0);*/
+    }
+
+    void rotateAndCopy(Image* dst, Image* src, float angle, PixelOperation pixop)
+    {
+        Transformation2D<float> t;
+        t.translate(+halfSize() - 0.5f, +halfSize() - 0.5f);
+        t.rotate(angle);
+        t.translate(-halfSize() + 0.5f, -halfSize() + 0.5f);
+        copy(dst, t, src, pixop);
+    }
+
+    void genBaseRing(Image* ring)
+    {
+        fill(
+            ring, 0, 1, 255
+        );
+        fill_circle(
+            ring, 0, 1, Color(0), {0, 0}, m_size
+        );
+        fill_circle(
+            ring, 0, 1, Color(255), {3, 3}, m_size - 6
+        );
+    }
+
+    inline int halfSize() const { return m_size >> 1; }
 
 public:
     KnobStyle  style()       const { return m_style; }
     int        size()        const { return m_size; }
     int        frameCount()  const { return m_frame_count; }
+
+    void paint(Painter* painter)
+    {
+//         painter->fillRect({0, 0, m_size, m_size}, Color(0, 0, 0, 0));
+        painter->putImage(&m_image, {0, 0});
+    }
 
 //     void allocFrames(Size<int> size, int frame_count)
 //     {
@@ -303,6 +430,7 @@ namespace{
 Widget_Knob::Widget_Knob(KnobStyle style, int size, Widget* parent)
 : Widget(parent)
 {
+    setSize({size, size});
     m_animation = KnobAnimation::getAnimation(style, size);
     onValueChanged(nullptr);
 }
@@ -312,6 +440,12 @@ Widget_Knob::~Widget_Knob()
 {
     if(m_animation)
         KnobAnimation::freeAnimation(m_animation);
+}
+
+
+void Widget_Knob::setValue(float value, bool notify)
+{
+
 }
 
 
@@ -377,19 +511,25 @@ void Widget_Knob::onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob
 }
 
 
-void Widget_Knob::paintAnimation(Painter* painter, int frame_num)
+void Widget_Knob::paintEvent(WidgetPaintEvent* event)
 {
-    static unsigned char bg[4] = {127, 127, 127, 0};
-    static unsigned char c1[4] = {0, 0, 0, 0};
-    static unsigned char c2[4] = {200, 200, 200, 0};
-    static unsigned char* colors[2] = {c1, c2};
-
-    painter->fillRect({0, 0, width(), height()}, bg);
-
-    Image frame;
-//     m_animation->pickFrame(&frame, frame_num);
-    painter->blendColors({0, 0}, colors, &frame);
+    cout << "Widget_Knob::paintEvent()\n";
+    m_animation->paint(event->painter());
 }
+
+// void Widget_Knob::paintAnimation(Painter* painter, int frame_num)
+// {
+//     static unsigned char bg[4] = {127, 127, 127, 0};
+//     static unsigned char c1[4] = {0, 0, 0, 0};
+//     static unsigned char c2[4] = {200, 200, 200, 0};
+//     static unsigned char* colors[2] = {c1, c2};
+// 
+//     painter->fillRect({0, 0, width(), height()}, bg);
+// 
+//     Image frame;
+// //     m_animation->pickFrame(&frame, frame_num);
+//     painter->blendColors({0, 0}, colors, &frame);
+// }
 
 
 void Widget_Knob::mousePressEvent(MousePressEvent* event)

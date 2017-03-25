@@ -10,6 +10,7 @@
 using namespace std;
 
 #include "Atlas.hpp"
+#include "Widget_Knob.hpp"
 
 namespace r64fx{
 
@@ -208,6 +209,12 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     {
         g_font = new Font("mono", 14);
     }
+
+    for(int i=0; i<8; i++)
+    {
+        auto knob = new Widget_Knob(KnobStyle::Unipolar, 44 + i*4, this);
+        knob->setPosition({50 + i*70, 200});
+    }
 }
 
 
@@ -384,41 +391,43 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 //     p->putImage(&trtex, {500, 300});
 //     p->putImage(&trteximg, {400, 300});
 
-    Image img(256, 256, 3);
-    fill(&img, Color(0, 0, 0));
-
-    srand(time(nullptr));
-
-    vector<Rect<short>> rects;
-    Atlas atlas(0, 0, img.width(), img.height());
-    for(int i=0; i<20; i++)
-    {
-        short w = (rand() % 7 + 1) * 20;
-        short h = (rand() % 5 + 1) * 10;
-        short r = (rand() % 16) << 4;
-        short g = (rand() % 16) << 4;
-        short b = (rand() % 16) << 4;
-
-        auto rect = atlas.allocRect({w, h});
-        assert(rect.width() >= 0);
-        if(rect.width() == 0)
-        {
-            assert(rect.height() == 0);
-            cout << "No room for: " << i << " -> " << w << "x" << h << "\n";
-            continue;
-        }
-        assert(rect.height() > 0);
-
-        rects.push_back(rect);
-        fill({&img, Rect<int>(rect.x(), rect.y(), rect.width(), rect.height())}, Color(r, g, b));
-    }
-
-    p->putImage(&img, {50, 100});
-
+//     Image img(256, 256, 3);
+//     fill(&img, Color(0, 0, 0));
+// 
+//     srand(time(nullptr));
+// 
+//     vector<Rect<short>> rects;
+//     Atlas atlas(0, 0, img.width(), img.height());
+//     for(int i=0; i<20; i++)
+//     {
+//         short w = (rand() % 7 + 1) * 20;
+//         short h = (rand() % 5 + 1) * 10;
+//         short r = (rand() % 16) << 4;
+//         short g = (rand() % 16) << 4;
+//         short b = (rand() % 16) << 4;
+// 
+//         auto rect = atlas.allocRect({w, h});
+//         assert(rect.width() >= 0);
+//         if(rect.width() == 0)
+//         {
+//             assert(rect.height() == 0);
+//             cout << "No room for: " << i << " -> " << w << "x" << h << "\n";
+//             continue;
+//         }
+//         assert(rect.height() > 0);
+// 
+//         rects.push_back(rect);
+//         fill({&img, Rect<int>(rect.x(), rect.y(), rect.width(), rect.height())}, Color(r, g, b));
+//     }
+// 
+//     p->putImage(&img, {50, 100});
+/*
     for(auto &rect : rects)
     {
         atlas.freeRect(rect);
-    }
+    }*/
+
+    childrenPaintEvent(event);
 }
 
 
