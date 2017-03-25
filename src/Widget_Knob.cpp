@@ -100,40 +100,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         }
     }
 
-    void genBaseHorseShoe(Image* horse_shoe)
-    {
-        genBaseRing(horse_shoe);
-        fill_bottom_triangle(
-            horse_shoe, 0, 1, Color(255), {0, 0}, m_size
-        );
-    }
-
-    void genDecorationSolidHorseShoe(Image* alpha_mask)
-    {
-        Image horse_shoe(m_size, m_size, 1);
-        genBaseHorseShoe(&horse_shoe);
-
-//         Image tick(m_size, m_size, 1);
-//         fill(&tick, 0, 1, 255);
-//         fill({&tick, {m_size/2 - 1, 2, 3, 5}}, 0, 1, 0);
-//         rotateAndCopy(&horse_shoe, &tick, -M_PI * 0.75f, PixOpMin());
-// 
-        mirror_left2right(&horse_shoe);
-        copy(alpha_mask, {0, 0}, &horse_shoe, PixOpMin());
-/*
-        fill({alpha_mask, {halfSize() - 2, 0, 4, 6}}, 0, 1, 255);
-        fill({alpha_mask, {halfSize() - 1, 0, 2, 5}}, 0, 1, 0);*/
-    }
-
-    void rotateAndCopy(Image* dst, Image* src, float angle, PixelOperation pixop)
-    {
-        Transformation2D<float> t;
-        t.translate(+halfSize() - 0.5f, +halfSize() - 0.5f);
-        t.rotate(angle);
-        t.translate(-halfSize() + 0.5f, -halfSize() + 0.5f);
-        copy(dst, t, src, pixop);
-    }
-
     void genBaseRing(Image* ring)
     {
         fill(
@@ -145,6 +111,42 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         fill_circle(
             ring, 0, 1, Color(255), {3, 3}, m_size - 6
         );
+    }
+
+    void genBaseHorseShoe(Image* horse_shoe)
+    {
+        genBaseRing(horse_shoe);
+        fill({horse_shoe, {0, m_size-6, m_size/2, 6}}, Color(255));
+
+        for(int x=(m_size/2 - 1); x>1; x--)
+        {
+            if(horse_shoe->pixel(x, m_size-7)[0] == 0 && horse_shoe->pixel(x-2, m_size-7)[0] != 0)
+            {
+                fill({horse_shoe, {x+1, m_size-12, m_size/2 - x, 12}}, Color(255));
+                break;
+            }
+        }
+    }
+
+    void genDecorationSolidHorseShoe(Image* alpha_mask)
+    {
+        Image horse_shoe(m_size, m_size, 1);
+        genBaseHorseShoe(&horse_shoe);
+
+        mirror_left2right(&horse_shoe);
+        copy(alpha_mask, {0, 0}, &horse_shoe, PixOpMin());
+
+        fill({alpha_mask, {halfSize() - 2, 0, 4, 6}}, 0, 1, 255);
+        fill({alpha_mask, {halfSize() - 1, 0, 2, 5}}, 0, 1, 0);
+    }
+
+    void rotateAndCopy(Image* dst, Image* src, float angle, PixelOperation pixop)
+    {
+        Transformation2D<float> t;
+        t.translate(+halfSize() - 0.5f, +halfSize() - 0.5f);
+        t.rotate(angle);
+        t.translate(-halfSize() + 0.5f, -halfSize() + 0.5f);
+        copy(dst, t, src, pixop);
     }
 
     inline int halfSize() const { return m_size >> 1; }
