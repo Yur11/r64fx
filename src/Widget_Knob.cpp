@@ -20,12 +20,14 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     int             m_size         = 0;
     int             m_frame_count  = 0;
     Image           m_image;
+    Image           m_marker;
 
     KnobAnimation(KnobStyle style, int size, int frame_count)
     : m_style(style)
     , m_size(size)
     , m_frame_count(frame_count)
     , m_image(size, size, 2)
+    , m_marker(size, size, 2)
     {
         genKnob(&m_image, {0, 0});
     }
@@ -45,6 +47,14 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
         genKnobCenter(dst, &alpha_mask, dstpos);
         copy(dst, dstpos, &alpha_mask, ChanShuf(1, 1, 0, 1));
+
+        fill(&m_marker, Color(0, 255));
+        fill({&m_marker, {m_size/2 - 2, 7, 4, m_size/2 - 7}}, Color(0, 127));
+        fill({&m_marker, {m_size/2 - 1, 8, 2, m_size/2 - 9}}, Color(255, 31));
+        for(int i=0; i<4; i++)
+        {
+            fill({&m_marker, {m_size/2 - 1, 7 + i, 2, 1}}, 1, 1, 191 - 24 * i);
+        }
     }
 
     void genKnobCenter(Image* dst, Image* alpha_mask, Point<int> dstpos)
@@ -149,6 +159,22 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         copy(dst, t, src, pixop);
     }
 
+    void genMarker(Image* dst, Point<int> dstpos, float angle)
+    {
+#ifdef R64FX_DEBUG
+        assert(dst->componentCount() == 2);
+#endif//R64FX_DEBUG
+
+        fill(dst, Color(0, 255));
+
+        int hs = m_size / 2;
+        Transformation2D<float> t;
+        t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
+        t.rotate(-(M_PI * 0.5f + angle));
+        t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
+        copy(dst, t, &m_marker, ChanShuf(0, 2, 0, 2));
+    }
+
     inline int halfSize() const { return m_size >> 1; }
 
 public:
@@ -156,238 +182,11 @@ public:
     int        size()        const { return m_size; }
     int        frameCount()  const { return m_frame_count; }
 
-    void paint(Painter* painter)
+    void paint(Painter* painter, float angle)
     {
-//         painter->fillRect({0, 0, m_size, m_size}, Color(0, 0, 0, 0));
         painter->putImage(&m_image, {0, 0});
+        painter->putImage(&m_marker, {0, 0});
     }
-
-//     void allocFrames(Size<int> size, int frame_count)
-//     {
-//         freeFrames();
-// 
-//         int data_size = frame_count * size.width() * size.height() * 2;
-//         m_data = new(std::nothrow) unsigned char[data_size];
-//         m_frame_count = frame_count;
-//         m_size = size;
-//     }
-// 
-//     void freeFrames()
-//     {
-//         if(m_data)
-//         {
-//             delete[] m_data;
-//             m_data = nullptr;
-//             m_frame_count = 0;
-//         }
-//     }
-// 
-//     void pickFrame(Image* img, int frame)
-//     {
-//         img->load(
-//             width(), height(),
-//             2, m_data + (frame * width() * height() * 2),
-//             false
-//         );
-//     }
-
-
-//     void genUnipolar()
-//     {
-//         unsigned char color1[2] = {255, 0};
-//         unsigned char color2[2] = {0, 255};
-// 
-//         float cx = width() >> 1;
-//         float cy = height() >> 1;
-// 
-//         float thickness = 2;
-//         float radius = (width() >> 1);
-// 
-//         float rotation = M_PI * 0.75f;
-//         float full_arc = M_PI * 1.5f;
-//         float frame_count_rcp = 1.0f / float(frameCount() - 1);
-// 
-//         Image circle_mask_img(width(), height(), 1);
-// //         fill_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
-//         invert(&circle_mask_img, &circle_mask_img);
-// 
-//         Image radius_img(width(), height(), 1);
-// 
-//         for(int frame=0; frame<frameCount(); frame++)
-//         {
-//             float percent = float(frame) * frame_count_rcp;
-// 
-//             Image img;
-//             pickFrame(&img, frame);
-//             {
-//                 unsigned char color[2] = {0, 0};
-//                 fill(&img, color);
-//             }
-// 
-//             if(frame > 0)
-//             {
-//                 draw_arc(
-//                     &img, color2, {cx, cy}, radius - 2,
-//                     normalize_angle(rotation),
-//                     normalize_angle(rotation + full_arc * percent),
-//                     thickness
-//                 );
-//             }
-// 
-//             if(frame < (frameCount() - 1))
-//             {
-//                 draw_arc(
-//                     &img, color1, {cx, cy}, radius  - 2,
-//                     normalize_angle(rotation + full_arc * percent),
-//                     normalize_angle(rotation + full_arc),
-//                     thickness
-//                 );
-//             }
-// 
-//             {
-//                 fill(&radius_img, Color(0));
-//                 draw_radius(
-//                     &radius_img, Color(255), {cx, cy},
-//                     normalize_angle(rotation + full_arc * percent),
-//                     (width() * 2) - 1, 0, thickness + 1
-//                 );
-//                 subtract_image(&radius_img, {0, 0}, &circle_mask_img);
-//                 {
-//                     unsigned char* colors[1];
-//                     if(frame == 0)
-//                         colors[0] = color1;
-//                     else
-//                         colors[0] = color2;
-//                     blend_colors(
-//                         &img, Point<int>(0, 0), colors, &radius_img
-//                     );
-//                 }
-//             }
-//         }
-// 
-//         m_is_bipolar = false;
-//     }
-
-
-//     void genBipolar()
-//     {
-//         unsigned char color1[2] = {255, 0};
-//         unsigned char color2[2] = {0, 255};
-// 
-//         float cx = width() >> 1;
-//         float cy = height() >> 1;
-// 
-//         float thickness = 2;
-//         float radius = (width() >> 1);
-// 
-//         float rotation = M_PI * 0.75f;
-//         float full_arc = M_PI * 1.5f;
-//         float frame_count_rcp = 1.0f / float(frameCount() - 1);
-// 
-//         Image circle_mask_img(width(), height(), 1);
-// //         fill_circle(&circle_mask_img, Color(255), Point<int>(cx, cy), radius - 1);
-//         invert(&circle_mask_img, &circle_mask_img);
-// 
-//         Image radius_img(width(), height(), 1);
-// 
-//         for(int frame=0; frame<frameCount(); frame++)
-//         {
-//             float percent = float(frame) * frame_count_rcp;
-// 
-//             Image img;
-//             pickFrame(&img, frame);
-//             {
-//                 unsigned char color[2] = {0, 0};
-//                 fill(&img, color);
-//             }
-// 
-//             if(frame < (frameCount()/2))
-//             {
-//                 draw_arc(
-//                     &img, color1, {cx, cy}, radius  - 2,
-//                     normalize_angle(rotation),
-//                     normalize_angle(rotation + full_arc * percent),
-//                     thickness
-//                 );
-// 
-//                 draw_arc(
-//                     &img, color2, {cx, cy}, radius  - 2,
-//                     normalize_angle(rotation + full_arc * percent),
-//                     normalize_angle(rotation + full_arc * 0.5),
-//                     thickness
-//                 );
-// 
-//                 draw_arc(
-//                     &img, color1, {cx, cy}, radius  - 2,
-//                     normalize_angle(rotation + full_arc * 0.5),
-//                     normalize_angle(rotation + full_arc),
-//                     thickness
-//                 );
-//             }
-//             else if(frame == (frameCount()/2))
-//             {
-//                 draw_arc(
-//                     &img, color1, {cx, cy}, radius  - 2,
-//                     normalize_angle(rotation),
-//                     normalize_angle(rotation + full_arc),
-//                     thickness
-//                 );
-//             }
-//             else
-//             {
-//                 draw_arc(
-//                     &img, color1, {cx, cy}, radius  - 2,
-//                     normalize_angle(rotation),
-//                     normalize_angle(rotation + full_arc * 0.5),
-//                     thickness
-//                 );
-// 
-//                 draw_arc(
-//                     &img, color2, {cx, cy}, radius  - 2,
-//                     normalize_angle(rotation + full_arc * 0.5),
-//                     normalize_angle(rotation + full_arc * percent),
-//                     thickness
-//                 );
-// 
-//                 draw_arc(
-//                     &img, color1, {cx, cy}, radius  - 2,
-//                     normalize_angle(rotation + full_arc * percent),
-//                     normalize_angle(rotation + full_arc),
-//                     thickness
-//                 );
-//             }
-// 
-//             {
-//                 fill(&radius_img, Color(0));
-//                 draw_radius(
-//                     &radius_img, Color(255), {cx, cy},
-//                     normalize_angle(rotation + full_arc * percent),
-//                     (width() * 2) - 1, 0, thickness + 1
-//                 );
-//                 subtract_image(&radius_img, {0, 0}, &circle_mask_img);
-//                 {
-//                     unsigned char* colors[1];
-//                     {
-//                         if(frame == (frameCount()/2))
-//                             colors[0] = color1;
-//                         else
-//                             colors[0] = color2;
-//                     }
-//                     blend_colors(
-//                         &img, Point<int>(0, 0), colors, &radius_img
-//                     );
-//                 }
-//             }
-//         }
-// 
-//         m_is_bipolar = true;
-//     }
-
-
-//     bool isBipolar() const
-//     {
-//         return m_is_bipolar;
-//     }
 
     static KnobAnimation* getAnimation(KnobStyle style, int size)
     {
@@ -515,23 +314,8 @@ void Widget_Knob::onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob
 
 void Widget_Knob::paintEvent(WidgetPaintEvent* event)
 {
-    cout << "Widget_Knob::paintEvent()\n";
-    m_animation->paint(event->painter());
+    m_animation->paint(event->painter(), 0.0f);
 }
-
-// void Widget_Knob::paintAnimation(Painter* painter, int frame_num)
-// {
-//     static unsigned char bg[4] = {127, 127, 127, 0};
-//     static unsigned char c1[4] = {0, 0, 0, 0};
-//     static unsigned char c2[4] = {200, 200, 200, 0};
-//     static unsigned char* colors[2] = {c1, c2};
-// 
-//     painter->fillRect({0, 0, width(), height()}, bg);
-// 
-//     Image frame;
-// //     m_animation->pickFrame(&frame, frame_num);
-//     painter->blendColors({0, 0}, colors, &frame);
-// }
 
 
 void Widget_Knob::mousePressEvent(MousePressEvent* event)
