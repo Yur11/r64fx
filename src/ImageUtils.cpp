@@ -269,18 +269,18 @@ template<> inline void shuf_components<R64FX_PIXOP_SRC_ALPHA_ACCURATE>(UnpackPix
 template<unsigned int PixOpType> inline void shuf_components_bilinear(
     UnpackPixopChanShuf shuf,
     unsigned char* dstpx, unsigned char* p11, unsigned char* p12, unsigned char* p21, unsigned char* p22,
-    float fracx, float fracy
+    double fracx, double fracy
 )
 {
     int srcinc = (shuf.nsrcc == 1 ? 0 : 1);
     int srci = shuf.srcc;
     for(int dsti=shuf.dstc; dsti<(shuf.dstc+shuf.ndstc); dsti++)
     {
-        float val =
-            float(p22[srci]) * (1-fracx) * (1-fracy) +
-            float(p12[srci]) * fracx     * (1-fracy) +
-            float(p21[srci]) * (1-fracx) * fracy     +
-            float(p11[srci]) * fracx     * fracy;
+        double val =
+            double(p22[srci]) * (1.0-fracx)  * (1.0-fracy) +
+            double(p12[srci]) * fracx        * (1.0-fracy) +
+            double(p21[srci]) * (1.0-fracx)  * fracy       +
+            double(p11[srci]) * fracx        * fracy;
 
         dstpx[dsti] = pix_op<PixOpType>(dstpx[dsti], (unsigned char)(val));
         srci += srcinc;
@@ -630,32 +630,6 @@ void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, const I
 }
 
 
-void threshold(Image* dst, Image* src, unsigned char* below_or_eq, unsigned char* above, unsigned char threshold)
-{
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(src != nullptr);
-    assert(dst->width() == src->width());
-    assert(dst->height() == src->height());
-    assert(dst->componentCount() == src->componentCount());
-#endif//R64FX_DEBUG
-
-    for(int y=0; y<dst->height(); y++)
-    {
-        for(int x=0; x<dst->width(); x++)
-        {
-            auto dstpx = dst->pixel(x, y);
-            auto srcpx = src->pixel(x, y);
-
-            for(int c=0; c<dst->componentCount(); c++)
-            {
-                dstpx[c] = (srcpx[c] <= threshold ? below_or_eq[c] : above[c]);
-            }
-        }
-    }
-}
-
-
 void flip_vert(Image* img)
 {
 #ifdef R64FX_DEBUG
@@ -747,52 +721,90 @@ void invert(Image* dst, Image* src)
 }
 
 
-void combine(Image* dst, Image* src1, Point<int> pos1, Image* src2, Point<int> pos2)
+void threshold(Image* dst, Image* src, unsigned char* below_or_eq, unsigned char* above, unsigned char threshold)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
-    assert(src1 != nullptr);
-    assert(src2 != nullptr);
-    assert(src1->componentCount() == dst->componentCount());
-    assert(src2->componentCount() == dst->componentCount());
+    assert(src != nullptr);
+    assert(dst->width() == src->width());
+    assert(dst->height() == src->height());
+    assert(dst->componentCount() == src->componentCount());
 #endif//R64FX_DEBUG
 
-    RectIntersection<int> src_isec(
-        {pos1.x(), pos1.y(), src1->width(), src1->height()},
-        {pos2.x(), pos2.y(), src2->width(), src2->height()}
-    );
-    if(src_isec.width() <= 0 || src_isec.height() <= 0)
-        return;
-
-    auto p1 = src_isec.dstOffset();
-    auto p2 = src_isec.srcOffset();
-
-    RectIntersection<int> dst_isec(
-        {0, 0, dst->width(), dst->height()},
-        src_isec.rect()
-    );
-    if(dst_isec.width() <=0 || dst_isec.height() <= 0)
-        return;
-
-    p1 += dst_isec.srcOffset();
-    p2 += dst_isec.srcOffset();
-
-    for(int y=0; y<dst_isec.height(); y++)
+    for(int y=0; y<dst->height(); y++)
     {
-        for(int x=0; x<dst_isec.width(); x++)
+        for(int x=0; x<dst->width(); x++)
         {
-            auto srcpx1 = src1->pixel(x + p1.x(), y + p1.y());
-            auto srcpx2 = src2->pixel(x + p2.x(), y + p2.y());
-            auto dstpx = dst->pixel(x + dst_isec.dstx(), y + dst_isec.dsty());
-            for(auto c=0; c<dst->componentCount(); c++)
+            auto dstpx = dst->pixel(x, y);
+            auto srcpx = src->pixel(x, y);
+
+            for(int c=0; c<dst->componentCount(); c++)
             {
-                auto val1 = float(srcpx1[c]) * rcp255;
-                auto val2 = float(srcpx2[c]) * rcp255;
-                auto val = val1 * val2;
-                dstpx[c] = (unsigned char)(val * 255.0f);
+                dstpx[c] = (srcpx[c] <= threshold ? below_or_eq[c] : above[c]);
             }
         }
     }
+}
+
+
+bool cmppixel(unsigned char* a, unsigned char* b, int component_count)
+{
+    for(int c=0; c<component_count; c++)
+    {
+        if(a[c] != b[c])
+            return false;
+    }
+    return true;
+}
+
+
+Rect<int> fit_content(ImgRect img, unsigned char* nullpixel)
+{
+    Rect<int> rect = img.rect;
+    
+    int running = 1;
+    while(running && rect.width() > 0)
+    {
+        for(int y=rect.top(); y<rect.bottom(); y++)
+        {
+            if(!cmppixel(img->pixel(rect.left(), y), nullpixel, img->componentCount()))
+            {
+                running = 0;
+                break;
+            }
+        }
+        rect.setLeft(rect.left() + running);
+    }
+
+    running = 1;
+    while(running && rect.height() > 0)
+    {
+        for(int x=rect.left(); x<rect.right(); x++)
+        {
+            if(!cmppixel(img->pixel(x, rect.top()), nullpixel, img->componentCount()))
+            {
+                running = false;
+                break;
+            }
+        }
+        rect.setTop(rect.top() + running);
+    }
+
+    running = 1;
+    while(running && rect.width() > 1)
+    {
+        for(int y=rect.top(); y<rect.bottom(); y++)
+        {
+            if(!cmppixel(img->pixel(rect.right()-1, y), nullpixel, img->componentCount()))
+            {
+                running = false;
+                break;
+            }
+        }
+        rect.setRight(rect.right() - running);
+    }
+
+    return rect;
 }
 
 

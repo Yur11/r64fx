@@ -15,6 +15,8 @@ struct ImgRect{
     ImgRect(Image* img, const Rect<int> &rect) : img(img), rect(rect) { crop(); }
     ImgRect(Image* img) : img(img), rect(0, 0, img->width(), img->height()) { crop(); }
 
+    inline Image* operator->() { return img; }
+
 private:
     void crop();
 };
@@ -80,6 +82,9 @@ void mirror_left2right(Image* img, PixelOperation pixop = 0);
 void invert(Image* dst, Image* src);
 
 void threshold(Image* dst, Image* src, unsigned char* below_or_eq, unsigned char* above, unsigned char threshold);
+
+
+Rect<int> fit_content(ImgRect img, unsigned char* nullpixel);
 
 
 /* Draw a bunch of triangles that point in four different directions

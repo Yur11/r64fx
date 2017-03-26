@@ -190,7 +190,8 @@ public:
         t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
         t.rotate(-(M_PI * 0.5f + angle));
         t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
-        copy(dst, t, &marker);
+        copy(dst, t, &marker, PixOpReplace());
+//         copy(dst, dstpos, &marker, PixOpReplace());
     }
 
     void genIndicationFrame(Image* dst, Point<int> dstpos, float min_angle, float max_angle)
@@ -209,12 +210,12 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     {
         g_font = new Font("mono", 14);
     }
-
+/*
     for(int i=0; i<8; i++)
     {
         auto knob = new Widget_Knob(KnobStyle::Unipolar, 44 + i*4, this);
         knob->setPosition({50 + i*70, 350});
-    }
+    }*/
 }
 
 
@@ -278,22 +279,22 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         atlas.freeRect(rect);
     }*/
 
-    constexpr float rcp = 1.0f / 32.0f;
+    constexpr float rcp = 1.0f / 64.0f;
 
     int size = 64;
     KnobAnimGenerator kanimg(size);
 
-    Image teximg(size*8, size*4, 2);
+    Image teximg(size*32, size, 2);
     Image subimg(size, size, 2);
     fill(&teximg, Color(0, 255));
-    for(int y=0; y<4; y++)
+    int xx = 0;
+    for(int x=0; x<32; x++)
     {
-        for(int x=0; x<8; x++)
-        {
-            fill(&subimg, Color(0, 255));
-            kanimg.genMarker(&subimg, {0, 0}, (x + y*8) * rcp * M_PI * 0.5f - M_PI * 0.5f);
-            copy(&teximg, {x*size, y*size}, &subimg, PixOpReplace());
-        }
+        fill(&subimg, Color(0, 255));
+        kanimg.genMarker(&subimg, {0, 0}, (x) * rcp * M_PI * 0.5f - M_PI * 0.5f);
+        auto rect = fit_content(&subimg, Color(0, 255));
+        copy(&teximg, {xx, 0}, {&subimg, rect}, PixOpReplace());
+        xx += rect.width();
     }
     p->putImage(&teximg, {10, 10});
 
