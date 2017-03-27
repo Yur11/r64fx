@@ -223,6 +223,8 @@ public:
     PainterTextureManager* textureManager();
 
 protected:
+    void deleteChildren();
+
     void childrenPaintEvent(WidgetPaintEvent* event);
 
     void childrenAddedToWindowEvent(WidgetAddedToWindowEvent* event);

@@ -21,6 +21,8 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     int             m_frame_count  = 0;
     Image           m_image;
     Image           m_marker;
+    Image           m_marker_frames;
+    Rect<short>     m_marker_frame_coords[32];
 
     KnobAnimation(KnobStyle style, int size, int frame_count)
     : m_style(style)
@@ -30,6 +32,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     , m_marker(size, size, 2)
     {
         genKnob(&m_image, {0, 0});
+        genMarkerFrames();
     }
 
     void genKnob(Image* dst, Point<int> dstpos)
@@ -175,6 +178,33 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         copy(dst, t, &m_marker, ChanShuf(0, 2, 0, 2));
     }
 
+    void genMarkerFrames()
+    {
+        int frame_count = 32;
+        float rcp = 1.0f / float(frame_count << 1);
+
+        Image frames(m_size * frame_count, m_size, 2);
+        fill(&frames, Color(0, 255));
+
+        Image frame(m_size, m_size, 2);
+        int w = 0;
+        int h = 0;
+        for(int i=0; i<frame_count; i++)
+        {
+            fill(&frame, Color(0, 255));
+            genMarker(&frame, {0, 0}, (i) * rcp * M_PI * 0.5f - M_PI * 0.5f);
+            auto rect = fit_content(&frame, Color(0, 255));
+            copy(&frames, {w, 0}, {&frame, rect}, PixOpReplace());
+            m_marker_frame_coords[i] = Rect<short>(w, 0, rect.width(), rect.height());
+            w += rect.width();
+            if(rect.height() > h)
+                h = rect.height();
+        }
+
+        m_marker_frames.load(w, h, 2);
+        copy(&m_marker_frames, {0, 0}, {&frames, {0, 0, w, h}}, PixOpReplace());
+    }
+
 public:
     KnobStyle  style()       const { return m_style; }
     int        size()        const { return m_size; }
@@ -215,6 +245,11 @@ public:
             knob_animations.remove(anim);
             delete anim;
         }
+    }
+
+    void debugPaint(Painter* painter, Point<int> position)
+    {
+        painter->putImage(&m_marker_frames, position);
     }
 };
 
@@ -307,6 +342,14 @@ void Widget_Knob::onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob
         m_on_value_changed = on_value_changed_stub;
     }
     m_on_value_changed_arg = arg;
+}
+
+
+void Widget_Knob::debugPaint(Painter* painter, Point<int> position, int size)
+{
+    auto anim = KnobAnimation::getAnimation(KnobStyle::Bipolar, size);
+    anim->debugPaint(painter, position);
+    KnobAnimation::freeAnimation(anim);
 }
 
 

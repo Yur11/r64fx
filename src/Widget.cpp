@@ -1500,6 +1500,17 @@ PainterTextureManager* Widget::textureManager()
 }
 
 
+void Widget::deleteChildren()
+{
+    while(!m_children.isEmpty())
+    {
+        auto child = m_children.first();
+        child->setParent(nullptr);
+        delete child;
+    }
+}
+
+
 void Widget::childrenPaintEvent(WidgetPaintEvent* event)
 {
     event->impl()->paintChildren(this);

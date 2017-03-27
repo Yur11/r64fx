@@ -210,17 +210,19 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     {
         g_font = new Font("mono", 14);
     }
-/*
+
     for(int i=0; i<8; i++)
     {
         auto knob = new Widget_Knob(KnobStyle::Unipolar, 44 + i*4, this);
         knob->setPosition({50 + i*70, 350});
-    }*/
+    }
 }
 
 
 View_Project::~View_Project()
 {
+    deleteChildren();
+
     if(g_font)
     {
         delete g_font;
@@ -299,6 +301,8 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     p->putImage(&teximg, {10, 10});
 
     childrenPaintEvent(event);
+
+    Widget_Knob::debugPaint(p, {10, 100}, 64);
 }
 
 

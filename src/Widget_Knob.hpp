@@ -47,6 +47,8 @@ public:
 
     void onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob* knob, float new_value), void* arg = nullptr);
 
+    static void debugPaint(Painter* painter, Point<int> position, int size);
+
 private:
     virtual void paintEvent(WidgetPaintEvent* event);
 
