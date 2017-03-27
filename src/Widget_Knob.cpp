@@ -146,16 +146,16 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         mirror_left2right(&horse_shoe);
         copy(alpha_mask, {0, 0}, &horse_shoe, PixOpMin());
 
-        fill({alpha_mask, {halfSize() - 2, 0, 4, 6}}, 0, 1, 255);
-        fill({alpha_mask, {halfSize() - 1, 0, 2, 5}}, 0, 1, 0);
+        fill({alpha_mask, {m_size/2 - 2, 0, 4, 6}}, 0, 1, 255);
+        fill({alpha_mask, {m_size/2 - 1, 0, 2, 5}}, 0, 1, 0);
     }
 
     void rotateAndCopy(Image* dst, Image* src, float angle, PixelOperation pixop)
     {
         Transformation2D<float> t;
-        t.translate(+halfSize() - 0.5f, +halfSize() - 0.5f);
+        t.translate(+(m_size/2) - 0.5f, +(m_size/2) - 0.5f);
         t.rotate(angle);
-        t.translate(-halfSize() + 0.5f, -halfSize() + 0.5f);
+        t.translate(-(m_size/2) + 0.5f, -(m_size/2) + 0.5f);
         copy(dst, t, src, pixop);
     }
 
@@ -174,8 +174,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
         copy(dst, t, &m_marker, ChanShuf(0, 2, 0, 2));
     }
-
-    inline int halfSize() const { return m_size >> 1; }
 
 public:
     KnobStyle  style()       const { return m_style; }
