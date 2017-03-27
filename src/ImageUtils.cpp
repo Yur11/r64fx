@@ -804,6 +804,20 @@ Rect<int> fit_content(ImgRect img, unsigned char* nullpixel)
         rect.setRight(rect.right() - running);
     }
 
+    running = 1;
+    while(running && rect.height() > 1)
+    {
+        for(int x=rect.left(); x<rect.right(); x++)
+        {
+            if(!cmppixel(img->pixel(x, rect.bottom()-1), nullpixel, img->componentCount()))
+            {
+                running = false;
+                break;
+            }
+        }
+        rect.setBottom(rect.bottom() - running);
+    }
+
     return rect;
 }
 
