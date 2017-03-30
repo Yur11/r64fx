@@ -205,6 +205,24 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         copy(&m_marker_frames, {0, 0}, {&frames, {0, 0, w, h}}, PixOpReplace());
     }
 
+    void genFullFrame(Image* dst, Point<int> dstpos)
+    {
+#ifdef R64FX_DEBUG
+        assert(dst->componentCount() == 4);
+#endif//R64FX_DEBUG
+
+        Image frame(m_size, m_size, 2);
+        fill(&frame, Color(0, 255));
+
+        Image alpha(m_size, m_size, 1);
+        fill(&alpha, Color(255));
+
+        genKnobCenter(&frame, &alpha, {0, 0});
+
+        copy(dst, {0, 0}, &frame);
+        copy(dst, {0, 0}, &alpha, ChanShuf(3, 1, 0, 1));
+    }
+
 public:
     KnobStyle  style()       const { return m_style; }
     int        size()        const { return m_size; }
@@ -212,8 +230,16 @@ public:
 
     void paint(Painter* painter, float angle)
     {
+        cout << "paint: " << angle << "\n";
         painter->putImage(&m_image, {0, 0});
-        painter->putImage(&m_marker, {0, 0});
+        Image marker(m_size, m_size, 2);
+        genMarker(&marker, {0, 0}, -angle);
+        painter->putImage(&marker, {0, 0});
+
+//         Image frame(m_size, m_size, 4);
+//         fill(&frame, Color(0, 0, 0, 0));
+//         genFullFrame(&frame, {0, 0});
+//         painter->putImage(&frame, {0, 0});
     }
 
     static KnobAnimation* getAnimation(KnobStyle style, int size)
@@ -279,7 +305,7 @@ Widget_Knob::~Widget_Knob()
 
 void Widget_Knob::setValue(float value, bool notify)
 {
-
+    m_value = value;
 }
 
 
@@ -355,7 +381,7 @@ void Widget_Knob::debugPaint(Painter* painter, Point<int> position, int size)
 
 void Widget_Knob::paintEvent(WidgetPaintEvent* event)
 {
-    m_animation->paint(event->painter(), 0.0f);
+    m_animation->paint(event->painter(), m_value * M_PI);
 }
 
 
