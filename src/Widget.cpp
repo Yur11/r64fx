@@ -1461,7 +1461,10 @@ void WidgetImpl::repaint()
         {
             //Paint whole window surface.
             WidgetPaintEvent event(this);
+            painter->resetPaintGroups();
+            painter->beginPaintGroup();
             root_widget->paintEvent(&event);
+            painter->endPaintGroup();
             painter->repaint();
         }
         else
@@ -1621,7 +1624,9 @@ void WidgetImpl::paintChildren(Widget* parent)
                              //and will know not to add any rects of it's own.
 
             WidgetPaintEvent event(this);
+            painter->beginPaintGroup();
             child->paintEvent(&event);
+            painter->endPaintGroup();
 
             if(!parent_got_rect)
             {

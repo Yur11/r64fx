@@ -97,6 +97,12 @@ public:
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform) = 0;
 
+    virtual void beginPaintGroup() = 0;
+
+    virtual void endPaintGroup() = 0;
+
+    virtual void resetPaintGroups() = 0;
+
     /** Make the changes visible.
 
         Update window surface. Swap buffers. etc.

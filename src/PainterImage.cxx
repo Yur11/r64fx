@@ -453,6 +453,21 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
+    virtual void beginPaintGroup()
+    {
+        
+    }
+
+    virtual void endPaintGroup()
+    {
+        
+    }
+
+    virtual void resetPaintGroups()
+    {
+        
+    }
+
     virtual void repaint(Rect<int>* rects, int numrects)
     {
         for(int i=0; i<numrects; i++)

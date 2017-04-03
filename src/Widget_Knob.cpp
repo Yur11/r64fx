@@ -230,7 +230,6 @@ public:
 
     void paint(Painter* painter, float angle)
     {
-        cout << "paint: " << angle << "\n";
         painter->putImage(&m_image, {0, 0});
         Image marker(m_size, m_size, 2);
         genMarker(&marker, {0, 0}, -angle);

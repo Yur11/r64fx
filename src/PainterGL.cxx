@@ -4,34 +4,35 @@
 
 namespace r64fx{
 
-namespace
+namespace{
+
+int PainterImplGL_count = 0;
+
+const GLuint primitive_restart = 0xFFFF;
+
+void init_gl_stuff()
 {
-    int PainterImplGL_count = 0;
-
-    const GLuint primitive_restart = 0xFFFF;
-
-    void init_gl_stuff()
+    int major, minor;
+    gl::GetIntegerv(GL_MAJOR_VERSION, &major);
+    gl::GetIntegerv(GL_MINOR_VERSION, &minor);
+    if(major < 3)
     {
-        int major, minor;
-        gl::GetIntegerv(GL_MAJOR_VERSION, &major);
-        gl::GetIntegerv(GL_MINOR_VERSION, &minor);
-        if(major < 3)
-        {
-            cerr << "OpenGL version " << major << "." << minor << " is to old!\n";
-            abort();
-        }
-
-        gl::InitIfNeeded();
-        init_painter_shaders();
-
-        gl::Enable(GL_PRIMITIVE_RESTART);
-        gl::PrimitiveRestartIndex(primitive_restart);
+        cerr << "OpenGL version " << major << "." << minor << " is to old!\n";
+        abort();
     }
 
-    void cleanup_gl_stuff()
-    {
-        cleanup_painter_shaders();
-    }
+    gl::InitIfNeeded();
+    init_painter_shaders();
+
+    gl::Enable(GL_PRIMITIVE_RESTART);
+    gl::PrimitiveRestartIndex(primitive_restart);
+}
+
+void cleanup_gl_stuff()
+{
+    cleanup_painter_shaders();
+}
+
 }//namespace
 
 
@@ -338,6 +339,38 @@ public:
 };//PainterTexture2DImplGL
 
 
+class PaintLayer : public LinkedList<PaintLayer>::Node{
+    
+};
+
+struct PaintGroup{
+    PaintGroup* parent_group = nullptr;
+};
+
+PaintGroup* g_spare_paint_groups = nullptr;
+
+PaintGroup* allocPaintGroup()
+{
+    PaintGroup* pg = nullptr;
+    if(g_spare_paint_groups)
+    {
+        pg = g_spare_paint_groups;
+        g_spare_paint_groups = g_spare_paint_groups->parent_group;
+    }
+    else
+    {
+        pg = new PaintGroup;
+    }
+    return pg;
+}
+
+void freePaintGroup(PaintGroup* pg)
+{
+    pg->parent_group = g_spare_paint_groups;
+    g_spare_paint_groups = pg;
+}
+
+
 struct PainterImplGL : public PainterImpl{
     PainterVertexArray_CommonRect      m_uber_rect;
 
@@ -351,6 +384,10 @@ struct PainterImplGL : public PainterImpl{
     float m_window_double_hrcp = 1.0f;
     float m_window_half_width = 0.0f;
     float m_window_half_height = 0.0f;
+
+    GLuint m_layers_vao;
+    GLuint m_layers_vbo;
+    LinkedList<PaintLayer> m_layers;
 
     PainterImplGL(Window* window)
     : PainterImpl(window)
@@ -671,6 +708,21 @@ struct PainterImplGL : public PainterImpl{
             delete texture_impl;
             texture[0] = nullptr;
         }
+    }
+
+    virtual void beginPaintGroup()
+    {
+        
+    }
+
+    virtual void endPaintGroup()
+    {
+        
+    }
+
+    virtual void resetPaintGroups()
+    {
+        
     }
 
     virtual void repaint(Rect<int>* rects, int numrects)
