@@ -960,7 +960,7 @@ void Widget::openWindow(
             /* Setup gui timer if needed. */
             if(!g_gui_timer)
             {
-                g_gui_timer = new (std::nothrow) Timer;
+                g_gui_timer = new(std::nothrow) Timer;
                 if(g_gui_timer)
                 {
                     g_gui_timer->setInterval(5000 * 1000);
@@ -1460,9 +1460,9 @@ void WidgetImpl::repaint()
         if(flags & R64FX_WIDGET_WANTS_REPAINT) //The root widget wants repaint.
         {
             //Paint whole window surface.
-            WidgetPaintEvent event(this);
             painter->resetPaintGroups();
             painter->beginPaintGroup();
+            WidgetPaintEvent event(this);
             root_widget->paintEvent(&event);
             painter->endPaintGroup();
             painter->repaint();

@@ -1,6 +1,7 @@
 /* To be included in Painter.cpp */
 
 #include "PainterVertexArrays.hpp"
+#include <vector>
 
 namespace r64fx{
 
@@ -8,9 +9,10 @@ class PainterImplGL;
 
 namespace{
 
-int PainterImplGL_count = 0;
+long PainterImplGL_count = 0;
 
-const GLuint primitive_restart = 0xFFFF;
+constexpr GLuint PRIMITIVE_RESTART_INDEX  = 0xFFFF;
+constexpr GLuint MAX_INDEX_COUNT          = 0xFFFE;
 
 void init_gl_stuff()
 {
@@ -27,7 +29,7 @@ void init_gl_stuff()
     init_painter_shaders();
 
     gl::Enable(GL_PRIMITIVE_RESTART);
-    gl::PrimitiveRestartIndex(primitive_restart);
+    gl::PrimitiveRestartIndex(PRIMITIVE_RESTART_INDEX);
 }
 
 void cleanup_gl_stuff()
@@ -45,8 +47,15 @@ void cleanup_gl_stuff()
 
 namespace r64fx{
 
-class PaintLayer : public LinkedList<PaintLayer>::Node{
-    
+union PainterVertex{
+    unsigned long bits = 0;
+    struct{
+        unsigned short x, y, sx, sy;
+    } c;
+};
+
+struct PaintLayer : public LinkedList<PaintLayer>::Node{
+    std::vector<short> vertex_indices;
 };
 
 struct PaintGroup{
@@ -94,6 +103,7 @@ struct PainterImplGL : public PainterImpl{
     GLuint m_layers_vao;
     GLuint m_layers_vbo;
     LinkedList<PaintLayer> m_layers;
+    PaintGroup* m_paint_group = nullptr;
 
     PainterImplGL(Window* window)
     : PainterImpl(window)
@@ -418,12 +428,19 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void beginPaintGroup()
     {
-        
+        auto pg = allocPaintGroup();
+        pg->parent_group = m_paint_group;
+        m_paint_group = pg;
     }
 
     virtual void endPaintGroup()
     {
-        
+        if(m_paint_group)
+        {
+            auto pg = m_paint_group;
+            m_paint_group = pg->parent_group;
+            freePaintGroup(pg);
+        }
     }
 
     virtual void resetPaintGroups()
