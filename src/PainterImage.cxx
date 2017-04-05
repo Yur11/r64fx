@@ -316,7 +316,7 @@ struct PainterImplImage : public PainterImpl{
         PainterImplImage::blendColors(pos, colors, mask_texture_impl->image());
     }
 
-    template<typename T> void drawWaveform(const Rect<int> &rect, unsigned char* color, T* waveform)
+    template<typename T> void drawWaveform(const Rect<int> &rect, Color color, T* waveform)
     {
         RectIntersection<int> intersection(
             current_clip_rect, rect + offset()
@@ -333,27 +333,27 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned char* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned char* waveform)
     {
         drawWaveform<unsigned char>(rect, color, waveform);
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned short* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned short* waveform)
     {
         drawWaveform<unsigned short>(rect, color, waveform);
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned int* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned int* waveform)
     {
         drawWaveform<unsigned int>(rect, color, waveform);
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, Color color, float* waveform)
     {
         drawWaveform<float>(rect, color, waveform);
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, Color color, PainterTexture1D* waveform)
     {
 #ifdef R64FX_DEBUG
         assert(waveform->length() == rect.width());

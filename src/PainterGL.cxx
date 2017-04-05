@@ -283,31 +283,31 @@ struct PainterImplGL : public PainterImpl{
         }
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned char* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned char* waveform)
     {
         m_spare_1d_texture.load(waveform, rect.width(), 2);
         PainterImplGL::drawWaveform(rect, color, &m_spare_1d_texture);
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned short* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned short* waveform)
     {
         m_spare_1d_texture.load(waveform, rect.width(), 2);
         PainterImplGL::drawWaveform(rect, color, &m_spare_1d_texture);
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned int* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned int* waveform)
     {
         m_spare_1d_texture.load(waveform, rect.width(), 2);
         PainterImplGL::drawWaveform(rect, color, &m_spare_1d_texture);
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float* waveform)
+    virtual void drawWaveform(const Rect<int> &rect, Color color, float* waveform)
     {
         m_spare_1d_texture.load(waveform, rect.width(), 2);
         PainterImplGL::drawWaveform(rect, color, &m_spare_1d_texture);
     }
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform_texture)
+    virtual void drawWaveform(const Rect<int> &rect, Color color, PainterTexture1D* waveform_texture)
     {
 #ifdef R64FX_DEBUG
         assert(waveform_texture->parentPainter() == this);

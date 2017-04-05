@@ -720,7 +720,7 @@ void invert(Image* dst, Image* src)
 }
 
 
-void threshold(Image* dst, Image* src, unsigned char* below_or_eq, unsigned char* above, unsigned char threshold)
+void threshold(Image* dst, Image* src, Color below_or_eq, Color above, unsigned char threshold)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -757,7 +757,7 @@ bool cmppixel(unsigned char* a, unsigned char* b, int component_count)
 }
 
 
-Rect<int> fit_content(ImgRect img, unsigned char* nullpixel)
+Rect<int> fit_content(ImgRect img, Color nullpixel)
 {
     Rect<int> rect = img.rect;
     
@@ -898,7 +898,7 @@ void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
 }
 
 
-void fill_bottom_triangle(Image* dst, int dstc, int ndstc, unsigned char* color, Point<int> square_pos, int square_size)
+void fill_bottom_triangle(Image* dst, int dstc, int ndstc, Color color, Point<int> square_pos, int square_size)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -937,7 +937,7 @@ template<> inline float denormalize(float num)
 }
 
 
-template<typename T> void draw_waveform(Image* dst, unsigned char* color, T* data, const Rect<int> &rect)
+template<typename T> void draw_waveform(Image* dst, Color color, T* data, const Rect<int> &rect)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -971,25 +971,25 @@ template<typename T> void draw_waveform(Image* dst, unsigned char* color, T* dat
 }
 
 
-void draw_waveform(Image* dst, unsigned char* color, unsigned char* data, const Rect<int> &rect)
+void draw_waveform(Image* dst, Color color, unsigned char* data, const Rect<int> &rect)
 {
     draw_waveform<unsigned char>(dst, color, data, rect);
 }
 
 
-void draw_waveform(Image* dst, unsigned char* color, unsigned short* data, const Rect<int> &rect)
+void draw_waveform(Image* dst, Color color, unsigned short* data, const Rect<int> &rect)
 {
     draw_waveform<unsigned short>(dst, color, data, rect);
 }
 
 
-void draw_waveform(Image* dst, unsigned char* color, unsigned int* data, const Rect<int> &rect)
+void draw_waveform(Image* dst, Color color, unsigned int* data, const Rect<int> &rect)
 {
     draw_waveform<unsigned int>(dst, color, data, rect);
 }
 
 
-void draw_waveform(Image* dst, unsigned char* color, float* data, const Rect<int> &rect)
+void draw_waveform(Image* dst, Color color, float* data, const Rect<int> &rect)
 {
     draw_waveform<float>(dst, color, data, rect);
 }
@@ -1002,7 +1002,7 @@ struct PlotPoint{
     float maxblend = 0.0f;
 };
 
-void stroke_plot(Image* img, unsigned char* color, Rect<int> rect, float* data, float thickness, float scale, float offset)
+void stroke_plot(Image* img, Color color, Rect<int> rect, float* data, float thickness, float scale, float offset)
 {
     if(!img || !data || !color || rect.width() <= 0 || rect.height() <= 0 || thickness <= 0.0f || scale <= 0.0f)
         return;

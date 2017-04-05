@@ -81,30 +81,30 @@ void mirror_left2right(Image* img, PixelOperation pixop = 0);
 
 void invert(Image* dst, Image* src);
 
-void threshold(Image* dst, Image* src, unsigned char* below_or_eq, unsigned char* above, unsigned char threshold);
+void threshold(Image* dst, Image* src, Color below_or_eq, Color above, unsigned char threshold);
 
 
-Rect<int> fit_content(ImgRect img, unsigned char* nullpixel);
+Rect<int> fit_content(ImgRect img, Color nullpixel);
 
 
 /* Draw a bunch of triangles that point in four different directions
  * and fit in a square with the given size. */
 void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right);
 
-void fill_bottom_triangle(Image* dst, int dstc, int ndstc, unsigned char* color, Point<int> square_pos, int square_size);
+void fill_bottom_triangle(Image* dst, int dstc, int ndstc, Color color, Point<int> square_pos, int square_size);
 
 
-void draw_waveform(Image* dst, unsigned char* color, unsigned char*  data, const Rect<int> &rect);
+void draw_waveform(Image* dst, Color color, unsigned char*  data, const Rect<int> &rect);
 
-void draw_waveform(Image* dst, unsigned char* color, unsigned short* data, const Rect<int> &rect);
+void draw_waveform(Image* dst, Color color, unsigned short* data, const Rect<int> &rect);
 
-void draw_waveform(Image* dst, unsigned char* color, unsigned int*   data, const Rect<int> &rect);
+void draw_waveform(Image* dst, Color color, unsigned int*   data, const Rect<int> &rect);
 
-void draw_waveform(Image* dst, unsigned char* color, float*          data, const Rect<int> &rect);
+void draw_waveform(Image* dst, Color color, float*          data, const Rect<int> &rect);
 
 
 void stroke_plot(
-    Image* img, unsigned char* color, Rect<int> rect, float* data, float thickness, float scale = 1.0f, float offset = 0.0f
+    Image* img, Color color, Rect<int> rect, float* data, float thickness, float scale = 1.0f, float offset = 0.0f
 );
 
 }//namespace r64fx

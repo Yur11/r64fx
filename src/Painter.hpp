@@ -88,15 +88,15 @@ public:
 
     virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture) = 0;
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned char*  waveform) = 0;
+    virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned char*  waveform) = 0;
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned short* waveform) = 0;
+    virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned short* waveform) = 0;
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned int*   waveform) = 0;
+    virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned int*   waveform) = 0;
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, float*          waveform) = 0;
+    virtual void drawWaveform(const Rect<int> &rect, Color color, float*          waveform) = 0;
 
-    virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, PainterTexture1D* waveform) = 0;
+    virtual void drawWaveform(const Rect<int> &rect, Color color, PainterTexture1D* waveform) = 0;
 
     virtual void beginPaintGroup() = 0;
 

@@ -56,7 +56,7 @@ void Widget_Dummy::resizeEvent(WidgetResizeEvent* event)
         vec[i] = val;
     }
 
-    stroke_plot(&m_img, m_color, {0, 0, width(), height()}, vec.data(), 3, 0.5, height() * 0.25);
+//     stroke_plot(&m_img, m_color, {0, 0, width(), height()}, vec.data(), 3, 0.5, height() * 0.25);
 
 //     /* Find extrema. */
 //     struct Extremum{

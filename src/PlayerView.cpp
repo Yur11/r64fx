@@ -171,10 +171,9 @@ private:
 
         for(int c=0; c<component_count; c++)
         {
-            unsigned char fg[4] = {63, 63, 63, 0};
             p->drawWaveform(
                 {pos, waveform_y, size, waveform_height},
-                fg, m->waveform + (c * (width()) * 2) + pos * 2
+                Color(63, 63, 63, 0), m->waveform + (c * (width()) * 2) + pos * 2
             );
             waveform_y += waveform_height;
         }
