@@ -190,10 +190,7 @@ private:
         Size<int> s(textimg.width(), textimg.height());
 
         p->fillRect({pos, s}, Color(127, 127, 127, 0));
-
-        unsigned char fg[4] = {0, 0, 0, 0};
-        unsigned char* colors[1] = {fg};
-        p->blendColors(pos, colors, &textimg);
+        p->blendColors(pos, Color(0, 0, 0, 0), &textimg);
     }
 
 

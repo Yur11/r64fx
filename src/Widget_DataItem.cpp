@@ -460,15 +460,15 @@ void Widget_DataItem::paintEvent(WidgetPaintEvent* event)
 
             int offset = indentWidth();
 
-            unsigned char odd_bg[4]  = {200, 200, 200, 0};
-            unsigned char even_bg[4] = {190, 190, 190, 0};
+            Color odd_bg  (200, 200, 200, 0);
+            Color even_bg (190, 190, 190, 0);
             p->fillRect({0, 0, width() + offset, height()}, ((m_flags & R64FX_WIDGET_IS_EVEN) ? even_bg : odd_bg));
 
-            unsigned char normal [4]  = {0, 0, 0, 0};
-            unsigned char hovered[4]  = {0, 127, 0, 0};
-            unsigned char selected[4] = {127, 0, 0, 255};
+            Color normal   (0,   0, 0, 0);
+            Color hovered  (0, 127, 0, 0);
+            Color selected (127, 0, 0, 255);
 
-            unsigned char* colors;
+            Colors colors;
             if(isSelected())
                 colors = selected;
             else if(isHovered())
@@ -485,12 +485,12 @@ void Widget_DataItem::paintEvent(WidgetPaintEvent* event)
                         button_img = g_button_img_down;
                     else
                         button_img = g_button_img_right;
-                    p->blendColors({offset + g_button_img_offset, g_button_img_offset}, &colors, button_img);
-                    p->blendColors({offset + m_image->height(), 0}, &colors, m_image);
+                    p->blendColors({offset + g_button_img_offset, g_button_img_offset}, colors, button_img);
+                    p->blendColors({offset + m_image->height(), 0}, colors, m_image);
                 }
                 else
                 {
-                    p->blendColors({offset, 0}, &colors, m_image);
+                    p->blendColors({offset, 0}, colors, m_image);
                 }
             }
 

@@ -24,9 +24,23 @@ public:
     : m_color{r, 0, 0, 0}
     {}
 
+    Color() : m_color{0, 0, 0, 0}
+    {}
+
+    Color(const Color& other)
+    {
+        operator=(other);
+    }
+
+    inline Color &operator=(const Color& other)
+    {
+        m_bits = other.bits();
+        return *this;
+    }
+
     inline operator unsigned char*() { return m_color; }
 
-    inline unsigned char &operator[](int c) { return m_color[c]; }
+    inline unsigned char operator[](int c) { return m_color[c]; }
 
     inline const unsigned int &bits() const { return m_bits; }
 };
@@ -44,26 +58,45 @@ inline bool operator!=(const Color &a, const Color &b)
 }
 
 class Colors{
-    unsigned char* m_colors[4];
+    Color m_colors[4];
 
 public:
-    explicit Colors(unsigned char* r, unsigned char* g, unsigned char* b, unsigned char* a)
+    Colors(Color r, Color g, Color b, Color a)
     : m_colors{r, g, b, a}
     {}
 
-    explicit Colors(unsigned char* r, unsigned char* g, unsigned char* b)
-    : m_colors{r, g, b, nullptr}
+    Colors(Color r, Color g, Color b)
+    : m_colors{r, g, b, Color()}
     {}
 
-    explicit Colors(unsigned char* r, unsigned char* g)
-    : m_colors{r, g, nullptr, nullptr}
+    Colors(Color r, Color g)
+    : m_colors{r, g, Color(), Color()}
     {}
 
-    explicit Colors(unsigned char* r)
-    : m_colors{r, nullptr, nullptr, nullptr}
+    Colors(Color r)
+    : m_colors{r, Color(), Color(), Color()}
     {}
 
-    inline operator unsigned char**() { return m_colors; }
+    Colors()
+    : m_colors{Color(), Color(), Color(), Color()}
+    {}
+
+    Colors(const Colors &other)
+    {
+        operator=(other);
+    }
+
+    inline Colors &operator=(const Colors &other)
+    {
+        for(int i=0; i<4; i++)
+            m_colors[i] = other[i];
+        return *this;
+    }
+
+    inline Color operator[](int i) const
+    {
+        return m_colors[i];
+    }
 };
 
 }//namespace r64fx

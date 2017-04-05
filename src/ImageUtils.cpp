@@ -595,11 +595,10 @@ void copy(const ImgRect &dst, Transformation2D<float> t, Image* src, const Pixel
 }
 
 
-void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, const ImgRect &src, const bool accurate)
+void blend_colors(Image* dst, Point<int> dstpos, const Colors &colors, const ImgRect &src, const bool accurate)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
-    assert(colors != nullptr);
 #endif//R64FX_DEBUG
 
     RectIntersection<int> src_isec({0, 0, src.img->width(), src.img->height()}, src.rect);
@@ -620,7 +619,7 @@ void blend_colors(Image* dst, Point<int> dstpos, unsigned char** colors, const I
                 for(int c=0; c<dst->componentCount(); c++)
                 {
                     if(accurate)
-                        dstpx[c] = mix_colors_accurate(dstpx[c], one_minus_alpha, colors[m][c], alpha);
+                        dstpx[c] = mix_colors_accurate(dstpx[c], one_minus_alpha, (colors[m][c]), alpha);
                     else
                         dstpx[c] = mix_colors(dstpx[c], one_minus_alpha, colors[m][c], alpha);
                 }

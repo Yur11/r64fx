@@ -142,8 +142,8 @@ int Widget_ScrollBar_Vertical::barLength()
 
 void Widget_ScrollBar_Vertical::paintEvent(WidgetPaintEvent* event)
 {
-    static unsigned char fg[4] = {0, 0, 127, 0};
-    static unsigned char bg[4] = {0, 127, 0, 0};
+    Color fg(0, 0, 127, 0);
+    Color bg(0, 127, 0, 0);
 
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, bg); //Remove me!
@@ -152,9 +152,8 @@ void Widget_ScrollBar_Vertical::paintEvent(WidgetPaintEvent* event)
     Rect<int> handle_rect(0, g_scroll_bar_width + handle_offset, width(), handleLength());
     p->fillRect(handle_rect, fg);
 
-    unsigned char* colors[1] = {fg};
-    p->blendColors({0, 0                            }, colors, img_button_up);
-    p->blendColors({0, height() - g_scroll_bar_width}, colors, img_button_down);
+    p->blendColors({0, 0                            }, fg, img_button_up);
+    p->blendColors({0, height() - g_scroll_bar_width}, fg, img_button_down);
 
     childrenPaintEvent(event);
 }
@@ -211,8 +210,8 @@ int Widget_ScrollBar_Horizontal::barLength()
 
 void Widget_ScrollBar_Horizontal::paintEvent(WidgetPaintEvent* event)
 {
-    static unsigned char fg[4] = {0, 0, 127, 0};
-    static unsigned char bg[4] = {0, 127, 0, 0};
+    Color fg(0, 0, 127, 0);
+    Color bg(0, 127, 0, 0);
 
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, bg); //Remove me!
@@ -221,9 +220,8 @@ void Widget_ScrollBar_Horizontal::paintEvent(WidgetPaintEvent* event)
     Rect<int> handle_rect(g_scroll_bar_width + handle_offset, 0, handleLength(), height());
     p->fillRect(handle_rect, fg);
 
-    unsigned char* colors[1] = {fg};
-    p->blendColors({0, 0                           }, colors, img_button_left);
-    p->blendColors({width() - g_scroll_bar_width, 0}, colors, img_button_right);
+    p->blendColors({0, 0                           }, fg, img_button_left);
+    p->blendColors({width() - g_scroll_bar_width, 0}, fg, img_button_right);
 
     childrenPaintEvent(event);
 }

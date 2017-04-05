@@ -135,12 +135,11 @@ void Widget_Label::paintEvent(WidgetPaintEvent* event)
 
     if(m_image->componentCount() == 1)
     {
-        unsigned char bg[4] = {200, 200, 200, 0};
-        unsigned char fg[4] = {0, 0, 0, 0};
-        unsigned char* colors = fg;
+        Color bg(200, 200, 200, 0);
+        Color fg(0, 0, 0, 0);
 
         p->fillRect({0, 0, width(), height()}, bg);
-        p->blendColors({0, 0}, &colors, m_image);
+        p->blendColors({0, 0}, fg, m_image);
     }
 }
 

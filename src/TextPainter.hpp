@@ -1,6 +1,7 @@
 #ifndef R64FX_TEXT_PAINTER_HPP
 #define R64FX_TEXT_PAINTER_HPP
 
+#include "Color.hpp"
 #include "Rect.hpp"
 #include "Font.hpp"
 #include "TextFlags.hpp"
@@ -233,7 +234,7 @@ public:
     /* Rendering images. */
     void paint(Image* image, Point<int> offset = {0, 0});
 
-    void paintText(Image* image, unsigned char* fg, unsigned char* bg, Point<int> offset = {0, 0});
+    void paintText(Image* image, Color fg, Color bg, Point<int> offset = {0, 0});
 
     void paintSelectionBackground(Image* image, unsigned char* color, Point<int> offset);
 

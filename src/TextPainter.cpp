@@ -460,7 +460,7 @@ void TextPainter::paint(Image* image, Point<int> offset)
 }
 
 
-void TextPainter::paintText(Image* image, unsigned char* fg, unsigned char* bg, Point<int> offset)
+void TextPainter::paintText(Image* image, Color fg, Color bg, Point<int> offset)
 {
     for(int l=0; l<(int)m_lines.size(); l++)
     {

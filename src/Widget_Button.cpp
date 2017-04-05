@@ -215,13 +215,13 @@ ButtonAnimation* ButtonAnimation::CenteredImageMask(Size<int> size, Image* mask)
     Image bg, depressed, pressed;
     generate_masks(size, &bg, &depressed, &pressed);
 
-    unsigned char black[4] = {0, 0, 0, 0};
-    unsigned char c0[4] = {127, 127, 127, 0};
+    Color black(0, 0, 0, 0);
+    Color c0(127, 127, 127, 0);
 
-    unsigned char bg_depressed [4] = {200, 200, 200, 0};
-    unsigned char bg_pressed   [4] = {150, 150, 150, 0};
-    unsigned char fg_depressed [4] = {100, 100, 100, 0};
-    unsigned char fg_pressed   [4] = { 50,  50,  50, 0};
+    Color bg_depressed  (200, 200, 200, 0);
+    Color bg_pressed    (150, 150, 150, 0);
+    Color fg_depressed  (100, 100, 100, 0);
+    Color fg_pressed    (50,  50,  50,  0);
 
     /* Depressed */
     {
@@ -281,9 +281,9 @@ ButtonAnimation* ButtonAnimation::Text(Size<int> size, const std::string &text, 
 }
 
 
-ButtonAnimation* ButtonAnimation::Colored(Size<int> size, unsigned char** rgbas, int num_rgbas)
+ButtonAnimation* ButtonAnimation::Colored(Size<int> size, Color* colors, int ncolors)
 {
-    ButtonAnimation* anim = new(std::nothrow) ButtonAnimation(size, num_rgbas * 2);
+    ButtonAnimation* anim = new(std::nothrow) ButtonAnimation(size, ncolors * 2);
     if(!anim)
     {
         return nullptr;
@@ -295,7 +295,7 @@ ButtonAnimation* ButtonAnimation::Colored(Size<int> size, unsigned char** rgbas,
         return nullptr;
     }
 
-    unsigned char black[4] = {0, 0, 0, 0};
+    Color black(0, 0, 0, 0);
 
     Image bg, depressed, pressed;
     generate_masks(size, &bg, &depressed, &pressed);
@@ -307,7 +307,7 @@ ButtonAnimation* ButtonAnimation::Colored(Size<int> size, unsigned char** rgbas,
             Image img;
             anim->pickFrame(&img, i*2);
             blend_colors(&img, Point<int>(0, 0), Colors(black), &bg);
-            blend_colors(&img, Point<int>(0, 0), rgbas + i, &depressed);
+            blend_colors(&img, Point<int>(0, 0), colors[i], &depressed);
         }
 
         /* Pressed */
@@ -315,7 +315,7 @@ ButtonAnimation* ButtonAnimation::Colored(Size<int> size, unsigned char** rgbas,
             Image img;
             anim->pickFrame(&img, i*2 + 1);
             blend_colors(&img, Point<int>(0, 0), Colors(black), &bg);
-            blend_colors(&img, Point<int>(0, 0), rgbas + i, &pressed);
+            blend_colors(&img, Point<int>(0, 0), colors[i], &pressed);
         }
     }
 
@@ -345,13 +345,13 @@ ButtonAnimation* ButtonAnimation::PlayPause(Size<int> size)
         return nullptr;
     }
 
-    unsigned char black[4] = {0, 0, 0, 0};
-    unsigned char c0[4] = {127, 127, 127, 0};
+    Color black(0, 0, 0, 0);
+    Color c0(127, 127, 127, 0);
 
-    unsigned char bg_depressed [4] = {200, 200, 200, 0};
-    unsigned char bg_pressed   [4] = {150, 150, 150, 0};
-    unsigned char fg_depressed [4] = {100, 100, 100, 0};
-    unsigned char fg_pressed   [4] = { 50,  50,  50, 0};
+    Color bg_depressed  (200, 200, 200, 0);
+    Color bg_pressed    (150, 150, 150, 0);
+    Color fg_depressed  (100, 100, 100, 0);
+    Color fg_pressed    (50,  50,  50,  0);
 
     Image bg, depressed, pressed;
     generate_masks(size, &bg, &depressed, &pressed);

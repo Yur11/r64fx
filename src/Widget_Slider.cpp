@@ -239,9 +239,8 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
-    unsigned char black[4] = {0, 0, 0, 0};
-    unsigned char bg[4] = {127, 127, 127, 0};
-    unsigned char* colors[1] = {black};
+    Color black(0, 0, 0, 0);
+    Color bg(127, 127, 127, 0);
 
     p->fillRect({0, 0, width(), height()}, bg);
 
@@ -272,7 +271,7 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
         {
             p->fillRect({bar_x, barOffset(), 2, barLength()}, black);
         }
-        p->blendColors({handle_x, pos}, colors, handle_img);
+        p->blendColors({handle_x, pos}, black, handle_img);
     }
     else
     {
@@ -299,7 +298,7 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
         {
             p->fillRect({barOffset(), bar_y, barLength(), 2}, black);
         }
-        p->blendColors({pos, handle_y}, colors, handle_img);
+        p->blendColors({pos, handle_y}, black, handle_img);
     }
 }
 

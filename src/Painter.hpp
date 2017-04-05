@@ -1,6 +1,7 @@
 #ifndef R64FX_PAINTER_HPP
 #define R64FX_PAINTER_HPP
 
+#include "Color.hpp"
 #include "Rect.hpp"
 #include "Offset.hpp"
 #include "Orientation.hpp"
@@ -83,9 +84,9 @@ public:
     virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos) = 0;
 
     /* Blend multiple colors using multi-component alpha mask. */
-    virtual void blendColors(Point<int> dst_pos, unsigned char** colors, Image* mask_image) = 0;
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image) = 0;
 
-    virtual void blendColors(Point<int> dst_pos, unsigned char** colors, PainterTexture2D* mask_texture) = 0;
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture) = 0;
 
     virtual void drawWaveform(const Rect<int> &rect, unsigned char* color, unsigned char*  waveform) = 0;
 

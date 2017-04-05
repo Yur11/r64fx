@@ -234,13 +234,13 @@ struct PainterImplGL : public PainterImpl{
         }
     }
 
-    virtual void blendColors(Point<int> dst_pos, unsigned char** colors, Image* mask_image)
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image)
     {
         m_spare_2d_texture.loadImage(mask_image);
         PainterImplGL::blendColors(dst_pos, colors, &m_spare_2d_texture);
     }
 
-    virtual void blendColors(Point<int> dst_pos, unsigned char** colors, PainterTexture2D* mask_texture)
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture)
     {
 #ifdef R64FX_DEBUG
         assert(mask_texture->parentPainter() == this);

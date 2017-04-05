@@ -300,12 +300,12 @@ struct PainterImplImage : public PainterImpl{
         PainterImplImage::putImage(texture_impl->image(), dst_pos);
     }
 
-    virtual void blendColors(Point<int> pos, unsigned char** colors, Image* mask)
+    virtual void blendColors(Point<int> pos, const Colors &colors, Image* mask)
     {
         blend_colors(window->image(), pos + offset(), colors, mask, false);
     }
 
-    virtual void blendColors(Point<int> pos, unsigned char** colors, PainterTexture2D* mask)
+    virtual void blendColors(Point<int> pos, const Colors &colors, PainterTexture2D* mask)
     {
 #ifdef R64FX_DEBUG
         assert(mask != nullptr);

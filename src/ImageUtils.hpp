@@ -69,7 +69,7 @@ void copy
 
 
 void blend_colors
-    (Image* dst, Point<int> dstpos, unsigned char** colors, const ImgRect &src, const bool accurate = true);
+    (Image* dst, Point<int> dstpos, const Colors &colors, const ImgRect &src, const bool accurate = true);
 
 
 void flip_vert(Image* img);

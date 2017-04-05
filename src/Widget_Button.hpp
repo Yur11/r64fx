@@ -2,6 +2,7 @@
 #define R64FX_WIDGET_BUTTON_HPP
 
 #include "Widget.hpp"
+#include "Color.hpp"
 
 namespace r64fx{
 
@@ -71,7 +72,7 @@ public:
 
     static ButtonAnimation* Text(Size<int> size, const std::string &text, Font* font);
 
-    static ButtonAnimation* Colored(Size<int> size, unsigned char** rgbas, int num_rgbas);
+    static ButtonAnimation* Colored(Size<int> size, Color* colors, int ncolors);
 
     static ButtonAnimation* PlayPause(Size<int> size);
 
