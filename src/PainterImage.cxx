@@ -270,12 +270,12 @@ struct PainterImplImage : public PainterImpl{
 
     }
 
-    virtual void clear(unsigned char* color)
+    virtual void clear(Color color)
     {
         fill(window->image(), color);
     }
 
-    virtual void fillRect(const Rect<int> &rect, unsigned char* color)
+    virtual void fillRect(const Rect<int> &rect, Color color)
     {
         auto intersection_rect = clip(rect + offset());
         if(intersection_rect.width() > 0 && intersection_rect.height() > 0)

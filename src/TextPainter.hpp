@@ -236,7 +236,7 @@ public:
 
     void paintText(Image* image, Color fg, Color bg, Point<int> offset = {0, 0});
 
-    void paintSelectionBackground(Image* image, unsigned char* color, Point<int> offset);
+    void paintSelectionBackground(Image* image, Color color, Point<int> offset);
 
 
     /* Rendering text. */

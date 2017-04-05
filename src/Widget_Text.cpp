@@ -435,13 +435,11 @@ void Widget_Text::paintEvent(WidgetPaintEvent* event)
     m_image = new Image(width(), height(), 4);
     if(isMouseFocusOwner())
     {
-        unsigned char color[4] = {255, 127, 127, 0};
-        fill(m_image, color);
+        fill(m_image, Color(255, 127, 127, 0));
     }
     else
     {
-        unsigned char color[4] = {255, 255, 255, 0};
-        fill(m_image, color);
+        fill(m_image, Color(255, 255, 255, 0));
     }
 
     m_text_painter->paintSelectionBackground(

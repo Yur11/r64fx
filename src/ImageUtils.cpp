@@ -288,7 +288,7 @@ template<unsigned int PixOpType> inline void shuf_components_bilinear(
 }
 
 
-void fill(const ImgRect &dst, unsigned char* components)
+void fill(const ImgRect &dst, Color components)
 {
 #ifdef R64FX_DEBUG
     assert(dst.img != nullptr);
@@ -411,7 +411,7 @@ void fill_gradient_radial(Image* dst, int dstc, int ndstc, unsigned char val1, u
 }
 
 
-void fill_circle(Image* dst, int dstc, int ndstc, unsigned char* components, Point<int> topleft, int diameter)
+void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> topleft, int diameter)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -825,8 +825,7 @@ void draw_triangles(int size, Image* up, Image* down, Image* left, Image* right)
 {
     Image img(size, size);
 
-    unsigned char bg = 0;
-    fill(&img, &bg);
+    fill(&img, Color(0));
 
     int half_width = size / 2;
     int triangle_height = sqrt(size * size - half_width * half_width) - 1;

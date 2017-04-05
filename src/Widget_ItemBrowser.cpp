@@ -248,9 +248,7 @@ void Widget_ItemBrowser::onItemSelected(void (*callback)(Widget_ItemBrowser* bro
 void Widget_ItemBrowser::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
-    unsigned char red[4] = {255, 0, 0, 0};
-    p->fillRect({0, 0, width(), height()}, red);
-
+    p->fillRect({0, 0, width(), height()}, Color(255, 0, 0, 0));
     childrenPaintEvent(event);
 }
 

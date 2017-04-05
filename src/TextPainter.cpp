@@ -485,7 +485,7 @@ void TextPainter::paintText(Image* image, Color fg, Color bg, Point<int> offset)
 }
 
 
-void TextPainter::paintSelectionBackground(Image* image, unsigned char* color, Point<int> offset)
+void TextPainter::paintSelectionBackground(Image* image, Color color, Point<int> offset)
 {
     for(auto rect : m_selection_rects)
     {
@@ -1010,8 +1010,7 @@ Image* text2image(const std::string &text, TextWrap wrap, Font* font, Image* dst
     if(!dst->isGood())
         return nullptr;
 
-    unsigned char color = 0;
-    fill(dst, &color);
+    fill(dst, Color(0));
     tp.paint(dst);
 
     return dst;

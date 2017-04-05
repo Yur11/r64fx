@@ -57,7 +57,7 @@ public:
 
     virtual Rect<int> clipRect() = 0;
 
-    virtual void clear(unsigned char* color) = 0;
+    virtual void clear(Color color) = 0;
 
     /** Fill a rectangle with the given color.
 
@@ -67,7 +67,7 @@ public:
 
         color  Color to use.
      */
-    virtual void fillRect(const Rect<int> &rect, unsigned char* color) = 0;
+    virtual void fillRect(const Rect<int> &rect, Color color) = 0;
 
     /** Put an image at the given position.
 

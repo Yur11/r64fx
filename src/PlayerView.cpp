@@ -489,15 +489,9 @@ void PlayerView::setPlayheadTime(float seconds)
 void PlayerView::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
-    unsigned char bg[4] = {127, 127, 127, 0};
-    p->fillRect({0, 0, width(), height()}, bg);
-
+    p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
     childrenPaintEvent(event);
-
-    {
-        unsigned char fg[4] = {0, 0, 0, 0};
-        p->fillRect({0, g_LargeFont->height(), width(), 2}, fg);
-    }
+    p->fillRect({0, g_LargeFont->height(), width(), 2}, Color(0, 0, 0, 0));
 }
 
 

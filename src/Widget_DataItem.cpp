@@ -442,8 +442,7 @@ void Widget_DataItem::paintEvent(WidgetPaintEvent* event)
 
     if(kind() == Widget_DataItem::Kind::List)
     {
-        unsigned char bg[4] = {200, 200, 200, 0};
-        p->fillRect({{0, 0}, size()}, bg);
+        p->fillRect({{0, 0}, size()}, Color(200, 200, 200, 0));
     }
     else
     {
