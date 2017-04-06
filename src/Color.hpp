@@ -45,17 +45,16 @@ public:
     inline const unsigned int &bits() const { return m_bits; }
 };
 
-
 inline bool operator==(const Color &a, const Color &b)
 {
     return a.bits() == b.bits();
 }
 
-
 inline bool operator!=(const Color &a, const Color &b)
 {
     return !operator==(a, b);
 }
+
 
 class Colors{
     Color m_colors[4];
@@ -98,6 +97,19 @@ public:
         return m_colors[i];
     }
 };
+
+inline bool operator!=(const Colors &a, const Colors &b)
+{
+    for(int i=0; i<4; i++)
+        if(a[i] != b[i])
+            return false;
+    return true;
+}
+
+inline bool operator==(const Colors &a, const Colors &b)
+{
+    return !operator!=(a, b);
+}
 
 }//namespace r64fx
 
