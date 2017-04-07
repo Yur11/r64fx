@@ -148,9 +148,9 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
         mirror_left2right(&horse_shoe);
         copy(alpha_mask, {0, 0}, &horse_shoe, PixOpMin());
-
+/*
         fill({alpha_mask, {m_size/2 - 2, 0, 4, 6}}, 0, 1, 255);
-        fill({alpha_mask, {m_size/2 - 1, 0, 2, 5}}, 0, 1, 0);
+        fill({alpha_mask, {m_size/2 - 1, 0, 2, 5}}, 0, 1, 0);*/
     }
 
     void rotateAndCopy(Image* dst, Image* src, float angle, PixelOperation pixop)
@@ -173,7 +173,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         int hs = m_size / 2;
         Transformation2D<float> t;
         t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
-        t.rotate(-(M_PI * 0.5f + angle));
+        t.rotate(-angle);
         t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
         copy(dst, t, &m_marker, ChanShuf(0, 2, 0, 2));
     }
@@ -292,6 +292,9 @@ Widget_Knob::Widget_Knob(KnobStyle style, int size, Widget* parent)
     setSize({size, size});
     m_animation = KnobAnimation::getAnimation(style, size);
     onValueChanged(nullptr);
+    setMinValue(-1.0f);
+    setMaxValue(+1.0f);
+    setValue(0.0f);
 }
 
 
@@ -305,6 +308,11 @@ Widget_Knob::~Widget_Knob()
 void Widget_Knob::setValue(float value, bool notify)
 {
     m_value = value;
+    if(m_value < minValue())
+        m_value = minValue();
+    else if(m_value > maxValue())
+        m_value = maxValue();
+    cout << m_value << "\n";
 }
 
 
@@ -380,7 +388,9 @@ void Widget_Knob::debugPaint(Painter* painter, Point<int> position, int size)
 
 void Widget_Knob::paintEvent(WidgetPaintEvent* event)
 {
-    m_animation->paint(event->painter(), m_value * M_PI);
+    auto p = event->painter();
+    p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
+    m_animation->paint(p, m_value * M_PI);
 }
 
 
