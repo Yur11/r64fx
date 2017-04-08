@@ -23,6 +23,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     Image           m_marker;
     Image           m_marker_frames;
     Rect<short>     m_marker_frame_coords[32];
+    float           m_cut_angle = 0.0f;
 
     KnobAnimation(KnobStyle style, int size, int frame_count)
     : m_style(style)
@@ -136,6 +137,8 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             if(horse_shoe->pixel(x, m_size-7)[0] == 0 && horse_shoe->pixel(x-2, m_size-7)[0] != 0)
             {
                 fill({horse_shoe, {x+1, m_size-12, m_size/2 - x, 12}}, Color(255));
+                m_cut_angle = asin(double(m_size/2 - x) / double(m_size/2));
+                cout << "m_cut_angle: " << (m_cut_angle / (M_PI * 0.5)) << "\n";
                 break;
             }
         }
@@ -276,6 +279,20 @@ public:
     {
         painter->putImage(&m_marker_frames, position);
     }
+
+    float markerAngle(float value, float minval, float maxval)
+    {
+//         float adjustment = 0.0f;
+//         if(m_size > 40)
+//         {
+// //             adjustment = 0.5f / 1.0f / (m_size - 40);
+//         }
+
+        float angle = (value - minval) / (maxval - minval);
+        angle *= M_PI * (2.0f) - m_cut_angle * 2.0f;
+        angle -= M_PI - m_cut_angle;
+        return angle;
+    }
 };
 
 LinkedList<KnobAnimation> KnobAnimation::knob_animations;
@@ -312,7 +329,6 @@ void Widget_Knob::setValue(float value, bool notify)
         m_value = minValue();
     else if(m_value > maxValue())
         m_value = maxValue();
-    cout << m_value << "\n";
 }
 
 
@@ -390,7 +406,8 @@ void Widget_Knob::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
-    m_animation->paint(p, m_value * M_PI);
+
+    m_animation->paint(p, m_animation->markerAngle(m_value, minValue(), maxValue()));
 }
 
 
