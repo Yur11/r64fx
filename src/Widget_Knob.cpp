@@ -33,7 +33,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     , m_marker(size, size, 2)
     {
         genKnob(&m_image, {0, 0});
-        genMarkerFrames();
+//         genMarkerFrames();
     }
 
     void genKnob(Image* dst, Point<int> dstpos)
@@ -181,51 +181,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         copy(dst, t, &m_marker, ChanShuf(0, 2, 0, 2));
     }
 
-    void genMarkerFrames()
-    {
-        int frame_count = 32;
-        float rcp = 1.0f / float(frame_count << 1);
-
-        Image frames(m_size * frame_count, m_size, 2);
-        fill(&frames, Color(0, 255));
-
-        Image frame(m_size, m_size, 2);
-        int w = 0;
-        int h = 0;
-        for(int i=0; i<frame_count; i++)
-        {
-            fill(&frame, Color(0, 255));
-            genMarker(&frame, {0, 0}, (i) * rcp * M_PI * 0.5f - M_PI * 0.5f);
-            auto rect = fit_content(&frame, Color(0, 255));
-            copy(&frames, {w, 0}, {&frame, rect}, PixOpReplace());
-            m_marker_frame_coords[i] = Rect<short>(w, 0, rect.width(), rect.height());
-            w += rect.width();
-            if(rect.height() > h)
-                h = rect.height();
-        }
-
-        m_marker_frames.load(w, h, 2);
-        copy(&m_marker_frames, {0, 0}, {&frames, {0, 0, w, h}}, PixOpReplace());
-    }
-
-    void genFullFrame(Image* dst, Point<int> dstpos)
-    {
-#ifdef R64FX_DEBUG
-        assert(dst->componentCount() == 4);
-#endif//R64FX_DEBUG
-
-        Image frame(m_size, m_size, 2);
-        fill(&frame, Color(0, 255));
-
-        Image alpha(m_size, m_size, 1);
-        fill(&alpha, Color(255));
-
-        genKnobCenter(&frame, &alpha, {0, 0});
-
-        copy(dst, {0, 0}, &frame);
-        copy(dst, {0, 0}, &alpha, ChanShuf(3, 1, 0, 1));
-    }
-
 public:
     KnobStyle  style()       const { return m_style; }
     int        size()        const { return m_size; }
@@ -237,11 +192,6 @@ public:
         Image marker(m_size, m_size, 2);
         genMarker(&marker, {0, 0}, -angle);
         painter->putImage(&marker, {0, 0});
-
-//         Image frame(m_size, m_size, 4);
-//         fill(&frame, Color(0, 0, 0, 0));
-//         genFullFrame(&frame, {0, 0});
-//         painter->putImage(&frame, {0, 0});
     }
 
     static KnobAnimation* getAnimation(KnobStyle style, int size)
@@ -277,17 +227,11 @@ public:
 
     void debugPaint(Painter* painter, Point<int> position)
     {
-        painter->putImage(&m_marker_frames, position);
+//         painter->putImage(&m_marker_frames, position);
     }
 
     float markerAngle(float value, float minval, float maxval)
     {
-//         float adjustment = 0.0f;
-//         if(m_size > 40)
-//         {
-// //             adjustment = 0.5f / 1.0f / (m_size - 40);
-//         }
-
         float angle = (value - minval) / (maxval - minval);
         angle *= M_PI * (2.0f) - m_cut_angle * 2.0f;
         angle -= M_PI - m_cut_angle;

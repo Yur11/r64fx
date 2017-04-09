@@ -26,7 +26,7 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     for(int i=0; i<10; i++)
     {
         auto knob = new Widget_Knob(KnobStyle::Unipolar, 44 + i*4, this);
-        knob->setPosition({50 + (44 + i*4)*i, 350});
+        knob->setPosition({50 + (44 + i*4)*i, 50});
     }
 }
 
