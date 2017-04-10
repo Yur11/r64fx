@@ -65,7 +65,7 @@ void ImgRect::crop()
 }
 
 
-PixelOperation ChanShuf(int dstc, int ndstc, int srcc, int nsrcc)
+ImgOpFlags ChanShuf(int dstc, int ndstc, int srcc, int nsrcc)
 {
 #ifdef R64FX_DEBUG
     assert(dstc >= 0);
@@ -95,51 +95,51 @@ struct UnpackPixopChanShuf{
 };
 
 
-PixelOperation PixOpReplace()
+ImgOpFlags ImgOpReplace()
 {
     return R64FX_PIXOP_REPLACE;
 }
 
-PixelOperation PixOpAdd()
+ImgOpFlags ImgOpAdd()
 {
     return R64FX_PIXOP_ADD;
 }
 
-PixelOperation PixOpSub()
+ImgOpFlags ImgOpSub()
 {
     return R64FX_PIXOP_SUB;
 }
 
-PixelOperation PixOpMul()
+ImgOpFlags ImgOpMul()
 {
     return R64FX_PIXOP_MUL;
 }
 
-PixelOperation PixOpMin()
+ImgOpFlags ImgOpMin()
 {
     return R64FX_PIXOP_MIN;
 }
 
-PixelOperation PixOpMax()
+ImgOpFlags ImgOpMax()
 {
     return R64FX_PIXOP_MAX;
 }
 
-PixelOperation PixOpBlendAlpha()
+ImgOpFlags ImgOpBlendAlpha()
 {
     return R64FX_PIXOP_SRC_ALPHA;
 }
 
-PixelOperation PixOpBlendAlphaAccurate()
+ImgOpFlags ImgOpBlendAlphaAccurate()
 {
     return R64FX_PIXOP_SRC_ALPHA_ACCURATE;
 }
 
 
-template<unsigned int PixOpType> inline unsigned char pix_op(unsigned char dst, unsigned char src)
+template<unsigned int ImgOpType> inline unsigned char pix_op(unsigned char dst, unsigned char src)
 {
 #ifdef R64FX_DEBUG
-    cerr << "Warning: Undefined PixOpType '" << PixOpType << "' in pix_op() !\n";
+    cerr << "Warning: Undefined ImgOpType '" << ImgOpType << "' in pix_op() !\n";
 #endif//R64FX_DEBUG
     return 0;
 }
@@ -177,10 +177,10 @@ template<> inline unsigned char pix_op<R64FX_PIXOP_MAX>(unsigned char dst, unsig
 }
 
 
-template<unsigned int PixOpType> unsigned char pix_op_alpha(unsigned char c1, float f1, unsigned char c2, float f2)
+template<unsigned int ImgOpType> unsigned char pix_op_alpha(unsigned char c1, float f1, unsigned char c2, float f2)
 {
 #ifdef R64FX_DEBUG
-    cerr << "Warning: Undefined PixOpType '" << PixOpType << "' in pix_op_alpha!\n";
+    cerr << "Warning: Undefined ImgOpType '" << ImgOpType << "' in pix_op_alpha!\n";
 #endif//R64FX_DEBUG
     return 0;
 }
@@ -196,18 +196,18 @@ template<> unsigned char pix_op_alpha<R64FX_PIXOP_SRC_ALPHA_ACCURATE>(unsigned c
 }
 
 
-template<unsigned int PixOpType> inline void shuf_components(UnpackPixopChanShuf shuf, unsigned char* dstpx, unsigned char* srcpx)
+template<unsigned int ImgOpType> inline void shuf_components(UnpackPixopChanShuf shuf, unsigned char* dstpx, unsigned char* srcpx)
 {
     for(auto c=0; c<shuf.ndstc; c++)
     {
         auto &dstref = dstpx[shuf.dstc + c];
         auto &srcref = srcpx[shuf.srcc + (shuf.nsrcc == 1 ? 0 : c)];
-        dstref = pix_op<PixOpType>(dstref, srcref);
+        dstref = pix_op<ImgOpType>(dstref, srcref);
     }
 }
 
 
-template<unsigned int PixOpType> inline void shuf_components_alpha(unsigned char* dstpx, unsigned char* srcpx, int ndstc, int nsrcc)
+template<unsigned int ImgOpType> inline void shuf_components_alpha(unsigned char* dstpx, unsigned char* srcpx, int ndstc, int nsrcc)
 {
     switch(nsrcc)
     {
@@ -226,7 +226,7 @@ template<unsigned int PixOpType> inline void shuf_components_alpha(unsigned char
             {
                 float alpha            = float(      srcpx[1]) * rcp255;
                 float one_minus_alpha  = float(255 - srcpx[1]) * rcp255;
-                dstpx[c] = pix_op_alpha<PixOpType>(dstpx[c], alpha, srcpx[0], one_minus_alpha);
+                dstpx[c] = pix_op_alpha<ImgOpType>(dstpx[c], alpha, srcpx[0], one_minus_alpha);
             }
             break;
         }
@@ -246,7 +246,7 @@ template<unsigned int PixOpType> inline void shuf_components_alpha(unsigned char
             float one_minus_alpha  = float(255 - srcpx[3]) * rcp255;
             for(int c=0; c<3; c++)
             {
-                dstpx[c] = pix_op_alpha<PixOpType>(dstpx[c], alpha, srcpx[c], one_minus_alpha);
+                dstpx[c] = pix_op_alpha<ImgOpType>(dstpx[c], alpha, srcpx[c], one_minus_alpha);
             }
             break;
         }
@@ -266,7 +266,7 @@ template<> inline void shuf_components<R64FX_PIXOP_SRC_ALPHA_ACCURATE>(UnpackPix
 }
 
 
-template<unsigned int PixOpType> inline void shuf_components_bilinear(
+template<unsigned int ImgOpType> inline void shuf_components_bilinear(
     UnpackPixopChanShuf shuf,
     unsigned char* dstpx, unsigned char* p11, unsigned char* p12, unsigned char* p21, unsigned char* p22,
     double fracx, double fracy
@@ -282,7 +282,7 @@ template<unsigned int PixOpType> inline void shuf_components_bilinear(
             double(p21[srci]) * (1.0-fracx)  * fracy       +
             double(p11[srci]) * fracx        * fracy;
 
-        dstpx[dsti] = pix_op<PixOpType>(dstpx[dsti], (unsigned char)(val));
+        dstpx[dsti] = pix_op<ImgOpType>(dstpx[dsti], (unsigned char)(val));
         srci += srcinc;
     }
 }
@@ -480,7 +480,7 @@ void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> t
 }
 
 
-template<unsigned int PixOpType> void perform_copy(Image* dst, Point<int> dstpos, const ImgRect &src, const PixelOperation pixop)
+template<unsigned int ImgOpType> void perform_copy(Image* dst, Point<int> dstpos, const ImgRect &src, const ImgOpFlags pixop)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -497,13 +497,13 @@ template<unsigned int PixOpType> void perform_copy(Image* dst, Point<int> dstpos
         {
             auto dstpx = dst->pixel     (x + dst_isec.dstx(),                   y + dst_isec.dsty());
             auto srcpx = src.img->pixel (x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
-            shuf_components<PixOpType>(shuf, dstpx, srcpx);
+            shuf_components<ImgOpType>(shuf, dstpx, srcpx);
         }
     }
 }
 
 
-void copy(Image* dst, Point<int> dstpos, const ImgRect &src, const PixelOperation pixop)
+void copy(Image* dst, Point<int> dstpos, const ImgRect &src, const ImgOpFlags pixop)
 {
     switch(pixop.bits() & R64FX_PIXOP_TYPE_MASK)
     {
@@ -522,7 +522,7 @@ void copy(Image* dst, Point<int> dstpos, const ImgRect &src, const PixelOperatio
 }
 
 
-template<unsigned int PixOpType> void perform_copy(const ImgRect &dst, Transformation2D<float> transform, Image* src, const PixelOperation pixop)
+template<unsigned int ImgOpType> void perform_copy(const ImgRect &dst, Transformation2D<float> transform, Image* src, const ImgOpFlags pixop)
 {
 #ifdef R64FX_DEBUG
     assert(dst.img != nullptr);
@@ -572,13 +572,13 @@ template<unsigned int PixOpType> void perform_copy(const ImgRect &dst, Transform
                 p22 = src->pixel(x2, y2);
             }
 
-            shuf_components_bilinear<PixOpType>(shuf, dstpx, p11, p12, p21, p22, fracx, fracy);
+            shuf_components_bilinear<ImgOpType>(shuf, dstpx, p11, p12, p21, p22, fracx, fracy);
         }
     }
 }
 
 
-void copy(const ImgRect &dst, Transformation2D<float> t, Image* src, const PixelOperation pixop)
+void copy(const ImgRect &dst, Transformation2D<float> t, Image* src, const ImgOpFlags pixop)
 {
     switch(pixop.bits() & R64FX_PIXOP_TYPE_MASK)
     {
@@ -679,7 +679,7 @@ void flip_hori(Image* img)
 }
 
 
-void mirror_left2right(Image* img, PixelOperation pixop)
+void mirror_left2right(Image* img, ImgOpFlags pixop)
 {
 #ifdef R64FX_DEBUG
     assert(img != nullptr);

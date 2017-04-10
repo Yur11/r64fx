@@ -22,31 +22,31 @@ private:
 };
 
 
-class PixelOperation{
+class ImgOpFlags{
     unsigned int m_bits;
 
 public:
-    PixelOperation(unsigned int bits) : m_bits(bits) {}
+    ImgOpFlags(unsigned int bits) : m_bits(bits) {}
 
     inline unsigned int bits() const { return m_bits; }
 };
 
-inline const PixelOperation operator|(const PixelOperation a, const PixelOperation b) { return a.bits() | b.bits(); }
+inline const ImgOpFlags operator|(const ImgOpFlags a, const ImgOpFlags b) { return a.bits() | b.bits(); }
 
 /* nsrcc must be equal to ndstc or be 1. */
-PixelOperation ChanShuf(int dstc, int ndstc, int srcc, int nsrcc);
+ImgOpFlags ChanShuf(int dstc, int ndstc, int srcc, int nsrcc);
 
 /* Compatible with ChanShuf(). */
-PixelOperation PixOpReplace();
-PixelOperation PixOpAdd();
-PixelOperation PixOpSub();
-PixelOperation PixOpMul();
-PixelOperation PixOpMin();
-PixelOperation PixOpMax();
+ImgOpFlags ImgOpReplace();
+ImgOpFlags ImgOpAdd();
+ImgOpFlags ImgOpSub();
+ImgOpFlags ImgOpMul();
+ImgOpFlags ImgOpMin();
+ImgOpFlags ImgOpMax();
 
 /* Incompatible with ChanShuf(). */
-PixelOperation PixOpBlendAlpha();
-PixelOperation PixOpBlendAlphaAccurate();
+ImgOpFlags ImgOpBlendAlpha();
+ImgOpFlags ImgOpBlendAlphaAccurate();
 
 
 void fill(const ImgRect &dst, Color components);
@@ -61,11 +61,11 @@ void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> t
 
 
 void copy
-    (Image* dst, Point<int> dstpos, const ImgRect &src, const PixelOperation pixop = PixOpBlendAlpha());
+    (Image* dst, Point<int> dstpos, const ImgRect &src, const ImgOpFlags pixop = ImgOpBlendAlpha());
 
 
 void copy
-    (const ImgRect &dst, Transformation2D<float> transform, Image* src, const PixelOperation pixop = PixOpReplace());
+    (const ImgRect &dst, Transformation2D<float> transform, Image* src, const ImgOpFlags pixop = ImgOpReplace());
 
 
 void blend_colors
@@ -76,7 +76,7 @@ void flip_vert(Image* img);
 
 void flip_hori(Image* img);
 
-void mirror_left2right(Image* img, PixelOperation pixop = 0);
+void mirror_left2right(Image* img, ImgOpFlags pixop = 0);
 
 
 void invert(Image* dst, Image* src);
