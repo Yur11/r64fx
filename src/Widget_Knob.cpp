@@ -68,7 +68,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             fill(&c0, Color(255));
             fill_circle(&c0, 0, 1, Color(0), {5, 5}, m_size - 10);
 
-            copy(alpha_mask, {0, 0}, &c0, ImgOpMin());
+            copy(alpha_mask, {0, 0}, &c0, ImgCopyMin());
 
             Image layer(m_size, m_size, 2);
             fill(&layer, Color(0, 255));
@@ -149,13 +149,13 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         genBaseHorseShoe(&horse_shoe);
 
         mirror_left2right(&horse_shoe);
-        copy(alpha_mask, {0, 0}, &horse_shoe, ImgOpMin());
+        copy(alpha_mask, {0, 0}, &horse_shoe, ImgCopyMin());
 /*
         fill({alpha_mask, {m_size/2 - 2, 0, 4, 6}}, 0, 1, 255);
         fill({alpha_mask, {m_size/2 - 1, 0, 2, 5}}, 0, 1, 0);*/
     }
 
-    void rotateAndCopy(Image* dst, Image* src, float angle, ImgOpFlags pixop)
+    void rotateAndCopy(Image* dst, Image* src, float angle, ImgCopyFlags pixop)
     {
         Transformation2D<float> t;
         t.translate(+(m_size/2) - 0.5f, +(m_size/2) - 0.5f);

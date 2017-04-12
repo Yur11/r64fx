@@ -22,31 +22,42 @@ private:
 };
 
 
-class ImgOpFlags{
+
+class ImgCopyFlags{
     unsigned int m_bits;
 
 public:
-    ImgOpFlags(unsigned int bits) : m_bits(bits) {}
+    ImgCopyFlags(unsigned int bits) : m_bits(bits) {}
 
     inline unsigned int bits() const { return m_bits; }
 };
 
-inline const ImgOpFlags operator|(const ImgOpFlags a, const ImgOpFlags b) { return a.bits() | b.bits(); }
+inline const ImgCopyFlags operator|(const ImgCopyFlags a, const ImgCopyFlags b) { return a.bits() | b.bits(); }
+
+ImgCopyFlags ImgCopyFlipVert();
+ImgCopyFlags ImgCopyFlipHori();
+ImgCopyFlags ImgCopyFlipDiag();
 
 /* nsrcc must be equal to ndstc or be 1. */
-ImgOpFlags ChanShuf(int dstc, int ndstc, int srcc, int nsrcc);
+ImgCopyFlags ChanShuf(int dstc, int ndstc, int srcc, int nsrcc);
 
 /* Compatible with ChanShuf(). */
-ImgOpFlags ImgOpReplace();
-ImgOpFlags ImgOpAdd();
-ImgOpFlags ImgOpSub();
-ImgOpFlags ImgOpMul();
-ImgOpFlags ImgOpMin();
-ImgOpFlags ImgOpMax();
+ImgCopyFlags ImgCopyReplace();
+ImgCopyFlags ImgCopyAdd();
+ImgCopyFlags ImgCopySub();
+ImgCopyFlags ImgCopyMul();
+ImgCopyFlags ImgCopyMin();
+ImgCopyFlags ImgCopyMax();
 
 /* Incompatible with ChanShuf(). */
-ImgOpFlags ImgOpBlendAlpha();
-ImgOpFlags ImgOpBlendAlphaAccurate();
+ImgCopyFlags ImgCopyBlendAlpha();
+ImgCopyFlags ImgCopyBlendAlphaAccurate();
+
+
+void copy(Image* dst, Point<int> dstpos, const ImgRect &src, const ImgCopyFlags pixop = ImgCopyBlendAlpha());
+
+void copy(const ImgRect &dst, Transformation2D<float> transform, Image* src, const ImgCopyFlags pixop = ImgCopyReplace());
+
 
 
 void fill(const ImgRect &dst, Color components);
@@ -60,14 +71,6 @@ void fill_gradient_radial(Image* dst, int dstc, int ndstc, unsigned char val1, u
 void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> topleft, int diameter);
 
 
-void copy
-    (Image* dst, Point<int> dstpos, const ImgRect &src, const ImgOpFlags pixop = ImgOpBlendAlpha());
-
-
-void copy
-    (const ImgRect &dst, Transformation2D<float> transform, Image* src, const ImgOpFlags pixop = ImgOpReplace());
-
-
 void blend_colors
     (Image* dst, Point<int> dstpos, const Colors &colors, const ImgRect &src, const bool accurate = true);
 
@@ -76,7 +79,7 @@ void flip_vert(Image* img);
 
 void flip_hori(Image* img);
 
-void mirror_left2right(Image* img, ImgOpFlags pixop = 0);
+void mirror_left2right(Image* img, ImgCopyFlags pixop = 0);
 
 
 void invert(Image* dst, Image* src);
