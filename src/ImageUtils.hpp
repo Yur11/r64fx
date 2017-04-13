@@ -21,6 +21,15 @@ private:
     void crop();
 };
 
+struct ImgPos{
+    Image* img = nullptr;
+    Point<int> pos;
+
+    ImgPos(Image* img, const Point<int> &pos) : img(img), pos(pos) {}
+    ImgPos(Image* img) : img(img), pos(0, 0) {}
+
+    inline Image* operator->() { return img; }
+};
 
 
 class ImgCopyFlags{
@@ -54,7 +63,7 @@ ImgCopyFlags ImgCopyBlendAlpha();
 ImgCopyFlags ImgCopyBlendAlphaAccurate();
 
 
-void copy(Image* dst, Point<int> dstpos, const ImgRect &src, const ImgCopyFlags pixop = ImgCopyBlendAlpha());
+void copy(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags pixop = ImgCopyBlendAlpha());
 
 void copy(const ImgRect &dst, Transformation2D<float> transform, Image* src, const ImgCopyFlags pixop = ImgCopyReplace());
 

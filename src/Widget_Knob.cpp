@@ -50,7 +50,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         genDecorationSolidHorseShoe(&alpha_mask);
 
         genKnobCenter(dst, &alpha_mask, dstpos);
-        copy(dst, dstpos, &alpha_mask, ChanShuf(1, 1, 0, 1));
+        copy({dst, dstpos}, &alpha_mask, ChanShuf(1, 1, 0, 1));
 
         fill(&m_marker, Color(0, 255));
         fill({&m_marker, {m_size/2 - 2, 7, 4, m_size/2 - 7}}, Color(0, 127));
@@ -68,13 +68,13 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             fill(&c0, Color(255));
             fill_circle(&c0, 0, 1, Color(0), {5, 5}, m_size - 10);
 
-            copy(alpha_mask, {0, 0}, &c0, ImgCopyMin());
+            copy(alpha_mask, &c0, ImgCopyMin());
 
             Image layer(m_size, m_size, 2);
             fill(&layer, Color(0, 255));
-            copy(&layer, {0, 0}, &c0, ChanShuf(1, 1, 0, 1));
+            copy(&layer, &c0, ChanShuf(1, 1, 0, 1));
 
-            copy(dst, dstpos, &layer);
+            copy({dst, dstpos}, &layer);
         }
 
         {
@@ -84,9 +84,9 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
             Image layer(m_size, m_size, 2);
             fill_gradient_vert(&layer, 0, 1, 127, 31, {0, 6, m_size, m_size - 6});
-            copy(&layer, {0, 0}, &c1, ChanShuf(1, 1, 0, 1));
+            copy(&layer, &c1, ChanShuf(1, 1, 0, 1));
 
-            copy(dst, dstpos, &layer);
+            copy({dst, dstpos}, &layer);
         }
 
         {
@@ -96,9 +96,9 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
             Image layer(m_size, m_size, 2);
             fill_gradient_vert(&layer, 0, 1, 223, 31, {0, 8, m_size, m_size - 8});
-            copy(&layer, {0, 0}, &c2, ChanShuf(1, 1, 0, 1));
+            copy(&layer, &c2, ChanShuf(1, 1, 0, 1));
 
-            copy(dst, dstpos, &layer);
+            copy({dst, dstpos}, &layer);
         }
 
         {
@@ -108,9 +108,9 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
             Image layer(m_size, m_size, 2);
             fill_gradient_vert(&layer, 0, 1, 147, 107, {0, 9, m_size, m_size - 9});
-            copy(&layer, {0, 0}, &c3, ChanShuf(1, 1, 0, 1));
+            copy(&layer, &c3, ChanShuf(1, 1, 0, 1));
 
-            copy(dst, dstpos, &layer);
+            copy({dst, dstpos}, &layer);
         }
     }
 
@@ -149,7 +149,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         genBaseHorseShoe(&horse_shoe);
 
         mirror_left2right(&horse_shoe);
-        copy(alpha_mask, {0, 0}, &horse_shoe, ImgCopyMin());
+        copy(alpha_mask, &horse_shoe, ImgCopyMin());
 /*
         fill({alpha_mask, {m_size/2 - 2, 0, 4, 6}}, 0, 1, 255);
         fill({alpha_mask, {m_size/2 - 1, 0, 2, 5}}, 0, 1, 0);*/

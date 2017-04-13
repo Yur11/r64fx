@@ -269,23 +269,18 @@ template<unsigned int ImgCopyType> inline void shuf_components_bilinear(
 
 
 template<unsigned int ImgCopyType> struct CopyFun{
-    void operator()(Image* dst, Point<int> dstpos, const ImgRect &src, const ImgCopyFlags pixop)
+    void operator()(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags pixop)
     {
-#ifdef R64FX_DEBUG
-        assert(dst != nullptr);
-        assert(src.img != nullptr);
-#endif//R64FX_DEBUG
-
         RectIntersection<int> src_isec({0, 0, src.img->width(), src.img->height()}, src.rect);
-        RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
+        RectIntersection<int> dst_isec({0, 0, dst.img->width(), dst.img->height()}, {dst.pos.x(), dst.pos.y(), src_isec.width(), src_isec.height()});
 
-        UnpackPixopChanShuf shuf(pixop.bits(), dst, src.img);
+        UnpackPixopChanShuf shuf(pixop.bits(), dst.img, src.img);
         for(int y=0; y<dst_isec.height(); y++)
         {
             for(int x=0; x<dst_isec.width(); x++)
             {
-                auto dstpx = dst->pixel     (x + dst_isec.dstx(),                   y + dst_isec.dsty());
-                auto srcpx = src.img->pixel (x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
+                auto dstpx = dst.img->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
+                auto srcpx = src.img->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
                 shuf_components<ImgCopyType>(shuf, dstpx, srcpx);
             }
         }
@@ -293,19 +288,16 @@ template<unsigned int ImgCopyType> struct CopyFun{
 };
 
 
-// struct CopyFun<R64FX_IMGOP_FLIP_VERT>{
-//     void operator()(Image* dst, Point<int> dstpos, const ImgRect &src, const ImgCopyFlags pixop)
-//     {
-//         
-//     }
-// };
-
-
-void copy(Image* dst, Point<int> dstpos, const ImgRect &src, const ImgCopyFlags pixop)
+void copy(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags pixop)
 {
+#ifdef R64FX_DEBUG
+        assert(dst.img != nullptr);
+        assert(src.img != nullptr);
+#endif//R64FX_DEBUG
+
     switch(pixop.bits() & R64FX_IMGOP_TYPE_MASK)
     {
-#define SWITCH_PIXOP(OP) case OP: { CopyFun<OP> fun; fun(dst, dstpos, src, pixop); } break
+#define SWITCH_PIXOP(OP) case OP: { CopyFun<OP> fun; fun(dst, src, pixop); } break
         SWITCH_PIXOP (R64FX_IMGOP_REPLACE);
         SWITCH_PIXOP (R64FX_IMGOP_ADD);
         SWITCH_PIXOP (R64FX_IMGOP_SUB);
