@@ -268,6 +268,17 @@ template<unsigned int ImgCopyType> inline void shuf_components_bilinear(
 }
 
 
+template<bool> inline int flipval(int val, int)
+{
+    return val;
+}
+
+template<> inline int flipval<true>(int val, int size)
+{
+    return size - val - 1;
+}
+
+
 template<unsigned int ImgCopyType> struct CopyFun{
     void operator()(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags pixop)
     {
@@ -277,10 +288,12 @@ template<unsigned int ImgCopyType> struct CopyFun{
         UnpackPixopChanShuf shuf(pixop.bits(), dst.img, src.img);
         for(int y=0; y<dst_isec.height(); y++)
         {
+            int yy = flipval<false>(y, dst_isec.height());
             for(int x=0; x<dst_isec.width(); x++)
             {
+                int xx = flipval<false>(x, dst_isec.width());
                 auto dstpx = dst.img->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
-                auto srcpx = src.img->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
+                auto srcpx = src.img->pixel(xx + dst_isec.srcx() + src_isec.dstx(), yy + dst_isec.srcy() + src_isec.dsty());
                 shuf_components<ImgCopyType>(shuf, dstpx, srcpx);
             }
         }
