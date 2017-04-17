@@ -12,20 +12,17 @@ struct ImgRect{
     Image* img = nullptr;
     Rect<int> rect;
 
-    ImgRect(Image* img, const Rect<int> &rect) : img(img), rect(rect) { crop(); }
-    ImgRect(Image* img) : img(img), rect(0, 0, img->width(), img->height()) { crop(); }
+    ImgRect(Image* img, const Rect<int> &rect);
+    ImgRect(Image* img) : img(img), rect(0, 0, img->width(), img->height()) {}
 
     inline Image* operator->() { return img; }
-
-private:
-    void crop();
 };
 
 struct ImgPos{
     Image* img = nullptr;
     Point<int> pos;
 
-    ImgPos(Image* img, const Point<int> &pos) : img(img), pos(pos) {}
+    ImgPos(Image* img, const Point<int> &pos);
     ImgPos(Image* img) : img(img), pos(0, 0) {}
 
     inline Image* operator->() { return img; }

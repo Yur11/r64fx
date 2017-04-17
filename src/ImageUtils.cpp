@@ -36,19 +36,27 @@ inline unsigned char mix_colors_accurate(unsigned char c1, float f1, unsigned ch
 }//namespace
 
 
-void ImgRect::crop()
+ImgRect::ImgRect(Image* img, const Rect<int> &rect)
+: img(img)
+, rect(rect)
 {
-    if(rect.left() < 0)
-        rect.setLeft(0);
+#ifdef R64FX_DEBUG
+    assert(rect.left() >= 0);
+    assert(rect.top() >= 0);
+    assert(rect.right() <= img->width());
+    assert(rect.bottom() <= img->height());
+#endif//R64FX_DEBUG
+}
 
-    if(rect.top() < 0)
-        rect.setTop(0);
 
-    if(rect.right() > img->width())
-        rect.setRight(img->width());
-
-    if(rect.bottom() > img->height())
-        rect.setBottom(img->height());
+ImgPos::ImgPos(Image* img, const Point<int> &pos)
+: img(img)
+, pos(pos)
+{
+#ifdef R64FX_DEBUG
+    assert(pos.x() >= 0);
+    assert(pos.y() >= 0);
+#endif//R64FX_DEBUG
 }
 
 }//namespace r64fx
