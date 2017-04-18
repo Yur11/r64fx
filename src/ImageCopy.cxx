@@ -279,21 +279,43 @@ template<> inline int flipval<true>(int val, int size)
 }
 
 
+template<bool> inline int secondval(int first, int)
+{
+    return first;
+}
+
+template<> inline int secondval<true>(int, int second)
+{
+    return second;
+}
+
+
 template<unsigned int ImgCopyType> struct CopyFun{
     void operator()(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags pixop)
     {
-        RectIntersection<int> src_isec({0, 0, src.img->width(), src.img->height()}, src.rect);
-        RectIntersection<int> dst_isec({0, 0, dst.img->width(), dst.img->height()}, {dst.pos.x(), dst.pos.y(), src_isec.width(), src_isec.height()});
+        constexpr bool transpose = false;
+        int srcw = secondval<transpose>(src.rect.width(), src.rect.height());
+        int srch = secondval<transpose>(src.rect.height(), src.rect.width());
+
+        RectIntersection<int> isec({0, 0, dst.img->width(), dst.img->height()}, {dst.pos.x(), dst.pos.y(), srcw, srch});
 
         UnpackPixopChanShuf shuf(pixop.bits(), dst.img, src.img);
-        for(int y=0; y<dst_isec.height(); y++)
+        for(int y=0; y<isec.height(); y++)
         {
-            int yy = flipval<false>(y, dst_isec.height());
-            for(int x=0; x<dst_isec.width(); x++)
+            int fy = flipval<false>(y, srch);
+            int srcy = fy + isec.srcy() + src.rect.y();
+            for(int x=0; x<isec.width(); x++)
             {
-                int xx = flipval<false>(x, dst_isec.width());
-                auto dstpx = dst.img->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
-                auto srcpx = src.img->pixel(xx + dst_isec.srcx() + src_isec.dstx(), yy + dst_isec.srcy() + src_isec.dsty());
+                int fx = flipval<false>(x, srcw);
+                int srcx = fx + isec.srcx() + src.rect.x();
+                auto srcpx = src.img->pixel(
+                    secondval<transpose>(srcx, srcy),
+                    secondval<transpose>(srcy, srcx)
+                );
+
+                auto dstpx = dst.img->pixel(
+                    x + isec.dstx(), y + isec.dsty()
+                );
                 shuf_components<ImgCopyType>(shuf, dstpx, srcpx);
             }
         }
