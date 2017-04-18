@@ -1,21 +1,21 @@
 /* To be included in ImageUtils.cpp */
 
-#define R64FX_IMGOP_SHUF_MASK           0x000000FF
+#define R64FX_IMGOP_SHUF_MASK           0x0000FF00
 
-#define R64FX_IMGOP_FLIP_MASK           0x00003800
-#define R64FX_IMGOP_FLIP_VERT           0x00000800
-#define R64FX_IMGOP_FLIP_HORI           0x00001000
-#define R64FX_IMGOP_FLIP_DIAG           0x00002000
-
-#define R64FX_IMGOP_TYPE_MASK           0x00000700
+#define R64FX_IMGOP_TYPE_MASK           0x00000007
 #define R64FX_IMGOP_REPLACE             0x00000000
-#define R64FX_IMGOP_ADD                 0x00000100
-#define R64FX_IMGOP_SUB                 0x00000200
-#define R64FX_IMGOP_MUL                 0x00000300
-#define R64FX_IMGOP_MIN                 0x00000400
-#define R64FX_IMGOP_MAX                 0x00000500
-#define R64FX_IMGOP_SRC_ALPHA           0x00000600
-#define R64FX_IMGOP_SRC_ALPHA_ACCURATE  0x00000700
+#define R64FX_IMGOP_ADD                 0x00000001
+#define R64FX_IMGOP_SUB                 0x00000002
+#define R64FX_IMGOP_MUL                 0x00000003
+#define R64FX_IMGOP_MIN                 0x00000004
+#define R64FX_IMGOP_MAX                 0x00000005
+#define R64FX_IMGOP_SRC_ALPHA           0x00000006
+#define R64FX_IMGOP_SRC_ALPHA_ACCURATE  0x00000007
+
+#define R64FX_IMGOP_FLIP_MASK           0x00000038
+#define R64FX_IMGOP_FLIP_VERT           0x00000008
+#define R64FX_IMGOP_FLIP_HORI           0x00000010
+#define R64FX_IMGOP_FLIP_DIAG           0x00000020
 
 #define R64FX_IMGOP_SWITCH_MASK (R64FX_IMGOP_FLIP_MASK | R64FX_IMGOP_TYPE_MASK)
 
@@ -51,7 +51,7 @@ ImgCopyFlags ChanShuf(int dstc, int ndstc, int srcc, int nsrcc)
         assert(nsrcc == ndstc);
     }
 #endif//R64FX_DEBUG
-    return  dstc | (ndstc << 2) | (srcc << 4) | (nsrcc << 6);
+    return  (dstc << 8) | (ndstc << 10) | (srcc << 12) | (nsrcc << 14);
 }
 
 struct UnpackPixopChanShuf{
@@ -62,10 +62,10 @@ struct UnpackPixopChanShuf{
         bits &= R64FX_IMGOP_SHUF_MASK;
         if(bits)
         {
-            dstc   = (bits & 3);
-            ndstc  = (bits & (3 << 2)) >> 2;
-            srcc   = (bits & (3 << 4)) >> 4;
-            nsrcc  = (bits & (3 << 6)) >> 6;
+            dstc   = (bits & (3 << 8))  >> 8;
+            ndstc  = (bits & (3 << 10)) >> 10;
+            srcc   = (bits & (3 << 12)) >> 12;
+            nsrcc  = (bits & (3 << 14)) >> 14;
         }
         else
         {
@@ -335,73 +335,73 @@ void copy(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags flags)
 
     switch(flags.bits() & R64FX_IMGOP_SWITCH_MASK)
     {
-        R64FX_IMGOP_OPTION(0x0000);
-        R64FX_IMGOP_OPTION(0x0100);
-        R64FX_IMGOP_OPTION(0x0200);
-        R64FX_IMGOP_OPTION(0x0300);
-        R64FX_IMGOP_OPTION(0x0400);
-        R64FX_IMGOP_OPTION(0x0500);
-        R64FX_IMGOP_OPTION(0x0600);
-        R64FX_IMGOP_OPTION(0x0700);
-        R64FX_IMGOP_OPTION(0x0800);
-        R64FX_IMGOP_OPTION(0x0900);
-        R64FX_IMGOP_OPTION(0x0A00);
-        R64FX_IMGOP_OPTION(0x0B00);
-        R64FX_IMGOP_OPTION(0x0C00);
-        R64FX_IMGOP_OPTION(0x0D00);
-        R64FX_IMGOP_OPTION(0x0E00);
-        R64FX_IMGOP_OPTION(0x0F00);
+        R64FX_IMGOP_OPTION(0x00);
+        R64FX_IMGOP_OPTION(0x01);
+        R64FX_IMGOP_OPTION(0x02);
+        R64FX_IMGOP_OPTION(0x03);
+        R64FX_IMGOP_OPTION(0x04);
+        R64FX_IMGOP_OPTION(0x05);
+        R64FX_IMGOP_OPTION(0x06);
+        R64FX_IMGOP_OPTION(0x07);
+        R64FX_IMGOP_OPTION(0x08);
+        R64FX_IMGOP_OPTION(0x09);
+        R64FX_IMGOP_OPTION(0x0A);
+        R64FX_IMGOP_OPTION(0x0B);
+        R64FX_IMGOP_OPTION(0x0C);
+        R64FX_IMGOP_OPTION(0x0D);
+        R64FX_IMGOP_OPTION(0x0E);
+        R64FX_IMGOP_OPTION(0x0F);
 
-        R64FX_IMGOP_OPTION(0x1000);
-        R64FX_IMGOP_OPTION(0x1100);
-        R64FX_IMGOP_OPTION(0x1200);
-        R64FX_IMGOP_OPTION(0x1300);
-        R64FX_IMGOP_OPTION(0x1400);
-        R64FX_IMGOP_OPTION(0x1500);
-        R64FX_IMGOP_OPTION(0x1600);
-        R64FX_IMGOP_OPTION(0x1700);
-        R64FX_IMGOP_OPTION(0x1800);
-        R64FX_IMGOP_OPTION(0x1900);
-        R64FX_IMGOP_OPTION(0x1A00);
-        R64FX_IMGOP_OPTION(0x1B00);
-        R64FX_IMGOP_OPTION(0x1C00);
-        R64FX_IMGOP_OPTION(0x1D00);
-        R64FX_IMGOP_OPTION(0x1E00);
-        R64FX_IMGOP_OPTION(0x1F00);
+        R64FX_IMGOP_OPTION(0x10);
+        R64FX_IMGOP_OPTION(0x11);
+        R64FX_IMGOP_OPTION(0x12);
+        R64FX_IMGOP_OPTION(0x13);
+        R64FX_IMGOP_OPTION(0x14);
+        R64FX_IMGOP_OPTION(0x15);
+        R64FX_IMGOP_OPTION(0x16);
+        R64FX_IMGOP_OPTION(0x17);
+        R64FX_IMGOP_OPTION(0x18);
+        R64FX_IMGOP_OPTION(0x19);
+        R64FX_IMGOP_OPTION(0x1A);
+        R64FX_IMGOP_OPTION(0x1B);
+        R64FX_IMGOP_OPTION(0x1C);
+        R64FX_IMGOP_OPTION(0x1D);
+        R64FX_IMGOP_OPTION(0x1E);
+        R64FX_IMGOP_OPTION(0x1F);
 
-        R64FX_IMGOP_OPTION(0x2000);
-        R64FX_IMGOP_OPTION(0x2100);
-        R64FX_IMGOP_OPTION(0x2200);
-        R64FX_IMGOP_OPTION(0x2300);
-        R64FX_IMGOP_OPTION(0x2400);
-        R64FX_IMGOP_OPTION(0x2500);
-        R64FX_IMGOP_OPTION(0x2600);
-        R64FX_IMGOP_OPTION(0x2700);
-        R64FX_IMGOP_OPTION(0x2800);
-        R64FX_IMGOP_OPTION(0x2900);
-        R64FX_IMGOP_OPTION(0x2A00);
-        R64FX_IMGOP_OPTION(0x2B00);
-        R64FX_IMGOP_OPTION(0x2C00);
-        R64FX_IMGOP_OPTION(0x2D00);
-        R64FX_IMGOP_OPTION(0x2E00);
-        R64FX_IMGOP_OPTION(0x2F00);
+        R64FX_IMGOP_OPTION(0x20);
+        R64FX_IMGOP_OPTION(0x21);
+        R64FX_IMGOP_OPTION(0x22);
+        R64FX_IMGOP_OPTION(0x23);
+        R64FX_IMGOP_OPTION(0x24);
+        R64FX_IMGOP_OPTION(0x25);
+        R64FX_IMGOP_OPTION(0x26);
+        R64FX_IMGOP_OPTION(0x27);
+        R64FX_IMGOP_OPTION(0x28);
+        R64FX_IMGOP_OPTION(0x29);
+        R64FX_IMGOP_OPTION(0x2A);
+        R64FX_IMGOP_OPTION(0x2B);
+        R64FX_IMGOP_OPTION(0x2C);
+        R64FX_IMGOP_OPTION(0x2D);
+        R64FX_IMGOP_OPTION(0x2E);
+        R64FX_IMGOP_OPTION(0x2F);
 
-        R64FX_IMGOP_OPTION(0x3000);
-        R64FX_IMGOP_OPTION(0x3100);
-        R64FX_IMGOP_OPTION(0x3200);
-        R64FX_IMGOP_OPTION(0x3300);
-        R64FX_IMGOP_OPTION(0x3400);
-        R64FX_IMGOP_OPTION(0x3500);
-        R64FX_IMGOP_OPTION(0x3600);
-        R64FX_IMGOP_OPTION(0x3700);
-        R64FX_IMGOP_OPTION(0x3800);
-        R64FX_IMGOP_OPTION(0x3900);
-        R64FX_IMGOP_OPTION(0x3A00);
-        R64FX_IMGOP_OPTION(0x3B00);
-        R64FX_IMGOP_OPTION(0x3C00);
-        R64FX_IMGOP_OPTION(0x3D00);
-        R64FX_IMGOP_OPTION(0x3E00);
-        R64FX_IMGOP_OPTION(0x3F00);
+        R64FX_IMGOP_OPTION(0x30);
+        R64FX_IMGOP_OPTION(0x31);
+        R64FX_IMGOP_OPTION(0x32);
+        R64FX_IMGOP_OPTION(0x33);
+        R64FX_IMGOP_OPTION(0x34);
+        R64FX_IMGOP_OPTION(0x35);
+        R64FX_IMGOP_OPTION(0x36);
+        R64FX_IMGOP_OPTION(0x37);
+        R64FX_IMGOP_OPTION(0x38);
+        R64FX_IMGOP_OPTION(0x39);
+        R64FX_IMGOP_OPTION(0x3A);
+        R64FX_IMGOP_OPTION(0x3B);
+        R64FX_IMGOP_OPTION(0x3C);
+        R64FX_IMGOP_OPTION(0x3D);
+        R64FX_IMGOP_OPTION(0x3E);
+        R64FX_IMGOP_OPTION(0x3F);
 
         default:
         {
