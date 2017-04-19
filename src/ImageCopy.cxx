@@ -1,7 +1,5 @@
 /* To be included in ImageUtils.cpp */
 
-#define R64FX_IMGOP_SHUF_MASK           0x0000FF00
-
 #define R64FX_IMGOP_TYPE_MASK           0x00000007
 #define R64FX_IMGOP_REPLACE             0x00000000
 #define R64FX_IMGOP_ADD                 0x00000001
@@ -18,6 +16,8 @@
 #define R64FX_IMGOP_FLIP_DIAG           0x00000020
 
 #define R64FX_IMGOP_SWITCH_MASK (R64FX_IMGOP_FLIP_MASK | R64FX_IMGOP_TYPE_MASK)
+
+#define R64FX_IMGOP_SHUF_MASK           0x0000FF00
 
 namespace r64fx{
 

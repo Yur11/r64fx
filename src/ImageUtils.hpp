@@ -60,9 +60,9 @@ ImgCopyFlags ImgCopyBlendAlpha();
 ImgCopyFlags ImgCopyBlendAlphaAccurate();
 
 
-void copy(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags pixop = ImgCopyBlendAlpha());
+void copy(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags flags = ImgCopyBlendAlpha());
 
-void copy(const ImgRect &dst, Transformation2D<float> transform, Image* src, const ImgCopyFlags pixop = ImgCopyReplace());
+void copy(const ImgRect &dst, Transformation2D<float> transform, Image* src, const ImgCopyFlags flags = ImgCopyReplace());
 
 
 
@@ -85,7 +85,7 @@ void flip_vert(Image* img);
 
 void flip_hori(Image* img);
 
-void mirror_left2right(Image* img, ImgCopyFlags pixop = 0);
+void mirror_left2right(Image* img, ImgCopyFlags flags = 0);
 
 
 void invert(Image* dst, Image* src);

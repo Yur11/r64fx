@@ -78,10 +78,10 @@ public:
                       Top left corner.
                       Offset and clipping are applied.
      */
-    virtual void putImage(Image* image, Point<int> dst_pos) = 0;
+    virtual void putImage(Image* image, Point<int> dst_pos, unsigned int flags = 0) = 0;
 
     /**  */
-    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos) = 0;
+    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, unsigned int flags = 0) = 0;
 
     /* Blend multiple colors using multi-component alpha mask. */
     virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image) = 0;
