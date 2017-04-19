@@ -286,7 +286,7 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void putImage(Image* img, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)
     {
-        copy({window->image(), dst_pos + offset()}, img, ImgCopyFlags((flags & 7) << 3) | ImgCopyBlendAlpha());
+        copy({window->image(), dst_pos + offset()}, {img, src_rect}, ImgCopyFlags((flags & 7) << 3) | ImgCopyBlendAlpha());
     }
 
     virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)

@@ -47,9 +47,20 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
-    Widget_Knob::debugPaint(p, {10, 100}, 64);
-
     childrenPaintEvent(event);
+
+    Image img(64, 64, 3);
+    fill(&img, Color(255, 255, 255));
+    fill_circle(&img, 1, 2, Color(0, 0), {0, 0}, img.width());
+    fill({&img, {0,             0,              img.width()/2, img.height()/2}},  1, 1, 255);
+    fill({&img, {img.width()/2, img.height()/2, img.width()/2, img.height()/2}},  2, 1, 255);
+    fill({&img, {img.width()/2, 0,              img.width()/2, img.height()/2}},  Color(0, 255, 0));
+    fill({&img, {0,             img.height()/2, img.width()/2, img.height()/2}},  Color(0, 0, 255));
+
+    for(int i=0; i<8; i++)
+    {
+        p->putImage(&img, {30 + i * 80, 200}, {0, 0, 40, 40}, i);
+    }
 }
 
 
