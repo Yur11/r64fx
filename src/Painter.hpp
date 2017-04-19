@@ -2,17 +2,71 @@
 #define R64FX_PAINTER_HPP
 
 #include "Color.hpp"
+#include "Image.hpp"
 #include "Rect.hpp"
 #include "Offset.hpp"
 #include "Orientation.hpp"
 
 namespace r64fx{
 
-class Image;
+class Painter;
 class Window;
-class PainterTexture;
-class PainterTexture1D;
-class PainterTexture2D;
+
+class PainterTexture{
+protected:
+    virtual ~PainterTexture() {};
+
+public:
+    virtual Painter* parentPainter() = 0;
+
+    virtual bool isGood() = 0;
+
+    virtual int componentCount() = 0;
+
+    virtual void free() = 0;
+};
+
+
+class PainterTexture1D : public PainterTexture{
+protected:
+    virtual ~PainterTexture1D() {};
+
+public:
+    enum class Type{
+        UnsignedChar,
+        UnsignedShort,
+        UnsignedInt,
+        Float
+    };
+
+    virtual Type dataType() = 0;
+
+    virtual int length() = 0;
+
+    virtual void load(unsigned char*   data, int length, int component_count) = 0;
+
+    virtual void load(unsigned short*  data, int length, int component_count) = 0;
+
+    virtual void load(unsigned int*    data, int length, int component_count) = 0;
+
+    virtual void load(float* data, int length, int component_count) = 0;
+};
+
+
+class PainterTexture2D : public PainterTexture{
+protected:
+    virtual ~PainterTexture2D() {};
+
+public:
+    virtual Point<int> position() = 0;
+
+    virtual Size<int> size() = 0;
+
+    virtual void loadImage(Image* teximg) = 0;
+
+    virtual void readImage(Image* teximg) = 0;
+};
+
 
 
 class PainterTextureManager{
@@ -78,10 +132,20 @@ public:
                       Top left corner.
                       Offset and clipping are applied.
      */
-    virtual void putImage(Image* image, Point<int> dst_pos, unsigned int flags = 0) = 0;
+    virtual void putImage(Image* image, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags = 0) = 0;
+
+    inline void putImage(Image* image, Point<int> dst_pos, unsigned int flags = 0)
+    {
+        putImage(image, dst_pos, {0, 0, image->width(), image->height()}, flags);
+    }
 
     /**  */
-    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, unsigned int flags = 0) = 0;
+    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags = 0) = 0;
+
+    inline void putImage(PainterTexture2D* texture, Point<int> dst_pos, unsigned int flags = 0)
+    {
+        putImage(texture, dst_pos, {{0, 0}, texture->size()}, flags);
+    }
 
     /* Blend multiple colors using multi-component alpha mask. */
     virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image) = 0;
@@ -114,62 +178,6 @@ public:
     /* Allways call this before any other paint commands
      * if the window has been resized. */
     virtual void adjustForWindowSize() = 0;
-};
-
-
-class PainterTexture{
-protected:
-    virtual ~PainterTexture() {};
-
-public:
-    virtual Painter* parentPainter() = 0;
-
-    virtual bool isGood() = 0;
-
-    virtual int componentCount() = 0;
-
-    virtual void free() = 0;
-};
-
-
-class PainterTexture1D : public PainterTexture{
-protected:
-    virtual ~PainterTexture1D() {};
-
-public:
-    enum class Type{
-        UnsignedChar,
-        UnsignedShort,
-        UnsignedInt,
-        Float
-    };
-
-    virtual Type dataType() = 0;
-
-    virtual int length() = 0;
-
-    virtual void load(unsigned char*   data, int length, int component_count) = 0;
-
-    virtual void load(unsigned short*  data, int length, int component_count) = 0;
-
-    virtual void load(unsigned int*    data, int length, int component_count) = 0;
-
-    virtual void load(float* data, int length, int component_count) = 0;
-};
-
-
-class PainterTexture2D : public PainterTexture{
-protected:
-    virtual ~PainterTexture2D() {};
-
-public:
-    virtual Point<int> position() = 0;
-
-    virtual Size<int> size() = 0;
-
-    virtual void loadImage(Image* teximg) = 0;
-
-    virtual void readImage(Image* teximg) = 0;
 };
 
 }//namespace r64fx
