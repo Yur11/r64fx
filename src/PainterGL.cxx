@@ -207,11 +207,22 @@ struct PainterImplGL : public PainterImpl{
         assert(texture->parentPainter() == this);
 #endif//R64FX_DEBUG
 
+        auto texture_size = texture->size();
+#ifdef R64FX_DEBUG
+        assert(src_rect.x() >= 0);
+        assert(src_rect.y() >= 0);
+        assert(src_rect.width() <= texture_size.width());
+        assert(src_rect.height() <= texture_size.height());
+#endif//R64FX_DEBUG
+
         auto tex = static_cast<PainterTexture2DImplGL*>(texture);
+
+        int srcw = (flags & 4 ? src_rect.height() : src_rect.width());
+        int srch = (flags & 4 ? src_rect.width() : src_rect.height());
 
         RectIntersection<int> intersection(
             current_clip_rect,
-            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), tex->width(), tex->height()}
+            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), srcw, srch}
         );
 
         if(intersection.width() > 0 && intersection.height() > 0)
@@ -224,11 +235,17 @@ struct PainterImplGL : public PainterImpl{
 
             setTexture2D(tex);
 
+            auto left    = intersection.srcx() + src_rect.x();
+            auto top     = intersection.srcy() + src_rect.y();
+            auto right   = intersection.srcx() + intersection.width();
+            auto bottom  = intersection.srcy() + intersection.height();
+
             m_uber_rect.setTexCoords(
-                intersection.srcx(),
-                intersection.srcy(),
-                intersection.srcx() + intersection.width(),
-                intersection.srcy() + intersection.height()
+                (flags & 2 ? right : left),
+                (flags & 1 ? bottom : top),
+                (flags & 2 ? left : right),
+                (flags & 1 ? top : bottom),
+                (flags & 4)
             );
             m_uber_rect.draw();
         }

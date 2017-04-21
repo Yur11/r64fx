@@ -32,21 +32,21 @@ public:
         g_PainterShader_Common->bindTexCoordAttr(GL_SHORT, GL_FALSE, 0, 16);
     }
 
-    void setTexCoords(short left, short top, short right, short bottom)
+    void setTexCoords(short left, short top, short right, short bottom, bool transpose = false)
     {
         short buff[8];
 
         buff[0] = left;
         buff[1] = top;
 
-        buff[2] = right;
-        buff[3] = top;
+        buff[2 + (transpose ? 4 : 0)] = right;
+        buff[3 + (transpose ? 4 : 0)] = top;
 
         buff[4] = right;
         buff[5] = bottom;
 
-        buff[6] = left;
-        buff[7] = bottom;
+        buff[6 - (transpose ? 4 : 0)] = left;
+        buff[7 - (transpose ? 4 : 0)] = bottom;
 
         gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
         gl::BufferSubData(GL_ARRAY_BUFFER, 16, 16, buff);
