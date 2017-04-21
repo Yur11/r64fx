@@ -195,13 +195,13 @@ struct PainterImplGL : public PainterImpl{
         }
     }
 
-    virtual void putImage(Image* img, Point<int> dst_pos)
+    virtual void putImage(Image* image, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)
     {
-        m_spare_2d_texture.loadImage(img);
-        PainterImplGL::putImage(&m_spare_2d_texture, dst_pos);
+        m_spare_2d_texture.loadImage(image);
+        PainterImplGL::putImage(&m_spare_2d_texture, dst_pos, src_rect, flags);
     }
 
-    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos)
+    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)
     {
 #ifdef R64FX_DEBUG
         assert(texture->parentPainter() == this);
@@ -225,10 +225,10 @@ struct PainterImplGL : public PainterImpl{
             setTexture2D(tex);
 
             m_uber_rect.setTexCoords(
-                intersection.srcx() * tex->wrcp(),
-                intersection.srcy() * tex->hrcp(),
-                (intersection.srcx() + intersection.width())  * tex->wrcp(),
-                (intersection.srcy() + intersection.height()) * tex->hrcp()
+                intersection.srcx(),
+                intersection.srcy(),
+                intersection.srcx() + intersection.width(),
+                intersection.srcy() + intersection.height()
             );
             m_uber_rect.draw();
         }
@@ -262,10 +262,10 @@ struct PainterImplGL : public PainterImpl{
             setTexture2D(mask_tex);
 
             m_uber_rect.setTexCoords(
-                intersection.srcx() * mask_tex->wrcp(),
-                intersection.srcy() * mask_tex->hrcp(),
-                (intersection.srcx() + intersection.width())  * mask_tex->wrcp(),
-                (intersection.srcy() + intersection.height()) * mask_tex->hrcp()
+                intersection.srcx(),
+                intersection.srcy(),
+                intersection.srcx() + intersection.width(),
+                intersection.srcy() + intersection.height()
             );
 
             for(int c=0; c<mask_tex->componentCount(); c++)
@@ -277,7 +277,6 @@ struct PainterImplGL : public PainterImpl{
                     float(colors[c][2]) * rcp255,
                     float(colors[c][3]) * rcp255
                 );
-
                 m_uber_rect.draw();
             }
         }
@@ -338,14 +337,11 @@ struct PainterImplGL : public PainterImpl{
 
             setTexture1D(waveform_tex);
 
-            float wrcp = waveform_tex->lengthRcp();
-            float hrcp = 1.0f / float(rect.height());
-
             m_uber_rect.setTexCoords(
-                intersection.srcx() * wrcp,
-                intersection.srcy() * hrcp,
-                (intersection.srcx() + intersection.width())  * wrcp,
-                (intersection.srcy() + intersection.height()) * hrcp
+                intersection.srcx(),
+                intersection.srcy(),
+                intersection.srcx() + intersection.width(),
+                intersection.srcy() + intersection.height()
             );
 
             m_uber_rect.draw();

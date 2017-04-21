@@ -17,7 +17,7 @@ public:
 
     void cleanup();
 
-    void setRect(float left, float top, float right, float bottom);
+    void setRect(short left, short top, short right, short bottom);
 
     void draw();
 };
@@ -27,14 +27,14 @@ class PainterVertexArray_CommonRect : public PainterVertexArray{
 public:
     void init()
     {
-        PainterVertexArray::init(64);
-        g_PainterShader_Common->bindPositionAttr(GL_FLOAT, GL_FALSE, 0, 0);
-        g_PainterShader_Common->bindTexCoordAttr(GL_FLOAT, GL_FALSE, 0, 32);
+        PainterVertexArray::init(32);
+        g_PainterShader_Common->bindPositionAttr(GL_SHORT, GL_FALSE, 0, 0);
+        g_PainterShader_Common->bindTexCoordAttr(GL_SHORT, GL_FALSE, 0, 16);
     }
 
-    void setTexCoords(float left, float top, float right, float bottom)
+    void setTexCoords(short left, short top, short right, short bottom)
     {
-        float buff[8];
+        short buff[8];
 
         buff[0] = left;
         buff[1] = top;
@@ -49,7 +49,7 @@ public:
         buff[7] = bottom;
 
         gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        gl::BufferSubData(GL_ARRAY_BUFFER, 32, 32, buff);
+        gl::BufferSubData(GL_ARRAY_BUFFER, 16, 16, buff);
     }
 };
 

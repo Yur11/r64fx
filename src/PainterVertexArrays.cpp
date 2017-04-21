@@ -18,9 +18,9 @@ void PainterVertexArray::cleanup()
     gl::DeleteBuffers(1, &m_vbo);
 }
 
-void PainterVertexArray::setRect(float left, float top, float right, float bottom)
+void PainterVertexArray::setRect(short left, short top, short right, short bottom)
 {
-    float buff[8];
+    short buff[8];
 
     buff[0] = left;
     buff[1] = top;
@@ -35,7 +35,7 @@ void PainterVertexArray::setRect(float left, float top, float right, float botto
     buff[7] = bottom;
 
     gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
-    gl::BufferSubData(GL_ARRAY_BUFFER, 0, 32, buff);
+    gl::BufferSubData(GL_ARRAY_BUFFER, 0, 16, buff);
 }
 
 void PainterVertexArray::draw()
