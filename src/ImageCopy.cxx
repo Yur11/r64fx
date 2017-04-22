@@ -281,37 +281,28 @@ template<> inline int flipval<true>(int val, int size)
 }
 
 
-template<bool> inline int secondval(int first, int)
-{
-    return first;
-}
-
-template<> inline int secondval<true>(int, int second)
-{
-    return second;
-}
-
-
 template<unsigned int Flags> struct CopyFun{
     void operator()(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags flags)
     {
-        int srcw = secondval<Flags & R64FX_IMGOP_FLIP_DIAG>(src.rect.width(), src.rect.height());
-        int srch = secondval<Flags & R64FX_IMGOP_FLIP_DIAG>(src.rect.height(), src.rect.width());
+        int srcw = (Flags & R64FX_IMGOP_FLIP_DIAG ? src.rect.height() : src.rect.width());
+        int srch = (Flags & R64FX_IMGOP_FLIP_DIAG ? src.rect.width() : src.rect.height());
+        const int flip_vert_mask = (Flags & R64FX_IMGOP_FLIP_DIAG ? R64FX_IMGOP_FLIP_HORI : R64FX_IMGOP_FLIP_VERT);
+        const int flip_hori_mask = (Flags & R64FX_IMGOP_FLIP_DIAG ? R64FX_IMGOP_FLIP_VERT : R64FX_IMGOP_FLIP_HORI);
 
         RectIntersection<int> isec({0, 0, dst.img->width(), dst.img->height()}, {dst.pos.x(), dst.pos.y(), srcw, srch});
 
         UnpackPixopChanShuf shuf(flags.bits(), dst.img, src.img);
         for(int y=0; y<isec.height(); y++)
         {
-            int fy = flipval<Flags & R64FX_IMGOP_FLIP_VERT>(y, srch);
+            int fy = flipval<Flags & flip_vert_mask>(y, srch);
             int srcy = fy + isec.srcy() + src.rect.y();
             for(int x=0; x<isec.width(); x++)
             {
-                int fx = flipval<Flags & R64FX_IMGOP_FLIP_HORI>(x, srcw);
+                int fx = flipval<Flags & flip_hori_mask>(x, srcw);
                 int srcx = fx + isec.srcx() + src.rect.x();
                 auto srcpx = src.img->pixel(
-                    secondval<Flags & R64FX_IMGOP_FLIP_DIAG>(srcx, srcy),
-                    secondval<Flags & R64FX_IMGOP_FLIP_DIAG>(srcy, srcx)
+                    (Flags & R64FX_IMGOP_FLIP_DIAG ? srcy : srcx),
+                    (Flags & R64FX_IMGOP_FLIP_DIAG ? srcx : srcy)
                 );
 
                 auto dstpx = dst.img->pixel(
