@@ -4,11 +4,18 @@
 #include "ImageUtils.hpp"
 #include "WidgetFlags.hpp"
 #include <cmath>
+#include <algorithm>
 
 #include <iostream>
 using namespace std;
 
 namespace r64fx{
+
+namespace{
+
+float g_2pi_rcp = 0.5f / M_PI;
+
+}//namespace
 
 Font* g_knob_font = nullptr;
 
@@ -22,7 +29,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     Image           m_image;
     Image           m_marker;
     Image           m_marker_frames;
-    Rect<short>     m_marker_frame_coords[32];
+    short*          m_marker_coords = nullptr;
     float           m_cut_angle = 0.0f;
 
     KnobAnimation(KnobStyle style, int size, int frame_count)
@@ -33,7 +40,12 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     , m_marker(size, size, 2)
     {
         genKnob(&m_image, {0, 0});
-//         genMarkerFrames();
+        genMarkerFrames();
+    }
+
+    ~KnobAnimation()
+    {
+        freeMarkerFrames();
     }
 
     void genKnob(Image* dst, Point<int> dstpos)
@@ -55,6 +67,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         fill(&m_marker, Color(0, 255));
         fill({&m_marker, {m_size/2 - 2, 7, 4, m_size/2 - 7}}, Color(0, 127));
         fill({&m_marker, {m_size/2 - 1, 8, 2, m_size/2 - 9}}, Color(255, 31));
+        fill({&m_marker, {m_size/2 - 2, 12, 4, 1}}, Color(0, 0));
         for(int i=0; i<4; i++)
         {
             fill({&m_marker, {m_size/2 - 1, 7 + i, 2, 1}}, 1, 1, 191 - 24 * i);
@@ -180,6 +193,95 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         copy(dst, t, &m_marker, ChanShuf(0, 2, 0, 2));
     }
 
+    void genMarkerFrames()
+    {
+#ifdef R64FX_DEBUG
+        assert(m_frame_count == 64);
+#endif//R64FX_DEBUG
+
+        m_marker_coords = new short[m_frame_count * 4 + 1];
+
+        m_marker_frames.load((m_size)*(m_frame_count/2), m_size, 2);
+        fill(&m_marker_frames, Color(0, 255));
+        float ang_coeff = (M_PI * 0.5) / m_frame_count;
+        int x = 0;
+        for(int i=0; i<m_frame_count; i++)
+        {
+            Image frame(m_size, m_size, 2);
+            genMarker(&frame, {0, 0}, (float(i) * ang_coeff));
+            auto rect = fit_content(&frame, Color(0, 255));
+            copy({&m_marker_frames, {x, 0}}, {&frame, rect}, ImgCopyReplace());
+            m_marker_coords[i*4 + 0] = x;
+            m_marker_coords[i*4 + 1] = rect.height();
+            m_marker_coords[i*4 + 2] = rect.x();
+            m_marker_coords[i*4 + 3] = rect.y();
+            x += rect.width();
+        }
+        m_marker_coords[m_frame_count*4] = x;
+    }
+
+    void freeMarkerFrames()
+    {
+        delete m_marker_coords;
+    }
+
+    bool angle2frame(float in_angle, Point<int> &out_dst_pos, Rect<int> &out_src_rect, int &out_flags)
+    {
+        int n = (256 + 128) - ((in_angle + M_PI) * g_2pi_rcp) * (m_frame_count << 2);
+        int m = (n >> 6) & 3;
+        n &= 63;
+
+        cout << "frame: " << n << " : " << m << "\n";
+
+        int dstx = m_marker_coords[n*4 + 2];
+        int dsty = m_marker_coords[n*4 + 3];
+
+        int srcx = m_marker_coords[n*4];
+        int srcy = 0;
+
+        int srcw = m_marker_coords[n*4 + 4] - m_marker_coords[n*4];
+        int srch = m_marker_coords[n*4 + 1];
+
+        switch(m)
+        {
+            case 0:
+            {
+                out_dst_pos = {dstx, dsty};
+                out_src_rect = {srcx, srcy, srcw, srch};
+                out_flags = 0;
+                return true;
+            }
+
+            case 1:
+            {
+                out_dst_pos = {dsty, m_size - srcw - dstx};
+                out_src_rect = {srcx, srcy, srcw, srch};
+                out_flags = 1 | 4;
+                return true;
+            }
+
+
+            case 2:
+            {
+                out_dst_pos = {m_size - srcw - dstx, m_size - srch - dsty};
+                out_src_rect = {srcx, srcy, srcw, srch};
+                out_flags = 1 | 2;
+                return true;
+            }
+
+            case 3:
+            {
+                out_dst_pos = {m_size - srch - dsty, dstx};
+                out_src_rect = {srcx, srcy, srcw, srch};
+                out_flags = 2 | 4;
+                return true;
+            }
+
+            default:
+                return false;
+        }
+    }
+
 public:
     KnobStyle  style()       const { return m_style; }
     int        size()        const { return m_size; }
@@ -188,9 +290,18 @@ public:
     void paint(Painter* painter, float angle)
     {
         painter->putImage(&m_image, {0, 0});
-        Image marker(m_size, m_size, 2);
-        genMarker(&marker, {0, 0}, -angle);
-        painter->putImage(&marker, {0, 0});
+
+//         Image marker(m_size, m_size, 2);
+//         genMarker(&marker, {0, 0}, -angle);
+//         painter->putImage(&marker, {0, 0});
+
+        Point<int> dst_pos;
+        Rect<int> src_rect;
+        int flags = 0;
+        if(angle2frame(angle, dst_pos, src_rect, flags))
+        {
+            painter->putImage(&m_marker_frames, dst_pos, src_rect, flags);
+        }
     }
 
     static KnobAnimation* getAnimation(KnobStyle style, int size)
@@ -207,7 +318,7 @@ public:
 
         if(!anim)
         {
-            anim = new KnobAnimation(style, size, 256);
+            anim = new KnobAnimation(style, size, 64);
             knob_animations.append(anim);
         }
         anim->m_user_count++;
@@ -226,7 +337,7 @@ public:
 
     void debugPaint(Painter* painter, Point<int> position)
     {
-//         painter->putImage(&m_marker_frames, position);
+        painter->putImage(&m_marker_frames, position);
     }
 
     float markerAngle(float value, float minval, float maxval)

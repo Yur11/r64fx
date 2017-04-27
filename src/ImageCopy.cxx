@@ -284,8 +284,16 @@ template<> inline int flipval<true>(int val, int size)
 template<unsigned int Flags> struct CopyFun{
     void operator()(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags flags)
     {
+#ifdef R64FX_DEBUG
+        assert(src.rect.x() >= 0);
+        assert(src.rect.y() >= 0);
+#endif//R64FX_DEBUG
         int srcw = (Flags & R64FX_IMGOP_FLIP_DIAG ? src.rect.height() : src.rect.width());
         int srch = (Flags & R64FX_IMGOP_FLIP_DIAG ? src.rect.width() : src.rect.height());
+#ifdef R64FX_DEBUG
+        assert((src.rect.x() + srcw) <= src.img->width());
+        assert((src.rect.y() + srch) <= src.img->height());
+#endif//R64FX_DEBUG
         const int flip_vert_mask = (Flags & R64FX_IMGOP_FLIP_DIAG ? R64FX_IMGOP_FLIP_HORI : R64FX_IMGOP_FLIP_VERT);
         const int flip_hori_mask = (Flags & R64FX_IMGOP_FLIP_DIAG ? R64FX_IMGOP_FLIP_VERT : R64FX_IMGOP_FLIP_HORI);
 
