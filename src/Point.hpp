@@ -81,6 +81,8 @@ template<typename T> struct Point{
     }
 
     inline T* vec2() const { return vec; }
+
+    inline Point<T> transposed() const { return {y(), x()}; }
 };
 
 

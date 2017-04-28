@@ -34,6 +34,8 @@ public:
     }
 
     inline T* vec2() const { return vec; }
+
+    inline Size<T> transposed() const { return {height(), width()}; }
 };
 
 
