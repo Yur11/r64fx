@@ -198,6 +198,8 @@ public:
     inline Point<T>  srcOffset()  const { return m_src_offset; }
     inline T         srcx()       const { return m_src_offset.x(); }
     inline T         srcy()       const { return m_src_offset.y(); }
+
+    inline operator bool() const { return m_rect.width() > 0 && m_rect.height() > 0; }
 };
 
 }//namespace r64fx

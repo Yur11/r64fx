@@ -26,7 +26,7 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     for(int i=0; i<10; i++)
     {
         auto knob = new Widget_Knob(KnobStyle::Unipolar, 44 + i*4, this);
-        knob->setPosition({50 + (44 + i*4)*i, 50});
+        knob->setPosition({(44 + i*4)*i - 10, 50});
     }
 }
 
@@ -49,20 +49,20 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
     childrenPaintEvent(event);
 
-//     Image img(64, 64, 3);
-//     fill(&img, Color(255, 255, 255));
-//     fill_circle(&img, 1, 2, Color(0, 0), {0, 0}, img.width());
-//     fill({&img, {0,             0,              img.width()/2, img.height()/2}},  1, 1, 255);
-//     fill({&img, {img.width()/2, img.height()/2, img.width()/2, img.height()/2}},  2, 1, 255);
-//     fill({&img, {img.width()/2, 0,              img.width()/2, img.height()/2}},  Color(0, 255, 0));
-//     fill({&img, {0,             img.height()/2, img.width()/2, img.height()/2}},  Color(0, 0, 255));
-// 
-//     for(int i=0; i<8; i++)
-//     {
-//         p->putImage(&img, {30 + i * 80, 200}, {2, 12, 40, 40}, i);
-//     }
+    Image img(64, 64, 3);
+    fill(&img, Color(255, 255, 255));
+    fill_circle(&img, 1, 2, Color(0, 0), {0, 0}, img.width());
+    fill({&img, {0,             0,              img.width()/2, img.height()/2}},  1, 1, 255);
+    fill({&img, {img.width()/2, img.height()/2, img.width()/2, img.height()/2}},  2, 1, 255);
+    fill({&img, {img.width()/2, 0,              img.width()/2, img.height()/2}},  Color(0, 255, 0));
+    fill({&img, {0,             img.height()/2, img.width()/2, img.height()/2}},  Color(0, 0, 255));
 
-    Widget_Knob::debugPaint(p, {50, 150}, 60);
+    for(int i=0; i<8; i++)
+    {
+        p->putImage(&img, {30 + i * 80, 200}, {2, 12, 40, 40}, i);
+    }
+
+//     Widget_Knob::debugPaint(p, {50, 150}, 60);
 }
 
 

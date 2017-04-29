@@ -284,38 +284,44 @@ template<> inline int flipval<true>(int val, int size)
 template<unsigned int Flags> struct CopyFun{
     void operator()(const ImgPos &dst, const ImgRect &src, const ImgCopyFlags flags)
     {
-#ifdef R64FX_DEBUG
-        assert(src.rect.x() >= 0);
-        assert(src.rect.y() >= 0);
-#endif//R64FX_DEBUG
-        int srcw = (Flags & R64FX_IMGOP_FLIP_DIAG ? src.rect.height() : src.rect.width());
-        int srch = (Flags & R64FX_IMGOP_FLIP_DIAG ? src.rect.width() : src.rect.height());
-#ifdef R64FX_DEBUG
-        assert((src.rect.x() + srcw) <= src.img->width());
-        assert((src.rect.y() + srch) <= src.img->height());
-#endif//R64FX_DEBUG
+        Rect<int> dstrect(dst.pos, (Flags & R64FX_IMGOP_FLIP_DIAG) ? src.rect.size().transposed() : src.rect.size());
+        RectIntersection<int> isec({0, 0, dst.img->width(), dst.img->height()}, dstrect);
+        if(!isec)
+            return;
+
+        auto isec_size = (Flags & R64FX_IMGOP_FLIP_DIAG) ? isec.size().transposed() : isec.size();
+        int dw = src.rect.width() - isec_size.width();
+        int dh = src.rect.height() - isec_size.height();
+
+        auto src_offset = ((Flags & R64FX_IMGOP_FLIP_DIAG)? isec.srcOffset().transposed() : isec.srcOffset());
+
+        cout << "so: " << src_offset << " -> " << dw << "x" << dh << "\n";
+
         const int flip_vert_mask = (Flags & R64FX_IMGOP_FLIP_DIAG ? R64FX_IMGOP_FLIP_HORI : R64FX_IMGOP_FLIP_VERT);
         const int flip_hori_mask = (Flags & R64FX_IMGOP_FLIP_DIAG ? R64FX_IMGOP_FLIP_VERT : R64FX_IMGOP_FLIP_HORI);
-
-        RectIntersection<int> isec({0, 0, dst.img->width(), dst.img->height()}, {dst.pos.x(), dst.pos.y(), srcw, srch});
 
         UnpackPixopChanShuf shuf(flags.bits(), dst.img, src.img);
         for(int y=0; y<isec.height(); y++)
         {
-            int fy = flipval<Flags & flip_vert_mask>(y, srch);
-            int srcy = fy + isec.srcy() + src.rect.y();
             for(int x=0; x<isec.width(); x++)
             {
-                int fx = flipval<Flags & flip_hori_mask>(x, srcw);
-                int srcx = fx + isec.srcx() + src.rect.x();
-                auto srcpx = src.img->pixel(
-                    (Flags & R64FX_IMGOP_FLIP_DIAG ? srcy : srcx),
-                    (Flags & R64FX_IMGOP_FLIP_DIAG ? srcx : srcy)
-                );
+                int srcx = (Flags & R64FX_IMGOP_FLIP_DIAG) ? y : x;
+                int srcy = (Flags & R64FX_IMGOP_FLIP_DIAG) ? x : y;
+                srcx += src.rect.x();
+                srcy += src.rect.y();
+//                 srcx += src_offset.x();
+//                 srcy += src_offset.y();
+                if(Flags & flip_hori_mask || src_offset.x() > 0)
+                    srcx += dw;
+                if(Flags & flip_vert_mask || src_offset.y() > 0)
+                    srcy += dh;
+                auto srcpx = src.img->pixel(srcx, srcy);
 
-                auto dstpx = dst.img->pixel(
-                    x + isec.dstx(), y + isec.dsty()
-                );
+                auto dstpos = Point<int>(
+                    flipval<Flags & R64FX_IMGOP_FLIP_HORI>(x, isec.width()), 
+                    flipval<Flags & R64FX_IMGOP_FLIP_VERT>(y, isec.height())
+                ) + isec.dstOffset();
+                auto dstpx = dst.img->pixel(dstpos.x(), dstpos.y());
                 shuf_components<Flags & R64FX_IMGOP_TYPE_MASK>(shuf, dstpx, srcpx);
             }
         }

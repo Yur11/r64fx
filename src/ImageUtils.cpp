@@ -53,10 +53,10 @@ ImgPos::ImgPos(Image* img, const Point<int> &pos)
 : img(img)
 , pos(pos)
 {
-#ifdef R64FX_DEBUG
-    assert(pos.x() >= 0);
-    assert(pos.y() >= 0);
-#endif//R64FX_DEBUG
+// #ifdef R64FX_DEBUG
+//     assert(pos.x() >= 0);
+//     assert(pos.y() >= 0);
+// #endif//R64FX_DEBUG
 }
 
 }//namespace r64fx

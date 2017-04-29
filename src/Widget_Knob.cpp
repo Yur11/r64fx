@@ -260,7 +260,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
                 return true;
             }
 
-
             case 2:
             {
                 out_dst_pos = {m_size - srcw - dstx, m_size - srch - dsty};
