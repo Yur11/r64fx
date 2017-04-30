@@ -289,39 +289,35 @@ template<unsigned int Flags> struct CopyFun{
         if(!isec)
             return;
 
+        auto isec_src_offset = ((Flags & R64FX_IMGOP_FLIP_DIAG)? isec.srcOffset().transposed() : isec.srcOffset());
         auto isec_size = (Flags & R64FX_IMGOP_FLIP_DIAG) ? isec.size().transposed() : isec.size();
+
+        int src_offset_x = src.rect.x();
+        int src_offset_y = src.rect.y();
+
         int dw = src.rect.width() - isec_size.width();
         int dh = src.rect.height() - isec_size.height();
 
-        auto src_offset = ((Flags & R64FX_IMGOP_FLIP_DIAG)? isec.srcOffset().transposed() : isec.srcOffset());
-
-        cout << "so: " << src_offset << " -> " << dw << "x" << dh << "\n";
-
         const int flip_vert_mask = (Flags & R64FX_IMGOP_FLIP_DIAG ? R64FX_IMGOP_FLIP_HORI : R64FX_IMGOP_FLIP_VERT);
         const int flip_hori_mask = (Flags & R64FX_IMGOP_FLIP_DIAG ? R64FX_IMGOP_FLIP_VERT : R64FX_IMGOP_FLIP_HORI);
+        if(Flags & flip_hori_mask || isec_src_offset.x() > 0)
+            src_offset_x += dw;
+        if(Flags & flip_vert_mask || isec_src_offset.y() > 0)
+            src_offset_y += dh;
 
         UnpackPixopChanShuf shuf(flags.bits(), dst.img, src.img);
         for(int y=0; y<isec.height(); y++)
         {
             for(int x=0; x<isec.width(); x++)
             {
-                int srcx = (Flags & R64FX_IMGOP_FLIP_DIAG) ? y : x;
-                int srcy = (Flags & R64FX_IMGOP_FLIP_DIAG) ? x : y;
-                srcx += src.rect.x();
-                srcy += src.rect.y();
-//                 srcx += src_offset.x();
-//                 srcy += src_offset.y();
-                if(Flags & flip_hori_mask || src_offset.x() > 0)
-                    srcx += dw;
-                if(Flags & flip_vert_mask || src_offset.y() > 0)
-                    srcy += dh;
+                int srcx = ((Flags & R64FX_IMGOP_FLIP_DIAG) ? y : x) + src_offset_x;
+                int srcy = ((Flags & R64FX_IMGOP_FLIP_DIAG) ? x : y) + src_offset_y;
                 auto srcpx = src.img->pixel(srcx, srcy);
 
-                auto dstpos = Point<int>(
-                    flipval<Flags & R64FX_IMGOP_FLIP_HORI>(x, isec.width()), 
-                    flipval<Flags & R64FX_IMGOP_FLIP_VERT>(y, isec.height())
-                ) + isec.dstOffset();
-                auto dstpx = dst.img->pixel(dstpos.x(), dstpos.y());
+                int dstx = flipval<Flags & R64FX_IMGOP_FLIP_HORI>(x, isec.width()) + isec.dstx();
+                int dsty = flipval<Flags & R64FX_IMGOP_FLIP_VERT>(y, isec.height()) + isec.dsty();
+                auto dstpx = dst.img->pixel(dstx, dsty);
+
                 shuf_components<Flags & R64FX_IMGOP_TYPE_MASK>(shuf, dstpx, srcpx);
             }
         }
