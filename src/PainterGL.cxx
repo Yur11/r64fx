@@ -215,40 +215,62 @@ struct PainterImplGL : public PainterImpl{
         assert(src_rect.height() <= texture_size.height());
 #endif//R64FX_DEBUG
 
-        auto tex = static_cast<PainterTexture2DImplGL*>(texture);
+        Rect<int> dstrect(dst_pos + offset(), (flags & 4) ? src_rect.size().transposed() : src_rect.size());
+        RectIntersection<int> isec(current_clip_rect, dstrect);
+        if(!isec)
+            return;
 
-        int srcw = (flags & 4 ? src_rect.height() : src_rect.width());
-        int srch = (flags & 4 ? src_rect.width() : src_rect.height());
+        auto isec_src_offset = ((flags & 4)? isec.srcOffset().transposed() : isec.srcOffset());
+        auto isec_size = (flags & 4) ? isec.size().transposed() : isec.size();
 
-        RectIntersection<int> intersection(
-            current_clip_rect,
-            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), srcw, srch}
-        );
+        int src_offset_x = src_rect.x();
+        int src_offset_y = src_rect.y();
 
-        if(intersection.width() > 0 && intersection.height() > 0)
-        {
-            setScaleAndShift(
-                g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
-            );
+        int dw = src_rect.width() - isec_size.width();
+        int dh = src_rect.height() - isec_size.height();
 
-            g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
+        const int flip_vert_mask = (flags & 4 ? 2 : 1);
+        const int flip_hori_mask = (flags & 4 ? 1 : 2);
+        if(flags & flip_hori_mask || isec_src_offset.x() > 0)
+            src_offset_x += dw;
+        if(flags & flip_vert_mask || isec_src_offset.y() > 0)
+            src_offset_y += dh;
 
-            setTexture2D(tex);
-
-            auto left    = intersection.srcx() + src_rect.x();
-            auto top     = intersection.srcy() + src_rect.y();
-            auto right   = intersection.srcx() + intersection.width();
-            auto bottom  = intersection.srcy() + intersection.height();
-
-            m_uber_rect.setTexCoords(
-                (flags & 2 ? right : left),
-                (flags & 1 ? bottom : top),
-                (flags & 2 ? left : right),
-                (flags & 1 ? top : bottom),
-                (flags & 4)
-            );
-            m_uber_rect.draw();
-        }
+ 
+//         auto tex = static_cast<PainterTexture2DImplGL*>(texture);
+// 
+//         int srcw = (flags & 4 ? src_rect.height() : src_rect.width());
+//         int srch = (flags & 4 ? src_rect.width() : src_rect.height());
+// 
+//         RectIntersection<int> intersection(
+//             current_clip_rect,
+//             {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), srcw, srch}
+//         );
+// 
+//         if(intersection.width() > 0 && intersection.height() > 0)
+//         {
+//             setScaleAndShift(
+//                 g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+//             );
+// 
+//             g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
+// 
+//             setTexture2D(tex);
+// 
+//             auto left    = intersection.srcx() + src_rect.x();
+//             auto top     = intersection.srcy() + src_rect.y();
+//             auto right   = intersection.srcx() + intersection.width();
+//             auto bottom  = intersection.srcy() + intersection.height();
+// 
+//             m_uber_rect.setTexCoords(
+//                 (flags & 2 ? right : left),
+//                 (flags & 1 ? bottom : top),
+//                 (flags & 2 ? left : right),
+//                 (flags & 1 ? top : bottom),
+//                 (flags & 4)
+//             );
+//             m_uber_rect.draw();
+//         }
     }
 
     virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image)
