@@ -2,7 +2,7 @@
 #define R64FX_TEXT_PAINTER_HPP
 
 #include "Color.hpp"
-#include "Rect.hpp"
+#include "GeometryUtils.hpp"
 #include "Font.hpp"
 #include "TextFlags.hpp"
 #include <string>

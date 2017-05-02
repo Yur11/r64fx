@@ -2,7 +2,7 @@
 #define R64FX_ATLAS_HPP
 
 #include <vector>
-#include "Rect.hpp"
+#include "GeometryUtils.hpp"
 #include "IteratorPair.hpp"
 
 namespace r64fx{

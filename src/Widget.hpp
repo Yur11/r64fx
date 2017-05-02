@@ -3,9 +3,8 @@
 
 #include <string>
 #include "LinkedList.hpp"
-#include "Rect.hpp"
+#include "GeometryUtils.hpp"
 #include "Mouse.hpp"
-#include "Orientation.hpp"
 #include "Window.hpp"
 #include "WidgetEvents.hpp"
 #include "ClipboardEvents.hpp"

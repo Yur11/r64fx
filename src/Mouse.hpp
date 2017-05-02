@@ -1,7 +1,7 @@
 #ifndef R64FX_MOUSE_HPP
 #define R64FX_MOUSE_HPP
 
-#include "Point.hpp"
+#include "GeometryUtils.hpp"
 
 namespace r64fx{
 

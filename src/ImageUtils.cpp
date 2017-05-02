@@ -1,6 +1,5 @@
 #include "ImageUtils.hpp"
 #include <limits>
-#include <algorithm>
 #include <vector>
 
 #ifdef R64FX_DEBUG

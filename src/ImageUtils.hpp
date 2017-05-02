@@ -2,8 +2,7 @@
 #define R64FX_IMAGE_UTILS_HPP
 
 #include "Image.hpp"
-#include "Rect.hpp"
-#include "Transformation2D.hpp"
+#include "GeometryUtils.hpp"
 #include "Color.hpp"
 
 namespace r64fx{

@@ -3,9 +3,8 @@
 
 #include "Color.hpp"
 #include "Image.hpp"
-#include "Rect.hpp"
+#include "GeometryUtils.hpp"
 #include "Offset.hpp"
-#include "Orientation.hpp"
 
 namespace r64fx{
 

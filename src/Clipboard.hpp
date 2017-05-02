@@ -1,7 +1,7 @@
 #ifndef R64FX_CLIPBOARD_HPP
 #define R64FX_CLIPBOARD_HPP
 
-#include "Point.hpp"
+#include "GeometryUtils.hpp"
 #include <string>
 #include <vector>
 #include <initializer_list>

@@ -2,7 +2,7 @@
 #define R64FX_WINDOW_HPP
 
 #include <string>
-#include "Rect.hpp"
+#include "GeometryUtils.hpp"
 #include "Clipboard.hpp"
 
 namespace r64fx{
