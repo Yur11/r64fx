@@ -220,6 +220,8 @@ struct PainterImplGL : public PainterImpl{
         if(!isec)
             return;
 
+        g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
+
         auto isec_src_offset = ((flags & 4)? isec.srcOffset().transposed() : isec.srcOffset());
         auto isec_size = (flags & 4) ? isec.size().transposed() : isec.size();
 
@@ -236,41 +238,47 @@ struct PainterImplGL : public PainterImpl{
         if(flags & flip_vert_mask || isec_src_offset.y() > 0)
             src_offset_y += dh;
 
- 
-//         auto tex = static_cast<PainterTexture2DImplGL*>(texture);
-// 
-//         int srcw = (flags & 4 ? src_rect.height() : src_rect.width());
-//         int srch = (flags & 4 ? src_rect.width() : src_rect.height());
-// 
-//         RectIntersection<int> intersection(
-//             current_clip_rect,
-//             {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), srcw, srch}
-//         );
-// 
-//         if(intersection.width() > 0 && intersection.height() > 0)
-//         {
-//             setScaleAndShift(
-//                 g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
-//             );
-// 
-//             g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
-// 
-//             setTexture2D(tex);
-// 
-//             auto left    = intersection.srcx() + src_rect.x();
-//             auto top     = intersection.srcy() + src_rect.y();
-//             auto right   = intersection.srcx() + intersection.width();
-//             auto bottom  = intersection.srcy() + intersection.height();
-// 
-//             m_uber_rect.setTexCoords(
-//                 (flags & 2 ? right : left),
-//                 (flags & 1 ? bottom : top),
-//                 (flags & 2 ? left : right),
-//                 (flags & 1 ? top : bottom),
-//                 (flags & 4)
-//             );
-//             m_uber_rect.draw();
-//         }
+        setScaleAndShift(
+            g_PainterShader_Common, {current_clip_rect.position() + Point<int>(isec.dstx(), isec.dsty()), isec_size}
+        );
+
+        {
+            float l = 0.0f;
+            float t = 0.0f;
+            float r = 1.0f;
+            float b = -1.0f;
+
+            if(flags & 4)
+            {
+                std::swap(l, t);
+                std::swap(r, b);
+            }
+
+            if(flags & 2)
+            {
+                std::swap(l, r);
+            }
+
+            if(flags & 1)
+            {
+                std::swap(t, b);
+            }
+
+            m_uber_rect.setRect(l, t, r, b);
+        }
+
+        m_uber_rect.setTexCoords(
+            src_offset_x,
+            src_offset_y,
+            src_offset_x + isec.width(),
+            src_offset_y + isec.height()
+        );
+
+        auto tex = static_cast<PainterTexture2DImplGL*>(texture);
+        setTexture2D(tex);
+
+        m_uber_rect.draw();
+        m_uber_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f); //Restore!
     }
 
     virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image)
