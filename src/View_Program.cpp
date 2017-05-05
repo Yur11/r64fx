@@ -260,8 +260,8 @@ public:
 protected:
     virtual void paintEvent(WidgetPaintEvent* event)
     {
-//         auto p = event->painter();
-//         p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
+        auto p = event->painter();
+        p->fillRect({0, 0, width(), height()}, Color(127, 127, 127, 0));
         childrenPaintEvent(event);
     }
 
@@ -428,165 +428,163 @@ void View_Program::setMainPartWidget(Widget* widget)
 
 void View_Program::paintEvent(WidgetPaintEvent* event)
 {
-//     childrenPaintEvent(event);
-// 
-//     auto p = event->painter();
-// 
-//     p->fillRect(
-//         {0, m->top_bar->height(), width(), m->gap},
-//         Color(0, 0, 0, 0)
-//     );
-// 
-//     if(m->left_dock->parent() == this)
-//     {
-//         p->fillRect(
-//             {m->left_dock->width(), m->left_dock->y(), m->gap, m->left_dock->height()},
-//             Color(0, 0, 0, 0)
-//         );
-//     }
-// 
-//     if(m->right_dock->parent() == this)
-//     {
-//         p->fillRect(
-//             {m->right_dock->x() - m->gap, m->right_dock->y(), m->gap, m->right_dock->height()},
-//             Color(0, 0, 0, 0)
-//         );
-//     }
-// 
-//     if(m->bottom_dock->parent() == this)
-//     {
-//         p->fillRect(
-//             {m->bottom_dock->x(), m->bottom_dock->y() - m->gap, m->bottom_dock->width(), m->gap},
-//             Color(0, 0, 0, 0)
-//         );
-//     }
-// 
-//     {
-//         int x = m->main_tab_bar->x() + m->main_tab_bar->currentTabX();
-//         int w = m->main_tab_bar->currentTabWidth();
-// 
-//         p->fillRect(
-//             {x, m->top_bar->height(), w, m->gap},
-//             Color(191, 191, 191, 0)
-//         );
-//     }
+    childrenPaintEvent(event);
 
     auto p = event->painter();
-    p->clear(Color(127, 127, 127));
-    p->setOffset({10, 10});
-    p->setClipRect({150, 150, 100, 100});
-    p->fillRect({100, 100, 100, 100}, Color(255, 0, 0));
-    p->fillRect({200, 100, 100, 100}, Color(0, 255, 0));
-    p->fillRect({100, 200, 100, 100}, Color(0, 0, 255));
-    p->fillRect({200, 200, 100, 100}, Color(255, 255, 0));
+
+    p->fillRect(
+        {0, m->top_bar->height(), width(), m->gap},
+        Color(0, 0, 0, 0)
+    );
+
+    if(m->left_dock->parent() == this)
+    {
+        p->fillRect(
+            {m->left_dock->width(), m->left_dock->y(), m->gap, m->left_dock->height()},
+            Color(0, 0, 0, 0)
+        );
+    }
+
+    if(m->right_dock->parent() == this)
+    {
+        p->fillRect(
+            {m->right_dock->x() - m->gap, m->right_dock->y(), m->gap, m->right_dock->height()},
+            Color(0, 0, 0, 0)
+        );
+    }
+
+    if(m->bottom_dock->parent() == this)
+    {
+        p->fillRect(
+            {m->bottom_dock->x(), m->bottom_dock->y() - m->gap, m->bottom_dock->width(), m->gap},
+            Color(0, 0, 0, 0)
+        );
+    }
+
+    {
+        int x = m->main_tab_bar->x() + m->main_tab_bar->currentTabX();
+        int w = m->main_tab_bar->currentTabWidth();
+
+        p->fillRect(
+            {x, m->top_bar->height(), w, m->gap},
+            Color(191, 191, 191, 0)
+        );
+    }
+
+//     auto p = event->painter();
+//     p->clear(Color(127, 127, 127));
+//     p->fillRect({100, 100, 100, 100}, Color(255, 0, 0));
+//     p->fillRect({200, 100, 100, 100}, Color(0, 255, 0));
+//     p->fillRect({100, 200, 100, 100}, Color(0, 0, 255));
+//     p->fillRect({200, 200, 100, 100}, Color(255, 255, 0));
 }
 
 
 void View_Program::resizeEvent(WidgetResizeEvent* event)
 {
-//     m->top_bar->setWidth(event->width());
-//     m->top_bar->setPosition({0, 0});
-// 
-//     m->main_part->setY(m->top_bar->height() + m->gap);
-// 
-//     if(m->bottom_dock->parent() == this)
-//     {
-//         m->bottom_dock->setY(event->height() - m->bottom_dock->height());
-// 
-//         if(m->left_dock->parent() == this && m->left_dock_expanded)
-//         {
-//             m->bottom_dock->setX(m->left_dock->width() + m->gap);
-//         }
-//         else
-//         {
-//             m->bottom_dock->setX(0);
-//         }
-// 
-//         if(m->right_dock->parent() == this && m->right_dock_expanded)
-//         {
-//             m->bottom_dock->setWidth(event->width() - m->bottom_dock->x() - m->right_dock->width() - m->gap);
-//         }
-//         else
-//         {
-//             m->bottom_dock->setWidth(event->width() - m->bottom_dock->x());
-//         }
-// 
-//         m->main_part->setHeight(
-//             event->height() - m->top_bar->height() - m->bottom_dock->height() - m->gap - m->gap
-//         );
-//     }
-//     else
-//     {
-//         m->main_part->setHeight(
-//             event->height() - m->top_bar->height() - m->gap
-//         );
-//     }
-// 
-//     if(m->left_dock->parent() == this)
-//     {
-//         m->left_dock->setX(0);
-//         m->left_dock->setY(m->top_bar->height() + m->gap);
-// 
-//         if(m->bottom_dock->parent() == this && !m->left_dock_expanded)
-//         {
-//             m->left_dock->setHeight(event->height() - m->left_dock->y() - m->bottom_dock->height());
-//         }
-//         else
-//         {
-//             m->left_dock->setHeight(event->height() - m->left_dock->y());
-//         }
-// 
-//         m->main_part->setX(m->left_dock->width() + m->gap);
-//     }
-//     else
-//     {
-//         m->main_part->setX(0);
-//     }
-// 
-//     if(m->right_dock->parent() == this)
-//     {
-//         m->right_dock->setX(event->width() - m->right_dock->width());
-//         m->right_dock->setY(m->top_bar->height() + m->gap);
-// 
-//         if(m->bottom_dock->parent() == this && !m->right_dock_expanded)
-//         {
-//             m->right_dock->setHeight(event->height() - m->right_dock->y() - m->bottom_dock->height());
-//         }
-//         else
-//         {
-//             m->right_dock->setHeight(event->height() - m->right_dock->y());
-//         }
-// 
-//         if(m->left_dock->parent() == this)
-//         {
-//             m->main_part->setWidth(
-//                 event->width() - m->left_dock->width() - m->right_dock->width() - m->gap - m->gap
-//             );
-//         }
-//         else
-//         {
-//             m->main_part->setWidth(
-//                 event->width() - m->right_dock->width() - m->gap
-//             );
-//         }
-//     }
-//     else
-//     {
-//         if(m->left_dock->parent() == this)
-//         {
-//             m->main_part->setWidth(
-//                 event->width() - m->left_dock->width() - m->gap
-//             );
-//         }
-//         else
-//         {
-//             m->main_part->setWidth(event->width());
-//         }
-//     }
-// 
-//     m->main_tab_bar->setX(
-//         (m->main_part->x() + m->main_part->width()) - m->main_tab_bar->width() + 1
-//     );
+    m->top_bar->setWidth(event->width());
+    m->top_bar->setPosition({0, 0});
+
+    m->main_part->setY(m->top_bar->height() + m->gap);
+
+    if(m->bottom_dock->parent() == this)
+    {
+        m->bottom_dock->setY(event->height() - m->bottom_dock->height());
+
+        if(m->left_dock->parent() == this && m->left_dock_expanded)
+        {
+            m->bottom_dock->setX(m->left_dock->width() + m->gap);
+        }
+        else
+        {
+            m->bottom_dock->setX(0);
+        }
+
+        if(m->right_dock->parent() == this && m->right_dock_expanded)
+        {
+            m->bottom_dock->setWidth(event->width() - m->bottom_dock->x() - m->right_dock->width() - m->gap);
+        }
+        else
+        {
+            m->bottom_dock->setWidth(event->width() - m->bottom_dock->x());
+        }
+
+        m->main_part->setHeight(
+            event->height() - m->top_bar->height() - m->bottom_dock->height() - m->gap - m->gap
+        );
+    }
+    else
+    {
+        m->main_part->setHeight(
+            event->height() - m->top_bar->height() - m->gap
+        );
+    }
+
+    if(m->left_dock->parent() == this)
+    {
+        m->left_dock->setX(0);
+        m->left_dock->setY(m->top_bar->height() + m->gap);
+
+        if(m->bottom_dock->parent() == this && !m->left_dock_expanded)
+        {
+            m->left_dock->setHeight(event->height() - m->left_dock->y() - m->bottom_dock->height());
+        }
+        else
+        {
+            m->left_dock->setHeight(event->height() - m->left_dock->y());
+        }
+
+        m->main_part->setX(m->left_dock->width() + m->gap);
+    }
+    else
+    {
+        m->main_part->setX(0);
+    }
+
+    if(m->right_dock->parent() == this)
+    {
+        m->right_dock->setX(event->width() - m->right_dock->width());
+        m->right_dock->setY(m->top_bar->height() + m->gap);
+
+        if(m->bottom_dock->parent() == this && !m->right_dock_expanded)
+        {
+            m->right_dock->setHeight(event->height() - m->right_dock->y() - m->bottom_dock->height());
+        }
+        else
+        {
+            m->right_dock->setHeight(event->height() - m->right_dock->y());
+        }
+
+        if(m->left_dock->parent() == this)
+        {
+            m->main_part->setWidth(
+                event->width() - m->left_dock->width() - m->right_dock->width() - m->gap - m->gap
+            );
+        }
+        else
+        {
+            m->main_part->setWidth(
+                event->width() - m->right_dock->width() - m->gap
+            );
+        }
+    }
+    else
+    {
+        if(m->left_dock->parent() == this)
+        {
+            m->main_part->setWidth(
+                event->width() - m->left_dock->width() - m->gap
+            );
+        }
+        else
+        {
+            m->main_part->setWidth(event->width());
+        }
+    }
+
+    m->main_tab_bar->setX(
+        (m->main_part->x() + m->main_part->width()) - m->main_tab_bar->width() + 1
+    );
 
     repaint();
 }
