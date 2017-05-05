@@ -2,48 +2,6 @@
 
 namespace r64fx{
 
-struct PainterImpl : public Painter{
-    Window*     window    = nullptr;
-
-    Rect<int> current_clip_rect;
-
-    PainterImpl(Window* window)
-    : window(window)
-    {
-
-    }
-
-    virtual ~PainterImpl()
-    {
-
-    }
-
-    virtual void setClipRect(Rect<int> rect)
-    {
-        current_clip_rect = rect;
-    }
-
-    virtual void setClipRectAtCurrentOffset(Size<int> size)
-    {
-        current_clip_rect = {offset(), size};
-    }
-
-    virtual Rect<int> clipRect()
-    {
-        return current_clip_rect;
-    }
-
-    /** @brief Clip a rectangle with the current_clip_rect. */
-    Rect<int> clip(Rect<int> rect)
-    {
-        return intersection(
-            current_clip_rect,
-            rect
-        );
-    }
-};//PainterImpl
-
-
 class PainterImplImage;
 
 

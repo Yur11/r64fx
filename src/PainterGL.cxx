@@ -178,21 +178,28 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void fillRect(const Rect<int> &rect, Color color)
     {
-        auto intersection_rect = clip(rect + offset());
-        if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
-        {
-            setScaleAndShift(g_PainterShader_Common, intersection_rect);
-            g_PainterShader_Common->setMode(PainterShader_Common::ModeColor());
+        auto transformed_rect = clip(rect + offset());
+        if(transformed_rect.width() <= 0 || transformed_rect.height() <= 0)
+            return;
 
-            g_PainterShader_Common->setColor(
-                float(color[0]) * rcp255,
-                float(color[1]) * rcp255,
-                float(color[2]) * rcp255,
-                float(color[3]) * rcp255
-            );
+        g_PainterShader_Common->setMode(PainterShader_Common::ModeColor());
 
-            m_uber_rect.draw();
-        }
+        g_PainterShader_Common->setScaleAndShift(
+            2.0f/float(window->width()), -2.0f/float(window->height()), -1.0f, +1.0f
+        );
+
+        g_PainterShader_Common->setColor(
+            float(color[0]) * rcp255,
+            float(color[1]) * rcp255,
+            float(color[2]) * rcp255,
+            float(color[3]) * rcp255
+        );
+
+        m_uber_rect.setRect(
+            transformed_rect.left(), transformed_rect.top(), transformed_rect.right(), transformed_rect.bottom()
+        );
+
+        m_uber_rect.draw();
     }
 
     virtual void putImage(Image* image, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)
@@ -277,7 +284,7 @@ struct PainterImplGL : public PainterImpl{
         auto tex = static_cast<PainterTexture2DImplGL*>(texture);
         setTexture2D(tex);
 
-        m_uber_rect.draw();
+//         m_uber_rect.draw();
         m_uber_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f); //Restore!
     }
 
@@ -324,7 +331,7 @@ struct PainterImplGL : public PainterImpl{
                     float(colors[c][2]) * rcp255,
                     float(colors[c][3]) * rcp255
                 );
-                m_uber_rect.draw();
+//                 m_uber_rect.draw();
             }
         }
     }
