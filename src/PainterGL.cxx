@@ -283,44 +283,51 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture)
     {
-// #ifdef R64FX_DEBUG
-//         assert(mask_texture->parentPainter() == this);
-// #endif//R64FX_DEBUG
-// 
-//         auto mask_tex = static_cast<PainterTexture2DImplGL*>(mask_texture);
-// 
-//         RectIntersection<int> intersection(
-//             current_clip_rect,
-//             {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), mask_tex->width(), mask_tex->height()}
-//         );
-// 
-//         if(intersection.width() > 0 && intersection.height() > 0)
-//         {
-//             setScaleAndShift(
-//                 g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
-//             );
-// 
-//             setTexture2D(mask_tex);
-// 
-//             m_uber_rect.setTexCoords(
-//                 intersection.srcx(),
-//                 intersection.srcy(),
-//                 intersection.srcx() + intersection.width(),
-//                 intersection.srcy() + intersection.height()
-//             );
-// 
-//             for(int c=0; c<mask_tex->componentCount(); c++)
-//             {
-//                 g_PainterShader_Common->setMode(PainterShader_Common::ModeBlendColors(mask_texture->componentCount()));
-//                 g_PainterShader_Common->setColor(
-//                     float(colors[c][0]) * rcp255,
-//                     float(colors[c][1]) * rcp255,
-//                     float(colors[c][2]) * rcp255,
-//                     float(colors[c][3]) * rcp255
-//                 );
-// //                 m_uber_rect.draw();
-//             }
-//         }
+#ifdef R64FX_DEBUG
+        assert(mask_texture->parentPainter() == this);
+#endif//R64FX_DEBUG
+
+        auto mask_texture_impl = static_cast<PainterTexture2DImplGL*>(mask_texture);
+
+        RectIntersection<int> isec(
+            current_clip_rect,
+            {dst_pos.x() + offsetX(), dst_pos.y() + offsetY(), mask_texture_impl->width(), mask_texture_impl->height()}
+        );
+
+        if(isec.width() > 0 && isec.height() > 0)
+        {
+            g_PainterShader_Common->setScaleAndShift(
+                m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f
+            );
+
+            setTexture2D(mask_texture_impl);
+
+            m_uber_rect.setRect(
+                current_clip_rect.x() + isec.dstx(),
+                current_clip_rect.y() + isec.dsty(),
+                current_clip_rect.x() + isec.dstx() + isec.width(),
+                current_clip_rect.y() + isec.dsty() + isec.height()
+            );
+
+            m_uber_rect.setTexCoords(
+                isec.srcx(),
+                isec.srcy(),
+                isec.srcx() + isec.width(),
+                isec.srcy() + isec.height()
+            );
+
+            for(int c=0; c<mask_texture_impl->componentCount(); c++)
+            {
+                g_PainterShader_Common->setMode(PainterShader_Common::ModeBlendColors(mask_texture->componentCount()));
+                g_PainterShader_Common->setColor(
+                    float(colors[c][0]) * rcp255,
+                    float(colors[c][1]) * rcp255,
+                    float(colors[c][2]) * rcp255,
+                    float(colors[c][3]) * rcp255
+                );
+                m_uber_rect.draw();
+            }
+        }
     }
 
     virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned char* waveform)
