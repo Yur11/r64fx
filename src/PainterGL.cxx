@@ -197,82 +197,63 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)
     {
-// #ifdef R64FX_DEBUG
-//         assert(texture->parentPainter() == this);
-// #endif//R64FX_DEBUG
-// 
-//         auto texture_size = texture->size();
-// #ifdef R64FX_DEBUG
-//         assert(src_rect.x() >= 0);
-//         assert(src_rect.y() >= 0);
-//         assert(src_rect.width() <= texture_size.width());
-//         assert(src_rect.height() <= texture_size.height());
-// #endif//R64FX_DEBUG
-// 
-//         Rect<int> dstrect(dst_pos + offset(), (flags & 4) ? src_rect.size().transposed() : src_rect.size());
-//         RectIntersection<int> isec(current_clip_rect, dstrect);
-//         if(!isec)
-//             return;
-// 
-//         g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
-// 
-//         auto isec_src_offset = ((flags & 4)? isec.srcOffset().transposed() : isec.srcOffset());
-//         auto isec_size = (flags & 4) ? isec.size().transposed() : isec.size();
-// 
-//         int src_offset_x = src_rect.x();
-//         int src_offset_y = src_rect.y();
-// 
-//         int dw = src_rect.width() - isec_size.width();
-//         int dh = src_rect.height() - isec_size.height();
-// 
-//         const int flip_vert_mask = (flags & 4 ? 2 : 1);
-//         const int flip_hori_mask = (flags & 4 ? 1 : 2);
-//         if(flags & flip_hori_mask || isec_src_offset.x() > 0)
-//             src_offset_x += dw;
-//         if(flags & flip_vert_mask || isec_src_offset.y() > 0)
-//             src_offset_y += dh;
-// 
-//         setScaleAndShift(
-//             g_PainterShader_Common, {current_clip_rect.position() + Point<int>(isec.dstx(), isec.dsty()), isec_size}
-//         );
-// 
-//         {
-//             float l = 0.0f;
-//             float t = 0.0f;
-//             float r = 1.0f;
-//             float b = -1.0f;
-// 
-//             if(flags & 4)
-//             {
-//                 std::swap(l, t);
-//                 std::swap(r, b);
-//             }
-// 
-//             if(flags & 2)
-//             {
-//                 std::swap(l, r);
-//             }
-// 
-//             if(flags & 1)
-//             {
-//                 std::swap(t, b);
-//             }
-// 
-//             m_uber_rect.setRect(l, t, r, b);
-//         }
-// 
-//         m_uber_rect.setTexCoords(
-//             src_offset_x,
-//             src_offset_y,
-//             src_offset_x + isec.width(),
-//             src_offset_y + isec.height()
-//         );
-// 
-//         auto tex = static_cast<PainterTexture2DImplGL*>(texture);
-//         setTexture2D(tex);
-// 
-// //         m_uber_rect.draw();
-//         m_uber_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f); //Restore!
+#ifdef R64FX_DEBUG
+        assert(texture->parentPainter() == this);
+#endif//R64FX_DEBUG
+
+        auto texture_size = texture->size();
+#ifdef R64FX_DEBUG
+        assert(src_rect.x() >= 0);
+        assert(src_rect.y() >= 0);
+        assert(src_rect.width() <= texture_size.width());
+        assert(src_rect.height() <= texture_size.height());
+#endif//R64FX_DEBUG
+
+        Rect<int> dstrect(dst_pos + offset(), (flags & 4) ? src_rect.size().transposed() : src_rect.size());
+        RectIntersection<int> isec(current_clip_rect, dstrect);
+        if(!isec)
+            return;
+
+        int src_offset_x = src_rect.x();
+        int src_offset_y = src_rect.y();
+
+        auto isec_src_offset = ((flags & 4)? isec.srcOffset().transposed() : isec.srcOffset());
+        auto isec_size = (flags & 4) ? isec.size().transposed() : isec.size();
+
+        int dw = src_rect.width() - isec_size.width();
+        int dh = src_rect.height() - isec_size.height();
+
+        const int flip_vert_mask = (flags & 4 ? 2 : 1);
+        const int flip_hori_mask = (flags & 4 ? 1 : 2);
+        if(flags & flip_hori_mask || isec_src_offset.x() > 0)
+            src_offset_x += dw;
+        if(flags & flip_vert_mask || isec_src_offset.y() > 0)
+            src_offset_y += dh;
+
+        g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
+
+        g_PainterShader_Common->setScaleAndShift(
+            m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f
+        );
+
+        setTexture2D(static_cast<PainterTexture2DImplGL*>(texture));
+
+        m_uber_rect.setTexCoords(
+            src_offset_x,
+            src_offset_y,
+            src_offset_x + ((flags & 4) ? isec.height() : isec.width()),
+            src_offset_y + ((flags & 4) ? isec.width() : isec.height()),
+            flags & 1, flags & 2, flags & 4
+        );
+
+        short l = current_clip_rect.x() + isec.dstx();
+        short t = current_clip_rect.y() + isec.dsty();
+        short r = current_clip_rect.x() + isec.dstx() + isec.width();
+        short b = current_clip_rect.y() + isec.dsty() + isec.height();
+
+        m_uber_rect.setRect(l, t, r, b);
+
+        m_uber_rect.draw();
     }
 
     virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image)

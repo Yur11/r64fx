@@ -17,6 +17,9 @@ public:
 
     void cleanup();
 
+    /* x,y clockwise */
+    void setCoords(short* buff, int nvertices);
+
     void setRect(short left, short top, short right, short bottom);
 
     void draw();
@@ -32,25 +35,7 @@ public:
         g_PainterShader_Common->bindTexCoordAttr(GL_SHORT, GL_FALSE, 0, 16);
     }
 
-    void setTexCoords(short left, short top, short right, short bottom, bool transpose = false)
-    {
-        short buff[8];
-
-        buff[0] = left;
-        buff[1] = top;
-
-        buff[2 + (transpose ? 4 : 0)] = right;
-        buff[3 + (transpose ? 4 : 0)] = top;
-
-        buff[4] = right;
-        buff[5] = bottom;
-
-        buff[6 - (transpose ? 4 : 0)] = left;
-        buff[7 - (transpose ? 4 : 0)] = bottom;
-
-        gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        gl::BufferSubData(GL_ARRAY_BUFFER, 16, 16, buff);
-    }
+    void setTexCoords(short left, short top, short right, short bottom, bool flip_vert = false, bool flip_hori = false, bool flip_diag = false);
 };
 
 }//namespace r64x
