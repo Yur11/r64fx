@@ -339,6 +339,63 @@ public:
 };
 
 
+template<typename T> class FlippedIntersection{
+    Size<int>   m_dst_size;
+    Size<int>   m_src_size;
+    Point<int>  m_dst_offset;
+    Point<int>  m_src_offset;
+
+public:
+    FlippedIntersection(const Rect<T> &dst_rect, const Point<T> pos, const Rect<T> &src_rect, bool flip_vert, bool flip_hori, bool flip_diag)
+    {
+        RectIntersection<T> isec(
+            dst_rect, Rect<T>(pos, flip_diag ? src_rect.size().transposed() : src_rect.size())
+        );
+        if(!isec)
+            return;
+
+        T src_offset_x = src_rect.x();
+        T src_offset_y = src_rect.y();
+
+        auto isec_src_offset  = (flip_diag ?  isec.srcOffset().transposed()  :  isec.srcOffset());
+        auto isec_src_size    = (flip_diag ?  isec.size().transposed()       :  isec.size());
+
+        T dw = src_rect.width() - isec_src_size.width();
+        T dh = src_rect.height() - isec_src_size.height();
+
+        if(flip_diag)
+            std::swap(flip_hori, flip_vert);
+        if(flip_hori || isec_src_offset.x() > 0)
+            src_offset_x += dw;
+        if(flip_vert || isec_src_offset.y() > 0)
+            src_offset_y += dh;
+
+        m_src_offset  = {src_offset_x, src_offset_y};
+        m_dst_offset  = isec.dstOffset();
+        m_src_size    = isec_src_size;
+        m_dst_size    = isec.size();
+    }
+
+    inline Size<T>   dstSize()    const { return m_dst_size; }
+    inline T         dstWidth()   const { return m_dst_size.width(); }
+    inline T         dstHeight()  const { return m_dst_size.height(); }
+
+    inline Size<T>   srcSize()    const { return m_src_size; }
+    inline T         srcWidth()   const { return m_src_size.width(); }
+    inline T         srcHeight()  const { return m_src_size.height(); }
+
+    inline Point<T>  dstOffset()  const { return m_dst_offset; }
+    inline T         dstx()       const { return m_dst_offset.x(); }
+    inline T         dsty()       const { return m_dst_offset.y(); }
+
+    inline Point<T>  srcOffset()  const { return m_src_offset; }
+    inline T         srcx()       const { return m_src_offset.x(); }
+    inline T         srcy()       const { return m_src_offset.y(); }
+
+    inline operator bool() const { return m_dst_size.width() > 0 && m_dst_size.height() > 0; }
+};
+
+
 template<typename T> class Transformation2D{
 /*
     Let's keep only relevant parts of the matrix.

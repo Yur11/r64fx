@@ -199,36 +199,17 @@ struct PainterImplGL : public PainterImpl{
     {
 #ifdef R64FX_DEBUG
         assert(texture->parentPainter() == this);
-#endif//R64FX_DEBUG
 
         auto texture_size = texture->size();
-#ifdef R64FX_DEBUG
         assert(src_rect.x() >= 0);
         assert(src_rect.y() >= 0);
         assert(src_rect.width() <= texture_size.width());
         assert(src_rect.height() <= texture_size.height());
 #endif//R64FX_DEBUG
 
-        Rect<int> dstrect(dst_pos + offset(), (flags & 4) ? src_rect.size().transposed() : src_rect.size());
-        RectIntersection<int> isec(current_clip_rect, dstrect);
+        FlippedIntersection<int> isec(current_clip_rect, dst_pos + offset(), src_rect, flags & 1, flags & 2, flags & 4);
         if(!isec)
             return;
-
-        int src_offset_x = src_rect.x();
-        int src_offset_y = src_rect.y();
-
-        auto isec_src_offset = ((flags & 4)? isec.srcOffset().transposed() : isec.srcOffset());
-        auto isec_size = (flags & 4) ? isec.size().transposed() : isec.size();
-
-        int dw = src_rect.width() - isec_size.width();
-        int dh = src_rect.height() - isec_size.height();
-
-        const int flip_vert_mask = (flags & 4 ? 2 : 1);
-        const int flip_hori_mask = (flags & 4 ? 1 : 2);
-        if(flags & flip_hori_mask || isec_src_offset.x() > 0)
-            src_offset_x += dw;
-        if(flags & flip_vert_mask || isec_src_offset.y() > 0)
-            src_offset_y += dh;
 
         g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
 
@@ -239,19 +220,19 @@ struct PainterImplGL : public PainterImpl{
         setTexture2D(static_cast<PainterTexture2DImplGL*>(texture));
 
         m_uber_rect.setTexCoords(
-            src_offset_x,
-            src_offset_y,
-            src_offset_x + ((flags & 4) ? isec.height() : isec.width()),
-            src_offset_y + ((flags & 4) ? isec.width() : isec.height()),
+            isec.srcx(),
+            isec.srcy(),
+            isec.srcx() + isec.srcWidth(),
+            isec.srcy() + isec.srcHeight(),
             flags & 1, flags & 2, flags & 4
         );
 
-        short l = current_clip_rect.x() + isec.dstx();
-        short t = current_clip_rect.y() + isec.dsty();
-        short r = current_clip_rect.x() + isec.dstx() + isec.width();
-        short b = current_clip_rect.y() + isec.dsty() + isec.height();
-
-        m_uber_rect.setRect(l, t, r, b);
+        m_uber_rect.setRect(
+            isec.dstx(),
+            isec.dsty(),
+            isec.dstx() + isec.dstWidth(),
+            isec.dsty() + isec.dstHeight()
+        );
 
         m_uber_rect.draw();
     }
