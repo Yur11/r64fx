@@ -3,7 +3,7 @@
 in vec2 frag_tex_coord;
 
 uniform int        mode        = 0;
-uniform vec4       colors[4]    = vec4[4](
+uniform vec4       colors[4]   = vec4[4](
     vec4(0.0, 0.0, 0.0, 0.0),
     vec4(0.0, 0.0, 0.0, 0.0),
     vec4(0.0, 0.0, 0.0, 0.0),
@@ -47,30 +47,17 @@ void main()
 
         //blendColors()
         case 5:
-        {
-            vec4 texel = texelFetch(sampler2d, ivec2(frag_tex_coord), 0);
-            gl_FragColor = vec4(colors[0][0], colors[0][1], colors[0][2], 1.0 - texel[0]);
-            break;
-        }
-
         case 6:
-        {
-            vec4 texel = texelFetch(sampler2d, ivec2(frag_tex_coord), 0);
-            gl_FragColor = vec4(colors[0][0], colors[0][1], colors[0][2], 1.0 - texel[1]);
-            break;
-        }
-
         case 7:
-        {
-            vec4 texel = texelFetch(sampler2d, ivec2(frag_tex_coord), 0);
-            gl_FragColor = vec4(colors[0][0], colors[0][1], colors[0][2], 1.0 - texel[2]);
-            break;
-        }
-
         case 8:
         {
+            vec4 frag_color = vec4(0.0, 0.0, 0.0, 0.0);
             vec4 texel = texelFetch(sampler2d, ivec2(frag_tex_coord), 0);
-            gl_FragColor = vec4(colors[0][0], colors[0][1], colors[0][2], 1.0 - texel[3]);
+            for(int i=0; i<(mode-4); i++)
+            {
+                 frag_color += vec4(colors[i][0], colors[i][1], colors[i][2], 1.0 - texel[i]);
+            }
+            gl_FragColor = frag_color;
             break;
         }
 
