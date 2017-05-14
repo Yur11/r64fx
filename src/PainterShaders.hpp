@@ -42,7 +42,7 @@ public:
 class PainterShader_Common : public PainterShader{
     GLint attr_tex_coord;
     GLint unif_mode;
-    GLint unif_color;
+    GLint unif_colors;
     GLint unif_sampler1d;
     GLint unif_sampler2d;
 
@@ -79,9 +79,15 @@ public:
         return 10;
     }
 
-    inline void setColor(float r, float g, float b, float a)
+    inline void setColors(float* rgba, int location, int count)
     {
-        gl::Uniform4f(unif_color, r, g, b, a);
+        gl::Uniform4fv(unif_colors + location, count, rgba);
+    }
+
+    inline void setColor(float r, float g, float b, float a, int location = 0)
+    {
+        float rgba[4] = {r, g, b, a};
+        setColors(rgba, location, 1);
     }
 
     inline void setSampler1D(int sampler)
