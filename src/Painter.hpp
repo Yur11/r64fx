@@ -147,9 +147,9 @@ public:
     }
 
     /* Blend multiple colors using multi-component alpha mask. */
-    virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image) = 0;
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image, unsigned int flags = 0) = 0;
 
-    virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture) = 0;
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture, unsigned int flags = 0) = 0;
 
     virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned char*  waveform) = 0;
 

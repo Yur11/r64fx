@@ -199,7 +199,6 @@ struct PainterImplGL : public PainterImpl{
     {
 #ifdef R64FX_DEBUG
         assert(texture->parentPainter() == this);
-
         auto texture_size = texture->size();
         assert(src_rect.x() >= 0);
         assert(src_rect.y() >= 0);
@@ -237,13 +236,13 @@ struct PainterImplGL : public PainterImpl{
         m_uber_rect.draw();
     }
 
-    virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image)
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image, unsigned int flags)
     {
         m_spare_2d_texture.loadImage(mask_image);
-        PainterImplGL::blendColors(dst_pos, colors, &m_spare_2d_texture);
+        PainterImplGL::blendColors(dst_pos, colors, &m_spare_2d_texture, flags);
     }
 
-    virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture)
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture, unsigned int flags)
     {
 #ifdef R64FX_DEBUG
         assert(mask_texture->parentPainter() == this);

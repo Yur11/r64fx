@@ -258,12 +258,12 @@ struct PainterImplImage : public PainterImpl{
         PainterImplImage::putImage(texture_impl->image(), dst_pos, src_rect, flags);
     }
 
-    virtual void blendColors(Point<int> pos, const Colors &colors, Image* mask)
+    virtual void blendColors(Point<int> pos, const Colors &colors, Image* mask, unsigned int flags)
     {
         blend_colors(window->image(), pos + offset(), colors, mask, false);
     }
 
-    virtual void blendColors(Point<int> pos, const Colors &colors, PainterTexture2D* mask)
+    virtual void blendColors(Point<int> pos, const Colors &colors, PainterTexture2D* mask, unsigned int flags)
     {
 #ifdef R64FX_DEBUG
         assert(mask != nullptr);
@@ -271,7 +271,7 @@ struct PainterImplImage : public PainterImpl{
 #endif//R64FX_DEBUG
 
         auto mask_texture_impl = static_cast<PainterTexture2DImplImage*>(mask);
-        PainterImplImage::blendColors(pos, colors, mask_texture_impl->image());
+        PainterImplImage::blendColors(pos, colors, mask_texture_impl->image(), flags);
     }
 
     template<typename T> void drawWaveform(const Rect<int> &rect, Color color, T* waveform)
