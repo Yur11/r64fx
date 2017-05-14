@@ -15,6 +15,9 @@
 
 #define R64FX_DEF_PAINTER_SHADER(NAME) R64FX_PAINTER_SHADER_EXTERN NAME* g_##NAME R64FX_PAINTER_SHADER_NULLPTR;
 
+#ifdef R64FX_DEBUG
+#include <assert.h>
+#endif//R64FX_DEBUG
 
 namespace r64fx{
 
@@ -61,12 +64,18 @@ public:
 
     inline static const int ModePutImage(int component_count)
     {
+#ifdef R64FX_DEBUG
+        assert(component_count >= 1 && component_count <= 4);
+#endif//R64FX_DEBUG
         return component_count;
     }
 
-    inline static const int ModeBlendColors(int tex_component)
+    inline static const int ModeBlendColors(int component_count)
     {
-        return 4 | tex_component;
+#ifdef R64FX_DEBUG
+        assert(component_count >= 1 &&  component_count <= 4);
+#endif//R64FX_DEBUG
+        return 4 + component_count;
     }
 
     inline static const int ModeColor()
