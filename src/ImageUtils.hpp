@@ -29,9 +29,11 @@ struct ImgPos{
 
 
 class ImgCopyFlags{
-    unsigned int m_bits;
+    unsigned int m_bits = 0;
 
 public:
+    ImgCopyFlags() {}
+
     ImgCopyFlags(unsigned int bits) : m_bits(bits) {}
 
     inline unsigned int bits() const { return m_bits; }
