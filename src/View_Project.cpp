@@ -59,7 +59,7 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
     for(int i=0; i<8; i++)
     {
-        p->putImage(&img, {30 + i * 80, 200}, {0, 12, 40, 35}, i);
+        p->putImage(&img, {30 + i * 80, 200}, {0, 12, 40, 35}, FlipFlags(i));
     }
 
 //     Widget_Knob::debugPaint(p, {50, 150}, 60);

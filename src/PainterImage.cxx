@@ -242,12 +242,24 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
-    virtual void putImage(Image* img, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)
+    static ImgCopyFlags convertFlags(FlipFlags in_flags)
     {
-        copy({window->image(), dst_pos + offset()}, {img, src_rect}, ImgCopyFlags((flags & 7) << 3) | ImgCopyBlendAlpha());
+        ImgCopyFlags out_flags;
+        if(in_flags & FlipFlags::Vert())
+            out_flags = out_flags | ImgCopyFlipVert();
+        if(in_flags & FlipFlags::Hori())
+            out_flags = out_flags | ImgCopyFlipHori();
+        if(in_flags & FlipFlags::Diag())
+            out_flags = out_flags | ImgCopyFlipDiag();
+        return out_flags;
     }
 
-    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)
+    virtual void putImage(Image* img, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags)
+    {
+        copy({window->image(), dst_pos + offset()}, {img, src_rect}, convertFlags(flags) | ImgCopyBlendAlpha());
+    }
+
+    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags)
     {
 #ifdef R64FX_DEBUG
         assert(texture != nullptr);
@@ -258,12 +270,12 @@ struct PainterImplImage : public PainterImpl{
         PainterImplImage::putImage(texture_impl->image(), dst_pos, src_rect, flags);
     }
 
-    virtual void blendColors(Point<int> pos, const Colors &colors, Image* mask, unsigned int flags)
+    virtual void blendColors(Point<int> pos, const Colors &colors, Image* mask, FlipFlags flags)
     {
         blend_colors(window->image(), pos + offset(), colors, mask, false);
     }
 
-    virtual void blendColors(Point<int> pos, const Colors &colors, PainterTexture2D* mask, unsigned int flags)
+    virtual void blendColors(Point<int> pos, const Colors &colors, PainterTexture2D* mask, FlipFlags flags)
     {
 #ifdef R64FX_DEBUG
         assert(mask != nullptr);

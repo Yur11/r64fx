@@ -3,6 +3,7 @@
 #include "TextPainter.hpp"
 #include "ImageUtils.hpp"
 #include "WidgetFlags.hpp"
+#include "FlipFlags.hpp"
 #include <cmath>
 #include <algorithm>
 
@@ -225,7 +226,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         delete m_marker_coords;
     }
 
-    bool angle2frame(float in_angle, Point<int> &out_dst_pos, Rect<int> &out_src_rect, int &out_flags)
+    bool angle2frame(float in_angle, Point<int> &out_dst_pos, Rect<int> &out_src_rect, FlipFlags &out_flags)
     {
         int n = (256 + 128) - ((in_angle + M_PI) * g_2pi_rcp) * (m_frame_count << 2);
         int m = (n >> 6) & 3;
@@ -248,7 +249,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             {
                 out_dst_pos = {dstx, dsty};
                 out_src_rect = {srcx, srcy, srcw, srch};
-                out_flags = 0;
+                out_flags = FlipFlags();
                 return true;
             }
 
@@ -256,7 +257,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             {
                 out_dst_pos = {dsty, m_size - srcw - dstx};
                 out_src_rect = {srcx, srcy, srcw, srch};
-                out_flags = 1 | 4;
+                out_flags = FlipFlags::Vert() | FlipFlags::Diag();
                 return true;
             }
 
@@ -264,7 +265,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             {
                 out_dst_pos = {m_size - srcw - dstx, m_size - srch - dsty};
                 out_src_rect = {srcx, srcy, srcw, srch};
-                out_flags = 1 | 2;
+                out_flags = FlipFlags::Vert() | FlipFlags::Hori();
                 return true;
             }
 
@@ -272,7 +273,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             {
                 out_dst_pos = {m_size - srch - dsty, dstx};
                 out_src_rect = {srcx, srcy, srcw, srch};
-                out_flags = 2 | 4;
+                out_flags = FlipFlags::Hori() | FlipFlags::Diag();
                 return true;
             }
 
@@ -296,10 +297,10 @@ public:
 
         Point<int> dst_pos;
         Rect<int> src_rect;
-        int flags = 0;
+        FlipFlags flags = FlipFlags();
         if(angle2frame(angle, dst_pos, src_rect, flags))
         {
-            painter->putImage(&m_marker_frames, dst_pos, src_rect, flags);
+            painter->putImage(&m_marker_frames, dst_pos, src_rect, FlipFlags(flags));
         }
     }
 

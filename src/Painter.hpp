@@ -5,11 +5,13 @@
 #include "Image.hpp"
 #include "GeometryUtils.hpp"
 #include "Offset.hpp"
+#include "FlipFlags.hpp"
 
 namespace r64fx{
 
 class Painter;
 class Window;
+
 
 class PainterTexture{
 protected:
@@ -131,25 +133,25 @@ public:
                       Top left corner.
                       Offset and clipping are applied.
      */
-    virtual void putImage(Image* image, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags = 0) = 0;
+    virtual void putImage(Image* image, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags = FlipFlags()) = 0;
 
-    inline void putImage(Image* image, Point<int> dst_pos, unsigned int flags = 0)
+    inline void putImage(Image* image, Point<int> dst_pos, FlipFlags flags = FlipFlags())
     {
         putImage(image, dst_pos, {0, 0, image->width(), image->height()}, flags);
     }
 
     /**  */
-    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags = 0) = 0;
+    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags = FlipFlags()) = 0;
 
-    inline void putImage(PainterTexture2D* texture, Point<int> dst_pos, unsigned int flags = 0)
+    inline void putImage(PainterTexture2D* texture, Point<int> dst_pos, FlipFlags flags = FlipFlags())
     {
         putImage(texture, dst_pos, {{0, 0}, texture->size()}, flags);
     }
 
     /* Blend multiple colors using multi-component alpha mask. */
-    virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image, unsigned int flags = 0) = 0;
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image, FlipFlags flags = FlipFlags()) = 0;
 
-    virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture, unsigned int flags = 0) = 0;
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture, FlipFlags flags = FlipFlags()) = 0;
 
     virtual void drawWaveform(const Rect<int> &rect, Color color, unsigned char*  waveform) = 0;
 

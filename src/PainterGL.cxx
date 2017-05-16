@@ -189,13 +189,13 @@ struct PainterImplGL : public PainterImpl{
         m_uber_rect.draw();
     }
 
-    virtual void putImage(Image* image, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)
+    virtual void putImage(Image* image, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags)
     {
         m_spare_2d_texture.loadImage(image);
         PainterImplGL::putImage(&m_spare_2d_texture, dst_pos, src_rect, flags);
     }
 
-    void putImageOrBlendColors(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)
+    void putImageOrBlendColors(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags)
     {
 #ifdef R64FX_DEBUG
         assert(texture->parentPainter() == this);
@@ -206,7 +206,10 @@ struct PainterImplGL : public PainterImpl{
         assert(src_rect.height() <= texture_size.height());
 #endif//R64FX_DEBUG
 
-        FlippedIntersection<int> isec(current_clip_rect, dst_pos + offset(), src_rect, flags & 1, flags & 2, flags & 4);
+        FlippedIntersection<int> isec(
+            current_clip_rect, dst_pos + offset(), src_rect,
+            flags & FlipFlags::Vert(), flags & FlipFlags::Hori(), flags & FlipFlags::Diag()
+        );
         if(!isec)
             return;
 
@@ -221,7 +224,7 @@ struct PainterImplGL : public PainterImpl{
             isec.srcy(),
             isec.srcx() + isec.srcWidth(),
             isec.srcy() + isec.srcHeight(),
-            flags & 1, flags & 2, flags & 4
+            flags & FlipFlags::Vert(), flags & FlipFlags::Hori(), flags & FlipFlags::Diag()
         );
 
         m_uber_rect.setRect(
@@ -234,19 +237,19 @@ struct PainterImplGL : public PainterImpl{
         m_uber_rect.draw();
     }
 
-    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, unsigned int flags)
+    virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags)
     {
         g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
         putImageOrBlendColors(texture, dst_pos, src_rect, flags);
     }
 
-    virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image, unsigned int flags)
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, Image* mask_image, FlipFlags flags)
     {
         m_spare_2d_texture.loadImage(mask_image);
         PainterImplGL::blendColors(dst_pos, colors, &m_spare_2d_texture, flags);
     }
 
-    virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture, unsigned int flags)
+    virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture, FlipFlags flags)
     {
         g_PainterShader_Common->setMode(PainterShader_Common::ModeBlendColors(mask_texture->componentCount()));
         for(int c=0; c<mask_texture->componentCount(); c++)
