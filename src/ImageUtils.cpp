@@ -256,7 +256,7 @@ void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> t
 }
 
 
-void blend_colors(Image* dst, Point<int> dstpos, const Colors &colors, const ImgRect &src, const bool accurate)
+void blend_colors(Image* dst, Point<int> dstpos, const Colors &colors, const ImgRect &src, FlipFlags flags)
 {
 #ifdef R64FX_DEBUG
     assert(dst != nullptr);
@@ -279,9 +279,9 @@ void blend_colors(Image* dst, Point<int> dstpos, const Colors &colors, const Img
 
                 for(int c=0; c<dst->componentCount(); c++)
                 {
-                    if(accurate)
-                        dstpx[c] = mix_colors_accurate(dstpx[c], one_minus_alpha, (colors[m][c]), alpha);
-                    else
+//                     if(accurate)
+//                         dstpx[c] = mix_colors_accurate(dstpx[c], one_minus_alpha, (colors[m][c]), alpha);
+//                     else
                         dstpx[c] = mix_colors(dstpx[c], one_minus_alpha, colors[m][c], alpha);
                 }
             }

@@ -4,6 +4,7 @@
 #include "Image.hpp"
 #include "GeometryUtils.hpp"
 #include "Color.hpp"
+#include "FlipFlags.hpp"
 
 namespace r64fx{
 
@@ -28,18 +29,10 @@ struct ImgPos{
 };
 
 
-class ImgCopyFlags{
-    unsigned int m_bits = 0;
-
+class ImgCopyFlags : public FlagBits<ImgCopyFlags>{
 public:
-    ImgCopyFlags() {}
-
-    ImgCopyFlags(unsigned int bits) : m_bits(bits) {}
-
-    inline unsigned int bits() const { return m_bits; }
+    using FlagBits<ImgCopyFlags>::FlagBits;
 };
-
-inline const ImgCopyFlags operator|(const ImgCopyFlags a, const ImgCopyFlags b) { return a.bits() | b.bits(); }
 
 ImgCopyFlags ImgCopyFlipVert();
 ImgCopyFlags ImgCopyFlipHori();
@@ -79,14 +72,14 @@ void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> t
 
 
 void blend_colors
-    (Image* dst, Point<int> dstpos, const Colors &colors, const ImgRect &src, const bool accurate = true);
+    (Image* dst, Point<int> dstpos, const Colors &colors, const ImgRect &src, FlipFlags flags = FlipFlags());
 
 
 void flip_vert(Image* img);
 
 void flip_hori(Image* img);
 
-void mirror_left2right(Image* img, ImgCopyFlags flags = 0);
+void mirror_left2right(Image* img, ImgCopyFlags flags = ImgCopyFlags());
 
 
 void invert(Image* dst, Image* src);

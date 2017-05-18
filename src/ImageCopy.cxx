@@ -23,17 +23,17 @@ namespace r64fx{
 
 ImgCopyFlags ImgCopyFlipVert()
 {
-    return R64FX_IMGOP_FLIP_VERT;
+    return ImgCopyFlags(R64FX_IMGOP_FLIP_VERT);
 }
 
 ImgCopyFlags ImgCopyFlipHori()
 {
-    return R64FX_IMGOP_FLIP_HORI;
+    return ImgCopyFlags(R64FX_IMGOP_FLIP_HORI);
 }
 
 ImgCopyFlags ImgCopyFlipDiag()
 {
-    return R64FX_IMGOP_FLIP_DIAG;
+    return ImgCopyFlags(R64FX_IMGOP_FLIP_DIAG);
 }
 
 
@@ -51,7 +51,7 @@ ImgCopyFlags ChanShuf(int dstc, int ndstc, int srcc, int nsrcc)
         assert(nsrcc == ndstc);
     }
 #endif//R64FX_DEBUG
-    return  (dstc << 8) | (ndstc << 10) | (srcc << 12) | (nsrcc << 14);
+    return ImgCopyFlags(((dstc << 8) | (ndstc << 10) | (srcc << 12) | (nsrcc << 14)));
 }
 
 struct UnpackPixopChanShuf{
@@ -78,42 +78,42 @@ struct UnpackPixopChanShuf{
 
 ImgCopyFlags ImgCopyReplace()
 {
-    return R64FX_IMGOP_REPLACE;
+    return ImgCopyFlags(R64FX_IMGOP_REPLACE);
 }
 
 ImgCopyFlags ImgCopyAdd()
 {
-    return R64FX_IMGOP_ADD;
+    return ImgCopyFlags(R64FX_IMGOP_ADD);
 }
 
 ImgCopyFlags ImgCopySub()
 {
-    return R64FX_IMGOP_SUB;
+    return ImgCopyFlags(R64FX_IMGOP_SUB);
 }
 
 ImgCopyFlags ImgCopyMul()
 {
-    return R64FX_IMGOP_MUL;
+    return ImgCopyFlags(R64FX_IMGOP_MUL);
 }
 
 ImgCopyFlags ImgCopyMin()
 {
-    return R64FX_IMGOP_MIN;
+    return ImgCopyFlags(R64FX_IMGOP_MIN);
 }
 
 ImgCopyFlags ImgCopyMax()
 {
-    return R64FX_IMGOP_MAX;
+    return ImgCopyFlags(R64FX_IMGOP_MAX);
 }
 
 ImgCopyFlags ImgCopyBlendAlpha()
 {
-    return R64FX_IMGOP_SRC_ALPHA;
+    return ImgCopyFlags(R64FX_IMGOP_SRC_ALPHA);
 }
 
 ImgCopyFlags ImgCopyBlendAlphaAccurate()
 {
-    return R64FX_IMGOP_SRC_ALPHA_ACCURATE;
+    return ImgCopyFlags(R64FX_IMGOP_SRC_ALPHA_ACCURATE);
 }
 
 

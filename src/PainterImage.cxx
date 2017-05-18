@@ -272,7 +272,7 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void blendColors(Point<int> pos, const Colors &colors, Image* mask, FlipFlags flags)
     {
-        blend_colors(window->image(), pos + offset(), colors, mask, false);
+        blend_colors(window->image(), pos + offset(), colors, mask, flags);
     }
 
     virtual void blendColors(Point<int> pos, const Colors &colors, PainterTexture2D* mask, FlipFlags flags)
