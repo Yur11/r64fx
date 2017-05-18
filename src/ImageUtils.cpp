@@ -262,15 +262,24 @@ void blend_colors(Image* dst, Point<int> dstpos, const Colors &colors, const Img
     assert(dst != nullptr);
 #endif//R64FX_DEBUG
 
-    RectIntersection<int> src_isec({0, 0, src.img->width(), src.img->height()}, src.rect);
-    RectIntersection<int> dst_isec({0, 0, dst->width(), dst->height()}, {dstpos.x(), dstpos.y(), src_isec.width(), src_isec.height()});
+    FlippedIntersection<int> isec(
+        {0, 0, dst->width(), dst->height()}, dstpos, src.rect,
+        flags & FlipFlags::Vert(), flags & FlipFlags::Hori(), flags & FlipFlags::Diag()
+    );
+    if(!isec)
+        return;
 
-    for(int y=0; y<dst_isec.height(); y++)
+    for(int y=0; y<isec.dstHeight(); y++)
     {
-        for(int x=0; x<dst_isec.width(); x++)
+        for(int x=0; x<isec.dstWidth(); x++)
         {
-            auto dstpx = dst->pixel(x + dst_isec.dstx(),                   y + dst_isec.dsty());
-            auto srcpx = src.img->pixel(x + dst_isec.srcx() + src_isec.dstx(), y + dst_isec.srcy() + src_isec.dsty());
+            int srcx = ((flags & FlipFlags::Diag()) ? y : x) + isec.srcx();
+            int srcy = ((flags & FlipFlags::Diag()) ? x : y) + isec.srcy();
+            auto srcpx = src.img->pixel(srcx, srcy);
+
+            int dstx = ((flags & FlipFlags::Hori()) ? (flipval<true>(x, isec.dstWidth()))  : x) + isec.dstx();
+            int dsty = ((flags & FlipFlags::Vert()) ? (flipval<true>(y, isec.dstHeight())) : y) + isec.dsty();
+            auto dstpx = dst->pixel(dstx, dsty);
 
             for(int m=0; m<src.img->componentCount(); m++)
             {
@@ -279,10 +288,7 @@ void blend_colors(Image* dst, Point<int> dstpos, const Colors &colors, const Img
 
                 for(int c=0; c<dst->componentCount(); c++)
                 {
-//                     if(accurate)
-//                         dstpx[c] = mix_colors_accurate(dstpx[c], one_minus_alpha, (colors[m][c]), alpha);
-//                     else
-                        dstpx[c] = mix_colors(dstpx[c], one_minus_alpha, colors[m][c], alpha);
+                    dstpx[c] = mix_colors(dstpx[c], one_minus_alpha, colors[m][c], alpha);
                 }
             }
         }
