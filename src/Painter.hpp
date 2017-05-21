@@ -84,9 +84,9 @@ public:
 
     virtual PainterTexture2D* newTexture(Image* image = nullptr) = 0;
 
-    virtual void deleteTexture(PainterTexture1D** texture) = 0;
+    virtual void deleteTexture(PainterTexture1D* texture) = 0;
 
-    virtual void deleteTexture(PainterTexture2D** texture) = 0;
+    virtual void deleteTexture(PainterTexture2D* texture) = 0;
 };
 
 

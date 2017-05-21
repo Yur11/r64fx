@@ -613,16 +613,16 @@ void View_Program::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
     childrenRemovedFromWindowEvent(event);
 
     auto tm = event->textureManager();
-    tm->deleteTexture(&m->icon10_tex);
-    tm->deleteTexture(&m->icon16_tex);
-    tm->deleteTexture(&m->icon18_tex);
-    tm->deleteTexture(&m->icon20_tex);
-    tm->deleteTexture(&m->icon22_tex);
-    tm->deleteTexture(&m->icon24_tex);
-    tm->deleteTexture(&m->icon26_tex);
-    tm->deleteTexture(&m->icon28_tex);
-    tm->deleteTexture(&m->icon30_tex);
-    tm->deleteTexture(&m->icon32_tex);
+    tm->deleteTexture(m->icon10_tex);
+    tm->deleteTexture(m->icon16_tex);
+    tm->deleteTexture(m->icon18_tex);
+    tm->deleteTexture(m->icon20_tex);
+    tm->deleteTexture(m->icon22_tex);
+    tm->deleteTexture(m->icon24_tex);
+    tm->deleteTexture(m->icon26_tex);
+    tm->deleteTexture(m->icon28_tex);
+    tm->deleteTexture(m->icon30_tex);
+    tm->deleteTexture(m->icon32_tex);
 }
 
 
