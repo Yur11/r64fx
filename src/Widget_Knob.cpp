@@ -27,8 +27,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     KnobStyle       m_style;
     int             m_size         = 0;
     int             m_frame_count  = 0;
-    Image           m_image;
-    Image           m_marker;
+    Image           m_knob_image;
     Image           m_marker_frames;
     short*          m_marker_coords = nullptr;
     float           m_cut_angle = 0.0f;
@@ -37,10 +36,9 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     : m_style(style)
     , m_size(size)
     , m_frame_count(frame_count)
-    , m_image(size, size, 2)
-    , m_marker(size, size, 2)
+    , m_knob_image(size, size, 2)
     {
-        genKnob(&m_image, {0, 0});
+        genKnob(&m_knob_image, {0, 0});
         genMarkerFrames();
     }
 
@@ -64,15 +62,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
         genKnobCenter(dst, &alpha_mask, dstpos);
         copy({dst, dstpos}, &alpha_mask, ChanShuf(1, 1, 0, 1));
-
-        fill(&m_marker, Color(0, 255));
-        fill({&m_marker, {m_size/2 - 2, 7, 4, m_size/2 - 7}}, Color(0, 127));
-        fill({&m_marker, {m_size/2 - 1, 8, 2, m_size/2 - 9}}, Color(255, 31));
-        fill({&m_marker, {m_size/2 - 2, 12, 4, 1}}, Color(0, 0));
-        for(int i=0; i<4; i++)
-        {
-            fill({&m_marker, {m_size/2 - 1, 7 + i, 2, 1}}, 1, 1, 191 - 24 * i);
-        }
     }
 
     void genKnobCenter(Image* dst, Image* alpha_mask, Point<int> dstpos)
@@ -164,9 +153,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
         mirror_left2right(&horse_shoe);
         copy(alpha_mask, &horse_shoe, ImgCopyMin());
-/*
-        fill({alpha_mask, {m_size/2 - 2, 0, 4, 6}}, 0, 1, 255);
-        fill({alpha_mask, {m_size/2 - 1, 0, 2, 5}}, 0, 1, 0);*/
     }
 
     void rotateAndCopy(Image* dst, Image* src, float angle, ImgCopyFlags pixop)
@@ -178,7 +164,20 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         copy(dst, t, src, pixop);
     }
 
-    void genMarker(Image* dst, Point<int> dstpos, float angle)
+    void genMarkerImage(Image* marker_image)
+    {
+        marker_image->load(m_size, m_size, 2);
+        fill(marker_image, Color(0, 255));
+        fill({marker_image, {m_size/2 - 2, 7, 4, m_size/2 - 7}}, Color(0, 127));
+        fill({marker_image, {m_size/2 - 1, 8, 2, m_size/2 - 9}}, Color(255, 31));
+        fill({marker_image, {m_size/2 - 2, 12, 4, 1}}, Color(0, 0));
+        for(int i=0; i<4; i++)
+        {
+            fill({marker_image, {m_size/2 - 1, 7 + i, 2, 1}}, 1, 1, 191 - 24 * i);
+        }
+    }
+
+    void genMarker(Image* dst, Image* marker_image, Point<int> dstpos, float angle)
     {
 #ifdef R64FX_DEBUG
         assert(dst->componentCount() == 2);
@@ -191,7 +190,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
         t.rotate(-angle);
         t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
-        copy(dst, t, &m_marker, ChanShuf(0, 2, 0, 2));
+        copy(dst, t, marker_image, ChanShuf(0, 2, 0, 2));
     }
 
     void genMarkerFrames()
@@ -199,6 +198,9 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 #ifdef R64FX_DEBUG
         assert(m_frame_count == 64);
 #endif//R64FX_DEBUG
+
+        Image marker_image;
+        genMarkerImage(&marker_image);
 
         m_marker_coords = new short[m_frame_count * 4 + 1];
 
@@ -209,7 +211,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         for(int i=0; i<m_frame_count; i++)
         {
             Image frame(m_size, m_size, 2);
-            genMarker(&frame, {0, 0}, (float(i) * ang_coeff));
+            genMarker(&frame, &marker_image, {0, 0}, (float(i) * ang_coeff));
             auto rect = fit_content(&frame, Color(0, 255));
             copy({&m_marker_frames, {x, 0}}, {&frame, rect}, ImgCopyReplace());
             m_marker_coords[i*4 + 0] = x;
@@ -231,8 +233,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         int n = (256 + 128) - ((in_angle + M_PI) * g_2pi_rcp) * (m_frame_count << 2);
         int m = (n >> 6) & 3;
         n &= 63;
-
-        cout << "frame: " << n << " : " << m << "\n";
 
         int dstx = m_marker_coords[n*4 + 2];
         int dsty = m_marker_coords[n*4 + 3];
@@ -289,11 +289,7 @@ public:
 
     void paint(Painter* painter, float angle)
     {
-        painter->putImage(&m_image, {0, 0});
-
-//         Image marker(m_size, m_size, 2);
-//         genMarker(&marker, {0, 0}, -angle);
-//         painter->putImage(&marker, {0, 0});
+        painter->putImage(&m_knob_image, {0, 0});
 
         Point<int> dst_pos;
         Rect<int> src_rect;
