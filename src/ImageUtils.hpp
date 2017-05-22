@@ -2,32 +2,11 @@
 #define R64FX_IMAGE_UTILS_HPP
 
 #include "Image.hpp"
-#include "GeometryUtils.hpp"
+#include "ImageArgs.hpp"
 #include "Color.hpp"
 #include "FlipFlags.hpp"
 
 namespace r64fx{
-
-struct ImgRect{
-    Image* img = nullptr;
-    Rect<int> rect;
-
-    ImgRect(Image* img, const Rect<int> &rect);
-    ImgRect(Image* img) : img(img), rect(0, 0, img->width(), img->height()) {}
-
-    inline Image* operator->() { return img; }
-};
-
-struct ImgPos{
-    Image* img = nullptr;
-    Point<int> pos;
-
-    ImgPos(Image* img, const Point<int> &pos);
-    ImgPos(Image* img) : img(img), pos(0, 0) {}
-
-    inline Image* operator->() { return img; }
-};
-
 
 class ImgCopyFlags : public FlagBits<ImgCopyFlags>{
 public:
