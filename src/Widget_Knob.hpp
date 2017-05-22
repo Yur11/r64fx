@@ -50,6 +50,10 @@ public:
     static void debugPaint(Painter* painter, Point<int> position, int size);
 
 private:
+    virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event);
+
+    virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event);
+
     virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);

@@ -23,14 +23,15 @@ Font* g_knob_font = nullptr;
 class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     static LinkedList<KnobAnimation> knob_animations;
 
-    int             m_user_count   = 0;
-    KnobStyle       m_style;
-    int             m_size         = 0;
-    int             m_frame_count  = 0;
-    Image           m_knob_image;
-    Image           m_marker_frames;
-    short*          m_marker_coords = nullptr;
-    float           m_cut_angle = 0.0f;
+    int                m_user_count              = 0;
+    KnobStyle          m_style;
+    int                m_size                    = 0;
+    int                m_frame_count             = 0;
+    Image              m_knob_image;
+    Image              m_marker_frames;
+    PainterTexture2D*  m_marker_frames_texture   = nullptr;
+    short*             m_marker_coords           = nullptr;
+    float              m_cut_angle               = 0.0f;
 
     KnobAnimation(KnobStyle style, int size, int frame_count)
     : m_style(style)
@@ -287,6 +288,28 @@ public:
     int        size()        const { return m_size; }
     int        frameCount()  const { return m_frame_count; }
 
+    inline void loadMarkerFramesTexture(PainterTextureManager* texture_manager)
+    {
+#ifdef R64FX_DEBUG
+        assert(texture_manager != nullptr);
+        assert(m_marker_frames.isGood());
+#endif//R64FX_DEBUG
+        m_marker_frames_texture = texture_manager->newTexture(&m_marker_frames);
+    }
+
+    inline bool markerFramesTextureLoaded()
+    {
+        return m_marker_frames_texture != nullptr;
+    }
+
+    float markerAngle(float value, float minval, float maxval)
+    {
+        float angle = (value - minval) / (maxval - minval);
+        angle *= M_PI * (2.0f) - m_cut_angle * 2.0f;
+        angle -= M_PI - m_cut_angle;
+        return angle;
+    }
+
     void paint(Painter* painter, float angle)
     {
         painter->putImage(&m_knob_image, {0, 0});
@@ -296,8 +319,24 @@ public:
         FlipFlags flags = FlipFlags();
         if(angle2frame(angle, dst_pos, src_rect, flags))
         {
-            painter->putImage(&m_marker_frames, dst_pos, src_rect, FlipFlags(flags));
+            painter->putImage(m_marker_frames_texture, dst_pos, src_rect, FlipFlags(flags));
         }
+    }
+
+    void debugPaint(Painter* painter, Point<int> position)
+    {
+        painter->putImage(m_marker_frames_texture, position);
+    }
+
+
+    inline void freeMarkerFramesTexture(PainterTextureManager* texture_manager)
+    {
+#ifdef R64FX_DEBUG
+        assert(texture_manager != nullptr);
+        assert(m_marker_frames_texture != nullptr);
+#endif//R64FX_DEBUG
+        texture_manager->deleteTexture(m_marker_frames_texture);
+        m_marker_frames_texture = nullptr;
     }
 
     static KnobAnimation* getAnimation(KnobStyle style, int size)
@@ -329,19 +368,6 @@ public:
             knob_animations.remove(anim);
             delete anim;
         }
-    }
-
-    void debugPaint(Painter* painter, Point<int> position)
-    {
-        painter->putImage(&m_marker_frames, position);
-    }
-
-    float markerAngle(float value, float minval, float maxval)
-    {
-        float angle = (value - minval) / (maxval - minval);
-        angle *= M_PI * (2.0f) - m_cut_angle * 2.0f;
-        angle -= M_PI - m_cut_angle;
-        return angle;
     }
 };
 
@@ -449,6 +475,20 @@ void Widget_Knob::debugPaint(Painter* painter, Point<int> position, int size)
     auto anim = KnobAnimation::getAnimation(KnobStyle::Bipolar, size);
     anim->debugPaint(painter, position);
     KnobAnimation::freeAnimation(anim);
+}
+
+
+void Widget_Knob::addedToWindowEvent(WidgetAddedToWindowEvent* event)
+{
+    if(!m_animation->markerFramesTextureLoaded())
+        m_animation->loadMarkerFramesTexture(event->textureManager());
+}
+
+
+void Widget_Knob::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
+{
+    if(m_animation->markerFramesTextureLoaded())
+        m_animation->freeMarkerFramesTexture(event->textureManager());
 }
 
 
