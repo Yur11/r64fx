@@ -18,7 +18,6 @@ float g_2pi_rcp = 0.5f / M_PI;
 
 }//namespace
 
-Font* g_knob_font = nullptr;
 
 class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     static LinkedList<KnobAnimation> knob_animations;
@@ -226,7 +225,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
     void freeMarkerFrames()
     {
-        delete m_marker_coords;
+        delete[] m_marker_coords;
     }
 
     bool angle2frame(float in_angle, Point<int> &out_dst_pos, Rect<int> &out_src_rect, FlipFlags &out_flags)
