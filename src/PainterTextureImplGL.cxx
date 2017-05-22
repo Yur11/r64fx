@@ -2,6 +2,63 @@
 
 namespace r64fx{
 
+namespace{
+
+int format(int component_count)
+{
+#ifdef R64FX_DEBUG
+    assert(component_count >= 1);
+    assert(component_count <= 4);
+#endif//R64FX_DEBUG
+
+    switch(component_count)
+    {
+        case 1:
+            return GL_RED;
+
+        case 2:
+            return GL_RG;
+
+        case 3:
+            return GL_RGB;
+
+        case 4:
+            return GL_RGBA;
+
+        default:
+            return 0;
+    }
+}
+
+int internal_format(int component_count)
+{
+#ifdef R64FX_DEBUG
+    assert(component_count >= 1);
+    assert(component_count <= 4);
+#endif//R64FX_DEBUG
+
+    switch(component_count)
+    {
+        case 1:
+            return GL_R8;
+
+        case 2:
+            return GL_RG8;
+
+        case 3:
+            return GL_RGB8;
+
+        case 4:
+            return GL_RGBA8;
+
+        default:
+            return 0;
+    }
+}
+
+}//namespace
+
+
 class PainterTextureImplGL{
 protected:
     PainterImplGL*  m_parent_painter   = nullptr;
@@ -11,41 +68,6 @@ protected:
     PainterTextureImplGL(PainterImplGL* parent_painter)
     : m_parent_painter(parent_painter)
     {}
-
-    bool formats(int component_count, GLenum &internal_format, GLenum &format)
-    {
-#ifdef R64FX_DEBUG
-        assert(component_count >= 1);
-        assert(component_count <= 4);
-#endif//R64FX_DEBUG
-
-        if(component_count == 1)
-        {
-            internal_format = GL_R8;
-            format = GL_RED;
-        }
-        else if(m_component_count == 2)
-        {
-            internal_format = GL_RG8;
-            format = GL_RG;
-        }
-        else if(component_count == 3)
-        {
-            internal_format = GL_RGB8;
-            format = GL_RGB;
-        }
-        else if(component_count == 4)
-        {
-            internal_format = GL_RGBA8;
-            format = GL_RGBA;
-        }
-        else
-        {
-            return false;
-        }
-
-        return true;
-    }
 };
 
 
@@ -119,13 +141,11 @@ public:
         gl::TexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         m_component_count = component_count;
-        GLenum internal_format = 0, format = 0;
-        formats(m_component_count, internal_format, format);
 
         gl::TexStorage1D(
             GL_TEXTURE_1D,
             1,
-            internal_format,
+            internal_format(component_count),
             length
         );
 
@@ -136,7 +156,7 @@ public:
             0,
             0,
             length,
-            format,
+            format(component_count),
             type,
             data
         );
@@ -175,10 +195,7 @@ class PainterTexture2DImplGL
 : public PainterTexture2D
 , public LinkedList<PainterTexture2DImplGL>::Node
 , public PainterTextureImplGL {
-    Point<int>      m_posision;
     Size<int>       m_size;
-    float           m_wrcp             = 1.0f;
-    float           m_hrcp             = 1.0f;
 
 public:
     PainterTexture2DImplGL(PainterImplGL* parent_painter)
@@ -202,16 +219,6 @@ public:
         return m_size.height();
     }
 
-    inline float wrcp() const
-    {
-        return m_wrcp;
-    }
-
-    inline float hrcp() const
-    {
-        return m_hrcp;
-    }
-
     inline void bind()
     {
         gl::BindTexture(GL_TEXTURE_2D, m_texture);
@@ -229,26 +236,13 @@ public:
         return m_component_count;
     }
 
-    virtual Point<int> position()
-    {
-        return m_posision;
-    }
-
     virtual Size<int> size()
     {
         return m_size;
     }
 
-    virtual void loadImage(Image* teximg)
+    virtual void allocStorage(Size<int> size, int component_count)
     {
-#ifdef R64FX_DEBUG
-        assert(teximg != nullptr);
-        assert(teximg->width() > 0);
-        assert(teximg->height() > 0);
-        assert(teximg->componentCount() > 0);
-        assert(teximg->componentCount() <= 4);
-#endif//R64FX_DEBUG
-
         free();
 
         gl::GenTextures(1, &m_texture);
@@ -256,33 +250,53 @@ public:
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        m_component_count = teximg->componentCount();
-        GLenum internal_format = 0, format = 0;
-        formats(m_component_count, internal_format, format);
-
         gl::TexStorage2D(
             GL_TEXTURE_2D,
             1,
-            internal_format,
-            teximg->width(), teximg->height()
+            internal_format(component_count),
+            size.width(), size.height()
         );
 
         gl::PixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        m_size = size;
+        m_component_count = component_count;
+    }
+
+    virtual void loadSubImage(const Point<int> &dstpos, const ImgRect &src)
+    {
+#ifdef R64FX_DEBUG
+        assert(src.rect.left()    >=  0);
+        assert(src.rect.top()     >=  0);
+        assert(src.rect.right()   <=  m_size.width());
+        assert(src.rect.bottom()  <=  m_size.height());
+        assert(src.img->componentCount() == m_component_count);
+#endif//R64FX_DEBUG
 
         gl::TexSubImage2D(
             GL_TEXTURE_2D,
             0,
             0, 0,
-            teximg->width(),
-            teximg->height(),
-            format,
+            src.img->width(),
+            src.img->height(),
+            format(src.img->componentCount()),
             GL_UNSIGNED_BYTE,
-            teximg->data()
+            src.img->data()
         );
+    }
 
-        m_size = {teximg->width(), teximg->height()};
-        m_wrcp = 1.0f / float(teximg->width());
-        m_hrcp = 1.0f / float(teximg->height());
+    virtual void loadImage(Image* teximg)
+    {
+#ifdef R64FX_DEBUG
+        assert(teximg != nullptr);
+        assert(teximg->width()           >   0);
+        assert(teximg->height()          >   0);
+        assert(teximg->componentCount()  >   0);
+        assert(teximg->componentCount()  <=  4);
+#endif//R64FX_DEBUG
+
+        PainterTexture2DImplGL::allocStorage({teximg->width(), teximg->height()}, teximg->componentCount());
+        PainterTexture2DImplGL::loadSubImage({0, 0}, teximg);
     }
 
     virtual void readImage(Image* teximg)

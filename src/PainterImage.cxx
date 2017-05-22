@@ -139,7 +139,6 @@ public:
 
 class PainterTexture2DImplImage : public PainterTexture2D, public LinkedList<PainterTexture2DImplImage>::Node{
     PainterImplImage* m_parent_painter;
-    Point<int> m_pos;
     Image m_img;
 
 public:
@@ -181,9 +180,9 @@ public:
         return m_img.isGood();
     }
 
-    virtual Point<int> position()
+    virtual int componentCount()
     {
-        return m_pos;
+        return m_img.componentCount();
     }
 
     virtual Size<int> size()
@@ -191,9 +190,14 @@ public:
         return {m_img.width(), m_img.height()};
     }
 
-    virtual int componentCount()
+    virtual void allocStorage(Size<int> size, int component_count)
     {
-        return m_img.componentCount();
+        m_img.load(size.width(), size.height(), component_count);
+    }
+
+    virtual void loadSubImage(const Point<int> &dstpos, const ImgRect &src)
+    {
+        copy({&m_img, dstpos}, src);
     }
 
     virtual void loadImage(Image* teximg)

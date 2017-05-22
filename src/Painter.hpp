@@ -3,7 +3,7 @@
 
 #include "Color.hpp"
 #include "Image.hpp"
-#include "GeometryUtils.hpp"
+#include "ImageArgs.hpp"
 #include "Offset.hpp"
 #include "FlipFlags.hpp"
 
@@ -59,9 +59,11 @@ protected:
     virtual ~PainterTexture2D() {};
 
 public:
-    virtual Point<int> position() = 0;
-
     virtual Size<int> size() = 0;
+
+    virtual void allocStorage(Size<int> size, int component_count) = 0;
+
+    virtual void loadSubImage(const Point<int> &dstpos, const ImgRect &src) = 0;
 
     virtual void loadImage(Image* teximg) = 0;
 
