@@ -26,11 +26,10 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     KnobStyle          m_style;
     int                m_size                    = 0;
     int                m_frame_count             = 0;
-    Image              m_knob_image;
-    Image              m_marker_frames;
 
-    PainterTexture2D*  m_marker_frames_texture   = nullptr;
-    struct MarkerCoord{
+    Image*             m_image                   = nullptr;
+
+    struct MarkerFrameCoords{
         short w = 0;
         short h = 0;
 
@@ -42,7 +41,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         short dstx = 0;
         short dsty = 0;
     };
-    MarkerCoord*       m_marker_coords           = nullptr;
+    MarkerFrameCoords*       m_marker_coords     = nullptr;
 
     /* Angle at which the decoration ring is cut.
        Used to limit marker movement. */
@@ -52,15 +51,19 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     : m_style(style)
     , m_size(size)
     , m_frame_count(frame_count)
-    , m_knob_image(size, size, 2)
     {
-        genKnob(&m_knob_image, {0, 0});
-        genMarkerFrames();
+        m_image = new Image(m_size * m_frame_count, m_size, 2);
+        m_marker_coords = new MarkerFrameCoords[m_frame_count];
+        fill(m_image, Color(0, 255));
+
+        genKnob(m_image, {0, 0});
+        genMarkerFrames(m_image, m_marker_coords, {m_size, 0});
     }
 
     ~KnobAnimation()
     {
-        freeMarkerFrames();
+        delete m_image;
+        delete[] m_marker_coords;
     }
 
     void genKnob(Image* dst, Point<int> dstpos)
@@ -209,7 +212,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         copy(dst, t, marker_image, ChanShuf(0, 2, 0, 2));
     }
 
-    void genMarkerFrames()
+    void genMarkerFrames(Image* dstimg, MarkerFrameCoords* mc, Point<int> dstpos)
     {
 #ifdef R64FX_DEBUG
         assert(m_frame_count == 64);
@@ -218,18 +221,14 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         Image marker_image;
         genMarkerImage(&marker_image);
 
-        m_marker_coords = new MarkerCoord[m_frame_count];
-
-        m_marker_frames.load((m_size)*(m_frame_count/2), m_size, 2);
-        fill(&m_marker_frames, Color(0, 255));
         float ang_coeff = (M_PI * 0.5) / m_frame_count;
-        int x = 0;
+        int x = dstpos.x();
         for(int i=0; i<m_frame_count; i++)
         {
             Image frame(m_size, m_size, 2);
             genMarker(&frame, &marker_image, {0, 0}, (float(i) * ang_coeff));
             auto rect = fit_content(&frame, Color(0, 255));
-            copy({&m_marker_frames, {x, 0}}, {&frame, rect}, ImgCopyReplace());
+            copy({dstimg, {x, 0}}, {&frame, rect}, ImgCopyReplace());
 
             auto &mc = m_marker_coords[i];
             mc.w = rect.width();
@@ -240,11 +239,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             mc.dsty = rect.y();
             x += rect.width();
         }
-    }
-
-    void freeMarkerFrames()
-    {
-        delete[] m_marker_coords;
     }
 
     bool angle2frame(float in_angle, Point<int> &out_dst_pos, Rect<int> &out_src_rect, FlipFlags &out_flags)
@@ -301,16 +295,17 @@ public:
 
     inline void loadMarkerFramesTexture(PainterTextureManager* texture_manager)
     {
-#ifdef R64FX_DEBUG
-        assert(texture_manager != nullptr);
-        assert(m_marker_frames.isGood());
-#endif//R64FX_DEBUG
-        m_marker_frames_texture = texture_manager->newTexture(&m_marker_frames);
+// #ifdef R64FX_DEBUG
+//         assert(texture_manager != nullptr);
+//         assert(m_image.isGood());
+// #endif//R64FX_DEBUG
+//         m_marker_frames_texture = texture_manager->newTexture(&m_marker_frames);
     }
 
     inline bool markerFramesTextureLoaded()
     {
-        return m_marker_frames_texture != nullptr;
+//         return m_marker_frames_texture != nullptr;
+        return false;
     }
 
     float markerAngle(float value, float minval, float maxval)
@@ -323,31 +318,30 @@ public:
 
     void paint(Painter* painter, float angle)
     {
-        painter->putImage(&m_knob_image, {0, 0});
+        painter->putImage(m_image, {0, 0}, {0, 0, m_size, m_size});
 
         Point<int> dst_pos;
         Rect<int> src_rect;
         FlipFlags flags = FlipFlags();
         if(angle2frame(angle, dst_pos, src_rect, flags))
         {
-            painter->putImage(m_marker_frames_texture, dst_pos, src_rect, FlipFlags(flags));
+            painter->putImage(m_image, dst_pos, src_rect, FlipFlags(flags));
         }
     }
 
     void debugPaint(Painter* painter, Point<int> position)
     {
-        painter->putImage(m_marker_frames_texture, position);
+        painter->putImage(m_image, position);
     }
-
 
     inline void freeMarkerFramesTexture(PainterTextureManager* texture_manager)
     {
-#ifdef R64FX_DEBUG
-        assert(texture_manager != nullptr);
-        assert(m_marker_frames_texture != nullptr);
-#endif//R64FX_DEBUG
-        texture_manager->deleteTexture(m_marker_frames_texture);
-        m_marker_frames_texture = nullptr;
+// #ifdef R64FX_DEBUG
+//         assert(texture_manager != nullptr);
+//         assert(m_marker_frames_texture != nullptr);
+// #endif//R64FX_DEBUG
+//         texture_manager->deleteTexture(m_marker_frames_texture);
+//         m_marker_frames_texture = nullptr;
     }
 
     static KnobAnimation* getAnimation(KnobStyle style, int size)
