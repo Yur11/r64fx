@@ -28,8 +28,24 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     int                m_frame_count             = 0;
     Image              m_knob_image;
     Image              m_marker_frames;
+
     PainterTexture2D*  m_marker_frames_texture   = nullptr;
-    short*             m_marker_coords           = nullptr;
+    struct MarkerCoord{
+        short w = 0;
+        short h = 0;
+
+        /* Texture coords. */
+        short srcx = 0;
+        short srcy = 0;
+
+        /* Resulting image coords. */
+        short dstx = 0;
+        short dsty = 0;
+    };
+    MarkerCoord*       m_marker_coords           = nullptr;
+
+    /* Angle at which the decoration ring is cut.
+       Used to limit marker movement. */
     float              m_cut_angle               = 0.0f;
 
     KnobAnimation(KnobStyle style, int size, int frame_count)
@@ -202,7 +218,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         Image marker_image;
         genMarkerImage(&marker_image);
 
-        m_marker_coords = new short[m_frame_count * 4 + 1];
+        m_marker_coords = new MarkerCoord[m_frame_count];
 
         m_marker_frames.load((m_size)*(m_frame_count/2), m_size, 2);
         fill(&m_marker_frames, Color(0, 255));
@@ -214,13 +230,16 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             genMarker(&frame, &marker_image, {0, 0}, (float(i) * ang_coeff));
             auto rect = fit_content(&frame, Color(0, 255));
             copy({&m_marker_frames, {x, 0}}, {&frame, rect}, ImgCopyReplace());
-            m_marker_coords[i*4 + 0] = x;
-            m_marker_coords[i*4 + 1] = rect.height();
-            m_marker_coords[i*4 + 2] = rect.x();
-            m_marker_coords[i*4 + 3] = rect.y();
+
+            auto &mc = m_marker_coords[i];
+            mc.w = rect.width();
+            mc.h = rect.height();
+            mc.srcx = x;
+            mc.srcy = 0;
+            mc.dstx = rect.x();
+            mc.dsty = rect.y();
             x += rect.width();
         }
-        m_marker_coords[m_frame_count*4] = x;
     }
 
     void freeMarkerFrames()
@@ -234,45 +253,38 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         int m = (n >> 6) & 3;
         n &= 63;
 
-        int dstx = m_marker_coords[n*4 + 2];
-        int dsty = m_marker_coords[n*4 + 3];
-
-        int srcx = m_marker_coords[n*4];
-        int srcy = 0;
-
-        int srcw = m_marker_coords[n*4 + 4] - m_marker_coords[n*4];
-        int srch = m_marker_coords[n*4 + 1];
+        auto &mc = m_marker_coords[n];
 
         switch(m)
         {
             case 0:
             {
-                out_dst_pos = {dstx, dsty};
-                out_src_rect = {srcx, srcy, srcw, srch};
+                out_dst_pos = {mc.dstx, mc.dsty};
+                out_src_rect = {mc.srcx, mc.srcy, mc.w, mc.h};
                 out_flags = FlipFlags();
                 return true;
             }
 
             case 1:
             {
-                out_dst_pos = {dsty, m_size - srcw - dstx};
-                out_src_rect = {srcx, srcy, srcw, srch};
+                out_dst_pos = {mc.dsty, m_size - mc.w - mc.dstx};
+                out_src_rect = {mc.srcx, mc.srcy, mc.w, mc.h};
                 out_flags = FlipFlags::Vert() | FlipFlags::Diag();
                 return true;
             }
 
             case 2:
             {
-                out_dst_pos = {m_size - srcw - dstx, m_size - srch - dsty};
-                out_src_rect = {srcx, srcy, srcw, srch};
+                out_dst_pos = {m_size - mc.w - mc.dstx, m_size - mc.h - mc.dsty};
+                out_src_rect = {mc.srcx, mc.srcy, mc.w, mc.h};
                 out_flags = FlipFlags::Vert() | FlipFlags::Hori();
                 return true;
             }
 
             case 3:
             {
-                out_dst_pos = {m_size - srch - dsty, dstx};
-                out_src_rect = {srcx, srcy, srcw, srch};
+                out_dst_pos = {m_size - mc.h - mc.dsty, mc.dstx};
+                out_src_rect = {mc.srcx, mc.srcy, mc.w, mc.h};
                 out_flags = FlipFlags::Hori() | FlipFlags::Diag();
                 return true;
             }
