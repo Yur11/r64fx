@@ -29,6 +29,8 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
     Image*             m_image                   = nullptr;
 
+    PainterTexture2D*  m_texture                 = nullptr;
+
     struct MarkerFrameCoords{
         short w = 0;
         short h = 0;
@@ -309,17 +311,16 @@ public:
 
     inline void loadMarkerFramesTexture(PainterTextureManager* texture_manager)
     {
-// #ifdef R64FX_DEBUG
-//         assert(texture_manager != nullptr);
-//         assert(m_image.isGood());
-// #endif//R64FX_DEBUG
-//         m_marker_frames_texture = texture_manager->newTexture(&m_marker_frames);
+#ifdef R64FX_DEBUG
+        assert(texture_manager != nullptr);
+        assert(m_image->isGood());
+#endif//R64FX_DEBUG
+        m_texture = texture_manager->newTexture(m_image);
     }
 
     inline bool markerFramesTextureLoaded()
     {
-//         return m_marker_frames_texture != nullptr;
-        return false;
+        return m_texture != nullptr;
     }
 
     float markerAngle(float value, float minval, float maxval)
@@ -339,7 +340,7 @@ public:
         FlipFlags flags = FlipFlags();
         if(angle2frame(angle, dst_pos, src_rect, flags))
         {
-            painter->putImage(m_image, dst_pos, src_rect, FlipFlags(flags));
+            painter->putImage(m_texture, dst_pos, src_rect, FlipFlags(flags));
         }
     }
 
@@ -350,12 +351,12 @@ public:
 
     inline void freeMarkerFramesTexture(PainterTextureManager* texture_manager)
     {
-// #ifdef R64FX_DEBUG
-//         assert(texture_manager != nullptr);
-//         assert(m_marker_frames_texture != nullptr);
-// #endif//R64FX_DEBUG
-//         texture_manager->deleteTexture(m_marker_frames_texture);
-//         m_marker_frames_texture = nullptr;
+#ifdef R64FX_DEBUG
+        assert(texture_manager != nullptr);
+        assert(m_texture != nullptr);
+#endif//R64FX_DEBUG
+        texture_manager->deleteTexture(m_texture);
+        m_texture = nullptr;
     }
 
     static KnobAnimation* getAnimation(KnobStyle style, int size)
