@@ -57,7 +57,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         fill(m_image, Color(0, 255));
 
         genKnob(m_image, {0, 0});
-        genMarkerFrames(m_image, m_marker_coords, {m_size, 0});
+        genMarkerFrames(m_image, m_marker_coords, {m_size, 0}, m_size);
     }
 
     ~KnobAnimation()
@@ -189,7 +189,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         fill(marker_image, Color(0, 255));
         fill({marker_image, {m_size/2 - 2, 7, 4, m_size/2 - 7}}, Color(0, 127));
         fill({marker_image, {m_size/2 - 1, 8, 2, m_size/2 - 9}}, Color(255, 31));
-        fill({marker_image, {m_size/2 - 2, 12, 4, 1}}, Color(0, 0));
+//         fill({marker_image, {m_size/2 - 2, 12, 4, 1}}, Color(0, 0));
         for(int i=0; i<4; i++)
         {
             fill({marker_image, {m_size/2 - 1, 7 + i, 2, 1}}, 1, 1, 191 - 24 * i);
@@ -212,7 +212,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         copy(dst, t, marker_image, ChanShuf(0, 2, 0, 2));
     }
 
-    void genMarkerFrames(Image* dstimg, MarkerFrameCoords* mc, Point<int> dstpos)
+    void genMarkerFrames(Image* dstimg, MarkerFrameCoords* mc, Point<int> dstpos, int height)
     {
 #ifdef R64FX_DEBUG
         assert(m_frame_count == 64);
@@ -223,21 +223,35 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
         float ang_coeff = (M_PI * 0.5) / m_frame_count;
         int x = dstpos.x();
+        int next_x = x;
+        int y = dstpos.y();
         for(int i=0; i<m_frame_count; i++)
         {
             Image frame(m_size, m_size, 2);
             genMarker(&frame, &marker_image, {0, 0}, (float(i) * ang_coeff));
             auto rect = fit_content(&frame, Color(0, 255));
-            copy({dstimg, {x, 0}}, {&frame, rect}, ImgCopyReplace());
 
             auto &mc = m_marker_coords[i];
             mc.w = rect.width();
             mc.h = rect.height();
-            mc.srcx = x;
-            mc.srcy = 0;
             mc.dstx = rect.x();
             mc.dsty = rect.y();
-            x += rect.width();
+
+            int xx = x + rect.width();
+            if(xx > next_x)
+                next_x = xx;
+
+            if((y - dstpos.y() + rect.height()) > height)
+            {
+                x = next_x;
+                y = dstpos.y();
+            }
+
+            mc.srcx = x;
+            mc.srcy = y;
+
+            copy({dstimg, {mc.srcx, mc.srcy}}, {&frame, rect}, ImgCopyReplace());
+            y += rect.height();
         }
     }
 
