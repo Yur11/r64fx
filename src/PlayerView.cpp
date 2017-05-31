@@ -363,9 +363,9 @@ public:
         m->slider_pitch->setMinValue(-1.0f);
         m->slider_pitch->setMaxValue(+1.0f);
         m->slider_pitch->setValue(0.0f);
-        m->slider_pitch->onValueChanged([](void* arg, Widget_Slider*, float slider_pos){
+        m->slider_pitch->onValueChanged([](void* arg, float new_value){
             auto m = (PlayerViewPrivate*) arg;
-            float pitch_shift = -0.5f * slider_pos;
+            float pitch_shift = -0.5f * new_value;
             m->pitchChanged(pitch_shift);
         }, m);
 

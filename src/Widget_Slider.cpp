@@ -44,8 +44,6 @@ namespace{
     }
 
     int g_slider_count = 0;
-
-    void on_value_changed_stub(void* arg, Widget_Slider* slider, float value) {}
 }//namespace
 
 
@@ -85,47 +83,7 @@ Widget_Slider::~Widget_Slider()
 }
 
 
-void Widget_Slider::setMinValue(float value)
-{
-    m_min_value = value;
-}
-
-
-float Widget_Slider::minValue() const
-{
-    return m_min_value;
-}
-
-
-void Widget_Slider::setMaxValue(float value)
-{
-    m_max_value = value;
-}
-
-
-float Widget_Slider::maxValue() const
-{
-    return m_max_value;
-}
-
-
-float Widget_Slider::valueRange() const
-{
-    return maxValue() - minValue();
-}
-
-
-void Widget_Slider::setValue(float value)
-{
-    m_value = value;
-    if(value < m_min_value)
-        m_value = m_min_value;
-    else if(value > m_max_value)
-        m_value = m_max_value;
-}
-
-
-void Widget_Slider::setValue(Point<int> position)
+void Widget_Slider::setValueFromPosition(Point<int> position)
 {
     int pos;
     if(orientation() == Orientation::Vertical)
@@ -145,12 +103,6 @@ void Widget_Slider::setValue(Point<int> position)
     float new_value = (float(pos)/float(barLength() - 1)) * valueRange() + minValue();
     setValue(new_value);
     repaint();
-}
-
-
-float Widget_Slider::value() const
-{
-    return m_value;
 }
 
 
@@ -218,20 +170,6 @@ bool Widget_Slider::isReversed(bool yes)
 bool Widget_Slider::isReversed() const
 {
     return m_flags & R64FX_WIDGET_IS_REVERSED;
-}
-
-
-void Widget_Slider::onValueChanged(void (on_value_changed)(void* arg, Widget_Slider* slider, float value), void* arg)
-{
-    if(on_value_changed)
-    {
-        m_on_value_changed = on_value_changed;
-    }
-    else
-    {
-        m_on_value_changed = on_value_changed_stub;
-    }
-    m_on_value_changed_arg = arg;
 }
 
 
@@ -308,7 +246,7 @@ void Widget_Slider::mousePressEvent(MousePressEvent* event)
     if(event->button() == MouseButton::Left())
     {
         grabMouseFocus();
-        setValue(event->position());
+        setValueFromPosition(event->position());
     }
 }
 
@@ -329,8 +267,7 @@ void Widget_Slider::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        setValue(event->position());
-        m_on_value_changed(m_on_value_changed_arg, this, value());
+        setValueFromPosition(event->position());
     }
 }
 

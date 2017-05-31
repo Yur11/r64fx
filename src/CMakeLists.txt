@@ -91,6 +91,7 @@ set(SRC
     TimeUtils.cpp
     Timer.cpp
     UndoRedoChain.cpp
+    Value.cpp
     WaveformUtils.cpp
     Widget.cpp
     Widget_Button.cpp

@@ -9,8 +9,8 @@
 #include <iostream>
 using namespace std;
 
-#include "Atlas.hpp"
 #include "Widget_Knob.hpp"
+#include "Widget_Slider.hpp"
 
 namespace r64fx{
 
@@ -23,11 +23,11 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
         g_font = new Font("mono", 14);
     }
 
-    for(int i=0; i<10; i++)
-    {
-        auto knob = new Widget_Knob(44 + i*4, this);
-        knob->setPosition({(44 + i*4)*i - 10, 50});
-    }
+    auto knob = new Widget_Knob(48, this);
+    knob->setPosition({50, 50});
+
+    auto slider = new Widget_Slider(200, Orientation::Vertical, this);
+    slider->setPosition({50, 120});
 }
 
 
@@ -48,21 +48,6 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
     childrenPaintEvent(event);
-
-//     Image img(64, 64, 3);
-//     fill(&img, Color(255, 255, 255));
-//     fill_circle(&img, 1, 2, Color(0, 0), {0, 0}, img.width());
-//     fill({&img, {0,             0,              img.width()/2, img.height()/2}},  1, 1, 255);
-//     fill({&img, {img.width()/2, img.height()/2, img.width()/2, img.height()/2}},  2, 1, 255);
-//     fill({&img, {img.width()/2, 0,              img.width()/2, img.height()/2}},  Color(0, 255, 0));
-//     fill({&img, {0,             img.height()/2, img.width()/2, img.height()/2}},  Color(0, 0, 255));
-// 
-//     for(int i=0; i<8; i++)
-//     {
-//         p->putImage(&img, {30 + i * 80, 200}, {0, 12, 40, 35}, FlipFlags(i));
-//     }
-
-    Widget_Knob::debugPaint(p, {50, 150}, 60);
 }
 
 

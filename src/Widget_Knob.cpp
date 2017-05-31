@@ -391,17 +391,11 @@ public:
 LinkedList<KnobAnimation> KnobAnimation::knob_animations;
 
 
-namespace{
-    void on_value_changed_stub(void* arg, Widget_Knob* knob, float new_value) {}
-}//namespace
-
-
 Widget_Knob::Widget_Knob(int size, Widget* parent)
 : Widget(parent)
 {
     setSize({size, size});
     m_animation = KnobAnimation::getAnimation(size);
-    onValueChanged(nullptr);
     setMinValue(-1.0f);
     setMaxValue(+1.0f);
     setValue(0.0f);
@@ -412,78 +406,6 @@ Widget_Knob::~Widget_Knob()
 {
     if(m_animation)
         KnobAnimation::freeAnimation(m_animation);
-}
-
-
-void Widget_Knob::setValue(float value, bool notify)
-{
-    m_value = value;
-    if(m_value < minValue())
-        m_value = minValue();
-    else if(m_value > maxValue())
-        m_value = maxValue();
-}
-
-
-float Widget_Knob::value() const
-{
-    return m_value;
-}
-
-
-void Widget_Knob::setMinValue(float value)
-{
-    m_min_value = value;
-}
-
-
-float Widget_Knob::minValue() const
-{
-    return m_min_value;
-}
-
-
-void Widget_Knob::setMaxValue(float value)
-{
-    m_max_value = value;
-}
-
-
-float Widget_Knob::maxValue() const
-{
-    return m_max_value;
-}
-
-
-void Widget_Knob::setValueStep(float step)
-{
-    m_value_step = step;
-}
-
-
-float Widget_Knob::valueStep() const
-{
-    return m_value_step;
-}
-
-
-float Widget_Knob::valueRange() const
-{
-    return maxValue() - minValue();
-}
-
-
-void Widget_Knob::onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob* knob, float new_value), void* arg)
-{
-    if(on_value_changed)
-    {
-        m_on_value_changed = on_value_changed;
-    }
-    else
-    {
-        m_on_value_changed = on_value_changed_stub;
-    }
-    m_on_value_changed_arg = arg;
 }
 
 
@@ -514,7 +436,7 @@ void Widget_Knob::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
-    m_animation->paint(p, m_animation->markerAngle(m_value, minValue(), maxValue()));
+    m_animation->paint(p, m_animation->markerAngle(value(), minValue(), maxValue()));
 }
 
 
