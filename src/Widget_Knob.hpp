@@ -7,11 +7,6 @@ namespace r64fx{
 
 class KnobAnimation;
 
-enum class KnobStyle{
-    Bipolar,
-    Unipolar
-};
-
 class Widget_Knob : public Widget{
 protected:
     float           m_min_value = 0.0f;
@@ -23,7 +18,7 @@ protected:
     void* m_on_value_changed_arg = nullptr;
 
 public:
-    Widget_Knob(KnobStyle style, int size, Widget* parent = nullptr);
+    Widget_Knob(int size, Widget* parent = nullptr);
 
     virtual ~Widget_Knob();
 

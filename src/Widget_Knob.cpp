@@ -23,7 +23,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     static LinkedList<KnobAnimation> knob_animations;
 
     int                m_user_count              = 0;
-    KnobStyle          m_style;
     int                m_size                    = 0;
     int                m_frame_count             = 0;
 
@@ -49,9 +48,8 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
        Used to limit marker movement. */
     float              m_cut_angle               = 0.0f;
 
-    KnobAnimation(KnobStyle style, int size, int frame_count)
-    : m_style(style)
-    , m_size(size)
+    KnobAnimation(int size, int frame_count)
+    : m_size(size)
     , m_frame_count(frame_count)
     {
         m_image = new Image(m_size * m_frame_count, m_size, 2);
@@ -305,7 +303,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
     }
 
 public:
-    KnobStyle  style()       const { return m_style; }
     int        size()        const { return m_size; }
     int        frameCount()  const { return m_frame_count; }
 
@@ -359,12 +356,12 @@ public:
         m_texture = nullptr;
     }
 
-    static KnobAnimation* getAnimation(KnobStyle style, int size)
+    static KnobAnimation* getAnimation(int size)
     {
         KnobAnimation* anim = nullptr;
         for(auto ka : knob_animations)
         {
-            if(ka->style() == style && ka->size() == size)
+            if(ka->size() == size)
             {
                 anim = ka;
                 break;
@@ -373,7 +370,7 @@ public:
 
         if(!anim)
         {
-            anim = new KnobAnimation(style, size, 64);
+            anim = new KnobAnimation(size, 64);
             knob_animations.append(anim);
         }
         anim->m_user_count++;
@@ -399,11 +396,11 @@ namespace{
 }//namespace
 
 
-Widget_Knob::Widget_Knob(KnobStyle style, int size, Widget* parent)
+Widget_Knob::Widget_Knob(int size, Widget* parent)
 : Widget(parent)
 {
     setSize({size, size});
-    m_animation = KnobAnimation::getAnimation(style, size);
+    m_animation = KnobAnimation::getAnimation(size);
     onValueChanged(nullptr);
     setMinValue(-1.0f);
     setMaxValue(+1.0f);
@@ -492,7 +489,7 @@ void Widget_Knob::onValueChanged(void (*on_value_changed)(void* arg, Widget_Knob
 
 void Widget_Knob::debugPaint(Painter* painter, Point<int> position, int size)
 {
-    auto anim = KnobAnimation::getAnimation(KnobStyle::Bipolar, size);
+    auto anim = KnobAnimation::getAnimation(size);
     anim->debugPaint(painter, position);
     KnobAnimation::freeAnimation(anim);
 }
