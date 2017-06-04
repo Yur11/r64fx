@@ -363,6 +363,16 @@ inline void Uniform1f(GLint location, GLfloat v0)
 }
 
 
+R64FX_MAYBE_EXTERN void (*r64fx_impl_glUniform2f)
+    (GLint location, GLfloat v0, GLfloat v1);
+
+inline void Uniform2f(GLint location, GLfloat v0, GLfloat v1)
+{
+    r64fx_impl_glUniform2f(location, v0, v1);
+    CHECK_FOR_GL_ERRORS("glUniform2f");
+}
+
+
 R64FX_MAYBE_EXTERN void (*r64fx_impl_glUniform4f)
     (GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
 
