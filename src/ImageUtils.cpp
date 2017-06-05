@@ -256,6 +256,35 @@ void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> t
 }
 
 
+void stroke_rect(const ImgRect &dst, Color stroke, Color fill, int stroke_width)
+{
+    #ifdef R64FX_DEBUG
+    assert(dst.img != nullptr);
+#endif//R64FX_DEBUG
+
+    for(int y=0; y<dst.rect.height(); y++)
+    {
+        for(int x=0; x<dst.rect.width(); x++)
+        {
+            bool border = (
+                (x < stroke_width) ||
+                (y < stroke_width) ||
+                (x >= dst.rect.width() - stroke_width) ||
+                (y >= dst.rect.height() - stroke_width)
+            );
+
+            Color &color = (border ? stroke : fill);
+
+            auto px = dst.img->pixel(x + dst.rect.x(), y + dst.rect.y());
+            for(int c=0; c<dst.img->componentCount(); c++)
+            {
+                px[c] = color[c];
+            }
+        }
+    }
+}
+
+
 void blend_colors(Image* dst, Point<int> dstpos, const Colors &colors, const ImgRect &src, FlipFlags flags)
 {
 #ifdef R64FX_DEBUG

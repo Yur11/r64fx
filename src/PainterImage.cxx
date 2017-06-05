@@ -248,7 +248,11 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void strokeRect(const Rect<int> &rect, Color stroke, Color fill, int stroke_width)
     {
-        
+        auto intersection_rect = clip(rect + offset());
+        if(intersection_rect.width() > 0 && intersection_rect.height() > 0)
+        {
+            stroke_rect({window->image(), intersection_rect}, stroke, fill, stroke_width);
+        }
     }
 
     static ImgCopyFlags convertFlags(FlipFlags in_flags)

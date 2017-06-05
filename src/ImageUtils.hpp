@@ -43,11 +43,15 @@ void fill(const ImgRect &dst, Color components);
 
 void fill(const ImgRect &dst, int dstc, int ndstc, unsigned char value);
 
+
 void fill_gradient_vert(Image* dst, int dstc, int ndstc, unsigned char val1, unsigned char val2, const Rect<int> &rect);
 
 void fill_gradient_radial(Image* dst, int dstc, int ndstc, unsigned char val1, unsigned char val2, const Rect<int> &rect);
 
 void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> topleft, int diameter);
+
+
+void stroke_rect(const ImgRect &dst, Color stroke, Color fill, int stroke_width = 1);
 
 
 void blend_colors
