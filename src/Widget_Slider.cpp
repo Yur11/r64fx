@@ -9,38 +9,51 @@ using namespace std;
 namespace r64fx{
 
 namespace{
-    constexpr int g_handle_size = 15;
-
-    Image* img_triangle_up     = nullptr;
-    Image* img_triangle_down   = nullptr;
-    Image* img_triangle_left   = nullptr;
-    Image* img_triangle_right  = nullptr;
+    Image* img_handle_vert = nullptr;
+    Image* img_handle_hori = nullptr;
 
     void init()
     {
-        img_triangle_up     = new Image;
-        img_triangle_down   = new Image;
-        img_triangle_left   = new Image;
-        img_triangle_right  = new Image;
+        img_handle_vert = new Image(16, 11, 1);
+        for(int x=0; x<16; x++)
+        {
+            for(int y=0; y<3; y++)
+            {
+                img_handle_vert->pixel(x, y+1)[0] =
+                img_handle_vert->pixel(x, y+7)[0] = 63;
+            }
 
-        draw_triangles(g_handle_size, img_triangle_up, img_triangle_down, img_triangle_left, img_triangle_right);
+            img_handle_vert->pixel(x, 0)[0]   = 95;
+            img_handle_vert->pixel(x, 4)[0]   =
+            img_handle_vert->pixel(x, 6)[0]   = 191;
+            img_handle_vert->pixel(x, 5)[0]   = 255;
+            img_handle_vert->pixel(x, 10)[0]  = 15;
+        }
+
+        img_handle_hori = new Image(11, 16, 1);
+        for(int y=0; y<16; y++)
+        {
+            for(int x=0; x<3; x++)
+            {
+                img_handle_hori->pixel(x+1, y)[0] =
+                img_handle_hori->pixel(x+7, y)[0] = 63;
+            }
+
+            img_handle_hori->pixel(0,  y)[0]  =
+            img_handle_hori->pixel(10, y)[0]  = 111;
+            img_handle_hori->pixel(4,  y)[0]  =
+            img_handle_hori->pixel(6,  y)[0]  = 191;
+            img_handle_hori->pixel(5,  y)[0]  = 255;
+        }
     }
 
     void cleanup()
     {
-        if(img_triangle_up)
-            delete img_triangle_up;
+        if(img_handle_vert)
+            delete img_handle_vert;
 
-        if(img_triangle_down)
-            delete img_triangle_down;
-
-        if(img_triangle_left)
-            delete img_triangle_left;
-
-        if(img_triangle_right)
-            delete img_triangle_right;
-
-        img_triangle_up = img_triangle_down = img_triangle_left = img_triangle_right = nullptr;
+        if(img_handle_hori)
+            delete img_handle_hori;
     }
 
     int g_slider_count = 0;
@@ -59,13 +72,13 @@ Widget_Slider::Widget_Slider(int length, Orientation orientation, Widget* parent
     setOrientation(orientation);
     if(orientation == Orientation::Vertical)
     {
-        setWidth(g_handle_size + 2);
+        setWidth(16);
         setHeight(length);
     }
     else
     {
         setWidth(length);
-        setHeight(g_handle_size + 2);
+        setHeight(16);
     }
 
     onValueChanged(nullptr);
@@ -110,18 +123,18 @@ int Widget_Slider::barLength() const
 {
     if(orientation() == Orientation::Vertical)
     {
-        return height() - g_handle_size;
+        return height() - 5;
     }
     else
     {
-        return width() - g_handle_size;
+        return width() - 5;
     }
 }
 
 
 int Widget_Slider::barOffset() const
 {
-    return g_handle_size >> 1;
+    return 5;
 }
 
 
@@ -177,11 +190,6 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
-    Color black(0, 0, 0, 0);
-    Color bg(127, 127, 127, 0);
-
-    p->fillRect({0, 0, width(), height()}, bg);
-
     int pos = ((value() - minValue()) / valueRange()) * (barLength() - 1);
 
     if(orientation() == Orientation::Vertical)
@@ -189,54 +197,14 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
         if(!isReversed())
             pos = barLength() - pos - 1;
 
-        int bar_x;
-        int handle_x;
-        Image* handle_img;
-        if(isFlipped())
-        {
-            bar_x = g_handle_size;
-            handle_x = 0;
-            handle_img = img_triangle_right;
-        }
-        else
-        {
-            bar_x = 0;
-            handle_x = 3;
-            handle_img = img_triangle_left;
-        }
+        p->strokeRect({4, 0, 8, pos + 1}, Color(63, 63, 63), Color(95, 95, 95));
+        p->strokeRect({4, pos, 8, height() - pos}, Color(63, 96, 127), Color(127, 191, 255));
 
-        if(barVisible())
-        {
-            p->fillRect({bar_x, barOffset(), 2, barLength()}, black);
-        }
-        p->blendColors({handle_x, pos}, black, handle_img);
+        p->putImage(img_handle_vert, {0, pos});
     }
     else
     {
-        if(isReversed())
-            pos = barLength() - pos - 1;
-
-        int bar_y;
-        int handle_y;
-        Image* handle_img;
-        if(isFlipped())
-        {
-            bar_y = 0;
-            handle_y = 2;
-            handle_img = img_triangle_up;
-        }
-        else
-        {
-            bar_y = g_handle_size;
-            handle_y = 0;
-            handle_img = img_triangle_down;
-        }
-
-        if(barVisible())
-        {
-            p->fillRect({barOffset(), bar_y, barLength(), 2}, black);
-        }
-        p->blendColors({pos, handle_y}, black, handle_img);
+        p->putImage(img_handle_hori, {pos, 0});
     }
 }
 

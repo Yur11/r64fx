@@ -26,8 +26,14 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     auto knob = new Widget_Knob(48, this);
     knob->setPosition({50, 50});
 
-    auto slider = new Widget_Slider(200, Orientation::Vertical, this);
-    slider->setPosition({50, 120});
+    for(int i=0; i<4; i++)
+    {
+        auto slider_vert = new Widget_Slider(200, Orientation::Vertical, this);
+        slider_vert->setPosition({50 + (slider_vert->width() + 2) * i, 120});
+    }
+
+    auto slider_hori = new Widget_Slider(200, Orientation::Horizontal, this);
+    slider_hori->setPosition({50, 350});
 }
 
 
