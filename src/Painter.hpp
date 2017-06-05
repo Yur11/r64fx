@@ -126,6 +126,8 @@ public:
      */
     virtual void fillRect(const Rect<int> &rect, Color color) = 0;
 
+    virtual void strokeRect(const Rect<int> &rect, Color stroke, Color fill, int stroke_width = 1) = 0;
+
     /** Put an image at the given position.
 
         image  Image to use. Must not be null.

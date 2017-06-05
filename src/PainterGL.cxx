@@ -189,6 +189,41 @@ struct PainterImplGL : public PainterImpl{
         m_uber_rect.draw();
     }
 
+    virtual void strokeRect(const Rect<int> &rect, Color stroke, Color fill, int stroke_width)
+    {
+        auto transformed_rect = clip(rect + offset());
+        if(transformed_rect.width() <= 0 || transformed_rect.height() <= 0)
+            return;
+
+        g_PainterShader_Common->setMode(11);
+        g_PainterShader_Common->setScaleAndShift(
+            m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f
+        );
+
+        float colors[8] = {
+            float(stroke[0]) * rcp255,
+            float(stroke[1]) * rcp255,
+            float(stroke[2]) * rcp255,
+            float(stroke[3]) * rcp255,
+            float(fill[0]) * rcp255,
+            float(fill[1]) * rcp255,
+            float(fill[2]) * rcp255,
+            float(fill[3]) * rcp255
+        };
+
+        g_PainterShader_Common->setColors(colors, 0, 2);
+        g_PainterShader_Common->setRectSize(transformed_rect.width(), transformed_rect.height());
+        g_PainterShader_Common->setStrokeWidth(stroke_width);
+
+        m_uber_rect.setRect(
+            transformed_rect.left(), transformed_rect.top(), transformed_rect.right(), transformed_rect.bottom()
+        );
+
+        m_uber_rect.setTexCoords(0, 0, transformed_rect.width(), transformed_rect.height());
+
+        m_uber_rect.draw();
+    }
+
     virtual void putImage(Image* image, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags)
     {
         m_spare_2d_texture.loadImage(image);

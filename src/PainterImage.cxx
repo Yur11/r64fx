@@ -246,6 +246,11 @@ struct PainterImplImage : public PainterImpl{
         }
     }
 
+    virtual void strokeRect(const Rect<int> &rect, Color stroke, Color fill, int stroke_width)
+    {
+        
+    }
+
     static ImgCopyFlags convertFlags(FlipFlags in_flags)
     {
         ImgCopyFlags out_flags;

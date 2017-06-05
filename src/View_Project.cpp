@@ -48,6 +48,8 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
     childrenPaintEvent(event);
+
+    p->strokeRect({300, 100, 8, 200}, Color(63, 96, 127), Color(127, 191, 255));
 }
 
 

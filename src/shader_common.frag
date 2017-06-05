@@ -2,8 +2,8 @@
 
 in vec2 frag_tex_coord;
 
-uniform int        mode        = 0;
-uniform vec4       colors[4]   = vec4[4](
+uniform int        mode          = 0;
+uniform vec4       colors[4]     = vec4[4](
     vec4(0.0, 0.0, 0.0, 0.0),
     vec4(0.0, 0.0, 0.0, 0.0),
     vec4(0.0, 0.0, 0.0, 0.0),
@@ -11,6 +11,8 @@ uniform vec4       colors[4]   = vec4[4](
 );
 uniform sampler1D  sampler1d;
 uniform sampler2D  sampler2d;
+uniform vec2       rect_size     = vec2(0, 0);
+uniform float      stroke_width  = 0;
 
 void main()
 {
@@ -83,6 +85,19 @@ void main()
             {
                 discard;
             }
+            break;
+        }
+
+        case 11:
+        {
+            ivec2 coord = ivec2(floor(frag_tex_coord[0]), floor(frag_tex_coord[1]));
+            bool border = (
+                (coord.x < stroke_width) ||
+                (coord.y < stroke_width) ||
+                (coord.x >= rect_size.x - stroke_width) ||
+                (coord.y >= rect_size.y - stroke_width)
+            );
+            gl_FragColor = colors[border ? 0 : 1];
             break;
         }
 

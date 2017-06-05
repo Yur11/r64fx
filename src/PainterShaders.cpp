@@ -57,6 +57,8 @@ PainterShader_Common::PainterShader_Common()
         R64FX_GET_UNIFORM_LOCATION(colors);
         R64FX_GET_UNIFORM_LOCATION(sampler1d);
         R64FX_GET_UNIFORM_LOCATION(sampler2d);
+        R64FX_GET_UNIFORM_LOCATION(rect_size);
+        R64FX_GET_UNIFORM_LOCATION(stroke_width);
     }
 }
 

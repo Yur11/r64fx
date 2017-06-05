@@ -48,6 +48,8 @@ class PainterShader_Common : public PainterShader{
     GLint unif_colors;
     GLint unif_sampler1d;
     GLint unif_sampler2d;
+    GLint unif_rect_size;
+    GLint unif_stroke_width;
 
 public:
     PainterShader_Common();
@@ -60,6 +62,16 @@ public:
     inline void setMode(int mode)
     {
         gl::Uniform1i(unif_mode, mode);
+    }
+
+    inline void setRectSize(float w, float h)
+    {
+        gl::Uniform2f(unif_rect_size, w, h);
+    }
+
+    inline void setStrokeWidth(float w)
+    {
+        gl::Uniform1f(unif_stroke_width, w);
     }
 
     inline static const int ModePutImage(int component_count)
