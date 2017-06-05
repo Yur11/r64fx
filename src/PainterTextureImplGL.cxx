@@ -127,7 +127,7 @@ public:
 
     template<typename T> void loadData(T* data, int length, int component_count, GLenum type)
     {
-#ifdef R64Fx_DEBUG
+#ifdef R64FX_DEBUG
         assert(data != nullptr);
         assert(length > 0);
         assert(component_count > 0);
