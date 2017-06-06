@@ -28,11 +28,11 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
 
     for(int i=0; i<4; i++)
     {
-        auto slider_vert = new Widget_Slider(200, Orientation::Vertical, this);
+        auto slider_vert = new Widget_Slider(200, 16, Orientation::Vertical, this);
         slider_vert->setPosition({50 + (slider_vert->width() + 2) * i, 120});
     }
 
-    auto slider_hori = new Widget_Slider(200, Orientation::Horizontal, this);
+    auto slider_hori = new Widget_Slider(200, 16, Orientation::Horizontal, this);
     slider_hori->setPosition({50, 350});
 }
 

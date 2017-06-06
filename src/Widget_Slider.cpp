@@ -8,91 +8,96 @@ using namespace std;
 
 namespace r64fx{
 
-namespace{
-    Image* img_handle_vert = nullptr;
-    Image* img_handle_hori = nullptr;
+class SliderHandle{
+    Image m_image;
+    Orientation m_orientation;
+    int m_user_cout = 0;
 
-    void init()
+public:
+    SliderHandle(int size, Orientation orientation)
+    : m_orientation(orientation)
     {
-        img_handle_vert = new Image(16, 11, 1);
-        for(int x=0; x<16; x++)
-        {
-            for(int y=0; y<3; y++)
-            {
-                img_handle_vert->pixel(x, y+1)[0] =
-                img_handle_vert->pixel(x, y+7)[0] = 63;
-            }
+#ifdef R64FX_DEBUG
+        assert(size > 10);
+#endif//R64FX_DEBUG
 
-            img_handle_vert->pixel(x, 0)[0]   = 95;
-            img_handle_vert->pixel(x, 4)[0]   =
-            img_handle_vert->pixel(x, 6)[0]   = 191;
-            img_handle_vert->pixel(x, 5)[0]   = 255;
-            img_handle_vert->pixel(x, 10)[0]  = 15;
+        int lateral = int(size * 0.7f) | 1;
+        m_image.load(
+            orientation == Orientation::Vertical   ? size : lateral,
+            orientation == Orientation::Horizontal ? size : lateral,
+            1
+        );
+
+        fill(&m_image, Color(63));
+
+        int middle = (lateral >> 1);
+
+        if(orientation == Orientation::Vertical)
+        {
+            for(int x=0; x<m_image.width(); x++)
+            {
+                m_image(x, 0)[0] = 95;
+                m_image(x, m_image.height() - 1)[0] = 15;
+                m_image(x, middle               )[0] = 255;
+                m_image(x, middle - 1           )[0] =
+                m_image(x, middle + 1           )[0] = 191;
+            }
         }
-
-        img_handle_hori = new Image(11, 16, 1);
-        for(int y=0; y<16; y++)
+        else
         {
-            for(int x=0; x<3; x++)
+            for(int y=0; y<m_image.height(); y++)
             {
-                img_handle_hori->pixel(x+1, y)[0] =
-                img_handle_hori->pixel(x+7, y)[0] = 63;
+                m_image(0, y)[0] =
+                m_image(m_image.width() - 1,  y)[0] = 111;
+                m_image(middle,               y)[0] = 255;
+                m_image(middle - 1,           y)[0] =
+                m_image(middle + 1,           y)[0] = 191;
             }
-
-            img_handle_hori->pixel(0,  y)[0]  =
-            img_handle_hori->pixel(10, y)[0]  = 111;
-            img_handle_hori->pixel(4,  y)[0]  =
-            img_handle_hori->pixel(6,  y)[0]  = 191;
-            img_handle_hori->pixel(5,  y)[0]  = 255;
         }
     }
 
-    void cleanup()
+    bool operator==(const SliderHandle &other)
     {
-        if(img_handle_vert)
-            delete img_handle_vert;
-
-        if(img_handle_hori)
-            delete img_handle_hori;
+        return
+            m_image.isGood() == other.m_image.isGood() &&
+            m_orientation == other.m_orientation &&
+            m_image.width() == other.m_image.width() &&
+            m_image.height() == other.m_image.height()
+        ;
     }
 
-    int g_slider_count = 0;
-}//namespace
+    inline Image* handleImage() { return &m_image; }
+
+    inline int thickness() const { return m_orientation == Orientation::Vertical ? m_image.height() : m_image.width(); }
+
+    inline int width() const { return m_orientation == Orientation::Vertical ? m_image.width() : m_image.height(); }
+};
 
 
-Widget_Slider::Widget_Slider(int length, Orientation orientation, Widget* parent)
+Widget_Slider::Widget_Slider(int length, int width, Orientation orientation, Widget* parent)
 : Widget(parent)
 {
-    if(g_slider_count == 0)
-    {
-        init();
-    }
-    g_slider_count++;
-
     setOrientation(orientation);
     if(orientation == Orientation::Vertical)
     {
-        setWidth(16);
+        setWidth(width);
         setHeight(length);
     }
     else
     {
         setWidth(length);
-        setHeight(16);
+        setHeight(width);
     }
 
+    m_handle = new SliderHandle(width, orientation);
+
     onValueChanged(nullptr);
-    barVisible(true);
 }
 
 
 Widget_Slider::~Widget_Slider()
 {
-    g_slider_count--;
-    if(g_slider_count == 0)
-    {
-        cleanup();
-    }
+    delete m_handle;
 }
 
 
@@ -101,110 +106,47 @@ void Widget_Slider::setValueFromPosition(Point<int> position)
     int pos;
     if(orientation() == Orientation::Vertical)
     {
-        pos = barLength() - (position.y()- barOffset());
+        pos = travelDistance() - (position.y() - m_handle->thickness()/2);
     }
     else
     {
-        pos = position.x() - barOffset();
+        pos = position.x() - m_handle->thickness()/2;
     }
 
-    if(isReversed())
-    {
-        pos = barLength() - pos;
-    }
-
-    float new_value = (float(pos)/float(barLength() - 1)) * valueRange() + minValue();
+    float new_value = (float(pos)/float(travelDistance())) * valueRange() + minValue();
     setValue(new_value);
     repaint();
 }
 
 
-int Widget_Slider::barLength() const
+int Widget_Slider::travelDistance() const
 {
-    if(orientation() == Orientation::Vertical)
-    {
-        return height() - 5;
-    }
-    else
-    {
-        return width() - 5;
-    }
-}
-
-
-int Widget_Slider::barOffset() const
-{
-    return 5;
-}
-
-
-bool Widget_Slider::barVisible(bool yes)
-{
-    if(yes)
-        m_flags |= R64FX_SLIDER_BAR_VISIBLE;
-    else
-        m_flags &= ~R64FX_SLIDER_BAR_VISIBLE;
-    return yes;
-}
-
-
-bool Widget_Slider::barVisible() const
-{
-    return m_flags & R64FX_SLIDER_BAR_VISIBLE;
-}
-
-
-bool Widget_Slider::isFlipped(bool yes)
-{
-    if(yes)
-        m_flags |= R64FX_WIDGET_IS_FLIPPED;
-    else
-        m_flags &= ~R64FX_WIDGET_IS_FLIPPED;
-    return yes;
-}
-
-
-bool Widget_Slider::isFlipped() const
-{
-    return m_flags & R64FX_WIDGET_IS_FLIPPED;
-}
-
-
-bool Widget_Slider::isReversed(bool yes)
-{
-    if(yes)
-        m_flags |= R64FX_WIDGET_IS_REVERSED;
-    else
-        m_flags &= ~R64FX_WIDGET_IS_REVERSED;
-    return yes;
-}
-
-
-bool Widget_Slider::isReversed() const
-{
-    return m_flags & R64FX_WIDGET_IS_REVERSED;
+    return (orientation() == Orientation::Vertical ? height() : width()) - m_handle->thickness();
 }
 
 
 void Widget_Slider::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
+    p->fillRect({0, 0, width(), height()}, Color(191, 191, 191));
 
-    int pos = ((value() - minValue()) / valueRange()) * (barLength() - 1);
+    int pos = ((value() - minValue()) / valueRange()) * travelDistance();
 
     if(orientation() == Orientation::Vertical)
     {
-        if(!isReversed())
-            pos = barLength() - pos - 1;
+        pos = travelDistance() - pos;
 
-        p->strokeRect({4, 0, 8, pos + 1}, Color(63, 63, 63), Color(95, 95, 95));
-        p->strokeRect({4, pos, 8, height() - pos}, Color(63, 96, 127), Color(127, 191, 255));
+        p->strokeRect({(width()>>2), 0,       (width()>>1), pos + 1             },  Color(63, 63, 63),   Color(95, 95, 95));
+        p->strokeRect({(width()>>2), pos + 2, (width()>>1), height() - (pos + 2)},  Color(63, 96, 127),  Color(127, 191, 255));
 
-        p->putImage(img_handle_vert, {0, pos});
+        p->putImage(m_handle->handleImage(), {0, pos});
     }
     else
     {
-        p->putImage(img_handle_hori, {pos, 0});
+        p->strokeRect({0,       (height()>>2), pos + 1,             (height()>>1)},  Color(63, 63, 63),   Color(95, 95, 95));
+        p->strokeRect({pos + 2, (height()>>2), width() - (pos + 2), (height()>>1)},  Color(63, 96, 127),  Color(127, 191, 255));
+
+        p->putImage(m_handle->handleImage(), {pos, 0});
     }
 }
 

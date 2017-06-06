@@ -359,7 +359,7 @@ class RightPart : public Widget{
 public:
     RightPart(PlayerViewPrivate* p, Widget* parent = nullptr) : Widget(parent), m(p)
     {
-        m->slider_pitch = new Widget_Slider(150, Orientation::Vertical, this);
+        m->slider_pitch = new Widget_Slider(150, 16, Orientation::Vertical, this);
         m->slider_pitch->setMinValue(-1.0f);
         m->slider_pitch->setMaxValue(+1.0f);
         m->slider_pitch->setValue(0.0f);
