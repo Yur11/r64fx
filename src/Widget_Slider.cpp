@@ -101,6 +101,22 @@ Widget_Slider::~Widget_Slider()
 }
 
 
+bool Widget_Slider::isReversed(bool yes)
+{
+    if(yes)
+        m_flags |= R64FX_WIDGET_IS_REVERSED;
+    else
+        m_flags &= ~R64FX_WIDGET_IS_REVERSED;
+    return yes;
+}
+
+
+bool Widget_Slider::isReversed() const
+{
+    return m_flags & R64FX_WIDGET_IS_REVERSED;
+}
+
+
 void Widget_Slider::setValueFromPosition(Point<int> position)
 {
     int pos;

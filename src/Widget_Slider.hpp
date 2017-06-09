@@ -16,6 +16,10 @@ public:
 
     virtual ~Widget_Slider();
 
+    bool isReversed(bool yes);
+
+    bool isReversed() const;
+
     void setValueFromPosition(Point<int> position);
 
     int travelDistance() const;
