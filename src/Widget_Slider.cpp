@@ -117,24 +117,6 @@ bool Widget_Slider::isReversed() const
 }
 
 
-void Widget_Slider::setValueFromPosition(Point<int> position)
-{
-    int pos;
-    if(orientation() == Orientation::Vertical)
-    {
-        pos = travelDistance() - (position.y() - m_handle->thickness()/2);
-    }
-    else
-    {
-        pos = position.x() - m_handle->thickness()/2;
-    }
-
-    float new_value = (float(pos)/float(travelDistance())) * valueRange() + minValue();
-    setValue(new_value);
-    repaint();
-}
-
-
 int Widget_Slider::travelDistance() const
 {
     return (orientation() == Orientation::Vertical ? height() : width()) - m_handle->thickness();
@@ -146,23 +128,41 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191));
 
-    int pos = ((value() - minValue()) / valueRange()) * travelDistance();
+    int pos = positionFromValue(value());
+    int nullpos = positionFromValue(0.0f);
+    if((orientation() == Orientation::Vertical && !isReversed()) || (orientation() == Orientation::Horizontal && isReversed()))
+    {
+        pos = travelDistance() - pos;
+        nullpos = travelDistance() - nullpos;
+    }
+    int hw = (m_handle->width()>>1);
+    int qw = (m_handle->width()>>2);
+    int ht = (m_handle->thickness()>>1);
+    int td = travelDistance();
 
     if(orientation() == Orientation::Vertical)
     {
-        pos = travelDistance() - pos;
-
-        p->strokeRect({(width()>>2), 0,       (width()>>1), pos + 1             },  Color(63, 63, 63),   Color(95, 95, 95));
-        p->strokeRect({(width()>>2), pos + 2, (width()>>1), height() - (pos + 2)},  Color(63, 96, 127),  Color(127, 191, 255));
-
-        p->putImage(m_handle->handleImage(), {0, pos});
+        p->strokeRect({qw, ht, hw, td}, Color(63, 63, 63), Color(95, 95, 95));
+        if(pos < nullpos)
+        {
+            p->strokeRect({qw, ht + pos, hw, nullpos - pos}, Color(63, 96, 127), Color(127, 191, 255));
+        }
+        else if(pos > nullpos)
+        {
+            p->strokeRect({qw, ht + nullpos, hw, pos - nullpos}, Color(63, 96, 127), Color(127, 191, 255));
+        }
     }
     else
     {
-        p->strokeRect({0,       (height()>>2), pos + 1,             (height()>>1)},  Color(63, 63, 63),   Color(95, 95, 95));
-        p->strokeRect({pos + 2, (height()>>2), width() - (pos + 2), (height()>>1)},  Color(63, 96, 127),  Color(127, 191, 255));
-
-        p->putImage(m_handle->handleImage(), {pos, 0});
+        p->strokeRect({ht, qw, td, hw}, Color(63, 63, 63), Color(95, 95, 95));
+        if(pos < nullpos)
+        {
+            p->strokeRect({ht + pos, qw, nullpos - pos, hw}, Color(63, 96, 127), Color(127, 191, 255));
+        }
+        else if(pos > nullpos)
+        {
+            p->strokeRect({ht + nullpos, qw, pos - nullpos, hw}, Color(63, 96, 127), Color(127, 191, 255));
+        }
     }
 }
 
@@ -195,6 +195,30 @@ void Widget_Slider::mouseMoveEvent(MouseMoveEvent* event)
     {
         setValueFromPosition(event->position());
     }
+}
+
+
+void Widget_Slider::setValueFromPosition(Point<int> position)
+{
+    int pos;
+    if(orientation() == Orientation::Vertical)
+    {
+        pos = travelDistance() - (position.y() - m_handle->thickness()/2);
+    }
+    else
+    {
+        pos = position.x() - m_handle->thickness()/2;
+    }
+
+    float new_value = (float(pos)/float(travelDistance())) * valueRange() + minValue();
+    setValue(new_value);
+    repaint();
+}
+
+
+int Widget_Slider::positionFromValue(float value) const
+{
+    return ((value - minValue()) / valueRange()) * travelDistance();
 }
 
 }//namespace r64fx

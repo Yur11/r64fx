@@ -20,8 +20,6 @@ public:
 
     bool isReversed() const;
 
-    void setValueFromPosition(Point<int> position);
-
     int travelDistance() const;
 
 protected:
@@ -33,7 +31,10 @@ protected:
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 
+private:
+    void setValueFromPosition(Point<int> position);
 
+    int positionFromValue(float value) const;
 };
 
 }//namespace r64fx
