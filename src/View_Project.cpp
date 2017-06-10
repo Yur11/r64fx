@@ -36,8 +36,6 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     }
     slider_vert[0]->setMinValue(0.0f);
     slider_vert[1]->setMaxValue(0.0f);
-    slider_vert[2]->setMinValue(-0.5f);
-    slider_vert[3]->setMaxValue(0.5f);
 
     Widget_Slider* slider_hori[4];
     for(int i=0; i<4; i++)
@@ -49,8 +47,6 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     }
     slider_hori[0]->setMinValue(0.0f);
     slider_hori[1]->setMaxValue(0.0f);
-    slider_hori[2]->setMinValue(-0.5f);
-    slider_hori[3]->setMaxValue(0.5f);
 }
 
 

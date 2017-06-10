@@ -171,8 +171,21 @@ void Widget_Slider::mousePressEvent(MousePressEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        grabMouseFocus();
-        setValueFromPosition(event->position());
+        if(event->doubleClick())
+        {
+            float val = 0.0f;
+            if(val < minValue())
+                val = minValue();
+            if(val > maxValue())
+                val = maxValue();
+            setValue(val, true);
+            repaint();
+        }
+        else
+        {
+            grabMouseFocus();
+            setValueFromPosition(event->position());
+        }
     }
 }
 

@@ -134,8 +134,14 @@ public:
 
 
 class MousePressEvent : public MouseEvent{
+    bool m_double_click;
+
 public:
-    using MouseEvent::MouseEvent;
+    explicit MousePressEvent(Point<int> position, Point<int> delta, MouseButton button, bool double_click)
+    : MouseEvent(position, delta, button), m_double_click(double_click)
+    {}
+
+    inline bool doubleClick() const { return m_double_click; }
 };
 
 

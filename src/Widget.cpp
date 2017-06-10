@@ -39,6 +39,12 @@ Widget* g_root_mouse_multi_grabber = nullptr;
 
 std::vector<Widget*> g_mouse_multi_grab_targets;
 
+Timer* g_double_click_timer = nullptr;
+
+MouseButton g_double_click_button = MouseButton::None();
+
+int g_double_click_timeout = 300 * 1000 * 1000;
+
 /* Widget that currently has keyboard focus. */
 Widget* g_keyboard_focus_owner = nullptr;
 
@@ -155,7 +161,10 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
                 {
                     Point<int> event_position = mouse_screen_position - widget_root_window->position();
 
-                    MousePressEvent event(event_position, {0, 0}, MouseButton(button));
+                    MousePressEvent event(
+                        event_position, {0, 0},
+                        MouseButton(button), MouseButton(button) == g_double_click_button
+                    );
                     widget->mousePressEvent(&event);
                     got_widget = true;
                     break;
@@ -182,11 +191,25 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
                 dst = d->root_widget;
             }
 
-            MousePressEvent event(event_position, {0, 0}, MouseButton(button));
+            MousePressEvent event(
+                event_position, {0, 0},
+                MouseButton(button), MouseButton(button) == g_double_click_button
+            );
             dst->mousePressEvent(&event);
         }
 
         g_prev_mouse_position = Point<int>(x, y);
+
+        if(MouseButton(button) == g_double_click_button)
+        {
+            g_double_click_timer->stop();
+            g_double_click_button = MouseButton::None();
+        }
+        else
+        {
+            g_double_click_timer->start(g_double_click_timeout);
+            g_double_click_button = MouseButton(button);
+        }
     }
 
 
@@ -986,6 +1009,24 @@ void Widget::openWindow(
 #endif//R64FX_DEBUG
             }
 
+            if(!g_double_click_timer)
+            {
+                g_double_click_timer = new(std::nothrow) Timer;
+                if(g_double_click_timer)
+                {
+                    g_double_click_timer->onTimeout([](Timer* timer, void* data){
+                        g_double_click_button = MouseButton::None();
+                        g_double_click_timer->stop();
+                    }, nullptr);
+                }
+#ifdef R64FX_DEBUG
+                else
+                {
+                    cerr << "Widget: Failed to create double click timer!\n";
+                }
+#endif//R64FX_DEBUG
+            }
+
             window->setSize(size());
             if(modal_parent)
                 m_parent.window->setModalTo(modal_parent);
@@ -1030,12 +1071,14 @@ void Widget::closeWindow()
             {
                 g_gui_timer->stop();
                 delete g_gui_timer;
+                g_gui_timer = nullptr;
             }
-            else
+
+            if(g_double_click_timer)
             {
-#ifdef R64FX_DEBUG
-                cerr << "Widget: gui timer is null!\n";
-#endif//R64FX_DEBUG
+                g_double_click_timer->stop();
+                delete g_double_click_timer;
+                g_double_click_timer = nullptr;
             }
         }
 #ifdef R64FX_DEBUG
