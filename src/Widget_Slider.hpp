@@ -16,12 +16,6 @@ public:
 
     virtual ~Widget_Slider();
 
-    bool isReversed(bool yes);
-
-    bool isReversed() const;
-
-    int travelDistance() const;
-
 protected:
     virtual void paintEvent(WidgetPaintEvent* event);
 
@@ -32,6 +26,8 @@ protected:
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 
 private:
+    int travelDistance() const;
+
     void setValueFromPosition(Point<int> position);
 
     int positionFromValue(float value) const;

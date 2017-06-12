@@ -38,9 +38,9 @@ public:
             {
                 m_image(x, 0)[0] = 95;
                 m_image(x, m_image.height() - 1)[0] = 15;
-                m_image(x, middle               )[0] = 255;
-                m_image(x, middle - 1           )[0] =
-                m_image(x, middle + 1           )[0] = 191;
+                m_image(x, middle              )[0] = 255;
+                m_image(x, middle - 1          )[0] =
+                m_image(x, middle + 1          )[0] = 191;
             }
         }
         else
@@ -101,28 +101,6 @@ Widget_Slider::~Widget_Slider()
 }
 
 
-bool Widget_Slider::isReversed(bool yes)
-{
-    if(yes)
-        m_flags |= R64FX_WIDGET_IS_REVERSED;
-    else
-        m_flags &= ~R64FX_WIDGET_IS_REVERSED;
-    return yes;
-}
-
-
-bool Widget_Slider::isReversed() const
-{
-    return m_flags & R64FX_WIDGET_IS_REVERSED;
-}
-
-
-int Widget_Slider::travelDistance() const
-{
-    return (orientation() == Orientation::Vertical ? height() : width()) - m_handle->thickness();
-}
-
-
 void Widget_Slider::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
@@ -130,39 +108,39 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
 
     int pos = positionFromValue(value());
     int nullpos = positionFromValue(0.0f);
-    if((orientation() == Orientation::Vertical && !isReversed()) || (orientation() == Orientation::Horizontal && isReversed()))
-    {
-        pos = travelDistance() - pos;
-        nullpos = travelDistance() - nullpos;
-    }
     int hw = (m_handle->width()>>1);
     int qw = (m_handle->width()>>2);
-    int ht = (m_handle->thickness()>>1);
-    int td = travelDistance();
 
     if(orientation() == Orientation::Vertical)
     {
-        p->strokeRect({qw, ht, hw, td}, Color(63, 63, 63), Color(95, 95, 95));
+        pos = travelDistance() - pos;
+        nullpos = travelDistance() - nullpos;
+
+        p->strokeRect({qw, 0, hw, height()}, Color(63, 63, 63), Color(95, 95, 95));
         if(pos < nullpos)
         {
-            p->strokeRect({qw, ht + pos, hw, nullpos - pos}, Color(63, 96, 127), Color(127, 191, 255));
+            int extra = (minValue() >= 0.0f ? m_handle->thickness() : 0.0f);
+            p->strokeRect({qw, pos, hw, nullpos - pos + extra}, Color(63, 96, 127), Color(127, 191, 255));
         }
         else if(pos > nullpos)
         {
-            p->strokeRect({qw, ht + nullpos, hw, pos - nullpos}, Color(63, 96, 127), Color(127, 191, 255));
+            p->strokeRect({qw, nullpos, hw, pos - nullpos + 1}, Color(63, 96, 127), Color(127, 191, 255));
         }
+        p->putImage(m_handle->handleImage(), {0, pos});
     }
     else
     {
-        p->strokeRect({ht, qw, td, hw}, Color(63, 63, 63), Color(95, 95, 95));
+        p->strokeRect({0, qw, width(), hw}, Color(63, 63, 63), Color(95, 95, 95));
         if(pos < nullpos)
         {
-            p->strokeRect({ht + pos, qw, nullpos - pos, hw}, Color(63, 96, 127), Color(127, 191, 255));
+            int extra = (maxValue() <= 0.0f ? m_handle->thickness() : 0.0f);
+            p->strokeRect({pos, qw, nullpos - pos + extra, hw}, Color(63, 96, 127), Color(127, 191, 255));
         }
         else if(pos > nullpos)
         {
-            p->strokeRect({ht + nullpos, qw, pos - nullpos, hw}, Color(63, 96, 127), Color(127, 191, 255));
+            p->strokeRect({nullpos, qw, pos - nullpos + 1, hw}, Color(63, 96, 127), Color(127, 191, 255));
         }
+        p->putImage(m_handle->handleImage(), {pos, 0});
     }
 }
 
@@ -232,6 +210,12 @@ void Widget_Slider::setValueFromPosition(Point<int> position)
 int Widget_Slider::positionFromValue(float value) const
 {
     return ((value - minValue()) / valueRange()) * travelDistance();
+}
+
+
+int Widget_Slider::travelDistance() const
+{
+    return (orientation() == Orientation::Vertical ? height() : width()) - m_handle->thickness();
 }
 
 }//namespace r64fx
