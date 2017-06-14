@@ -209,7 +209,7 @@ void Widget_Slider::setValueFromPosition(Point<int> position)
 
 int Widget_Slider::positionFromValue(float value) const
 {
-    return ((value - minValue()) / valueRange()) * travelDistance();
+    return normalizedValue(value) * travelDistance();
 }
 
 

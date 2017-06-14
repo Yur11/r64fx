@@ -32,6 +32,18 @@ float Value::value() const
 }
 
 
+float Value::normalizedValue(float value) const
+{
+    return (value - minValue()) / valueRange();
+}
+
+
+float Value::normalizedValue() const
+{
+    return normalizedValue(value());
+}
+
+
 void Value::setMinValue(float value)
 {
     m_min_value = value;

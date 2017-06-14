@@ -18,6 +18,10 @@ public:
 
     float value() const;
 
+    float normalizedValue(float value) const; //Between 0 and 1
+
+    float normalizedValue() const; //Using value()
+
     void setMinValue(float value);
 
     float minValue() const;
