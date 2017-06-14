@@ -320,9 +320,9 @@ public:
         return m_texture != nullptr;
     }
 
-    float markerAngle(float value, float minval, float maxval)
+    float markerAngle(float normalized_value)
     {
-        float angle = (value - minval) / (maxval - minval);
+        float angle = normalized_value;
         angle *= M_PI * (2.0f) - m_cut_angle * 2.0f;
         angle -= M_PI - m_cut_angle;
         return angle;
@@ -436,7 +436,7 @@ void Widget_Knob::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
-    m_animation->paint(p, m_animation->markerAngle(value(), minValue(), maxValue()));
+    m_animation->paint(p, m_animation->markerAngle(normalizedValue()));
 }
 
 
