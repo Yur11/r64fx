@@ -42,11 +42,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         short dstx = 0;
         short dsty = 0;
     };
-    MarkerFrameCoords*       m_marker_coords     = nullptr;
-
-    /* Angle at which the decoration ring is cut.
-       Used to limit marker movement. */
-    float              m_cut_angle               = 0.0f;
+    MarkerFrameCoords*  m_marker_coords     = nullptr;
 
     KnobAnimation(int size, int frame_count)
     : m_size(size)
@@ -56,7 +52,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         m_marker_coords = new MarkerFrameCoords[m_frame_count];
         fill(m_image, Color(0, 255));
 
-        genKnob(m_image, {0, 0});
+        genImage(m_image, {0, 0});
         genMarkerFrames(m_image, m_marker_coords, {m_size, 0}, m_size);
     }
 
@@ -66,7 +62,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         delete[] m_marker_coords;
     }
 
-    void genKnob(Image* dst, Point<int> dstpos)
+    void genImage(Image* dst, Point<int> dstpos)
     {
 #ifdef R64FX_DEBUG
         assert(dst->componentCount() == 2);
@@ -77,20 +73,12 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         Image alpha_mask(m_size, m_size, 1);
         fill(&alpha_mask, 0, 1, 255);
 
-        genDecorationSolidHorseShoe(&alpha_mask);
-
-        genKnobCenter(dst, &alpha_mask, dstpos);
-        copy({dst, dstpos}, &alpha_mask, ChanShuf(1, 1, 0, 1));
-    }
-
-    void genKnobCenter(Image* dst, Image* alpha_mask, Point<int> dstpos)
-    {
         {
             Image c0(m_size, m_size, 1);
             fill(&c0, Color(255));
-            fill_circle(&c0, 0, 1, Color(0), {5, 5}, m_size - 10);
+            fill_circle(&c0, 0, 1, Color(0), {0, 0}, m_size);
 
-            copy(alpha_mask, &c0, ImgCopyMin());
+            copy(&alpha_mask, &c0, ImgCopyMin());
 
             Image layer(m_size, m_size, 2);
             fill(&layer, Color(0, 255));
@@ -134,53 +122,8 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 
             copy({dst, dstpos}, &layer);
         }
-    }
 
-    void genBaseRing(Image* ring)
-    {
-        fill(
-            ring, 0, 1, 255
-        );
-        fill_circle(
-            ring, 0, 1, Color(0), {0, 0}, m_size
-        );
-        fill_circle(
-            ring, 0, 1, Color(255), {3, 3}, m_size - 6
-        );
-    }
-
-    void genBaseHorseShoe(Image* horse_shoe)
-    {
-        genBaseRing(horse_shoe);
-        fill({horse_shoe, {0, m_size-6, m_size/2, 6}}, Color(255));
-
-        for(int x=(m_size/2 - 1); x>1; x--)
-        {
-            if(horse_shoe->pixel(x, m_size-7)[0] == 0 && horse_shoe->pixel(x-2, m_size-7)[0] != 0)
-            {
-                fill({horse_shoe, {x+1, m_size-12, m_size/2 - x, 12}}, Color(255));
-                m_cut_angle = asin(double(m_size/2 - x) / double(m_size/2));
-                break;
-            }
-        }
-    }
-
-    void genDecorationSolidHorseShoe(Image* alpha_mask)
-    {
-        Image horse_shoe(m_size, m_size, 1);
-        genBaseHorseShoe(&horse_shoe);
-
-        mirror_left2right(&horse_shoe);
-        copy(alpha_mask, &horse_shoe, ImgCopyMin());
-    }
-
-    void rotateAndCopy(Image* dst, Image* src, float angle, ImgCopyFlags pixop)
-    {
-        Transformation2D<float> t;
-        t.translate(+(m_size/2) - 0.5f, +(m_size/2) - 0.5f);
-        t.rotate(angle);
-        t.translate(-(m_size/2) + 0.5f, -(m_size/2) + 0.5f);
-        copy(dst, t, src, pixop);
+        copy({dst, dstpos}, &alpha_mask, ChanShuf(1, 1, 0, 1));
     }
 
     void genMarkerImage(Image* marker_image)
@@ -189,7 +132,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         fill(marker_image, Color(0, 255));
         fill({marker_image, {m_size/2 - 2, 7, 4, m_size/2 - 7}}, Color(0, 127));
         fill({marker_image, {m_size/2 - 1, 8, 2, m_size/2 - 9}}, Color(255, 31));
-//         fill({marker_image, {m_size/2 - 2, 12, 4, 1}}, Color(0, 0));
         for(int i=0; i<4; i++)
         {
             fill({marker_image, {m_size/2 - 1, 7 + i, 2, 1}}, 1, 1, 191 - 24 * i);
@@ -203,13 +145,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
 #endif//R64FX_DEBUG
 
         fill(dst, Color(0, 255));
-
-        int hs = m_size / 2;
-        Transformation2D<float> t;
-        t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
-        t.rotate(-angle);
-        t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
-        copy(dst, t, marker_image, ChanShuf(0, 2, 0, 2));
+        copyRotated(dst, marker_image, angle);
     }
 
     void genMarkerFrames(Image* dstimg, MarkerFrameCoords* mc, Point<int> dstpos, int height)
@@ -253,6 +189,16 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             copy({dstimg, {mc.srcx, mc.srcy}}, {&frame, rect}, ImgCopyReplace());
             y += rect.height();
         }
+    }
+
+    void copyRotated(Image* dst, Image* src, float angle, const ImgCopyFlags flags = ImgCopyReplace())
+    {
+        int hs = m_size / 2;
+        Transformation2D<float> t;
+        t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
+        t.rotate(-angle);
+        t.translate(float(-hs) + 0.5f, float(-hs) + 0.5f);
+        copy(dst, t, src, flags);
     }
 
     bool angle2frame(float in_angle, Point<int> &out_dst_pos, Rect<int> &out_src_rect, FlipFlags &out_flags)
@@ -302,10 +248,10 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         }
     }
 
-public:
     int        size()        const { return m_size; }
     int        frameCount()  const { return m_frame_count; }
 
+public:
     inline void loadMarkerFramesTexture(PainterTextureManager* texture_manager)
     {
 #ifdef R64FX_DEBUG
@@ -323,13 +269,50 @@ public:
     float markerAngle(float normalized_value)
     {
         float angle = normalized_value;
-        angle *= M_PI * (2.0f) - m_cut_angle * 2.0f;
-        angle -= M_PI - m_cut_angle;
+        angle *= M_PI * 2.0f;
+        angle -= M_PI;
         return angle;
     }
 
     void paint(Painter* painter, float angle)
     {
+//         Image sectorimg(m_size, m_size, 1);
+//         fill(&sectorimg, Color(0, 255));
+//         for(int y=0; y<m_size; y++)
+//         {
+//             for(int x=0; x<m_size; x++)
+//             {
+//                 int xx = x - m_size/2;
+//                 int yy = y - m_size/2;
+// 
+//                 float xyang = atan2(yy, xx) + (M_PI * 0.5);
+//                 if(xyang > M_PI)
+//                     xyang -= (2.0 * M_PI);
+// 
+//                 float diff = xyang - angle;
+//                 if(diff <= 0.0f)
+//                 {
+//                     sectorimg(x, y)[0] = 255;
+//                 }
+//             }
+//         }
+// 
+//         Image radiusimg(m_size, m_size, 1);
+//         fill(&radiusimg, Color(0));
+//         for(int y=0; y<m_size/2; y++)
+//         {
+//             radiusimg(m_size/2 - 1, y)[0] =
+//             radiusimg(m_size/2,     y)[0] = 255;
+//         }
+//         copyRotated(&sectorimg, &radiusimg, -angle, ImgCopyMax());
+// 
+//         Image circleimg(m_size, m_size, 1);
+//         fill(&circleimg, Color(0));
+//         fill_circle(&circleimg, 0, 1, Color(255), {0, 0}, m_size);
+//         copy(&sectorimg, &circleimg, ImgCopyMul());
+// 
+//         painter->blendColors({0, 0}, Color(127, 191, 255), &sectorimg);
+
         painter->putImage(m_image, {0, 0}, {0, 0, m_size, m_size});
 
         Point<int> dst_pos;
