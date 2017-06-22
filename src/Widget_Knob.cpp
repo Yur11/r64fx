@@ -68,29 +68,15 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         assert(dst->componentCount() == 2);
 #endif//R64FX_DEBUG
 
-        fill({dst, {dstpos.x(), dstpos.y(), m_size, m_size}}, Color(63, 255));
-
-        Image alpha_mask(m_size, m_size, 1);
-        fill(&alpha_mask, 0, 1, 255);
 
         {
-            Image c0(m_size, m_size, 1);
-            fill(&c0, Color(255));
-            fill_circle(&c0, 0, 1, Color(47), {0, 0}, m_size);
-
-            copy(&alpha_mask, &c0, ImgCopyMin());
-
-            Image layer(m_size, m_size, 2);
-            fill(&layer, Color(0, 255));
-            copy(&layer, &c0, ChanShuf(1, 1, 0, 1));
-
-            copy({dst, dstpos}, &layer);
+            fill({dst, {dstpos.x(), dstpos.y(), m_size, m_size}}, Color(31, 0));
         }
 
         {
             Image c1(m_size, m_size, 1);
             fill(&c1, Color(255));
-            fill_circle(&c1, 0, 1, Color(0), {6, 6}, m_size - 12);
+            fill_circle(&c1, 0, 1, Color(0), {m_size/2, m_size/2}, m_size/2 - 6.5f);
 
             Image layer(m_size, m_size, 2);
             fill_gradient_vert(&layer, 0, 1, 127, 31, {0, 6, m_size, m_size - 6});
@@ -102,7 +88,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         {
             Image c2(m_size, m_size, 1);
             fill(&c2, Color(255));
-            fill_circle(&c2, 0, 1, Color(0), {8, 8}, m_size - 16);
+            fill_circle(&c2, 0, 1, Color(0), {m_size/2, m_size/2}, m_size/2 - 8.5f);
 
             Image layer(m_size, m_size, 2);
             fill_gradient_vert(&layer, 0, 1, 223, 31, {0, 8, m_size, m_size - 8});
@@ -114,7 +100,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         {
             Image c3(m_size, m_size, 1);
             fill(&c3, Color(255));
-            fill_circle(&c3, 0, 1, Color(0), {9, 9}, m_size - 18);
+            fill_circle(&c3, 0, 1, Color(0), {m_size/2, m_size/2}, m_size/2 - 9.5f);
 
             Image layer(m_size, m_size, 2);
             fill_gradient_vert(&layer, 0, 1, 147, 107, {0, 9, m_size, m_size - 9});
@@ -123,7 +109,14 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             copy({dst, dstpos}, &layer);
         }
 
-        copy({dst, dstpos}, &alpha_mask, ChanShuf(1, 1, 0, 1));
+        {
+            Image alpha_mask(m_size, m_size, 1);
+            fill(&alpha_mask, Color(0));
+            fill_circle(&alpha_mask, 0, 1, Color(255), {m_size/2, m_size/2}, m_size/2);
+            invert(&alpha_mask, &alpha_mask);
+
+            copy({dst, dstpos}, &alpha_mask, ChanShuf(1, 1, 0, 1));
+        }
     }
 
     void genMarkerImage(Image* marker_image)
@@ -312,10 +305,10 @@ public:
 
         Image circleimg(m_size, m_size, 1);
         fill(&circleimg, Color(0));
-        fill_circle(&circleimg, 0, 1, Color(255), {1, 1}, m_size - 2);
+        fill_circle(&circleimg, 0, 1, Color(255), {m_size/2, m_size/2}, m_size/2 - 1.5f);
         copy(&sectorimg, &circleimg, ImgCopyMul());
         fill(&circleimg, Color(255));
-        fill_circle(&circleimg, 0, 1, Color(0), {5, 5}, m_size - 10);
+        fill_circle(&circleimg, 0, 1, Color(0), {m_size/2, m_size/2}, m_size/2 - 5.5f);
         copy(&sectorimg, &circleimg, ImgCopyMul());
 
         painter->blendColors({0, 0}, Color(127, 191, 255), &sectorimg);

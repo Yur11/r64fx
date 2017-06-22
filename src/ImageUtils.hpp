@@ -48,7 +48,8 @@ void fill_gradient_vert(Image* dst, int dstc, int ndstc, unsigned char val1, uns
 
 void fill_gradient_radial(Image* dst, int dstc, int ndstc, unsigned char val1, unsigned char val2, const Rect<int> &rect);
 
-void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> topleft, int diameter);
+
+void fill_circle(const ImgRect &dst, int dstc, int ndstc, Color color, const Point<int> center, float radius);
 
 void fill_sector(const ImgRect &dst, int dstc, int ndstc, Color color, const Point<int> center, float min_angle, float max_angle);
 

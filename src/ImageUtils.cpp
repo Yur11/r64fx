@@ -185,27 +185,14 @@ void fill_gradient_radial(Image* dst, int dstc, int ndstc, unsigned char val1, u
 }
 
 
-void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> topleft, int diameter)
+void fill_circle(const ImgRect &dst, int dstc, int ndstc, Color color, const Point<int> center, float radius)
 {
-#ifdef R64FX_DEBUG
-    assert(dst != nullptr);
-    assert(diameter > 0);
-    assert(topleft.x() >= 0);
-    assert(topleft.y() >= 0);
-    assert((topleft.x() + diameter) <= dst->width());
-    assert((topleft.y() + diameter) <= dst->height());
-#endif//R64FX_DEBUG
-
-    int radius = diameter >> 1;
-    int is_odd = diameter & 1;
-    int range  = radius + is_odd;
-
-    for(int y=0; y<range; y++)
+    for(int y=dst.rect.top(); y<dst.rect.bottom(); y++)
     {
-        for(int x=0; x<range; x++)
+        for(int x=dst.rect.left(); x<dst.rect.right(); x++)
         {
-            float dx = x - radius;
-            float dy = y - radius;
+            float dx = x - center.x(); dx += 0.5f;
+            float dy = y - center.y(); dy += 0.5f;
             float rr = sqrt(dx*dx + dy*dy);
             float dd = radius - rr;
             if(dd < 0.0f)
@@ -213,40 +200,16 @@ void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> t
             else if(dd > 1.0f)
                 dd = 1.0f;
 
-            float alpha = dd;
-            float one_minus_alpha  = 1.0f - alpha;
-
-            auto px0 = dst->pixel(topleft.x() + x,                topleft.y() + y);
-            auto px1 = dst->pixel(topleft.x() + diameter - x - 1, topleft.y() + y);
-            auto px2 = dst->pixel(topleft.x() + x,                topleft.y() + diameter - y - 1);
-            auto px3 = dst->pixel(topleft.x() + diameter - x - 1, topleft.y() + diameter - y - 1);
-
-            for(int c=0; c<ndstc; c++)
+            if(dd >= 0.0f)
             {
-                px0[dstc + c] = (unsigned char)(float(px0[dstc + c]) * one_minus_alpha + float(components[c]) * alpha);
-            }
+                float alpha = dd;
+                float one_minus_alpha = 1.0f - alpha;
 
-            if(x < radius)
-            {
+                auto px = dst.img->pixel(x, y);
+
                 for(int c=0; c<ndstc; c++)
                 {
-                    px1[dstc + c] = (unsigned char)(float(px1[dstc + c]) * one_minus_alpha + float(components[c]) * alpha);
-                }
-
-                if(y < radius)
-                {
-                    for(int c=0; c<ndstc; c++)
-                    {
-                        px3[dstc + c] = (unsigned char)(float(px3[dstc + c]) * one_minus_alpha + float(components[c]) * alpha);
-                    }
-                }
-            }
-
-            if(y < radius)
-            {
-                for(int c=0; c<ndstc; c++)
-                {
-                    px2[dstc + c] = (unsigned char)(float(px2[dstc + c]) * one_minus_alpha + float(components[c]) * alpha);
+                    px[c + dstc] = (unsigned char) (float(color[c]) * alpha + float(px[c + dstc]) * one_minus_alpha);
                 }
             }
         }

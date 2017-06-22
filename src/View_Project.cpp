@@ -72,6 +72,11 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     fill(&sector, Color(0));
     fill_sector(&sector, 0, 1, Color(255), {sector.width()/2, sector.height()/2}, -0.35 * M_PI, 0.25f * M_PI);
     p->putImage(&sector, {300, 100});
+
+    Image circle(100, 100, 1);
+    fill(&circle, Color(0));
+    fill_circle(&circle, 0, 1, Color(255), {circle.width()/2, circle.height()/2}, circle.width()/2);
+    p->putImage(&circle, {300, 300});
 }
 
 
