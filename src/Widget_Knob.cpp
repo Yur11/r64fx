@@ -68,55 +68,59 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         assert(dst->componentCount() == 2);
 #endif//R64FX_DEBUG
 
+        int hs = m_size/2;
+        Point<int> center(hs, hs);
+
+        /* Outer ring color. */
+        fill({dst, {dstpos.x(), dstpos.y(), hs, m_size}}, Color(31, 0));
 
         {
-            fill({dst, {dstpos.x(), dstpos.y(), m_size, m_size}}, Color(31, 0));
-        }
-
-        {
-            Image c1(m_size, m_size, 1);
+            Image c1(hs, m_size, 1);
             fill(&c1, Color(255));
-            fill_circle(&c1, 0, 1, Color(0), {m_size/2, m_size/2}, m_size/2 - 6.5f);
+            fill_circle(&c1, 0, 1, Color(0), center, hs - 6.5f);
 
-            Image layer(m_size, m_size, 2);
-            fill_gradient_vert(&layer, 0, 1, 127, 31, {0, 6, m_size, m_size - 6});
+            Image layer(hs, m_size, 2);
+            fill_gradient_vert(&layer, 0, 1, 127, 31, {0, 6, hs, m_size - 6});
             copy(&layer, &c1, ChanShuf(1, 1, 0, 1));
 
             copy({dst, dstpos}, &layer);
         }
 
         {
-            Image c2(m_size, m_size, 1);
+            Image c2(hs, m_size, 1);
             fill(&c2, Color(255));
-            fill_circle(&c2, 0, 1, Color(0), {m_size/2, m_size/2}, m_size/2 - 8.5f);
+            fill_circle(&c2, 0, 1, Color(0), center, hs - 8.5f);
 
-            Image layer(m_size, m_size, 2);
-            fill_gradient_vert(&layer, 0, 1, 223, 31, {0, 8, m_size, m_size - 8});
+            Image layer(hs, m_size, 2);
+            fill_gradient_vert(&layer, 0, 1, 223, 31, {0, 8, hs, m_size - 8});
             copy(&layer, &c2, ChanShuf(1, 1, 0, 1));
 
             copy({dst, dstpos}, &layer);
         }
 
         {
-            Image c3(m_size, m_size, 1);
+            Image c3(hs, m_size, 1);
             fill(&c3, Color(255));
-            fill_circle(&c3, 0, 1, Color(0), {m_size/2, m_size/2}, m_size/2 - 9.5f);
+            fill_circle(&c3, 0, 1, Color(0), center, hs - 9.5f);
 
-            Image layer(m_size, m_size, 2);
-            fill_gradient_vert(&layer, 0, 1, 147, 107, {0, 9, m_size, m_size - 9});
+            Image layer(hs, m_size, 2);
+            fill_gradient_vert(&layer, 0, 1, 147, 107, {0, 9, hs, m_size - 9});
             copy(&layer, &c3, ChanShuf(1, 1, 0, 1));
 
             copy({dst, dstpos}, &layer);
         }
 
         {
-            Image alpha_mask(m_size, m_size, 1);
+            Image alpha_mask(hs, m_size, 1);
             fill(&alpha_mask, Color(0));
-            fill_circle(&alpha_mask, 0, 1, Color(255), {m_size/2, m_size/2}, m_size/2);
+            fill_circle(&alpha_mask, 0, 1, Color(255), center, hs);
             invert(&alpha_mask, &alpha_mask);
 
             copy({dst, dstpos}, &alpha_mask, ChanShuf(1, 1, 0, 1));
         }
+
+        /* Mirror left to right. */
+        copy({dst, {dstpos.x() + hs, dstpos.y()}}, {dst, {dstpos.x(), dstpos.y(), hs, m_size}}, ImgCopyFlipHori());
     }
 
     void genMarkerImage(Image* marker_image)
