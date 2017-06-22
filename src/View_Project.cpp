@@ -68,7 +68,10 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
     childrenPaintEvent(event);
 
-    p->strokeRect({300, 100, 8, 200}, Color(63, 96, 127), Color(127, 191, 255));
+    Image sector(100, 100, 1);
+    fill(&sector, Color(0));
+    fill_sector(&sector, 0, 1, Color(255), {sector.width()/2, sector.height()/2}, -0.35 * M_PI, 0.25f * M_PI);
+    p->putImage(&sector, {300, 100});
 }
 
 

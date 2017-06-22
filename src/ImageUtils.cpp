@@ -40,6 +40,7 @@ ImgRect::ImgRect(Image* img, const Rect<int> &rect)
 , rect(rect)
 {
 #ifdef R64FX_DEBUG
+    assert(img != nullptr);
     assert(rect.left() >= 0);
     assert(rect.top() >= 0);
     assert(rect.right() <= img->width());
@@ -52,10 +53,7 @@ ImgPos::ImgPos(Image* img, const Point<int> &pos)
 : img(img)
 , pos(pos)
 {
-// #ifdef R64FX_DEBUG
-//     assert(pos.x() >= 0);
-//     assert(pos.y() >= 0);
-// #endif//R64FX_DEBUG
+
 }
 
 }//namespace r64fx
@@ -256,12 +254,33 @@ void fill_circle(Image* dst, int dstc, int ndstc, Color components, Point<int> t
 }
 
 
+void fill_sector(const ImgRect &dst, int dstc, int ndstc, Color color, const Point<int> center, float min_angle, float max_angle)
+{
+    for(int y=dst.rect.top(); y<dst.rect.bottom(); y++)
+    {
+        for(int x=dst.rect.left(); x<dst.rect.right(); x++)
+        {
+            int xx = x - center.x();
+            int yy = y - center.y();
+
+            float xyang = atan2(yy, xx) + 0.5f * M_PI;
+            if(xyang > M_PI)
+                xyang -= 2.0f * M_PI;
+
+            if(xyang >= min_angle && xyang <= max_angle)
+            {
+                for(int c=0; c<ndstc; c++)
+                {
+                    dst.img->pixel(x, y)[c + dstc] = color[c];
+                }
+            }
+        }
+    }
+}
+
+
 void stroke_rect(const ImgRect &dst, Color stroke, Color fill, int stroke_width)
 {
-    #ifdef R64FX_DEBUG
-    assert(dst.img != nullptr);
-#endif//R64FX_DEBUG
-
     for(int y=0; y<dst.rect.height(); y++)
     {
         for(int x=0; x<dst.rect.width(); x++)
