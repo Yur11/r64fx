@@ -76,7 +76,7 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         {
             Image c0(m_size, m_size, 1);
             fill(&c0, Color(255));
-            fill_circle(&c0, 0, 1, Color(0), {0, 0}, m_size);
+            fill_circle(&c0, 0, 1, Color(47), {0, 0}, m_size);
 
             copy(&alpha_mask, &c0, ImgCopyMin());
 
@@ -276,44 +276,52 @@ public:
 
     void paint(Painter* painter, float angle)
     {
-//         Image sectorimg(m_size, m_size, 1);
-//         fill(&sectorimg, Color(0, 255));
-//         for(int y=0; y<m_size; y++)
-//         {
-//             for(int x=0; x<m_size; x++)
-//             {
-//                 int xx = x - m_size/2;
-//                 int yy = y - m_size/2;
-// 
-//                 float xyang = atan2(yy, xx) + (M_PI * 0.5);
-//                 if(xyang > M_PI)
-//                     xyang -= (2.0 * M_PI);
-// 
-//                 float diff = xyang - angle;
-//                 if(diff <= 0.0f)
-//                 {
-//                     sectorimg(x, y)[0] = 255;
-//                 }
-//             }
-//         }
-// 
-//         Image radiusimg(m_size, m_size, 1);
-//         fill(&radiusimg, Color(0));
-//         for(int y=0; y<m_size/2; y++)
-//         {
-//             radiusimg(m_size/2 - 1, y)[0] =
-//             radiusimg(m_size/2,     y)[0] = 255;
-//         }
-//         copyRotated(&sectorimg, &radiusimg, -angle, ImgCopyMax());
-// 
-//         Image circleimg(m_size, m_size, 1);
-//         fill(&circleimg, Color(0));
-//         fill_circle(&circleimg, 0, 1, Color(255), {0, 0}, m_size);
-//         copy(&sectorimg, &circleimg, ImgCopyMul());
-// 
-//         painter->blendColors({0, 0}, Color(127, 191, 255), &sectorimg);
-
         painter->putImage(m_image, {0, 0}, {0, 0, m_size, m_size});
+
+
+
+        Image sectorimg(m_size, m_size, 1);
+        fill(&sectorimg, Color(0, 255));
+        for(int y=0; y<m_size; y++)
+        {
+            for(int x=0; x<m_size; x++)
+            {
+                int xx = x - m_size/2;
+                int yy = y - m_size/2;
+
+                float xyang = atan2(yy, xx) + (M_PI * 0.5);
+                if(xyang > M_PI)
+                    xyang -= (2.0 * M_PI);
+
+                float diff = xyang - angle;
+                if(diff <= 0.0f)
+                {
+                    sectorimg(x, y)[0] = 255;
+                }
+            }
+        }
+
+        Image radiusimg(m_size, m_size, 1);
+        fill(&radiusimg, Color(0));
+        for(int y=0; y<m_size/2; y++)
+        {
+            radiusimg(m_size/2 - 1, y)[0] =
+            radiusimg(m_size/2,     y)[0] = 255;
+        }
+        copyRotated(&sectorimg, &radiusimg, -angle, ImgCopyMax());
+
+        Image circleimg(m_size, m_size, 1);
+        fill(&circleimg, Color(0));
+        fill_circle(&circleimg, 0, 1, Color(255), {1, 1}, m_size - 2);
+        copy(&sectorimg, &circleimg, ImgCopyMul());
+        fill(&circleimg, Color(255));
+        fill_circle(&circleimg, 0, 1, Color(0), {5, 5}, m_size - 10);
+        copy(&sectorimg, &circleimg, ImgCopyMul());
+
+        painter->blendColors({0, 0}, Color(127, 191, 255), &sectorimg);
+
+
+
 
         Point<int> dst_pos;
         Rect<int> src_rect;
@@ -322,6 +330,14 @@ public:
         {
             painter->putImage(m_texture, dst_pos, src_rect, FlipFlags(flags));
         }
+    }
+
+    void paintArc(Painter* painter, float angle, float length)
+    {
+#ifdef R64FX_DEBUG
+        assert(angle >= -M_PI);
+        assert((angle + length) <= +M_PI);
+#endif//R64FX_DEBUG
     }
 
     void debugPaint(Painter* painter, Point<int> position)
