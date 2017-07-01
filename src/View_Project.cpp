@@ -61,6 +61,7 @@ View_Project::~View_Project()
     }
 }
 
+
 void View_Project::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
@@ -68,15 +69,57 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
     childrenPaintEvent(event);
 
-    Image sector(100, 100, 1);
-    fill(&sector, Color(0));
-    fill_sector(&sector, 0, 1, Color(255), {sector.width()/2, sector.height()/2}, -0.35 * M_PI, 0.25f * M_PI);
-    p->putImage(&sector, {300, 100});
+    {
+        Image atan_table(32, 32, 4);
+        gen_atan_table(&atan_table);
 
-    Image circle(100, 100, 1);
-    fill(&circle, Color(0));
-    fill_circle(&circle, 0, 1, Color(255), {circle.width()/2, circle.height()/2}, circle.width()/2);
-    p->putImage(&circle, {300, 300});
+        float min_angle = -0.1f * M_PI;
+        float max_angle = +0.0f * M_PI;
+        Point<int> center(32, 32);
+        Image img(64, 64, 1);
+        fill(&img, Color(0));
+        for(int y=0; y<img.height(); y++)
+        {
+            for(int x=0; x<img.width(); x++)
+            {
+                float xyang = atan(x, y, &atan_table);
+
+                if(xyang >= min_angle && xyang <= max_angle)
+                {
+                    img.pixel(x, y)[0] = 255;
+                }
+            }
+        }
+        p->putImage(&img, {300, 100});
+    }
+
+
+    {
+        Image radius_table(32, 32, 4);
+        gen_radius_table(&radius_table);
+
+        Image img(64, 64, 1);
+        fill(&img, Color(0));
+        for(int y=0; y<img.height(); y++)
+        {
+            for(int x=0; x<img.width(); x++)
+            {
+                float rr = radius(x, y, &radius_table);
+                float dd = 16 - rr;
+                if(dd < 0.0f)
+                    dd = 0.0f;
+                else if(dd > 1.0f)
+                    dd = 1.0f;
+
+                if(dd >= 0.0f)
+                {
+                    auto px = img(x, y);
+                    px[0] = (unsigned char) (255.0f * dd);
+                }
+            }
+        }
+        p->putImage(&img, {400, 100});
+    }
 }
 
 

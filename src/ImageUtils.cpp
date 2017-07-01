@@ -242,6 +242,120 @@ void fill_sector(const ImgRect &dst, int dstc, int ndstc, Color color, const Poi
 }
 
 
+void gen_atan_table(Image* table)
+{
+#ifdef R64FX_DEBUG
+    assert(table->componentCount() == 4);
+#endif//R64FX_DEBUG
+
+    for(int y=0; y<table->height(); y++)
+    {
+        for(int x=0; x<table->width(); x++)
+        {
+            int xx = x - table->width();
+            int yy = y - table->height();
+
+            float xyang = atan2(yy, xx) + 0.5f * M_PI;
+            if(xyang > M_PI)
+                xyang -= 2.0f * M_PI;
+
+            auto px = (float*)table->pixel(x, y);
+            px[0] = xyang;
+        }
+    }
+}
+
+
+float atan(int x, int y, Image* table)
+{
+#ifdef R64FX_DEBUG
+    assert(table != nullptr);
+    assert(table->componentCount() == 4);
+    assert(table->width() == table->height());
+    assert(x < (table->width()*2));
+    assert(y < (table->height()*2));
+#endif//R64FX_DEBUG
+
+    int s = table->width();
+
+    float a = 1.0f;
+    float b = 0.0f;
+
+    if(x >= s)
+    {
+        x = x - s;
+        x = s - x - 1;
+        a = -1.0f;
+    }
+
+    int xx = x;
+    int yy = y;
+
+    if(y >= s)
+    {
+        y -= s;
+        xx = s - y - 1;
+        yy = x;
+        b = -0.5f * M_PI;
+    }
+
+    auto px = (float*)table->pixel(xx, yy);
+    return (px[0] + b) * a;
+}
+
+
+void gen_radius_table(Image* table)
+{
+#ifdef R64FX_DEBUG
+    assert(table != nullptr);
+    assert(table->componentCount() == 4);
+    assert(table->width() == table->height());
+#endif//R64FX_DEBUG
+
+    int c = table->width();
+
+    for(int y=0; y<table->height(); y++)
+    {
+        for(int x=0; x<table->width(); x++)
+        {
+            float dx = x - c; dx += 0.5f;
+            float dy = y - c; dy += 0.5f;
+            float rr = sqrt(dx*dx + dy*dy);
+
+            auto px = (float*)table->pixel(x, y);
+            px[0] = rr;
+        }
+    }
+}
+
+
+float radius(int x, int y, Image* table)
+{
+#ifdef R64FX_DEBUG
+    assert(table != nullptr);
+    assert(table->componentCount() == 4);
+    assert(table->width() == table->height());
+#endif//R64FX_DEBUG
+
+    int s = table->width();
+
+    if(x >= s)
+    {
+        x = x - s;
+        x = s - x - 1;
+    }
+
+    if(y >= s)
+    {
+        y = y - s;
+        y = s - y - 1;
+    }
+
+    auto px = (float*)table->pixel(x, y);
+    return px[0];
+}
+
+
 void stroke_rect(const ImgRect &dst, Color stroke, Color fill, int stroke_width)
 {
     for(int y=0; y<dst.rect.height(); y++)
