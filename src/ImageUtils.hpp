@@ -49,18 +49,18 @@ void fill_gradient_vert(Image* dst, int dstc, int ndstc, unsigned char val1, uns
 void fill_gradient_radial(Image* dst, int dstc, int ndstc, unsigned char val1, unsigned char val2, const Rect<int> &rect);
 
 
+void gen_atan_table(Image* table, int chan = 0);
+
+float atan(int x, int y, Image* table, int chan = 0);
+
+void gen_radius_table(Image* table, int chan = 0);
+
+float radius(int x, int y, Image* table, int chan = 0);
+
+
 void fill_circle(const ImgRect &dst, int dstc, int ndstc, Color color, const Point<int> center, float radius);
 
 void fill_sector(const ImgRect &dst, int dstc, int ndstc, Color color, const Point<int> center, float min_angle, float max_angle);
-
-
-void gen_atan_table(Image* table);
-
-float atan(int x, int y, Image* table);
-
-void gen_radius_table(Image* table);
-
-float radius(int x, int y, Image* table);
 
 
 void stroke_rect(const ImgRect &dst, Color stroke, Color fill, int stroke_width = 1);

@@ -69,9 +69,10 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
     childrenPaintEvent(event);
 
+    Image table(32, 32, 8);
+
     {
-        Image atan_table(32, 32, 4);
-        gen_atan_table(&atan_table);
+        gen_atan_table(&table, 0);
 
         float min_angle = -0.1f * M_PI;
         float max_angle = +0.0f * M_PI;
@@ -82,7 +83,7 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         {
             for(int x=0; x<img.width(); x++)
             {
-                float xyang = atan(x, y, &atan_table);
+                float xyang = atan(x, y, &table, 0);
 
                 if(xyang >= min_angle && xyang <= max_angle)
                 {
@@ -95,8 +96,7 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
 
 
     {
-        Image radius_table(32, 32, 4);
-        gen_radius_table(&radius_table);
+        gen_radius_table(&table, 1);
 
         Image img(64, 64, 1);
         fill(&img, Color(0));
@@ -104,7 +104,7 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         {
             for(int x=0; x<img.width(); x++)
             {
-                float rr = radius(x, y, &radius_table);
+                float rr = radius(x, y, &table, 1);
                 float dd = 16 - rr;
                 if(dd < 0.0f)
                     dd = 0.0f;
