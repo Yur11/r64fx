@@ -299,6 +299,45 @@ float radius(int x, int y, Image* table, int chan)
 }
 
 
+void atan_and_radius(int x, int y, Image* table, float &atanval, float &radiusval)
+{
+#ifdef R64FX_DEBUG
+    assert(table != nullptr);
+    assert(table->componentCount() == 8);
+    assert(table->width() == table->height());
+    assert(x < (table->width()*2));
+    assert(y < (table->height()*2));
+#endif//R64FX_DEBUG
+
+    int s = table->width();
+
+    float a = 1.0f;
+    float b = 0.0f;
+
+    if(x >= s)
+    {
+        x = x - s;
+        x = s - x - 1;
+        a = -1.0f;
+    }
+
+    int xx = x;
+    int yy = y;
+
+    if(y >= s)
+    {
+        y -= s;
+        xx = s - y - 1;
+        yy = x;
+        b = -0.5f * M_PI;
+    }
+
+    auto px = (float*)table->pixel(xx, yy);
+    atanval = (px[0] + b) * a;
+    radiusval = px[1];
+}
+
+
 void fill_circle(const ImgRect &dst, int dstc, int ndstc, Color color, const Point<int> center, float radius)
 {
     for(int y=dst.rect.top(); y<dst.rect.bottom(); y++)

@@ -57,6 +57,8 @@ void gen_radius_table(Image* table, int chan = 0);
 
 float radius(int x, int y, Image* table, int chan = 0);
 
+void atan_and_radius(int x, int y, Image* table, float &atanval, float &radiusval);
+
 
 void fill_circle(const ImgRect &dst, int dstc, int ndstc, Color color, const Point<int> center, float radius);
 
