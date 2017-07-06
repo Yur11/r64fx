@@ -53,7 +53,6 @@ set(SRC
 #     MachinePoolThread.cpp
 #     MachinePort.cpp
 #     MachinePortImpl.cpp
-    View_Program.cpp
     MemoryUtils.cpp
     Midi.cpp
     MidiDispatcher.cpp
@@ -71,7 +70,7 @@ set(SRC
     PlayerView.cpp
     Program.cpp
     Project.cpp
-    View_Project.cpp
+    RingSectorPainter.cpp
     SignalGraph.cpp
     SignalNodeCollection.cpp
 #     SignalNode_BufferIO.cpp
@@ -92,6 +91,8 @@ set(SRC
     Timer.cpp
     UndoRedoChain.cpp
     Value.cpp
+    View_Program.cpp
+    View_Project.cpp
     WaveformUtils.cpp
     Widget.cpp
     Widget_Button.cpp

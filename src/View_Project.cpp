@@ -11,6 +11,7 @@ using namespace std;
 
 #include "Widget_Knob.hpp"
 #include "Widget_Slider.hpp"
+#include "RingSectorPainter.hpp"
 
 namespace r64fx{
 
@@ -61,59 +62,6 @@ View_Project::~View_Project()
     }
 }
 
-
-class RingSectorPainter{
-    Image m_table;
-
-public:
-    RingSectorPainter(int size)
-    : m_table((size >> 1), (size >> 1), 8)
-    {
-#ifdef R64FX_DEBUG
-        assert(size > 0);
-        assert((size & 1) == 0);
-#endif//R64FX_DEBUG
-        gen_atan_table(&m_table, 0);
-        gen_radius_table(&m_table, 1);
-    }
-
-    void paint(ImgPos dst, float min_angle, float max_angle, float outer_radius, float inner_radius = 0)
-    {
-        float atanval = 0.0f;
-        float radiusval = 0.0f;
-        int w = (m_table.width() << 1);
-        int h = (m_table.height() << 1);
-
-        for(int y=0; y<h; y++)
-        {
-            for(int x=0; x<w; x++)
-            {
-                atan_and_radius(x, y, &m_table, atanval, radiusval);
-
-                if(atanval >= min_angle && atanval <= max_angle)
-                {
-                    auto dstpx = dst.img->pixel(x + dst.pos.x(), y + dst.pos.y());
-
-                    float outer = outer_radius - radiusval;
-                    if(outer < 0.0f)
-                        outer = 0.0f;
-                    else if(outer > 1.0f)
-                        outer = 1.0f;
-
-                    float inner = radiusval - inner_radius;
-                    if(inner < 0.0f)
-                        inner = 0.0f;
-                    else if(inner > 1.0f)
-                        inner = 1.0f;
-
-                    dstpx[0] = (unsigned char) (255.0f * outer * inner);
-                }
-            }
-        }
-    }
-};
-
-
 void View_Project::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
@@ -125,7 +73,7 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
         Image img(64, 64, 1);
         fill(&img, Color(0));
         RingSectorPainter rsp(64);
-        rsp.paint(&img, +0.35f*M_PI, +0.70f*M_PI, 31.0f, 27.0f);
+        rsp.paint(&img, -0.5f*M_PI, +0.75f*M_PI, 31.0f, 15.0f);
         p->putImage(&img, {500, 100});
     }
 }
