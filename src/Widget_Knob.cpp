@@ -4,6 +4,7 @@
 #include "ImageUtils.hpp"
 #include "WidgetFlags.hpp"
 #include "FlipFlags.hpp"
+#include "RingSectorPainter.hpp"
 #include <cmath>
 #include <algorithm>
 
@@ -275,50 +276,12 @@ public:
     {
         painter->putImage(m_image, {0, 0}, {0, 0, m_size, m_size});
 
-
-
         Image sectorimg(m_size, m_size, 1);
-        fill(&sectorimg, Color(0, 255));
-        for(int y=0; y<m_size; y++)
-        {
-            for(int x=0; x<m_size; x++)
-            {
-                int xx = x - m_size/2;
-                int yy = y - m_size/2;
-
-                float xyang = atan2(yy, xx) + (M_PI * 0.5);
-                if(xyang > M_PI)
-                    xyang -= (2.0 * M_PI);
-
-                float diff = xyang - angle;
-                if(diff <= 0.0f)
-                {
-                    sectorimg(x, y)[0] = 255;
-                }
-            }
-        }
-
-        Image radiusimg(m_size, m_size, 1);
-        fill(&radiusimg, Color(0));
-        for(int y=0; y<m_size/2; y++)
-        {
-            radiusimg(m_size/2 - 1, y)[0] =
-            radiusimg(m_size/2,     y)[0] = 255;
-        }
-        copyRotated(&sectorimg, &radiusimg, -angle, ImgCopyMax());
-
-        Image circleimg(m_size, m_size, 1);
-        fill(&circleimg, Color(0));
-        fill_circle(&circleimg, 0, 1, Color(255), {m_size/2, m_size/2}, m_size/2 - 1.5f);
-        copy(&sectorimg, &circleimg, ImgCopyMul());
-        fill(&circleimg, Color(255));
-        fill_circle(&circleimg, 0, 1, Color(0), {m_size/2, m_size/2}, m_size/2 - 5.5f);
-        copy(&sectorimg, &circleimg, ImgCopyMul());
+        fill(&sectorimg, Color(0));
+        RingSectorPainter rsp(m_size);
+        rsp.paint(&sectorimg, -M_PI, angle, m_size/2 - 1.5f, m_size/2 - 6.0f);
 
         painter->blendColors({0, 0}, Color(127, 191, 255), &sectorimg);
-
-
-
 
         Point<int> dst_pos;
         Rect<int> src_rect;

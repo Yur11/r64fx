@@ -120,7 +120,7 @@ float radius(int x, int y, Image* table, int chan)
 
 void copy_rotated(Image* dst, Image* src, int size, float angle, const ImgCopyFlags flags = ImgCopyReplace())
 {
-    int hs = size;
+    int hs = (size >> 1);
     Transformation2D<float> t;
     t.translate(float(hs) - 0.5f, float(hs) - 0.5f);
     t.rotate(angle);
@@ -137,7 +137,7 @@ RingSectorPainter::RingSectorPainter(int size)
     gen_radius_table(&m_table, 1);
     fill(&m_radius, Color(0));
 
-    for(int y=0; y<size; y++)
+    for(int y=0; y<(size>>1); y++)
     {
         m_radius(m_radius.width()/2 - 1, y)[0] =
         m_radius(m_radius.width()/2,     y)[0] = 255;
