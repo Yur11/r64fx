@@ -15,19 +15,21 @@ namespace r64fx{
 
 namespace{
 
-float g_2pi_rcp = 0.5f / M_PI;
+constexpr float g_2pi_rcp = 0.5f / M_PI;
 
 }//namespace
 
 
+//Knobs of the same size can share their animations.
 class KnobAnimation : public LinkedList<KnobAnimation>::Node{
-    static LinkedList<KnobAnimation> knob_animations;
+    static LinkedList<KnobAnimation> knob_animations; //List of all instances.
 
-    int                m_user_count              = 0;
-    int                m_size                    = 0;
+    int                m_user_count              = 0; //Used to automatically free when all users are gone.
+
+    int                m_size                    = 0; //Length of the side of square that the animation fits in.
     int                m_frame_count             = 0;
 
-    Image*             m_image                   = nullptr;
+    Image*             m_image                   = nullptr; //Part that is the same for all frames.
 
     PainterTexture2D*  m_texture                 = nullptr;
 
@@ -39,21 +41,60 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         short srcx = 0;
         short srcy = 0;
 
-        /* Resulting image coords. */
+        /* Destination image coords. */
         short dstx = 0;
         short dsty = 0;
     };
     MarkerFrameCoords*  m_marker_coords     = nullptr;
 
+    RingSectorPainter m_rsp;
+
+public:
+    int        size()        const { return m_size; }
+    int        frameCount()  const { return m_frame_count; }
+
+    static KnobAnimation* getAnimation(int size)
+    {
+        KnobAnimation* anim = nullptr;
+        for(auto ka : knob_animations)
+        {
+            if(ka->size() == size)
+            {
+                anim = ka;
+                break;
+            }
+        }
+
+        if(!anim)
+        {
+            anim = new KnobAnimation(size, 64);
+            knob_animations.append(anim);
+        }
+        anim->m_user_count++;
+        return anim;
+    }
+
+    static void freeAnimation(KnobAnimation* anim)
+    {
+        anim->m_user_count--;
+        if(anim->m_user_count == 0)
+        {
+            knob_animations.remove(anim);
+            delete anim;
+        }
+    }
+
+private:
     KnobAnimation(int size, int frame_count)
     : m_size(size)
     , m_frame_count(frame_count)
+    , m_rsp(size)
     {
         m_image = new Image(m_size * m_frame_count, m_size, 2);
         m_marker_coords = new MarkerFrameCoords[m_frame_count];
         fill(m_image, Color(0, 255));
 
-        genImage(m_image, {0, 0});
+        genStaticImage(m_image, {0, 0});
         genMarkerFrames(m_image, m_marker_coords, {m_size, 0}, m_size);
     }
 
@@ -63,17 +104,18 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         delete[] m_marker_coords;
     }
 
-    void genImage(Image* dst, Point<int> dstpos)
+    void genStaticImage(Image* dst, Point<int> dstpos)
     {
 #ifdef R64FX_DEBUG
         assert(dst->componentCount() == 2);
 #endif//R64FX_DEBUG
 
+        /* Generate left half of the image. */
         int hs = m_size/2;
         Point<int> center(hs, hs);
 
         /* Outer ring color. */
-        fill({dst, {dstpos.x(), dstpos.y(), hs, m_size}}, Color(31, 0));
+        fill({dst, {dstpos.x(), dstpos.y(), hs, m_size}}, Color(47, 0));
 
         {
             Image c1(hs, m_size, 1);
@@ -124,28 +166,6 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         copy({dst, {dstpos.x() + hs, dstpos.y()}}, {dst, {dstpos.x(), dstpos.y(), hs, m_size}}, ImgCopyFlipHori());
     }
 
-    void genMarkerImage(Image* marker_image)
-    {
-        marker_image->load(m_size, m_size, 2);
-        fill(marker_image, Color(0, 255));
-        fill({marker_image, {m_size/2 - 2, 7, 4, m_size/2 - 7}}, Color(0, 127));
-        fill({marker_image, {m_size/2 - 1, 8, 2, m_size/2 - 9}}, Color(255, 31));
-        for(int i=0; i<4; i++)
-        {
-            fill({marker_image, {m_size/2 - 1, 7 + i, 2, 1}}, 1, 1, 191 - 24 * i);
-        }
-    }
-
-    void genMarker(Image* dst, Image* marker_image, Point<int> dstpos, float angle)
-    {
-#ifdef R64FX_DEBUG
-        assert(dst->componentCount() == 2);
-#endif//R64FX_DEBUG
-
-        fill(dst, Color(0, 255));
-        copyRotated(dst, marker_image, angle);
-    }
-
     void genMarkerFrames(Image* dstimg, MarkerFrameCoords* mc, Point<int> dstpos, int height)
     {
 #ifdef R64FX_DEBUG
@@ -187,6 +207,28 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
             copy({dstimg, {mc.srcx, mc.srcy}}, {&frame, rect}, ImgCopyReplace());
             y += rect.height();
         }
+    }
+
+    void genMarkerImage(Image* marker_image)
+    {
+        marker_image->load(m_size, m_size, 2);
+        fill(marker_image, Color(0, 255));
+        fill({marker_image, {m_size/2 - 2, 7, 4, m_size/2 - 7}}, Color(0, 127));
+        fill({marker_image, {m_size/2 - 1, 8, 2, m_size/2 - 9}}, Color(255, 31));
+        for(int i=0; i<4; i++)
+        {
+            fill({marker_image, {m_size/2 - 1, 7 + i, 2, 1}}, 1, 1, 191 - 24 * i);
+        }
+    }
+
+    void genMarker(Image* dst, Image* marker_image, Point<int> dstpos, float angle)
+    {
+#ifdef R64FX_DEBUG
+        assert(dst->componentCount() == 2);
+#endif//R64FX_DEBUG
+
+        fill(dst, Color(0, 255));
+        copyRotated(dst, marker_image, angle);
     }
 
     void copyRotated(Image* dst, Image* src, float angle, const ImgCopyFlags flags = ImgCopyReplace())
@@ -246,11 +288,8 @@ class KnobAnimation : public LinkedList<KnobAnimation>::Node{
         }
     }
 
-    int        size()        const { return m_size; }
-    int        frameCount()  const { return m_frame_count; }
-
 public:
-    inline void loadMarkerFramesTexture(PainterTextureManager* texture_manager)
+    inline void loadTexture(PainterTextureManager* texture_manager)
     {
 #ifdef R64FX_DEBUG
         assert(texture_manager != nullptr);
@@ -272,32 +311,25 @@ public:
         return angle;
     }
 
-    void paint(Painter* painter, float angle)
+    void paint(Painter* painter, float min_angle, float max_angle, float marker_angle)
     {
         painter->putImage(m_image, {0, 0}, {0, 0, m_size, m_size});
 
         Image sectorimg(m_size, m_size, 1);
         fill(&sectorimg, Color(0));
-        RingSectorPainter rsp(m_size);
-        rsp.paint(&sectorimg, -M_PI, angle, m_size/2 - 1.5f, m_size/2 - 6.0f);
+
+        if(min_angle != max_angle)
+            m_rsp.paint(&sectorimg, min_angle, max_angle, m_size/2 - 1.5f, m_size/2 - 6.0f);
 
         painter->blendColors({0, 0}, Color(127, 191, 255), &sectorimg);
 
         Point<int> dst_pos;
         Rect<int> src_rect;
         FlipFlags flags = FlipFlags();
-        if(angle2frame(angle, dst_pos, src_rect, flags))
+        if(angle2frame(marker_angle, dst_pos, src_rect, flags))
         {
             painter->putImage(m_texture, dst_pos, src_rect, FlipFlags(flags));
         }
-    }
-
-    void paintArc(Painter* painter, float angle, float length)
-    {
-#ifdef R64FX_DEBUG
-        assert(angle >= -M_PI);
-        assert((angle + length) <= +M_PI);
-#endif//R64FX_DEBUG
     }
 
     void debugPaint(Painter* painter, Point<int> position)
@@ -305,7 +337,7 @@ public:
         painter->putImage(m_image, position);
     }
 
-    inline void freeMarkerFramesTexture(PainterTextureManager* texture_manager)
+    inline void freeTexture(PainterTextureManager* texture_manager)
     {
 #ifdef R64FX_DEBUG
         assert(texture_manager != nullptr);
@@ -313,37 +345,6 @@ public:
 #endif//R64FX_DEBUG
         texture_manager->deleteTexture(m_texture);
         m_texture = nullptr;
-    }
-
-    static KnobAnimation* getAnimation(int size)
-    {
-        KnobAnimation* anim = nullptr;
-        for(auto ka : knob_animations)
-        {
-            if(ka->size() == size)
-            {
-                anim = ka;
-                break;
-            }
-        }
-
-        if(!anim)
-        {
-            anim = new KnobAnimation(size, 64);
-            knob_animations.append(anim);
-        }
-        anim->m_user_count++;
-        return anim;
-    }
-
-    static void freeAnimation(KnobAnimation* anim)
-    {
-        anim->m_user_count--;
-        if(anim->m_user_count == 0)
-        {
-            knob_animations.remove(anim);
-            delete anim;
-        }
     }
 };
 
@@ -379,23 +380,40 @@ void Widget_Knob::debugPaint(Painter* painter, Point<int> position, int size)
 void Widget_Knob::addedToWindowEvent(WidgetAddedToWindowEvent* event)
 {
     if(!m_animation->markerFramesTextureLoaded())
-        m_animation->loadMarkerFramesTexture(event->textureManager());
+        m_animation->loadTexture(event->textureManager());
 }
 
 
 void Widget_Knob::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
 {
     if(m_animation->markerFramesTextureLoaded())
-        m_animation->freeMarkerFramesTexture(event->textureManager());
+        m_animation->freeTexture(event->textureManager());
 }
 
 
 void Widget_Knob::paintEvent(WidgetPaintEvent* event)
 {
+#ifdef R64FX_DEBUG
+    assert(minValue() <= 0.0f);
+    assert(maxValue() >= 0.0f);
+#endif//R64FX_DEBUG
+
     auto p = event->painter();
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
-    m_animation->paint(p, m_animation->markerAngle(normalizedValue()));
+    float marker_angle = m_animation->markerAngle(normalizedValue());
+    float null_angle = m_animation->markerAngle(normalizedValue(0.0f));
+    float min_angle = null_angle;
+    float max_angle = null_angle;
+    if(marker_angle < null_angle)
+    {
+        min_angle = marker_angle;
+    }
+    else if(marker_angle > null_angle)
+    {
+        max_angle = marker_angle;
+    }
+    m_animation->paint(p, min_angle, max_angle, marker_angle);
 }
 
 
@@ -403,7 +421,20 @@ void Widget_Knob::mousePressEvent(MousePressEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        grabMouseFocus();
+        if(event->doubleClick())
+        {
+            float val = 0.0f;
+            if(val < minValue())
+                val = minValue();
+            if(val > maxValue())
+                val = maxValue();
+            setValue(val, true);
+            repaint();
+        }
+        else
+        {
+            grabMouseFocus();
+        }
     }
 }
 
