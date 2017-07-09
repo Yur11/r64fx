@@ -110,6 +110,7 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
     int nullpos = positionFromValue(0.0f);
     int hw = (m_handle->width()>>1);
     int qw = (m_handle->width()>>2);
+    int ht = (m_handle->thickness()>>1);
 
     if(orientation() == Orientation::Vertical)
     {
@@ -119,12 +120,13 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
         p->strokeRect({qw, 0, hw, height()}, Color(63, 63, 63), Color(95, 95, 95));
         if(pos < nullpos)
         {
-            int extra = (minValue() >= 0.0f ? m_handle->thickness() : 0.0f);
+            int extra = (minValue() >= 0.0f ? m_handle->thickness() : ht + 1);
             p->strokeRect({qw, pos, hw, nullpos - pos + extra}, Color(63, 96, 127), Color(127, 191, 255));
         }
         else if(pos > nullpos)
         {
-            p->strokeRect({qw, nullpos, hw, pos - nullpos + 1}, Color(63, 96, 127), Color(127, 191, 255));
+            int extra = (maxValue() <= 0.0f ? 0.0f : ht);
+            p->strokeRect({qw, nullpos + extra, hw, pos - nullpos - extra + 1}, Color(63, 96, 127), Color(127, 191, 255));
         }
         p->putImage(m_handle->handleImage(), {0, pos});
     }
@@ -133,12 +135,13 @@ void Widget_Slider::paintEvent(WidgetPaintEvent* event)
         p->strokeRect({0, qw, width(), hw}, Color(63, 63, 63), Color(95, 95, 95));
         if(pos < nullpos)
         {
-            int extra = (maxValue() <= 0.0f ? m_handle->thickness() : 0.0f);
+            int extra = (maxValue() <= 0.0f ? m_handle->thickness() : ht);
             p->strokeRect({pos, qw, nullpos - pos + extra, hw}, Color(63, 96, 127), Color(127, 191, 255));
         }
         else if(pos > nullpos)
         {
-            p->strokeRect({nullpos, qw, pos - nullpos + 1, hw}, Color(63, 96, 127), Color(127, 191, 255));
+            int extra = (minValue() >= 0.0f ? 0.0f : ht);
+            p->strokeRect({nullpos + extra, qw, pos - nullpos - extra + 1, hw}, Color(63, 96, 127), Color(127, 191, 255));
         }
         p->putImage(m_handle->handleImage(), {pos, 0});
     }
@@ -202,7 +205,7 @@ void Widget_Slider::setValueFromPosition(Point<int> position)
     }
 
     float new_value = (float(pos)/float(travelDistance())) * valueRange() + minValue();
-    setValue(new_value);
+    setValue(new_value, true);
     repaint();
 }
 

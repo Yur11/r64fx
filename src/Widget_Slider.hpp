@@ -16,7 +16,7 @@ public:
 
     virtual ~Widget_Slider();
 
-protected:
+private:
     virtual void paintEvent(WidgetPaintEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event);
@@ -25,7 +25,6 @@ protected:
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
 
-private:
     int travelDistance() const;
 
     void setValueFromPosition(Point<int> position);
