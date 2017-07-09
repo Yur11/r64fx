@@ -11,7 +11,6 @@ using namespace std;
 
 #include "Widget_Knob.hpp"
 #include "Widget_Slider.hpp"
-#include "RingSectorPainter.hpp"
 
 namespace r64fx{
 
@@ -68,14 +67,6 @@ void View_Project::paintEvent(WidgetPaintEvent* event)
     p->fillRect({0, 0, width(), height()}, Color(191, 191, 191, 0));
 
     childrenPaintEvent(event);
-
-    {
-        Image img(64, 64, 1);
-        fill(&img, Color(0));
-        RingSectorPainter rsp(64);
-        rsp.paint(&img, -0.5f*M_PI, +0.75f*M_PI, 31.0f, 15.0f);
-        p->putImage(&img, {500, 100});
-    }
 }
 
 
