@@ -31,22 +31,20 @@ void init()
             int img_size = handle_size;
             Image img(img_size, img_size);
             fill(&img, Color(0));
-            fill(&img, Color(255), {0, img_size/2, img_size, 1});
-            fill(&img, Color(255), {img_size/2, 0, 1, img_size});
+            fill({&img, {0, img_size/2, img_size, 1}}, Color(255));
+            fill({&img, {img_size/2, 0, 1, img_size}}, Color(255));
 
             Transformation2D<float> t;
             t.translate(img_size/2, img_size/2);
             t.rotate(M_PI/4);
             t.translate(-img_size/2, -img_size/2);
 
-            implant(g_cross_img, t, &img);
+            copy(g_cross_img, t, &img);
         }
 
         g_circle_img = new Image(handle_size, handle_size);
         fill(g_circle_img, Color(0));
-        stroke_circle(
-            g_circle_img, Color(255), {handle_size * 0.5f - 0.5f, handle_size * 0.5f - 0.5f}, handle_size * 0.5f - 1.0f, 1.0f
-        );
+        fill_circle(g_circle_img, 0, 1, Color(255), {handle_size >> 1, handle_size >> 1}, (handle_size >> 1) - 1);
 
         g_Font = new Font("", 15, 72);
     }
@@ -193,21 +191,22 @@ public:
         markup_img.load(width(), height(), 1);
         fill(&markup_img, Color(0));
 
-        stroke_circle(
-            &markup_img, Color(255), {width()*0.5f, height()*0.5f}, min(width(), height()) * 0.45, 1.0f
-        );
+//         stroke_circle(
+//             &markup_img, Color(255), {width()*0.5f, height()*0.5f}, min(width(), height()) * 0.45, 1.0f
+//         );
+        
 
-        fill(&markup_img, Color(255), {0, height()/2 - 1, width(), 1});
+        fill({&markup_img, {0, height()/2 - 1, width(), 1}}, Color(255));
         {
             Image* textimg = text2image("Re", TextWrap::None, g_Font);
-            implant(&markup_img, Point<int>(width() - textimg->width() - 2,  height()/2 - textimg->height() - 1), textimg);
+            copy({&markup_img, Point<int>(width() - textimg->width() - 2,  height()/2 - textimg->height() - 1)}, textimg);
             delete textimg;
         }
 
-        fill(&markup_img, Color(255), {width()/2 - 1, 0, 1, height()});
+        fill({&markup_img, {width()/2 - 1, 0, 1, height()}}, Color(255));
         {
             Image* textimg = text2image("Im", TextWrap::None, g_Font);
-            implant(&markup_img, Point<int>(width()/2 + 3, 1), textimg);
+            copy({&markup_img, Point<int>(width()/2 + 3, 1)}, textimg);
             delete textimg;
         }
     }
@@ -220,33 +219,33 @@ private:
         p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
         if(zimg.isGood())
         {
-//             p->blendColors({0, 0}, Colors(Color(255, 255, 255, 0)), &zimg);
+            p->blendColors({0, 0}, Colors(Color(255, 255, 255, 0)), &zimg);
         }
 
         if(markup_img.isGood())
         {
-// //             p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &markup_img);
+            p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &markup_img);
         }
 
         Point<int> handle_offset((handle_size >> 1) + 1, (handle_size >> 1) + 1);
 
-//         for(auto zero : zeros)
-//         {
-//             p->blendColors(
-//                 complexToPoint(zero) - handle_offset,
-//                 Colors(Color(0, 0, 255, 0)),
-//                 g_circle_img
-//             );
-//         }
-//
-//         for(auto pole : poles)
-//         {
-//             p->blendColors(
-//                 complexToPoint(pole) - handle_offset,
-//                 Colors(Color(255, 0, 0, 0)),
-//                 g_cross_img
-//             );
-//         }
+        for(auto zero : zeros)
+        {
+            p->blendColors(
+                complexToPoint(zero) - handle_offset,
+                Colors(Color(0, 0, 255, 0)),
+                g_circle_img
+            );
+        }
+
+        for(auto pole : poles)
+        {
+            p->blendColors(
+                complexToPoint(pole) - handle_offset,
+                Colors(Color(255, 0, 0, 0)),
+                g_cross_img
+            );
+        }
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -390,7 +389,7 @@ private:
         Image img(width(), height(), 1);
         fill(&img, Color(0));
         stroke_plot(&img, Color(255), {0, 0, width(), height()}, response.data(), 2.0f, 1.0f, height() / 2);
-//         p->blendColors({0, 0}, Colors(Color(255, 63, 0)), &img);
+        p->blendColors({0, 0}, Color(255, 63, 0), &img);
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)

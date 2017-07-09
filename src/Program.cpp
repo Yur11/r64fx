@@ -11,6 +11,8 @@
 #include "Player.hpp"
 #include "Module_Oscillator.hpp"
 
+#include "FilterView.hpp"
+
 #include <iostream>
 
 using namespace std;
@@ -24,6 +26,8 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     View_Program* view_program = nullptr;
 
+    FilterView* view_filter = nullptr;
+
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
 
@@ -35,6 +39,9 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
         view_program = new View_Program(this);
         view_program->openWindow();
+
+        view_filter = new FilterView(nullptr);
+        view_filter->openWindow();
 
         newProject();
 
@@ -49,6 +56,9 @@ struct ProgramPrivate : public View_ProgramEventIface{
             auto time = Timer::runTimers();
             sleep_nanoseconds(time);
         }
+
+        view_filter->closeWindow();
+        delete view_filter;
 
         view_program->closeWindow();
         closeAllProjects();
