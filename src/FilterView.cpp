@@ -45,6 +45,7 @@ void init()
         g_circle_img = new Image(handle_size, handle_size);
         fill(g_circle_img, Color(0));
         fill_circle(g_circle_img, 0, 1, Color(255), {handle_size >> 1, handle_size >> 1}, (handle_size >> 1) - 1);
+        fill_circle(g_circle_img, 0, 1, Color(0),   {handle_size >> 1, handle_size >> 1}, (handle_size >> 1) - 3);
 
         g_Font = new Font("", 15, 72);
     }
@@ -112,20 +113,21 @@ class PoleZeroPlot : public Widget{
     Complex<float>* current_point = nullptr;
     Point<int> handle_anchor = {0, 0};
 
+    PainterTexture1D* m_pole_zero_texture = nullptr;
+
 public:
     PoleZeroPlot(FilterViewPrivate* m, Widget* parent = nullptr)
     : Widget(parent)
     , m(m)
     {
         zeros.push_back({1.0f, 0.0f});
-//         zeros.push_back({1.0f, 0.0f});
+        zeros.push_back({1.0f, 0.0f});
 //         zeros.push_back({1.0f, 0.0f});
 //         zeros.push_back({1.0f, 0.0f});
 //         zeros.push_back({1.0f, 0.0f});
 //
-//         poles.push_back({0.0f, 0.7f});
         poles.push_back({0.0f, 0.7f});
-//         poles.push_back({0.0f, 0.7f});
+        poles.push_back({0.0f, 0.7f});
 //         poles.push_back({0.0f, 0.7f});
 //         poles.push_back({0.0f, 0.7f});
 //         poles.push_back({0.0f, 0.7f});
@@ -184,7 +186,6 @@ public:
                     px = (unsigned char)mag;
                 }
                 zimg.pixel(x, y)[0] = px;
-
             }
         }
 
@@ -194,7 +195,9 @@ public:
 //         stroke_circle(
 //             &markup_img, Color(255), {width()*0.5f, height()*0.5f}, min(width(), height()) * 0.45, 1.0f
 //         );
-        
+
+        fill_circle(&markup_img, 0, 1, Color(255), {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45) - 1);
+        fill_circle(&markup_img, 0, 1, Color(0),   {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45) - 3);
 
         fill({&markup_img, {0, height()/2 - 1, width(), 1}}, Color(255));
         {
@@ -211,16 +214,59 @@ public:
         }
     }
 
+    void initTextures(PainterTextureManager* manager)
+    {
+
+    }
+
+    void updateTextures(PainterTextureManager* manager)
+    {
+
+        
+    }
+
+    void freeTextures(PainterTextureManager* manager)
+    {
+
+    }
+
 private:
     virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
 
-        p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
-        if(zimg.isGood())
+//         p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
+//         if(zimg.isGood())
+//         {
+//             p->blendColors({0, 0}, Colors(Color(255, 255, 255, 0)), &zimg);
+//         }
+
+#ifdef R64FX_DEBUG
+        assert(m_pole_zero_texture != nullptr);
+        assert((zeros.size() + poles.size()) <= 32);
+#endif//R64FX_DEBUG
+        static float buff[32 * 4];
+
+        for(int i=0; i<(int)zeros.size(); i++)
         {
-            p->blendColors({0, 0}, Colors(Color(255, 255, 255, 0)), &zimg);
+            buff[i*4 + 0] = zeros[i].re;
+            buff[i*4 + 1] = zeros[i].im;
+            buff[i*4 + 2] = zeros[i].re;
+            buff[i*4 + 3] = -zeros[i].im;
         }
+
+        for(int i=0; i<(int)poles.size(); i++)
+        {
+            buff[(i + zeros.size()*2) * 4 + 0] = poles[i].re;
+            buff[(i + zeros.size()*2) * 4 + 1] = poles[i].im;
+            buff[(i + zeros.size()*2) * 4 + 2] = poles[i].re;
+            buff[(i + zeros.size()*2) * 4 + 3] = -poles[i].im;
+        }
+
+        m_pole_zero_texture->load(buff, (zeros.size() + poles.size()) * 2, 2);
+
+        p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, zeros.size()*2, zeros.size()*2, poles.size()*2);
+
 
         if(markup_img.isGood())
         {
@@ -246,6 +292,22 @@ private:
                 g_cross_img
             );
         }
+    }
+
+    virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event)
+    {
+#ifdef R64FX_DEBUG
+        assert(m_pole_zero_texture == nullptr);
+#endif//R64FX_DEBUG
+        m_pole_zero_texture = event->textureManager()->newTexture();
+    }
+
+    virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
+    {
+#ifdef R64FX_DEBUG
+        assert(m_pole_zero_texture != nullptr);
+#endif//R64FX_DEBUG
+        event->textureManager()->deleteTexture(m_pole_zero_texture);
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)

@@ -360,7 +360,12 @@ struct PainterImplImage : public PainterImpl{
         {
             PainterImplImage::drawWaveform(rect, color, waveform_texture_impl->dataFloat());
         }
-}
+    }
+
+    virtual void drawPoleZeroPlot(const Rect<int> &rect, PainterTexture1D* tex, int zero_index, int zero_count, int pole_index, int pole_count)
+    {
+        
+    }
 
     virtual PainterTexture1D* newTexture()
     {

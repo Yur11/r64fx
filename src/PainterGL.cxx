@@ -366,6 +366,39 @@ struct PainterImplGL : public PainterImpl{
 //         }
     }
 
+    virtual void drawPoleZeroPlot(const Rect<int> &rect, PainterTexture1D* texture, int zero_index, int zero_count, int pole_index, int pole_count)
+    {
+#ifdef R64FX_DEBUG
+        assert(texture->parentPainter() == this);
+#endif//R64FX_DEBUG
+
+        auto transformed_rect = clip(rect + offset());
+        if(transformed_rect.width() <= 0 || transformed_rect.height() <= 0)
+            return;
+
+        g_PainterShader_Common->setMode(12);
+        g_PainterShader_Common->setScaleAndShift(
+            m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f
+        );
+
+        g_PainterShader_Common->setRectSize(transformed_rect.width(), transformed_rect.height());
+
+        setTexture1D(static_cast<PainterTexture1DImplGL*>(texture));
+
+        g_PainterShader_Common->setZeroIndex(zero_index);
+        g_PainterShader_Common->setZeroCount(zero_count);
+        g_PainterShader_Common->setPoleIndex(pole_index);
+        g_PainterShader_Common->setPoleCount(pole_count);
+
+        m_uber_rect.setRect(
+            transformed_rect.left(), transformed_rect.top(), transformed_rect.right(), transformed_rect.bottom()
+        );
+
+        m_uber_rect.setTexCoords(0, 0, transformed_rect.width(), transformed_rect.height());
+
+        m_uber_rect.draw();
+    }
+
     virtual PainterTexture1D* newTexture()
     {
         auto texture_impl = new PainterTexture1DImplGL(this);

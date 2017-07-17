@@ -217,31 +217,6 @@ void fill_circle(const ImgRect &dst, int dstc, int ndstc, Color color, const Poi
 }
 
 
-// void fill_sector(const ImgRect &dst, int dstc, int ndstc, Color color, const Point<int> center, float min_angle, float max_angle)
-// {
-//     for(int y=dst.rect.top(); y<dst.rect.bottom(); y++)
-//     {
-//         for(int x=dst.rect.left(); x<dst.rect.right(); x++)
-//         {
-//             int xx = x - center.x();
-//             int yy = y - center.y();
-// 
-//             float xyang = atan2(yy, xx) + 0.5f * M_PI;
-//             if(xyang > M_PI)
-//                 xyang -= 2.0f * M_PI;
-// 
-//             if(xyang >= min_angle && xyang <= max_angle)
-//             {
-//                 for(int c=0; c<ndstc; c++)
-//                 {
-//                     dst.img->pixel(x, y)[c + dstc] = color[c];
-//                 }
-//             }
-//         }
-//     }
-// }
-
-
 void stroke_rect(const ImgRect &dst, Color stroke, Color fill, int stroke_width)
 {
     for(int y=0; y<dst.rect.height(); y++)

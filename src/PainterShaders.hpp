@@ -50,6 +50,10 @@ class PainterShader_Common : public PainterShader{
     GLint unif_sampler2d;
     GLint unif_rect_size;
     GLint unif_stroke_width;
+    GLint unif_zero_index;
+    GLint unif_zero_count;
+    GLint unif_pole_index;
+    GLint unif_pole_count;
 
 public:
     PainterShader_Common();
@@ -72,6 +76,26 @@ public:
     inline void setStrokeWidth(float w)
     {
         gl::Uniform1f(unif_stroke_width, w);
+    }
+
+    inline void setZeroIndex(int i)
+    {
+        gl::Uniform1i(unif_zero_index, i);
+    }
+
+    inline void setZeroCount(int i)
+    {
+        gl::Uniform1i(unif_zero_count, i);
+    }
+
+    inline void setPoleIndex(int i)
+    {
+        gl::Uniform1i(unif_pole_index, i);
+    }
+
+    inline void setPoleCount(int i)
+    {
+        gl::Uniform1i(unif_pole_count, i);
     }
 
     inline static const int ModePutImage(int component_count)
