@@ -163,7 +163,7 @@ void main()
             }
 
             float mag = complex_maginitude(denominator);
-            if(mag > 0.0)
+            if(abs(mag) > 0.0)
             {
                 vec2 res = complex_div(numerator, denominator);
                 mag = complex_maginitude(res);

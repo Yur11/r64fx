@@ -106,10 +106,12 @@ class PoleZeroPlot : public Widget{
     FilterViewPrivate* m = nullptr;
 
     Image markup_img;
-    Image zimg;
 
-    vector<Complex<float>> zeros;
-    vector<Complex<float>> poles;
+    std::vector<Complex<float>> m_zeros_and_poles;
+    int m_pole_index = 0;
+
+    
+
     Complex<float>* current_point = nullptr;
     Point<int> handle_anchor = {0, 0};
 
@@ -120,17 +122,20 @@ public:
     : Widget(parent)
     , m(m)
     {
-        zeros.push_back({1.0f, 0.0f});
-        zeros.push_back({1.0f, 0.0f});
-//         zeros.push_back({1.0f, 0.0f});
-//         zeros.push_back({1.0f, 0.0f});
-//         zeros.push_back({1.0f, 0.0f});
-//
-        poles.push_back({0.0f, 0.7f});
-        poles.push_back({0.0f, 0.7f});
-//         poles.push_back({0.0f, 0.7f});
-//         poles.push_back({0.0f, 0.7f});
-//         poles.push_back({0.0f, 0.7f});
+        // Zeros
+        for(Complex<float> c : {
+            Complex<float>(1.0f, 0.0f),
+            Complex<float>(1.0f, 0.0f),
+        })
+            m_zeros_and_poles.push_back(c);
+        m_pole_index = m_zeros_and_poles.size();
+
+        // Poles
+        for(Complex<float> c : {
+            Complex<float>(0.0f, 0.5f),
+            Complex<float>(0.0f, 0.7f),
+        })
+            m_zeros_and_poles.push_back(c);
     }
 
     virtual ~PoleZeroPlot()
@@ -168,33 +173,8 @@ public:
 
     void update()
     {
-        zimg.load(width(), height(), 1);
-
-        for(int y=0; y<height(); y++)
-        {
-            for(int x=0; x<width(); x++)
-            {
-                auto z = pointToComplex({x, y});
-                auto val = evaluateAt(z);
-                unsigned char px = 255;
-                float mag = val.magnitude();
-                if(mag < 500.0f)
-                {
-                    mag /= 500.0f;
-                    mag = sqrt(mag);
-                    mag *= 255.0f;
-                    px = (unsigned char)mag;
-                }
-                zimg.pixel(x, y)[0] = px;
-            }
-        }
-
         markup_img.load(width(), height(), 1);
         fill(&markup_img, Color(0));
-
-//         stroke_circle(
-//             &markup_img, Color(255), {width()*0.5f, height()*0.5f}, min(width(), height()) * 0.45, 1.0f
-//         );
 
         fill_circle(&markup_img, 0, 1, Color(255), {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45) - 1);
         fill_circle(&markup_img, 0, 1, Color(0),   {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45) - 3);
@@ -214,33 +194,9 @@ public:
         }
     }
 
-    void initTextures(PainterTextureManager* manager)
-    {
-
-    }
-
-    void updateTextures(PainterTextureManager* manager)
-    {
-
-        
-    }
-
-    void freeTextures(PainterTextureManager* manager)
-    {
-
-    }
-
 private:
-    virtual void paintEvent(WidgetPaintEvent* event)
+    void loadTransferFunctionTexture()
     {
-        auto p = event->painter();
-
-//         p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
-//         if(zimg.isGood())
-//         {
-//             p->blendColors({0, 0}, Colors(Color(255, 255, 255, 0)), &zimg);
-//         }
-
 #ifdef R64FX_DEBUG
         assert(m_pole_zero_texture != nullptr);
         assert((zeros.size() + poles.size()) <= 32);
@@ -257,16 +213,21 @@ private:
 
         for(int i=0; i<(int)poles.size(); i++)
         {
-            buff[(i + zeros.size()*2) * 4 + 0] = poles[i].re;
-            buff[(i + zeros.size()*2) * 4 + 1] = poles[i].im;
-            buff[(i + zeros.size()*2) * 4 + 2] = poles[i].re;
-            buff[(i + zeros.size()*2) * 4 + 3] = -poles[i].im;
+            buff[zeros.size()*4 + i*4 + 0] = poles[i].re;
+            buff[zeros.size()*4 + i*4 + 1] = poles[i].im;
+            buff[zeros.size()*4 + i*4 + 2] = poles[i].re;
+            buff[zeros.size()*4 + i*4 + 3] = -poles[i].im;
         }
 
         m_pole_zero_texture->load(buff, (zeros.size() + poles.size()) * 2, 2);
+    }
 
+    virtual void paintEvent(WidgetPaintEvent* event)
+    {
+        auto p = event->painter();
+
+        loadTransferFunctionTexture();
         p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, zeros.size()*2, zeros.size()*2, poles.size()*2);
-
 
         if(markup_img.isGood())
         {
@@ -318,7 +279,6 @@ private:
 
     virtual void mousePressEvent(MousePressEvent* event)
     {
-//         auto val = evaluateAt(pointToComplex(event->position()));
         Point<int> anchor(0, 0);
         auto point = pointAt(event->position(), &anchor);
         if(point)

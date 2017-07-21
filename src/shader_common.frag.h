@@ -163,7 +163,7 @@
 "            }\n"
 "\n"
 "            float mag = complex_maginitude(denominator);\n"
-"            if(mag > 0.0)\n"
+"            if(abs(mag) > 0.0)\n"
 "            {\n"
 "                vec2 res = complex_div(numerator, denominator);\n"
 "                mag = complex_maginitude(res);\n"
