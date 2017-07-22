@@ -4,9 +4,9 @@
 #include "Complex.hpp"
 #include "Expression.hpp"
 #include "LinkedList.hpp"
+#include "IteratorPair.hpp"
 
 namespace r64fx{
-
 
 class SysFunRoot{
     unsigned long m_flags = 0;
@@ -48,6 +48,9 @@ public:
     using SysFunRoot::SysFunRoot;
 };
 
+typedef IteratorPair<LinkedList<Zero>::Iterator> ZeroIterators;
+typedef IteratorPair<LinkedList<Pole>::Iterator> PoleIterators;
+
 
 class FilterClass{
     LinkedList<Zero> m_zeros;
@@ -61,6 +64,10 @@ public:
     inline void removeZero(Zero* zero) { m_zeros.remove(zero); }
 
     inline void removePole(Pole* pole) { m_poles.remove(pole); }
+
+    inline ZeroIterators zeros() const { return {m_zeros.begin(), m_zeros.end()}; }
+
+    inline PoleIterators poles() const { return {m_poles.begin(), m_poles.end()}; }
 };
 
 }//namespace r64fx
