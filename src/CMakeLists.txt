@@ -37,6 +37,7 @@ set(SRC
     Directory.cpp
 #     DummyMachine.cpp
 #     FilterMachine.cpp
+    FilterClass.cpp
     FilterView.cpp
     Font.cpp
     IconSupply.cpp

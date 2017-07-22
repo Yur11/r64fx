@@ -6,6 +6,8 @@
 #include <vector>
 #include <iostream>
 
+#include "FilterClass.hpp"
+
 using namespace std;
 
 namespace r64fx{
@@ -146,24 +148,24 @@ public:
     Complex<float> evaluateAt(Complex<float> z)
     {
         Complex<float> numerator(1, 0);
-        for(auto zero : zeros)
-        {
-            numerator *= (z - zero);
-            if(zero.im != 0.0f)
-            {
-                numerator *= (z - zero.conjugate());
-            }
-        }
+//         for(auto zero : zeros)
+//         {
+//             numerator *= (z - zero);
+//             if(zero.im != 0.0f)
+//             {
+//                 numerator *= (z - zero.conjugate());
+//             }
+//         }
 
         Complex<float> denominator(1, 0);
-        for(auto pole : poles)
-        {
-            denominator *= (z - pole);
-            if(pole.im != 0.0f)
-            {
-                denominator *= (z - pole.conjugate());
-            }
-        }
+//         for(auto pole : poles)
+//         {
+//             denominator *= (z - pole);
+//             if(pole.im != 0.0f)
+//             {
+//                 denominator *= (z - pole.conjugate());
+//             }
+//         }
 
         if(denominator.magnitude() != 0)
             return numerator / denominator;
@@ -197,62 +199,62 @@ public:
 private:
     void loadTransferFunctionTexture()
     {
-#ifdef R64FX_DEBUG
-        assert(m_pole_zero_texture != nullptr);
-        assert((zeros.size() + poles.size()) <= 32);
-#endif//R64FX_DEBUG
-        static float buff[32 * 4];
-
-        for(int i=0; i<(int)zeros.size(); i++)
-        {
-            buff[i*4 + 0] = zeros[i].re;
-            buff[i*4 + 1] = zeros[i].im;
-            buff[i*4 + 2] = zeros[i].re;
-            buff[i*4 + 3] = -zeros[i].im;
-        }
-
-        for(int i=0; i<(int)poles.size(); i++)
-        {
-            buff[zeros.size()*4 + i*4 + 0] = poles[i].re;
-            buff[zeros.size()*4 + i*4 + 1] = poles[i].im;
-            buff[zeros.size()*4 + i*4 + 2] = poles[i].re;
-            buff[zeros.size()*4 + i*4 + 3] = -poles[i].im;
-        }
-
-        m_pole_zero_texture->load(buff, (zeros.size() + poles.size()) * 2, 2);
+// #ifdef R64FX_DEBUG
+//         assert(m_pole_zero_texture != nullptr);
+//         assert((zeros.size() + poles.size()) <= 32);
+// #endif//R64FX_DEBUG
+//         static float buff[32 * 4];
+// 
+//         for(int i=0; i<(int)zeros.size(); i++)
+//         {
+//             buff[i*4 + 0] = zeros[i].re;
+//             buff[i*4 + 1] = zeros[i].im;
+//             buff[i*4 + 2] = zeros[i].re;
+//             buff[i*4 + 3] = -zeros[i].im;
+//         }
+// 
+//         for(int i=0; i<(int)poles.size(); i++)
+//         {
+//             buff[zeros.size()*4 + i*4 + 0] = poles[i].re;
+//             buff[zeros.size()*4 + i*4 + 1] = poles[i].im;
+//             buff[zeros.size()*4 + i*4 + 2] = poles[i].re;
+//             buff[zeros.size()*4 + i*4 + 3] = -poles[i].im;
+//         }
+// 
+//         m_pole_zero_texture->load(buff, (zeros.size() + poles.size()) * 2, 2);
     }
 
     virtual void paintEvent(WidgetPaintEvent* event)
     {
-        auto p = event->painter();
-
-        loadTransferFunctionTexture();
-        p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, zeros.size()*2, zeros.size()*2, poles.size()*2);
-
-        if(markup_img.isGood())
-        {
-            p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &markup_img);
-        }
-
-        Point<int> handle_offset((handle_size >> 1) + 1, (handle_size >> 1) + 1);
-
-        for(auto zero : zeros)
-        {
-            p->blendColors(
-                complexToPoint(zero) - handle_offset,
-                Colors(Color(0, 0, 255, 0)),
-                g_circle_img
-            );
-        }
-
-        for(auto pole : poles)
-        {
-            p->blendColors(
-                complexToPoint(pole) - handle_offset,
-                Colors(Color(255, 0, 0, 0)),
-                g_cross_img
-            );
-        }
+//         auto p = event->painter();
+// 
+//         loadTransferFunctionTexture();
+//         p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, zeros.size()*2, zeros.size()*2, poles.size()*2);
+// 
+//         if(markup_img.isGood())
+//         {
+//             p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &markup_img);
+//         }
+// 
+//         Point<int> handle_offset((handle_size >> 1) + 1, (handle_size >> 1) + 1);
+// 
+//         for(auto zero : zeros)
+//         {
+//             p->blendColors(
+//                 complexToPoint(zero) - handle_offset,
+//                 Colors(Color(0, 0, 255, 0)),
+//                 g_circle_img
+//             );
+//         }
+// 
+//         for(auto pole : poles)
+//         {
+//             p->blendColors(
+//                 complexToPoint(pole) - handle_offset,
+//                 Colors(Color(255, 0, 0, 0)),
+//                 g_cross_img
+//             );
+//         }
     }
 
     virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event)
@@ -336,29 +338,29 @@ private:
         Complex<float>* result = nullptr;
         Point<int> anchor(0, 0);
 
-        for(auto &pole : poles)
-        {
-            Point<int> pole_pos = complexToPoint(pole);
-            Point<int> d = (pos - pole_pos);
-
-            if(abs(d.x()) < handle_size/2 && abs(d.y()) < handle_size/2)
-            {
-                result = &pole;
-                anchor = {d.x(), d.y()};
-            }
-        }
-
-        for(auto &zero : zeros)
-        {
-            Point<int> zero_pos = complexToPoint(zero);
-            Point<int> d = (pos - zero_pos);
-
-            if(abs(d.x()) < handle_size/2 && abs(d.y()) < handle_size/2)
-            {
-                result = &zero;
-                anchor = {d.x(), d.y()};
-            }
-        }
+//         for(auto &pole : poles)
+//         {
+//             Point<int> pole_pos = complexToPoint(pole);
+//             Point<int> d = (pos - pole_pos);
+// 
+//             if(abs(d.x()) < handle_size/2 && abs(d.y()) < handle_size/2)
+//             {
+//                 result = &pole;
+//                 anchor = {d.x(), d.y()};
+//             }
+//         }
+// 
+//         for(auto &zero : zeros)
+//         {
+//             Point<int> zero_pos = complexToPoint(zero);
+//             Point<int> d = (pos - zero_pos);
+// 
+//             if(abs(d.x()) < handle_size/2 && abs(d.y()) < handle_size/2)
+//             {
+//                 result = &zero;
+//                 anchor = {d.x(), d.y()};
+//             }
+//         }
 
         if(anchor_out)
         {
