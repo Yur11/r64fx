@@ -24,6 +24,8 @@ Font* g_Font = nullptr;
 
 unsigned long g_instance_count = 0;
 
+constexpr float g_apparent_unity = 0.9;
+
 void init()
 {
     if(g_instance_count == 0)
@@ -79,6 +81,58 @@ void cleanup()
     }
 }
 
+
+void loadSysFunToBuffer(FilterClass* fc, Complex<float>** out_buff, int* out_zero_count, int* out_pole_count)
+{
+    int zero_count = 0;
+    for(auto zero : fc->zeros())
+    {
+        zero_count += (zero->hasConjugate() ? 2 : 1);
+    }
+
+    int pole_count = 0;
+    for(auto pole : fc->poles())
+    {
+        pole_count += (pole->hasConjugate() ? 2 : 1);
+    }
+
+    int buff_len = zero_count + pole_count;
+    int n = 0;
+    Complex<float>* buff = new Complex<float>[buff_len];
+
+    for(auto zero : fc->zeros())
+    {
+#ifdef R64FX_DEBUG
+        assert(zero->hasValue());
+#endif//R64FX_DEBUG
+        buff[n] = zero->value();
+        n++;
+        if(zero->hasConjugate())
+        {
+            buff[n] = zero->value().conjugate();
+            n++;
+        }
+    }
+
+    for(auto pole : fc->poles())
+    {
+    #ifdef R64FX_DEBUG
+        assert(pole->hasValue());
+#endif//R64FX_DEBUG
+        buff[n] = pole->value();
+        n++;
+        if(pole->hasConjugate())
+        {
+            buff[n] = pole->value().conjugate();
+            n++;
+        }
+    }
+
+    *out_buff = buff;
+    *out_zero_count = zero_count;
+    *out_pole_count = pole_count;
+}
+
 class PoleZeroPlot;
 class ResponsePlot;
 
@@ -109,63 +163,14 @@ struct FilterViewPrivate{
 
 namespace{
 
-
-void loadSysFunToBuffer(FilterClass* fc, float** out_buff, int* out_zero_buff_len, int* out_pole_buff_len)
-{
-    int zero_count = 0;
-    for(auto zero : fc->zeros())
-    {
-        zero_count += (zero->hasConjugate() ? 2 : 1);
-    }
-
-    int pole_count = 0;
-    for(auto pole : fc->poles())
-    {
-        pole_count += (pole->hasConjugate() ? 2 : 1);
-    }
-
-    int zero_buff_len = (zero_count << 1);
-    int pole_buff_len = (pole_count << 1);
-    int buff_len = zero_buff_len + pole_buff_len;
-    int n = 0;
-    float* buff = new float[buff_len];
-
-    for(auto zero : fc->zeros())
-    {
-#ifdef R64FX_DEBUG
-        assert(zero->hasValue());
-#endif//R64FX_DEBUG
-        auto val = zero->value();
-        buff[n] = val.re;
-        buff[n + 1] = val.im;
-        n+=2;
-    }
-
-    for(auto pole : fc->poles())
-    {
-    #ifdef R64FX_DEBUG
-        assert(pole->hasValue());
-#endif//R64FX_DEBUG
-        auto val = pole->value();
-        buff[n] = val.re;
-        buff[n + 1] = val.im;
-        n+=2;
-    }
-
-    *out_buff = buff;
-    *out_zero_buff_len = zero_buff_len;
-    *out_pole_buff_len = pole_buff_len;
-}
-
-
 class PoleZeroPlot : public Widget{
     FilterViewPrivate* m = nullptr;
 
     Image markup_img;
 
-    float*  m_buff            = nullptr;
-    int     m_zero_buff_size  = 0;
-    int     m_pole_buff_size  = 0;
+    Complex<float>*  m_buff = nullptr;
+    int     m_zero_count  = 0;
+    int     m_pole_count  = 0;
 
     Complex<float>* current_point = nullptr;
     Point<int> handle_anchor = {0, 0};
@@ -243,10 +248,16 @@ private:
 
         if(m->fc)
         {
-            loadSysFunToBuffer(m->fc, &m_buff, &m_zero_buff_size, &m_pole_buff_size);
-            m_pole_zero_texture->load(m_buff, ((m_zero_buff_size + m_pole_buff_size) >> 1), 2);
+            loadSysFunToBuffer(m->fc, &m_buff, &m_zero_count, &m_pole_count);
+            for(int n=0; n<(m_zero_count + m_pole_count); n++)
+            {
+                auto &val = m_buff[n];
+                val *= Complex<float>(g_apparent_unity * 0.5f, 0.0f);
+                val += Complex<float>(0.5f, 0.5f);
+            }
+            m_pole_zero_texture->load((float*)m_buff, (m_zero_count + m_pole_count), 2);
 
-            p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, m_zero_buff_size, m_zero_buff_size, m_pole_buff_size);
+            p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, m_zero_count, m_zero_count, m_pole_count);
 
             if(markup_img.isGood())
             {
@@ -267,7 +278,7 @@ private:
                 {
                     p->blendColors(
                         complexToPoint(val.conjugate()) - g_handle_offset,
-                        Colors(Color(0, 255, 0, 0)),
+                        Colors(Color(255, 0, 0, 0)),
                         g_circle_img
                     );
                 }
@@ -276,7 +287,6 @@ private:
             for(auto pole : m->fc->poles())
             {
                 auto val = pole->value();
-                cout << "pole: " << val << "\n";
 
                 p->blendColors(
                     complexToPoint(val) - g_handle_offset,
@@ -286,10 +296,9 @@ private:
 
                 if(pole->hasConjugate())
                 {
-                    cout << "has conjugate: " << val.conjugate() << "\n";
                     p->blendColors(
                         complexToPoint(val.conjugate()) - g_handle_offset,
-                        Colors(Color(0, 255, 0, 0)),
+                        Colors(Color(255, 0, 0, 0)),
                         g_cross_img
                     );
                 }
@@ -365,7 +374,7 @@ private:
 
     float apparentRadius() const
     {
-        return widthOrHeight() * 0.45f;
+        return widthOrHeight() * g_apparent_unity * 0.5f;
     }
 
     int widthOrHeight() const
@@ -462,11 +471,15 @@ FilterView::FilterView(FilterViewControllerIface* ctrl, Widget* parent)
 
     //Remove This!
     auto fc = new FilterClass;
-    fc->addZero(new Zero({1.0f, 0.0f}));
-    auto pole = new Pole(Complex<float>{0.75f, 0.75f});
-    cout << "new pole: " << pole->value() << "\n";
-    pole->enableConjugate();
-    fc->addPole(pole);
+    fc->addZero(new Zero({-0.5f, 0.0f}));
+
+    auto pole1 = new Pole(Complex<float>{0.75f, 0.75f});
+    pole1->enableConjugate();
+    fc->addPole(pole1);
+
+    auto pole2 = new Pole(Complex<float>{-0.5f, 0.5f});
+    pole2->enableConjugate();
+    fc->addPole(pole2);
 
     setFilterClass(fc);
 }

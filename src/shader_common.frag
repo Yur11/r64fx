@@ -141,12 +141,7 @@ void main()
 
         case 12:
         {
-            float radius = min(rect_size.x, rect_size.y) * 0.45;
-
-            vec2 z = vec2(
-                (floor(frag_tex_coord.x) - (rect_size.x * 0.5)) / radius,
-                (floor(frag_tex_coord.y) - (rect_size.y * 0.5)) / radius
-            );
+            vec2 z = frag_tex_coord;
 
             vec2 numerator = vec2(1.0, 0.0);
             for(int i=0; i<zero_count; i++)
@@ -168,10 +163,9 @@ void main()
                 vec2 res = complex_div(numerator, denominator);
                 mag = complex_maginitude(res);
 
-                if(mag < 500.0)
+                if(mag < 100.0)
                 {
-                    mag /= 500.0;
-                    mag = sqrt(mag);
+                    mag /= 100.0;
                     gl_FragColor = vec4(mag, mag, mag, 0.0);
                     break;
                 }

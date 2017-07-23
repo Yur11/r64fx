@@ -394,7 +394,7 @@ struct PainterImplGL : public PainterImpl{
             transformed_rect.left(), transformed_rect.top(), transformed_rect.right(), transformed_rect.bottom()
         );
 
-        m_uber_rect.setTexCoords(0, 0, transformed_rect.width(), transformed_rect.height());
+        m_uber_rect.setTexCoords(0.0f, 0.0f, 1.0f, 1.0f);
 
         m_uber_rect.draw();
     }
