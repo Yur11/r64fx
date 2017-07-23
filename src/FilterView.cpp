@@ -18,6 +18,7 @@ constexpr int handle_size = 15;
 
 Image* g_cross_img   = nullptr;
 Image* g_circle_img  = nullptr;
+Point<int> g_handle_offset;
 
 Font* g_Font = nullptr;
 
@@ -48,6 +49,8 @@ void init()
         fill(g_circle_img, Color(0));
         fill_circle(g_circle_img, 0, 1, Color(255), {handle_size >> 1, handle_size >> 1}, (handle_size >> 1) - 1);
         fill_circle(g_circle_img, 0, 1, Color(0),   {handle_size >> 1, handle_size >> 1}, (handle_size >> 1) - 3);
+
+        g_handle_offset = Point<int>(handle_size >> 1, handle_size >> 1);
 
         g_Font = new Font("", 15, 72);
     }
@@ -85,6 +88,8 @@ class ResponsePlot;
 struct FilterViewPrivate{
     FilterViewControllerIface* ctrl = nullptr;
 
+    FilterClass* fc = nullptr;
+
     PoleZeroPlot* pole_zero_plot = nullptr;
     ResponsePlot* response_plot  = nullptr;
 
@@ -104,15 +109,63 @@ struct FilterViewPrivate{
 
 namespace{
 
+
+void loadSysFunToBuffer(FilterClass* fc, float** out_buff, int* out_zero_buff_len, int* out_pole_buff_len)
+{
+    int zero_count = 0;
+    for(auto zero : fc->zeros())
+    {
+        zero_count += (zero->hasConjugate() ? 2 : 1);
+    }
+
+    int pole_count = 0;
+    for(auto pole : fc->poles())
+    {
+        pole_count += (pole->hasConjugate() ? 2 : 1);
+    }
+
+    int zero_buff_len = (zero_count << 1);
+    int pole_buff_len = (pole_count << 1);
+    int buff_len = zero_buff_len + pole_buff_len;
+    int n = 0;
+    float* buff = new float[buff_len];
+
+    for(auto zero : fc->zeros())
+    {
+#ifdef R64FX_DEBUG
+        assert(zero->hasValue());
+#endif//R64FX_DEBUG
+        auto val = zero->value();
+        buff[n] = val.re;
+        buff[n + 1] = val.im;
+        n+=2;
+    }
+
+    for(auto pole : fc->poles())
+    {
+    #ifdef R64FX_DEBUG
+        assert(pole->hasValue());
+#endif//R64FX_DEBUG
+        auto val = pole->value();
+        buff[n] = val.re;
+        buff[n + 1] = val.im;
+        n+=2;
+    }
+
+    *out_buff = buff;
+    *out_zero_buff_len = zero_buff_len;
+    *out_pole_buff_len = pole_buff_len;
+}
+
+
 class PoleZeroPlot : public Widget{
     FilterViewPrivate* m = nullptr;
 
     Image markup_img;
 
-    std::vector<Complex<float>> m_zeros_and_poles;
-    int m_pole_index = 0;
-
-    
+    float*  m_buff            = nullptr;
+    int     m_zero_buff_size  = 0;
+    int     m_pole_buff_size  = 0;
 
     Complex<float>* current_point = nullptr;
     Point<int> handle_anchor = {0, 0};
@@ -124,20 +177,6 @@ public:
     : Widget(parent)
     , m(m)
     {
-        // Zeros
-        for(Complex<float> c : {
-            Complex<float>(1.0f, 0.0f),
-            Complex<float>(1.0f, 0.0f),
-        })
-            m_zeros_and_poles.push_back(c);
-        m_pole_index = m_zeros_and_poles.size();
-
-        // Poles
-        for(Complex<float> c : {
-            Complex<float>(0.0f, 0.5f),
-            Complex<float>(0.0f, 0.7f),
-        })
-            m_zeros_and_poles.push_back(c);
     }
 
     virtual ~PoleZeroPlot()
@@ -147,30 +186,31 @@ public:
 
     Complex<float> evaluateAt(Complex<float> z)
     {
-        Complex<float> numerator(1, 0);
-//         for(auto zero : zeros)
-//         {
-//             numerator *= (z - zero);
-//             if(zero.im != 0.0f)
-//             {
-//                 numerator *= (z - zero.conjugate());
-//             }
-//         }
-
-        Complex<float> denominator(1, 0);
-//         for(auto pole : poles)
-//         {
-//             denominator *= (z - pole);
-//             if(pole.im != 0.0f)
-//             {
-//                 denominator *= (z - pole.conjugate());
-//             }
-//         }
-
-        if(denominator.magnitude() != 0)
-            return numerator / denominator;
-        else
-            return denominator;
+//         Complex<float> numerator(1, 0);
+// //         for(auto zero : zeros)
+// //         {
+// //             numerator *= (z - zero);
+// //             if(zero.im != 0.0f)
+// //             {
+// //                 numerator *= (z - zero.conjugate());
+// //             }
+// //         }
+// 
+//         Complex<float> denominator(1, 0);
+// //         for(auto pole : poles)
+// //         {
+// //             denominator *= (z - pole);
+// //             if(pole.im != 0.0f)
+// //             {
+// //                 denominator *= (z - pole.conjugate());
+// //             }
+// //         }
+// 
+//         if(denominator.magnitude() != 0)
+//             return numerator / denominator;
+//         else
+//             return denominator;
+        return {};
     }
 
     void update()
@@ -178,83 +218,83 @@ public:
         markup_img.load(width(), height(), 1);
         fill(&markup_img, Color(0));
 
-        fill_circle(&markup_img, 0, 1, Color(255), {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45) - 1);
-        fill_circle(&markup_img, 0, 1, Color(0),   {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45) - 3);
+        fill_circle(&markup_img, 0, 1, Color(255), {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45) + 1);
+        fill_circle(&markup_img, 0, 1, Color(0),   {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45));
 
         fill({&markup_img, {0, height()/2 - 1, width(), 1}}, Color(255));
-        {
-            Image* textimg = text2image("Re", TextWrap::None, g_Font);
-            copy({&markup_img, Point<int>(width() - textimg->width() - 2,  height()/2 - textimg->height() - 1)}, textimg);
-            delete textimg;
-        }
+//         {
+//             Image* textimg = text2image("Re", TextWrap::None, g_Font);
+//             copy({&markup_img, Point<int>(width() - textimg->width() - 2,  height()/2 - textimg->height() - 1)}, textimg);
+//             delete textimg;
+//         }
 
         fill({&markup_img, {width()/2 - 1, 0, 1, height()}}, Color(255));
-        {
-            Image* textimg = text2image("Im", TextWrap::None, g_Font);
-            copy({&markup_img, Point<int>(width()/2 + 3, 1)}, textimg);
-            delete textimg;
-        }
+//         {
+//             Image* textimg = text2image("Im", TextWrap::None, g_Font);
+//             copy({&markup_img, Point<int>(width()/2 + 3, 1)}, textimg);
+//             delete textimg;
+//         }
     }
 
 private:
-    void loadTransferFunctionTexture()
-    {
-// #ifdef R64FX_DEBUG
-//         assert(m_pole_zero_texture != nullptr);
-//         assert((zeros.size() + poles.size()) <= 32);
-// #endif//R64FX_DEBUG
-//         static float buff[32 * 4];
-// 
-//         for(int i=0; i<(int)zeros.size(); i++)
-//         {
-//             buff[i*4 + 0] = zeros[i].re;
-//             buff[i*4 + 1] = zeros[i].im;
-//             buff[i*4 + 2] = zeros[i].re;
-//             buff[i*4 + 3] = -zeros[i].im;
-//         }
-// 
-//         for(int i=0; i<(int)poles.size(); i++)
-//         {
-//             buff[zeros.size()*4 + i*4 + 0] = poles[i].re;
-//             buff[zeros.size()*4 + i*4 + 1] = poles[i].im;
-//             buff[zeros.size()*4 + i*4 + 2] = poles[i].re;
-//             buff[zeros.size()*4 + i*4 + 3] = -poles[i].im;
-//         }
-// 
-//         m_pole_zero_texture->load(buff, (zeros.size() + poles.size()) * 2, 2);
-    }
-
     virtual void paintEvent(WidgetPaintEvent* event)
     {
-//         auto p = event->painter();
-// 
-//         loadTransferFunctionTexture();
-//         p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, zeros.size()*2, zeros.size()*2, poles.size()*2);
-// 
-//         if(markup_img.isGood())
-//         {
-//             p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &markup_img);
-//         }
-// 
-//         Point<int> handle_offset((handle_size >> 1) + 1, (handle_size >> 1) + 1);
-// 
-//         for(auto zero : zeros)
-//         {
-//             p->blendColors(
-//                 complexToPoint(zero) - handle_offset,
-//                 Colors(Color(0, 0, 255, 0)),
-//                 g_circle_img
-//             );
-//         }
-// 
-//         for(auto pole : poles)
-//         {
-//             p->blendColors(
-//                 complexToPoint(pole) - handle_offset,
-//                 Colors(Color(255, 0, 0, 0)),
-//                 g_cross_img
-//             );
-//         }
+        auto p = event->painter();
+
+        if(m->fc)
+        {
+            loadSysFunToBuffer(m->fc, &m_buff, &m_zero_buff_size, &m_pole_buff_size);
+            m_pole_zero_texture->load(m_buff, ((m_zero_buff_size + m_pole_buff_size) >> 1), 2);
+
+            p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, m_zero_buff_size, m_zero_buff_size, m_pole_buff_size);
+
+            if(markup_img.isGood())
+            {
+                p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &markup_img);
+            }
+
+            for(auto zero : m->fc->zeros())
+            {
+                auto val = zero->value();
+
+                p->blendColors(
+                    complexToPoint(val) - g_handle_offset,
+                    Colors(Color(0, 0, 255, 0)),
+                    g_circle_img
+                );
+
+                if(zero->hasConjugate())
+                {
+                    p->blendColors(
+                        complexToPoint(val.conjugate()) - g_handle_offset,
+                        Colors(Color(0, 255, 0, 0)),
+                        g_circle_img
+                    );
+                }
+            }
+
+            for(auto pole : m->fc->poles())
+            {
+                auto val = pole->value();
+                cout << "pole: " << val << "\n";
+
+                p->blendColors(
+                    complexToPoint(val) - g_handle_offset,
+                    Colors(Color(255, 0, 0, 0)),
+                    g_cross_img
+                );
+
+                if(pole->hasConjugate())
+                {
+                    cout << "has conjugate: " << val.conjugate() << "\n";
+                    p->blendColors(
+                        complexToPoint(val.conjugate()) - g_handle_offset,
+                        Colors(Color(0, 255, 0, 0)),
+                        g_cross_img
+                    );
+                }
+            }
+        }
     }
 
     virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event)
@@ -338,30 +378,6 @@ private:
         Complex<float>* result = nullptr;
         Point<int> anchor(0, 0);
 
-//         for(auto &pole : poles)
-//         {
-//             Point<int> pole_pos = complexToPoint(pole);
-//             Point<int> d = (pos - pole_pos);
-// 
-//             if(abs(d.x()) < handle_size/2 && abs(d.y()) < handle_size/2)
-//             {
-//                 result = &pole;
-//                 anchor = {d.x(), d.y()};
-//             }
-//         }
-// 
-//         for(auto &zero : zeros)
-//         {
-//             Point<int> zero_pos = complexToPoint(zero);
-//             Point<int> d = (pos - zero_pos);
-// 
-//             if(abs(d.x()) < handle_size/2 && abs(d.y()) < handle_size/2)
-//             {
-//                 result = &zero;
-//                 anchor = {d.x(), d.y()};
-//             }
-//         }
-
         if(anchor_out)
         {
             anchor_out[0] = anchor + Point<int>(handle_size/2, handle_size/2);
@@ -443,6 +459,16 @@ FilterView::FilterView(FilterViewControllerIface* ctrl, Widget* parent)
     m->response_plot = new ResponsePlot(m, this);
 
     setSize({800, 400});
+
+    //Remove This!
+    auto fc = new FilterClass;
+    fc->addZero(new Zero({1.0f, 0.0f}));
+    auto pole = new Pole(Complex<float>{0.75f, 0.75f});
+    cout << "new pole: " << pole->value() << "\n";
+    pole->enableConjugate();
+    fc->addPole(pole);
+
+    setFilterClass(fc);
 }
 
 
@@ -462,6 +488,12 @@ FilterView::~FilterView()
 
         delete m;
     }
+}
+
+
+void FilterView::setFilterClass(FilterClass* fc)
+{
+    m->fc = fc;
 }
 
 

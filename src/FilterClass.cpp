@@ -4,14 +4,18 @@ namespace r64fx{
 
 namespace{
 
+static_assert(sizeof(unsigned long) == sizeof(Complex<float>), "Expecting: sizeof(unsigned long) == sizeof(Complex<float>) !");
+
 union Cast{
     unsigned long  data;
-    Complex<float> complex = {0.0, 0.0};
+    Complex<float> complex;
+
+    Cast() {}
 };
 
 inline Complex<float> data2complex(unsigned long data) { Cast cast; cast.data = data; return cast.complex; }
 
-inline unsigned int complex2data(Complex<float> complex) { Cast cast; cast.complex = complex; return cast.data; }
+inline unsigned long complex2data(Complex<float> complex) { Cast cast; cast.complex = complex; return cast.data; }
 
 }//namespace
 

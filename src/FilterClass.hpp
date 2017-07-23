@@ -68,6 +68,10 @@ public:
     inline ZeroIterators zeros() const { return {m_zeros.begin(), m_zeros.end()}; }
 
     inline PoleIterators poles() const { return {m_poles.begin(), m_poles.end()}; }
+
+    inline bool hasZeros() const { return !m_zeros.isEmpty(); }
+
+    inline bool hasPoles() const { return !m_poles.isEmpty(); }
 };
 
 }//namespace r64fx
