@@ -82,7 +82,7 @@ void cleanup()
 }
 
 
-void loadSysFunToBuffer(FilterClass* fc, Complex<float>** out_buff, int* out_zero_count, int* out_pole_count)
+void load_sys_fun_to_buffer(FilterClass* fc, Complex<float>* buff, int buff_capacity, int* out_zero_count, int* out_pole_count)
 {
     int zero_count = 0;
     for(auto zero : fc->zeros())
@@ -97,8 +97,10 @@ void loadSysFunToBuffer(FilterClass* fc, Complex<float>** out_buff, int* out_zer
     }
 
     int buff_len = zero_count + pole_count;
+#ifdef R64FX_DEBUG
+    assert(buff_len <= buff_capacity);
+#endif//R64FX_DEBUG
     int n = 0;
-    Complex<float>* buff = new Complex<float>[buff_len];
 
     for(auto zero : fc->zeros())
     {
@@ -128,7 +130,6 @@ void loadSysFunToBuffer(FilterClass* fc, Complex<float>** out_buff, int* out_zer
         }
     }
 
-    *out_buff = buff;
     *out_zero_count = zero_count;
     *out_pole_count = pole_count;
 }
@@ -157,7 +158,10 @@ struct FilterViewPrivate{
         cleanup();
     }
 
-    void updatePlots();
+    void update()
+    {
+        
+    }
 };
 
 
@@ -168,13 +172,11 @@ class PoleZeroPlot : public Widget{
 
     Image markup_img;
 
-    Complex<float>*  m_buff = nullptr;
-    int     m_zero_count  = 0;
-    int     m_pole_count  = 0;
-
     Complex<float>* current_point = nullptr;
     Point<int> handle_anchor = {0, 0};
 
+    int m_zero_count = 0;
+    int m_pole_count = 0;
     PainterTexture1D* m_pole_zero_texture = nullptr;
 
 public:
@@ -187,35 +189,6 @@ public:
     virtual ~PoleZeroPlot()
     {
 
-    }
-
-    Complex<float> evaluateAt(Complex<float> z)
-    {
-//         Complex<float> numerator(1, 0);
-// //         for(auto zero : zeros)
-// //         {
-// //             numerator *= (z - zero);
-// //             if(zero.im != 0.0f)
-// //             {
-// //                 numerator *= (z - zero.conjugate());
-// //             }
-// //         }
-// 
-//         Complex<float> denominator(1, 0);
-// //         for(auto pole : poles)
-// //         {
-// //             denominator *= (z - pole);
-// //             if(pole.im != 0.0f)
-// //             {
-// //                 denominator *= (z - pole.conjugate());
-// //             }
-// //         }
-// 
-//         if(denominator.magnitude() != 0)
-//             return numerator / denominator;
-//         else
-//             return denominator;
-        return {};
     }
 
     void update()
@@ -239,6 +212,19 @@ public:
 //             copy({&markup_img, Point<int>(width()/2 + 3, 1)}, textimg);
 //             delete textimg;
 //         }
+
+        if(m->fc)
+        {
+            Complex<float> buff[32];
+            load_sys_fun_to_buffer(m->fc, buff, 32, &m_zero_count, &m_pole_count);
+            for(int n=0; n<(m_zero_count + m_pole_count); n++)
+            {
+                auto &val = buff[n];
+                val *= Complex<float>(g_apparent_unity * 0.5f, 0.0f);
+                val += Complex<float>(0.5f, 0.5f);
+            }
+            m_pole_zero_texture->load((float*)buff, (m_zero_count + m_pole_count), 2);
+        }
     }
 
 private:
@@ -248,15 +234,6 @@ private:
 
         if(m->fc)
         {
-            loadSysFunToBuffer(m->fc, &m_buff, &m_zero_count, &m_pole_count);
-            for(int n=0; n<(m_zero_count + m_pole_count); n++)
-            {
-                auto &val = m_buff[n];
-                val *= Complex<float>(g_apparent_unity * 0.5f, 0.0f);
-                val += Complex<float>(0.5f, 0.5f);
-            }
-            m_pole_zero_texture->load((float*)m_buff, (m_zero_count + m_pole_count), 2);
-
             p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, m_zero_count, m_zero_count, m_pole_count);
 
             if(markup_img.isGood())
@@ -312,6 +289,7 @@ private:
         assert(m_pole_zero_texture == nullptr);
 #endif//R64FX_DEBUG
         m_pole_zero_texture = event->textureManager()->newTexture();
+        update();
     }
 
     virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
@@ -324,6 +302,7 @@ private:
 
     virtual void resizeEvent(WidgetResizeEvent* event)
     {
+        m->update();
         update();
         repaint();
     }
@@ -351,7 +330,7 @@ private:
         {
             auto pos = event->position() - handle_anchor;
             current_point[0] = pointToComplex(pos);
-            m->updatePlots();
+            m->update();
             parent()->repaint();
         }
     }
@@ -424,7 +403,7 @@ public:
             {
                 float phase = (float(i) * rcp) * M_PI;
                 Complex<float> z(Polar<float>(1.0, phase));
-                Complex<float> value = m->pole_zero_plot->evaluateAt(z);
+                Complex<float> value;
                 response[i] = (height() / 2) - (value.magnitude() * height() * 0.125);
             }
         }
@@ -449,13 +428,6 @@ private:
 };
 
 }//namespace
-
-
-void FilterViewPrivate::updatePlots()
-{
-    pole_zero_plot->update();
-    response_plot->update();
-}
 
 
 FilterView::FilterView(FilterViewControllerIface* ctrl, Widget* parent)
