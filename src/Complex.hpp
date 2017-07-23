@@ -133,6 +133,13 @@ template<typename T> Complex<T> &Complex<T>::operator=(const Polar<T> &polar)
     return *this;
 }
 
+
+template<typename T, typename StreamT> StreamT &operator<<(StreamT &stream, Complex<T> val)
+{
+    stream << val.re << " + " << val.im << "i";
+    return stream;
+}
+
 }//namespace r64fx
 
 #endif//R64FX_COMPLEX_HPP
