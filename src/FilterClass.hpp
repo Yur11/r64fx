@@ -9,6 +9,8 @@
 namespace r64fx{
 
 class SysFunRoot{
+    friend class FilterClass;
+
     unsigned long m_flags = 0;
     unsigned long m_data  = 0;
 
@@ -36,6 +38,11 @@ public:
     void disableConjugate();
 
     bool hasConjugate() const;
+
+private:
+    void setIndex(int index);
+
+    int index() const;
 };
 
 class Zero : public LinkedList<Zero>::Node, public SysFunRoot{
@@ -57,13 +64,13 @@ class FilterClass{
     LinkedList<Pole> m_poles;
 
 public:
-    inline void addZero(Zero* zero) { m_zeros.append(zero); }
+    void addZero(Zero* zero);
 
-    inline void addPole(Pole* pole) { m_poles.append(pole); }
+    void addPole(Pole* pole);
 
-    inline void removeZero(Zero* zero) { m_zeros.remove(zero); }
+    void removeZero(Zero* zero);
 
-    inline void removePole(Pole* pole) { m_poles.remove(pole); }
+    void removePole(Pole* pole);
 
     inline ZeroIterators zeros() const { return {m_zeros.begin(), m_zeros.end()}; }
 
