@@ -162,6 +162,36 @@ struct FilterViewPrivate{
     {
         
     }
+
+    Complex<float> evalAt(Complex<float> z)
+    {
+        if(!fc)
+            return {};
+
+        Complex<float> numerator(1.0f, 0.0f);
+        for(auto zero : fc->zeros())
+        {
+#ifdef R64FX_DEBUG
+            assert(zero->hasValue());
+#endif//R64FX_DEBUG
+            numerator *= (zero->value() - z);
+            if(zero->hasConjugate())
+                numerator *= (zero->value().conjugate() - z);
+        }
+
+        Complex<float> denomenator(1.0f, 0.0f);
+        for(auto pole : fc->poles())
+        {
+#ifdef R64FX_DEBUG
+            assert(pole->hasValue());
+#endif//R64FX_DEBUG
+            denomenator *= (pole->value() - z);
+            if(pole->hasConjugate())
+                denomenator *= (pole->value().conjugate() - z);
+        }
+
+        return numerator / denomenator;
+    }
 };
 
 
@@ -403,7 +433,8 @@ public:
             {
                 float phase = (float(i) * rcp) * M_PI;
                 Complex<float> z(Polar<float>(1.0, phase));
-                Complex<float> value;
+                Complex<float> value = m->evalAt(z);
+                cout << "eval: " << value << " @ " << z << "\n";
                 response[i] = (height() / 2) - (value.magnitude() * height() * 0.125);
             }
         }
