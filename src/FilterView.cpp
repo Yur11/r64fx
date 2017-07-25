@@ -443,16 +443,10 @@ FilterView::FilterView(FilterViewControllerIface* ctrl, Widget* parent)
 
     //Remove This!
     auto fc = new FilterClass;
-    fc->addZero(new Zero({-0.5f, 0.0f}));
-
-    auto pole1 = new Pole(Complex<float>{0.75f, 0.75f});
-    pole1->enableConjugate();
-    fc->addPole(pole1);
-
-    auto pole2 = new Pole(Complex<float>{-0.5f, 0.5f});
-    pole2->enableConjugate();
-    fc->addPole(pole2);
-
+    fc->newZero({-0.5f, 0.0f});
+    fc->newZero({-0.25f, 0.0f});
+    fc->newPole({0.75f, 0.75f});
+    fc->newPole({-0.5f, 0.5f});
     setFilterClass(fc);
 }
 
@@ -461,6 +455,8 @@ FilterView::~FilterView()
 {
     if(m)
     {
+        delete m->fc;//Remove This!
+
         if(m->pole_zero_plot)
         {
             delete m->pole_zero_plot;

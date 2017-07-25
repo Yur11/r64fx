@@ -1,8 +1,9 @@
 #include "FilterClass.hpp"
 
-#define R64FX_HAS_VALUE      0x8000000000000000UL
-#define R64FX_HAS_CONJUGATE  0x4000000000000000UL
-#define R64FX_DATA_MASK      0x3FFFFFFFFFFFFFFFUL
+#define R64FX_HAS_VALUE             0x8000000000000000UL
+#define R64FX_HAS_CONJUGATE         0x4000000000000000UL
+#define R64FX_DELETED_WITH_PARENT   0x2000000000000000UL
+#define R64FX_DATA_MASK             0x1FFFFFFFFFFFFFFFUL
 
 namespace r64fx{
 
@@ -78,6 +79,24 @@ bool SysFunRoot::hasConjugate() const
 }
 
 
+void SysFunRoot::enableDeletionWithParent()
+{
+    m_flags |= R64FX_DELETED_WITH_PARENT;
+}
+
+
+void SysFunRoot::disableDeletionWithParent()
+{
+    m_flags &= ~R64FX_DELETED_WITH_PARENT;
+}
+
+
+bool SysFunRoot::isDeletedWithParent() const
+{
+    return m_flags & R64FX_DELETED_WITH_PARENT;
+}
+
+
 void SysFunRoot::setIndex(int index)
 {
     m_flags &= ~R64FX_DATA_MASK;
@@ -88,6 +107,30 @@ void SysFunRoot::setIndex(int index)
 int SysFunRoot::index() const
 {
     return m_flags & R64FX_DATA_MASK;
+}
+
+
+FilterClass::~FilterClass()
+{
+    auto next_zero = m_zeros.first();
+    while(next_zero)
+    {
+        auto zero = next_zero;
+        next_zero = zero->next();
+        m_zeros.remove(zero);
+        if(zero->isDeletedWithParent())
+            delete zero;
+    }
+
+    auto next_pole = m_poles.first();
+    while(next_pole)
+    {
+        auto pole = next_pole;
+        next_pole = pole->next();
+        m_poles.remove(pole);
+        if(pole->isDeletedWithParent())
+            delete pole;
+    }
 }
 
 
@@ -110,6 +153,28 @@ void FilterClass::addPole(Pole* pole)
     pole->setIndex(index);
 
     m_poles.append(pole);
+}
+
+
+Zero* FilterClass::newZero(Complex<float> value)
+{
+    auto zero = new Zero(value);
+    zero->enableDeletionWithParent();
+    if(value.im != 0.0f)
+        zero->enableConjugate();
+    addZero(zero);
+    return zero;
+}
+
+
+Pole* FilterClass::newPole(Complex<float> value)
+{
+    auto pole = new Pole(value);
+    pole->enableDeletionWithParent();
+    if(value.im != 0.0f)
+        pole->enableConjugate();
+    addPole(pole);
+    return pole;
 }
 
 

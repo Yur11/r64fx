@@ -39,6 +39,12 @@ public:
 
     bool hasConjugate() const;
 
+    void enableDeletionWithParent();
+
+    void disableDeletionWithParent();
+
+    bool isDeletedWithParent() const;
+
 private:
     void setIndex(int index);
 
@@ -64,9 +70,15 @@ class FilterClass{
     LinkedList<Pole> m_poles;
 
 public:
+    ~FilterClass();
+
     void addZero(Zero* zero);
 
     void addPole(Pole* pole);
+
+    Zero* newZero(Complex<float> value);
+
+    Pole* newPole(Complex<float> value);
 
     void removeZero(Zero* zero);
 
