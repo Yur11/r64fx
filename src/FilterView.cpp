@@ -202,7 +202,7 @@ class PoleZeroPlot : public Widget{
 
     Image markup_img;
 
-    Complex<float>* current_point = nullptr;
+    SysFunRoot* selected_root = nullptr;
     Point<int> handle_anchor = {0, 0};
 
     int m_zero_count = 0;
@@ -339,30 +339,30 @@ private:
 
     virtual void mousePressEvent(MousePressEvent* event)
     {
-        Point<int> anchor(0, 0);
-        auto point = pointAt(event->position(), &anchor);
-        if(point)
-        {
-            current_point = point;
-            handle_anchor = anchor;
-        }
+//         Point<int> anchor(0, 0);
+//         auto point = rootAt(event->position(), &anchor);
+//         if(point)
+//         {
+//             current_point = point;
+//             handle_anchor = anchor;
+//         }
     }
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event)
     {
-        current_point = nullptr;
-        handle_anchor = {0, 0};
+//         current_point = nullptr;
+//         handle_anchor = {0, 0};
     }
 
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
-        if(current_point)
-        {
-            auto pos = event->position() - handle_anchor;
-            current_point[0] = pointToComplex(pos);
-            m->update();
-            parent()->repaint();
-        }
+//         if(current_point)
+//         {
+//             auto pos = event->position() - handle_anchor;
+//             current_point[0] = pointToComplex(pos);
+//             m->update();
+//             parent()->repaint();
+//         }
     }
 
     Complex<float> pointToComplex(Point<int> point) const
@@ -391,16 +391,23 @@ private:
         return min(width(), height());
     }
 
-    Complex<float>* pointAt(Point<int> pos, Point<int>* anchor_out = nullptr)
+    SysFunRoot* rootAt(Point<int> pos, Point<int>* anchor_out = nullptr)
     {
-        Complex<float>* result = nullptr;
-        Point<int> anchor(0, 0);
+//         for(auto zero : m->fc->zeros())
+//         {
+//             
+//         }
+// 
+//         for(auto pole : m->fc->poles())
+//         {
+//             
+//         }
 
-        if(anchor_out)
-        {
-            anchor_out[0] = anchor + Point<int>(handle_size/2, handle_size/2);
-        }
-        return result;
+//         if(anchor_out)
+//         {
+//             anchor_out[0] = anchor + Point<int>(handle_size/2, handle_size/2);
+//         }
+        return nullptr;
     }
 };
 
