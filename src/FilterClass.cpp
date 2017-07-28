@@ -1,9 +1,10 @@
 #include "FilterClass.hpp"
 
-#define R64FX_HAS_VALUE             0x8000000000000000UL
-#define R64FX_HAS_CONJUGATE         0x4000000000000000UL
-#define R64FX_DELETED_WITH_PARENT   0x2000000000000000UL
-#define R64FX_DATA_MASK             0x1FFFFFFFFFFFFFFFUL
+#define R64FX_ROOT_IS_POLE          0x8000000000000000UL
+#define R64FX_HAS_VALUE             0x4000000000000000UL
+#define R64FX_HAS_CONJUGATE         0x2000000000000000UL
+#define R64FX_DELETED_WITH_PARENT   0x1000000000000000UL
+#define R64FX_DATA_MASK             0x0FFFFFFFFFFFFFFFUL
 
 namespace r64fx{
 
@@ -25,10 +26,11 @@ inline unsigned long complex2data(Complex<float> complex) { Cast cast; cast.comp
 }//namespace
 
 
-void SysFunRoot::setValue(Complex<float> value)
+SysFunRoot* SysFunRoot::setValue(Complex<float> value)
 {
     m_data = complex2data(value);
     m_flags |= R64FX_HAS_VALUE;
+    return this;
 }
 
 
@@ -40,10 +42,11 @@ Complex<float> SysFunRoot::value() const
 }
 
 
-void SysFunRoot::setExpression(Expression* expr)
+SysFunRoot* SysFunRoot::setExpression(Expression* expr)
 {
     m_data = (unsigned long) expr;
     m_flags &= ~R64FX_HAS_VALUE;
+    return this;
 }
 
 
@@ -61,15 +64,37 @@ bool SysFunRoot::hasValue() const
 }
 
 
-void SysFunRoot::enableConjugate()
+SysFunRoot* SysFunRoot::makeZero()
 {
-    m_flags |= R64FX_HAS_CONJUGATE;
+    m_flags &= ~R64FX_ROOT_IS_POLE;
+    return this;
 }
 
 
-void SysFunRoot::disableConjugate()
+SysFunRoot* SysFunRoot::makePole()
+{
+    m_flags |= R64FX_ROOT_IS_POLE;
+    return this;
+}
+
+
+bool SysFunRoot::isPole() const
+{
+    return m_flags & R64FX_ROOT_IS_POLE;
+}
+
+
+SysFunRoot* SysFunRoot::enableConjugate()
+{
+    m_flags |= R64FX_HAS_CONJUGATE;
+    return this;
+}
+
+
+SysFunRoot* SysFunRoot::disableConjugate()
 {
     m_flags &= ~R64FX_HAS_CONJUGATE;
+    return this;
 }
 
 
@@ -79,15 +104,17 @@ bool SysFunRoot::hasConjugate() const
 }
 
 
-void SysFunRoot::enableDeletionWithParent()
+SysFunRoot* SysFunRoot::enableDeletionWithParent()
 {
     m_flags |= R64FX_DELETED_WITH_PARENT;
+    return this;
 }
 
 
-void SysFunRoot::disableDeletionWithParent()
+SysFunRoot* SysFunRoot::disableDeletionWithParent()
 {
     m_flags &= ~R64FX_DELETED_WITH_PARENT;
+    return this;
 }
 
 
@@ -112,94 +139,115 @@ int SysFunRoot::index() const
 
 FilterClass::~FilterClass()
 {
-    auto next_zero = m_zeros.first();
-    while(next_zero)
+    auto next_root = m_roots.first();
+    while(next_root)
     {
-        auto zero = next_zero;
-        next_zero = zero->next();
-        m_zeros.remove(zero);
-        if(zero->isDeletedWithParent())
-            delete zero;
-    }
-
-    auto next_pole = m_poles.first();
-    while(next_pole)
-    {
-        auto pole = next_pole;
-        next_pole = pole->next();
-        m_poles.remove(pole);
-        if(pole->isDeletedWithParent())
-            delete pole;
+        auto root = next_root;
+        next_root = root->next();
+        m_roots.remove(root);
+        if(root->isDeletedWithParent())
+            delete root;
     }
 }
 
 
-void FilterClass::addZero(Zero* zero)
+void FilterClass::addRoot(SysFunRoot* root)
 {
-    int index = 0;
-    if(!m_zeros.isEmpty())
-        index = m_zeros.last()->index() + 1;
-    zero->setIndex(index);
-
-    m_zeros.append(zero);
-}
-
-
-void FilterClass::addPole(Pole* pole)
-{
-    int index = 0;
-    if(!m_poles.isEmpty())
-        index = m_poles.last()->index() + 1;
-    pole->setIndex(index);
-
-    m_poles.append(pole);
-}
-
-
-Zero* FilterClass::newZero(Complex<float> value)
-{
-    auto zero = new Zero(value);
-    zero->enableDeletionWithParent();
-    if(value.im != 0.0f)
-        zero->enableConjugate();
-    addZero(zero);
-    return zero;
-}
-
-
-Pole* FilterClass::newPole(Complex<float> value)
-{
-    auto pole = new Pole(value);
-    pole->enableDeletionWithParent();
-    if(value.im != 0.0f)
-        pole->enableConjugate();
-    addPole(pole);
-    return pole;
-}
-
-
-void FilterClass::removeZero(Zero* zero)
-{
-    Zero* next_zero = zero->next();
-    m_zeros.remove(zero);
-
-    while(next_zero)
+    auto existing_root = (root->isPole() ? m_last_zero : m_roots.last());
+    if(existing_root)
     {
-        next_zero->setIndex(next_zero->index() - 1);
-        next_zero = next_zero->next();
+        root->setIndex(existing_root->index() + (root->hasConjugate() ? 2 : 1));
+        m_roots.insertAfter(existing_root, root);
+    }
+    else
+    {
+        root->setIndex(0);
+        m_roots.append(root);
     }
 }
 
 
-void FilterClass::removePole(Pole* pole)
+void FilterClass::removeRoot(SysFunRoot* root)
 {
-    Pole* next_pole = pole->next();
-    m_poles.remove(pole);
-
-    while(next_pole)
+    if(root == m_last_zero)
     {
-        next_pole->setIndex(next_pole->index() - 1);
-        next_pole = next_pole->next();
+        m_last_zero = root->prev();
+    }
+    m_roots.remove(root);
+    root->setIndex(0);
+}
+
+
+SysFunRootIterators FilterClass::zeros() const
+{
+    if(isEmpty())
+        return {nullptr, nullptr};
+
+    if(m_last_zero)
+        return {m_roots.first(), m_last_zero};
+
+    return {nullptr, nullptr};
+}
+
+
+SysFunRootIterators FilterClass::poles() const
+{
+    if(isEmpty())
+        return {nullptr, nullptr};
+
+    if(m_last_zero)
+        return {m_last_zero->next(), m_roots.end()};
+
+    return roots();
+}
+
+
+int FilterClass::rootCount() const
+{
+    if(isEmpty())
+        return 0;
+    return m_roots.last()->index() + 1;
+}
+
+
+int FilterClass::zeroCount() const
+{
+    if(m_last_zero)
+        return m_last_zero->index() + 1;
+    return 0;
+}
+
+
+int FilterClass::poleCount() const
+{
+    if(isEmpty())
+        return 0;
+
+    return rootCount() - zeroCount();
+}
+
+
+int FilterClass::firstPoleIndex() const
+{
+    if(isEmpty())
+        return -1;
+
+    if(m_last_zero && m_last_zero->next())
+    {
+        return m_last_zero->next()->index();
+    }
+
+    return 0;
+}
+
+
+void FilterClass::updateIndices()
+{
+    int n = 0;
+    for(auto root : m_roots)
+    {
+        root->setIndex(n);
+        n += (root->hasConjugate() ? 2 : 1);
     }
 }
 

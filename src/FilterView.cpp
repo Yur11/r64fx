@@ -82,56 +82,29 @@ void cleanup()
 }
 
 
-void load_sys_fun_to_buffer(FilterClass* fc, Complex<float>* buff, int buff_capacity, int* out_zero_count, int* out_pole_count)
+void load_sys_fun_to_buffer(FilterClass* fc, Complex<float>* buff, int buff_capacity)
 {
-    int zero_count = 0;
-    for(auto zero : fc->zeros())
-    {
-        zero_count += (zero->hasConjugate() ? 2 : 1);
-    }
-
-    int pole_count = 0;
-    for(auto pole : fc->poles())
-    {
-        pole_count += (pole->hasConjugate() ? 2 : 1);
-    }
-
-    int buff_len = zero_count + pole_count;
 #ifdef R64FX_DEBUG
-    assert(buff_len <= buff_capacity);
+    assert(fc->rootCount() <= buff_capacity);
 #endif//R64FX_DEBUG
+
+    if(fc->isEmpty())
+        return;
+
     int n = 0;
-
-    for(auto zero : fc->zeros())
+    for(auto root : fc->roots())
     {
 #ifdef R64FX_DEBUG
-        assert(zero->hasValue());
+        assert(root->hasValue());
 #endif//R64FX_DEBUG
-        buff[n] = zero->value();
+        buff[n] = root->value();
         n++;
-        if(zero->hasConjugate())
+        if(root->hasConjugate())
         {
-            buff[n] = zero->value().conjugate();
+            buff[n] = root->value().conjugate();
             n++;
         }
     }
-
-    for(auto pole : fc->poles())
-    {
-    #ifdef R64FX_DEBUG
-        assert(pole->hasValue());
-#endif//R64FX_DEBUG
-        buff[n] = pole->value();
-        n++;
-        if(pole->hasConjugate())
-        {
-            buff[n] = pole->value().conjugate();
-            n++;
-        }
-    }
-
-    *out_zero_count = zero_count;
-    *out_pole_count = pole_count;
 }
 
 class PoleZeroPlot;
@@ -245,15 +218,21 @@ public:
 
         if(m->fc)
         {
-            Complex<float> buff[32];
-            load_sys_fun_to_buffer(m->fc, buff, 32, &m_zero_count, &m_pole_count);
-            for(int n=0; n<(m_zero_count + m_pole_count); n++)
+            m_zero_count = m->fc->zeroCount();
+            m_pole_count = m->fc->poleCount();
+            int buff_len = m_zero_count + m_pole_count;
+            if(buff_len > 0)
             {
-                auto &val = buff[n];
-                val *= Complex<float>(g_apparent_unity * 0.5f, 0.0f);
-                val += Complex<float>(0.5f, 0.5f);
+                Complex<float> buff[32];
+                load_sys_fun_to_buffer(m->fc, buff, 32);
+                for(int n=0; n<buff_len; n++)
+                {
+                    auto &val = buff[n];
+                    val *= Complex<float>(g_apparent_unity * 0.5f, 0.0f);
+                    val += Complex<float>(0.5f, 0.5f);
+                }
+                m_pole_zero_texture->load((float*)buff, buff_len, 2);
             }
-            m_pole_zero_texture->load((float*)buff, (m_zero_count + m_pole_count), 2);
         }
     }
 
@@ -264,7 +243,14 @@ private:
 
         if(m->fc)
         {
-            p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, m_zero_count, m_zero_count, m_pole_count);
+            if(m_pole_zero_texture && m_pole_zero_texture->isGood())
+            {
+                p->drawPoleZeroPlot({0, 0, width(), height()}, m_pole_zero_texture, 0, m_zero_count, m_zero_count, m_pole_count);
+            }
+            else
+            {
+                p->fillRect({0, 0, width(), height()}, Color(0));
+            }
 
             if(markup_img.isGood())
             {
@@ -481,10 +467,10 @@ FilterView::FilterView(FilterViewControllerIface* ctrl, Widget* parent)
 
     //Remove This!
     auto fc = new FilterClass;
-    fc->newZero({-0.5f, 0.0f});
-    fc->newZero({-0.25f, 0.0f});
-    fc->newPole({0.75f, 0.75f});
-    fc->newPole({-0.5f, 0.5f});
+//     fc->newZero({-0.5f, 0.0f});
+//     fc->newZero({-0.25f, 0.0f});
+//     fc->newPole({0.75f, 0.75f});
+//     fc->newPole({-0.5f, 0.5f});
     setFilterClass(fc);
 }
 

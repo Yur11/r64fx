@@ -8,24 +8,26 @@
 
 namespace r64fx{
 
-class SysFunRoot{
+class SysFunRoot : public LinkedList<SysFunRoot>::Node{
     friend class FilterClass;
 
-    unsigned long m_flags = 0;
     unsigned long m_data  = 0;
 
-public:
+protected:
+    unsigned long m_flags = 0;
+
     SysFunRoot() { setValue(Complex<float>(0.0f, 0.0f)); }
 
     SysFunRoot(Complex<float> value) { setValue(value); }
 
     SysFunRoot(Expression* expr) { setExpression(expr); }
 
-    void setValue(Complex<float> value);
+public:
+    SysFunRoot* setValue(Complex<float> value);
 
     Complex<float> value() const;
 
-    void setExpression(Expression* expr);
+    SysFunRoot* setExpression(Expression* expr);
 
     Expression* expression() const;
 
@@ -33,15 +35,23 @@ public:
 
     inline bool hasExpression() const { return !hasValue(); }
 
-    void enableConjugate();
+    SysFunRoot* makeZero();
 
-    void disableConjugate();
+    SysFunRoot* makePole();
+
+    bool isPole() const;
+
+    inline bool isZero() const { return !isPole(); }
+
+    SysFunRoot* enableConjugate();
+
+    SysFunRoot* disableConjugate();
 
     bool hasConjugate() const;
 
-    void enableDeletionWithParent();
+    SysFunRoot* enableDeletionWithParent();
 
-    void disableDeletionWithParent();
+    SysFunRoot* disableDeletionWithParent();
 
     bool isDeletedWithParent() const;
 
@@ -51,46 +61,37 @@ private:
     int index() const;
 };
 
-class Zero : public LinkedList<Zero>::Node, public SysFunRoot{
-public:
-    using SysFunRoot::SysFunRoot;
-};
-
-class Pole : public LinkedList<Pole>::Node, public SysFunRoot{
-public:
-    using SysFunRoot::SysFunRoot;
-};
-
-typedef IteratorPair<LinkedList<Zero>::Iterator> ZeroIterators;
-typedef IteratorPair<LinkedList<Pole>::Iterator> PoleIterators;
+typedef IteratorPair<LinkedList<SysFunRoot>::Iterator> SysFunRootIterators;
 
 
 class FilterClass{
-    LinkedList<Zero> m_zeros;
-    LinkedList<Pole> m_poles;
+    LinkedList<SysFunRoot> m_roots; // Zeros and Poles
+    SysFunRoot* m_last_zero = nullptr;
 
 public:
     ~FilterClass();
 
-    void addZero(Zero* zero);
+    void addRoot(SysFunRoot* root);
 
-    void addPole(Pole* pole);
+    void removeRoot(SysFunRoot* root);
 
-    Zero* newZero(Complex<float> value);
+    inline SysFunRootIterators roots() const { return {m_roots.begin(), m_roots.end()}; }
 
-    Pole* newPole(Complex<float> value);
+    SysFunRootIterators zeros() const;
 
-    void removeZero(Zero* zero);
+    SysFunRootIterators poles() const;
 
-    void removePole(Pole* pole);
+    inline bool isEmpty() const { return m_roots.isEmpty(); }
 
-    inline ZeroIterators zeros() const { return {m_zeros.begin(), m_zeros.end()}; }
+    int rootCount() const; // Roots with enabled conjugates count as two!
 
-    inline PoleIterators poles() const { return {m_poles.begin(), m_poles.end()}; }
+    int zeroCount() const;
 
-    inline bool hasZeros() const { return !m_zeros.isEmpty(); }
+    int poleCount() const;
 
-    inline bool hasPoles() const { return !m_poles.isEmpty(); }
+    int firstPoleIndex() const;
+
+    void updateIndices();
 };
 
 }//namespace r64fx
