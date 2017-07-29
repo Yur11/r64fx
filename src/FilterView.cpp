@@ -182,6 +182,9 @@ class PoleZeroPlot : public Widget{
     int m_pole_count = 0;
     PainterTexture1D* m_pole_zero_texture = nullptr;
 
+    float m_apparent_radius = 0.0f;
+    float m_apparent_radius_rcp = 0.0f;
+
 public:
     PoleZeroPlot(FilterViewPrivate* m, Widget* parent = nullptr)
     : Widget(parent)
@@ -258,46 +261,19 @@ private:
                 p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &markup_img);
             }
 
-            for(auto zero : m->fc->zeros())
+            for(auto root : m->fc->roots())
             {
-                auto val = zero->value();
-                cout << "zero: " << val << "\n";
+#ifdef R64FX_DEBUG
+                assert(root->hasValue());
+#endif//R64FX_DEBUG
+                auto val = root->value();
 
-                p->blendColors(
-                    complexToPoint(val) - g_handle_offset,
-                    Colors(Color(0, 0, 255, 0)),
-                    g_circle_img
-                );
+                auto img = (root->isPole() ? g_cross_img : g_circle_img);
+                Color color = (root->isPole() ? Color(255, 0, 0) : Color(0, 0, 255));
 
-                if(zero->hasConjugate())
-                {
-                    p->blendColors(
-                        complexToPoint(val.conjugate()) - g_handle_offset,
-                        Colors(Color(255, 0, 0, 0)),
-                        g_circle_img
-                    );
-                }
-            }
-
-            for(auto pole : m->fc->poles())
-            {
-                auto val = pole->value();
-                cout << "pole: " << val << "\n";
-
-                p->blendColors(
-                    complexToPoint(val) - g_handle_offset,
-                    Colors(Color(255, 0, 0, 0)),
-                    g_cross_img
-                );
-
-                if(pole->hasConjugate())
-                {
-                    p->blendColors(
-                        complexToPoint(val.conjugate()) - g_handle_offset,
-                        Colors(Color(255, 0, 0, 0)),
-                        g_cross_img
-                    );
-                }
+                p->blendColors(complexToPoint(val) - g_handle_offset, color, img);
+                if(root->hasConjugate())
+                    p->blendColors(complexToPoint(val.conjugate()) - g_handle_offset, color, img);
             }
         }
     }
@@ -321,6 +297,8 @@ private:
 
     virtual void resizeEvent(WidgetResizeEvent* event)
     {
+        m_apparent_radius = float(width() < height() ? width() : height()) * g_apparent_unity * 0.5f;
+        m_apparent_radius_rcp = 1.0f / m_apparent_radius;
         m->update();
         update();
         repaint();
@@ -357,27 +335,17 @@ private:
     Complex<float> pointToComplex(Point<int> point) const
     {
         return {
-            +float((point.x() - width()/2)  / apparentRadius()),
-            -float((point.y() - height()/2) / apparentRadius())
+            +float((point.x() - width()/2)  * m_apparent_radius_rcp),
+            -float((point.y() - height()/2) * m_apparent_radius_rcp)
         };
     }
 
     Point<int> complexToPoint(Complex<float> complex) const
     {
         return{
-            +int(complex.re * apparentRadius()) + width()/2,
-            -int(complex.im * apparentRadius()) + height()/2
+            +int(complex.re * m_apparent_radius) + width()/2,
+            -int(complex.im * m_apparent_radius) + height()/2
         };
-    }
-
-    float apparentRadius() const
-    {
-        return widthOrHeight() * g_apparent_unity * 0.5f;
-    }
-
-    int widthOrHeight() const
-    {
-        return min(width(), height());
     }
 
     SysFunRoot* rootAt(Point<int> pos, Point<int>* anchor_out = nullptr)
