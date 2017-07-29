@@ -126,6 +126,8 @@ public:
     int poleBufferSize() const;
 
     void updateIndices();
+
+    Complex<float> evalAt(Complex<float> z);
 };
 
 }//namespace r64fx

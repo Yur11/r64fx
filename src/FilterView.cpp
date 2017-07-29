@@ -130,41 +130,6 @@ struct FilterViewPrivate{
     {
         cleanup();
     }
-
-    void update()
-    {
-        
-    }
-
-    Complex<float> evalAt(Complex<float> z)
-    {
-        if(!fc)
-            return {};
-
-        Complex<float> numerator(1.0f, 0.0f);
-        for(auto zero : fc->zeros())
-        {
-#ifdef R64FX_DEBUG
-            assert(zero->hasValue());
-#endif//R64FX_DEBUG
-            numerator *= (zero->value() - z);
-            if(zero->hasConjugate())
-                numerator *= (zero->value().conjugate() - z);
-        }
-
-        Complex<float> denomenator(1.0f, 0.0f);
-        for(auto pole : fc->poles())
-        {
-#ifdef R64FX_DEBUG
-            assert(pole->hasValue());
-#endif//R64FX_DEBUG
-            denomenator *= (pole->value() - z);
-            if(pole->hasConjugate())
-                denomenator *= (pole->value().conjugate() - z);
-        }
-
-        return numerator / denomenator;
-    }
 };
 
 
@@ -175,15 +140,18 @@ class PoleZeroPlot : public Widget{
 
     Image markup_img;
 
-    SysFunRoot* selected_root = nullptr;
-    Point<int> handle_anchor = {0, 0};
+    SysFunRoot* m_selected_root = nullptr;
+    Point<int> m_handle_anchor = {0, 0};
 
-    int m_zero_count = 0;
-    int m_pole_count = 0;
     PainterTexture1D* m_pole_zero_texture = nullptr;
 
-    float m_apparent_radius = 0.0f;
-    float m_apparent_radius_rcp = 0.0f;
+    /* Calculated once on update & used in subsequent repaints.*/
+    int m_zero_count = 0;
+    int m_pole_count = 0;
+
+    float m_apparent_radius      = 0.0f;    // Radius of the unit circle in pixels;
+    float m_apparent_radius_rcp  = 0.0f;
+    float m_sys_fun_img_radius   = 0.0f;    // Size of X or O image in sys. fun. coords.
 
 public:
     PoleZeroPlot(FilterViewPrivate* m, Widget* parent = nullptr)
@@ -199,6 +167,30 @@ public:
 
     void update()
     {
+        m_apparent_radius = float(width() < height() ? width() : height()) * g_apparent_unity * 0.5f;
+        m_apparent_radius_rcp = 1.0f / m_apparent_radius;
+        m_sys_fun_img_radius = float(handle_size) * m_apparent_radius_rcp * 0.5f;
+        cout << "bla: " << m_sys_fun_img_radius << "\n";
+
+        if(m->fc)
+        {
+            m_zero_count = m->fc->zeroBufferSize();
+            m_pole_count = m->fc->poleBufferSize();
+            int buff_len = m_zero_count + m_pole_count;
+            if(buff_len > 0)
+            {
+                Complex<float> buff[32];
+                load_sys_fun_to_buffer(m->fc, buff, 32);
+                for(int n=0; n<buff_len; n++)
+                {
+                    auto &val = buff[n];
+                    val *= Complex<float>(g_apparent_unity * 0.5f, 0.0f);
+                    val += Complex<float>(0.5f, 0.5f);
+                }
+                m_pole_zero_texture->load((float*)buff, buff_len, 2);
+            }
+        }
+
         markup_img.load(width(), height(), 1);
         fill(&markup_img, Color(0));
 
@@ -218,26 +210,6 @@ public:
 //             copy({&markup_img, Point<int>(width()/2 + 3, 1)}, textimg);
 //             delete textimg;
 //         }
-
-        if(m->fc)
-        {
-            m_zero_count = m->fc->zeroBufferSize();
-            m_pole_count = m->fc->poleBufferSize();
-            cout << m_zero_count << " / " << m_pole_count << "\n";
-            int buff_len = m_zero_count + m_pole_count;
-            if(buff_len > 0)
-            {
-                Complex<float> buff[32];
-                load_sys_fun_to_buffer(m->fc, buff, 32);
-                for(int n=0; n<buff_len; n++)
-                {
-                    auto &val = buff[n];
-                    val *= Complex<float>(g_apparent_unity * 0.5f, 0.0f);
-                    val += Complex<float>(0.5f, 0.5f);
-                }
-                m_pole_zero_texture->load((float*)buff, buff_len, 2);
-            }
-        }
     }
 
 private:
@@ -297,39 +269,32 @@ private:
 
     virtual void resizeEvent(WidgetResizeEvent* event)
     {
-        m_apparent_radius = float(width() < height() ? width() : height()) * g_apparent_unity * 0.5f;
-        m_apparent_radius_rcp = 1.0f / m_apparent_radius;
-        m->update();
         update();
         repaint();
     }
 
     virtual void mousePressEvent(MousePressEvent* event)
     {
-//         Point<int> anchor(0, 0);
-//         auto point = rootAt(event->position(), &anchor);
-//         if(point)
-//         {
-//             current_point = point;
-//             handle_anchor = anchor;
-//         }
+        Point<int> anchor(0, 0);
+        auto root = rootAt(event->position());
+        if(root)
+        {
+            m_selected_root = root;
+        }
     }
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event)
     {
-//         current_point = nullptr;
-//         handle_anchor = {0, 0};
+        m_selected_root = nullptr;
     }
 
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
-//         if(current_point)
-//         {
-//             auto pos = event->position() - handle_anchor;
-//             current_point[0] = pointToComplex(pos);
-//             m->update();
-//             parent()->repaint();
-//         }
+        if(m_selected_root)
+        {
+            m_selected_root->setValue(pointToComplex(event->position()));
+            parent()->repaint();
+        }
     }
 
     Complex<float> pointToComplex(Point<int> point) const
@@ -348,22 +313,40 @@ private:
         };
     }
 
-    SysFunRoot* rootAt(Point<int> pos, Point<int>* anchor_out = nullptr)
+    SysFunRoot* rootAt(Point<int> pos)
     {
-//         for(auto zero : m->fc->zeros())
-//         {
-//             
-//         }
-// 
-//         for(auto pole : m->fc->poles())
-//         {
-//             
-//         }
+        if(!m->fc)
+            return nullptr;
 
-//         if(anchor_out)
-//         {
-//             anchor_out[0] = anchor + Point<int>(handle_size/2, handle_size/2);
-//         }
+        auto z = pointToComplex(pos);
+        auto s = m_sys_fun_img_radius;
+        auto l = z.re - s;
+        auto r = z.re + s;
+        auto t = z.im - s;
+        auto b = z.im + s;
+
+        for(auto root : m->fc->roots())
+        {
+#ifdef R64FX_DEBUG
+            assert(root->hasValue());
+#endif//R64FX_DEBUG
+            auto v = root->value();
+
+            if(v.re < r && v.re > l && v.im < b && v.im > t)
+            {
+                return root;
+            }
+
+            if(root->hasConjugate())
+            {
+                v = v.conjugate();
+                if(v.re < r && v.re > l && v.im < b && v.im > t)
+                {
+                    return root;
+                }
+            }
+        }
+
         return nullptr;
     }
 };
@@ -389,6 +372,9 @@ public:
 
     void update()
     {
+        if(!m->fc)
+            return;
+
         if(width() > 0)
         {
             response.resize(width());
@@ -397,7 +383,7 @@ public:
             {
                 float phase = (float(i) * rcp) * M_PI;
                 Complex<float> z(Polar<float>(1.0, phase));
-                Complex<float> value = m->evalAt(z);
+                Complex<float> value = m->fc->evalAt(z);
                 response[i] = (height() / 2) - (value.magnitude() * height() * 0.125);
             }
         }
