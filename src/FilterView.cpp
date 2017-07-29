@@ -50,7 +50,7 @@ void init()
         g_circle_img = new Image(handle_size, handle_size);
         fill(g_circle_img, Color(0));
         fill_circle(g_circle_img, 0, 1, Color(255), {handle_size >> 1, handle_size >> 1}, (handle_size >> 1) - 1);
-        fill_circle(g_circle_img, 0, 1, Color(0),   {handle_size >> 1, handle_size >> 1}, (handle_size >> 1) - 3);
+        fill_circle(g_circle_img, 0, 1, Color(0),   {handle_size >> 1, handle_size >> 1}, (handle_size >> 1) - 2);
 
         g_handle_offset = Point<int>(handle_size >> 1, handle_size >> 1);
 
@@ -85,7 +85,7 @@ void cleanup()
 void load_sys_fun_to_buffer(FilterClass* fc, Complex<float>* buff, int buff_capacity)
 {
 #ifdef R64FX_DEBUG
-    assert(fc->rootCount() <= buff_capacity);
+    assert(fc->rootBufferSize() <= buff_capacity);
 #endif//R64FX_DEBUG
 
     if(fc->isEmpty())
@@ -218,8 +218,9 @@ public:
 
         if(m->fc)
         {
-            m_zero_count = m->fc->zeroCount();
-            m_pole_count = m->fc->poleCount();
+            m_zero_count = m->fc->zeroBufferSize();
+            m_pole_count = m->fc->poleBufferSize();
+            cout << m_zero_count << " / " << m_pole_count << "\n";
             int buff_len = m_zero_count + m_pole_count;
             if(buff_len > 0)
             {
@@ -260,6 +261,7 @@ private:
             for(auto zero : m->fc->zeros())
             {
                 auto val = zero->value();
+                cout << "zero: " << val << "\n";
 
                 p->blendColors(
                     complexToPoint(val) - g_handle_offset,
@@ -280,6 +282,7 @@ private:
             for(auto pole : m->fc->poles())
             {
                 auto val = pole->value();
+                cout << "pole: " << val << "\n";
 
                 p->blendColors(
                     complexToPoint(val) - g_handle_offset,
@@ -427,7 +430,6 @@ public:
                 float phase = (float(i) * rcp) * M_PI;
                 Complex<float> z(Polar<float>(1.0, phase));
                 Complex<float> value = m->evalAt(z);
-                cout << "eval: " << value << " @ " << z << "\n";
                 response[i] = (height() / 2) - (value.magnitude() * height() * 0.125);
             }
         }
@@ -440,7 +442,7 @@ private:
         p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
         Image img(width(), height(), 1);
         fill(&img, Color(0));
-        stroke_plot(&img, Color(255), {0, 0, width(), height()}, response.data(), 2.0f, 1.0f, height() / 2);
+        stroke_plot(&img, Color(255), {0, 0, width(), height()}, response.data(), 1.0f, 1.0f, height() / 2);
         p->blendColors({0, 0}, Color(255, 63, 0), &img);
     }
 
@@ -467,10 +469,11 @@ FilterView::FilterView(FilterViewControllerIface* ctrl, Widget* parent)
 
     //Remove This!
     auto fc = new FilterClass;
-//     fc->newZero({-0.5f, 0.0f});
-//     fc->newZero({-0.25f, 0.0f});
-//     fc->newPole({0.75f, 0.75f});
-//     fc->newPole({-0.5f, 0.5f});
+    fc->newRoot<Pole>({-0.5f, 0.5f});
+    fc->newRoot<Pole>({0.5f, 0.5f});
+    fc->newRoot<Zero>({-0.5f, 0.0f});
+    fc->newRoot<Zero>({-0.25f, 0.0f});
+    fc->updateIndices();
     setFilterClass(fc);
 }
 

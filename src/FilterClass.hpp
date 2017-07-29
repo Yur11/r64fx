@@ -8,50 +8,59 @@
 
 namespace r64fx{
 
-class SysFunRoot : public LinkedList<SysFunRoot>::Node{
-    friend class FilterClass;
 
-    unsigned long m_data  = 0;
+// Base class for SysFunRoot and its ctor. parameter.
+class SysFunRootData{
+    friend class SysFunRoot;
 
-protected:
-    unsigned long m_flags = 0;
-
-    SysFunRoot() { setValue(Complex<float>(0.0f, 0.0f)); }
-
-    SysFunRoot(Complex<float> value) { setValue(value); }
-
-    SysFunRoot(Expression* expr) { setExpression(expr); }
+    unsigned long m_data   = 0;
+    unsigned long m_flags  = 0;
 
 public:
-    SysFunRoot* setValue(Complex<float> value);
+    SysFunRootData() { setValue(Complex<float>(0.0f, 0.0f)); }
+
+    SysFunRootData(Complex<float> value) { setValue(value); }
+
+    SysFunRootData(float re, float im) { setValue({re, im}); }
+
+    SysFunRootData(Expression* expr) { setExpression(expr); }
+
+    void setValue(Complex<float> value);
 
     Complex<float> value() const;
 
-    SysFunRoot* setExpression(Expression* expr);
+    void setExpression(Expression* expr);
 
     Expression* expression() const;
 
     bool hasValue() const;
 
     inline bool hasExpression() const { return !hasValue(); }
+};
 
-    SysFunRoot* makeZero();
 
-    SysFunRoot* makePole();
+// Pole or Zero.
+class SysFunRoot : public LinkedList<SysFunRoot>::Node, public SysFunRootData{
+    friend class FilterClass;
+    friend class Zero;
+    friend class Pole;
 
+    SysFunRoot(const SysFunRootData &data); // Using implicit call of SysFunRootData params.
+
+public:
     bool isPole() const;
 
     inline bool isZero() const { return !isPole(); }
 
-    SysFunRoot* enableConjugate();
+    void enableConjugate();
 
-    SysFunRoot* disableConjugate();
+    void disableConjugate();
 
     bool hasConjugate() const;
 
-    SysFunRoot* enableDeletionWithParent();
+    void enableDeletionWithParent();
 
-    SysFunRoot* disableDeletionWithParent();
+    void disableDeletionWithParent();
 
     bool isDeletedWithParent() const;
 
@@ -59,9 +68,23 @@ private:
     void setIndex(int index);
 
     int index() const;
+
+    void makeZero();
+
+    void makePole();
 };
 
 typedef IteratorPair<LinkedList<SysFunRoot>::Iterator> SysFunRootIterators;
+
+class Zero : public SysFunRoot{
+public:
+    Zero(const SysFunRootData &data) : SysFunRoot(data) { makeZero(); }
+};
+
+class Pole : public SysFunRoot{
+public:
+    Pole(const SysFunRootData &data) : SysFunRoot(data) { makePole(); }
+};
 
 
 class FilterClass{
@@ -73,6 +96,19 @@ public:
 
     void addRoot(SysFunRoot* root);
 
+    template<class T> inline T* newRoot(const SysFunRootData &data)
+    {
+        auto root = new T(data);
+        root->enableDeletionWithParent();
+        if(root->hasValue())
+        {
+            if(root->value().im != 0.0f)
+                root->enableConjugate();
+        }
+        addRoot(root);
+        return root;
+    }
+
     void removeRoot(SysFunRoot* root);
 
     inline SysFunRootIterators roots() const { return {m_roots.begin(), m_roots.end()}; }
@@ -83,13 +119,11 @@ public:
 
     inline bool isEmpty() const { return m_roots.isEmpty(); }
 
-    int rootCount() const; // Roots with enabled conjugates count as two!
+    int rootBufferSize() const; // Roots with enabled conjugates count as two!
 
-    int zeroCount() const;
+    int zeroBufferSize() const;
 
-    int poleCount() const;
-
-    int firstPoleIndex() const;
+    int poleBufferSize() const;
 
     void updateIndices();
 };
