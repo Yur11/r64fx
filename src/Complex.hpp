@@ -31,9 +31,19 @@ public:
         return sqrt(re*re + im*im);
     }
 
+    inline void setMagnitude(T mag)
+    {
+        *this = Polar<T>(mag, phase());
+    }
+
     inline T phase() const
     {
         return atan2(im, re);
+    }
+
+    inline void setPhase(T ph)
+    {
+        *this = Polar<T>(magnitude(), ph);
     }
 };
 
