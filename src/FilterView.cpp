@@ -170,26 +170,8 @@ public:
         m_apparent_radius = float(width() < height() ? width() : height()) * g_apparent_unity * 0.5f;
         m_apparent_radius_rcp = 1.0f / m_apparent_radius;
         m_sys_fun_img_radius = float(handle_size) * m_apparent_radius_rcp * 0.5f;
-        cout << "bla: " << m_sys_fun_img_radius << "\n";
 
-        if(m->fc)
-        {
-            m_zero_count = m->fc->zeroBufferSize();
-            m_pole_count = m->fc->poleBufferSize();
-            int buff_len = m_zero_count + m_pole_count;
-            if(buff_len > 0)
-            {
-                Complex<float> buff[32];
-                load_sys_fun_to_buffer(m->fc, buff, 32);
-                for(int n=0; n<buff_len; n++)
-                {
-                    auto &val = buff[n];
-                    val *= Complex<float>(g_apparent_unity * 0.5f, 0.0f);
-                    val += Complex<float>(0.5f, 0.5f);
-                }
-                m_pole_zero_texture->load((float*)buff, buff_len, 2);
-            }
-        }
+        updateSysFunTexture();
 
         markup_img.load(width(), height(), 1);
         fill(&markup_img, Color(0));
@@ -210,6 +192,29 @@ public:
 //             copy({&markup_img, Point<int>(width()/2 + 3, 1)}, textimg);
 //             delete textimg;
 //         }
+    }
+
+
+    void updateSysFunTexture()
+    {
+        if(m->fc)
+        {
+            m_zero_count = m->fc->zeroBufferSize();
+            m_pole_count = m->fc->poleBufferSize();
+            int buff_len = m_zero_count + m_pole_count;
+            if(buff_len > 0)
+            {
+                Complex<float> buff[32];
+                load_sys_fun_to_buffer(m->fc, buff, 32);
+                for(int n=0; n<buff_len; n++)
+                {
+                    auto &val = buff[n];
+                    val *= Complex<float>(g_apparent_unity * 0.5f, 0.0f);
+                    val += Complex<float>(0.5f, 0.5f);
+                }
+                m_pole_zero_texture->load((float*)buff, buff_len, 2);
+            }
+        }
     }
 
 private:
@@ -280,22 +285,37 @@ private:
         if(root)
         {
             m_selected_root = root;
+            grabMouseFocus();
         }
     }
 
     virtual void mouseReleaseEvent(MouseReleaseEvent* event)
     {
         m_selected_root = nullptr;
+        releaseMouseFocus();
     }
 
     virtual void mouseMoveEvent(MouseMoveEvent* event)
     {
         if(m_selected_root)
         {
-            m_selected_root->setValue(pointToComplex(event->position()));
+            auto z = pointToComplex(event->position());
+            if(!m_selected_root->hasConjugate())
+                z.im = 0.0f;
+            if(m_selected_root->isPole())
+            {
+                if(z.magnitude() >= 0.99999f)
+                    z.setMagnitude(0.99999f);
+            }
+            m_selected_root->setValue(z);
+            updateSysFunTexture();
+            updateResponsePlot();
             parent()->repaint();
         }
     }
+
+    void updateResponsePlot();
+
 
     Complex<float> pointToComplex(Point<int> point) const
     {
@@ -406,6 +426,12 @@ private:
         repaint();
     }
 };
+
+
+void PoleZeroPlot::updateResponsePlot()
+{
+    m->response_plot->update();
+}
 
 }//namespace
 

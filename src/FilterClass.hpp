@@ -100,10 +100,9 @@ public:
     {
         auto root = new T(data);
         root->enableDeletionWithParent();
-        if(root->hasValue())
+        if(root->hasValue() && root->value().im != 0.0f)
         {
-            if(root->value().im != 0.0f)
-                root->enableConjugate();
+            root->enableConjugate();
         }
         addRoot(root);
         return root;
