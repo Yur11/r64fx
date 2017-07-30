@@ -11,6 +11,7 @@ using namespace std;
 
 #include "Widget_Knob.hpp"
 #include "Widget_Slider.hpp"
+#include "Widget_Number.hpp"
 
 namespace r64fx{
 
@@ -61,6 +62,9 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     }
     slider_hori[0]->setMinValue(0.0f);
     slider_hori[1]->setMaxValue(0.0f);
+
+    Widget_Number* wn = new Widget_Number(this);
+    wn->setPosition({300, 100});
 }
 
 
