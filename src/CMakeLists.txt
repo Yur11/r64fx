@@ -44,6 +44,7 @@ set(SRC
     Image.cpp
     ImageAnimation.cpp
     ImageUtils.cpp
+    InstanceCounter.cpp
     Keyboard.cpp
     KeyboardModifiers.cpp
     LayoutUtils.cpp
