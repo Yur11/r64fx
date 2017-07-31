@@ -63,8 +63,17 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     slider_hori[0]->setMinValue(0.0f);
     slider_hori[1]->setMaxValue(0.0f);
 
-    Widget_Number* wn = new Widget_Number(this);
-    wn->setPosition({300, 100});
+    Widget_Number* wn1 = new Widget_Number(this);
+    wn1->setPosition({300, 100 + (wn1->height() + 2) * 1});
+
+    Widget_Number* wn2 = new Widget_Number(this);
+    wn2->setPosition({300, 100 + (wn1->height() + 2) * 2});
+
+    Widget_Number* wn3 = new Widget_Number(this);
+    wn3->setPosition({300, 100 + (wn1->height() + 2) * 3});
+
+    Widget_Number* wn4 = new Widget_Number(this);
+    wn4->setPosition({300, 100 + (wn1->height() + 2) * 4});
 }
 
 
