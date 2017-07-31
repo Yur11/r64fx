@@ -22,7 +22,7 @@ void InstanceCounter::destroyed()
 #endif//R64FX_DEBUG
 
     m_count--;
-    if(m_count)
+    if(m_count == 0)
         cleanupEvent();
 }
 
