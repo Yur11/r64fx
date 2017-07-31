@@ -36,7 +36,8 @@ Widget_Number::Widget_Number(Widget* parent)
 : Widget(parent)
 {
     g.created();
-    setSize(find_text_bbox("+0.000000", TextWrap::None, g.font()));
+    auto bbox = find_text_bbox("+0.000000", TextWrap::None, g.font());
+    setSize({bbox.width() + 2, bbox.height() + 2});
     setMinValue(-1.0f);
 }
 
@@ -63,12 +64,12 @@ void Widget_Number::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
-    p->fillRect({0, 0, width(), height()}, Color(255, 255, 255));
+    p->strokeRect({0, 0, width(), height()}, Color(0, 0, 0), Color(255, 255, 255), 1);
 
     char buff[32];
     int n = sprintf(buff, "%+f", value());
     auto img = text2image(std::string(buff), TextWrap::None, g.font());
-    p->blendColors({0, 0}, Color(0, 0, 0), img);
+    p->blendColors({1, 1}, Color(0, 0, 0), img);
     delete img;
 }
 
