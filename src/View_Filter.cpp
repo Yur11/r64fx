@@ -1,4 +1,4 @@
-#include "FilterView.hpp"
+#include "View_Filter.hpp"
 #include "Painter.hpp"
 #include "ImageUtils.hpp"
 #include "TextPainter.hpp"
@@ -113,20 +113,20 @@ class ResponsePlot;
 }//namespace
 
 
-struct FilterViewPrivate{
-    FilterViewControllerIface* ctrl = nullptr;
+struct View_FilterPrivate{
+    View_FilterControllerIface* ctrl = nullptr;
 
     FilterClass* fc = nullptr;
 
     PoleZeroPlot* pole_zero_plot = nullptr;
     ResponsePlot* response_plot  = nullptr;
 
-    FilterViewPrivate()
+    View_FilterPrivate()
     {
         init();
     }
 
-    ~FilterViewPrivate()
+    ~View_FilterPrivate()
     {
         cleanup();
     }
@@ -136,7 +136,7 @@ struct FilterViewPrivate{
 namespace{
 
 class PoleZeroPlot : public Widget{
-    FilterViewPrivate* m = nullptr;
+    View_FilterPrivate* m = nullptr;
 
     Image markup_img;
 
@@ -154,7 +154,7 @@ class PoleZeroPlot : public Widget{
     float m_sys_fun_img_radius   = 0.0f;    // Size of X or O image in sys. fun. coords.
 
 public:
-    PoleZeroPlot(FilterViewPrivate* m, Widget* parent = nullptr)
+    PoleZeroPlot(View_FilterPrivate* m, Widget* parent = nullptr)
     : Widget(parent)
     , m(m)
     {
@@ -373,12 +373,12 @@ private:
 
 
 class ResponsePlot : public Widget{
-    FilterViewPrivate* m = nullptr;
+    View_FilterPrivate* m = nullptr;
 
     vector<float> response;
 
 public:
-    ResponsePlot(FilterViewPrivate* m, Widget* parent = nullptr)
+    ResponsePlot(View_FilterPrivate* m, Widget* parent = nullptr)
     : Widget(parent)
     , m(m)
     {
@@ -436,10 +436,10 @@ void PoleZeroPlot::updateResponsePlot()
 }//namespace
 
 
-FilterView::FilterView(FilterViewControllerIface* ctrl, Widget* parent)
+View_Filter::View_Filter(View_FilterControllerIface* ctrl, Widget* parent)
 : Widget(parent)
 {
-    m = new FilterViewPrivate;
+    m = new View_FilterPrivate;
     m->ctrl = ctrl;
 
     m->pole_zero_plot = new PoleZeroPlot(m, this);
@@ -458,7 +458,7 @@ FilterView::FilterView(FilterViewControllerIface* ctrl, Widget* parent)
 }
 
 
-FilterView::~FilterView()
+View_Filter::~View_Filter()
 {
     if(m)
     {
@@ -479,13 +479,13 @@ FilterView::~FilterView()
 }
 
 
-void FilterView::setFilterClass(FilterClass* fc)
+void View_Filter::setFilterClass(FilterClass* fc)
 {
     m->fc = fc;
 }
 
 
-void FilterView::resizeEvent(WidgetResizeEvent* event)
+void View_Filter::resizeEvent(WidgetResizeEvent* event)
 {
     if(event->width() > event->height())
     {

@@ -38,7 +38,6 @@ set(SRC
 #     DummyMachine.cpp
 #     FilterMachine.cpp
     FilterClass.cpp
-    FilterView.cpp
     Font.cpp
     IconSupply.cpp
     Image.cpp
@@ -93,6 +92,7 @@ set(SRC
     Timer.cpp
     UndoRedoChain.cpp
     Value.cpp
+    View_Filter.cpp
     View_Program.cpp
     View_Project.cpp
     WaveformUtils.cpp

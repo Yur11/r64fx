@@ -10,7 +10,7 @@
 #include "SoundDriverMachine.hpp"
 #include "MachinePool.hpp"
 
-#include "FilterView.hpp"
+#include "View_Filter.hpp"
 
 #include <iostream>
 using namespace std;
@@ -21,7 +21,7 @@ SoundFilePool* g_sound_file_pool = nullptr;
 
 class PlayerControllerPrivate
 : public PlayerViewControllerIface
-, public FilterViewControllerIface
+, public View_FilterControllerIface
 {
     PlayerView* m_view = nullptr;
     PlayerMachine* m_machine = nullptr;
@@ -35,7 +35,7 @@ class PlayerControllerPrivate
 
     SoundFileDataPtr m_sound_data;
 
-    FilterView* m_filter_view = nullptr;
+    View_Filter* m_filter_view = nullptr;
 
 public:
     PlayerControllerPrivate()
@@ -100,7 +100,7 @@ public:
 //         }
 //
 //         m_filter_machine->setPole(0.01f);
-//         m_filter_view = new FilterView(this);
+//         m_filter_view = new View_Filter(this);
 //         m_filter_view->show();
     }
 

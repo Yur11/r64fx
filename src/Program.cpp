@@ -11,7 +11,7 @@
 #include "Player.hpp"
 #include "Module_Oscillator.hpp"
 
-#include "FilterView.hpp"
+#include "View_Filter.hpp"
 
 #include <iostream>
 
@@ -26,7 +26,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     View_Program* view_program = nullptr;
 
-    FilterView* view_filter = nullptr;
+    View_Filter* view_filter = nullptr;
 
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
@@ -40,7 +40,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
         view_program = new View_Program(this);
         view_program->openWindow();
 
-        view_filter = new FilterView(nullptr);
+        view_filter = new View_Filter(nullptr);
         view_filter->openWindow();
 
         newProject();
