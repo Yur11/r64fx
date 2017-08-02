@@ -76,6 +76,8 @@ struct View_ProgramPrivate{
     PainterTexture2D* icon28_tex = nullptr;
     PainterTexture2D* icon30_tex = nullptr;
     PainterTexture2D* icon32_tex = nullptr;
+
+    Image* icon_check = nullptr;
 };
 
 
@@ -198,6 +200,9 @@ protected:
         p->putImage(m->icon28_tex, {10, 180});
         p->putImage(m->icon30_tex, {10, 214});
         p->putImage(m->icon32_tex, {10, 250});
+
+        p->strokeRect({10, 300, 16, 16}, Color(15, 15, 15), Color(190, 190, 190), 2);
+        p->putImage(m->icon_check, {10, 300});
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -376,6 +381,8 @@ View_Program::View_Program(View_ProgramEventIface* event_iface, Widget* parent) 
     m->icon30 = get_icon(name, 30, &g_colors);
     m->icon32 = get_icon(name, 32, &g_colors);
 
+    m->icon_check = get_icon(IconName::Check, 16, &g_colors);
+
     setSize({800, 600});
 }
 
@@ -391,6 +398,7 @@ View_Program::~View_Program()
     free_icon(&m->icon28);
     free_icon(&m->icon30);
     free_icon(&m->icon32);
+    free_icon(&m->icon_check);
 
     m->main_tab_bar->setParent(nullptr);
     delete m->main_tab_bar;

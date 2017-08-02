@@ -338,6 +338,50 @@ void gen_icon_Folder(Image* img, int size, IconColors* ic)
 }
 
 
+void gen_icon_Check(Image* img, int size, IconColors* ic)
+{
+#ifdef R64FX_DEBUG
+    assert(size >= 8);
+#endif//R64FX_DEBUG
+    Image ell(size - 4, (size - 4) >> 1);
+    fill(&ell, Color(0));
+
+    int check_thickness = size >> 3;
+    for(int x=0; x<ell.width(); x++)
+    {
+        for(int y=(ell.height() - check_thickness); y<ell.height(); y++)
+        {
+            ell(x, y)[0] = 255;
+        }
+    }
+
+    for(int x=0; x<check_thickness; x++)
+    {
+        for(int y=0; y<(ell.height() - check_thickness); y++)
+        {
+            ell(x, y)[0] = 255;
+        }
+    }
+
+    Image rotated_ell(size, size, 1);
+    fill(&rotated_ell, Color(0));
+
+    int x_offset = sqrt(ell.height() * ell.height());
+    int y_offset = (ell.height() << 1);
+
+    Transformation2D<float> tr;
+    tr.translate(x_offset, y_offset);
+    tr.rotate(M_PI * -0.25f);
+    tr.translate(0, -ell.height());
+
+    copy(&rotated_ell, tr, &ell);
+    invert(&rotated_ell, &rotated_ell);
+
+    fill(img, Color(0, 0, 0, 127));
+    copy(img, &rotated_ell, ChanShuf(3, 1, 0, 1));
+}
+
+
 IconEntry* gen_new_icon(IconName name, int size, IconColors* ic)
 {
     if(size <= 0)
@@ -379,6 +423,11 @@ IconEntry* gen_new_icon(IconName name, int size, IconColors* ic)
         {
             gen_icon_DoubleDiskette(&(entry->img), size, ic);
             break;
+        }
+
+        case IconName::Check:
+        {
+            gen_icon_Check(&(entry->img), size, ic);
         }
 
         default:
