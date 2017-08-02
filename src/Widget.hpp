@@ -21,7 +21,7 @@ class Widget : public LinkedList<Widget>::Node{
     friend class WindowEventDispatcher;
 
     /* Parent can either be a widget or a window.
-     * Never both at same time. */
+     * Never both at the same time. */
     union{
         Widget* widget = nullptr;
         Window* window;
@@ -88,7 +88,7 @@ public:
 
     Widget* popLastChild();
 
-    /* The root parent widget in a tree that this widget belongs to. */
+    /* The root widget in a tree that this widget belongs to. */
     Widget* root() const;
 
     void setPosition(Point<int> pos);
@@ -116,12 +116,12 @@ public:
 
     int height() const;
 
-    /* Find leaf child at a given position.
-     * The optional offset parameter is used to return the leaf position
+    /* Find leaf child at the given position.
+     * Optional offset parameter is used to return the leaf position
      * in the coordinate system of this widget. */
     Widget* leafAt(Point<int> position, Point<int>* offset = nullptr);
 
-    /* Convert a point from the coordinate system of this widget
+    /* Convert point from the coordinate system of this widget
      * to the coordinate system of the root widget.
      * The optional root parameter is used to obtain the root widget. */
     Point<int> toRootCoords(Point<int> point, Widget** root = nullptr);
