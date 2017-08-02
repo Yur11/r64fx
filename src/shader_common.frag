@@ -18,6 +18,10 @@ uniform int        zero_count    = 0;
 uniform int        pole_index    = 0;
 uniform int        pole_count    = 0;
 
+const float PI = 3.1415926;
+const float PI_rcp = 1.0 / PI;
+const float rcp100 = 1.0 / 100.0;
+
 vec2 complex_add(in vec2 a, in vec2 b)
 {
     return vec2(a.x + b.x, a.y + b.y);
@@ -158,22 +162,39 @@ void main()
             }
 
             float mag = complex_maginitude(denominator);
-            if(abs(mag) > 0.0)
+            if(mag > 0.0)
             {
-                vec2 res = complex_div(numerator, denominator);
-                mag = complex_maginitude(res);
+                vec2 h = complex_div(numerator, denominator);
+                mag = complex_maginitude(h);
+                mag = (mag < 100 ? mag * rcp100 : 1.0);
 
-                if(mag < 100.0)
+                float phase = complex_phase(h);
+                float r = 0.0;
+                float b = 0.0;
+
+                if(phase > 0.0)
                 {
-                    mag /= 100.0;
-                    gl_FragColor = vec4(mag, mag, mag, 0.0);
-                    break;
+                    while(phase > PI)
+                        phase -= PI;
+                    r = abs(0.5 - phase * PI_rcp) * 2.0;
                 }
-            }
 
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
-            break;
+                if(phase < 0.0)
+                {
+                    while(phase < -PI)
+                        phase += PI;
+                    b = abs(0.5 - abs(phase) * PI_rcp) * 2.0;
+                }
+
+                r *= mag;
+                b *= mag;
+
+                gl_FragColor = vec4(mag - r, mag - r - b, mag - b, 0.0);
+                break;
+            }
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
         }
+        break;
 
         default:
             discard;

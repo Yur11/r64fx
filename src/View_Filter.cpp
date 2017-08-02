@@ -404,7 +404,8 @@ public:
                 float phase = (float(i) * rcp) * M_PI;
                 Complex<float> z(Polar<float>(1.0, phase));
                 Complex<float> value = m->fc->evalAt(z);
-                response[i] = (height() / 2) - (value.magnitude() * height() * 0.125);
+                response[i] = (height() / 2) - (value.magnitude() * height() * 0.125f);
+//                 response[i] = (value.phase() / M_PI) * height() * 0.5f;
             }
         }
     }
@@ -449,10 +450,10 @@ View_Filter::View_Filter(View_FilterControllerIface* ctrl, Widget* parent)
 
     //Remove This!
     auto fc = new FilterClass;
-    fc->newRoot<Pole>({-0.5f, 0.5f});
-    fc->newRoot<Pole>({0.5f, 0.5f});
-    fc->newRoot<Zero>({-0.5f, 0.0f});
-    fc->newRoot<Zero>({-0.25f, 0.0f});
+    fc->newRoot<Pole>({-0.25f, 0.25f});
+//     fc->newRoot<Pole>({0.5f, 0.5f});
+//     fc->newRoot<Zero>({-0.5f, 0.5f});
+    fc->newRoot<Zero>({-0.25f, 0.25f});
     fc->updateIndices();
     setFilterClass(fc);
 }
