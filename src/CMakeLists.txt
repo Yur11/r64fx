@@ -98,6 +98,7 @@ set(SRC
     WaveformUtils.cpp
     Widget.cpp
     Widget_Button.cpp
+    Widget_CheckBox.cpp
     Widget_ItemBrowser.cpp
     Widget_DataItem.cpp
     Widget_DirectoryItem.cpp

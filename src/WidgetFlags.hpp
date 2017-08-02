@@ -73,6 +73,8 @@
 
 #define R64FX_TAB_SELECTED                    (1UL << 0x20)
 
-#define R64FX_WIDGET_BELONGS_TO_WINDOW                 (1UL << 0x21)
+#define R64FX_WIDGET_BELONGS_TO_WINDOW        (1UL << 0x21)
+
+#define R64FX_WIDGET_IS_CHECKED               (1UL << 0x22)
 
 #endif//R64FX_WIDGET_FLAGS_HPP

@@ -12,6 +12,7 @@ using namespace std;
 #include "Widget_Knob.hpp"
 #include "Widget_Slider.hpp"
 #include "Widget_Number.hpp"
+#include "Widget_CheckBox.hpp"
 
 namespace r64fx{
 
@@ -74,6 +75,10 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
 
     Widget_Number* wn4 = new Widget_Number(this);
     wn4->setPosition({300, 100 + (wn1->height() + 2) * 4});
+
+
+    Widget_CheckBox* cb = new Widget_CheckBox(this);
+    cb->setPosition({400, 100});
 }
 
 
