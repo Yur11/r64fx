@@ -17,5 +17,3 @@ do
     echo "$i.h"
 done
 if [ "$#" != "0" ]; then cd -; fi
-
-rm ./makestring
