@@ -774,8 +774,8 @@ void stroke_plot(Image* img, Color color, Rect<int> rect, float* data, float thi
             }
         }
 
-        pp.minval = int(max(pp.minval, minimum) * scale + offset);
-        pp.maxval = int(min(pp.maxval, maximum) * scale + offset);
+        pp.minval = int(max(pp.minval, minimum) * scale + offset + 0.5f);
+        pp.maxval = int(min(pp.maxval, maximum) * scale + offset - 0.5f);
         pvec[i] = pp;
     }
 
