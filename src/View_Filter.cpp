@@ -404,7 +404,7 @@ public:
                 float phase = (float(i) * rcp) * M_PI;
                 Complex<float> z(Polar<float>(1.0, phase));
                 Complex<float> value = m->fc->evalAt(z);
-                response[i] = (height() / 2) - (value.magnitude() * height() * 0.125f);
+                response[i] = (height() / 2) - (value.magnitude() * height() * 0.125f * 0.125f);
 //                 response[i] = (value.phase() / M_PI) * height() * 0.5f;
             }
         }
@@ -414,11 +414,18 @@ private:
     virtual void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
+
         p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
         Image img(width(), height(), 1);
         fill(&img, Color(0));
         stroke_plot(&img, Color(255), {0, 0, width(), height()}, response.data(), 1.0f, 1.0f, height() / 2);
         p->blendColors({0, 0}, Color(255, 63, 0), &img);
+
+        for(int x=0; x<width(); x++)
+        {
+            if((x & 15) == 0)
+                p->fillRect({x, 0, 1, height()}, Color(63, 63, 63));
+        }
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -450,9 +457,12 @@ View_Filter::View_Filter(View_FilterControllerIface* ctrl, Widget* parent)
 
     //Remove This!
     auto fc = new FilterClass;
-    fc->newRoot<Pole>({-0.25f, 0.25f});
-//     fc->newRoot<Pole>({0.5f, 0.5f});
-//     fc->newRoot<Zero>({-0.5f, 0.5f});
+//     fc->newRoot<Pole>({-0.25f, 0.25f});
+    fc->newRoot<Pole>({0.5f, 0.5f});
+    fc->newRoot<Pole>({0.5f, 0.5f});
+    fc->newRoot<Zero>({-0.5f, 0.5f});
+    fc->newRoot<Zero>({-0.25f, 0.25f});
+    fc->newRoot<Zero>({-0.25f, 0.25f});
     fc->newRoot<Zero>({-0.25f, 0.25f});
     fc->updateIndices();
     setFilterClass(fc);
