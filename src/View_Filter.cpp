@@ -421,11 +421,11 @@ private:
         stroke_plot(&img, Color(255), {0, 0, width(), height()}, response.data(), 1.0f, 1.0f, height() / 2);
         p->blendColors({0, 0}, Color(255, 63, 0), &img);
 
-        for(int x=0; x<width(); x++)
-        {
-            if((x & 15) == 0)
-                p->fillRect({x, 0, 1, height()}, Color(63, 63, 63));
-        }
+//         for(int x=0; x<width(); x++)
+//         {
+//             if((x & 15) == 0)
+//                 p->fillRect({x, 0, 1, height()}, Color(63, 63, 63));
+//         }
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -459,11 +459,12 @@ View_Filter::View_Filter(View_FilterControllerIface* ctrl, Widget* parent)
     auto fc = new FilterClass;
 //     fc->newRoot<Pole>({-0.25f, 0.25f});
     fc->newRoot<Pole>({0.5f, 0.5f});
-    fc->newRoot<Pole>({0.5f, 0.5f});
+//     fc->newRoot<Pole>({0.5f, 0.5f});
     fc->newRoot<Zero>({-0.5f, 0.5f});
-    fc->newRoot<Zero>({-0.25f, 0.25f});
-    fc->newRoot<Zero>({-0.25f, 0.25f});
-    fc->newRoot<Zero>({-0.25f, 0.25f});
+//     fc->newRoot<Zero>({-0.25f, 0.25f});
+//     fc->newRoot<Zero>({-0.25f, 0.25f});
+//     fc->newRoot<Zero>({-0.25f, 0.25f});
+//     fc->newRoot<Zero>({-0.25f, 0.25f});
     fc->updateIndices();
     setFilterClass(fc);
 }

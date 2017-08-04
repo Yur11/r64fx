@@ -82,7 +82,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     void quit()
     {
-
+        running = false;
     }
 
     void newProject()

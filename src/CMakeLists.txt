@@ -58,6 +58,7 @@ set(SRC
     Midi.cpp
     MidiDispatcher.cpp
     Module.cpp
+    Module_Filter.cpp
     Module_Oscillator.cpp
     Mouse.cpp
     Mutex.cpp
