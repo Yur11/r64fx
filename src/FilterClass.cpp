@@ -6,7 +6,6 @@
 #define R64FX_DELETED_WITH_PARENT   0x1000000000000000UL
 #define R64FX_DATA_MASK             0x0FFFFFFFFFFFFFFFUL
 
-
 #include <iostream>
 
 using namespace std;

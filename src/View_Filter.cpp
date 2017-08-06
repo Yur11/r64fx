@@ -454,19 +454,6 @@ View_Filter::View_Filter(View_FilterControllerIface* ctrl, Widget* parent)
     m->response_plot = new ResponsePlot(m, this);
 
     setSize({800, 400});
-
-    //Remove This!
-    auto fc = new FilterClass;
-//     fc->newRoot<Pole>({-0.25f, 0.25f});
-    fc->newRoot<Pole>({0.5f, 0.5f});
-//     fc->newRoot<Pole>({0.5f, 0.5f});
-    fc->newRoot<Zero>({-0.5f, 0.5f});
-//     fc->newRoot<Zero>({-0.25f, 0.25f});
-//     fc->newRoot<Zero>({-0.25f, 0.25f});
-//     fc->newRoot<Zero>({-0.25f, 0.25f});
-//     fc->newRoot<Zero>({-0.25f, 0.25f});
-    fc->updateIndices();
-    setFilterClass(fc);
 }
 
 
@@ -474,8 +461,6 @@ View_Filter::~View_Filter()
 {
     if(m)
     {
-        delete m->fc;//Remove This!
-
         if(m->pole_zero_plot)
         {
             delete m->pole_zero_plot;

@@ -11,6 +11,7 @@
 #include "Player.hpp"
 
 #include "View_Filter.hpp"
+#include "Module_Filter.hpp"
 
 #include <iostream>
 
@@ -26,6 +27,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
     View_Program* view_program = nullptr;
 
     View_Filter* view_filter = nullptr;
+    Module_Filter* module_filter = nullptr;
 
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
@@ -37,8 +39,22 @@ struct ProgramPrivate : public View_ProgramEventIface{
         view_program = new View_Program(this);
         view_program->openWindow();
 
+        FilterClass fc;
+        fc.newRoot<Pole>({0.5f, 0.5f});
+        fc.newRoot<Zero>({-0.5f, 0.5f});
+        fc.newRoot<Pole>({0.5f, 0.5f});
+        fc.newRoot<Zero>({-0.5f, 0.5f});
+        fc.newRoot<Pole>({0.5f, 0.5f});
+        fc.newRoot<Zero>({-0.5f, 0.5f});
+        fc.updateIndices();
+
         view_filter = new View_Filter(nullptr);
         view_filter->openWindow();
+        view_filter->setFilterClass(&fc);
+
+        module_filter = new Module_Filter;
+        module_filter->engage();
+        module_filter->setFilterClass(&fc);
 
         newProject();
 
@@ -50,6 +66,8 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
         view_filter->closeWindow();
         delete view_filter;
+
+        delete module_filter;
 
         view_program->closeWindow();
         closeAllProjects();
@@ -81,6 +99,17 @@ struct ProgramPrivate : public View_ProgramEventIface{
     }
 
     void quit()
+    {
+        if(module_filter)
+        {
+            module_filter->disengage([](Module* module, void* arg){
+                auto p = (ProgramPrivate*) arg;
+                p->oscDisengaged(static_cast<Module_Filter*>(module));
+            }, this);
+        }
+    }
+
+    void doQuit()
     {
         running = false;
     }
@@ -164,6 +193,18 @@ struct ProgramPrivate : public View_ProgramEventIface{
     {
 
     }
+
+    void oscEngaged(Module_Filter* osc)
+    {
+        cout << "Filter Engaged: " << module_filter << ", " << osc << "\n";
+    }
+
+    void oscDisengaged(Module_Filter* osc)
+    {
+        cout << "Filter Disengaged: " << module_filter << ", " << osc << "\n";
+        doQuit();
+    }
+
 };
 
 
