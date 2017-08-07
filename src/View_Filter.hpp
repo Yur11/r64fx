@@ -19,6 +19,8 @@ public:
 
     void setFilterClass(FilterClass* fc);
 
+    void onChanged(void (*on_changed)(FilterClass* fc, void* data), void* changed_data = nullptr);
+
 protected:
     virtual void resizeEvent(WidgetResizeEvent* event);
 };

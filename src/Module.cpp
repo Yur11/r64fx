@@ -231,7 +231,7 @@ SoundDriver* ModuleThreadObjectIface::soundDriver()
 {
     if(!g_SoundDriver)
     {
-        g_SoundDriver = SoundDriver::newInstance(SoundDriver::Type::Stub);
+        g_SoundDriver = SoundDriver::newInstance(SoundDriver::Type::Jack);
         g_SoundDriver->enable();
     }
     return g_SoundDriver;

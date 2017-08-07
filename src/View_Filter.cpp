@@ -110,6 +110,8 @@ void load_sys_fun_to_buffer(FilterClass* fc, Complex<float>* buff, int buff_capa
 class PoleZeroPlot;
 class ResponsePlot;
 
+void on_changed_stub(FilterClass* fc, void* data) {}
+
 }//namespace
 
 
@@ -117,6 +119,9 @@ struct View_FilterPrivate{
     View_FilterControllerIface* ctrl = nullptr;
 
     FilterClass* fc = nullptr;
+
+    void (*on_changed)(FilterClass* fc, void* data) = nullptr;
+    void* on_changed_data = nullptr;
 
     PoleZeroPlot* pole_zero_plot = nullptr;
     ResponsePlot* response_plot  = nullptr;
@@ -311,6 +316,7 @@ private:
             updateSysFunTexture();
             updateResponsePlot();
             parent()->repaint();
+            m->on_changed(m->fc, m->on_changed_data);
         }
     }
 
@@ -479,6 +485,21 @@ View_Filter::~View_Filter()
 void View_Filter::setFilterClass(FilterClass* fc)
 {
     m->fc = fc;
+}
+
+
+void View_Filter::onChanged(void (*on_changed)(FilterClass* fc, void* data), void* data)
+{
+    if(on_changed)
+    {
+        m->on_changed = on_changed;
+        m->on_changed_data = data;
+    }
+    else
+    {
+        m->on_changed = on_changed_stub;
+        m->on_changed_data = nullptr;
+    }
 }
 
 

@@ -29,6 +29,8 @@ struct ProgramPrivate : public View_ProgramEventIface{
     View_Filter* view_filter = nullptr;
     Module_Filter* module_filter = nullptr;
 
+    FilterClass fc;
+
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
 
@@ -39,12 +41,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
         view_program = new View_Program(this);
         view_program->openWindow();
 
-        FilterClass fc;
-        fc.newRoot<Pole>({0.5f, 0.5f});
-        fc.newRoot<Zero>({-0.5f, 0.5f});
-        fc.newRoot<Pole>({0.5f, 0.5f});
-        fc.newRoot<Zero>({-0.5f, 0.5f});
-        fc.newRoot<Pole>({0.5f, 0.5f});
+        fc.newRoot<Pole>({0.0f, 0.1f});
         fc.newRoot<Zero>({-0.5f, 0.5f});
         fc.updateIndices();
 
@@ -53,8 +50,15 @@ struct ProgramPrivate : public View_ProgramEventIface{
         view_filter->setFilterClass(&fc);
 
         module_filter = new Module_Filter;
-        module_filter->engage();
-        module_filter->setFilterClass(&fc);
+        module_filter->engage([](Module* module, void* arg){
+            auto pp = (ProgramPrivate*) arg;
+            pp->filterEngaged(pp->module_filter);
+        }, this);
+
+        view_filter->onChanged([](FilterClass* fc, void* data){
+            auto mf = (Module_Filter*) data;
+            mf->setFilterClass(fc);
+        }, module_filter);
 
         newProject();
 
@@ -104,7 +108,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
         {
             module_filter->disengage([](Module* module, void* arg){
                 auto p = (ProgramPrivate*) arg;
-                p->oscDisengaged(static_cast<Module_Filter*>(module));
+                p->filterDisengaged(static_cast<Module_Filter*>(module));
             }, this);
         }
     }
@@ -194,12 +198,13 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     }
 
-    void oscEngaged(Module_Filter* osc)
+    void filterEngaged(Module_Filter* osc)
     {
         cout << "Filter Engaged: " << module_filter << ", " << osc << "\n";
+        module_filter->setFilterClass(&fc);
     }
 
-    void oscDisengaged(Module_Filter* osc)
+    void filterDisengaged(Module_Filter* osc)
     {
         cout << "Filter Disengaged: " << module_filter << ", " << osc << "\n";
         doQuit();
