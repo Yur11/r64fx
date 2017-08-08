@@ -43,6 +43,12 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
         fc.newRoot<Pole>({0.0f, 0.1f});
         fc.newRoot<Zero>({-0.5f, 0.5f});
+//         fc.newRoot<Pole>({0.0f, 0.1f});
+//         fc.newRoot<Zero>({-0.5f, 0.5});
+//         fc.newRoot<Pole>({0.0f, 0.1f});
+//         fc.newRoot<Zero>({-0.5f, 0.5f});
+//         fc.newRoot<Pole>({0.0f, 0.1f});
+//         fc.newRoot<Zero>({-0.5f, 0.5});
         fc.updateIndices();
 
         view_filter = new View_Filter(nullptr);
