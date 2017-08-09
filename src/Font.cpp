@@ -71,7 +71,7 @@ namespace{
 #define m_glyph_cache ((GlyphCache*)p[1])
 
 
-Font::Font(string name, float size, int dpy)
+Font::Font(string name, float size, int dpi)
 {
     if(font_instance_count == 0)
         init_freetype();
@@ -98,7 +98,7 @@ Font::Font(string name, float size, int dpy)
     int code = FT_Set_Char_Size(
         m_ft_face,
         size * 64, size * 64,
-        dpy, dpy
+        dpi, dpi
     );
 
     if(code != 0)

@@ -41,7 +41,7 @@ public:
         inline int height()    const { return m_height; }
     };
 
-    Font(std::string name = "", float size = 16.0f, int dpy = 72);
+    Font(std::string name = "", float size = 16.0f, int dpi = 72);
 
     ~Font();
 
