@@ -149,6 +149,20 @@ public:
 };
 
 
+template<typename T> inline Size<T> operator+(Size<T> a, Size<T> b)
+{
+    a += b;
+    return a;
+}
+
+
+template<typename T> inline Size<T> operator-(Size<T> a, Size<T> b)
+{
+    a -= b;
+    return a;
+}
+
+
 template<typename Ost, typename T> inline Ost &operator<<(Ost &ost, Size<T> size)
 {
     ost << "Size{" << size.width() << ", " << size.height() << "}";
@@ -270,6 +284,19 @@ template<typename T> inline Rect<T> operator-(Rect<T> rect, Point<T> offset)
 {
     return {rect.position() - offset, rect.size()};
 }
+
+
+template<typename T> inline Rect<T> operator+(Rect<T> rect, Size<T> offset)
+{
+    return {rect.position(), rect.size() + offset};
+}
+
+
+template<typename T> inline Rect<T> operator-(Rect<T> rect, Size<T> offset)
+{
+    return {rect.position(), rect.size() - offset};
+}
+
 
 
 template<typename StreamT, typename T> StreamT &operator<<(StreamT &stream, Rect<T> rect)
