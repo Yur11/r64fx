@@ -405,10 +405,11 @@ public:
         if(width() > 0)
         {
             response.resize(width());
-            float rcp = 1.0f / float(width() - 1);
-            for(int i=0; i<width(); i++)
+            float freq_rcp = 1.0f / m_plot.freqRange();
+            for(int i=0; i<m_plot.length(); i++)
             {
-                float phase = (float(i) * rcp) * M_PI;
+                float freq = m_plot.freqAt(i + m_plot.offset().x());
+                float phase = freq * freq_rcp * M_PI;
                 Complex<float> z(Polar<float>(1.0, phase));
                 Complex<float> value = m->fc->evalAt(z);
                 response[i] = (height() / 2) - (value.magnitude() * height() * 0.125f * 0.125f);
@@ -423,10 +424,10 @@ private:
         auto p = event->painter();
 
         p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
-//         Image img(width(), height(), 1);
-//         fill(&img, Color(0));
-//         stroke_plot(&img, Color(255), m_plot.rect(), response.data(), 1.0f, 1.0f, (m_plot.rect().height()) >> 1);
-//         p->blendColors({0, 0}, Color(255, 63, 0), &img);
+        Image img(width(), height(), 1);
+        fill(&img, Color(0));
+        stroke_plot(&img, Color(255), m_plot.rect() - Size<int>(1, 0), response.data(), 1.0f, 1.0f, (m_plot.rect().height()) >> 1);
+        p->blendColors({0, 0}, Color(255, 63, 0), &img);
 
         m_plot.update(width(), height());
         if(m_plot.isGood())
@@ -443,7 +444,9 @@ private:
 
     virtual void mousePressEvent(MousePressEvent* event)
     {
-        cout << "click: " << event->x() << " -> " << m_plot.freqAt(event->x()) << "\n";
+        float freq = m_plot.freqAt(event->x());
+        float phase = freq / m_plot.freqRange();
+        cout << "click: " << event->x() << " -> " << freq << ", " << phase << "\n";
     }
 };
 

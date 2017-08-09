@@ -54,9 +54,24 @@ public:
         return m_max_freq;
     }
 
+    inline float freqRange() const
+    {
+        return m_max_freq - m_min_freq;
+    }
+
     inline Rect<int> rect() const
     {
         return m_rect;
+    }
+
+    inline Point<int> offset() const
+    {
+        return m_rect.position();
+    }
+
+    inline int length() const
+    {
+        return m_rect.width();
     }
 
     void update(int w, int h);
