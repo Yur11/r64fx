@@ -27,8 +27,8 @@ FrequencyPlot::~FrequencyPlot()
 void FrequencyPlot::update(int w, int h)
 {
     m_image.load(w, h, 1);
-
     m_rect = {10, 10, (w | 1) - 40, (h | 1) - 20};
+    m_width_rcp = 1.0f / float(m_rect.width());
 
     fill(&m_image, Color(0));
 
@@ -71,6 +71,14 @@ void FrequencyPlot::update(int w, int h)
 
     paintLineAt(m_rect.x(), 255);
     paintLineAt(m_rect.right()-1, 255);
+}
+
+
+float FrequencyPlot::freqAt(int x) const
+{
+    if(x < m_rect.x() || x >= m_rect.right())
+        return 0.0f;
+    return pow(10, float(x - m_rect.x()) * m_width_rcp * m_freq_range_log) + minFreq();
 }
 
 

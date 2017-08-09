@@ -14,6 +14,7 @@ class FrequencyPlot{
     float m_min_freq_log        = 1.0f;
     float m_freq_range_log      = 1.0f;
     float m_freq_range_log_rcp  = 1.0f;
+    float m_width_rcp           = 1.0f;
     Rect<int> m_rect;
 
 public:
@@ -59,6 +60,8 @@ public:
     }
 
     void update(int w, int h);
+
+    float freqAt(int x) const;
 
 private:
     void paintLineAt(int x, unsigned char value);

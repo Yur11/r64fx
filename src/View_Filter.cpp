@@ -388,7 +388,7 @@ public:
     : Widget(parent)
     , m(m)
     {
-        m_plot.setMinFreq(20.0f);
+        m_plot.setMinFreq(1.0f);
         m_plot.setMaxFreq(24000.0f);
     }
 
@@ -439,6 +439,11 @@ private:
     {
         update();
         repaint();
+    }
+
+    virtual void mousePressEvent(MousePressEvent* event)
+    {
+        cout << "click: " << event->x() << " -> " << m_plot.freqAt(event->x()) << "\n";
     }
 };
 
