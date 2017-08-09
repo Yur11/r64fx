@@ -39,6 +39,7 @@ set(SRC
 #     FilterMachine.cpp
     FilterClass.cpp
     Font.cpp
+    FrequencyPlot.cpp
     IconSupply.cpp
     Image.cpp
     ImageAnimation.cpp

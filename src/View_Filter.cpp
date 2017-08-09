@@ -1,12 +1,12 @@
 #include "View_Filter.hpp"
+#include "FilterClass.hpp"
 #include "Painter.hpp"
 #include "ImageUtils.hpp"
+#include "FrequencyPlot.hpp"
 #include "TextPainter.hpp"
 #include "Complex.hpp"
 #include <vector>
 #include <iostream>
-
-#include "FilterClass.hpp"
 
 using namespace std;
 
@@ -143,7 +143,7 @@ namespace{
 class PoleZeroPlot : public Widget{
     View_FilterPrivate* m = nullptr;
 
-    Image markup_img;
+    Image m_markup_img;
 
     SysFunRoot* m_selected_root = nullptr;
     Point<int> m_handle_anchor = {0, 0};
@@ -178,20 +178,20 @@ public:
 
         updateSysFunTexture();
 
-        markup_img.load(width(), height(), 1);
-        fill(&markup_img, Color(0));
+        m_markup_img.load(width(), height(), 1);
+        fill(&m_markup_img, Color(0));
 
-        fill_circle(&markup_img, 0, 1, Color(255), {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45) + 1);
-        fill_circle(&markup_img, 0, 1, Color(0),   {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45));
+        fill_circle(&m_markup_img, 0, 1, Color(255), {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45) + 1);
+        fill_circle(&m_markup_img, 0, 1, Color(0),   {width() >> 1, height() >> 1}, (min(width(), height()) * 0.45));
 
-        fill({&markup_img, {0, height()/2 - 1, width(), 1}}, Color(255));
+        fill({&m_markup_img, {0, height()/2 - 1, width(), 1}}, Color(255));
 //         {
 //             Image* textimg = text2image("Re", TextWrap::None, g_Font);
 //             copy({&markup_img, Point<int>(width() - textimg->width() - 2,  height()/2 - textimg->height() - 1)}, textimg);
 //             delete textimg;
 //         }
 
-        fill({&markup_img, {width()/2 - 1, 0, 1, height()}}, Color(255));
+        fill({&m_markup_img, {width()/2 - 1, 0, 1, height()}}, Color(255));
 //         {
 //             Image* textimg = text2image("Im", TextWrap::None, g_Font);
 //             copy({&markup_img, Point<int>(width()/2 + 3, 1)}, textimg);
@@ -238,9 +238,9 @@ private:
                 p->fillRect({0, 0, width(), height()}, Color(0));
             }
 
-            if(markup_img.isGood())
+            if(m_markup_img.isGood())
             {
-                p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &markup_img);
+                p->blendColors({0, 0}, Colors(Color(0, 127, 0, 0)), &m_markup_img);
             }
 
             for(auto root : m->fc->roots())
@@ -380,7 +380,7 @@ private:
 
 class ResponsePlot : public Widget{
     View_FilterPrivate* m = nullptr;
-
+    FrequencyPlot m_plot;
     vector<float> response;
 
 public:
@@ -388,7 +388,8 @@ public:
     : Widget(parent)
     , m(m)
     {
-
+        m_plot.setMinFreq(20.0f);
+        m_plot.setMaxFreq(24000.0f);
     }
 
     ~ResponsePlot()
@@ -422,16 +423,16 @@ private:
         auto p = event->painter();
 
         p->fillRect({0, 0, width(), height()}, Color(0, 0, 0, 0));
-        Image img(width(), height(), 1);
-        fill(&img, Color(0));
-        stroke_plot(&img, Color(255), {0, 0, width(), height()}, response.data(), 1.0f, 1.0f, height() / 2);
-        p->blendColors({0, 0}, Color(255, 63, 0), &img);
+//         Image img(width(), height(), 1);
+//         fill(&img, Color(0));
+//         stroke_plot(&img, Color(255), m_plot.rect(), response.data(), 1.0f, 1.0f, (m_plot.rect().height()) >> 1);
+//         p->blendColors({0, 0}, Color(255, 63, 0), &img);
 
-//         for(int x=0; x<width(); x++)
-//         {
-//             if((x & 15) == 0)
-//                 p->fillRect({x, 0, 1, height()}, Color(63, 63, 63));
-//         }
+        m_plot.update(width(), height());
+        if(m_plot.isGood())
+        {
+            p->blendColors({0, 0}, Color(255, 255, 255), m_plot.image());
+        }
     }
 
     virtual void resizeEvent(WidgetResizeEvent* event)
@@ -459,7 +460,7 @@ View_Filter::View_Filter(View_FilterControllerIface* ctrl, Widget* parent)
     m->pole_zero_plot = new PoleZeroPlot(m, this);
     m->response_plot = new ResponsePlot(m, this);
 
-    setSize({800, 400});
+    setSize({1000, 256});
 }
 
 
