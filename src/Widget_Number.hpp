@@ -12,18 +12,34 @@ public:
 
     virtual ~Widget_Number();
 
+    void enableTextEditing();
+
+    void disableTextEditing();
+
+    bool doingTextEditing() const;
+
 private:
-    virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event);
+    virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event) override final;
 
-    virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event);
+    virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event) override final;
 
-    virtual void paintEvent(WidgetPaintEvent* event);
+    virtual void paintEvent(WidgetPaintEvent* event) override final;
 
-    virtual void mousePressEvent(MousePressEvent* event);
+    virtual void mousePressEvent(MousePressEvent* event) override final;
 
-    virtual void mouseReleaseEvent(MouseReleaseEvent* event);
+    virtual void mouseReleaseEvent(MouseReleaseEvent* event) override final;
 
     virtual void mouseMoveEvent(MouseMoveEvent* event);
+
+    virtual void focusInEvent() override final;
+
+    virtual void focusOutEvent() override final;
+
+    virtual void keyPressEvent(KeyPressEvent* event) override final;
+
+    virtual void keyReleaseEvent(KeyReleaseEvent* event) override final;
+
+    virtual void textInputEvent(TextInputEvent* event) override final;
 };
 
 }//namespace r64fx

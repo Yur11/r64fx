@@ -11,6 +11,7 @@ using namespace std;
 
 #include "Widget_Knob.hpp"
 #include "Widget_Slider.hpp"
+#include "Widget_Text.hpp"
 #include "Widget_Number.hpp"
 #include "Widget_CheckBox.hpp"
 
@@ -76,9 +77,14 @@ View_Project::View_Project(Widget* parent) : Widget(parent)
     Widget_Number* wn4 = new Widget_Number(this);
     wn4->setPosition({300, 100 + (wn1->height() + 2) * 4});
 
-
     Widget_CheckBox* cb = new Widget_CheckBox(this);
     cb->setPosition({400, 100});
+
+    Widget_Text* wt = new Widget_Text(this);
+    wt->setPosition({400, 200});
+    wt->setSize({200, 100});
+    wt->setTextWrap(TextWrap::Newline);
+    wt->setText("Hello, Text!\nSausage!\n");
 }
 
 

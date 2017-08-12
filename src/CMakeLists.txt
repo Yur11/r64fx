@@ -88,12 +88,14 @@ set(SRC
     SoundFilePool.cpp
     StringUtils.cpp
     SystemUtils.cpp
+    TextEditingUtils.cpp
     TextPainter.cpp
     Thread.cpp
     ThreadObject.cpp
     TimeUtils.cpp
     Timer.cpp
     UndoRedoChain.cpp
+    UndoRedoUtils.cpp
     Value.cpp
     View_Filter.cpp
     View_Program.cpp

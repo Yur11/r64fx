@@ -77,4 +77,6 @@
 
 #define R64FX_WIDGET_IS_CHECKED               (1UL << 0x22)
 
+#define R64FX_WIDGET_EDITING_TEXT             (1UL << 0x23)
+
 #endif//R64FX_WIDGET_FLAGS_HPP

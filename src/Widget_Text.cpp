@@ -1,13 +1,10 @@
 #include "Widget_Text.hpp"
 #include "WidgetFlags.hpp"
-#include "Font.hpp"
+#include "TextEditingUtils.hpp"
+#include "UndoRedoUtils.hpp"
 #include "ImageUtils.hpp"
 #include "Painter.hpp"
-#include "Keyboard.hpp"
-#include "KeyboardModifiers.hpp"
 #include "Mouse.hpp"
-#include "TextPainter.hpp"
-#include "UndoRedoChain.hpp"
 #include "Window.hpp"
 
 #include <iostream>
@@ -64,228 +61,6 @@ Widget_Text::Widget_Text(Widget* parent)
 }
 
 
-namespace{
-
-class CursorsMixin{
-    int m_cursor_position_before;
-    int m_selection_start_before;
-    int m_selection_end_before;
-
-    int m_cursor_position_after;
-    int m_selection_start_after;
-    int m_selection_end_after;
-
-public:
-    void saveCursorsBefore(TextPainter* tp)
-    {
-        m_cursor_position_before = tp->cursorPositionToGlyphIndex(
-            tp->cursorPosition()
-        );
-
-        m_selection_start_before = tp->cursorPositionToGlyphIndex(
-            tp->selectionStart()
-        );
-
-        m_selection_end_before   = tp->cursorPositionToGlyphIndex(
-            tp->selectionEnd()
-        );
-    }
-
-    void saveCursorsAfter(TextPainter* tp)
-    {
-        m_cursor_position_after = tp->cursorPositionToGlyphIndex(
-            tp->cursorPosition()
-        );
-
-        m_selection_start_after = tp->cursorPositionToGlyphIndex(
-            tp->selectionStart()
-        );
-
-        m_selection_end_after   = tp->cursorPositionToGlyphIndex(
-            tp->selectionEnd()
-        );
-    }
-
-    void restoreCursorsBefore(TextPainter* tp)
-    {
-        tp->setCursorPosition(tp->glyphIndexToCursorPosition(
-            m_cursor_position_before
-        ));
-
-        tp->setSelectionStart(tp->glyphIndexToCursorPosition(
-            m_selection_start_before
-        ));
-
-        tp->setSelectionEnd(tp->glyphIndexToCursorPosition(
-            m_selection_end_before
-        ));
-    }
-
-    void restoreCursorsAfter(TextPainter* tp)
-    {
-        tp->setCursorPosition(tp->glyphIndexToCursorPosition(
-            m_cursor_position_after
-        ));
-
-        tp->setSelectionStart(tp->glyphIndexToCursorPosition(
-            m_selection_start_after
-        ));
-
-        tp->setSelectionEnd(tp->glyphIndexToCursorPosition(
-            m_selection_end_after
-        ));
-    }
-
-    inline int cursorPositionBefore() const
-    {
-        return m_cursor_position_before;
-    }
-};
-
-
-class TextAddedMixin{
-    GlyphString m_added_glyphs;
-
-public:
-    inline void saveAddedGlyphs(const GlyphString &glyphs)
-    {
-        m_added_glyphs = glyphs;
-    }
-
-    inline const GlyphString &addedGlyphs() const
-    {
-        return m_added_glyphs;
-    }
-};
-
-
-class TextRemovedMixin{
-    GlyphString m_removed_glyphs;
-
-public:
-    inline void saveRemovedGlyphs(const GlyphString &glyphs)
-    {
-        m_removed_glyphs = glyphs;
-    }
-
-    inline const GlyphString &removedGlyphs() const
-    {
-        return m_removed_glyphs;
-    }
-};
-
-
-class UndoRedoItem_TextAdded
-: public UndoRedoItem
-, public CursorsMixin
-, public TextAddedMixin
-{
-public:
-    virtual void undo(void* data)
-    {
-        auto tp = (TextPainter*) data;
-
-        tp->setSelectionStart(tp->glyphIndexToCursorPosition(
-            cursorPositionBefore()
-        ));
-
-        tp->setSelectionEnd(tp->glyphIndexToCursorPosition(
-            cursorPositionBefore() + addedGlyphs().size()
-        ));
-
-        tp->deleteSelection();
-
-        restoreCursorsBefore(tp);
-        tp->updateSelection();
-    }
-
-    virtual void redo(void* data)
-    {
-        auto tp = (TextPainter*) data;
-        restoreCursorsBefore(tp);
-        tp->insertText(addedGlyphs());
-        restoreCursorsAfter(tp);
-        tp->updateSelection();
-    }
-};
-
-
-class UndoRedoItem_TextDeleted
-: public UndoRedoItem
-, public CursorsMixin
-, public TextRemovedMixin{
-    bool m_removed_before_cursor; //Delete or Backspace
-
-public:
-    UndoRedoItem_TextDeleted(bool removed_before_cursor)
-    : m_removed_before_cursor(removed_before_cursor)
-    {}
-
-    virtual void undo(void* data)
-    {
-        auto tp = (TextPainter*) data;
-        restoreCursorsAfter(tp);
-        tp->insertText(removedGlyphs());
-        restoreCursorsBefore(tp);
-        tp->updateSelection();
-    }
-
-    virtual void redo(void* data)
-    {
-        auto tp = (TextPainter*) data;
-        restoreCursorsBefore(tp);
-        if(m_removed_before_cursor)
-        {
-            tp->deleteBeforeCursor();
-        }
-        else
-        {
-            tp->deleteAfterCursor();
-        }
-        restoreCursorsAfter(tp);
-        tp->updateSelection();
-    }
-};
-
-
-class UndoRedoItem_TextReplaced
-: public UndoRedoItem
-, public CursorsMixin
-, public TextRemovedMixin
-, public TextAddedMixin{
-public:
-    virtual void undo(void* data)
-    {
-        auto tp = (TextPainter*) data;
-
-        tp->setSelectionStart(tp->glyphIndexToCursorPosition(
-            cursorPositionBefore()
-        ));
-
-        tp->setSelectionEnd(tp->glyphIndexToCursorPosition(
-            cursorPositionBefore() + addedGlyphs().size()
-        ));
-
-        tp->deleteAfterCursor();
-        tp->insertText(removedGlyphs());
-
-        restoreCursorsBefore(tp);
-        tp->updateSelection();
-    }
-
-    virtual void redo(void* data)
-    {
-        auto tp = (TextPainter*) data;
-        restoreCursorsBefore(tp);
-        tp->insertText(addedGlyphs());
-        restoreCursorsAfter(tp);
-        tp->updateSelection();
-    }
-};
-
-}//namespace
-
-
 void Widget_Text::initUndoRedoChain()
 {
     m[1] = new UndoRedoChain;
@@ -308,47 +83,13 @@ void Widget_Text::setText(const std::string &text)
 
 void Widget_Text::insertText(const std::string &text)
 {
-    auto tp = m_text_painter;
-    auto uc = m_undo_redo_chain;
-
-    if(tp->hasSelection())
-    {
-        auto item = new UndoRedoItem_TextReplaced;
-        item->saveCursorsBefore(tp);
-        GlyphString removed_glyphs, added_glyphs;
-        tp->insertText(text, &removed_glyphs, &added_glyphs);
-        item->saveRemovedGlyphs(removed_glyphs);
-        item->saveAddedGlyphs(added_glyphs);
-        item->saveCursorsAfter(tp);
-        uc->addItem(item);
-    }
-    else
-    {
-        auto item = new UndoRedoItem_TextAdded;
-        item->saveCursorsBefore(tp);
-        GlyphString added_glyphs;
-        tp->insertText(text, nullptr, &added_glyphs);
-        item->saveAddedGlyphs(added_glyphs);
-        item->saveCursorsAfter(tp);
-        uc->addItem(item);
-    }
+    insert_text(m_text_painter, m_undo_redo_chain, text);
 }
 
 
 void Widget_Text::deleteAtCursorPosition(bool backspace)
 {
-    auto tp   = m_text_painter;
-    auto uc   = m_undo_redo_chain;
-    auto item = new UndoRedoItem_TextDeleted(true);
-    item->saveCursorsBefore(tp);
-    GlyphString glyphs;
-    if(backspace)
-        tp->deleteBeforeCursor(&glyphs);
-    else
-        tp->deleteAfterCursor(&glyphs);
-    item->saveRemovedGlyphs(glyphs);
-    item->saveCursorsAfter(tp);
-    uc->addItem(item);
+    delete_text_at_cursor(m_text_painter, m_undo_redo_chain, backspace);
 }
 
 
@@ -450,10 +191,6 @@ void Widget_Text::paintEvent(WidgetPaintEvent* event)
         m_image, Color(0, 0, 0), Color(0, 0, 0), {paddingLeft(), paddingTop()}
     );
 
-//     draw_rect(
-//         m_image, {0, 0, 0}, {0, 0, width(), height()}
-//     );
-
     for(int y=0; y<m_text_painter->font->height(); y++)
     {
         auto cursor_pos = m_text_painter->findCursorCoords(m_text_painter->cursorPosition());
@@ -470,8 +207,8 @@ void Widget_Text::paintEvent(WidgetPaintEvent* event)
         }
     }
 
-//     auto painter = event->painter();
-//     painter->putImage(m_image);
+    auto painter = event->painter();
+    painter->putImage(m_image, {0, 0});
 
     childrenPaintEvent(event);
 }
@@ -550,19 +287,18 @@ void Widget_Text::mouseMoveEvent(MouseMoveEvent* event)
         m_text_painter->updateSelection();
         repaint();
     }
-//     Widget::mouseMoveEvent(event);
 }
 
 
 void Widget_Text::keyPressEvent(KeyPressEvent* event)
 {
-//     Widget::keyPressEvent(event);
+
 }
 
 
 void Widget_Text::keyReleaseEvent(KeyReleaseEvent* event)
 {
-//     Widget::keyReleaseEvent(event);
+
 }
 
 
@@ -578,119 +314,13 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     {
         releaseKeyboardFocus();
     }
-    else if(Keyboard::CtrlDown() && Keyboard::ShiftDown() && event->key() == Keyboard::Key::Z)
-    {
-        uc->redo();
-    }
-    else if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::Z)
-    {
-        uc->undo();
-    }
-    else if(Keyboard::CtrlDown() && (event->key() == Keyboard::Key::Y))
-    {
-        uc->redo();
-    }
-    else if(key == Keyboard::Key::Up)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            tp->selectUp();
-            touched_selection = true;
-        }
-        else
-        {
-            if(tp->hasSelection())
-            {
-                tp->clearSelection();
-            }
-            tp->moveCursorUp();
-        }
-    }
-    else if(key == Keyboard::Key::Down)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            tp->selectDown();
-            touched_selection = true;
-        }
-        else
-        {
-            if(tp->hasSelection())
-            {
-                tp->clearSelection();
-            }
-            tp->moveCursorDown();
-        }
-    }
-    else if(key == Keyboard::Key::Left)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            tp->selectLeft();
-            touched_selection = true;
-        }
-        else
-        {
-            if(tp->hasSelection())
-            {
-                tp->clearSelection();
-            }
-            tp->moveCursorLeft();
-        }
-    }
-    else if(key == Keyboard::Key::Right)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            tp->selectRight();
-            touched_selection = true;
-        }
-        else
-        {
-            if(tp->hasSelection())
-            {
-                tp->clearSelection();
-            }
-            tp->moveCursorRight();
-        }
-    }
-    else if(key == Keyboard::Key::Home)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            tp->homeSelection();
-            touched_selection = true;
-        }
-        else
-        {
-            if(tp->hasSelection())
-            {
-                tp->clearSelection();
-            }
-            tp->homeCursor();
-        }
-    }
-    else if(key == Keyboard::Key::End)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            tp->endSelection();
-            touched_selection = true;
-        }
-        else
-        {
-            if(tp->hasSelection())
-            {
-                tp->clearSelection();
-            }
-            tp->endCursor();
-        }
-    }
-    else if(Keyboard::CtrlDown() && key == Keyboard::Key::A)
-    {
-        tp->selectAll();
-        touched_selection = true;
-    }
+    else if(
+        undo_redo(uc, key) ||
+        cursor_hori(tp, key, &touched_selection) ||
+        cursor_vert(tp, key, &touched_selection) ||
+        select_all(tp, key, &touched_selection)  ||
+        delete_text(tp, key, uc, &touched_selection)
+    ){}
     else if(Keyboard::CtrlDown() && key == Keyboard::Key::C)
     {
         if(tp->hasSelection())
@@ -711,14 +341,6 @@ void Widget_Text::textInputEvent(TextInputEvent* event)
     else if(Keyboard::CtrlDown() && key == Keyboard::Key::V)
     {
         requestClipboardMetadata(ClipboardMode::Clipboard);
-    }
-    else if(key == Keyboard::Key::Delete)
-    {
-        deleteAtCursorPosition(false);
-    }
-    else if(key == Keyboard::Key::Backspace)
-    {
-        deleteAtCursorPosition(true);
     }
     else if(key == Keyboard::Key::Return)
     {
