@@ -18,6 +18,10 @@ public:
 
     bool doingTextEditing() const;
 
+    void insertText(const std::string &text);
+
+    void setText(const std::string &text);
+
 private:
     virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event) override final;
 

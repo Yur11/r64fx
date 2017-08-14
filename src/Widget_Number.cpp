@@ -3,10 +3,8 @@
 #include "InstanceCounter.hpp"
 #include "FontSupply.hpp"
 #include "Painter.hpp"
-#include "TextPainter.hpp"
-#include "Keyboard.hpp"
-#include "KeyboardModifiers.hpp"
-#include "UndoRedoChain.hpp"
+#include "TextEditingUtils.hpp"
+#include "UndoRedoUtils.hpp"
 
 #include <iostream>
 
@@ -17,24 +15,29 @@ namespace r64fx{
 namespace{
 
 class Widget_Number_Global : public InstanceCounter{
-    TextPainter* m_text_painter = nullptr;
+    TextPainter*    m_text_painter     = nullptr;
+    UndoRedoChain*  m_undo_redo_chain  = nullptr;
 
     virtual void initEvent()
     {
         m_text_painter = new TextPainter;
         m_text_painter->font = get_font("mono", 14);
+        m_undo_redo_chain = new UndoRedoChain;
     }
 
     virtual void cleanupEvent()
     {
         free_font(m_text_painter->font);
         delete m_text_painter;
+        delete m_undo_redo_chain;
     }
 
 public:
     inline Font* font() const { return m_text_painter->font; }
 
     inline TextPainter* textPainter() const { return m_text_painter; }
+
+    inline UndoRedoChain* undoRedoChain() const { return m_undo_redo_chain; }
 } g;
 
 }//namespace
@@ -59,18 +62,36 @@ Widget_Number::~Widget_Number()
 void Widget_Number::enableTextEditing()
 {
     m_flags |= R64FX_WIDGET_EDITING_TEXT;
+    grabKeyboardFocus();
+    startTextInput();
+    repaint();
 }
 
 
 void Widget_Number::disableTextEditing()
 {
     m_flags &= ~R64FX_WIDGET_EDITING_TEXT;
+    releaseKeyboardFocus();
+    stopTextInput();
+    repaint();
 }
 
 
 bool Widget_Number::doingTextEditing() const
 {
     return m_flags & R64FX_WIDGET_EDITING_TEXT;
+}
+
+
+void Widget_Number::insertText(const std::string &text)
+{
+
+}
+
+
+void Widget_Number::setText(const std::string &text)
+{
+
 }
 
 
@@ -92,11 +113,18 @@ void Widget_Number::paintEvent(WidgetPaintEvent* event)
 
     p->strokeRect({0, 0, width(), height()}, Color(0, 0, 0), Color(255, 255, 255), 1);
 
-    char buff[32];
-    sprintf(buff, "%+f", value());
-    auto img = text2image(std::string(buff), TextWrap::None, g.font());
-    p->blendColors({1, 1}, Color(0, 0, 0), img);
-    delete img;
+    if(doingTextEditing())
+    {
+        p->fillRect({0, 0, width(), height()}, Color(255, 0, 0));
+    }
+    else
+    {
+        char buff[32];
+        sprintf(buff, "%+f", value());
+        auto img = text2image(std::string(buff), TextWrap::None, g.font());
+        p->blendColors({1, 1}, Color(0, 0, 0), img);
+        delete img;
+    }
 }
 
 
@@ -104,8 +132,7 @@ void Widget_Number::mousePressEvent(MousePressEvent* event)
 {
     if(event->doubleClick())
     {
-        grabKeyboardFocus();
-        startTextInput();
+        enableTextEditing();
     }
     else
     {
@@ -161,6 +188,7 @@ void Widget_Number::keyReleaseEvent(KeyReleaseEvent* event)
 void Widget_Number::textInputEvent(TextInputEvent* event)
 {
     auto tp = g.textPainter();
+    auto uc = g.undoRedoChain();
     auto key = event->key();
     const auto &text = event->text();
     bool touched_selection = false;
@@ -169,156 +197,22 @@ void Widget_Number::textInputEvent(TextInputEvent* event)
     {
         releaseKeyboardFocus();
     }
-    else if(Keyboard::CtrlDown() && Keyboard::ShiftDown() && event->key() == Keyboard::Key::Z)
-    {
-//         uc->redo();
-    }
-    else if(Keyboard::CtrlDown() && event->key() == Keyboard::Key::Z)
-    {
-//         uc->undo();
-    }
-    else if(Keyboard::CtrlDown() && (event->key() == Keyboard::Key::Y))
-    {
-//         uc->redo();
-    }
-    else if(key == Keyboard::Key::Up)
-    {
-//         if(Keyboard::ShiftDown())
-//         {
-// //             tp->selectUp();
-// //             touched_selection = true;
-//         }
-//         else
-//         {
-//             if(tp->hasSelection())
-//             {
-//                 tp->clearSelection();
-//             }
-//             tp->moveCursorUp();
-//         }
-    }
-    else if(key == Keyboard::Key::Down)
-    {
-//         if(Keyboard::ShiftDown())
-//         {
-//             tp->selectDown();
-//             touched_selection = true;
-//         }
-//         else
-//         {
-//             if(tp->hasSelection())
-//             {
-//                 tp->clearSelection();
-//             }
-//             tp->moveCursorDown();
-//         }
-    }
-    else if(key == Keyboard::Key::Left)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            tp->selectLeft();
-            touched_selection = true;
-        }
-        else
-        {
-            if(tp->hasSelection())
-            {
-                tp->clearSelection();
-            }
-            tp->moveCursorLeft();
-        }
-    }
-    else if(key == Keyboard::Key::Right)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            tp->selectRight();
-            touched_selection = true;
-        }
-        else
-        {
-            if(tp->hasSelection())
-            {
-                tp->clearSelection();
-            }
-            tp->moveCursorRight();
-        }
-    }
-    else if(key == Keyboard::Key::Home)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            tp->homeSelection();
-            touched_selection = true;
-        }
-        else
-        {
-            if(tp->hasSelection())
-            {
-                tp->clearSelection();
-            }
-            tp->homeCursor();
-        }
-    }
-    else if(key == Keyboard::Key::End)
-    {
-        if(Keyboard::ShiftDown())
-        {
-            tp->endSelection();
-            touched_selection = true;
-        }
-        else
-        {
-            if(tp->hasSelection())
-            {
-                tp->clearSelection();
-            }
-            tp->endCursor();
-        }
-    }
-    else if(Keyboard::CtrlDown() && key == Keyboard::Key::A)
-    {
-        tp->selectAll();
-        touched_selection = true;
-    }
-    else if(Keyboard::CtrlDown() && key == Keyboard::Key::C)
-    {
-//         if(tp->hasSelection())
-//         {
-//             g_clipboard_text = tp->selectionText();
-//             anounceClipboardData("text/plain", ClipboardMode::Clipboard);
-//         }
-    }
-    else if(Keyboard::CtrlDown() && key == Keyboard::Key::X)
-    {
-/*        if(tp->hasSelection())
-        {
-            g_clipboard_text = tp->selectionText();
-            anounceClipboardData("text/plain", ClipboardMode::Clipboard);
-            deleteAtCursorPosition(false);
-        }*/
-    }
-    else if(Keyboard::CtrlDown() && key == Keyboard::Key::V)
-    {
-//         requestClipboardMetadata(ClipboardMode::Clipboard);
-    }
-    else if(key == Keyboard::Key::Delete)
-    {
-//         deleteAtCursorPosition(false);
-    }
-    else if(key == Keyboard::Key::Backspace)
-    {
-//         deleteAtCursorPosition(true);
-    }
+    else if(
+        undo_redo(uc, key) ||
+        cursor_hori(tp, key, &touched_selection) ||
+        cursor_vert(tp, key, &touched_selection) ||
+        select_all(tp, key, &touched_selection)  ||
+        delete_text(tp, key, uc, &touched_selection)
+    ){}
     else if(key == Keyboard::Key::Return)
     {
-//         insertText("\n");
+        disableTextEditing();
     }
     else if(!text.empty())
     {
-//         insertText(text);
+        insertText(text);
     }
+
 }
 
 }//namespace r64fx
