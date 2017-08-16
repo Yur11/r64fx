@@ -2,28 +2,9 @@
 
 namespace r64fx{
 
-void UndoRedoChain::setData(void* data)
-{
-    m_data = data;
-}
-
-
-void* UndoRedoChain::data() const
-{
-    return m_data;
-}
-
-
 void UndoRedoChain::addItem(UndoRedoItem *action)
 {
-    if(!m_chain.empty() && (m_index + 1) < (int)m_chain.size())
-    {
-        for(auto it = (m_chain.begin() + m_index + 1); it != m_chain.end(); it++)
-        {
-            delete *it;
-        }
-        m_chain.erase(m_chain.begin() + m_index + 1, m_chain.end());
-    }
+    removeUndone();
     m_chain.push_back(action);
     m_index = m_chain.size() - 1;
 }
@@ -43,8 +24,21 @@ void UndoRedoChain::undo()
     if(canUndo())
     {
         auto &act = m_chain[m_index];
-        act->undo(m_data);
+        act->undo();
         m_index--;
+    }
+}
+
+
+void UndoRedoChain::removeUndone()
+{
+    if(!m_chain.empty() && (m_index + 1) < (int)m_chain.size())
+    {
+        for(auto it = (m_chain.begin() + m_index + 1); it != m_chain.end(); it++)
+        {
+            delete *it;
+        }
+        m_chain.erase(m_chain.begin() + m_index + 1, m_chain.end());
     }
 }
 
@@ -64,7 +58,7 @@ void UndoRedoChain::redo()
     {
         m_index++;
         auto &act = m_chain[m_index];
-        act->redo(m_data);
+        act->redo();
     }
 }
 

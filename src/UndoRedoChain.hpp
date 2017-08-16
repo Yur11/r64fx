@@ -9,26 +9,23 @@ class UndoRedoItem{
 public:
     virtual ~UndoRedoItem() {}
 
-    virtual void undo(void* data) = 0;
-    virtual void redo(void* data) = 0;
+    virtual void undo() = 0;
+    virtual void redo() = 0;
 };
 
 
 class UndoRedoChain{
     std::vector<UndoRedoItem*> m_chain;
     int   m_index = -1;
-    void* m_data  = nullptr;
 
 public:
-    void setData(void* data);
-
-    void* data() const;
-
     void addItem(UndoRedoItem *action);
 
     bool canUndo() const;
 
     void undo();
+
+    void removeUndone();
 
     bool canRedo() const;
 
