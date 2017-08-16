@@ -34,6 +34,10 @@ std::string hexstr(int dword);
 
 std::string num2str(int num);
 
+std::string float2str(float num);
+
+float str2float(const std::string &str);
+
 
 std::string full_path_to_uri(const std::string &full_path);
 

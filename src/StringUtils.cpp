@@ -1,4 +1,6 @@
 #include "StringUtils.hpp"
+#include "Float.hpp"
+
 
 namespace r64fx{
 
@@ -141,6 +143,56 @@ std::string num2str(int num)
 }
 
 
+std::string float2str(float num)
+{
+    Float32 u(num);
+
+    char buff[25];
+    Float32::frac2str(u.fractionalBits(), buff, 24);
+    for(int i=24; i>0; i++)
+    {
+        if(buff[i-1] != '0')
+            break;
+        buff[i] = 0;
+    }
+
+    return num2str(u.wholePart()) + "." + std::string((const char*)buff);
+}
+
+
+float str2float(const std::string &str)
+{
+    float f = 0.0f;
+    auto it = str.begin();
+    while(it != str.end())
+    {
+        auto ch = *it;
+        it++;
+        if(ch == '.')
+            break;
+
+        if(ch < '0' || ch > '9')
+            return Float32::Nan();
+
+        f = f * 10.0f + float(ch - '0');
+    }
+
+    float c = 0.1f;
+    while(it != str.end())
+    {
+        auto ch = *it;
+        it++;
+        if(ch < '0' || ch > '9')
+            return Float32::Nan();
+
+        f += float(ch - '0') * c;
+        c *= 0.1f;
+    }
+
+    return f;
+}
+
+
 std::string full_path_to_uri(const std::string &full_path)
 {
     std::string str = "file://";
@@ -172,7 +224,6 @@ std::string next_file_path_from_uri_list(std::string::iterator &begin_it, const 
 
     State state = State::Initial;
     std::string result;
-
 
     auto it = begin_it;
     while(it != end_it)
