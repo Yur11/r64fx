@@ -38,6 +38,7 @@ set(SRC
 #     DummyMachine.cpp
 #     FilterMachine.cpp
     FilterClass.cpp
+    Float.cpp
     Font.cpp
     FontSupply.cpp
     FrequencyPlot.cpp

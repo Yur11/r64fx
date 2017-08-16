@@ -64,7 +64,6 @@ Widget_Text::Widget_Text(Widget* parent)
 void Widget_Text::initUndoRedoChain()
 {
     m[1] = new UndoRedoChain;
-    m_undo_redo_chain->setData(m_text_painter);
 }
 
 

@@ -7,6 +7,8 @@
 namespace r64fx{
 
 class Widget_Number : public Widget, public Value{
+    void* m = nullptr;
+
 public:
     Widget_Number(Widget* parent = nullptr);
 
@@ -18,9 +20,9 @@ public:
 
     bool doingTextEditing() const;
 
-    void insertText(const std::string &text);
+    void setValue(float value, bool notify = false);
 
-    void setText(const std::string &text);
+    bool setText(const std::string &text);
 
 private:
     virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event) override final;
@@ -28,6 +30,8 @@ private:
     virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event) override final;
 
     virtual void paintEvent(WidgetPaintEvent* event) override final;
+
+    virtual void resizeEvent(WidgetResizeEvent* event);
 
     virtual void mousePressEvent(MousePressEvent* event) override final;
 
