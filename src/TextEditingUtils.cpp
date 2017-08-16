@@ -114,15 +114,30 @@ public:
 };
 
 
+class ParentTextPainterMixin{
+protected:
+    TextPainter* m_text_painter = nullptr;
+
+    ParentTextPainterMixin(TextPainter* text_painter)
+    : m_text_painter(text_painter)
+    {}
+};
+
+
 class UndoRedoItem_TextAdded
 : public UndoRedoItem
 , public CursorsMixin
 , public TextAddedMixin
+, public ParentTextPainterMixin
 {
 public:
-    virtual void undo(void* data)
+    UndoRedoItem_TextAdded(TextPainter* text_painter)
+    : ParentTextPainterMixin(text_painter)
+    {}
+
+    virtual void undo() override final
     {
-        auto tp = (TextPainter*) data;
+        auto tp = m_text_painter;
 
         tp->setSelectionStart(tp->glyphIndexToCursorPosition(
             cursorPositionBefore()
@@ -138,9 +153,9 @@ public:
         tp->updateSelection();
     }
 
-    virtual void redo(void* data)
+    virtual void redo() override final
     {
-        auto tp = (TextPainter*) data;
+        auto tp = m_text_painter;
         restoreCursorsBefore(tp);
         tp->insertText(addedGlyphs());
         restoreCursorsAfter(tp);
@@ -152,26 +167,29 @@ public:
 class UndoRedoItem_TextDeleted
 : public UndoRedoItem
 , public CursorsMixin
-, public TextRemovedMixin{
+, public TextRemovedMixin
+, public ParentTextPainterMixin
+{
     bool m_removed_before_cursor; //Delete or Backspace
 
 public:
-    UndoRedoItem_TextDeleted(bool removed_before_cursor)
-    : m_removed_before_cursor(removed_before_cursor)
+    UndoRedoItem_TextDeleted(TextPainter* text_painter, bool removed_before_cursor)
+    : ParentTextPainterMixin(text_painter)
+    , m_removed_before_cursor(removed_before_cursor)
     {}
 
-    virtual void undo(void* data)
+    virtual void undo() override final
     {
-        auto tp = (TextPainter*) data;
+        auto tp = m_text_painter;
         restoreCursorsAfter(tp);
         tp->insertText(removedGlyphs());
         restoreCursorsBefore(tp);
         tp->updateSelection();
     }
 
-    virtual void redo(void* data)
+    virtual void redo() override final
     {
-        auto tp = (TextPainter*) data;
+        auto tp = m_text_painter;
         restoreCursorsBefore(tp);
         if(m_removed_before_cursor)
         {
@@ -191,11 +209,17 @@ class UndoRedoItem_TextReplaced
 : public UndoRedoItem
 , public CursorsMixin
 , public TextRemovedMixin
-, public TextAddedMixin{
+, public TextAddedMixin
+, public ParentTextPainterMixin
+{
 public:
-    virtual void undo(void* data)
+    UndoRedoItem_TextReplaced(TextPainter* text_painter)
+    : ParentTextPainterMixin(text_painter)
+    {}
+
+    virtual void undo() override final
     {
-        auto tp = (TextPainter*) data;
+        auto tp = m_text_painter;
 
         tp->setSelectionStart(tp->glyphIndexToCursorPosition(
             cursorPositionBefore()
@@ -212,9 +236,9 @@ public:
         tp->updateSelection();
     }
 
-    virtual void redo(void* data)
+    virtual void redo() override final
     {
-        auto tp = (TextPainter*) data;
+        auto tp = m_text_painter;
         restoreCursorsBefore(tp);
         tp->insertText(addedGlyphs());
         restoreCursorsAfter(tp);
@@ -353,7 +377,7 @@ bool select_all(TextPainter* tp, int key, bool* touched_selection)
 
 void delete_text_at_cursor(TextPainter* tp, UndoRedoChain* uc, bool backspace)
 {
-    auto item = new UndoRedoItem_TextDeleted(true);
+    auto item = new UndoRedoItem_TextDeleted(tp, true);
     item->saveCursorsBefore(tp);
     GlyphString glyphs;
     if(backspace)
@@ -386,7 +410,7 @@ bool insert_text(TextPainter* tp, UndoRedoChain* uc, const std::string &text)
 {
     if(tp->hasSelection())
     {
-        auto item = new UndoRedoItem_TextReplaced;
+        auto item = new UndoRedoItem_TextReplaced(tp);
         item->saveCursorsBefore(tp);
         GlyphString removed_glyphs, added_glyphs;
         tp->insertText(text, &removed_glyphs, &added_glyphs);
@@ -398,7 +422,7 @@ bool insert_text(TextPainter* tp, UndoRedoChain* uc, const std::string &text)
     }
     else
     {
-        auto item = new UndoRedoItem_TextAdded;
+        auto item = new UndoRedoItem_TextAdded(tp);
         item->saveCursorsBefore(tp);
         GlyphString added_glyphs;
         tp->insertText(text, nullptr, &added_glyphs);
