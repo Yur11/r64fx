@@ -123,6 +123,7 @@ void Widget_Number::beginTextEditing()
     auto tp = g.textPainter();
     tp->clear();
     tp->insertText(float2str(value()));
+    tp->selectAll();
 
     renderImage();
     repaint();
@@ -240,6 +241,13 @@ void Widget_Number::paintEvent(WidgetPaintEvent* event)
 
     if(m_image->isGood())
         p->putImage(m_image, {0, 0});
+
+    if(doingTextEditing())
+    {
+        auto tp = g.textPainter();
+        auto cursor_pos = tp->findCursorCoords(tp->cursorPosition());
+        p->fillRect({cursor_pos.x(), cursor_pos.y(), 2, tp->font->height()}, Color(0, 0, 0));
+    }
 }
 
 
@@ -255,18 +263,54 @@ void Widget_Number::resizeEvent(WidgetResizeEvent* event)
 
 void Widget_Number::mousePressEvent(MousePressEvent* event)
 {
-    if(event->doubleClick())
+    if(doingTextEditing())
     {
-        beginTextEditing();
+        if(event->button() == MouseButton::Left())
+        {
+            auto tp = g.textPainter();
+            auto tcp = tp->findCursorPosition(
+                event->position()
+            );
+            tp->setCursorPosition(tcp);
+            if(event->doubleClick())
+            {
+                tp->selectAll();
+            }
+            else
+            {
+                tp->setSelectionStart(tcp);
+                tp->setSelectionEnd(tcp);
+                tp->updateSelection();
+            }
+        }
+
+        if(event->button() == MouseButton::Left() && !Rect<int>(0, 0, width(), height()).overlaps(event->position()))
+        {
+            endTextEditing(false);
+            releaseMouseFocus();
+        }
     }
-    grabMouseFocus();
+    else
+    {
+        if(event->button() == MouseButton::Left())
+        {
+            if(event->doubleClick())
+            {
+                beginTextEditing();
+            }
+            grabMouseFocus();
+        }
+    }
     repaint();
 }
 
 
 void Widget_Number::mouseReleaseEvent(MouseReleaseEvent* event)
 {
-    releaseMouseFocus();
+    if(!doingTextEditing())
+    {
+        releaseMouseFocus();
+    }
 }
 
 
@@ -274,11 +318,26 @@ void Widget_Number::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        int dy = event->dy();
-        if(event->dy() != 0)
+        if(doingTextEditing())
         {
-            setValue(value() + float(-dy) * valueStep(), true);
+            auto tp = g.textPainter();
+            auto tcp = tp->findCursorPosition(
+                event->position()
+            );
+            tp->setCursorPosition(tcp);
+            tp->setSelectionEnd(tcp);
+            tp->updateSelection();
+            renderImage();
             repaint();
+        }
+        else
+        {
+            int dy = event->dy();
+            if(event->dy() != 0)
+            {
+                setValue(value() + float(-dy) * valueStep(), true);
+                repaint();
+            }
         }
     }
 }
@@ -298,13 +357,13 @@ void Widget_Number::focusOutEvent()
 
 void Widget_Number::keyPressEvent(KeyPressEvent* event)
 {
-    
+
 }
 
 
 void Widget_Number::keyReleaseEvent(KeyReleaseEvent* event)
 {
-    
+
 }
 
 
@@ -345,6 +404,7 @@ void Widget_Number::textInputEvent(TextInputEvent* event)
         /* Text Has Changed */
         string str;
         tp->getText(str);
+        cout << str << "\n";
         float value = str2float(str);
         if(isnan(value))
         {
