@@ -190,26 +190,11 @@ void Widget_Text::paintEvent(WidgetPaintEvent* event)
         m_image, Color(0, 0, 0), Color(0, 0, 0), {paddingLeft(), paddingTop()}
     );
 
-    for(int y=0; y<m_text_painter->font->height(); y++)
-    {
-        auto cursor_pos = m_text_painter->findCursorCoords(m_text_painter->cursorPosition());
-        int xx = cursor_pos.x() + paddingLeft();
-        int yy = cursor_pos.y() + paddingTop() + y;
+    auto p = event->painter();
+    p->putImage(m_image, {0, 0});
 
-        if(xx >= 0 &&
-           xx < m_image->width() &&
-           yy >=0 &&
-           yy < m_image->height())
-        {
-            unsigned char px[4] = {0, 0, 0, 0};
-            m_image->setPixel(xx, yy, px);
-        }
-    }
-
-    auto painter = event->painter();
-    painter->putImage(m_image, {0, 0});
-
-    childrenPaintEvent(event);
+    auto cursor_pos = m_text_painter->findCursorCoords(m_text_painter->cursorPosition());
+    p->fillRect({cursor_pos.x(), cursor_pos.y(), 2, m_text_painter->font->height()}, Color(0, 0, 0));
 }
 
 
