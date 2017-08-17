@@ -14,17 +14,19 @@ public:
 
     virtual ~Widget_Number();
 
-    void enableTextEditing();
+    void beginTextEditing();
 
-    void disableTextEditing();
+    void endTextEditing(bool commit);
 
     bool doingTextEditing() const;
 
     void setValue(float value, bool notify = false);
 
-    bool setText(const std::string &text);
+    void setValue(const std::string &text, bool notify = false);
 
 private:
+    void renderImage();
+
     virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event) override final;
 
     virtual void removedFromWindowEvent(WidgetRemovedFromWindowEvent* event) override final;

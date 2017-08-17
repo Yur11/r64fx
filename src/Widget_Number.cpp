@@ -6,7 +6,6 @@
 #include "TextEditingUtils.hpp"
 #include "UndoRedoUtils.hpp"
 #include "StringUtils.hpp"
-#include "Float.hpp"
 #include "ImageUtils.hpp"
 
 #define m_image ((Image*)m)
@@ -43,17 +42,48 @@ public:
     inline TextPainter* textPainter() const { return m_text_painter; }
 
     inline UndoRedoChain* undoRedoChain() const { return m_undo_redo_chain; }
-
-    inline void insertText(const std::string &text) { insert_text(m_text_painter, m_undo_redo_chain, text); }
-
-    inline void getText(std::string &text) { m_text_painter->getText(text); }
-
-    inline void undo()
-    {
-        m_undo_redo_chain->undo();
-        m_undo_redo_chain->removeUndone();
-    }
 } g;
+
+
+string float2str(float f)
+{
+    char buff[64];
+    sprintf(buff, "%f", f);  
+    return string((const char*)buff);
+}
+
+
+float str2float(const string &str)
+{
+    float f = 0.0f;
+    float c = 0.1f;
+    bool whole_part = true;
+    for(auto ch : str)
+    {
+        if(whole_part && ch == '.')
+        {
+            whole_part = false;
+        }
+        else if(ch < '0' || ch > '9')
+        {
+            return nanf("");
+        }
+        else
+        {
+            float a = float(ch - '0');
+            if(whole_part)
+            {
+                f = f * 10.0f + a;
+            }
+            else
+            {
+                f = f + a * c;
+                c *= 1.0f;
+            }
+        }
+    }
+    return f;
+}
 
 }//namespace
 
@@ -65,6 +95,8 @@ Widget_Number::Widget_Number(Widget* parent)
     auto bbox = find_text_bbox("+0.000000", TextWrap::None, g.font());
     setSize({bbox.width() + 2, bbox.height() + 2});
     setMinValue(-1.0f);
+    setMaxValue(+1.0f);
+    setValue(0.0f);
 }
 
 
@@ -76,22 +108,53 @@ Widget_Number::~Widget_Number()
 }
 
 
-void Widget_Number::enableTextEditing()
+void Widget_Number::beginTextEditing()
 {
     m_flags |= R64FX_WIDGET_EDITING_TEXT;
     grabKeyboardFocus();
     startTextInput();
-    setText(float2str(value()));
+
+    auto tp = g.textPainter();
+    tp->clear();
+    tp->insertText(float2str(value()));
+
+    renderImage();
     repaint();
 }
 
 
-void Widget_Number::disableTextEditing()
+void Widget_Number::endTextEditing(bool commit)
 {
+    if(!doingTextEditing())
+        return;
+
+    auto tp = g.textPainter();
+    auto uc = g.undoRedoChain();
+
     m_flags &= ~R64FX_WIDGET_EDITING_TEXT;
     releaseKeyboardFocus();
     stopTextInput();
+
+    if(commit)
+    {
+        string str;
+        tp->getText(str);
+        if(str.empty())
+            Value::setValue(0.0f);
+        else
+            Value::setValue(str2float(str));
+    }
+    else
+    {
+        tp->clear();
+        tp->insertText(float2str(value()));
+    }
+
+    renderImage();
     repaint();
+
+    tp->clear();
+    uc->clear();
 }
 
 
@@ -103,39 +166,65 @@ bool Widget_Number::doingTextEditing() const
 
 void Widget_Number::setValue(float value, bool notify)
 {
-    if(m_image && m_image->isGood())
+    endTextEditing(false);
+
+    auto tp = g.textPainter();
+
+    if(value != Value::value())
     {
-        fill(m_image, Color(255, 255, 255, 0));
-
-        g.textPainter()->paintSelectionBackground(
-            m_image, Color(148, 202, 239), {0, 0}
-        );
-
-        g.textPainter()->paintText(
-            m_image, Color(0, 0, 0), Color(0, 0, 0), {0, 0}
-        );
+        Value::setValue(value, notify);
+        tp->clear();
+        tp->insertText(float2str(Value::value()));
+        renderImage();
+        tp->clear();
+        cout << ">> " << Value::value() << " -> " << float2str(Value::value()) << "\n";
     }
-
-    Value::setValue(value, notify);
 }
 
 
-bool Widget_Number::setText(const std::string &text)
+void Widget_Number::setValue(const std::string &text, bool notify)
 {
-    float num = str2float(text);
-    if(Float32::IsNan(num))
+    float value = str2float(text);
+    if(!isnan(value))
     {
-        return false;
+        setValue(value);
     }
+}
 
-    setValue(num);
-    return true;
+
+void Widget_Number::renderImage()
+{
+    if(!m_image || !m_image->isGood())
+        return;
+
+    auto tp = g.textPainter();
+
+    if(doingTextEditing())
+    {
+        fill(m_image, Color(255, 255, 255, 0));
+
+        tp->paintSelectionBackground(
+            m_image, Color(148, 202, 239), {0, 0}
+        );
+
+        tp->paintText(
+            m_image, Color(0, 0, 0), Color(0, 0, 0), {0, 0}
+        );
+    }
+    else
+    {
+        fill(m_image, Color(127, 127, 127, 0));
+
+        tp->paintText(
+            m_image, Color(0, 0, 0), Color(0, 0, 0), {0, 0}
+        );
+    }
 }
 
 
 void Widget_Number::addedToWindowEvent(WidgetAddedToWindowEvent* event)
 {
-
+    renderImage();
 }
 
 
@@ -149,8 +238,6 @@ void Widget_Number::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
-    p->strokeRect({0, 0, width(), height()}, Color(0, 0, 0), Color(255, 255, 255), 1);
-
     if(m_image->isGood())
         p->putImage(m_image, {0, 0});
 }
@@ -161,6 +248,14 @@ void Widget_Number::resizeEvent(WidgetResizeEvent* event)
     if(!m_image)
         m = new Image;
     m_image->load(width(), height(), 4);
+    if(!doingTextEditing())
+    {
+        auto tp = g.textPainter();
+        tp->clear();
+        tp->insertText(float2str(value()));
+    }
+    renderImage();
+    repaint();
 }
 
 
@@ -168,12 +263,10 @@ void Widget_Number::mousePressEvent(MousePressEvent* event)
 {
     if(event->doubleClick())
     {
-        enableTextEditing();
+        beginTextEditing();
     }
-    else
-    {
-        grabMouseFocus();
-    }
+    grabMouseFocus();
+    repaint();
 }
 
 
@@ -199,13 +292,13 @@ void Widget_Number::mouseMoveEvent(MouseMoveEvent* event)
 
 void Widget_Number::focusInEvent()
 {
-    
+
 }
 
 
 void Widget_Number::focusOutEvent()
 {
-    
+
 }
 
 
@@ -229,38 +322,48 @@ void Widget_Number::textInputEvent(TextInputEvent* event)
     const auto &text = event->text();
     bool touched_selection = false;
 
-    if(event->key() == Keyboard::Key::Escape)
+    if(event->key() == Keyboard::Key::Escape || key == Keyboard::Key::Return)
     {
         if(doingTextEditing())
         {
-            disableTextEditing();
+            endTextEditing(key == Keyboard::Key::Return);
         }
     }
     else if(
-        undo_redo(uc, key) ||
         cursor_hori(tp, key, &touched_selection) ||
         cursor_vert(tp, key, &touched_selection) ||
-        select_all(tp, key, &touched_selection)  ||
-        delete_text(tp, key, uc, &touched_selection)
-    ){}
-    else if(key == Keyboard::Key::Return)
+        select_all(tp, key, &touched_selection)
+    )
     {
-        disableTextEditing();
-    }
-    else if(!text.empty())
-    {
-        g.insertText(text);
-        string full_text;
-        g.textPainter()->getText(full_text);
-        if(!setText(full_text))
-            g.undo();
+        /* Selection May Have Changed */
+        renderImage();
+        repaint();
     }
     else
     {
-        return;
-    }
+        if( undo_redo(uc, key) || delete_text(tp, key, uc, &touched_selection))
+        {}
+        else if(!text.empty())
+        {
+            insert_text(tp, uc, text);
+        }
 
-    repaint();
+        /* Text Has Changed */
+        string str;
+        tp->getText(str);
+        cout << str << "\n";
+        float value = str2float(str);
+        if(isnan(value))
+        {
+            uc->undo();
+            uc->removeUndone();
+        }
+        else
+        {
+            renderImage();
+            repaint();
+        }
+    }
 }
 
 }//namespace r64fx
