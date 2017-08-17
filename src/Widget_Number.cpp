@@ -47,9 +47,14 @@ public:
 
 string float2str(float f)
 {
+    if(f == 0.0f)
+        return "0";
+
     char buff[64];
-    sprintf(buff, "%f", f);  
-    return string((const char*)buff);
+    sprintf(buff, "%.3f", f);  
+    string str((const char*)buff);
+
+    return str;
 }
 
 
@@ -78,7 +83,7 @@ float str2float(const string &str)
             else
             {
                 f = f + a * c;
-                c *= 1.0f;
+                c *= 0.1f;
             }
         }
     }
@@ -92,11 +97,12 @@ Widget_Number::Widget_Number(Widget* parent)
 : Widget(parent)
 {
     g.created();
-    auto bbox = find_text_bbox("+0.000000", TextWrap::None, g.font());
+    auto bbox = find_text_bbox("1234567", TextWrap::None, g.font());
     setSize({bbox.width() + 2, bbox.height() + 2});
     setMinValue(-1.0f);
     setMaxValue(+1.0f);
-    setValue(0.0f);
+    setValueStep(0.005f);
+    Value::setValue(0.0f);
 }
 
 
@@ -140,17 +146,15 @@ void Widget_Number::endTextEditing(bool commit)
         string str;
         tp->getText(str);
         if(str.empty())
-            Value::setValue(0.0f);
+            setValue(0.0f, true);
         else
-            Value::setValue(str2float(str));
+            setValue(str2float(str), true);
     }
     else
     {
-        tp->clear();
-        tp->insertText(float2str(value()));
+        setValue(Value::value(), true);
     }
 
-    renderImage();
     repaint();
 
     tp->clear();
@@ -170,15 +174,11 @@ void Widget_Number::setValue(float value, bool notify)
 
     auto tp = g.textPainter();
 
-    if(value != Value::value())
-    {
-        Value::setValue(value, notify);
-        tp->clear();
-        tp->insertText(float2str(Value::value()));
-        renderImage();
-        tp->clear();
-        cout << ">> " << Value::value() << " -> " << float2str(Value::value()) << "\n";
-    }
+    Value::setValue(value, notify);
+    tp->clear();
+    tp->insertText(float2str(Value::value()));
+    renderImage();
+    tp->clear();
 }
 
 
@@ -224,13 +224,13 @@ void Widget_Number::renderImage()
 
 void Widget_Number::addedToWindowEvent(WidgetAddedToWindowEvent* event)
 {
-    renderImage();
+
 }
 
 
 void Widget_Number::removedFromWindowEvent(WidgetRemovedFromWindowEvent* event)
 {
-    
+
 }
 
 
@@ -248,13 +248,7 @@ void Widget_Number::resizeEvent(WidgetResizeEvent* event)
     if(!m_image)
         m = new Image;
     m_image->load(width(), height(), 4);
-    if(!doingTextEditing())
-    {
-        auto tp = g.textPainter();
-        tp->clear();
-        tp->insertText(float2str(value()));
-    }
-    renderImage();
+    setValue(Value::value());
     repaint();
 }
 
@@ -351,7 +345,6 @@ void Widget_Number::textInputEvent(TextInputEvent* event)
         /* Text Has Changed */
         string str;
         tp->getText(str);
-        cout << str << "\n";
         float value = str2float(str);
         if(isnan(value))
         {
