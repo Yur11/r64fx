@@ -26,6 +26,7 @@ class Widget_Number_Global : public InstanceCounter{
     {
         m_text_painter = new TextPainter;
         m_text_painter->font = get_font("mono", 14);
+        m_text_painter->setTextAlignment(TextAlignment::Center);
         m_undo_redo_chain = new UndoRedoChain;
     }
 
@@ -199,17 +200,20 @@ void Widget_Number::renderImage()
         return;
 
     auto tp = g.textPainter();
+    tp->resizeToText();
+    auto ts = tp->textSize();
+    m_text_x = (width() >> 1) - (ts.width() >> 1);
 
     if(doingTextEditing())
     {
         fill(m_image, Color(255, 255, 255, 0));
 
         tp->paintSelectionBackground(
-            m_image, Color(148, 202, 239), {0, 0}
+            m_image, Color(148, 202, 239), {m_text_x, 0}
         );
 
         tp->paintText(
-            m_image, Color(0, 0, 0), Color(0, 0, 0), {0, 0}
+            m_image, Color(0, 0, 0), Color(0, 0, 0), {m_text_x, 0}
         );
     }
     else
@@ -217,7 +221,7 @@ void Widget_Number::renderImage()
         fill(m_image, Color(127, 127, 127, 0));
 
         tp->paintText(
-            m_image, Color(0, 0, 0), Color(0, 0, 0), {0, 0}
+            m_image, Color(0, 0, 0), Color(0, 0, 0), {m_text_x, 0}
         );
     }
 }
@@ -246,7 +250,7 @@ void Widget_Number::paintEvent(WidgetPaintEvent* event)
     {
         auto tp = g.textPainter();
         auto cursor_pos = tp->findCursorCoords(tp->cursorPosition());
-        p->fillRect({cursor_pos.x(), cursor_pos.y(), 2, tp->font->height()}, Color(0, 0, 0));
+        p->fillRect({cursor_pos.x() + m_text_x, cursor_pos.y(), 2, tp->font->height()}, Color(0, 0, 0));
     }
 }
 
@@ -269,7 +273,7 @@ void Widget_Number::mousePressEvent(MousePressEvent* event)
         {
             auto tp = g.textPainter();
             auto tcp = tp->findCursorPosition(
-                event->position()
+                {event->x() - m_text_x, event->y()}
             );
             tp->setCursorPosition(tcp);
             if(event->doubleClick())
@@ -322,7 +326,7 @@ void Widget_Number::mouseMoveEvent(MouseMoveEvent* event)
         {
             auto tp = g.textPainter();
             auto tcp = tp->findCursorPosition(
-                event->position()
+                {event->x() - m_text_x, event->y()}
             );
             tp->setCursorPosition(tcp);
             tp->setSelectionEnd(tcp);

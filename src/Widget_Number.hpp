@@ -8,6 +8,7 @@ namespace r64fx{
 
 class Widget_Number : public Widget, public Value{
     void* m = nullptr;
+    int m_text_x = 0;
 
 public:
     Widget_Number(Widget* parent = nullptr);
