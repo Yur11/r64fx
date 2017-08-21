@@ -82,10 +82,8 @@ set(SRC
 #     SignalNode_Sampler.cpp
     Shader.cpp
     SoundDriver.cpp
-#     SoundDriverMachine.cpp
     SoundFile.cpp
-    SoundFileData.cpp
-    SoundFilePool.cpp
+    SoundFileLoader.cpp
     StringUtils.cpp
     SystemUtils.cpp
     TextEditingUtils.cpp

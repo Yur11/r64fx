@@ -1,8 +1,6 @@
 #ifndef R64FX_SOUND_FILE_HPP
 #define R64FX_SOUND_FILE_HPP
 
-#include <string>
-
 namespace r64fx{
 
 class SoundFile{
@@ -22,14 +20,13 @@ private:
     int m_sample_rate   = 0;
 
 public:
-
     SoundFile();
 
-    SoundFile(const std::string &path, SoundFile::Mode mode);
+    SoundFile(const char* path, SoundFile::Mode mode);
 
     ~SoundFile();
 
-    void open(const std::string &path, SoundFile::Mode mode);
+    void open(const char* path, SoundFile::Mode mode);
 
     void close();
 

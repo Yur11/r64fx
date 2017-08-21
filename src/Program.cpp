@@ -9,7 +9,7 @@
 #include "TimeUtils.hpp"
 
 #include "Player.hpp"
-
+#include "SoundFileLoader.hpp"
 #include "View_Filter.hpp"
 #include "Module_Filter.hpp"
 
@@ -30,6 +30,8 @@ struct ProgramPrivate : public View_ProgramEventIface{
     Module_Filter* module_filter = nullptr;
 
     FilterClass fc;
+
+    SoundFileLoader sfl;
 
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;

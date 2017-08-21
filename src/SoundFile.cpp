@@ -11,7 +11,7 @@ SoundFile::SoundFile()
 }
 
 
-SoundFile::SoundFile(const std::string &path, SoundFile::Mode mode)
+SoundFile::SoundFile(const char* path, SoundFile::Mode mode)
 {
     open(path, mode);
 }
@@ -23,7 +23,7 @@ SoundFile::~SoundFile()
 }
 
 
-void SoundFile::open(const std::string &path, SoundFile::Mode mode)
+void SoundFile::open(const char* path, SoundFile::Mode mode)
 {
     close();
 
@@ -55,7 +55,7 @@ void SoundFile::open(const std::string &path, SoundFile::Mode mode)
             return;
     }
 
-    m = sf_open(path.c_str(), sndfilemode, &sfinfo);
+    m = sf_open(path, sndfilemode, &sfinfo);
     if(m)
     {
         m_mode = mode;
