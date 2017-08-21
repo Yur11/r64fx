@@ -70,11 +70,17 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
         newProject();
 
+        auto port = sfl.newPort();
+
         while(running)
         {
+            port->run();
+
             auto time = Timer::runTimers();
             sleep_nanoseconds(time);
         }
+
+        sfl.deletePort(port);
 
         view_filter->closeWindow();
         delete view_filter;

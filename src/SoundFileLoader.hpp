@@ -19,9 +19,9 @@ public:
         ~Port();
 
     public:
-        void readMessages();
+        void run();
 
-        SoundFileHandle* open(const char* file_path);
+        void open(const char* file_path, void (*callback)(SoundFileHandle* handle));
 
         void getFileProperties(SoundFileHandle* handle, void (*callback)(float sample_rate, int frame_count, int component_count));
 
@@ -36,7 +36,7 @@ public:
 
     SoundFileLoader::Port* newPort();
 
-    void freePort(SoundFileLoader::Port* port);
+    void deletePort(SoundFileLoader::Port* port);
 };
 
 }//namespace r64fx

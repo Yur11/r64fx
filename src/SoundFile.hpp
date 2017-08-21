@@ -13,11 +13,11 @@ public:
     };
 
 private:
-    void* m = nullptr;
-    SoundFile::Mode m_mode = SoundFile::Mode::Bad;
-    int m_component_count = 0;
-    int m_frame_count   = 0;
-    int m_sample_rate   = 0;
+    void* m                 = nullptr;
+    SoundFile::Mode m_mode  = SoundFile::Mode::Bad;
+    int m_component_count   = 0;
+    int m_frame_count       = 0;
+    int m_sample_rate       = 0;
 
 public:
     SoundFile();

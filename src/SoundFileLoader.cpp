@@ -3,6 +3,7 @@
 #include "CircularBuffer.hpp"
 #include "LinkedList.hpp"
 #include "SoundFile.hpp"
+#include <string>
 
 #include <iostream>
 using namespace std;
@@ -40,13 +41,40 @@ enum{
 
     Open,
     GetFileProperties,
+    LoadChunk,
     Close,
 };
 
 
+struct OpenSoundFileMessage{
+    std::string       path    = "";
+    SoundFileHandle*  handle  = nullptr;
+};
+
+struct GetSoundFilePropertiesMessage{
+    SoundFileHandle*  handle           = nullptr;
+    int               component_count  = 0;
+    int               frame_count      = 0;
+    float             sample_rate      = 0.0f;
+};
+
+struct LoadSoundChunkMessage{
+    SoundFileHandle*  handle  = nullptr;
+    float*            chunk   = nullptr;
+    int               size    = 0;
+};
+
+
+struct SoundFileChunk : public LinkedList<SoundFileChunk>::Node{
+    float*  ptr   = nullptr;
+    long    size  = 0;
+};
+
 
 struct SoundFileRec : public LinkedList<SoundFileRec>::Node{
-    SoundFile sf;
+    SoundFile                   sf;
+    std::string                 path    = "";
+    LinkedList<SoundFileChunk>  chunks;
 };
 
 
@@ -55,8 +83,6 @@ class PortImpl : public LinkedList<PortImpl>::Node{
 
     CircularBuffer<Message>*  m_from_iface  = nullptr;
     CircularBuffer<Message>*  m_to_iface    = nullptr;
-
-    LinkedList<SoundFileRec> m_recs;
 
 public:
     PortImpl(CircularBuffer<Message>* from_iface, CircularBuffer<Message>* to_iface)
@@ -81,9 +107,10 @@ private:
 
 
 class SoundFileLoaderThread{
-    CircularBuffer<Message>* m_buffer = nullptr;
-    bool m_running = false;
-    LinkedList<PortImpl> m_port_impls;
+    CircularBuffer<Message>*  m_buffer      = nullptr;
+    bool                      m_running     = false;
+    LinkedList<PortImpl>      m_port_impls;
+    LinkedList<SoundFileRec>  m_recs;
 
 public:
     SoundFileLoaderThread(CircularBuffer<Message>* buffer)
@@ -143,13 +170,16 @@ public:
 class PortIface{
     friend class SoundFileLoader;
 
-    CircularBuffer<Message>*  m_to_impl     = nullptr;
+    CircularBuffer<Message>*  m_to_impl    = nullptr;
     CircularBuffer<Message>*  m_from_impl  = nullptr;
 
+    void* m_port_impl = nullptr;
+
 public:
-    PortIface(CircularBuffer<Message>* to_impl, CircularBuffer<Message>* from_impl)
+    PortIface(CircularBuffer<Message>* to_impl, CircularBuffer<Message>* from_impl, PortImpl* impl)
     : m_to_impl(to_impl)
     , m_from_impl(from_impl)
+    , m_port_impl(impl)
     {}
 
     inline void readMessages()
@@ -164,6 +194,8 @@ public:
             }
         }
     }
+
+    inline void* portImpl() const { return m_port_impl; }
 };
 
 }//namespace
@@ -186,15 +218,15 @@ SoundFileLoader::Port::~Port()
 }
 
 
-void SoundFileLoader::Port::readMessages()
+void SoundFileLoader::Port::run()
 {
     m_port_iface->readMessages();
 }
 
 
-SoundFileHandle* SoundFileLoader::Port::open(const char* file_path)
+void SoundFileLoader::Port::open(const char* file_path, void (*callback)(SoundFileHandle* handle))
 {
-    return nullptr;
+
 }
 
 
@@ -245,8 +277,8 @@ SoundFileLoader::Port* SoundFileLoader::newPort()
 {
     auto iface_to_impl  = new CircularBuffer<Message>(16);
     auto impl_to_iface  = new CircularBuffer<Message>(16);
-    auto port_iface     = new PortIface(iface_to_impl, impl_to_iface);
     auto port_impl      = new PortImpl(iface_to_impl, impl_to_iface);
+    auto port_iface     = new PortIface(iface_to_impl, impl_to_iface, port_impl);
 
     auto port = new SoundFileLoader::Port;
     port->SoundFileLoaderPort_Members = port_iface;
@@ -256,8 +288,11 @@ SoundFileLoader::Port* SoundFileLoader::newPort()
 }
 
 
-void SoundFileLoader::freePort(SoundFileLoader::Port* port)
+void SoundFileLoader::deletePort(SoundFileLoader::Port* port)
 {
+    auto port_iface = (PortIface*) port->SoundFileLoaderPort_Members;
+    m_buffer->write(Message(RemovePort, port_iface->portImpl()));
+    delete port_iface;
     delete port;
 }
 
