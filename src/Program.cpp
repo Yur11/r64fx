@@ -12,6 +12,7 @@
 #include "SoundFileLoader.hpp"
 #include "View_Filter.hpp"
 #include "Module_Filter.hpp"
+#include "Module_Player.hpp"
 
 #include <iostream>
 
@@ -26,10 +27,12 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     View_Program* view_program = nullptr;
 
-    View_Filter* view_filter = nullptr;
-    Module_Filter* module_filter = nullptr;
+//     View_Filter* view_filter = nullptr;
+//     Module_Filter* module_filter = nullptr;
+// 
+//     FilterClass fc;
 
-    FilterClass fc;
+    Module_Player* m_module_player = nullptr;
 
     SoundFileLoader sfl;
     SoundFileLoader::Port* m_sflp = nullptr;
@@ -44,30 +47,36 @@ struct ProgramPrivate : public View_ProgramEventIface{
         view_program = new View_Program(this);
         view_program->openWindow();
 
-        fc.newRoot<Pole>({0.0f, 0.1f});
-        fc.newRoot<Zero>({-0.5f, 0.5f});
+//         fc.newRoot<Pole>({0.0f, 0.1f});
+//         fc.newRoot<Zero>({-0.5f, 0.5f});
 //         fc.newRoot<Pole>({0.0f, 0.1f});
 //         fc.newRoot<Zero>({-0.5f, 0.5});
 //         fc.newRoot<Pole>({0.0f, 0.1f});
 //         fc.newRoot<Zero>({-0.5f, 0.5f});
 //         fc.newRoot<Pole>({0.0f, 0.1f});
 //         fc.newRoot<Zero>({-0.5f, 0.5});
-        fc.updateIndices();
+//         fc.updateIndices();
 
-        view_filter = new View_Filter(nullptr);
-        view_filter->openWindow();
-        view_filter->setFilterClass(&fc);
+//         view_filter = new View_Filter(nullptr);
+//         view_filter->openWindow();
+//         view_filter->setFilterClass(&fc);
 
-        module_filter = new Module_Filter;
-        module_filter->engage([](Module* module, void* arg){
+//         module_filter = new Module_Filter;
+//         module_filter->engage([](Module* module, void* arg){
+//             auto pp = (ProgramPrivate*) arg;
+//             pp->filterEngaged(pp->module_filter);
+//         }, this);
+// 
+//         view_filter->onChanged([](FilterClass* fc, void* data){
+//             auto mf = (Module_Filter*) data;
+//             mf->setFilterClass(fc);
+//         }, module_filter);
+
+        m_module_player = new Module_Player;
+        m_module_player->engage([](Module* module, void* arg){
             auto pp = (ProgramPrivate*) arg;
-            pp->filterEngaged(pp->module_filter);
+            pp->playerEngaged(pp->m_module_player);
         }, this);
-
-        view_filter->onChanged([](FilterClass* fc, void* data){
-            auto mf = (Module_Filter*) data;
-            mf->setFilterClass(fc);
-        }, module_filter);
 
         newProject();
 
@@ -87,10 +96,12 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
         sfl.deletePort(m_sflp);
 
-        view_filter->closeWindow();
-        delete view_filter;
+//         view_filter->closeWindow();
+//         delete view_filter;
+// 
+//         delete module_filter;
 
-        delete module_filter;
+        delete m_module_player;
 
         view_program->closeWindow();
         closeAllProjects();
@@ -146,6 +157,29 @@ struct ProgramPrivate : public View_ProgramEventIface{
         cout << "file closed!\n";
     }
 
+    void filterEngaged(Module_Filter* module_filter)
+    {
+//         cout << "Filter Engaged: " << module_filter << ", " << osc << "\n";
+//         module_filter->setFilterClass(&fc);
+    }
+
+    void filterDisengaged(Module_Filter* module_filter)
+    {
+//         cout << "Filter Disengaged: " << module_filter << ", " << osc << "\n";
+//         doQuit();
+    }
+
+    void playerEngaged(Module_Player* module_player)
+    {
+        cout << "Player Engaged: " << module_player << "\n";
+    }
+
+    void playerDisengaged(Module_Player* module_player)
+    {
+        cout << "Player Disengaged: " << module_player << "\n";
+        doQuit();
+    }
+
     void newSession()
     {
 
@@ -168,11 +202,11 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     void quit()
     {
-        if(module_filter)
+        if(m_module_player)
         {
-            module_filter->disengage([](Module* module, void* arg){
+            m_module_player->disengage([](Module* module, void* arg){
                 auto p = (ProgramPrivate*) arg;
-                p->filterDisengaged(static_cast<Module_Filter*>(module));
+                p->playerDisengaged(static_cast<Module_Player*>(module));
             }, this);
         }
     }
@@ -261,19 +295,6 @@ struct ProgramPrivate : public View_ProgramEventIface{
     {
 
     }
-
-    void filterEngaged(Module_Filter* osc)
-    {
-        cout << "Filter Engaged: " << module_filter << ", " << osc << "\n";
-        module_filter->setFilterClass(&fc);
-    }
-
-    void filterDisengaged(Module_Filter* osc)
-    {
-        cout << "Filter Disengaged: " << module_filter << ", " << osc << "\n";
-        doQuit();
-    }
-
 };
 
 

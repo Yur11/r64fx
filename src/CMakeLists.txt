@@ -61,6 +61,7 @@ set(SRC
     MidiDispatcher.cpp
     Module.cpp
     Module_Filter.cpp
+    Module_Player.cpp
     Module_Oscillator.cpp
     Mouse.cpp
     Mutex.cpp
@@ -71,7 +72,7 @@ set(SRC
 #     PlayerController.cpp
 #     PlayerMachine.cpp
     Player.cpp
-    PlayerView.cpp
+#     PlayerView.cpp
     Program.cpp
     Project.cpp
     RingSectorPainter.cpp
@@ -96,6 +97,7 @@ set(SRC
     UndoRedoUtils.cpp
     Value.cpp
     View_Filter.cpp
+    View_Player.cpp
     View_Program.cpp
     View_Project.cpp
     WaveformUtils.cpp
