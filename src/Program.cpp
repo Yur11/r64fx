@@ -32,6 +32,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
     FilterClass fc;
 
     SoundFileLoader sfl;
+    SoundFileLoader::Port* m_sflp = nullptr;
 
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
@@ -70,17 +71,21 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
         newProject();
 
-        auto port = sfl.newPort();
+        m_sflp = sfl.newPort();
+        m_sflp->open("./35-Kick1Alt-5.wav", [](SoundFileHandle* handle, void* data){
+            auto self = (ProgramPrivate*) data;
+            self->fileOpened(handle);
+        }, this);
 
         while(running)
         {
-            port->run();
+            m_sflp->run();
 
             auto time = Timer::runTimers();
             sleep_nanoseconds(time);
         }
 
-        sfl.deletePort(port);
+        sfl.deletePort(m_sflp);
 
         view_filter->closeWindow();
         delete view_filter;
@@ -94,6 +99,51 @@ struct ProgramPrivate : public View_ProgramEventIface{
         cleanupActions();
 
         return 0;
+    }
+
+    void fileOpened(SoundFileHandle* handle)
+    {
+        if(handle)
+        {
+            cout << "fileOpened!\n";
+            cout << handle << "\n";
+            m_sflp->getFileProperties(handle, [](SoundFileHandle* handle, float sample_rate, int frame_count, int component_count, void* data){
+                auto self = (ProgramPrivate*) data;
+                self->fileStats(handle, sample_rate, component_count, frame_count);
+            }, this);
+        }
+    }
+
+    void fileStats(SoundFileHandle* handle, float sample_rate, float component_count, float frame_count)
+    {
+        cout << ">> " << sample_rate << ", " << component_count << ", " << frame_count << "\n";
+        m_sflp->loadChunk(handle, 0, 32, [](SoundFileHandle* handle, float* chunk, int index, int nframes, void* data){
+            auto self = (ProgramPrivate*) data;
+            self->fileChunk(handle, chunk, nframes);
+        }, this);
+    }
+
+    void fileChunk(SoundFileHandle* handle, float* chunk, int nframes)
+    {
+        cout << "chunk: " << chunk << " -> " << nframes << "\n";
+        m_sflp->freeChunk(handle, chunk, [](SoundFileHandle* handle, void* data){
+            auto self = (ProgramPrivate*) data;
+            self->freeChunk(handle);
+        }, this);
+    }
+
+    void freeChunk(SoundFileHandle* handle)
+    {
+        cout << "free\n";
+        m_sflp->close(handle, [](void* data){
+            auto self = (ProgramPrivate*) data;
+            self->fileClosed();
+        }, this);
+    }
+
+    void fileClosed()
+    {
+        cout << "file closed!\n";
     }
 
     void newSession()

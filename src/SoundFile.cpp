@@ -146,4 +146,10 @@ int SoundFile::readFramesUnpack(float** out, int nframes)
     return frames_read;
 }
 
+
+int SoundFile::seek(int frames, int whence)
+{
+    return sf_seek(m_sndfile, frames, whence);
+}
+
 }//namespace r64fx

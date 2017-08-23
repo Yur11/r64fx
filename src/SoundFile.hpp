@@ -43,6 +43,8 @@ public:
     int readFrames(float* out, int nframes);
 
     int readFramesUnpack(float** out, int nframes);
+
+    int seek(int frames, int whence);
 };
 
 }//namespace r64fx
