@@ -20,6 +20,16 @@ struct PlayerWithdrawalArgs{
 
 R64FX_DECL_MODULE_AGENTS(Player)
 
+struct ChangeMessage{
+    float*  buff    = nullptr;
+    int     nchans  = 0;
+    int     nframes = 0;
+};
+
+enum{
+    Change
+};
+
 
 /*======= Worker Thread =======*/
 
@@ -27,6 +37,10 @@ class PlayerThreadObjectImpl : public ModuleThreadObjectImpl{
     SoundDriverAudioInput* m_audio_input_port  = nullptr;
     SoundDriverAudioOutput* m_audio_output_port = nullptr;
     SoundDriverMidiInput*   m_midi_input_port   = nullptr;
+
+    float* m_buff     = nullptr;
+    int    m_nchans   = 0;
+    int    m_nframes  = 0;
 
 public:
     PlayerThreadObjectImpl(PlayerDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
@@ -61,6 +75,14 @@ private:
     {
         switch(msg.key())
         {
+            case Change:
+            {
+                auto message = (ChangeMessage*) msg.value();
+                ThreadObjectMessage response(Change, message);
+                sendMessagesToIface(&response, 1);
+                break;
+            }
+
             default:
             {
                 std::cerr << "Bad Message from iface!\n";
@@ -139,10 +161,29 @@ private:
         delete filter_agent;
     }
 
+public:
+    inline void change(float* buff, int nchans, int nframes)
+    {
+        auto message = new ChangeMessage;
+        message->buff     = buff;
+        message->nchans   = nchans;
+        message->nframes  = nframes;
+        ThreadObjectMessage msg(Change, message);
+        sendMessagesToImpl(&msg, 1);
+    }
+
+private:
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg) override final
     {
         switch(msg.key())
         {
+            case Change:
+            {
+                auto message = (ChangeMessage*) msg.value();
+                delete message;
+                break;
+            }
+
             default:
             {
                 std::cerr << "Bad message from impl!\n";
@@ -164,6 +205,15 @@ Module_Player::Module_Player()
 Module_Player::~Module_Player()
 {
     
+}
+
+
+void Module_Player::change(float* buff, int nchans, int nframes)
+{
+    if(m_thread_object_iface)
+    {
+        m_thread_object_iface->change(buff, nchans, nframes);
+    }
 }
 
 

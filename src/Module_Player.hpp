@@ -13,6 +13,8 @@ public:
 
     virtual ~Module_Player();
 
+    void change(float* buff, int nchans, int nframes);
+
     virtual bool engage(ModuleCallback done = nullptr, void* done_arg = nullptr) override;
 
     virtual void disengage(ModuleCallback done = nullptr, void* done_arg = nullptr) override;
