@@ -49,13 +49,6 @@ set(SRC
     Keyboard.cpp
     KeyboardModifiers.cpp
     LayoutUtils.cpp
-#     MachineConnection.cpp
-#     MachineIface.cpp
-#     MachineImpl.cpp
-#     MachinePool.cpp
-#     MachinePoolThread.cpp
-#     MachinePort.cpp
-#     MachinePortImpl.cpp
     MemoryUtils.cpp
     Midi.cpp
     MidiDispatcher.cpp
@@ -65,22 +58,14 @@ set(SRC
     Module_Oscillator.cpp
     Mouse.cpp
     Mutex.cpp
-    Oscillator.cpp
     Painter.cpp
     PainterShaders.cpp
     PainterVertexArrays.cpp
-#     PlayerController.cpp
-#     PlayerMachine.cpp
-    Player.cpp
-#     PlayerView.cpp
     Program.cpp
     Project.cpp
     RingSectorPainter.cpp
     SignalGraph.cpp
     SignalNodeCollection.cpp
-#     SignalNode_BufferIO.cpp
-#     SignalNode_Filter.cpp
-#     SignalNode_Sampler.cpp
     Shader.cpp
     SoundDriver.cpp
     SoundFile.cpp

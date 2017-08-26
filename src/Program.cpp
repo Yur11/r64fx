@@ -8,7 +8,6 @@
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
 
-#include "Player.hpp"
 #include "SoundFileLoader.hpp"
 #include "View_Filter.hpp"
 #include "Module_Filter.hpp"
