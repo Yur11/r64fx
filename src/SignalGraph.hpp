@@ -10,22 +10,19 @@ class SignalNode;
 
 /* Base class for Nodes and edges. */
 class SignalGraphElement : public LinkedList<SignalGraphElement>::Node{
-    SignalNode* m_parent = nullptr;
 
 public:
     virtual ~SignalGraphElement();
 
-    void setParent(SignalNode* parent);
-
-    SignalNode* parent() const;
-
-protected:
     virtual void prologue() = 0;
 
     virtual void routine(int i) = 0;
 
     virtual void epilogue() = 0;
 };
+
+
+typedef IteratorPair<LinkedList<SignalGraphElement>::Iterator> SignalGraphElementIterators;
 
 
 class SignalPort{
@@ -57,7 +54,6 @@ public:
 
 class SignalNode : public SignalGraphElement{
     friend class SignalGraphElement;
-    LinkedList<SignalGraphElement> m_subgraph;
 
 public:
     SignalNode();
@@ -85,6 +81,16 @@ public:
 
 private:
     virtual void routine(int i);
+};
+
+
+class SignalGraph{
+    LinkedList<SignalGraphElement> m_elements;
+
+public:
+    inline void addElement(SignalGraphElement* element) { m_elements.append(element); }
+
+    inline SignalGraphElementIterators elements() const { return {m_elements.begin(), m_elements.end()}; }
 };
 
 }//namespace r64fx

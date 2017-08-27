@@ -4,6 +4,7 @@
 #include "SoundDriver.hpp"
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
+#include "SignalGraph.hpp"
 
 #ifdef R64FX_DEBUG
 #include <iostream>
@@ -33,6 +34,8 @@ struct ModuleImplSharedAssets{
     LinkedList<ModuleImplFun>  epilogue_list;
     long                       buffer_size    = 0;
     long                       sample_rate    = 0;
+    long                       flags          = 0;
+    SignalGraph                graph;
 };
 
 }//namespace
@@ -175,6 +178,13 @@ void ModuleThreadObjectImpl::runThread()
             }
 
             //Run Main Cycle Here!
+            for(int i=0; i<shared->buffer_size; i++)
+            {
+                for(auto element : shared->graph.elements())
+                {
+                    element->routine(i);
+                }
+            }
 
             for(auto item : shared->epilogue_list)
             {
