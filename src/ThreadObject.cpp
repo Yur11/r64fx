@@ -52,7 +52,7 @@ public:
 
     void objectDeployed(ThreadObjectDeploymentAgent* agent);
 
-    void sendMessagesToImpl(ThreadObjectImplHandle* dst_impl, ThreadObjectMessage* msgs, int nmsgs);
+    void sendMessagesToImpl(ThreadObjectImplHandle* dst_impl, const ThreadObjectMessage* msgs, int nmsgs);
 
     void readMessagesFromImpl();
 
@@ -145,7 +145,7 @@ public:
         return m_asset;
     }
 
-    void sendMessagesToIface(ThreadObjectIfaceHandle* dst_iface, ThreadObjectMessage* msgs, int nmsgs);
+    void sendMessagesToIface(ThreadObjectIfaceHandle* dst_iface, const ThreadObjectMessage* msgs, int nmsgs);
 
     void readMessagesFromIface();
 
@@ -258,7 +258,7 @@ bool ThreadObjectIface::withdrawalPending() const
 }
 
 
-void ThreadObjectIface::sendMessagesToImpl(ThreadObjectMessage* msgs, int nmsgs)
+void ThreadObjectIface::sendMessagesToImpl(const ThreadObjectMessage* msgs, int nmsgs)
 {
 #ifdef R64FX_DEBUG
     assert(m_manager != nullptr);
@@ -402,7 +402,7 @@ void ThreadObjectManagerIface::objectDeployed(ThreadObjectDeploymentAgent* agent
 }
 
 
-inline void ThreadObjectManagerIface::sendMessagesToImpl(ThreadObjectImplHandle* dst_impl, ThreadObjectMessage* msgs, int nmsgs)
+inline void ThreadObjectManagerIface::sendMessagesToImpl(ThreadObjectImplHandle* dst_impl, const ThreadObjectMessage* msgs, int nmsgs)
 {
     if(m_dst_impl_handle != dst_impl)
     {
@@ -558,7 +558,7 @@ ThreadObjectImpl::~ThreadObjectImpl()
 }
 
 
-void ThreadObjectImpl::sendMessagesToIface(ThreadObjectMessage* msgs, int nmsgs)
+void ThreadObjectImpl::sendMessagesToIface(const ThreadObjectMessage* msgs, int nmsgs)
 {
 #ifdef R64FX_DEBUG
     assert(m_iface_handle != nullptr);
@@ -602,7 +602,7 @@ void ThreadObjectManagerImpl::execThread(ThreadObjectDeploymentAgent* agent)
 }
 
 
-inline void ThreadObjectManagerImpl::sendMessagesToIface(ThreadObjectIfaceHandle* dst_iface, ThreadObjectMessage* msgs, int nmsgs)
+inline void ThreadObjectManagerImpl::sendMessagesToIface(ThreadObjectIfaceHandle* dst_iface, const ThreadObjectMessage* msgs, int nmsgs)
 {
     if(m_dst_iface != dst_iface)
     {

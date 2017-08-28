@@ -112,7 +112,7 @@ public:
     bool withdrawalPending() const;
 
 protected:
-    void sendMessagesToImpl(ThreadObjectMessage* msgs, int nmsgs);
+    void sendMessagesToImpl(const ThreadObjectMessage* msgs, int nmsgs);
 
     inline ThreadObjectImplHandle* impl() const { return m_impl_handle; }
 
@@ -238,7 +238,7 @@ public:
     virtual ~ThreadObjectImpl();
 
 protected:
-    void sendMessagesToIface(ThreadObjectMessage* msgs, int nmsgs);
+    void sendMessagesToIface(const ThreadObjectMessage* msgs, int nmsgs);
 
     void readMessagesFromIface();
 
