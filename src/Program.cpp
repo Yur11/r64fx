@@ -12,6 +12,7 @@
 #include "View_Filter.hpp"
 #include "Module_Filter.hpp"
 #include "Module_Player.hpp"
+#include "Module_SoundDriver.hpp"
 
 #include <iostream>
 
@@ -32,6 +33,8 @@ struct ProgramPrivate : public View_ProgramEventIface{
 //     FilterClass fc;
 
     Module_Player* m_module_player = nullptr;
+
+    Module_SoundDriver* m_module_sound_driver = nullptr;
 
     SoundFileLoader sfl;
     SoundFileLoader::Port* m_sflp = nullptr;
@@ -71,36 +74,44 @@ struct ProgramPrivate : public View_ProgramEventIface{
 //             mf->setFilterClass(fc);
 //         }, module_filter);
 
-        m_module_player = new Module_Player;
-        m_module_player->engage([](Module* module, void* arg){
+//         m_module_player = new Module_Player;
+//         m_module_player->engage([](Module* module, void* arg){
+//             auto pp = (ProgramPrivate*) arg;
+//             pp->playerEngaged(pp->m_module_player);
+//         }, this);
+
+        m_module_sound_driver = new Module_SoundDriver;
+        m_module_sound_driver->engage([](Module* module, void* arg){
             auto pp = (ProgramPrivate*) arg;
-            pp->playerEngaged(pp->m_module_player);
+            pp->engagedModuleSoundDriver(pp->m_module_sound_driver);
         }, this);
 
         newProject();
 
-        m_sflp = sfl.newPort();
-        m_sflp->open("./35-Kick1Alt-5.wav", [](SoundFileHandle* handle, void* data){
-            auto self = (ProgramPrivate*) data;
-            self->fileOpened(handle);
-        }, this);
+//         m_sflp = sfl.newPort();
+//         m_sflp->open("./35-Kick1Alt-5.wav", [](SoundFileHandle* handle, void* data){
+//             auto self = (ProgramPrivate*) data;
+//             self->fileOpened(handle);
+//         }, this);
 
         while(running)
         {
-            m_sflp->run();
+//             m_sflp->run();
 
             auto time = Timer::runTimers();
             sleep_nanoseconds(time);
         }
 
-        sfl.deletePort(m_sflp);
+//         sfl.deletePort(m_sflp);
+
+        delete m_module_sound_driver;
 
 //         view_filter->closeWindow();
 //         delete view_filter;
 // 
 //         delete module_filter;
 
-        delete m_module_player;
+//         delete m_module_player;
 
         view_program->closeWindow();
         closeAllProjects();
@@ -109,6 +120,17 @@ struct ProgramPrivate : public View_ProgramEventIface{
         cleanupActions();
 
         return 0;
+    }
+
+    void engagedModuleSoundDriver(Module_SoundDriver* module_sound_driver)
+    {
+        cout << "engagedModuleSoundDriver\n";
+    }
+
+    void disengagedModuleSoundDriver(Module_SoundDriver* module_sound_driver)
+    {
+        cout << "disengagedModuleSoundDriver\n";
+        doQuit();
     }
 
     void fileOpened(SoundFileHandle* handle)
@@ -201,11 +223,11 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     void quit()
     {
-        if(m_module_player)
+        if(m_module_sound_driver)
         {
-            m_module_player->disengage([](Module* module, void* arg){
+            m_module_sound_driver->disengage([](Module* module, void* arg){
                 auto p = (ProgramPrivate*) arg;
-                p->playerDisengaged(static_cast<Module_Player*>(module));
+                p->disengagedModuleSoundDriver(static_cast<Module_SoundDriver*>(module));
             }, this);
         }
     }
