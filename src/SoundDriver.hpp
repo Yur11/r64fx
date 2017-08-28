@@ -99,13 +99,33 @@ public:
 
     virtual int sampleRate() = 0;
 
-    virtual SoundDriverAudioInput* newAudioInput(const std::string &name = "") = 0;
+    virtual SoundDriverAudioInput* newAudioInput(const std::string &name) = 0;
 
-    virtual SoundDriverAudioOutput* newAudioOutput(const std::string &name = "") = 0;
+    virtual SoundDriverAudioOutput* newAudioOutput(const std::string &name) = 0;
 
-    virtual SoundDriverMidiInput* newMidiInput(const std::string &name = "") = 0;
+    virtual SoundDriverMidiInput* newMidiInput(const std::string &name) = 0;
 
-    virtual SoundDriverMidiOutput* newMidiOutput(const std::string &name = "") = 0;
+    virtual SoundDriverMidiOutput* newMidiOutput(const std::string &name) = 0;
+
+    inline void newPort(SoundDriverAudioInput** port, const std::string &name)
+    {
+        *port = newAudioInput(name);
+    }
+
+    inline void newPort(SoundDriverAudioOutput** port, const std::string &name)
+    {
+        *port = newAudioOutput(name);
+    }
+
+    inline void newPort(SoundDriverMidiInput** port, const std::string &name)
+    {
+        *port = newMidiInput(name);
+    }
+
+    inline void newPort(SoundDriverMidiOutput** port, const std::string &name)
+    {
+        *port = newMidiOutput(name);
+    }
 
     virtual void deletePort(SoundDriverPort* port) = 0;
 
