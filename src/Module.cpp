@@ -94,8 +94,11 @@ void set_item(LinkedList<ModuleImplFun> &item_list, HeapAllocator* ha, void (*fu
         }
     }
 
-    auto item = ha->allocObj<ModuleImplFun>(fun, arg, impl);
-    item_list.append(item);
+    if(fun)
+    {
+        auto item = ha->allocObj<ModuleImplFun>(fun, arg, impl);
+        item_list.append(item);
+    }
 }
 
 
