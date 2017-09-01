@@ -35,11 +35,14 @@ void NAME##WithdrawalAgent::withdrawModuleImpl(HeapAllocator* ha, ModuleThreadOb
 
 namespace r64fx{
 
-class SoundDriver;
-class SoundDriverSyncPort;
 class ModuleThreadObjectIfaceHandle;
 class ModuleThreadObjectImplHandle;
 class ModuleDeploymentAgent;
+class SoundDriver;
+class SoundDriverSyncPort;
+class SignalGraphElement;
+class SignalSink;
+class SignalSource;
 
 /*
  * === Impl ===================================================================
@@ -67,6 +70,10 @@ protected:
     long bufferSize() const;
 
     long sampleRate() const;
+
+    void addGraphElement(SignalGraphElement* element);
+
+    void removeGraphElement(SignalGraphElement* element);
 
 private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override;
@@ -138,6 +145,30 @@ private:
     virtual void deleteWithdrawalAgent(ThreadObjectWithdrawalAgent* agent) override final;
 
     virtual void deleteModuleWithdrawalAgent(ModuleWithdrawalAgent* agent) = 0;
+};
+
+
+class ModulePrivate{
+public:
+    inline static void setPortPayload(ModuleSink* sink, SignalSink* payload)
+    {
+        sink->m_payload = (void*) payload;
+    }
+
+    inline static void setPortPayload(ModuleSource* source, SignalSource* payload)
+    {
+        source->m_payload = (void*) payload;
+    }
+
+    inline static void getPortPayload(ModuleSink* sink, SignalSink* &payload)
+    {
+        payload = (SignalSink*) sink->m_payload;
+    }
+
+    inline static void getPortPayload(ModuleSource* source, SignalSource* &payload)
+    {
+        payload = (SignalSource*) source->m_payload;
+    }
 };
 
 }//namespace r64fx

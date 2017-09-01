@@ -5,31 +5,30 @@ namespace r64fx{
 
 class Module;
 
-enum class ModulePortType{
-    Bad,
-    Signal,
-    Sequencer
-};
-
 class ModulePort{
-    ModulePortType m_type = ModulePortType::Bad;
+    friend class ModuleSink;
+    friend class ModuleSource;
+    friend class ModulePrivate;
+
+    unsigned long  m_flags    = 0;
+    void*          m_payload  = nullptr;
 
 public:
-    ModulePort(ModulePortType type) : m_type(type) {}
+    ModulePort();
 
-    ModulePort() {}
+    inline bool isSink() const { return !isSource(); }
 
-    inline ModulePortType type() const { return m_type; }
+    bool isSource() const;
 };
 
 class ModuleSink : public ModulePort{
 public:
-    using ModulePort::ModulePort;
+    ModuleSink();
 };
 
 class ModuleSource : public ModulePort{
 public:
-    using ModulePort::ModulePort;
+    ModuleSource();
 };
 
 

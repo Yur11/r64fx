@@ -152,6 +152,30 @@ long ModuleThreadObjectImpl::sampleRate() const
 }
 
 
+void ModuleThreadObjectImpl::addGraphElement(SignalGraphElement* element)
+{
+#ifdef R64FX_DEBUG
+    assert(asset() != nullptr);
+    assert(element);
+#endif//R64FX_DEBUG
+    auto shared = (ModuleImplSharedAssets*) asset();
+    shared->graph.addElement(element);
+    shared->flags |= R64FX_MODULE_SIGNAL_GRAPH_CHANGED;
+}
+
+
+void ModuleThreadObjectImpl::removeGraphElement(SignalGraphElement* element)
+{
+#ifdef R64FX_DEBUG
+    assert(asset() != nullptr);
+    assert(element);
+#endif//R64FX_DEBUG
+    auto shared = (ModuleImplSharedAssets*) asset();
+    shared->graph.removeElement(element);
+    shared->flags |= R64FX_MODULE_SIGNAL_GRAPH_CHANGED;
+}
+
+
 void ModuleThreadObjectImpl::messageFromIfaceRecieved(const ThreadObjectMessage &msg)
 {
 
@@ -333,6 +357,36 @@ void ModuleThreadObjectIface::deleteWithdrawalAgent(ThreadObjectWithdrawalAgent*
     }
 
     deleteModuleWithdrawalAgent(module_agent);
+}
+
+
+
+
+
+#define R64FX_MODULE_PORT_IS_SOURCE 1
+
+
+ModulePort::ModulePort()
+{
+
+}
+
+
+bool ModulePort::isSource() const
+{
+    return m_flags & R64FX_MODULE_PORT_IS_SOURCE;
+}
+
+
+ModuleSink::ModuleSink()
+{
+
+}
+
+
+ModuleSource::ModuleSource()
+{
+    m_flags |= R64FX_MODULE_PORT_IS_SOURCE;
 }
 
 

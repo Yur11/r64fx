@@ -66,7 +66,7 @@ set(SRC
     Project.cpp
     RingSectorPainter.cpp
     SignalGraph.cpp
-    SignalNodeCollection.cpp
+    SignalNode_BufferRW.cpp
     Shader.cpp
     SoundDriver.cpp
     SoundFile.cpp

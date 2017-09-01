@@ -8,10 +8,12 @@ namespace r64fx{
 
 class SignalNode;
 
-/* Base class for Nodes and edges. */
+/* Base class for Nodes and Edges. */
 class SignalGraphElement : public LinkedList<SignalGraphElement>::Node{
 
 public:
+    SignalGraphElement();
+
     virtual ~SignalGraphElement();
 
     virtual void prologue() = 0;
@@ -26,61 +28,70 @@ typedef IteratorPair<LinkedList<SignalGraphElement>::Iterator> SignalGraphElemen
 
 
 class SignalPort{
-    float*      m_addr   = nullptr;
-    SignalNode* m_parent = nullptr;
+    friend class SignalSource;
+    friend class SignalSink;
 
-public:
-    SignalPort(SignalNode* parent = nullptr);
+    float*         m_ptr   = nullptr;
+    unsigned long  m_bits  = 0;
+
+    SignalPort(SignalNode* parent);
 
     ~SignalPort();
 
-    inline SignalNode* parentNode() const { return m_parent; }
+public:
+    SignalNode* parentNode() const;
 
-    inline float &operator[](unsigned long index) { return m_addr[index]; }
+    bool isSource() const;
+
+    inline bool isSink() const { return !isSource(); }
+
+    inline float &operator[](int i) { return m_ptr[i]; }
 };
 
 
 class SignalSource : public SignalPort{
 public:
-    using SignalPort::SignalPort;
+    SignalSource(SignalNode* parent);
+
+    ~SignalSource();
 };
 
 
 class SignalSink : public SignalPort{
 public:
-    using SignalPort::SignalPort;
+    SignalSink(SignalNode* parent);
+
+    ~SignalSink();
 };
 
 
 class SignalNode : public SignalGraphElement{
     friend class SignalGraphElement;
 
+    long m_size = 0;
+
 public:
-    SignalNode();
+    SignalNode(long size);
 
     virtual ~SignalNode();
 
-protected:
-    virtual void prologue();
+    inline long size() const { return m_size; }
 
-    virtual void routine(int i);
-
-    virtual void epilogue();
+    virtual void forEachPort(bool (*fun)(SignalNode* node, SignalPort* port, void* arg), void* arg) = 0;
 };
 
 
 class SignalEdge : public SignalGraphElement{
-    SignalNode*   m_parent = nullptr;
-    SignalSource* m_source = nullptr;
-    SignalSink*   m_sink   = nullptr;
+    SignalSource*  m_source         = nullptr;
+    SignalSink*    m_sink           = nullptr;
+    int            m_size           = 0;
+    short          m_source_offset  = 0;
+    short          m_sink_offset    = 0;
 
 public:
-    SignalEdge(SignalSource* source, SignalSink* sink, SignalNode* parent = nullptr);
+    SignalEdge(SignalSource* source, SignalSink* sink);
 
     virtual ~SignalEdge();
-
-private:
-    virtual void routine(int i);
 };
 
 
@@ -89,6 +100,8 @@ class SignalGraph{
 
 public:
     inline void addElement(SignalGraphElement* element) { m_elements.append(element); }
+
+    inline void removeElement(SignalGraphElement* element) { m_elements.remove(element); };
 
     inline SignalGraphElementIterators elements() const { return {m_elements.begin(), m_elements.end()}; }
 };
