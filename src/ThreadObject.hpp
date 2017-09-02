@@ -58,6 +58,7 @@ typedef LinkedList<ThreadObjectIface>::Iterator ThreadObjectIfaceIterator;
  *
  * ThreadObjectIface instances form a tree hierarchy.
  * Each separate tree uses its own worker thread.
+ * Instances belonging to the same tree share their communication link.
  */
 
 class ThreadObjectIface : public LinkedList<ThreadObjectIface>::Node{
@@ -80,9 +81,9 @@ public:
      * This method behaves differently depending on the value of parent.
      * If parent is nullptr this object is deployed in a new thread.
      * If parent is deployed this object is deployed at the thread of the parent.
-     * Any children of this object are recursivly deployed as well.     *
+     * Any children of this object are recursivly deployed as well.
      * The done_fun callback is called once the deployemnt procedure is completed.
-     * The function itself returns immediately.
+     * The deploy() method itself returns immediately.
      * If parent is not deployed this object is simply added to the tree to be later deployed with it.
      * The callback is not called in that case.
      *
@@ -95,7 +96,7 @@ public:
      * Any children of this object are recursivly withdrawn before their parents.
      *
      * The done_fun callback is called once the withdrawal procedure is completed.
-     * The function itself returns immediately.
+     * The withdraw() method itself returns immediately.
      */
     void withdraw(ThreadObjectCallbackFun done_fun = nullptr, void* done_arg = nullptr);
 
@@ -243,7 +244,7 @@ protected:
     void readMessagesFromIface();
 
     /*
-     * Each worker thread is provided with a custom HeapAllocator instance.
+     * Each worker thread is provided with its own HeapAllocator instance.
      */
     HeapAllocator* heapAllocator() const;
 
@@ -267,13 +268,13 @@ protected:
 private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) = 0;
 
-    /* Run the loop of the worker thread.
+    /* Worker thread loop.
      *
      * readMessagesFromIface() method must be periodically called.
      */
     virtual void runThread() = 0;
 
-    /* Stop and exit the worker thread loop. */
+    /* Stop and exit the worker thread. */
     virtual void exitThread() = 0;
 };
 
