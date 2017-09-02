@@ -7,11 +7,7 @@ namespace r64fx{
 
 namespace{
 
-struct SoundDriverDeploymentArgs{};
-
-struct SoundDriverWithdrawalArgs{};
-
-R64FX_DECL_MODULE_AGENTS(SoundDriver)
+R64FX_DECL_DEFAULT_MODULE_AGENTS(SoundDriver);
 
 
 template<unsigned long MsgKey, typename SDPortT, typename GraphPortT, typename ResponseT>
@@ -189,11 +185,6 @@ R64FX_DEF_MODULE_AGENTS(SoundDriver)
 /*======= Main Thread =======*/
 
 class SoundDriverThreadObjectIface : public ModuleThreadObjectIface{
-public:
-    ModuleCallback  done      = nullptr;
-    void*           done_arg  = nullptr;
-
-private:
     virtual ModuleDeploymentAgent* newModuleDeploymentAgent()  override final
     {
         auto agent = new SoundDriverDeploymentAgent;
@@ -331,57 +322,44 @@ private:
 
 Module_SoundDriver::Module_SoundDriver()
 {
-    
+    m = new(std::nothrow) SoundDriverThreadObjectIface;
 }
 
 
 Module_SoundDriver::~Module_SoundDriver()
 {
-    
+#ifdef R64FX_DEBUG
+    assert(!isEngaged());
+    assert(!engagementPending());
+#endif//R64FX_DEBUG
+    delete m_thread_object_iface;
 }
 
 
 bool Module_SoundDriver::engage(ModuleCallback done, void* done_arg)
 {
-    if(!m)
-        m = new(std::nothrow) SoundDriverThreadObjectIface;
-    if(!m)
-        return false;
 #ifdef R64FX_DEBUG
     assert(!isEngaged());
     assert(!engagementPending());
 #endif//R64FX_DEBUG
-
-    m_thread_object_iface->done = done;
-    m_thread_object_iface->done_arg = done_arg;
-    m_thread_object_iface->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
-        auto filter_iface = static_cast<SoundDriverThreadObjectIface*>(iface);
-        if(filter_iface->done)
-        {
-            filter_iface->done((Module*)arg, filter_iface->done_arg);
-        }
-    }, this);
+    deploy_tobj(this, m_thread_object_iface, done, done_arg);
     return true;
 }
 
 
 void Module_SoundDriver::disengage(ModuleCallback done, void* done_arg)
 {
-    m_thread_object_iface->done = done;
-    m_thread_object_iface->done_arg = done_arg;
-    m_thread_object_iface->withdraw([](ThreadObjectIface* iface, void* arg){
-        auto filter_iface = static_cast<SoundDriverThreadObjectIface*>(iface);
-        if(filter_iface->done)
-        {
-            filter_iface->done((Module*)arg, filter_iface->done_arg);
-        }
-    }, this);
+#ifdef R64FX_DEBUG
+    assert(isEngaged());
+    assert(!engagementPending());
+#endif//R64FX_DEBUG
+    withdraw_tobj(this, m_thread_object_iface, done, done_arg);
 }
 
 
 bool Module_SoundDriver::isEngaged()
 {
-    return m != nullptr && m_thread_object_iface->isDeployed() && (!m_thread_object_iface->isPending());
+    return m_thread_object_iface->isDeployed() && (!m_thread_object_iface->isPending());
 }
 
 

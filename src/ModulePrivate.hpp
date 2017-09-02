@@ -19,6 +19,16 @@ class NAME##WithdrawalAgent : public ModuleWithdrawalAgent, public NAME##Withdra
 };
 
 
+#define R64FX_DECL_DEFAULT_MODULE_AGENTS(NAME)\
+class NAME##DeploymentAgent : public ModuleDeploymentAgent{\
+    virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final;\
+};\
+\
+class NAME##WithdrawalAgent : public ModuleWithdrawalAgent{\
+    virtual void withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl) override final;\
+};
+
+
 #define R64FX_DEF_MODULE_AGENTS(NAME)\
 ModuleThreadObjectImpl* NAME##DeploymentAgent::deployModuleImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)\
 {\
@@ -170,6 +180,46 @@ public:
         payload = (SignalSource*) source->m_payload;
     }
 };
+
+
+template<typename SelfT> struct EngagementArgs{
+    SelfT*          self      = nullptr;
+    ModuleCallback  done      = nullptr;
+    void*           done_arg  = nullptr;
+
+    EngagementArgs(SelfT* self, ModuleCallback done, void* done_arg)
+    : self(self), done(done), done_arg(done_arg) {}
+
+    inline void callBack()
+    {
+        if(done)
+        {
+            done(self, done_arg);
+        }
+    }
+};
+
+
+template<typename ModuleT, typename ThreadObjectIfaceT> inline void deploy_tobj(ModuleT* module, ThreadObjectIfaceT* iface, ModuleCallback done, void* done_arg)
+{
+    auto args = new EngagementArgs<ModuleT>(module, done, done_arg);
+    iface->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
+        auto args = (EngagementArgs<ModuleT>*) arg;
+        args->callBack();
+        delete args;
+    }, args);
+}
+
+
+template<typename ModuleT, typename ThreadObjectIfaceT> inline void withdraw_tobj(ModuleT* module, ThreadObjectIfaceT* iface, ModuleCallback done, void* done_arg)
+{
+    auto args = new EngagementArgs<ModuleT>(module, done, done_arg);
+    iface->withdraw([](ThreadObjectIface* iface, void* arg){
+        auto args = (EngagementArgs<ModuleT>*) arg;
+        args->callBack();
+        delete args;
+    }, args);
+}
 
 }//namespace r64fx
 

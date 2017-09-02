@@ -35,7 +35,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
     Module_Player* m_module_player = nullptr;
 
     Module_SoundDriver* m_module_sound_driver = nullptr;
-    ModuleSource* m_port = nullptr;
+    ModuleSource* m_source = nullptr;
 
     SoundFileLoader sfl;
     SoundFileLoader::Port* m_sflp = nullptr;
@@ -135,15 +135,16 @@ struct ProgramPrivate : public View_ProgramEventIface{
     void portAdded(ModuleSource* source, Module_SoundDriver* module_sound_driver)
     {
         cout << "portAdded\n";
-        module_sound_driver->removePort(source, [](void* arg1, void* arg2){
-            auto self = (ProgramPrivate*) arg1;
-            self->portRemoved((Module_SoundDriver*)arg2);
-        }, this, module_sound_driver);
+        m_source = source;
     }
 
     void portRemoved(Module_SoundDriver* module_sound_driver)
     {
         cout << "portRemoved\n";
+        m_module_sound_driver->disengage([](Module* module, void* arg){
+            auto p = (ProgramPrivate*) arg;
+            p->disengagedModuleSoundDriver(static_cast<Module_SoundDriver*>(module));
+        }, this);
     }
 
     void disengagedModuleSoundDriver(Module_SoundDriver* module_sound_driver)
@@ -244,10 +245,10 @@ struct ProgramPrivate : public View_ProgramEventIface{
     {
         if(m_module_sound_driver)
         {
-            m_module_sound_driver->disengage([](Module* module, void* arg){
-                auto p = (ProgramPrivate*) arg;
-                p->disengagedModuleSoundDriver(static_cast<Module_SoundDriver*>(module));
-            }, this);
+            m_module_sound_driver->removePort(m_source, [](void* arg1, void* arg2){
+                auto self = (ProgramPrivate*) arg1;
+                self->portRemoved((Module_SoundDriver*)arg2);
+            }, this, m_module_sound_driver);
         }
     }
 

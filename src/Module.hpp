@@ -39,7 +39,6 @@ typedef void (*ModulePortCallback)(ModulePort* port, void* arg);
 
 class Module{
     friend class ModulePrivate;
-    void* m = nullptr;
 
 public:
     Module();
