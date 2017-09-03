@@ -22,7 +22,7 @@ SignalGraphElement::~SignalGraphElement()
 #define R64FX_SIGNAL_PORT_PARENT_OFFSET_MASK  0x3FFFFFFFFFFFFFFFUL
 
 
-SignalPort::SignalPort(SignalNode* parent)
+SignalPort::SignalPort(SignalGraphNode* parent)
 {
     long thisnum    = (long)this;
     long parentnum  = (long)parent;
@@ -42,11 +42,11 @@ SignalPort::~SignalPort()
 }
 
 
-SignalNode* SignalPort::parentNode() const
+SignalGraphNode* SignalPort::parentNode() const
 {
     long thisnum = (long)this;
     long diff = m_bits;
-    return (SignalNode*)(thisnum - diff);
+    return (SignalGraphNode*)(thisnum - diff);
 }
 
 
@@ -56,7 +56,7 @@ bool SignalPort::isSource() const
 }
 
 
-SignalSource::SignalSource(SignalNode* parent)
+SignalSource::SignalSource(SignalGraphNode* parent)
 : SignalPort(parent)
 {
     m_bits |= R64FX_SIGNAL_PORT_IS_SOURCE;
@@ -69,7 +69,7 @@ SignalSource::~SignalSource()
 }
 
 
-SignalSink::SignalSink(SignalNode* parent)
+SignalSink::SignalSink(SignalGraphNode* parent)
 : SignalPort(parent)
 {
 
@@ -82,26 +82,26 @@ SignalSink::~SignalSink()
 }
 
 
-SignalNode::SignalNode(long size)
+SignalGraphNode::SignalGraphNode(long size)
 : m_size(size)
 {
 
 }
 
 
-SignalNode::~SignalNode()
+SignalGraphNode::~SignalGraphNode()
 {
 
 }
 
 
-SignalEdge::SignalEdge(SignalSource* source, SignalSink* sink)
+SignalGraphEdge::SignalGraphEdge(SignalSource* source, SignalSink* sink)
 {
 
 }
 
 
-SignalEdge::~SignalEdge()
+SignalGraphEdge::~SignalGraphEdge()
 {
 
 }

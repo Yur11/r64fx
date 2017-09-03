@@ -152,27 +152,13 @@ long ModuleThreadObjectImpl::sampleRate() const
 }
 
 
-void ModuleThreadObjectImpl::addGraphElement(SignalGraphElement* element)
+SignalGraph* ModuleThreadObjectImpl::signalGraph() const
 {
 #ifdef R64FX_DEBUG
     assert(asset() != nullptr);
-    assert(element);
 #endif//R64FX_DEBUG
     auto shared = (ModuleImplSharedAssets*) asset();
-    shared->graph.addElement(element);
-    shared->flags |= R64FX_MODULE_SIGNAL_GRAPH_CHANGED;
-}
-
-
-void ModuleThreadObjectImpl::removeGraphElement(SignalGraphElement* element)
-{
-#ifdef R64FX_DEBUG
-    assert(asset() != nullptr);
-    assert(element);
-#endif//R64FX_DEBUG
-    auto shared = (ModuleImplSharedAssets*) asset();
-    shared->graph.removeElement(element);
-    shared->flags |= R64FX_MODULE_SIGNAL_GRAPH_CHANGED;
+    return &(shared->graph);
 }
 
 

@@ -53,6 +53,7 @@ class SoundDriverSyncPort;
 class SignalGraphElement;
 class SignalSink;
 class SignalSource;
+class SignalGraph;
 
 /*
  * === Impl ===================================================================
@@ -81,9 +82,7 @@ protected:
 
     long sampleRate() const;
 
-    void addGraphElement(SignalGraphElement* element);
-
-    void removeGraphElement(SignalGraphElement* element);
+    SignalGraph* signalGraph() const;
 
 private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override;

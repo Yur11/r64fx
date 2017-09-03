@@ -6,12 +6,12 @@
 namespace r64fx{
 
 
-class SignalNode_BufferReader : public SignalNode{
+class SignalGraphNode_BufferReader : public SignalGraphNode{
     SignalSource  m_source;
     float*        m_buffer = nullptr;
 
 public:
-    SignalNode_BufferReader();
+    SignalGraphNode_BufferReader();
 
     void resizeBuffer(int new_size);
 
@@ -19,7 +19,7 @@ public:
 
     inline SignalSource* source() { return &m_source; }
 
-    virtual void forEachPort(bool (*fun)(SignalNode* node, SignalPort* port, void* arg), void* arg) override final;
+    virtual void forEachPort(bool (*fun)(SignalGraphNode* node, SignalPort* port, void* arg), void* arg) override final;
 
 private:
     virtual void prologue() override final;
@@ -30,12 +30,12 @@ private:
 };
 
 
-class SignalNode_BufferWriter : public SignalNode{
+class SignalGraphNode_BufferWriter : public SignalGraphNode{
     SignalSink  m_sink;
     float*      m_buffer = nullptr;
 
 public:
-    SignalNode_BufferWriter();
+    SignalGraphNode_BufferWriter();
 
     void resizeBuffer(int new_size);
 
@@ -43,7 +43,7 @@ public:
 
     inline SignalSink* sink() { return &m_sink; }
 
-    virtual void forEachPort(bool (*fun)(SignalNode* node, SignalPort* port, void* arg), void* arg)  override final;
+    virtual void forEachPort(bool (*fun)(SignalGraphNode* node, SignalPort* port, void* arg), void* arg)  override final;
 
 private:
     virtual void prologue() override final;

@@ -6,7 +6,7 @@
 
 namespace r64fx{
 
-class SignalNode;
+class SignalGraphNode;
 
 /* Base class for Nodes and Edges. */
 class SignalGraphElement : public LinkedList<SignalGraphElement>::Node{
@@ -34,12 +34,12 @@ class SignalPort{
     float*         m_ptr   = nullptr;
     unsigned long  m_bits  = 0;
 
-    SignalPort(SignalNode* parent);
+    SignalPort(SignalGraphNode* parent);
 
     ~SignalPort();
 
 public:
-    SignalNode* parentNode() const;
+    SignalGraphNode* parentNode() const;
 
     bool isSource() const;
 
@@ -51,7 +51,7 @@ public:
 
 class SignalSource : public SignalPort{
 public:
-    SignalSource(SignalNode* parent);
+    SignalSource(SignalGraphNode* parent);
 
     ~SignalSource();
 };
@@ -59,29 +59,29 @@ public:
 
 class SignalSink : public SignalPort{
 public:
-    SignalSink(SignalNode* parent);
+    SignalSink(SignalGraphNode* parent);
 
     ~SignalSink();
 };
 
 
-class SignalNode : public SignalGraphElement{
+class SignalGraphNode : public SignalGraphElement{
     friend class SignalGraphElement;
 
     long m_size = 0;
 
 public:
-    SignalNode(long size);
+    SignalGraphNode(long size);
 
-    virtual ~SignalNode();
+    virtual ~SignalGraphNode();
 
     inline long size() const { return m_size; }
 
-    virtual void forEachPort(bool (*fun)(SignalNode* node, SignalPort* port, void* arg), void* arg) = 0;
+    virtual void forEachPort(bool (*fun)(SignalGraphNode* node, SignalPort* port, void* arg), void* arg) = 0;
 };
 
 
-class SignalEdge : public SignalGraphElement{
+class SignalGraphEdge : public SignalGraphElement{
     SignalSource*  m_source         = nullptr;
     SignalSink*    m_sink           = nullptr;
     int            m_size           = 0;
@@ -89,9 +89,9 @@ class SignalEdge : public SignalGraphElement{
     short          m_sink_offset    = 0;
 
 public:
-    SignalEdge(SignalSource* source, SignalSink* sink);
+    SignalGraphEdge(SignalSource* source, SignalSink* sink);
 
-    virtual ~SignalEdge();
+    virtual ~SignalGraphEdge();
 };
 
 
@@ -99,7 +99,7 @@ class SignalGraph{
     LinkedList<SignalGraphElement> m_elements;
 
 public:
-    inline void addElement(SignalGraphElement* element) { m_elements.append(element); }
+    void add(SignalGraphElement* element) { m_elements.append(element); }
 
     inline void removeElement(SignalGraphElement* element) { m_elements.remove(element); };
 

@@ -4,7 +4,7 @@
 #include "MachinePoolThreadImpl.hpp"
 #include "SoundDriver.hpp"
 #include "SignalGraph.hpp"
-#include "SignalNode_BufferIO.hpp"
+#include "SignalGraphNode_BufferIO.hpp"
 #include "StringUtils.hpp"
 
 #include <utility>
@@ -111,7 +111,7 @@ struct SoundDriverMachineImpl : public MachineImpl{
 //                 }
 //
 //                 auto input = sound_driver->newAudioInput(name);
-//                 auto node =  new SignalNode_BufferReader(input, sound_driver->bufferSize());
+//                 auto node =  new SignalGraphNode_BufferReader(input, sound_driver->bufferSize());
 //                 ctx()->input_subgraph->addItem(node);
 //                 source_impl->sources.at(i) = node->source();
 //             }
@@ -134,7 +134,7 @@ struct SoundDriverMachineImpl : public MachineImpl{
 //                 }
 //
 //                 auto output = sound_driver->newAudioOutput(name);
-//                 auto node =  new SignalNode_BufferWriter(output, sound_driver->bufferSize());
+//                 auto node =  new SignalGraphNode_BufferWriter(output, sound_driver->bufferSize());
 //                 ctx()->output_subgraph->addItem(node);
 //                 sink_impl->sinks.at(i) = node->sink();
 //             }

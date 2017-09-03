@@ -3,7 +3,7 @@
 #include "MachineFlags.hpp"
 #include "MachinePortImpl.hpp"
 #include "MachinePoolThreadImpl.hpp"
-#include "SignalNode_Filter.hpp"
+#include "SignalGraphNode_Filter.hpp"
 
 
 #include <iostream>
@@ -25,14 +25,14 @@ namespace{
 
 
 struct FilterMachineImpl : public MachineImpl{
-    SignalNode_Filter* m_filter = 0;
+    SignalGraphNode_Filter* m_filter = 0;
     MachineSinkImpl*    m_sink_impl    = nullptr;
     MachineSourceImpl*  m_source_impl  = nullptr;
 
     FilterMachineImpl(MachineIface* iface)
     : MachineImpl(iface)
     {
-//         m_filter = new SignalNode_Filter;
+//         m_filter = new SignalGraphNode_Filter;
 //         ctx()->main_subgraph->addItem(m_filter);
 //
 //         m_sink_impl    = new MachineSinkImpl;

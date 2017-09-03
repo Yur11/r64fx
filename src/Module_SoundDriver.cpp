@@ -39,7 +39,7 @@ typedef Message<3, SoundDriverAudioOutput,  SignalSink,    Response_RemovePort> 
 struct Impl_SoundDriverAudioInput : public LinkedList<Impl_SoundDriverAudioInput>::Node{
     friend class SoundDriverThreadObjectImpl;
 
-    SignalNode_BufferReader node;
+    SignalGraphNode_BufferReader node;
     SoundDriverAudioInput*  sd_port  = nullptr;
 
     Impl_SoundDriverAudioInput(Message_AddAudioInput* message)
@@ -57,7 +57,7 @@ struct Impl_SoundDriverAudioInput : public LinkedList<Impl_SoundDriverAudioInput
 struct Impl_SoundDriverAudioOutput : public LinkedList<Impl_SoundDriverAudioOutput>::Node{
     friend class SoundDriverThreadObjectImpl;
 
-    SignalNode_BufferWriter  node;
+    SignalGraphNode_BufferWriter  node;
     SoundDriverAudioOutput*  sd_port  = nullptr;
 
     Impl_SoundDriverAudioOutput(Message_AddAudioOutput* message)
@@ -123,7 +123,7 @@ private:
     {
         auto impl = allocObj<Impl_SoundDriverAudioInput>(message);
         impl->node.resizeBuffer(bufferSize());
-        addGraphElement(&impl->node);
+//         addGraphElement(&impl->node);
         m_inputs.append(impl);
     }
 
@@ -131,7 +131,7 @@ private:
     {
         auto impl = allocObj<Impl_SoundDriverAudioOutput>(message);
         impl->node.resizeBuffer(bufferSize());
-        addGraphElement(&impl->node);
+//         addGraphElement(&impl->node);
         m_outputs.append(impl);
     }
 
@@ -141,7 +141,7 @@ private:
         for(auto obj : m_inputs) if(obj->node.source() == message->graph_port){ impl = obj; break; }
         if(impl)
         {
-            removeGraphElement(&impl->node);
+//             removeGraphElement(&impl->node);
             m_inputs.remove(impl);
             message->sd_port = impl->sd_port;
             freeObj(impl);
@@ -154,7 +154,7 @@ private:
         for(auto obj : m_outputs) if(obj->node.sink() == message->graph_port){ impl = obj; break; }
         if(impl)
         {
-            removeGraphElement(&impl->node);
+//             removeGraphElement(&impl->node);
             m_outputs.remove(impl);
             message->sd_port = impl->sd_port;
             freeObj(impl);
