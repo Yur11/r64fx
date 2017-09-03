@@ -9,7 +9,6 @@ namespace{
 
 R64FX_DECL_DEFAULT_MODULE_AGENTS(SoundDriver);
 
-
 template<unsigned long MsgKey, typename SDPortT, typename GraphPortT, typename ResponseT>
 struct Message{
     inline constexpr static unsigned long Key() { return MsgKey; }
@@ -109,11 +108,8 @@ private:
             R64FX_CASE_RECIEVED(AddAudioOutput)
             R64FX_CASE_RECIEVED(RemoveAudioInput)
             R64FX_CASE_RECIEVED(RemoveAudioOutput)
-
             default:
-            {
                 abort(); //Must never happen!
-            }
         }
 
         sendMessagesToIface(&msg, 1); //Always respond so that iface can free the message payload.
@@ -189,27 +185,7 @@ R64FX_DEF_MODULE_AGENTS(SoundDriver)
 /*======= Main Thread =======*/
 
 class SoundDriverThreadObjectIface : public ModuleThreadObjectIface{
-    virtual ModuleDeploymentAgent* newModuleDeploymentAgent()  override final
-    {
-        auto agent = new SoundDriverDeploymentAgent;
-        return agent;
-    }
-
-    virtual void deleteModuleDeploymentAgent(ModuleDeploymentAgent* agent) override final
-    {
-        delete agent;
-    }
-
-    virtual ModuleWithdrawalAgent* newModuleWithdrawalAgent() override final
-    {
-        return new SoundDriverWithdrawalAgent;
-    }
-
-    virtual void deleteModuleWithdrawalAgent(ModuleWithdrawalAgent* agent) override final
-    {
-        auto withdrawal_agent = static_cast<SoundDriverWithdrawalAgent*>(agent);
-        delete withdrawal_agent;
-    }
+    R64FX_USE_EMPTY_MODULE_AGENTS(SoundDriver)
 
 public:
     template<typename MessageT, typename ResponseT>
@@ -254,11 +230,8 @@ private:
             R64FX_CASE_RECIEVED(AddAudioOutput)
             R64FX_CASE_RECIEVED(RemoveAudioInput)
             R64FX_CASE_RECIEVED(RemoveAudioOutput)
-
             default:
-            {
                 abort();
-            }
         }
     }
 

@@ -43,6 +43,30 @@ void NAME##WithdrawalAgent::withdrawModuleImpl(HeapAllocator* ha, ModuleThreadOb
 }
 
 
+#define R64FX_USE_EMPTY_MODULE_AGENTS(NAME)\
+    virtual ModuleDeploymentAgent* newModuleDeploymentAgent()  override final\
+    {\
+        auto agent = new NAME##DeploymentAgent;\
+        return agent;\
+    }\
+\
+    virtual void deleteModuleDeploymentAgent(ModuleDeploymentAgent* agent) override final\
+    {\
+        delete agent;\
+    }\
+\
+    virtual ModuleWithdrawalAgent* newModuleWithdrawalAgent() override final\
+    {\
+        return new NAME##WithdrawalAgent;\
+    }\
+\
+    virtual void deleteModuleWithdrawalAgent(ModuleWithdrawalAgent* agent) override final\
+    {\
+        auto withdrawal_agent = static_cast<NAME##WithdrawalAgent*>(agent);\
+        delete withdrawal_agent;\
+    }\
+
+
 namespace r64fx{
 
 class ModuleThreadObjectIfaceHandle;

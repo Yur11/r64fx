@@ -378,28 +378,7 @@ Module::~Module()
 
 }
 
-
-ModuleConnection::ModuleConnection(ModuleSource* source_port, ModuleSink* sink)
-{
-
-}
-
-
-bool ModuleConnection::enabled()
-{
-    return false;
-}
-
-
-void ModuleConnection::enableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg)
-{
-    
-}
-
-
-void ModuleConnection::disableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg)
-{
-    
-}
-
 }//namespace r64fx
+
+#include "ModuleConnection.cxx"
+
