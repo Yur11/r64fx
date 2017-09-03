@@ -21,12 +21,10 @@ public:
 
     virtual void forEachPort(bool (*fun)(SignalGraphNode* node, SignalPort* port, void* arg), void* arg) override final;
 
+    virtual int portCount() override final;
+
 private:
-    virtual void prologue() override final;
-
     virtual void routine(int i) override final;
-
-    virtual void epilogue() override final;
 };
 
 
@@ -45,12 +43,10 @@ public:
 
     virtual void forEachPort(bool (*fun)(SignalGraphNode* node, SignalPort* port, void* arg), void* arg)  override final;
 
+    virtual int portCount() override final;
+
 private:
-    virtual void prologue() override final;
-
     virtual void routine(int i) override final;
-
-    virtual void epilogue() override final;
 };
 
 }//namespace r64fx

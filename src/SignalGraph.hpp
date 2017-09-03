@@ -16,11 +16,7 @@ public:
 
     virtual ~SignalGraphElement();
 
-    virtual void prologue() = 0;
-
     virtual void routine(int i) = 0;
-
-    virtual void epilogue() = 0;
 };
 
 
@@ -28,6 +24,8 @@ typedef IteratorPair<LinkedList<SignalGraphElement>::Iterator> SignalGraphElemen
 
 
 class SignalPort{
+    friend class SignalGraphNode;
+    friend class SignalGraphEdge;
     friend class SignalSource;
     friend class SignalSink;
 
@@ -67,31 +65,40 @@ public:
 
 class SignalGraphNode : public SignalGraphElement{
     friend class SignalGraphElement;
-
-    long m_size = 0;
+    int m_size = 0;
 
 public:
-    SignalGraphNode(long size);
+    SignalGraphNode();
 
     virtual ~SignalGraphNode();
 
-    inline long size() const { return m_size; }
-
     virtual void forEachPort(bool (*fun)(SignalGraphNode* node, SignalPort* port, void* arg), void* arg) = 0;
+
+    virtual int portCount() = 0;
+
+    void resize(int new_size);
+
+    inline int size() const { return m_size; }
 };
 
 
 class SignalGraphEdge : public SignalGraphElement{
     SignalSource*  m_source         = nullptr;
     SignalSink*    m_sink           = nullptr;
-    int            m_size           = 0;
     short          m_source_offset  = 0;
     short          m_sink_offset    = 0;
+    int            m_size           = 0;
 
 public:
-    SignalGraphEdge(SignalSource* source, SignalSink* sink);
+    SignalGraphEdge(SignalSource* source, short source_offset, SignalSink* sink, short sink_offset, int size = 1);
 
     virtual ~SignalGraphEdge();
+
+    virtual void routine(int i);
+
+    inline short sourceOffset() const { return m_source_offset; }
+
+    inline short sinkOffset() const { return m_sink_offset; }
 };
 
 
@@ -99,11 +106,15 @@ class SignalGraph{
     LinkedList<SignalGraphElement> m_elements;
 
 public:
-    void add(SignalGraphElement* element) { m_elements.append(element); }
+    void add(SignalGraphNode* node);
 
-    inline void removeElement(SignalGraphElement* element) { m_elements.remove(element); };
+    void add(SignalGraphEdge* edge);
 
-    inline SignalGraphElementIterators elements() const { return {m_elements.begin(), m_elements.end()}; }
+    void remove(SignalGraphNode* node);
+
+    void remove(SignalGraphEdge* edge);
+
+    void run(int nsamples);
 };
 
 }//namespace r64fx

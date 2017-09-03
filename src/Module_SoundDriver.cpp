@@ -123,7 +123,8 @@ private:
     {
         auto impl = allocObj<Impl_SoundDriverAudioInput>(message);
         impl->node.resizeBuffer(bufferSize());
-//         addGraphElement(&impl->node);
+        auto sg = signalGraph();
+        sg->add(&impl->node);
         m_inputs.append(impl);
     }
 
@@ -131,7 +132,8 @@ private:
     {
         auto impl = allocObj<Impl_SoundDriverAudioOutput>(message);
         impl->node.resizeBuffer(bufferSize());
-//         addGraphElement(&impl->node);
+        auto sg = signalGraph();
+        sg->add(&impl->node);
         m_outputs.append(impl);
     }
 
@@ -141,7 +143,8 @@ private:
         for(auto obj : m_inputs) if(obj->node.source() == message->graph_port){ impl = obj; break; }
         if(impl)
         {
-//             removeGraphElement(&impl->node);
+            auto sg = signalGraph();
+            sg->remove(&impl->node);
             m_inputs.remove(impl);
             message->sd_port = impl->sd_port;
             freeObj(impl);
@@ -154,7 +157,8 @@ private:
         for(auto obj : m_outputs) if(obj->node.sink() == message->graph_port){ impl = obj; break; }
         if(impl)
         {
-//             removeGraphElement(&impl->node);
+            auto sg = signalGraph();
+            sg->remove(&impl->node);
             m_outputs.remove(impl);
             message->sd_port = impl->sd_port;
             freeObj(impl);

@@ -16,10 +16,9 @@ void resize_buffer(float* &buffer, int new_size)
 
 
 SignalGraphNode_BufferReader::SignalGraphNode_BufferReader()
-: SignalGraphNode(1)
-, m_source(this)
+: m_source(this)
 {
-
+    resize(1);
 }
 
 
@@ -35,9 +34,9 @@ void SignalGraphNode_BufferReader::forEachPort(bool (*fun)(SignalGraphNode* node
 }
 
 
-void SignalGraphNode_BufferReader::prologue()
+int SignalGraphNode_BufferReader::portCount()
 {
-
+    return 1;
 }
 
 
@@ -47,17 +46,10 @@ void SignalGraphNode_BufferReader::routine(int i)
 }
 
 
-void SignalGraphNode_BufferReader::epilogue()
-{
-
-}
-
-
 SignalGraphNode_BufferWriter::SignalGraphNode_BufferWriter()
-: SignalGraphNode(1)
-, m_sink(this)
+: m_sink(this)
 {
-
+    resize(1);
 }
 
 
@@ -73,21 +65,15 @@ void SignalGraphNode_BufferWriter::forEachPort(bool (*fun)(SignalGraphNode* node
 }
 
 
-void SignalGraphNode_BufferWriter::prologue()
+int SignalGraphNode_BufferWriter::portCount()
 {
-
+    return 1;
 }
 
 
 void SignalGraphNode_BufferWriter::routine(int i)
 {
     m_buffer[i] = m_sink[0];
-}
-
-
-void SignalGraphNode_BufferWriter::epilogue()
-{
-
 }
 
 }//namespace r64fx

@@ -10,11 +10,14 @@ class ModulePort{
     friend class ModuleSource;
     friend class ModulePrivate;
 
-    unsigned long  m_flags    = 0;
+    Module*        m_parent   = nullptr;
     void*          m_payload  = nullptr;
+    unsigned long  m_flags    = 0;
 
 public:
     ModulePort();
+
+    inline Module* parent() const { return m_parent; };
 
     inline bool isSink() const { return !isSource(); }
 
@@ -37,14 +40,8 @@ typedef void (*ModuleCallback)(Module* module, void* arg);
 typedef void (*ModulePortCallback)(ModulePort* port, void* arg);
 
 
-class Module{
-    friend class ModulePrivate;
-
+class ModuleEnagementIface{
 public:
-    Module();
-
-    virtual ~Module();
-
     virtual bool engage(ModuleCallback done = nullptr, void* done_arg = nullptr) = 0;
 
     virtual void disengage(ModuleCallback done = nullptr, void* done_arg = nullptr) = 0;
@@ -55,14 +52,31 @@ public:
 };
 
 
-class ModuleConnection{
-    Module*        m_source_module  = nullptr;
-    ModuleSource*  m_source_port    = nullptr;
-    Module*        m_sink_module    = nullptr;
-    ModuleSink*    m_sink_port      = nullptr;
+class Module : public ModuleEnagementIface{
+    friend class ModulePrivate;
 
 public:
-    ModuleConnection(Module* source_module, ModuleSource* source_port, Module* sink_module, ModuleSink* sink_port);
+    Module();
+
+    virtual ~Module();
+};
+
+
+class ModuleConnection{
+    ModuleSource*  m_source_port  = nullptr;
+    ModuleSink*    m_sink_port    = nullptr;
+    void*          m_payload      = nullptr;
+
+public:
+    ModuleConnection(ModuleSource* source_port, ModuleSink* sink_port);
+
+    bool enabled();
+
+    typedef void (Callback)(ModuleConnection* connections, int nconnections, void* arg);
+
+    static void enableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg);
+
+    static void disableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg);
 };
 
 }//namespace r64fx

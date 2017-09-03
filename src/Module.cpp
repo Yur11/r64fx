@@ -190,14 +190,7 @@ void ModuleThreadObjectImpl::runThread()
                 item->fun(item->arg);
             }
 
-            //Run Main Cycle Here!
-            for(int i=0; i<shared->buffer_size; i++)
-            {
-                for(auto element : shared->graph.elements())
-                {
-                    element->routine(i);
-                }
-            }
+            shared->graph.run(shared->buffer_size);
 
             for(auto item : shared->epilogue_list)
             {
@@ -347,8 +340,6 @@ void ModuleThreadObjectIface::deleteWithdrawalAgent(ThreadObjectWithdrawalAgent*
 
 
 
-
-
 #define R64FX_MODULE_PORT_IS_SOURCE 1
 
 
@@ -388,9 +379,27 @@ Module::~Module()
 }
 
 
-ModuleConnection::ModuleConnection(Module* source_module, ModuleSource* source_port, Module* sink_module, ModuleSink* sink_port)
+ModuleConnection::ModuleConnection(ModuleSource* source_port, ModuleSink* sink)
 {
 
+}
+
+
+bool ModuleConnection::enabled()
+{
+    return false;
+}
+
+
+void ModuleConnection::enableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg)
+{
+    
+}
+
+
+void ModuleConnection::disableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg)
+{
+    
 }
 
 }//namespace r64fx
