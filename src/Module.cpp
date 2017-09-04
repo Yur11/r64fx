@@ -242,41 +242,7 @@ SoundDriver*        g_SoundDriver            = nullptr;
 Timer*              g_SoundDriverEventTimer  = nullptr;
 long                g_SoundDriverUserCount   = 0;
 
-ModuleRootThreadObjectIface*  g_root = nullptr;
-
 }//namespace
-
-
-void ModuleThreadObjectIface::getDeployedRoot(void (*callback)(ModuleThreadObjectIface* iface, void* arg), void* arg)
-{
-    if(!g_root)
-        g_root = new ModuleRootThreadObjectIface;
-
-    if(g_root->isDeployed())
-    {
-        callback(g_root, arg);
-    }
-    else
-    {
-#ifdef R64FX_DEBUG
-        assert(!g_root->deploymentPending());
-#endif//R64FX_DEBUG
-
-        struct Args{
-            void (*callback)(ModuleThreadObjectIface* iface, void* arg) = nullptr;
-            void* arg = nullptr;
-        };
-        auto args = new Args;
-        args->callback = callback;
-        args->arg = arg;
-
-        g_root->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
-            auto args = (Args*) arg;
-            args->callback(g_root, args->arg);
-            delete args;
-        }, args);
-    }
-}
 
 
 SoundDriver* ModuleThreadObjectIface::soundDriver()
@@ -375,6 +341,17 @@ void ModuleThreadObjectIface::deleteWithdrawalAgent(ThreadObjectWithdrawalAgent*
 }
 
 
+namespace{
+
+long g_MaxThreadCount = 2;
+
+struct ModuleRootThreadRec : public LinkedList<ModuleRootThreadRec>::Node{
+    ModuleRootThreadObjectIface* root = nullptr;
+    int thread_id = 0;
+};
+
+LinkedList<ModuleRootThreadRec> g_root_recs;
+
 struct EngagementArgs{
     Module*             module    = nullptr;
     ThreadObjectIface*  iface     = nullptr;
@@ -393,11 +370,59 @@ struct EngagementArgs{
     }
 };
 
+}//namespace
 
-void deploy_tobj(Module* module, ThreadObjectIface* iface, ModuleCallback done, void* done_arg)
+
+void get_deployed_root(int thread_id, void (*callback)(ModuleThreadObjectIface* iface, void* arg), void* arg)
+{
+#ifdef R64FX_DEBUG
+    assert(thread_id >= 0);
+    assert(thread_id < g_MaxThreadCount);
+#endif//R64FX_DEBUG
+
+    ModuleRootThreadRec* rec = nullptr;
+    for(auto root_rec : g_root_recs)
+    {
+        if(root_rec->thread_id == thread_id)
+        {
+#ifdef R64FX_DEBUG
+            assert(root_rec->root && root_rec->root->isDeployed() && (!root_rec->root->isPending()));
+#endif//R64FX_DEBUG
+            rec = root_rec;
+            break;
+        }
+    }
+
+    if(rec)
+    {
+        callback(rec->root, arg);
+    }
+    else
+    {
+        rec = new ModuleRootThreadRec;
+        rec->root = new ModuleRootThreadObjectIface;
+        rec->thread_id = thread_id;
+
+        struct Args{
+            void (*callback)(ModuleThreadObjectIface* iface, void* arg) = nullptr;
+            void* arg = nullptr;
+        };
+        auto args = new Args;
+        args->callback = callback;
+        args->arg = arg;
+
+        rec->root->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
+            auto args = (Args*) arg;
+            args->callback((ModuleRootThreadObjectIface*)iface, args->arg);
+            delete args;
+        }, args);
+    }
+}
+
+void ModulePrivate::deploy(Module* module, ModuleThreadObjectIface* iface, ModuleCallback done, void* done_arg)
 {
     auto args = new EngagementArgs(module, iface, done, done_arg);
-    ModuleThreadObjectIface::getDeployedRoot([](ModuleThreadObjectIface* root, void* arg){
+    get_deployed_root(module->threadId(), [](ModuleThreadObjectIface* root, void* arg){
         auto args = (EngagementArgs*) arg;
         args->iface->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
             auto args = (EngagementArgs*) arg;
@@ -405,11 +430,10 @@ void deploy_tobj(Module* module, ThreadObjectIface* iface, ModuleCallback done, 
             delete args;
         }, args);
     }, args);
-
 }
 
 
-void withdraw_tobj(Module* module, ThreadObjectIface* iface, ModuleCallback done, void* done_arg)
+void ModulePrivate::withdraw(Module* module, ModuleThreadObjectIface* iface, ModuleCallback done, void* done_arg)
 {
     auto args = new EngagementArgs(module, nullptr, done, done_arg);
     iface->withdraw([](ThreadObjectIface* iface, void* arg){
@@ -457,6 +481,21 @@ Module::Module()
 Module::~Module()
 {
 
+}
+
+
+void Module::changeThread(int thread_id)
+{
+#ifdef R64FX_DEBUG
+    assert(!isEngaged() && !engagementPending());
+#endif//R64FX_DEBUG
+    m_thread_id = thread_id;
+}
+
+
+int Module::threadId() const
+{
+    return m_thread_id;
 }
 
 }//namespace r64fx

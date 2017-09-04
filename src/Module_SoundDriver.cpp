@@ -319,7 +319,7 @@ bool Module_SoundDriver::engage(ModuleCallback done, void* done_arg)
     assert(!isEngaged());
     assert(!engagementPending());
 #endif//R64FX_DEBUG
-    deploy_tobj(this, m_thread_object_iface, done, done_arg);
+    ModulePrivate::deploy(this, m_thread_object_iface, done, done_arg);
     return true;
 }
 
@@ -330,7 +330,7 @@ void Module_SoundDriver::disengage(ModuleCallback done, void* done_arg)
     assert(isEngaged());
     assert(!engagementPending());
 #endif//R64FX_DEBUG
-    withdraw_tobj(this, m_thread_object_iface, done, done_arg);
+    ModulePrivate::withdraw(this, m_thread_object_iface, done, done_arg);
 }
 
 

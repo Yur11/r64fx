@@ -110,7 +110,10 @@ bool ModuleConnection::enabled()
 
 void ModuleConnection::enableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg)
 {
-    
+    for(int i=0; i<nconnections; i++)
+    {
+        
+    }
 }
 
 

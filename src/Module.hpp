@@ -40,8 +40,15 @@ typedef void (*ModuleCallback)(Module* module, void* arg);
 typedef void (*ModulePortCallback)(ModulePort* port, void* arg);
 
 
-class ModuleEnagementIface{
+class Module{
+    friend class ModulePrivate;
+    int m_thread_id = 0;
+
 public:
+    Module();
+
+    virtual ~Module();
+
     virtual bool engage(ModuleCallback done = nullptr, void* done_arg = nullptr) = 0;
 
     virtual void disengage(ModuleCallback done = nullptr, void* done_arg = nullptr) = 0;
@@ -49,16 +56,10 @@ public:
     virtual bool isEngaged() = 0;
 
     virtual bool engagementPending() = 0;
-};
 
+    void changeThread(int thread_id);
 
-class Module : public ModuleEnagementIface{
-    friend class ModulePrivate;
-
-public:
-    Module();
-
-    virtual ~Module();
+    int threadId() const;
 };
 
 

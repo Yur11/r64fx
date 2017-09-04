@@ -153,9 +153,6 @@ class ModuleWithdrawalAgent : public ThreadObjectWithdrawalAgent{
  */
 
 class ModuleThreadObjectIface : public ThreadObjectIface{
-public:
-    static void getDeployedRoot(void (*callback)(ModuleThreadObjectIface* root, void* arg), void* arg);
-
 protected:
     SoundDriver* soundDriver();
 
@@ -186,6 +183,10 @@ private:
 
 class ModulePrivate{
 public:
+    static void deploy(Module* module, ModuleThreadObjectIface* iface, ModuleCallback done, void* done_arg);
+
+    static void withdraw(Module* module, ModuleThreadObjectIface* iface, ModuleCallback done, void* done_arg);
+
     inline static void setPortPayload(ModuleSink* sink, SignalSink* payload)
     {
         sink->m_payload = (void*) payload;
@@ -206,11 +207,6 @@ public:
         payload = (SignalSource*) source->m_payload;
     }
 };
-
-
-void deploy_tobj(Module* module, ThreadObjectIface* iface, ModuleCallback done, void* done_arg);
-
-void withdraw_tobj(Module* module, ThreadObjectIface* iface, ModuleCallback done, void* done_arg);
 
 }//namespace r64fx
 
