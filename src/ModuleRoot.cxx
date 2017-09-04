@@ -1,10 +1,10 @@
-/* To be included in Moduel.cpp */
+/* To be included in Module.cpp */
 
 namespace r64fx{
 
 namespace{
 
-R64FX_DECL_DEFAULT_MODULE_AGENTS(ModuleConnectionManager);
+R64FX_DECL_DEFAULT_MODULE_AGENTS(ModuleRoot);
 
 
 struct ModuleConnectionMessage{
@@ -20,19 +20,19 @@ struct ModuleConnectionMessage{
 
 /*======= Worker Thread =======*/
 
-class ModuleConnectionManagerThreadObjectImpl : public ModuleThreadObjectImpl{
+class ModuleRootThreadObjectImpl : public ModuleThreadObjectImpl{
 public:
-    ModuleConnectionManagerThreadObjectImpl(ModuleConnectionManagerDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
+    ModuleRootThreadObjectImpl(ModuleRootDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
     : ModuleThreadObjectImpl(agent, R64FX_THREAD_OBJECT_IMPL_ARGS)
     {
 
     }
 
-    ~ModuleConnectionManagerThreadObjectImpl()
+    ~ModuleRootThreadObjectImpl()
     {
     }
 
-    void storeWithdrawalArgs(ModuleConnectionManagerWithdrawalAgent* agent)
+    void storeWithdrawalArgs(ModuleRootWithdrawalAgent* agent)
     {
     }
 
@@ -69,14 +69,14 @@ private:
     }
 };
 
-R64FX_DEF_MODULE_AGENTS(ModuleConnectionManager)
+R64FX_DEF_MODULE_AGENTS(ModuleRoot)
 
 
 
 /*======= Main Thread =======*/
 
-class ModuleConnectionManagerThreadObjectIface : public ModuleThreadObjectIface{
-    R64FX_USE_EMPTY_MODULE_AGENTS(ModuleConnectionManager)
+class ModuleRootThreadObjectIface : public ModuleThreadObjectIface{
+    R64FX_USE_EMPTY_MODULE_AGENTS(ModuleRoot)
 
 public:
 
@@ -89,9 +89,9 @@ private:
         assert(msgs);
         assert(nmsgs > 0);
 #endif//R64FX_DEBUG
+        delete[] msgs;
     }
 };
-
 
 }//namespace
 

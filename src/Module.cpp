@@ -10,6 +10,8 @@
 #include <iostream>
 #endif//R64FX_DEBUG
 
+#include "ModuleRoot.cxx"
+
 namespace r64fx{
 
 /*
@@ -236,11 +238,45 @@ void ModuleWithdrawalAgent::withdrawImpl(HeapAllocator* ha, ThreadObjectImpl* im
  */
 namespace{
 
-SoundDriver*  g_SoundDriver            = nullptr;
-Timer*        g_SoundDriverEventTimer  = nullptr;
-long          g_SoundDriverUserCount   = 0;
+SoundDriver*        g_SoundDriver            = nullptr;
+Timer*              g_SoundDriverEventTimer  = nullptr;
+long                g_SoundDriverUserCount   = 0;
+
+ModuleRootThreadObjectIface*  g_root = nullptr;
 
 }//namespace
+
+
+void ModuleThreadObjectIface::getDeployedRoot(void (*callback)(ModuleThreadObjectIface* iface, void* arg), void* arg)
+{
+    if(!g_root)
+        g_root = new ModuleRootThreadObjectIface;
+
+    if(g_root->isDeployed())
+    {
+        callback(g_root, arg);
+    }
+    else
+    {
+#ifdef R64FX_DEBUG
+        assert(!g_root->deploymentPending());
+#endif//R64FX_DEBUG
+
+        struct Args{
+            void (*callback)(ModuleThreadObjectIface* iface, void* arg) = nullptr;
+            void* arg = nullptr;
+        };
+        auto args = new Args;
+        args->callback = callback;
+        args->arg = arg;
+
+        g_root->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
+            auto args = (Args*) arg;
+            args->callback(g_root, args->arg);
+            delete args;
+        }, args);
+    }
+}
 
 
 SoundDriver* ModuleThreadObjectIface::soundDriver()
@@ -339,6 +375,51 @@ void ModuleThreadObjectIface::deleteWithdrawalAgent(ThreadObjectWithdrawalAgent*
 }
 
 
+struct EngagementArgs{
+    Module*             module    = nullptr;
+    ThreadObjectIface*  iface     = nullptr;
+    ModuleCallback      done      = nullptr;
+    void*               done_arg  = nullptr;
+
+    EngagementArgs(Module* module, ThreadObjectIface* iface, ModuleCallback done, void* done_arg)
+    : module(module), iface(iface), done(done), done_arg(done_arg) {}
+
+    inline void callBack()
+    {
+        if(done)
+        {
+            done(module, done_arg);
+        }
+    }
+};
+
+
+void deploy_tobj(Module* module, ThreadObjectIface* iface, ModuleCallback done, void* done_arg)
+{
+    auto args = new EngagementArgs(module, iface, done, done_arg);
+    ModuleThreadObjectIface::getDeployedRoot([](ModuleThreadObjectIface* root, void* arg){
+        auto args = (EngagementArgs*) arg;
+        args->iface->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
+            auto args = (EngagementArgs*) arg;
+            args->callBack();
+            delete args;
+        }, args);
+    }, args);
+
+}
+
+
+void withdraw_tobj(Module* module, ThreadObjectIface* iface, ModuleCallback done, void* done_arg)
+{
+    auto args = new EngagementArgs(module, nullptr, done, done_arg);
+    iface->withdraw([](ThreadObjectIface* iface, void* arg){
+        auto args = (EngagementArgs*) arg;
+        args->callBack();
+        delete args;
+    }, args);
+}
+
+
 
 #define R64FX_MODULE_PORT_IS_SOURCE 1
 
@@ -379,6 +460,3 @@ Module::~Module()
 }
 
 }//namespace r64fx
-
-#include "ModuleConnection.cxx"
-

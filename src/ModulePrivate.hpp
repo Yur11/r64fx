@@ -153,6 +153,9 @@ class ModuleWithdrawalAgent : public ThreadObjectWithdrawalAgent{
  */
 
 class ModuleThreadObjectIface : public ThreadObjectIface{
+public:
+    static void getDeployedRoot(void (*callback)(ModuleThreadObjectIface* root, void* arg), void* arg);
+
 protected:
     SoundDriver* soundDriver();
 
@@ -205,44 +208,9 @@ public:
 };
 
 
-template<typename SelfT> struct EngagementArgs{
-    SelfT*          self      = nullptr;
-    ModuleCallback  done      = nullptr;
-    void*           done_arg  = nullptr;
+void deploy_tobj(Module* module, ThreadObjectIface* iface, ModuleCallback done, void* done_arg);
 
-    EngagementArgs(SelfT* self, ModuleCallback done, void* done_arg)
-    : self(self), done(done), done_arg(done_arg) {}
-
-    inline void callBack()
-    {
-        if(done)
-        {
-            done(self, done_arg);
-        }
-    }
-};
-
-
-template<typename ModuleT, typename ThreadObjectIfaceT> inline void deploy_tobj(ModuleT* module, ThreadObjectIfaceT* iface, ModuleCallback done, void* done_arg)
-{
-    auto args = new EngagementArgs<ModuleT>(module, done, done_arg);
-    iface->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
-        auto args = (EngagementArgs<ModuleT>*) arg;
-        args->callBack();
-        delete args;
-    }, args);
-}
-
-
-template<typename ModuleT, typename ThreadObjectIfaceT> inline void withdraw_tobj(ModuleT* module, ThreadObjectIfaceT* iface, ModuleCallback done, void* done_arg)
-{
-    auto args = new EngagementArgs<ModuleT>(module, done, done_arg);
-    iface->withdraw([](ThreadObjectIface* iface, void* arg){
-        auto args = (EngagementArgs<ModuleT>*) arg;
-        args->callBack();
-        delete args;
-    }, args);
-}
+void withdraw_tobj(Module* module, ThreadObjectIface* iface, ModuleCallback done, void* done_arg);
 
 }//namespace r64fx
 
