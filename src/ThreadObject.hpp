@@ -102,6 +102,8 @@ public:
 
     ThreadObjectIface* parent() const;
 
+    inline bool isEmpty() const { return m_children.isEmpty(); }
+
     IteratorPair<ThreadObjectIfaceIterator> children() const;
 
     bool isDeployed() const;

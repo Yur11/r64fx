@@ -480,6 +480,9 @@ void ThreadObjectManagerIface::withdrawObject(
 
 void ThreadObjectManagerIface::objectWithdrawn(ThreadObjectWithdrawalAgent* agent)
 {
+    ThreadObjectCallbackFun done_fun = nullptr;
+    void* done_arg = nullptr;
+
     auto object = agent->object_iface;
     auto parent_agent = agent->parent_agent;
     if(parent_agent)
@@ -501,13 +504,9 @@ void ThreadObjectManagerIface::objectWithdrawn(ThreadObjectWithdrawalAgent* agen
     {
         alterTreeFlags(object, (R64FX_THREAD_OBJECT_PENDING | R64FX_THREAD_OBJECT_DEPLOYED), false);
 
-        auto done_fun = agent->done_fun;
-        auto done_arg = agent->done_arg;
+        done_fun = agent->done_fun;
+        done_arg = agent->done_arg;
         object->deleteWithdrawalAgent(agent);
-        if(done_fun)
-        {
-            done_fun(object, done_arg);
-        }
     }
 
     object->m_manager = nullptr;
@@ -528,6 +527,11 @@ void ThreadObjectManagerIface::objectWithdrawn(ThreadObjectWithdrawalAgent* agen
             self->suicide();
         }, this);
         m_timer->setInterval(0);
+    }
+
+    if(done_fun)
+    {
+        done_fun(object, done_arg);
     }
 }
 
