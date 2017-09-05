@@ -373,7 +373,7 @@ struct EngagementArgs{
 }//namespace
 
 
-void get_deployed_root(int thread_id, void (*callback)(ModuleThreadObjectIface* iface, void* arg), void* arg)
+void get_deployed_root(int thread_id, void (*callback)(ModuleRootThreadObjectIface* root, void* arg), void* arg)
 {
 #ifdef R64FX_DEBUG
     assert(thread_id >= 0);
@@ -402,9 +402,10 @@ void get_deployed_root(int thread_id, void (*callback)(ModuleThreadObjectIface* 
         rec = new ModuleRootThreadRec;
         rec->root = new ModuleRootThreadObjectIface;
         rec->thread_id = thread_id;
+        g_root_recs.append(rec);
 
         struct Args{
-            void (*callback)(ModuleThreadObjectIface* iface, void* arg) = nullptr;
+            void (*callback)(ModuleRootThreadObjectIface* iface, void* arg) = nullptr;
             void* arg = nullptr;
         };
         auto args = new Args;
@@ -422,9 +423,9 @@ void get_deployed_root(int thread_id, void (*callback)(ModuleThreadObjectIface* 
 void ModulePrivate::deploy(Module* module, ModuleThreadObjectIface* iface, ModuleCallback done, void* done_arg)
 {
     auto args = new EngagementArgs(module, iface, done, done_arg);
-    get_deployed_root(module->threadId(), [](ModuleThreadObjectIface* root, void* arg){
+    get_deployed_root(module->threadId(), [](ModuleRootThreadObjectIface* root, void* arg){
         auto args = (EngagementArgs*) arg;
-        args->iface->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
+        args->iface->deploy(root, [](ThreadObjectIface* iface, void* arg){
             auto args = (EngagementArgs*) arg;
             args->callBack();
             delete args;
@@ -435,11 +436,38 @@ void ModulePrivate::deploy(Module* module, ModuleThreadObjectIface* iface, Modul
 
 void ModulePrivate::withdraw(Module* module, ModuleThreadObjectIface* iface, ModuleCallback done, void* done_arg)
 {
-    auto args = new EngagementArgs(module, nullptr, done, done_arg);
+    auto args = new EngagementArgs(module, iface->parent(), done, done_arg);
     iface->withdraw([](ThreadObjectIface* iface, void* arg){
         auto args = (EngagementArgs*) arg;
-        args->callBack();
-        delete args;
+        auto parent = args->iface;
+
+        if((!parent->parent()) && parent->isEmpty()) //Withdraw root if needed.
+        {
+            parent->withdraw([](ThreadObjectIface* iface, void* arg){
+                auto args = (EngagementArgs*) arg;
+
+#ifdef R64FX_DEBUG
+                assert(dynamic_cast<ModuleRootThreadObjectIface*>(iface));
+#endif//R64FX_DEBUG
+                auto root = static_cast<ModuleRootThreadObjectIface*>(iface);
+                ModuleRootThreadRec* rec_to_remove = nullptr;
+                for(auto root_rec : g_root_recs) {if(root_rec->root == root) { rec_to_remove = root_rec; break; }}
+#ifdef R64FX_DEBUG
+                assert(rec_to_remove);
+#endif//R64FX_DEBUG
+                delete root;
+                g_root_recs.remove(rec_to_remove);
+                delete rec_to_remove;
+
+                args->callBack();
+                delete args;
+            }, args);
+        }
+        else
+        {
+            args->callBack();
+            delete args;
+        }
     }, args);
 }
 
