@@ -60,6 +60,8 @@ public:
     void changeThread(int thread_id);
 
     int threadId() const;
+
+    static int maxThreadId();
 };
 
 

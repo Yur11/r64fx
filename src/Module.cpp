@@ -10,6 +10,10 @@
 #include <iostream>
 #endif//R64FX_DEBUG
 
+#ifndef R64FX_MAX_POSSIBLE_MODULE_THREADS
+#define R64FX_MAX_POSSIBLE_MODULE_THREADS 2
+#endif//R64FX_MAX_POSSIBLE_MODULE_THREADS
+
 #include "ModuleRoot.cxx"
 
 namespace r64fx{
@@ -343,14 +347,14 @@ void ModuleThreadObjectIface::deleteWithdrawalAgent(ThreadObjectWithdrawalAgent*
 
 namespace{
 
-long g_MaxThreadCount = 2;
+long g_MaxThreadCount = R64FX_MAX_POSSIBLE_MODULE_THREADS;
 
-struct ModuleRootThreadRec : public LinkedList<ModuleRootThreadRec>::Node{
+struct ModuleRootThreadRec{
     ModuleRootThreadObjectIface* root = nullptr;
-    int thread_id = 0;
 };
 
-LinkedList<ModuleRootThreadRec> g_root_recs;
+ModuleRootThreadRec g_root_recs[R64FX_MAX_POSSIBLE_MODULE_THREADS];
+
 
 struct EngagementArgs{
     Module*             module    = nullptr;
@@ -380,29 +384,14 @@ void get_deployed_root(int thread_id, void (*callback)(ModuleRootThreadObjectIfa
     assert(thread_id < g_MaxThreadCount);
 #endif//R64FX_DEBUG
 
-    ModuleRootThreadRec* rec = nullptr;
-    for(auto root_rec : g_root_recs)
+    auto &rec = g_root_recs[thread_id];
+    if(rec.root)
     {
-        if(root_rec->thread_id == thread_id)
-        {
-#ifdef R64FX_DEBUG
-            assert(root_rec->root && root_rec->root->isDeployed() && (!root_rec->root->isPending()));
-#endif//R64FX_DEBUG
-            rec = root_rec;
-            break;
-        }
-    }
-
-    if(rec)
-    {
-        callback(rec->root, arg);
+        callback(rec.root, arg);
     }
     else
     {
-        rec = new ModuleRootThreadRec;
-        rec->root = new ModuleRootThreadObjectIface;
-        rec->thread_id = thread_id;
-        g_root_recs.append(rec);
+        rec.root = new ModuleRootThreadObjectIface;
 
         struct Args{
             void (*callback)(ModuleRootThreadObjectIface* iface, void* arg) = nullptr;
@@ -412,7 +401,7 @@ void get_deployed_root(int thread_id, void (*callback)(ModuleRootThreadObjectIfa
         args->callback = callback;
         args->arg = arg;
 
-        rec->root->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
+        rec.root->deploy(nullptr, [](ThreadObjectIface* iface, void* arg){
             auto args = (Args*) arg;
             args->callback((ModuleRootThreadObjectIface*)iface, args->arg);
             delete args;
@@ -422,6 +411,11 @@ void get_deployed_root(int thread_id, void (*callback)(ModuleRootThreadObjectIfa
 
 void ModulePrivate::deploy(Module* module, ModuleThreadObjectIface* iface, ModuleCallback done, void* done_arg)
 {
+#ifdef R64FX_DEBUG
+    assert(module->threadId() >=0);
+    assert(module->threadId() < g_MaxThreadCount);
+#endif//R64FX_DEBUG
+
     auto args = new EngagementArgs(module, iface, done, done_arg);
     get_deployed_root(module->threadId(), [](ModuleRootThreadObjectIface* root, void* arg){
         auto args = (EngagementArgs*) arg;
@@ -450,14 +444,10 @@ void ModulePrivate::withdraw(Module* module, ModuleThreadObjectIface* iface, Mod
                 assert(dynamic_cast<ModuleRootThreadObjectIface*>(iface));
 #endif//R64FX_DEBUG
                 auto root = static_cast<ModuleRootThreadObjectIface*>(iface);
-                ModuleRootThreadRec* rec_to_remove = nullptr;
-                for(auto root_rec : g_root_recs) {if(root_rec->root == root) { rec_to_remove = root_rec; break; }}
-#ifdef R64FX_DEBUG
-                assert(rec_to_remove);
-#endif//R64FX_DEBUG
                 delete root;
-                g_root_recs.remove(rec_to_remove);
-                delete rec_to_remove;
+
+                auto &rec = g_root_recs[args->module->threadId()];
+                rec.root = nullptr;
 
                 args->callBack();
                 delete args;
@@ -524,6 +514,12 @@ void Module::changeThread(int thread_id)
 int Module::threadId() const
 {
     return m_thread_id;
+}
+
+
+int Module::maxThreadId()
+{
+    return g_MaxThreadCount;
 }
 
 }//namespace r64fx

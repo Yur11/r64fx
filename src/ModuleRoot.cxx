@@ -110,6 +110,7 @@ bool ModuleConnection::enabled()
 
 void ModuleConnection::enableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg)
 {
+    auto msgs = new ModuleConnectionMessage[nconnections];
     for(int i=0; i<nconnections; i++)
     {
         
@@ -119,7 +120,10 @@ void ModuleConnection::enableBulk(ModuleConnection* connections, int nconnection
 
 void ModuleConnection::disableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg)
 {
-    
+    for(int i=0; i<nconnections; i++)
+    {
+        
+    }
 }
 
 }//namespace r64fx
