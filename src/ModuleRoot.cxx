@@ -1,6 +1,4 @@
-/* To be included in Module.cpp */
-
-namespace r64fx{
+/* To be included in Module.cpp within r64fx namespace. */
 
 namespace{
 
@@ -79,6 +77,10 @@ class ModuleRootThreadObjectIface : public ModuleThreadObjectIface{
     R64FX_USE_EMPTY_MODULE_AGENTS(ModuleRoot)
 
 public:
+    inline void sendConnectionMessages(ModuleConnectionMessage* msgs, int nmsgs)
+    {
+        
+    }
 
 private:
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg) override final
@@ -110,10 +112,36 @@ bool ModuleConnection::enabled()
 
 void ModuleConnection::enableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg)
 {
-    auto msgs = new ModuleConnectionMessage[nconnections];
-    for(int i=0; i<nconnections; i++)
+    int source_id  = -1;
+    int sink_id    = -1;
+    int size       = 0;
+    for(int i=0; i<nconnections;)
     {
-        
+        auto connection  = connections[i];
+        auto source      = connection.source();
+        auto sink        = connection.sink();
+        if(source_id == source->threadId() && sink_id == sink->threadId())
+        {
+            size++;
+            i++;
+        }
+        else
+        {
+            if(size > 0)
+            {
+                auto msgs = new ModuleConnectionMessage[size];
+                for(int j=(i-size); j<i; i++)
+                {
+                }
+            }
+            else
+            {
+                source_id = source->threadId();
+                sink_id = sink->threadId();
+                size = 1;
+                i++;
+            }
+        }
     }
 }
 
@@ -125,5 +153,3 @@ void ModuleConnection::disableBulk(ModuleConnection* connections, int nconnectio
         
     }
 }
-
-}//namespace r64fx

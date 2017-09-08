@@ -14,8 +14,6 @@
 #define R64FX_MAX_POSSIBLE_MODULE_THREADS 2
 #endif//R64FX_MAX_POSSIBLE_MODULE_THREADS
 
-#include "ModuleRoot.cxx"
-
 namespace r64fx{
 
 /*
@@ -347,6 +345,8 @@ void ModuleThreadObjectIface::deleteWithdrawalAgent(ThreadObjectWithdrawalAgent*
 
 namespace{
 
+class ModuleRootThreadObjectIface;
+
 long g_MaxThreadCount = R64FX_MAX_POSSIBLE_MODULE_THREADS;
 
 struct ModuleRootThreadRec{
@@ -375,6 +375,9 @@ struct EngagementArgs{
 };
 
 }//namespace
+
+
+#include "ModuleRoot.cxx"
 
 
 void get_deployed_root(int thread_id, void (*callback)(ModuleRootThreadObjectIface* root, void* arg), void* arg)
@@ -408,6 +411,7 @@ void get_deployed_root(int thread_id, void (*callback)(ModuleRootThreadObjectIfa
         }, args);
     }
 }
+
 
 void ModulePrivate::deploy(Module* module, ModuleThreadObjectIface* iface, ModuleCallback done, void* done_arg)
 {

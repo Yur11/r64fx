@@ -10,9 +10,10 @@ class ModulePort{
     friend class ModuleSource;
     friend class ModulePrivate;
 
-    Module*        m_parent   = nullptr;
-    void*          m_payload  = nullptr;
-    unsigned long  m_flags    = 0;
+    Module*        m_parent     = nullptr;
+    void*          m_payload    = nullptr;
+    unsigned long  m_flags      = 0;
+    int            m_thread_id  = 0;
 
 public:
     ModulePort();
@@ -22,6 +23,8 @@ public:
     inline bool isSink() const { return !isSource(); }
 
     bool isSource() const;
+
+    inline int threadId() const { return m_thread_id; }
 };
 
 class ModuleSink : public ModulePort{
@@ -66,12 +69,16 @@ public:
 
 
 class ModuleConnection{
-    ModuleSource*  m_source_port  = nullptr;
-    ModuleSink*    m_sink_port    = nullptr;
-    void*          m_payload      = nullptr;
+    ModuleSource*  m_source   = nullptr;
+    ModuleSink*    m_sink     = nullptr;
+    void*          m_payload  = nullptr;
 
 public:
     ModuleConnection(ModuleSource* source_port, ModuleSink* sink_port);
+
+    inline ModuleSource* source() const { return m_source; }
+
+    inline ModuleSink* sink() const { return m_sink; }
 
     bool enabled();
 
