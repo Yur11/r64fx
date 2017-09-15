@@ -105,6 +105,7 @@ set(SRC
     Widget_Text.cpp
     Window.cpp
     gl.cpp
+    jit.cpp
     main.cpp
 )
 
