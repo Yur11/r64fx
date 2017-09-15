@@ -6,65 +6,38 @@
 
 namespace r64fx{
 
-class SignalGraphNode;
+class SignalGraphProcessingContext;
 
-/* Base class for Nodes and Edges. */
-class SignalGraphElement : public LinkedList<SignalGraphElement>::Node{
-
-public:
-    SignalGraphElement();
-
-    virtual ~SignalGraphElement();
-
-    virtual void routine(int i) = 0;
-};
-
-
-typedef IteratorPair<LinkedList<SignalGraphElement>::Iterator> SignalGraphElementIterators;
-
-
-class SignalPort{
-    friend class SignalGraphNode;
-    friend class SignalGraphEdge;
-    friend class SignalSource;
+class SignalSource{
     friend class SignalSink;
 
-    float*         m_ptr   = nullptr;
-    unsigned long  m_bits  = 0;
-
-    SignalPort(SignalGraphNode* parent);
-
-    ~SignalPort();
+    int m_index = 0;
+    int m_connected_sinks = 0;
+    int m_processed_sinks = 0;
 
 public:
-    SignalGraphNode* parentNode() const;
-
-    bool isSource() const;
-
-    inline bool isSink() const { return !isSource(); }
-
-    inline float &operator[](int i) { return m_ptr[i]; }
-};
-
-
-class SignalSource : public SignalPort{
-public:
-    SignalSource(SignalGraphNode* parent);
+    SignalSource();
 
     ~SignalSource();
 };
 
 
-class SignalSink : public SignalPort{
+class SignalSink{
+    SignalSource* m_connected_source = nullptr;
+
 public:
-    SignalSink(SignalGraphNode* parent);
+    SignalSink();
 
     ~SignalSink();
+
+    void setConnectedSource(SignalSource* source);
 };
 
 
-class SignalGraphNode : public SignalGraphElement{
-    friend class SignalGraphElement;
+class SignalGraphNode : public LinkedList<SignalGraphNode>::Node{
+    friend class SignalGraph;
+
+    unsigned int m_position = 0;
     int m_size = 0;
 
 public:
@@ -72,49 +45,114 @@ public:
 
     virtual ~SignalGraphNode();
 
-    virtual void forEachPort(bool (*fun)(SignalGraphNode* node, SignalPort* port, void* arg), void* arg) = 0;
+    virtual void process(SignalGraphProcessingContext* ctx) = 0;
 
-    virtual int portCount() = 0;
-
-    void resize(int new_size);
+    inline void setSize(int size) { m_size = size; }
 
     inline int size() const { return m_size; }
+
+    virtual void getSources(SignalSource* &sources, int &nsources);
+
+    virtual void getSinks(SignalSink* &sinks, int &nsinks);
 };
 
 
-class SignalGraphEdge : public SignalGraphElement{
-    SignalSource*  m_source         = nullptr;
-    SignalSink*    m_sink           = nullptr;
-    short          m_source_offset  = 0;
-    short          m_sink_offset    = 0;
-    int            m_size           = 0;
+template<int SourceCount, int SinkCount> class SignalGraphNode_WithPorts : public SignalGraphNode{
+    SignalSource  m_sources [SourceCount];
+    SignalSink    m_sinks   [SinkCount];
 
 public:
-    SignalGraphEdge(SignalSource* source, short source_offset, SignalSink* sink, short sink_offset, int size = 1);
+    virtual void getSources(SignalSource* &sources, int &nsources) override
+    {
+        sources = m_sources;
+        nsources = SourceCount;
+    }
 
-    virtual ~SignalGraphEdge();
+    virtual void getSinks(SignalSink* &sinks, int &nsinks) override
+    {
+        sinks = m_sinks;
+        nsinks = SinkCount;
+    }
 
-    virtual void routine(int i);
+    inline SignalSource* source(int i)
+    {
+#ifdef R64FX_DEBUG
+        assert(i >= 0);
+        assert(i < SourceCount);
+#endif//R64FX_DEBUG
+        return m_sources + i;
+    }
 
-    inline short sourceOffset() const { return m_source_offset; }
+    inline SignalSink* sink(int i)
+    {
+#ifdef R64FX_DEBUG
+        assert(i >= 0);
+        assert(i < SinkCount);
+#endif//R64FX_DEBUG
+        return m_sinks + i;
+    }
 
-    inline short sinkOffset() const { return m_sink_offset; }
+    inline int sourceCount() const { return SourceCount; }
+
+    inline int sinkCount() const { return SinkCount; }
+};
+
+template<int SourceCount> class SignalGraphNode_WithSources : public SignalGraphNode{
+    SignalSource m_sources[SourceCount];
+
+public:
+    virtual void getSources(SignalSource* &sources, int &nsources) override
+    {
+        sources = m_sources;
+        nsources = SourceCount;
+    }
+
+    inline SignalSource* source(int i)
+    {
+#ifdef R64FX_DEBUG
+        assert(i >= 0);
+        assert(i < SourceCount);
+#endif//R64FX_DEBUG
+        return m_sources + i;
+    }
+
+    inline int sourceCount() const { return SourceCount; }
+};
+
+template<int SinkCount> class SignalGraphNode_WithSinks : public SignalGraphNode{
+    SignalSink m_sinks[SinkCount];
+
+public:
+    virtual void getSinks(SignalSink* &sinks, int &nsinks) override
+    {
+        sinks = m_sinks;
+        nsinks = SinkCount;
+    }
+
+    inline SignalSink* sink(int i)
+    {
+#ifdef R64FX_DEBUG
+        assert(i >= 0);
+        assert(i < SinkCount);
+#endif//R64FX_DEBUG
+        return m_sinks + i;
+    }
+
+    inline int sinkCount() const { return SinkCount; }
 };
 
 
 class SignalGraph{
-    LinkedList<SignalGraphElement> m_elements;
+    LinkedList<SignalGraphNode> m_nodes;
 
 public:
-    void add(SignalGraphNode* node);
+    void process(SignalGraphProcessingContext* sgpctx);
 
-    void add(SignalGraphEdge* edge);
+    void insertNode(SignalGraphNode* node, SignalGraphNode* after = nullptr, SignalGraphNode* before = nullptr);
 
-    void remove(SignalGraphNode* node);
+    void removeNode(SignalGraphNode* node);
 
-    void remove(SignalGraphEdge* edge);
-
-    void run(int nsamples);
+    void sort();
 };
 
 }//namespace r64fx

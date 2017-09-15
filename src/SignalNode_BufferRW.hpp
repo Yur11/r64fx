@@ -6,9 +6,8 @@
 namespace r64fx{
 
 
-class SignalGraphNode_BufferReader : public SignalGraphNode{
-    SignalSource  m_source;
-    float*        m_buffer = nullptr;
+class SignalGraphNode_BufferReader : public SignalGraphNode_WithSources<1>{
+    float* m_buffer = nullptr;
 
 public:
     SignalGraphNode_BufferReader();
@@ -17,18 +16,13 @@ public:
 
     inline float* buffer() const { return m_buffer; }
 
-    inline SignalSource* source() { return &m_source; }
+    inline SignalSource* source() { return SignalGraphNode_WithSources<1>::source(0); };
 
-    virtual void forEachPort(bool (*fun)(SignalGraphNode* node, SignalPort* port, void* arg), void* arg) override final;
-
-    virtual int portCount() override final;
-
-private:
-    virtual void routine(int i) override final;
+    virtual void process(SignalGraphProcessingContext* ctx) override final;
 };
 
 
-class SignalGraphNode_BufferWriter : public SignalGraphNode{
+class SignalGraphNode_BufferWriter : public SignalGraphNode_WithSinks<1>{
     SignalSink  m_sink;
     float*      m_buffer = nullptr;
 
@@ -39,14 +33,9 @@ public:
 
     inline float* buffer() const { return m_buffer; }
 
-    inline SignalSink* sink() { return &m_sink; }
+    inline SignalSink* sink() { return SignalGraphNode_WithSinks<1>::sink(0); }
 
-    virtual void forEachPort(bool (*fun)(SignalGraphNode* node, SignalPort* port, void* arg), void* arg)  override final;
-
-    virtual int portCount() override final;
-
-private:
-    virtual void routine(int i) override final;
+    virtual void process(SignalGraphProcessingContext* ctx) override final;
 };
 
 }//namespace r64fx
