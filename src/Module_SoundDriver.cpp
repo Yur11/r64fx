@@ -24,10 +24,10 @@ struct Message{
     void*        arg2        = nullptr;
 };
 
-typedef Message<0, SoundDriverAudioInput,   SignalSource,  Response_AddAudioInput>   Message_AddAudioInput;
-typedef Message<1, SoundDriverAudioOutput,  SignalSink,    Response_AddAudioOutput>  Message_AddAudioOutput;
-typedef Message<2, SoundDriverAudioInput,   SignalSource,  Response_RemovePort>      Message_RemoveAudioInput;
-typedef Message<3, SoundDriverAudioOutput,  SignalSink,    Response_RemovePort>      Message_RemoveAudioOutput;
+typedef Message<0, SoundDriverAudioInput,   SignalSource,  Callback_AddAudioInput>   Message_AddAudioInput;
+typedef Message<1, SoundDriverAudioOutput,  SignalSink,    Callback_AddAudioOutput>  Message_AddAudioOutput;
+typedef Message<2, SoundDriverAudioInput,   SignalSource,  Callback_RemovePort>      Message_RemoveAudioInput;
+typedef Message<3, SoundDriverAudioOutput,  SignalSink,    Callback_RemovePort>      Message_RemoveAudioOutput;
 
 #define R64FX_CASE_RECIEVED(A) case Message_##A ::Key() : { recieved((Message_##A*)msg.value());  break; }
 
@@ -209,7 +209,7 @@ public:
     }
 
     template<typename ModulePortT, typename MessageT>
-    inline void removeAudioPort(ModulePortT* port, Response_RemovePort* response, void* arg1, void* arg2)
+    inline void removeAudioPort(ModulePortT* port, Callback_RemovePort* response, void* arg1, void* arg2)
     {
         auto message = new MessageT(response, arg1, arg2);
         ModulePrivate::getPortPayload(port, message->graph_port);
@@ -346,19 +346,19 @@ bool Module_SoundDriver::engagementPending()
 }
 
 
-void Module_SoundDriver::addAudioInput(const char* name, Response_AddAudioInput* response, void* arg1, void* arg2)
+void Module_SoundDriver::addAudioInput(const char* name, Callback_AddAudioInput* response, void* arg1, void* arg2)
 {
-    m_thread_object_iface->addAudioPort<Message_AddAudioInput, Response_AddAudioInput>(name, response, arg1, arg2);
+    m_thread_object_iface->addAudioPort<Message_AddAudioInput, Callback_AddAudioInput>(name, response, arg1, arg2);
 }
 
 
-void Module_SoundDriver::addAudioOutput(const char* name, Response_AddAudioOutput* response, void* arg1, void* arg2)
+void Module_SoundDriver::addAudioOutput(const char* name, Callback_AddAudioOutput* response, void* arg1, void* arg2)
 {
-    m_thread_object_iface->addAudioPort<Message_AddAudioOutput, Response_AddAudioOutput>(name, response, arg1, arg2);
+    m_thread_object_iface->addAudioPort<Message_AddAudioOutput, Callback_AddAudioOutput>(name, response, arg1, arg2);
 }
 
 
-void Module_SoundDriver::removePort(ModulePort* port, Response_RemovePort* response, void* arg1, void* arg2)
+void Module_SoundDriver::removePort(ModulePort* port, Callback_RemovePort* response, void* arg1, void* arg2)
 {
     if(port->isSource())
     {

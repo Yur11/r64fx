@@ -49,7 +49,7 @@ enum{
 struct Message_OpenFile{
     std::string              path           = "";
     SoundFileHandle*         handle         = nullptr;
-    Response_OpenSoundFile*  callback       = nullptr;
+    Callback_OpenSoundFile*  callback       = nullptr;
     void*                    callback_data  = nullptr;
 
     static inline unsigned long key() { return Key_OpenFile; }
@@ -60,7 +60,7 @@ struct Message_GetProps{
     int                               component_count  = 0;
     int                               frame_count      = 0;
     float                             sample_rate      = 0.0f;
-    Response_GetSoundFileProperties*  callback         = nullptr;
+    Callback_GetSoundFileProperties*  callback         = nullptr;
     void*                             callback_data    = nullptr;
 
     static inline unsigned long key() { return Key_GetProps; }
@@ -71,7 +71,7 @@ struct Message_LoadChunk{
     float*                        chunk          = nullptr;
     int                           index          = 0;
     int                           nframes        = 0;
-    Response_LoadSoundFileChunk*  callback       = nullptr;
+    Callback_LoadSoundFileChunk*  callback       = nullptr;
     void*                         callback_data  = nullptr;
 
     static inline unsigned long key() { return Key_LoadChunk; }
@@ -80,7 +80,7 @@ struct Message_LoadChunk{
 struct Message_FreeChunk{
     SoundFileHandle*              handle         = nullptr;
     float*                        chunk          = nullptr;
-    Response_FreeSoundFileChunk*  callback       = nullptr;
+    Callback_FreeSoundFileChunk*  callback       = nullptr;
     void*                         callback_data  = nullptr;
 
     static inline unsigned long key() { return Key_FreeChunk; }
@@ -88,7 +88,7 @@ struct Message_FreeChunk{
 
 struct Message_CloseFile{
     SoundFileHandle*          handle         = nullptr;
-    Response_CloseSoundFile*  callback       = nullptr;
+    Callback_CloseSoundFile*  callback       = nullptr;
     void*                     callback_data  = nullptr;
 
     static inline unsigned long key() { return Key_CloseFile; }
@@ -439,7 +439,7 @@ void SoundFileLoader::Port::run()
 }
 
 
-void SoundFileLoader::Port::open(const char* file_path, Response_OpenSoundFile* callback, void* data)
+void SoundFileLoader::Port::open(const char* file_path, Callback_OpenSoundFile* callback, void* data)
 {
     auto message = new Message_OpenFile;
     message->path           = file_path;
@@ -450,7 +450,7 @@ void SoundFileLoader::Port::open(const char* file_path, Response_OpenSoundFile* 
 }
 
 
-void SoundFileLoader::Port::getFileProperties(SoundFileHandle* handle, Response_GetSoundFileProperties* callback, void* data)
+void SoundFileLoader::Port::getFileProperties(SoundFileHandle* handle, Callback_GetSoundFileProperties* callback, void* data)
 {
     auto message = new Message_GetProps;
     message->handle         = handle;
@@ -461,7 +461,7 @@ void SoundFileLoader::Port::getFileProperties(SoundFileHandle* handle, Response_
 }
 
 
-void SoundFileLoader::Port::loadChunk(SoundFileHandle* handle, int index, int nframes, Response_LoadSoundFileChunk* callback, void* data)
+void SoundFileLoader::Port::loadChunk(SoundFileHandle* handle, int index, int nframes, Callback_LoadSoundFileChunk* callback, void* data)
 {
     auto message = new Message_LoadChunk;
     message->handle         = handle;
@@ -474,7 +474,7 @@ void SoundFileLoader::Port::loadChunk(SoundFileHandle* handle, int index, int nf
 }
 
 
-void SoundFileLoader::Port::freeChunk(SoundFileHandle* handle, float* chunk, Response_FreeSoundFileChunk* callback, void* data)
+void SoundFileLoader::Port::freeChunk(SoundFileHandle* handle, float* chunk, Callback_FreeSoundFileChunk* callback, void* data)
 {
     auto message = new Message_FreeChunk;
     message->handle         = handle;
@@ -486,7 +486,7 @@ void SoundFileLoader::Port::freeChunk(SoundFileHandle* handle, float* chunk, Res
 }
 
 
-void SoundFileLoader::Port::close(SoundFileHandle* handle, Response_CloseSoundFile* callback, void* data)
+void SoundFileLoader::Port::close(SoundFileHandle* handle, Callback_CloseSoundFile* callback, void* data)
 {
     auto message = new Message_CloseFile;
     message->handle         = handle;

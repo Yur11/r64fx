@@ -5,9 +5,9 @@
 
 namespace r64fx{
 
-typedef void (Response_AddAudioInput)(ModuleSource* source, void* arg1, void* arg2);
-typedef void (Response_AddAudioOutput)(ModuleSink* sink, void* arg1, void* arg2);
-typedef void (Response_RemovePort)(void* arg1, void* arg2);
+typedef void (Callback_AddAudioInput)(ModuleSource* source, void* arg1, void* arg2);
+typedef void (Callback_AddAudioOutput)(ModuleSink* sink, void* arg1, void* arg2);
+typedef void (Callback_RemovePort)(void* arg1, void* arg2);
 
 class Module_SoundDriver : public Module{
     void* m = nullptr;
@@ -27,11 +27,11 @@ public:
 
     virtual bool engagementPending() override final;
 
-    void addAudioInput(const char* name, Response_AddAudioInput* response, void* arg1, void* arg2);
+    void addAudioInput(const char* name, Callback_AddAudioInput* response, void* arg1, void* arg2);
 
-    void addAudioOutput(const char* name, Response_AddAudioOutput* response, void* arg1, void* arg2);
+    void addAudioOutput(const char* name, Callback_AddAudioOutput* response, void* arg1, void* arg2);
 
-    void removePort(ModulePort* port, Response_RemovePort* response, void* arg1, void* arg2);
+    void removePort(ModulePort* port, Callback_RemovePort* response, void* arg1, void* arg2);
 };
 
 }//namespace r64fx
