@@ -108,7 +108,6 @@ class ThreadObjectManagerImpl{
     ThreadObjectImpl*                     m_root_impl         = nullptr;
     HeapAllocator*                        m_heap_allocator    = nullptr;
     ThreadObjectWithdrawalAgent*          m_withdrawal_agent  = nullptr;
-    void*                                 m_asset             = nullptr;
 
 public:
     ThreadObjectManagerImpl(
@@ -133,16 +132,6 @@ public:
     inline HeapAllocator* heapAllocator() const
     {
         return m_heap_allocator;
-    }
-
-    inline void setAsset(void* asset)
-    {
-        m_asset = asset;
-    }
-
-    inline void* asset() const
-    {
-        return m_asset;
     }
 
     void sendMessagesToIface(ThreadObjectIfaceHandle* dst_iface, const ThreadObjectMessage* msgs, int nmsgs);
@@ -583,15 +572,9 @@ HeapAllocator* ThreadObjectImpl::heapAllocator() const
 }
 
 
-void ThreadObjectImpl::setAsset(void* asset)
+ThreadObjectImpl* ThreadObjectImpl::rootImpl() const
 {
-    m_manager_impl->setAsset(asset);
-}
-
-
-void* ThreadObjectImpl::asset() const
-{
-    return m_manager_impl->asset();
+    return m_manager_impl->rootImpl();
 }
 
 

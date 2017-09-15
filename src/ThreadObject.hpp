@@ -260,12 +260,7 @@ protected:
         heapAllocator()->freeObj<T>(obj);
     }
 
-    /*
-     * Extra asset shared by all ThreadObjectImpl instances of a worker thread.
-     */
-    void setAsset(void* asset);
-
-    void* asset() const;
+    ThreadObjectImpl* rootImpl() const;
 
 private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) = 0;
