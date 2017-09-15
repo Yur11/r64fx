@@ -120,7 +120,7 @@ private:
         auto impl = allocObj<Impl_SoundDriverAudioInput>(message);
         impl->node.resizeBuffer(bufferSize());
         auto sg = signalGraph();
-        sg->add(&impl->node);
+//         sg->add(&impl->node);
         m_inputs.append(impl);
     }
 
@@ -129,7 +129,7 @@ private:
         auto impl = allocObj<Impl_SoundDriverAudioOutput>(message);
         impl->node.resizeBuffer(bufferSize());
         auto sg = signalGraph();
-        sg->add(&impl->node);
+//         sg->add(&impl->node);
         m_outputs.append(impl);
     }
 
@@ -140,7 +140,7 @@ private:
         if(impl)
         {
             auto sg = signalGraph();
-            sg->remove(&impl->node);
+//             sg->remove(&impl->node);
             m_inputs.remove(impl);
             message->sd_port = impl->sd_port;
             freeObj(impl);
@@ -154,7 +154,7 @@ private:
         if(impl)
         {
             auto sg = signalGraph();
-            sg->remove(&impl->node);
+//             sg->remove(&impl->node);
             m_outputs.remove(impl);
             message->sd_port = impl->sd_port;
             freeObj(impl);
@@ -313,24 +313,24 @@ Module_SoundDriver::~Module_SoundDriver()
 }
 
 
-bool Module_SoundDriver::engage(ModuleCallback done, void* done_arg)
+bool Module_SoundDriver::engage(Module::Callback* done, void* done_arg, ModuleThreadHandle* threads, int nthreads)
 {
 #ifdef R64FX_DEBUG
     assert(!isEngaged());
     assert(!engagementPending());
 #endif//R64FX_DEBUG
-    ModulePrivate::deploy(this, m_thread_object_iface, done, done_arg);
+    ModulePrivate::deploy(m_thread_object_iface, nullptr, done, done_arg, this);
     return true;
 }
 
 
-void Module_SoundDriver::disengage(ModuleCallback done, void* done_arg)
+void Module_SoundDriver::disengage(Module::Callback* done, void* done_arg)
 {
 #ifdef R64FX_DEBUG
     assert(isEngaged());
     assert(!engagementPending());
 #endif//R64FX_DEBUG
-    ModulePrivate::withdraw(this, m_thread_object_iface, done, done_arg);
+    ModulePrivate::withdraw(m_thread_object_iface, done, done_arg, this);
 }
 
 

@@ -115,8 +115,8 @@ R64FX_DEF_MODULE_AGENTS(Oscillator)
 
 class OscillatorThreadObjectIface : public ModuleThreadObjectIface{
 public:
-    ModuleCallback  done      = nullptr;
-    void*           done_arg  = nullptr;
+    Module::Callback*  done      = nullptr;
+    void*             done_arg  = nullptr;
 
 private:
     virtual ModuleDeploymentAgent* newModuleDeploymentAgent()  override final
@@ -186,7 +186,7 @@ Module_Oscillator::~Module_Oscillator()
 }
 
 
-bool Module_Oscillator::engage(ModuleCallback done, void* done_arg)
+bool Module_Oscillator::engage(Module::Callback* done, void* done_arg, ModuleThreadHandle* threads, int nthreads)
 {
     if(!m)
         m = new(std::nothrow) OscillatorThreadObjectIface;
@@ -210,7 +210,7 @@ bool Module_Oscillator::engage(ModuleCallback done, void* done_arg)
 }
 
 
-void Module_Oscillator::disengage(ModuleCallback done, void* done_arg)
+void Module_Oscillator::disengage(Module::Callback* done, void* done_arg)
 {
     m_thread_object_iface->done = done;
     m_thread_object_iface->done_arg = done_arg;

@@ -17,13 +17,15 @@ public:
 
     virtual ~Module_SoundDriver();
 
-    virtual bool engage(ModuleCallback done = nullptr, void* done_arg = nullptr);
+    virtual bool engage(
+        Module::Callback* done = nullptr, void* done_arg = nullptr, ModuleThreadHandle* threads = nullptr, int nthreads = 0
+    ) override final;
 
-    virtual void disengage(ModuleCallback done = nullptr, void* done_arg = nullptr);
+    virtual void disengage(Module::Callback* done = nullptr, void* done_arg = nullptr) override final;
 
-    virtual bool isEngaged();
+    virtual bool isEngaged() override final;
 
-    virtual bool engagementPending();
+    virtual bool engagementPending() override final;
 
     void addAudioInput(const char* name, Response_AddAudioInput* response, void* arg1, void* arg2);
 

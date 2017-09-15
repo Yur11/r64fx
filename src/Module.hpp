@@ -4,16 +4,17 @@
 namespace r64fx{
 
 class Module;
+class ModuleThreadHandle;
 
 class ModulePort{
     friend class ModuleSink;
     friend class ModuleSource;
     friend class ModulePrivate;
 
-    Module*        m_parent     = nullptr;
-    void*          m_payload    = nullptr;
-    unsigned long  m_flags      = 0;
-    int            m_thread_id  = 0;
+    unsigned long        m_flags          = 0;
+    Module*              m_parent         = nullptr;
+    void*                m_payload        = nullptr;
+    ModuleThreadHandle*  m_thread_handle  = nullptr;
 
 public:
     ModulePort();
@@ -23,8 +24,6 @@ public:
     inline bool isSink() const { return !isSource(); }
 
     bool isSource() const;
-
-    inline int threadId() const { return m_thread_id; }
 };
 
 class ModuleSink : public ModulePort{
@@ -38,33 +37,29 @@ public:
 };
 
 
-typedef void (*ModuleCallback)(Module* module, void* arg);
-
-typedef void (*ModulePortCallback)(ModulePort* port, void* arg);
-
-
 class Module{
     friend class ModulePrivate;
-    int m_thread_id = 0;
 
 public:
     Module();
 
     virtual ~Module();
 
-    virtual bool engage(ModuleCallback done = nullptr, void* done_arg = nullptr) = 0;
+    typedef void (Callback)(Module* module, void* arg);
 
-    virtual void disengage(ModuleCallback done = nullptr, void* done_arg = nullptr) = 0;
+    virtual bool engage(
+        Module::Callback* done = nullptr, void* done_arg = nullptr, ModuleThreadHandle* threads = nullptr, int nthreads = 0
+    ) = 0;
+
+    virtual void disengage(Module::Callback* done = nullptr, void* done_arg = nullptr) = 0;
 
     virtual bool isEngaged() = 0;
 
     virtual bool engagementPending() = 0;
 
-    void changeThread(int thread_id);
+    static void genThreads(ModuleThreadHandle** threads, int nthreads);
 
-    int threadId() const;
-
-    static int maxThreadId();
+    static int freeThreads(ModuleThreadHandle** threads, int nthreads);
 };
 
 

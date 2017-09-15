@@ -17,9 +17,9 @@ public:
 
     void setFilterClass(FilterClass* fc);
 
-    virtual bool engage(ModuleCallback done = nullptr, void* done_arg = nullptr);
+    virtual bool engage(Module::Callback* done = nullptr, void* done_arg = nullptr, ModuleThreadHandle* threads = nullptr, int nthreads = 0);
 
-    virtual void disengage(ModuleCallback done = nullptr, void* done_arg = nullptr);
+    virtual void disengage(Module::Callback* done = nullptr, void* done_arg = nullptr);
 
     virtual bool isEngaged();
 

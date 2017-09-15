@@ -170,7 +170,7 @@ class FilterThreadObjectIface : public ModuleThreadObjectIface{
     FilterClass* m_fc;
 
 public:
-    ModuleCallback  done      = nullptr;
+    Module::Callback*  done      = nullptr;
     void*           done_arg  = nullptr;
 
     void setFilterClass(FilterClass* fc)
@@ -327,7 +327,7 @@ void Module_Filter::setFilterClass(FilterClass* fc)
 }
 
 
-bool Module_Filter::engage(ModuleCallback done, void* done_arg)
+bool Module_Filter::engage(Module::Callback* done, void* done_arg, ModuleThreadHandle* threads, int nthreads)
 {
     if(!m)
         m = new(std::nothrow) FilterThreadObjectIface;
@@ -351,7 +351,7 @@ bool Module_Filter::engage(ModuleCallback done, void* done_arg)
 }
 
 
-void Module_Filter::disengage(ModuleCallback done, void* done_arg)
+void Module_Filter::disengage(Module::Callback* done, void* done_arg)
 {
     m_thread_object_iface->done = done;
     m_thread_object_iface->done_arg = done_arg;

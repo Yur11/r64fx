@@ -2,7 +2,6 @@
 #define R64FX_MODULE_PRIVATE_HPP
 
 #include "ThreadObject.hpp"
-#include "ModuleFlags.hpp"
 
 
 #define R64FX_DECL_MODULE_AGENTS(NAME)\
@@ -37,9 +36,10 @@ ModuleThreadObjectImpl* NAME##DeploymentAgent::deployModuleImpl(HeapAllocator* h
 \
 void NAME##WithdrawalAgent::withdrawModuleImpl(HeapAllocator* ha, ModuleThreadObjectImpl* impl)\
 {\
-    auto osc_impl = static_cast<NAME##ThreadObjectImpl*>(impl);\
-    osc_impl->storeWithdrawalArgs(this);\
-    ha->freeObj(osc_impl);\
+    auto NAME##_impl = static_cast<NAME##ThreadObjectImpl*>(impl);\
+    NAME##_impl->storeWithdrawalArgs(this);\
+    NAME##_impl->clearHooks();\
+    ha->freeObj(NAME##_impl);\
 }
 
 
@@ -84,20 +84,17 @@ class SignalGraph;
  */
 
 class ModuleThreadObjectImpl : public ThreadObjectImpl, public LinkedList<ModuleThreadObjectImpl>::Node{
-    ModuleThreadObjectImpl*             m_parent    = nullptr;
-    LinkedList<ModuleThreadObjectImpl>  m_children;
-
-protected:
-    unsigned long m_flags = 0;
 
 public:
     ModuleThreadObjectImpl(ModuleDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS);
 
+    void clearHooks();
+
     virtual ~ModuleThreadObjectImpl();
 
-    SoundDriverSyncPort* syncPort();
-
 protected:
+    SoundDriverSyncPort* syncPort() const;
+
     void setPrologue(void (*fun)(void* arg), void* arg = nullptr);
 
     void setEpilogue(void (*fun)(void* arg), void* arg = nullptr);
@@ -108,12 +105,14 @@ protected:
 
     SignalGraph* signalGraph() const;
 
+    void armRebuild();
+
 private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override;
 
-    virtual void runThread() override final;
+    virtual void runThread() override;
 
-    virtual void exitThread() override final;
+    virtual void exitThread() override;
 };
 
 
@@ -125,11 +124,6 @@ class ModuleDeploymentAgent : public ThreadObjectDeploymentAgent{
     friend class ModuleThreadObjectIface;
     friend class ModuleThreadObjectImpl;
 
-    SoundDriverSyncPort*     sync_port    = nullptr; // ->
-    ModuleThreadObjectImpl*  parent_impl  = nullptr; // ->
-    long                     buffer_size  = 0;
-    long                     sample_rate  = 0;
-
     virtual ThreadObjectImpl* deployImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) override final;
 
     virtual ModuleThreadObjectImpl* deployModuleImpl(HeapAllocator* ha, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS) = 0;
@@ -139,8 +133,6 @@ class ModuleDeploymentAgent : public ThreadObjectDeploymentAgent{
 class ModuleWithdrawalAgent : public ThreadObjectWithdrawalAgent{
     friend class ModuleThreadObjectIface;
     friend class ModuleThreadObjectImpl;
-
-    SoundDriverSyncPort*     sync_port    = nullptr; // <-
 
     virtual void withdrawImpl(HeapAllocator* ha, ThreadObjectImpl* impl) override final;
 
@@ -183,9 +175,9 @@ private:
 
 class ModulePrivate{
 public:
-    static void deploy(Module* module, ModuleThreadObjectIface* iface, ModuleCallback done, void* done_arg);
+    static void deploy(ModuleThreadObjectIface* iface, ModuleThreadHandle* thread, Module::Callback* done, void* done_arg, Module* module);
 
-    static void withdraw(Module* module, ModuleThreadObjectIface* iface, ModuleCallback done, void* done_arg);
+    static void withdraw(ModuleThreadObjectIface* iface, Module::Callback* done, void* done_arg, Module* module);
 
     inline static void setPortPayload(ModuleSink* sink, SignalSink* payload)
     {

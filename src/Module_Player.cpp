@@ -111,8 +111,8 @@ R64FX_DEF_MODULE_AGENTS(Player)
 class PlayerThreadObjectIface : public ModuleThreadObjectIface{
 
 public:
-    ModuleCallback  done      = nullptr;
-    void*           done_arg  = nullptr;
+    Module::Callback*  done      = nullptr;
+    void*             done_arg  = nullptr;
 
 private:
     virtual ModuleDeploymentAgent* newModuleDeploymentAgent()  override final
@@ -217,7 +217,7 @@ void Module_Player::change(float* buff, int nchans, int nframes)
 }
 
 
-bool Module_Player::engage(ModuleCallback done, void* done_arg)
+bool Module_Player::engage(Module::Callback* done, void* done_arg, ModuleThreadHandle* threads, int nthreads)
 {
     if(!m)
         m = new(std::nothrow) PlayerThreadObjectIface;
@@ -241,7 +241,7 @@ bool Module_Player::engage(ModuleCallback done, void* done_arg)
 }
 
 
-void Module_Player::disengage(ModuleCallback done, void* done_arg)
+void Module_Player::disengage(Module::Callback* done, void* done_arg)
 {
     m_thread_object_iface->done = done;
     m_thread_object_iface->done_arg = done_arg;

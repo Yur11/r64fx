@@ -15,9 +15,9 @@ public:
 
     void change(float* buff, int nchans, int nframes);
 
-    virtual bool engage(ModuleCallback done = nullptr, void* done_arg = nullptr) override;
+    virtual bool engage(Module::Callback* done = nullptr, void* done_arg = nullptr, ModuleThreadHandle* threads = nullptr, int nthreads = 0) override final;
 
-    virtual void disengage(ModuleCallback done = nullptr, void* done_arg = nullptr) override;
+    virtual void disengage(Module::Callback* done = nullptr, void* done_arg = nullptr) override final;
 
     virtual bool isEngaged() override;
 
