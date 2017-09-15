@@ -491,7 +491,7 @@ namespace{
         if(!g_display)
             return;
 
-        if(g_all_windows.isEmpty())
+        if(g_all_windows.empty())
         {
             cleanup_cursors();
 

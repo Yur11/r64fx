@@ -393,7 +393,7 @@ void TextPainter::updateSelection()
             for(auto l=a.line()+1; l<=b.line()-1; l++)
             {
                 auto line = m_lines[l];
-                if(line.isEmpty())
+                if(line.empty())
                     continue;
 
                 int w = 0;

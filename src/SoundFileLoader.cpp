@@ -317,7 +317,7 @@ public:
         }//while
 
 #ifdef R64FX_DEBUG
-        assert(m_port_impls.isEmpty());
+        assert(m_port_impls.empty());
 #endif//R64FX_DEBUG
     }
 };

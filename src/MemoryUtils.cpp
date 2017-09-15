@@ -195,7 +195,7 @@ bool HeapBuffer::freeChunk(void* addr)
 }
 
 
-bool HeapBuffer::isEmpty() const
+bool HeapBuffer::empty() const
 {
     return ((unsigned short*)m_buffer)[1] == 0;
 }
@@ -245,7 +245,7 @@ void HeapAllocator::freeChunk(void* addr)
     {
         if(buff->freeChunk(addr))
         {
-            if(buff->isEmpty())
+            if(buff->empty())
                 buff_to_remove = buff;
             break;
         }
@@ -259,9 +259,9 @@ void HeapAllocator::freeChunk(void* addr)
 }
 
 
-bool HeapAllocator::isEmpty() const
+bool HeapAllocator::empty() const
 {
-    return m_buffers.isEmpty();
+    return m_buffers.empty();
 }
 
 

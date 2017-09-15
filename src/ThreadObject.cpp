@@ -291,7 +291,7 @@ inline void ThreadObjectManagerIface::createThreadAndDeployRoot(
 
         ha.freeObj(manager_impl);
 #ifdef R64FX_DEBUG
-        assert(ha.isEmpty());
+        assert(ha.empty());
 #endif//R64FX_DEBUG
         return nullptr;
     }, iface_to_impl);
@@ -336,7 +336,7 @@ void ThreadObjectManagerIface::objectDeployed(ThreadObjectDeploymentAgent* agent
 
     auto object =  agent->object_iface;
     object->m_impl_handle = agent->deployed_impl;
-    if(object->m_children.isEmpty())
+    if(object->m_children.empty())
     {
         auto parent_agent = agent->parent_agent;
         for(;;)
@@ -453,7 +453,7 @@ void ThreadObjectManagerIface::withdrawObject(
         agent->parent_agent    =  parent_agent;
         parent_agent           =  agent;
 
-        if(object->m_children.isEmpty())
+        if(object->m_children.empty())
         {
             ThreadObjectMessage msg(WithdrawObject, agent);
             sendMessagesToImpl(nullptr, &msg, 1);

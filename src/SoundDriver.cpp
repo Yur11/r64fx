@@ -517,7 +517,7 @@ private:
 
     virtual bool hasPorts()
     {
-        return !m_ports.isEmpty();
+        return !m_ports.empty();
     }
 
     virtual void processEvents()

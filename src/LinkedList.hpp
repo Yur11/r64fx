@@ -127,7 +127,7 @@ public:
     };//Iterator
 
 
-    bool isEmpty() const
+    bool empty() const
     {
         return first_node == nullptr && last_node == nullptr;
     }

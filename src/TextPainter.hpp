@@ -77,7 +77,7 @@ public:
 
     inline int glyphCount() const { return end() - begin(); }
 
-    inline bool isEmpty() const { return m_begin == m_end; }
+    inline bool empty() const { return m_begin == m_end; }
 };
 
 

@@ -188,7 +188,7 @@ void FilterClass::removeRoot(SysFunRoot* root)
 
 SysFunRootIterators FilterClass::zeros() const
 {
-    if(isEmpty())
+    if(empty())
         return {nullptr, nullptr};
 
     if(m_last_zero)
@@ -200,7 +200,7 @@ SysFunRootIterators FilterClass::zeros() const
 
 SysFunRootIterators FilterClass::poles() const
 {
-    if(isEmpty())
+    if(empty())
         return {nullptr, nullptr};
 
     if(m_last_zero)
@@ -212,7 +212,7 @@ SysFunRootIterators FilterClass::poles() const
 
 int FilterClass::rootBufferSize() const
 {
-    if(isEmpty())
+    if(empty())
         return 0;
     return m_roots.last()->index() + (m_roots.last()->hasConjugate() ? 2 : 1);
 }
@@ -228,7 +228,7 @@ int FilterClass::zeroBufferSize() const
 
 int FilterClass::poleBufferSize() const
 {
-    if(isEmpty())
+    if(empty())
         return 0;
 
     return rootBufferSize() - zeroBufferSize();

@@ -65,7 +65,7 @@ TimerThread* allocate_thread()
 
     for(int i=0; i<max_threads; i++)
     {
-        if((!g_threads[i].is_reserved) && g_threads[i].active_timers.isEmpty() && g_threads[i].spare_timers.isEmpty())
+        if((!g_threads[i].is_reserved) && g_threads[i].active_timers.empty() && g_threads[i].spare_timers.empty())
         {
             if(empty_thread == nullptr)
             {
@@ -110,7 +110,7 @@ Timer::Timer(unsigned long interval)
     if(!thread)
         return;
 
-    if(thread->spare_timers.isEmpty())
+    if(thread->spare_timers.empty())
     {
         m = new TimerImpl;
     }
@@ -214,7 +214,7 @@ TimerThreadId* Timer::reserveThreadId()
 void Timer::freeThreadId(TimerThreadId* thread_id)
 {
     auto thread = (TimerThread*) thread_id;
-    if(thread->active_timers.isEmpty() && thread->spare_timers.isEmpty())
+    if(thread->active_timers.empty() && thread->spare_timers.empty())
     {
         thread->is_reserved = false;
     }

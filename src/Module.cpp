@@ -170,8 +170,8 @@ private:
         m.sd_sync_port->disable();
 
 #ifdef R64FX_DEBUG
-        assert(m.prologue_list.isEmpty());
-        assert(m.epilogue_list.isEmpty());
+        assert(m.prologue_list.empty());
+        assert(m.epilogue_list.empty());
 #endif///R64FX_DEBUG
     }
 
@@ -450,7 +450,7 @@ public:
 
         if(!thread_handle)
         {
-            if(m_recs.isEmpty())
+            if(m_recs.empty())
                 genThreads(&thread_handle, 1);
             else
                 thread_handle = (ModuleThreadHandle*) m_recs.first();
@@ -501,7 +501,7 @@ private:
     inline void objectWithdrawn(ThreadObjectIface* iface, EngagementArgs* args)
     {
         auto parent = args->iface;
-        if((!parent->parent()) && parent->isEmpty()) //Root is empty. Withdraw it.
+        if((!parent->parent()) && parent->empty()) //Root is empty. Withdraw it.
         {
             parent->withdraw([](ThreadObjectIface* iface, void* arg){
                 auto args = (EngagementArgs*) arg;

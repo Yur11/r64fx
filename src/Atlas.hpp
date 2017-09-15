@@ -16,7 +16,7 @@ protected:
     AtlasItem() {};
 
 public:
-    bool isEmpty() const;
+    bool empty() const;
 
     bool isFull() const;
 

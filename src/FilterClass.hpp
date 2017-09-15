@@ -116,7 +116,7 @@ public:
 
     SysFunRootIterators poles() const;
 
-    inline bool isEmpty() const { return m_roots.isEmpty(); }
+    inline bool empty() const { return m_roots.empty(); }
 
     int rootBufferSize() const; // Roots with enabled conjugates count as two!
 

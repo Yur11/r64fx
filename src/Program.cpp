@@ -290,7 +290,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     void closeAllProjects()
     {
-        while(!open_projects.isEmpty())
+        while(!open_projects.empty())
         {
             auto proj = open_projects.last();
             open_projects.remove(proj);

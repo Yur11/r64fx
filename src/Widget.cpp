@@ -543,7 +543,7 @@ Widget::~Widget()
     if(!isWindow())
         setParent(nullptr);
 
-    while(!m_children.isEmpty())
+    while(!m_children.empty())
     {
         auto child = m_children.last();
         child->setParent(nullptr);
@@ -687,7 +687,7 @@ WidgetIterator Widget::end() const
 
 bool Widget::hasChildren() const
 {
-    return !m_children.isEmpty();
+    return !m_children.empty();
 }
 
 
@@ -699,7 +699,7 @@ Widget* Widget::firstChild() const
 
 Widget* Widget::popFirstChild()
 {
-    if(m_children.isEmpty())
+    if(m_children.empty())
         return nullptr;
     auto child = m_children.first();
     child->setParent(nullptr);
@@ -715,7 +715,7 @@ Widget* Widget::lastChild() const
 
 Widget* Widget::popLastChild()
 {
-    if(m_children.isEmpty())
+    if(m_children.empty())
         return nullptr;
     auto child = m_children.last();
     child->setParent(nullptr);
@@ -1548,7 +1548,7 @@ PainterTextureManager* Widget::textureManager()
 
 void Widget::deleteChildren()
 {
-    while(!m_children.isEmpty())
+    while(!m_children.empty())
     {
         auto child = m_children.first();
         child->setParent(nullptr);

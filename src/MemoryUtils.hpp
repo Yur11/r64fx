@@ -31,7 +31,7 @@ public:
 
     bool freeChunk(void* addr);
 
-    bool isEmpty() const;
+    bool empty() const;
 
 #ifdef R64FX_DEBUG
     void dumpHeader();
@@ -47,7 +47,7 @@ public:
 
     void freeChunk(void* addr);
 
-    bool isEmpty() const;
+    bool empty() const;
 
 #ifdef R64FX_DEBUG
     void dumpHeaders();

@@ -78,7 +78,7 @@ void SignalGraph::process(SignalGraphProcessingContext* sgpctx)
 
 void SignalGraph::insertNode(SignalGraphNode* node, SignalGraphNode* after, SignalGraphNode* before)
 {
-    if(m_nodes.isEmpty())
+    if(m_nodes.empty())
     {
         m_nodes.append(node);
         return;

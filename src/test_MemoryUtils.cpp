@@ -549,7 +549,7 @@ bool test_HeapAllocator(HeapAllocator* ha)
             return false;
         }
 
-        if(!ha->isEmpty())
+        if(!ha->empty())
         {
             cout << "\nHeapAllocator not empty!\n";
             return false;

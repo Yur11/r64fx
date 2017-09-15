@@ -6,7 +6,7 @@
 namespace r64fx{
 
 
-bool AtlasItem::isEmpty() const
+bool AtlasItem::empty() const
 {
     return m_children == nullptr;
 }
@@ -82,13 +82,13 @@ bool AtlasItem::freeRect(Rect<short> rect)
 
     for(int i=0; i<2; i++)
     {
-        if(m_children[i].isEmpty())
+        if(m_children[i].empty())
             continue;
         if(rect.y() > m_children[i].bottom() || rect.x() > m_children[i].right())
             continue;
         if(m_children[i].freeRect(rect))
         {
-            if(m_children[0].isEmpty() && m_children[1].isEmpty())
+            if(m_children[0].empty() && m_children[1].empty())
             {
                 delete[] m_children;
                 m_children = nullptr;

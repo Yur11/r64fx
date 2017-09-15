@@ -102,7 +102,7 @@ public:
 
     ThreadObjectIface* parent() const;
 
-    inline bool isEmpty() const { return m_children.isEmpty(); }
+    inline bool empty() const { return m_children.empty(); }
 
     IteratorPair<ThreadObjectIfaceIterator> children() const;
 

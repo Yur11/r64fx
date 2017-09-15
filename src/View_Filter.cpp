@@ -88,7 +88,7 @@ void load_sys_fun_to_buffer(FilterClass* fc, Complex<float>* buff, int buff_capa
     assert(fc->rootBufferSize() <= buff_capacity);
 #endif//R64FX_DEBUG
 
-    if(fc->isEmpty())
+    if(fc->empty())
         return;
 
     int n = 0;
