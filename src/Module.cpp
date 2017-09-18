@@ -25,6 +25,8 @@
 
 #define R64FX_MODULE_PORT_IS_SOURCE 1
 
+using namespace std;
+
 namespace r64fx{
 
 /*
@@ -57,7 +59,6 @@ struct ModuleConnectionMessage{
 
 struct ModuleThreadAssets{
     SoundDriverSyncPort*  sd_sync_port   = nullptr;
-    long                  buffer_size    = 0;
     long                  sample_rate    = 0;
     long                  flags          = 0;
     SignalGraph           signal_graph;
@@ -83,8 +84,9 @@ public:
     : ModuleThreadObjectImpl(agent, R64FX_THREAD_OBJECT_IMPL_ARGS)
     {
         m.sd_sync_port  = agent->sd_sync_port;
-        m.buffer_size   = agent->buffer_size;
         m.sample_rate   = agent->sample_rate;
+
+        m.signal_graph.setSampleCount(agent->buffer_size);
     }
 
     void storeWithdrawalArgs(RootModuleWithdrawalAgent* agent)
@@ -130,31 +132,21 @@ private:
 
                 if(m.flags & R64FX_GRAPH_REBUILD_ARMED)
                 {
+                    m.flags &= ~R64FX_GRAPH_REBUILD_ARMED;
+
                     assembler.rewindIp();
-                    assembler.push(rbx);
-                    assembler.push(rbp);
-                    assembler.push(r12);
-                    assembler.push(r13);
-                    assembler.push(r14);
-                    assembler.push(r15);
 
                     SignalGraphProcessingContext sgctx(&assembler);
                     m.signal_graph.process(&sgctx);
 
-                    assembler.pop(r15);
-                    assembler.pop(r14);
-                    assembler.pop(r13);
-                    assembler.pop(r12);
-                    assembler.pop(rbp);
-                    assembler.pop(rbx);
+                    assembler.mov(rax, Imm64S(-123));
                     assembler.ret();
 
                     routine = (long (*)()) assembler.codeBegin();
-
-                    m.flags &= ~R64FX_GRAPH_REBUILD_ARMED;
                 }
 
-                routine();
+                long val = routine();
+                cout << val << "\n";
 
                 for(auto item : m.epilogue_list)
                 {
@@ -272,7 +264,7 @@ void ModuleThreadObjectImpl::setEpilogue(void (*fun)(void* arg), void* arg)
 
 long ModuleThreadObjectImpl::bufferSize() const
 {
-    return R64FX_MODULE_THREAD_ASSETS->buffer_size;
+    return R64FX_MODULE_THREAD_ASSETS->signal_graph.sampleCount();
 }
 
 

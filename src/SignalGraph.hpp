@@ -6,12 +6,14 @@
 
 namespace r64fx{
 
+class SignalGraph;
+class SignalGraphNode;
 class SignalGraphProcessingContext;
 
-class SignalSource{
-    friend class SignalSink;
 
-    int m_index = 0;
+class SignalSource{
+    friend class SignalGraph;
+
     int m_connected_sinks = 0;
     int m_processed_sinks = 0;
 
@@ -23,6 +25,8 @@ public:
 
 
 class SignalSink{
+    friend class SignalGraphNode;
+
     SignalSource* m_connected_source = nullptr;
 
 public:
@@ -30,15 +34,13 @@ public:
 
     ~SignalSink();
 
-    void setConnectedSource(SignalSource* source);
+    inline SignalSource* connectedSource() const { return m_connected_source; }
 };
 
 
 class SignalGraphNode : public LinkedList<SignalGraphNode>::Node{
     friend class SignalGraph;
-
-    unsigned int m_position = 0;
-    int m_size = 0;
+    unsigned long m_index = 0;
 
 public:
     SignalGraphNode();
@@ -47,13 +49,13 @@ public:
 
     virtual void process(SignalGraphProcessingContext* ctx) = 0;
 
-    inline void setSize(int size) { m_size = size; }
-
-    inline int size() const { return m_size; }
-
     virtual void getSources(SignalSource* &sources, int &nsources);
 
     virtual void getSinks(SignalSink* &sinks, int &nsinks);
+
+    void disconnectPorts();
+
+    inline unsigned long index() const { return m_index; }
 };
 
 
@@ -97,6 +99,7 @@ public:
     inline int sinkCount() const { return SinkCount; }
 };
 
+
 template<int SourceCount> class SignalGraphNode_WithSources : public SignalGraphNode{
     SignalSource m_sources[SourceCount];
 
@@ -118,6 +121,7 @@ public:
 
     inline int sourceCount() const { return SourceCount; }
 };
+
 
 template<int SinkCount> class SignalGraphNode_WithSinks : public SignalGraphNode{
     SignalSink m_sinks[SinkCount];
@@ -142,17 +146,46 @@ public:
 };
 
 
-class SignalGraph{
-    LinkedList<SignalGraphNode> m_nodes;
+template<typename PortT> class NodePort{
+    SignalGraphNode* m_node = nullptr;
+    PortT*           m_port = nullptr;
 
 public:
-    void process(SignalGraphProcessingContext* sgpctx);
+    NodePort(SignalGraphNode* node, PortT* port)
+    : m_node(node), m_port(port) {}
 
-    void insertNode(SignalGraphNode* node, SignalGraphNode* after = nullptr, SignalGraphNode* before = nullptr);
+    inline SignalGraphNode* node() const { return m_node; }
+
+    inline PortT* port() const { return m_port; }
+};
+
+typedef NodePort<SignalSource>  NodeSource;
+typedef NodePort<SignalSink>    NodeSink;
+
+
+class SignalGraph : public SignalGraphNode{
+    LinkedList<SignalGraphNode> m_nodes;
+    unsigned long  m_node_count    = 0;
+    unsigned long  m_sample_count  = 0;
+
+public:
+    void process(SignalGraphProcessingContext* sgpctx) override final;
+
+    void insertNode(SignalGraphNode* node);
 
     void removeNode(SignalGraphNode* node);
 
-    void sort();
+    void makeConnection(const NodeSource &node_source, const NodeSink &node_sink);
+
+    void disconnectSink(const NodeSink &node_sink);
+
+    void disconnectSource(const NodeSource &node_source);
+
+    void disconnectNode(SignalGraphNode* node);
+
+    inline void setSampleCount(unsigned long sample_count) { m_sample_count = sample_count; }
+
+    inline unsigned long sampleCount() const { return m_sample_count; }
 };
 
 }//namespace r64fx
