@@ -906,6 +906,20 @@ int main()
     CodeBuffer codebuff;
     Assembler as(&codebuff);
 
+    as.mov(rax, Imm64S(0));
+    auto loop = as.ip();
+    for(int i=0; i<1024; i++)
+        as.nop(3);
+    as.add(rax, Imm32S(1));
+    as.cmp(rax, Imm32S(12345));
+    as.jne(loop);
+    as.nop(1024 * 1024);
+    as.ret();
+
+    auto jitfun = (JitFun) as.codeBegin();
+    cout << jitfun() << "\n";
+    return 0;
+
     bool ok =
         test_mov(as) &&
         test_add(as) &&

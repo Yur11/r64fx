@@ -2,33 +2,71 @@
 #include <sys/mman.h>
 #include <limits>
 #include <cstdlib>
+#include <cstring>
 
 using namespace std;
 
 namespace r64fx{
 
 
-CodeBuffer::CodeBuffer(int page_count) : m_page_count(page_count)
+CodeBuffer::CodeBuffer(int page_count)
 {
-    m_begin = m_end = (unsigned char*) alloc_aligned(memory_page_size(), byteCount());
-    mprotect(m_begin, byteCount(), PROT_READ | PROT_WRITE | PROT_EXEC);
+    resize(page_count);
 }
 
 
 CodeBuffer::~CodeBuffer()
 {
-    if(m_begin)
+    resize(0);
+}
+
+
+void CodeBuffer::resize(int page_count)
+{
+#ifdef R64FX_DEBUG
+    assert(page_count >= 0);
+#endif//R64FX_DEBUG
+
+    unsigned long new_size = page_count * memory_page_size();
+    unsigned long old_size = m_size;
+
+    if(new_size == 0)
     {
-        free(m_begin);
+        if(old_size > 0)
+        {
+            mprotect(m_begin, old_size, PROT_READ | PROT_WRITE);
+            free(m_begin);
+            m_begin = m_end = nullptr;
+            m_size = 0;
+        }
     }
+    else
+    {
+        auto new_buff = (unsigned char*) alloc_aligned(memory_page_size(), new_size);
+        if(old_size > 0)
+        {
+            if(new_size > old_size)
+            {
+                memcpy(new_buff, m_begin, old_size);
+            }
+            mprotect(m_begin, old_size, PROT_READ | PROT_WRITE);
+            free(m_begin);
+        }
+        auto end_offset = (unsigned long)(m_end - m_begin);
+        m_begin = new_buff;
+        m_end = m_begin + end_offset;
+        m_size = new_size;
+        mprotect(m_begin, new_size, PROT_READ | PROT_WRITE | PROT_EXEC);
+    }
+
+    m_page_count = page_count;
 }
 
 
 CodeBuffer &CodeBuffer::operator<<(unsigned char byte)
 {
-#ifdef R64FX_DEBUG
-    assert(bytesAvailable() > 0);
-#endif//R64FX_DEBUG
+    if(bytesAvailable() == 0)
+        resize(m_page_count + 1);
     *m_end = byte;
     m_end += 1;
     return *this;
@@ -37,9 +75,8 @@ CodeBuffer &CodeBuffer::operator<<(unsigned char byte)
 
 CodeBuffer &CodeBuffer::operator<<(Imm16 imm)
 {
-#ifdef R64FX_DEBUG
-    assert(bytesAvailable() > 1);
-#endif//R64FX_DEBUG
+    if(bytesAvailable() == 1)
+        resize(m_page_count + 1);
     for(int i=0; i<2; i++)
     {
         *m_end = imm.b[i];
@@ -51,9 +88,8 @@ CodeBuffer &CodeBuffer::operator<<(Imm16 imm)
 
 CodeBuffer &CodeBuffer::operator<<(Imm32 imm)
 {
-#ifdef R64FX_DEBUG
-    assert(bytesAvailable() > 3);
-#endif//R64FX_DEBUG
+    if(bytesAvailable() == 3)
+        resize(m_page_count + 1);
     for(int i=0; i<4; i++)
     {
         *m_end = imm.b[i];
@@ -65,9 +101,8 @@ CodeBuffer &CodeBuffer::operator<<(Imm32 imm)
 
 CodeBuffer &CodeBuffer::operator<<(Imm64 imm)
 {
-#ifdef R64FX_DEBUG
-    assert(bytesAvailable() > 7);
-#endif//R64FX_DEBUG
+    if(bytesAvailable() == 7)
+        resize(m_page_count + 1);
     for(int i=0; i<8; i++)
     {
         *m_end = imm.b[i];
@@ -133,14 +168,17 @@ unsigned char Rex(bool W, bool R, bool X, bool B)
 struct Rip32{
     int displacement;
 
-    Rip32(long int addr, unsigned char* next_ip)
+    Rip32(long addr, unsigned char* next_ip)
     {
-        long int _addr = (long int) addr;
-        long int _next_ip = (long int) next_ip;
+        long n_addr = (long) addr;
+        long n_next_ip = (long) next_ip;
 
-        long int _displacement = _addr - _next_ip;
+        long n_displacement = n_addr - n_next_ip;
+#ifdef R64FX_DEBUG
+        assert(n_displacement <= 0xFFFFFFFF);
+#endif//R64FX_DEBUG
 
-        displacement = (int) _displacement;
+        displacement = (int) n_displacement;
     }
 };
 
@@ -202,7 +240,7 @@ void Assembler::mov(GPR64 reg, Imm32 imm)
 void Assembler::mov(GPR64 reg, Imm64 imm)
 {
 #ifdef R64FX_DEBUG_JIT_STDOUT
-    std::cout << (void*)ip() << " mov    " << reg.name() << ", " << (signed long int) imm << "\n";
+    std::cout << (void*)ip() << " mov    " << reg.name() << ", " << (long) imm << "\n";
 #endif//R64FX_DEBUG_JIT_STDOUT
 
     *m_bytes << Rex(1, 0, 0, reg.prefix_bit());

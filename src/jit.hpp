@@ -101,7 +101,6 @@ inline Imm64 ImmAddr(void* addr)
     return Imm64U((unsigned long)addr);
 }
 
-
 class Register{
     const unsigned char mbits;
 
@@ -321,12 +320,15 @@ unsigned char Shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigne
 class CodeBuffer{
     unsigned char*  m_begin       = nullptr;
     unsigned char*  m_end         = nullptr;
-    int             m_page_count  = 0;
+    unsigned long   m_size        = 0;
+    unsigned long   m_page_count  = 0;
 
 public:
-    CodeBuffer(int npages = 1);
+    CodeBuffer(int page_count = 1);
 
     ~CodeBuffer();
+
+    void resize(int page_count);
 
     inline void rewind()
     {
@@ -341,13 +343,13 @@ public:
 
     inline void setEnd(void* addr) { m_end = (unsigned char*) addr; }
 
-    inline int pageCount() const { return m_page_count; }
+    inline unsigned long size() const { return m_size; }
 
-    inline int byteCount() const { return m_page_count * memory_page_size(); }
+    inline unsigned long bytesUsed() const { return (unsigned long)(m_end - m_begin); }
 
-    inline int bytesUsed() const { return int(m_end - m_begin); }
+    inline unsigned long bytesAvailable() const { return size() - bytesUsed(); }
 
-    inline int bytesAvailable() const { return byteCount() - bytesUsed(); }
+    inline unsigned long pageCount() const { return m_page_count; }
 
     CodeBuffer &operator<<(unsigned char byte);
 
