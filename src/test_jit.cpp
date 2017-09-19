@@ -23,6 +23,12 @@ template<typename T1, typename T2> bool expect_eq(T1 expected, T2 got)
 #define R64FX_EXPECT_EQ(expected, got) { auto evaled = (got); if(!expect_eq(expected, evaled)) return false; }
 
 
+inline void dump(float* f)
+{
+    cout << f[0] << ", " << f[1] << ", " << f[2] << ", " << f[3] << "\n";
+}
+
+
 typedef long (*JitFun)();
 
 void* g_data = nullptr;
@@ -40,7 +46,7 @@ bool test_mov(Assembler &as)
     cout << "mov(GPR64, Imm32)\n";
     {
         int num = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm32S(num));
         as.ret();
         R64FX_EXPECT_EQ(num, jitfun());
@@ -50,7 +56,7 @@ bool test_mov(Assembler &as)
     {
         int num1 = rand();
         int num2 = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm32S(num1));
         as.mov(r8,  Imm32S(num2));
         as.ret();
@@ -60,7 +66,7 @@ bool test_mov(Assembler &as)
     cout << "mov(GPR64, Imm64)\n";
     {
         long int num = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm64S(num));
         as.ret();
         R64FX_EXPECT_EQ(num, jitfun());
@@ -70,7 +76,7 @@ bool test_mov(Assembler &as)
     {
         int num1 = rand();
         int num2 = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm64S(num1));
         as.mov(r8,  Imm64S(num2));
         as.ret();
@@ -80,7 +86,7 @@ bool test_mov(Assembler &as)
     cout << "mov(GPR64, GPR64)\n";
     {
         int num = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(rcx, Imm32S(num));
         as.mov(rax, rcx);
         as.ret();
@@ -92,7 +98,7 @@ bool test_mov(Assembler &as)
         int num1 = rand();
         int num2 = rand();
         int num3 = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(r9,  Imm32S(num1));
         as.mov(rdx, Imm32S(num2));
         as.mov(rcx, Imm32S(num3));
@@ -105,7 +111,7 @@ bool test_mov(Assembler &as)
     cout << "mov(GPR64, Mem64)\n";
     {
         *a = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Mem64(a));
         as.ret();
         R64FX_EXPECT_EQ(*a, jitfun());
@@ -115,7 +121,7 @@ bool test_mov(Assembler &as)
     {
         *a = rand();
         *b = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Mem64(a));
         as.mov(r8,  Mem64(b));
         as.ret();
@@ -126,7 +132,7 @@ bool test_mov(Assembler &as)
     {
         int num = rand();
         *a = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(rcx, Imm32S(num));
         as.mov(Mem64(a), rcx);
         as.ret();
@@ -139,7 +145,7 @@ bool test_mov(Assembler &as)
         int num1 = rand();
         int num2 = rand();
         *a = 0;
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm32S(num1));
         as.mov(r8,  Imm32S(num2));
         as.mov(Mem64(a), r8);
@@ -171,7 +177,7 @@ bool test_add(Assembler &as)
         int num2 = rand() & 0xFFFF;
         int num3 = rand() & 0xFFFF;
         int sum = num1 + num2;
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm32S(num1));
         as.add(rax, Imm32S(num2));
         as.mov(r8,  Imm32S(0));
@@ -186,7 +192,7 @@ bool test_add(Assembler &as)
         int num2 = rand() & 0xFFFF;
         int num3 = rand() & 0xFFFF;
         int sum = num1 + num2;
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm32S(num1));
         as.mov(r9,  Imm32S(num2));
         as.mov(rcx, Imm32S(num3));
@@ -202,7 +208,7 @@ bool test_add(Assembler &as)
         *a = rand();
         *b = rand();
         long sum = *a + *b;
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm64S(*b));
         as.add(rax, Mem64(a));
         as.add(r8,  Mem64(b));
@@ -214,7 +220,7 @@ bool test_add(Assembler &as)
     {
         *a = 0;
         long num1 = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(r8,  Imm32S(num1));
         as.mov(rax, Imm32S(rand()));
         as.add(Mem64(a), r8);
@@ -229,7 +235,7 @@ bool test_add(Assembler &as)
         *b = rand();
         *c = rand();
         *d = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm32S(0));
         as.mov(r10, ImmAddr(a));
         as.mov(rdx, ImmAddr(c));
@@ -247,7 +253,7 @@ bool test_add(Assembler &as)
         *d = rand();
         long int num = rand();
         long int sum = num + *d;
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm64S(num + 1));
         as.mov(r8,  Imm64S(num));
         as.mov(rdx, ImmAddr(a));
@@ -281,7 +287,7 @@ bool test_sub(Assembler &as)
         int num2 = rand() & 0xFFFF;
         int num3 = rand() & 0xFFFF;
         int dif = num1 - num2;
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm32S(num1));
         as.sub(rax, Imm32S(num2));
         as.mov(r8,  Imm32S(0));
@@ -296,7 +302,7 @@ bool test_sub(Assembler &as)
         int num2 = rand() & 0xFFFF;
         int num3 = rand() & 0xFFFF;
         int dif = num1 - num2;
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm32S(num1));
         as.mov(r9,  Imm32S(num2));
         as.mov(rcx, Imm32S(num3));
@@ -312,7 +318,7 @@ bool test_sub(Assembler &as)
         *a = rand();
         *b = rand();
         long dif = *b - *a;
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm64S(*b));
         as.sub(rax, Mem64(a));
         as.sub(r8,  Mem64(b));
@@ -324,7 +330,7 @@ bool test_sub(Assembler &as)
     {
         *a = 0;
         long num1 = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(r8,  Imm32S(num1));
         as.mov(rax, Imm32S(rand()));
         as.sub(Mem64(a), r8);
@@ -339,7 +345,7 @@ bool test_sub(Assembler &as)
         *b = rand();
         *c = rand();
         *d = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm32S(0));
         as.mov(r10, ImmAddr(a));
         as.mov(rdx, ImmAddr(c));
@@ -357,7 +363,7 @@ bool test_sub(Assembler &as)
         *d = rand();
         long int num = rand();
         long int dif = *d - num;
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm64S(num + 1));
         as.mov(r8,  Imm64S(num));
         as.mov(rdx, ImmAddr(a));
@@ -380,7 +386,7 @@ bool test_push_pop(Assembler &as)
     cout << "push & pop\n";
     {
         long num = rand();
-        as.rewindIp();
+        as.rewind();
         as.mov(r9, Imm64S(num));
         as.push(r9);
         as.pop(rax);
@@ -419,7 +425,7 @@ bool test_sse(Assembler &as)
             d[i] = float(rand());
         }
 
-        as.rewindIp();
+        as.rewind();
         as.movaps(xmm0, Mem128(a));
         as.movaps(xmm8, Mem128(b));
         as.movaps(xmm1, xmm8);
@@ -452,13 +458,13 @@ bool test_sse(Assembler &as)
             d[i] = float(rand());
         }
 
-        as.rewindIp();
-        as.movups(xmm0, Mem128(a));
-        as.movups(xmm8, Mem128(b));
+        as.rewind();
+        as.movups(xmm0, Mem32(a));
+        as.movups(xmm8, Mem32(b));
         as.movups(xmm1, xmm8);
         as.movups(xmm9, xmm0);
-        as.movups(Mem128(c), xmm1);
-        as.movups(Mem128(d), xmm9);
+        as.movups(Mem32(c), xmm1);
+        as.movups(Mem32(d), xmm9);
         as.ret();
 
         jitfun();
@@ -491,7 +497,7 @@ bool test_sse(Assembler &as)
             f[i] = float(rand());
         }
 
-        as.rewindIp();
+        as.rewind();
 
         as.movaps(xmm0,  Mem128(n));
         as.movaps(xmm1,  Mem128(f));
@@ -561,7 +567,7 @@ bool test_sse(Assembler &as)
             f[i] = rand();
         }
 
-        as.rewindIp();
+        as.rewind();
 
         as.movaps(xmm0,  Mem128(n));
         as.movaps(xmm1,  Mem128(f));
@@ -650,7 +656,7 @@ bool test_sse(Assembler &as)
             f[i] = rand();
         }
 
-        as.rewindIp();
+        as.rewind();
 
         as.movaps(xmm0,  Mem128(n));
         as.movaps(xmm1,  Mem128(f));
@@ -741,7 +747,7 @@ bool test_sse(Assembler &as)
             n[i] = 0;
         }
 
-        as.rewindIp();
+        as.rewind();
         as.movaps(xmm8, Mem128(d));
         as.minps(xmm8, Mem128(a));
         as.addps(xmm8, Mem128(m));
@@ -787,7 +793,7 @@ bool test_sse(Assembler &as)
             n[i] = 0;
         }
 
-        as.rewindIp();
+        as.rewind();
         as.movaps(xmm8, Mem128(d));
         as.maxps(xmm8, Mem128(a));
         as.addps(xmm8, Mem128(m));
@@ -846,7 +852,7 @@ bool test_sse(Assembler &as)
         c3[1] = a3[0];
         c3[0] = a3[2];
 
-        as.rewindIp();
+        as.rewind();
         as.pshufd(xmm8, Mem128(a1), Shuf(3, 2, 1, 0));
         as.movaps(Mem128(b1), xmm8);
 
@@ -878,7 +884,7 @@ bool test_jumps(Assembler &as)
 
     cout << "jnz\n";
     {
-        as.rewindIp();
+        as.rewind();
         as.mov(rax, Imm32S(0));
         as.mov(rcx, Imm32S(1234));
         auto loop1 = as.ip();
@@ -903,29 +909,43 @@ int main()
         buff[i] = 0;
     }
 
-    CodeBuffer codebuff;
-    Assembler as(&codebuff);
+    Assembler as;
 
-    as.mov(rax, Imm64S(0));
-    auto loop = as.ip();
-    for(int i=0; i<1024; i++)
-        as.nop(3);
-    as.add(rax, Imm32S(1));
-    as.cmp(rax, Imm32S(12345));
-    as.jne(loop);
-    as.nop(1024 * 1024);
-    as.ret();
-
-    auto jitfun = (JitFun) as.codeBegin();
-    cout << jitfun() << "\n";
-    return 0;
+//     float* buff = (float*) g_data;
+//     auto a = buff;
+//     auto b = buff + 4;
+//     auto c = buff + 8;
+//     auto d = buff + 12;
+// 
+//     for(int i=0; i<4; i++)
+//     {
+//         a[i] = float(rand());
+//         b[i] = float(rand());
+//         c[i] = float(rand());
+//         d[i] = float(rand());
+//     }
+// 
+//     as.rewind();
+//     as.movaps(xmm0, Mem128(a));
+//     as.movaps(xmm8, Mem128(b));
+//     as.movaps(xmm1, xmm8);
+//     as.movaps(xmm9, xmm0);
+//     as.movaps(Mem128(c), xmm1);
+//     as.movaps(Mem128(d), xmm9);
+//     as.ret();
+// 
+//     dump(a);
+//     dump(b);
+//     dump(c);
+// 
+//     return 0;
 
     bool ok =
         test_mov(as) &&
+        test_push_pop(as) &&
         test_add(as) &&
         test_sub(as) &&
         test_sse(as) &&
-        test_push_pop(as) &&
         test_jumps(as);
     ;
 

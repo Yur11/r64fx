@@ -111,8 +111,7 @@ private:
     {
         m.sd_sync_port->enable();
 
-        CodeBuffer code_buffer;
-        Assembler assembler(&code_buffer);
+        Assembler assembler;
 
         long (*routine)() = nullptr;
 
@@ -134,7 +133,7 @@ private:
                 {
                     m.flags &= ~R64FX_GRAPH_REBUILD_ARMED;
 
-                    assembler.rewindIp();
+                    assembler.rewind();
 
                     SignalGraphProcessingContext sgctx(&assembler);
                     m.signal_graph.process(&sgctx);

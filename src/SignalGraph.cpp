@@ -60,7 +60,7 @@ void SignalGraph::process(SignalGraphProcessingContext* sgpctx)
     auto a = sgpctx->assembler();
     a->push(rbx);
     a->mov(rbx, Imm64U(0));
-    auto loop = a->ip();
+    auto loop = a->codeEnd();
     for(auto node : m_nodes)
     {
         node->process(sgpctx);

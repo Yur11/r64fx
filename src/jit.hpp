@@ -314,21 +314,24 @@ const CmpCode
        - shuf(3, 2, 1, 0) - reverse order.
        - etc...
  */
-unsigned char Shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3);
+inline unsigned char Shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3)
+{
+    return (s3 << 6) + (s2 << 4) + (s1 << 2) + s0;
+}
 
 
-class CodeBuffer{
+class Assembler{
     unsigned char*  m_begin       = nullptr;
     unsigned char*  m_end         = nullptr;
     unsigned long   m_size        = 0;
     unsigned long   m_page_count  = 0;
 
 public:
-    CodeBuffer(int page_count = 1);
+    Assembler(unsigned long page_count = 1) { resize(page_count); }
 
-    ~CodeBuffer();
+    ~Assembler() { resize(0); }
 
-    void resize(int page_count);
+    void resize(unsigned long page_count);
 
     inline void rewind()
     {
@@ -341,7 +344,9 @@ public:
     /* Pointer to the byte past the end of the written bytes. */
     inline unsigned char* codeEnd() const { return m_end; }
 
-    inline void setEnd(void* addr) { m_end = (unsigned char*) addr; }
+    inline unsigned char* ip() const { return m_end; }
+
+    inline void setCodeEnd(void* addr) { m_end = (unsigned char*) addr; }
 
     inline unsigned long size() const { return m_size; }
 
@@ -349,92 +354,36 @@ public:
 
     inline unsigned long bytesAvailable() const { return size() - bytesUsed(); }
 
+    inline void ensureAvailable(unsigned long nbytes) { if(bytesAvailable() < nbytes) resize(pageCount() + 1); }
+
     inline unsigned long pageCount() const { return m_page_count; }
 
-    CodeBuffer &operator<<(unsigned char byte);
+private:
+    void write_bytes(unsigned char byte, int nbytes);
 
-    inline CodeBuffer &operator<<(Imm8 imm)
-    {
-        return operator<<(imm.u);
-    }
+    void write(unsigned char byte);
+    void write(unsigned char byte0, unsigned char byte1);
 
-    CodeBuffer &operator<<(Imm16 imm);
+    void write(unsigned char opcode, unsigned char r, GPR64 reg, Imm32 imm);
+    void write(unsigned char opcode, GPR64 reg, Imm64 imm);
 
-    CodeBuffer &operator<<(Imm32 imm);
+    void write(unsigned char opcode, GPR64 dst, GPR64 src);
+    void write(unsigned char opcode, GPR64 reg, Mem64 mem);
+    void write(unsigned char opcode, GPR64 reg, Base base, Disp8 disp);
 
-    CodeBuffer &operator<<(Imm64 imm);
-};
+    void write(unsigned char opcode, Mem8 mem);
+    void write(unsigned char opcode1, unsigned char opcode2, Mem8 mem);
 
-
-class Assembler{
-    CodeBuffer* m_bytes = nullptr;
+    void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm dst, Xmm src, int imm = -1);
+    void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, long memaddr, int imm = -1);
+    void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, Base base, Disp8 disp, int imm = -1);
 
 public:
-    Assembler(CodeBuffer* bytes) : m_bytes(bytes)
-    {
+    void nop(int count = 1); // Insert one or more nop instructions.
+    void ret();
 
-    }
-
-    inline CodeBuffer* codeBuffer() const
-    {
-        return m_bytes;
-    }
-
-    inline unsigned char* codeBegin()
-    {
-        return m_bytes->codeBegin();
-    }
-
-    inline unsigned char* ip()
-    {
-        return m_bytes->codeEnd();
-    }
-
-    inline void setIp(unsigned char* addr)
-    {
-        m_bytes->setEnd(addr);
-    }
-
-    inline void rewindIp()
-    {
-        m_bytes->setEnd(m_bytes->codeBegin());
-    }
-
-    /* Insert one or more nop instructions. */
-    inline void nop(int count = 1)
-    {
-        while(count--)
-        {
-#ifdef R64FX_DEBUG_JIT_STDOUT
-            std::cout << (void*)ip() << " nop\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-            *m_bytes << 0x90;
-        }
-    }
-
-    inline void ret()
-    {
-#ifdef R64FX_DEBUG_JIT_STDOUT
-        std::cout << (void*)ip() << " ret\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-        *m_bytes << 0xC3;
-    }
-
-    inline void rdtsc()
-    {
-#ifdef R64FX_DEBUG_JIT_STDOUT
-        std::cout << (void*)ip() << " rdtsc\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-        *m_bytes << 0x0F << 0x31;
-    }
-
-    inline void rdpmc()
-    {
-#ifdef R64FX_DEBUG_JIT_STDOUT
-        std::cout << (void*)ip() << " rdpmc\n";
-#endif//R64FX_DEBUG_JIT_STDOUT
-        *m_bytes << 0x0F << 0x33;
-    }
+    void rdtsc();
+    void rdpmc();
 
     void mov(GPR64 reg, Imm32 imm);
     void mov(GPR64 reg, Imm64 imm);
@@ -476,8 +425,8 @@ public:
     void movaps(Base base, Disp8 disp, Xmm reg);
 
     void movups(Xmm dst, Xmm src);
-    void movups(Xmm reg, Mem128 mem);
-    void movups(Mem128, Xmm reg);
+    void movups(Xmm reg, Mem32 mem);
+    void movups(Mem32, Xmm reg);
     void movups(Xmm reg, Base base, Disp8 disp);
     void movups(Base base, Disp8 disp, Xmm reg);
 
@@ -490,94 +439,74 @@ private:
     void sse_ss_instruction(unsigned char third_opcode, Xmm reg, Mem32 mem);
     void sse_ss_instruction(unsigned char third_opcode, Xmm reg, Base base, Disp8 disp);
 
+#ifdef R64FX_DEBUG_JIT_STDOUT
+#define DUMP_IP_AND_NAME(name) std::cout << (void*)ip() << " " << #name;
+#else
+#define DUMP_IP_AND_NAME(name)
+#endif//R64FX_DEBUG_JIT_STDOUT
+
+
+#define ENCODE_SSE_PS_INSTRUCTION(name, second_opcode)\
+inline void name(Xmm dst, Xmm src)\
+{\
+    DUMP_IP_AND_NAME(name)\
+    sse_ps_instruction(second_opcode, dst, src);\
+}\
+\
+\
+inline void name(Xmm reg, Mem128 mem)\
+{\
+    DUMP_IP_AND_NAME(name)\
+    sse_ps_instruction(second_opcode, reg, mem);\
+}\
+\
+\
+inline void name(Xmm reg, Base base, Disp8 disp)\
+{\
+    DUMP_IP_AND_NAME(name)\
+    sse_ps_instruction(second_opcode, reg, base, disp);\
+}\
+
+
+#define ENCODE_SSE_SS_INSTRUCTION(name, third_opcode)\
+inline void name(Xmm dst, Xmm src)\
+{\
+    DUMP_IP_AND_NAME(name)\
+    sse_ss_instruction(third_opcode, dst, src);\
+}\
+\
+\
+inline void name(Xmm reg, Mem32 mem)\
+{\
+    DUMP_IP_AND_NAME(name)\
+    sse_ss_instruction(third_opcode, reg, mem);\
+}\
+\
+\
+inline void name(Xmm reg, Base base, Disp8 disp)\
+{\
+    DUMP_IP_AND_NAME(name)\
+    sse_ss_instruction(third_opcode, reg, base, disp);\
+}\
+
+#define ENCODE_SSE_INSTRUCTION(name, opcode)\
+    ENCODE_SSE_PS_INSTRUCTION(name##ps, opcode)\
+    ENCODE_SSE_SS_INSTRUCTION(name##ss, opcode)
+
 public:
-    void addps(Xmm dst, Xmm src);
-    void addps(Xmm reg, Mem128 mem);
-    void addps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void addss(Xmm dst, Xmm src);
-    void addss(Xmm reg, Mem32 mem);
-    void addss(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void subps(Xmm dst, Xmm src);
-    void subps(Xmm reg, Mem128 mem);
-    void subps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void subss(Xmm dst, Xmm src);
-    void subss(Xmm reg, Mem32 mem);
-    void subss(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void mulps(Xmm dst, Xmm src);
-    void mulps(Xmm reg, Mem128 mem);
-    void mulps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void mulss(Xmm dst, Xmm src);
-    void mulss(Xmm reg, Mem32 mem);
-    void mulss(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void divps(Xmm dst, Xmm src);
-    void divps(Xmm reg, Mem128 mem);
-    void divps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void divss(Xmm dst, Xmm src);
-    void divss(Xmm reg, Mem32 mem);
-    void divss(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void rcpps(Xmm dst, Xmm src);
-    void rcpps(Xmm reg, Mem128 mem);
-    void rcpps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void rcpss(Xmm dst, Xmm src);
-    void rcpss(Xmm reg, Mem32 mem);
-    void rcpss(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void sqrtps(Xmm dst, Xmm src);
-    void sqrtps(Xmm reg, Mem128 mem);
-    void sqrtps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void sqrtss(Xmm dst, Xmm src);
-    void sqrtss(Xmm reg, Mem32 mem);
-    void sqrtss(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void rsqrtps(Xmm dst, Xmm src);
-    void rsqrtps(Xmm reg, Mem128 mem);
-    void rsqrtps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void rsqrtss(Xmm dst, Xmm src);
-    void rsqrtss(Xmm reg, Mem32 mem);
-    void rsqrtss(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void maxps(Xmm dst, Xmm src);
-    void maxps(Xmm reg, Mem128 mem);
-    void maxps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void maxss(Xmm dst, Xmm src);
-    void maxss(Xmm reg, Mem32 mem);
-    void maxss(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void minps(Xmm dst, Xmm src);
-    void minps(Xmm reg, Mem128 mem);
-    void minps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void minss(Xmm dst, Xmm src);
-    void minss(Xmm reg, Mem32 mem);
-    void minss(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void andps(Xmm dst, Xmm src);
-    void andps(Xmm reg, Mem128 mem);
-    void andps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void andnps(Xmm dst, Xmm src);
-    void andnps(Xmm reg, Mem128 mem);
-    void andnps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void orps(Xmm dst, Xmm src);
-    void orps(Xmm reg, Mem128 mem);
-    void orps(Xmm reg, Base base, Disp8 disp = Disp8(0));
-
-    void xorps(Xmm dst, Xmm src);
-    void xorps(Xmm reg, Mem128 mem);
-    void xorps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+    ENCODE_SSE_INSTRUCTION(add,   0x58)
+    ENCODE_SSE_INSTRUCTION(sub,   0x5C)
+    ENCODE_SSE_INSTRUCTION(mul,   0x59)
+    ENCODE_SSE_INSTRUCTION(div,   0x5E)
+    ENCODE_SSE_INSTRUCTION(rcp,   0x53)
+    ENCODE_SSE_INSTRUCTION(sqrt,  0x51)
+    ENCODE_SSE_INSTRUCTION(rsqrt, 0x52)
+    ENCODE_SSE_INSTRUCTION(max,   0x5F)
+    ENCODE_SSE_INSTRUCTION(min,   0x5D)
+    ENCODE_SSE_PS_INSTRUCTION(andps,   0x54)
+    ENCODE_SSE_PS_INSTRUCTION(andnps,  0x55)
+    ENCODE_SSE_PS_INSTRUCTION(orps,    0x56)
+    ENCODE_SSE_PS_INSTRUCTION(xorps,   0x57)
 
     void cmpps(CmpCode kind, Xmm dst, Xmm src);
     void cmpps(CmpCode kind, Xmm reg, Mem128 mem);
