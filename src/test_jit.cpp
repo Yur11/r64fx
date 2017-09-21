@@ -22,10 +22,14 @@ template<typename T1, typename T2> bool expect_eq(T1 expected, T2 got)
 }
 #define R64FX_EXPECT_EQ(expected, got) { auto evaled = (got); if(!expect_eq(expected, evaled)) return false; }
 
-
-inline void dump(float* f)
+template<typename T> bool vec4_eq(T* a, T* b)
 {
-    cout << f[0] << ", " << f[1] << ", " << f[2] << ", " << f[3] << "\n";
+    return (a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]) && (a[3] == b[3]);
+}
+
+template<typename T> inline void dump(T* v)
+{
+    cout << v[0] << ", " << v[1] << ", " << v[2] << ", " << v[3] << "\n";
 }
 
 
@@ -396,12 +400,6 @@ bool test_push_pop(Assembler &as)
 
     cout << "\n";
     return true;
-}
-
-
-template<typename T> bool vec4_eq(T* a, T* b)
-{
-    return (a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]) && (a[3] == b[3]);
 }
 
 
@@ -873,6 +871,36 @@ bool test_sse(Assembler &as)
         }
     }
 
+    cout << "cmpltps\n";
+    {
+        float* buff = (float*) g_data;
+        auto a = buff;
+        auto b = buff + 4;
+        auto c = (int*)(buff + 8);
+        auto d = (int*)(buff + 12);
+        for(int i=0; i<4; i++)
+        {
+            a[i] = float(rand() & 0xFF) * 0.5f;
+            b[i] = float(rand() & 0xFF) * 0.5f;
+            d[i] = (a[i] < b[i] ? -1 : 0);
+        }
+
+        as.rewind();
+
+        as.movaps(xmm0, Mem128(a)); 
+        as.movaps(xmm1, Mem128(b));
+        as.cmpltps(xmm0, xmm1);
+        as.movaps(Mem128(c), xmm0);
+
+        as.ret();
+        jitfun();
+
+        if(!vec4_eq(c, d))
+        {
+            return false;
+        }
+    }
+
     cout << "\n";
     return true;
 }
@@ -910,35 +938,6 @@ int main()
     }
 
     Assembler as;
-
-//     float* buff = (float*) g_data;
-//     auto a = buff;
-//     auto b = buff + 4;
-//     auto c = buff + 8;
-//     auto d = buff + 12;
-// 
-//     for(int i=0; i<4; i++)
-//     {
-//         a[i] = float(rand());
-//         b[i] = float(rand());
-//         c[i] = float(rand());
-//         d[i] = float(rand());
-//     }
-// 
-//     as.rewind();
-//     as.movaps(xmm0, Mem128(a));
-//     as.movaps(xmm8, Mem128(b));
-//     as.movaps(xmm1, xmm8);
-//     as.movaps(xmm9, xmm0);
-//     as.movaps(Mem128(c), xmm1);
-//     as.movaps(Mem128(d), xmm9);
-//     as.ret();
-// 
-//     dump(a);
-//     dump(b);
-//     dump(c);
-// 
-//     return 0;
 
     bool ok =
         test_mov(as) &&

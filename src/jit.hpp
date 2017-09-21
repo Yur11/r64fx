@@ -295,7 +295,7 @@ public:
             + std::string(1, s0() + '0') + ", "
             + std::string(1, s1() + '0') + ", "
             + std::string(1, s2() + '0') + ", "
-            + std::string(1, s3() + '0') + "}\n";
+            + std::string(1, s3() + '0') + "}";
     }
 #endif//R64FX_JIT_DEBUG_STDOUT
 };
