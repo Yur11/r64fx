@@ -5,9 +5,10 @@
 #include <assert.h>
 #endif//R64FX_DEBUG
 
-#ifdef R64FX_DEBUG_JIT_STDOUT
+#ifdef R64FX_JIT_DEBUG_STDOUT
 #include <iostream>
-#endif//R64FX_DEBUG_JIT_STDOUT_JIT_STDOUT
+#include <string>
+#endif//R64FX_JIT_DEBUG_STDOUT
 
 #include "MemoryUtils.hpp"
 #include "binary_constants.hpp"
@@ -116,16 +117,16 @@ public:
 };
 
 class GPR64 : public Register{
-#ifdef R64FX_DEBUG_JIT_STDOUT
+#ifdef R64FX_JIT_DEBUG_STDOUT
     static const char* names[];
-#endif//R64FX_DEBUG_JIT_STDOUT
+#endif//R64FX_JIT_DEBUG_STDOUT
 
 public:
     explicit GPR64(const unsigned char bits) : Register(bits) {}
 
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    inline const char* name() const { return names[Register::code()]; }
-#endif//R64FX_DEBUG_JIT_STDOUT
+#ifdef R64FX_JIT_DEBUG_STDOUT
+    inline std::string name() const { return names[Register::code()]; }
+#endif//R64FX_JIT_DEBUG_STDOUT
 };
 
 const GPR64
@@ -149,16 +150,16 @@ const GPR64
 
 
 class Xmm : public Register{
-#ifdef R64FX_DEBUG_JIT_STDOUT
+#ifdef R64FX_JIT_DEBUG_STDOUT
     static const char* names[];
-#endif//R64FX_DEBUG_JIT_STDOUT
+#endif//R64FX_JIT_DEBUG_STDOUT
 
 public:
     explicit Xmm(const unsigned char bits) : Register(bits) {}
 
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    inline const char* name() const { return names[Register::code()]; }
-#endif//R64FX_DEBUG_JIT_STDOUT
+#ifdef R64FX_JIT_DEBUG_STDOUT
+    inline std::string name() const { return names[Register::code()]; }
+#endif//R64FX_JIT_DEBUG_STDOUT
 };
 
 const Xmm
@@ -181,78 +182,41 @@ const Xmm
 ;
 
 
+#ifdef R64FX_DEBUG
+#define R64FX_JIT_DEBUG_MEM_ALIGN(bytes) assert((long int)addr % bytes == 0);
+#endif//R64FX_DEBUG
+
 struct Mem8{
-    long int addr;
+    long int m_addr = 0;
 
-    Mem8(void* addr)
-    {
-        this->addr = (long int) addr;
-    }
+public:
+    Mem8(){}
+    Mem8(void* addr){ m_addr = (long int) addr; }
+
+    inline long int addr() const { return m_addr; }
 };
 
-struct Mem16{
-    long int addr;
-
-    Mem16(void* addr)
-    {
-#ifdef R64FX_DEBUG
-        assert((long int)addr % 2 == 0);
-#endif//R64FX_DEBUG
-        this->addr = (long int) addr;
-    }
+struct Mem16 : public Mem8{
+    Mem16(){}
+    Mem16(void* addr){ R64FX_JIT_DEBUG_MEM_ALIGN(2); m_addr = (unsigned long)addr; }
 };
 
-struct Mem32{
-    long int addr;
-
-    Mem32(void* addr)
-    {
-#ifdef R64FX_DEBUG
-        assert((long int)addr % 4 == 0);
-#endif//R64FX_DEBUG
-        this->addr = (long int) addr;
-    }
+struct Mem32 : public Mem16{
+    Mem32(){}
+    Mem32(void* addr){ R64FX_JIT_DEBUG_MEM_ALIGN(4); m_addr = (unsigned long)addr; }
 };
 
-struct Mem64{
-    long int addr;
-
-    Mem64(void* addr)
-    {
-#ifdef R64FX_DEBUG
-        assert((long int)addr % 8 == 0);
-#endif//R64FX_DEBUG
-        this->addr = (long int) addr;
-    }
+struct Mem64 : public Mem32{
+    Mem64(){}
+    Mem64(void* addr){ R64FX_JIT_DEBUG_MEM_ALIGN(8); m_addr = (unsigned long)addr; }
 };
 
-struct Mem128{
-    long int addr;
-
-    Mem128(void* addr)
-    {
-#ifdef R64FX_DEBUG_JIT_STDOUT
-        assert((long int)addr % 16 == 0);
-#endif//R64FX_DEBUG_JIT_STDOUT
-        this->addr = (long int) addr;
-    }
-
-    Mem128(float arr[4]) : Mem128((void*)arr) {}
-    Mem128(int arr[4]) : Mem128((void*)arr) {}
-    Mem128(unsigned int arr[4]) : Mem128((void*)arr) {}
+struct Mem128 : public Mem64{
+    Mem128(){}
+    Mem128(void* addr){ R64FX_JIT_DEBUG_MEM_ALIGN(16); m_addr = (unsigned long)addr; }
 };
 
-struct Mem256{
-    long int addr;
-
-    Mem256(void* addr)
-    {
-#ifdef R64FX_DEBUG_JIT_STDOUT
-        assert((long int)addr % 32 == 0);
-#endif//R64FX_DEBUG_JIT_STDOUT
-        this->addr = (long int) addr;
-    }
-};
+#undef R64FX_JIT_DEBUG_MEM_ALIGN
 
 
 struct Base{
@@ -269,27 +233,21 @@ struct Disp8{
 };
 
 
-const unsigned char Scale1 = b00;
-const unsigned char Scale2 = b01;
-const unsigned char Scale4 = b10;
-const unsigned char Scale8 = b11;
-
-
 class CmpCode{
-    unsigned int _code;
+    unsigned int m_code;
 
-#ifdef R64FX_DEBUG_JIT_STDOUT
+#ifdef R64FX_JIT_DEBUG_STDOUT
     static const char* names[];
-#endif//R64FX_DEBUG_JIT_STDOUT
+#endif//R64FX_JIT_DEBUG_STDOUT
 
 public:
-    CmpCode(unsigned int code) : _code(code) {}
+    CmpCode(unsigned int code) : m_code(code) {}
 
-    inline unsigned int code() const { return _code; }
+    inline unsigned int code() const { return m_code; }
 
-#ifdef R64FX_DEBUG_JIT_STDOUT
-    inline const char* name() const { return names[code()]; }
-#endif//R64FX_DEBUG_JIT_STDOUT
+#ifdef R64FX_JIT_DEBUG_STDOUT
+    inline std::string name() const { return names[code()]; }
+#endif//R64FX_JIT_DEBUG_STDOUT
 };
 
 /* Codes used with cmpps. */
@@ -314,10 +272,33 @@ const CmpCode
        - shuf(3, 2, 1, 0) - reverse order.
        - etc...
  */
-inline unsigned char Shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3)
-{
-    return (s3 << 6) + (s2 << 4) + (s1 << 2) + s0;
-}
+class Shuf{
+    unsigned char m_byte = 0;
+
+public:
+    Shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3)
+    {
+        m_byte = (s3 << 6) + (s2 << 4) + (s1 << 2) + s0;
+    }
+
+    inline unsigned char byte() const { return m_byte; }
+
+    inline int s0() const { return m_byte & b11; }
+    inline int s1() const { return (m_byte >> 2) & b11; }
+    inline int s2() const { return (m_byte >> 4) & b11; }
+    inline int s3() const { return (m_byte >> 6) & b11; }
+
+#ifdef R64FX_JIT_DEBUG_STDOUT
+    inline std::string str() const
+    {
+        return "{"
+            + std::string(1, s0() + '0') + ", "
+            + std::string(1, s1() + '0') + ", "
+            + std::string(1, s2() + '0') + ", "
+            + std::string(1, s3() + '0') + "}\n";
+    }
+#endif//R64FX_JIT_DEBUG_STDOUT
+};
 
 
 class Assembler{
@@ -354,7 +335,7 @@ public:
 
     inline unsigned long bytesAvailable() const { return size() - bytesUsed(); }
 
-    inline void ensureAvailable(unsigned long nbytes) { if(bytesAvailable() < nbytes) resize(pageCount() + 1); }
+    inline void ensureAvailable(unsigned long nbytes) { while(bytesAvailable() < nbytes) resize(pageCount() + 1); }
 
     inline unsigned long pageCount() const { return m_page_count; }
 
@@ -375,119 +356,106 @@ private:
     void write(unsigned char opcode1, unsigned char opcode2, Mem8 mem);
 
     void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm dst, Xmm src, int imm = -1);
-    void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, long memaddr, int imm = -1);
+    void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, Mem8 mem, int imm = -1);
     void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, Base base, Disp8 disp, int imm = -1);
 
+    void write(unsigned char opcode, GPR64 reg);
+
+#ifdef R64FX_JIT_DEBUG_STDOUT
+#define R64FX_JIT_DEBUG_PRINT(...) { Assembler::print(__VA_ARGS__); }
+#else
+#define R64FX_JIT_DEBUG_PRINT(...)
+#endif//R64FX_JIT_DEBUG_STDOUT
+
 public:
-    void nop(int count = 1); // Insert one or more nop instructions.
-    void ret();
+    inline void nop(int count) { R64FX_JIT_DEBUG_PRINT("nop");    write(0x90, count); }
+    inline void ret()          { R64FX_JIT_DEBUG_PRINT("ret");    write(0xC3); }
+    inline void rdtsc()        { R64FX_JIT_DEBUG_PRINT("rdtsc");  write(0x0F, 0x31); }
 
-    void rdtsc();
-    void rdpmc();
+    inline void mov(GPR64 reg, Imm32 imm){ R64FX_JIT_DEBUG_PRINT("mov", reg, imm);  write(0xC7, 0, reg, imm); }
+    inline void mov(GPR64 reg, Imm64 imm){ R64FX_JIT_DEBUG_PRINT("mov", reg, imm);  write(0xB8, reg, imm); }
+    inline void mov(GPR64 dst, GPR64 src){ R64FX_JIT_DEBUG_PRINT("mov", dst, src);  write(0x8B, dst, src); }
+    inline void mov(GPR64 reg, Mem64 mem){ R64FX_JIT_DEBUG_PRINT("mov", reg, mem);  write(0x8B, reg, mem); }
+    inline void mov(Mem64 mem, GPR64 reg){ R64FX_JIT_DEBUG_PRINT("mov", mem, reg);  write(0x89, reg, mem); }
+    inline void mov(GPR64 reg, Base base, Disp8 disp){ R64FX_JIT_DEBUG_PRINT("mov", reg, base, disp);  write(0x8B, reg, base, disp); }
+    inline void mov(Base base, Disp8 disp, GPR64 reg){ R64FX_JIT_DEBUG_PRINT("mov", base, disp, reg);  write(0x89, reg, base, disp); }
 
-    void mov(GPR64 reg, Imm32 imm);
-    void mov(GPR64 reg, Imm64 imm);
-    void mov(GPR64 dst, GPR64 src);
-    void mov(GPR64 reg, Mem64 mem);
-    void mov(Mem64 mem, GPR64 reg);
-    void mov(GPR64 reg, Base base, Disp8 disp);
-    void mov(Base base, Disp8 disp, GPR64 reg);
+    inline void add(GPR64 reg, Imm32 imm){ R64FX_JIT_DEBUG_PRINT("add", reg, imm);  write(0x81, 0, reg, imm); }
+    inline void add(GPR64 dst, GPR64 src){ R64FX_JIT_DEBUG_PRINT("add", dst, src);  write(0x03, dst, src); }
+    inline void add(GPR64 reg, Mem64 mem){ R64FX_JIT_DEBUG_PRINT("add", reg, mem);  write(0x03, reg, mem); }
+    inline void add(Mem64 mem, GPR64 reg){ R64FX_JIT_DEBUG_PRINT("add", mem, reg);  write(0x01, reg, mem); }
+    inline void add(GPR64 reg, Base base, Disp8 disp){ R64FX_JIT_DEBUG_PRINT("add", reg, base, disp);  write(0x03, reg, base, disp); }
+    inline void add(Base base, Disp8 disp, GPR64 reg){ R64FX_JIT_DEBUG_PRINT("add", base, disp, reg);  write(0x01, reg, base, disp); }
 
-    void add(GPR64 reg, Imm32 imm);
-    void add(GPR64 dst, GPR64 src);
-    void add(GPR64 reg, Mem64 mem);
-    void add(Mem64 mem, GPR64 reg);
-    void add(GPR64 reg, Base base, Disp8 disp);
-    void add(Base base, Disp8 disp, GPR64 reg);
+    inline void sub(GPR64 reg, Imm32 imm){ R64FX_JIT_DEBUG_PRINT("sub", reg, imm);  write(0x81, 5, reg, imm); }
+    inline void sub(GPR64 dst, GPR64 src){ R64FX_JIT_DEBUG_PRINT("sub", dst, src);  write(0x2B, dst, src); }
+    inline void sub(GPR64 reg, Mem64 mem){ R64FX_JIT_DEBUG_PRINT("sub", reg, mem);  write(0x2B, reg, mem); }
+    inline void sub(Mem64 mem, GPR64 reg){ R64FX_JIT_DEBUG_PRINT("sub", mem, reg);  write(0x29, reg, mem); }
+    inline void sub(GPR64 reg, Base base, Disp8 disp){ R64FX_JIT_DEBUG_PRINT("sub", reg, base, disp);  write(0x2B, reg, base, disp); }
+    inline void sub(Base base, Disp8 disp, GPR64 reg){ R64FX_JIT_DEBUG_PRINT("sub", base, disp, reg);  write(0x29, reg, base, disp); }
 
-    void sub(GPR64 dst, GPR64 src);
-    void sub(GPR64 reg, Imm32 imm);
-    void sub(GPR64 reg, Mem64 mem);
-    void sub(Mem64 mem, GPR64 reg);
-    void sub(GPR64 reg, Base base, Disp8 disp);
-    void sub(Base base, Disp8 disp, GPR64 reg);
+    inline void push (GPR64 reg){ R64FX_JIT_DEBUG_PRINT("push", reg);  write(0x50, reg); }
+    inline void pop  (GPR64 reg){ R64FX_JIT_DEBUG_PRINT("pop",  reg);  write(0x58, reg); }
 
-    void push(GPR64 reg);
-    void pop(GPR64 reg);
+    inline void cmp(GPR64 reg, Imm32 imm){ R64FX_JIT_DEBUG_PRINT("cmp", reg, imm);  write(0x81, 7, reg, imm); }
 
-    void cmp(GPR64 reg, Imm32 imm);
-    void jmp(Mem8 mem);
-    void jnz(Mem8 mem);
-    void jz(Mem8 mem);
-    void je(Mem8 mem);
-    void jne(Mem8 mem);
-    void jl(Mem8 mem);
+    inline void jmp (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("jmp", mem);  write(0xE9, mem); }
+    inline void jnz (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("jnz", mem);  write(0x0F, 0x85, mem); }
+    inline void jz  (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("jz",  mem);  write(0x0F, 0x84, mem); }
+    inline void je  (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("je",  mem);  write(0x0F, 0x84, mem); }
+    inline void jne (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("jne", mem);  write(0x0F, 0x85, mem); }
+    inline void jl  (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("jl",  mem);  write(0x0F, 0x8C, mem); }
 
-    void movaps(Xmm dst, Xmm src);
-    void movaps(Xmm reg, Mem128 mem);
-    void movaps(Mem128, Xmm reg);
-    void movaps(Xmm reg, Base base, Disp8 disp);
-    void movaps(Base base, Disp8 disp, Xmm reg);
+    inline void movaps(Xmm dst, Xmm src)    { R64FX_JIT_DEBUG_PRINT("movaps", dst, src);  write0x0F(0, 0x28, dst, src); }
+    inline void movaps(Xmm reg, Mem128 mem) { R64FX_JIT_DEBUG_PRINT("movaps", reg, mem);  write0x0F(0, 0x28, reg, mem); }
+    inline void movaps(Mem128 mem, Xmm reg) { R64FX_JIT_DEBUG_PRINT("movaps", mem, reg);  write0x0F(0, 0x29, reg, mem); }
+    inline void movaps(Xmm reg, Base base, Disp8 disp) { R64FX_JIT_DEBUG_PRINT("movaps", reg, base, disp);  write0x0F(0, 0x28, reg, base, disp); }
+    inline void movaps(Base base, Disp8 disp, Xmm reg) { R64FX_JIT_DEBUG_PRINT("movaps", base, disp, reg);  write0x0F(0, 0x29, reg, base, disp); }
 
-    void movups(Xmm dst, Xmm src);
-    void movups(Xmm reg, Mem32 mem);
-    void movups(Mem32, Xmm reg);
-    void movups(Xmm reg, Base base, Disp8 disp);
-    void movups(Base base, Disp8 disp, Xmm reg);
+    inline void movups(Xmm dst, Xmm src)   { R64FX_JIT_DEBUG_PRINT("movups", dst, src);  write0x0F(0, 0x10, dst, src); }
+    inline void movups(Xmm reg, Mem32 mem) { R64FX_JIT_DEBUG_PRINT("movups", reg, mem);  write0x0F(0, 0x10, reg, mem); }
+    inline void movups(Mem32 mem, Xmm reg) { R64FX_JIT_DEBUG_PRINT("movups", mem, reg);  write0x0F(0, 0x11, reg, mem); }
+    inline void movups(Xmm reg, Base base, Disp8 disp) { R64FX_JIT_DEBUG_PRINT("movups", reg, base, disp);  write0x0F(0, 0x10, reg, base, disp); }
+    inline void movups(Base base, Disp8 disp, Xmm reg) { R64FX_JIT_DEBUG_PRINT("movups", base, disp, reg);  write0x0F(0, 0x11, reg, base, disp); }
 
 private:
-    void sse_ps_instruction(unsigned char second_opcode, Xmm dst, Xmm src);
-    void sse_ps_instruction(unsigned char second_opcode, Xmm reg, Mem128 mem);
-    void sse_ps_instruction(unsigned char second_opcode, Xmm reg, Base base, Disp8 disp);
+    inline void sse_ps_instruction(unsigned char second_opcode_byte, Xmm dst, Xmm src)
+        { write0x0F(0, second_opcode_byte, dst, src); }
 
-    void sse_ss_instruction(unsigned char third_opcode, Xmm dst, Xmm src);
-    void sse_ss_instruction(unsigned char third_opcode, Xmm reg, Mem32 mem);
-    void sse_ss_instruction(unsigned char third_opcode, Xmm reg, Base base, Disp8 disp);
+    inline void sse_ps_instruction(unsigned char second_opcode_byte, Xmm reg, Mem128 mem)
+        { write0x0F(0, second_opcode_byte, reg, mem); }
 
-#ifdef R64FX_DEBUG_JIT_STDOUT
-#define DUMP_IP_AND_NAME(name) std::cout << (void*)ip() << " " << #name;
-#else
-#define DUMP_IP_AND_NAME(name)
-#endif//R64FX_DEBUG_JIT_STDOUT
+    inline void sse_ps_instruction(unsigned char second_opcode_byte, Xmm reg, Base base, Disp8 disp)
+        { write0x0F(0, second_opcode_byte, reg, base, disp); }
 
+    inline void sse_ss_instruction(unsigned char third_opcode_byte, Xmm dst, Xmm src)
+        { write0x0F(0xF3, third_opcode_byte, dst, src); }
 
-#define ENCODE_SSE_PS_INSTRUCTION(name, second_opcode)\
+    inline void sse_ss_instruction(unsigned char third_opcode_byte, Xmm reg, Mem32 mem)
+        { write0x0F(0xF3, third_opcode_byte, reg, mem); }
+
+    inline void sse_ss_instruction(unsigned char third_opcode_byte, Xmm reg, Base base, Disp8 disp)
+        { write0x0F(0xF3, third_opcode_byte, reg, base, disp); }
+
+#define ENCODE_SSE_PS_INSTRUCTION(name, second_opcode_byte)\
 inline void name(Xmm dst, Xmm src)\
-{\
-    DUMP_IP_AND_NAME(name)\
-    sse_ps_instruction(second_opcode, dst, src);\
-}\
-\
+    { R64FX_JIT_DEBUG_PRINT(#name, dst, src); sse_ps_instruction(second_opcode_byte, dst, src); }\
 \
 inline void name(Xmm reg, Mem128 mem)\
-{\
-    DUMP_IP_AND_NAME(name)\
-    sse_ps_instruction(second_opcode, reg, mem);\
-}\
-\
+ { R64FX_JIT_DEBUG_PRINT(#name, reg, mem); sse_ps_instruction(second_opcode_byte, reg, mem); }\
 \
 inline void name(Xmm reg, Base base, Disp8 disp)\
-{\
-    DUMP_IP_AND_NAME(name)\
-    sse_ps_instruction(second_opcode, reg, base, disp);\
-}\
+ { R64FX_JIT_DEBUG_PRINT(#name, reg, base, disp); sse_ps_instruction(second_opcode_byte, reg, base, disp); }
 
-
-#define ENCODE_SSE_SS_INSTRUCTION(name, third_opcode)\
+#define ENCODE_SSE_SS_INSTRUCTION(name, third_opcode_byte)\
 inline void name(Xmm dst, Xmm src)\
-{\
-    DUMP_IP_AND_NAME(name)\
-    sse_ss_instruction(third_opcode, dst, src);\
-}\
-\
+    { R64FX_JIT_DEBUG_PRINT(#name, dst, src); sse_ss_instruction(third_opcode_byte, dst, src); }\
 \
 inline void name(Xmm reg, Mem32 mem)\
-{\
-    DUMP_IP_AND_NAME(name)\
-    sse_ss_instruction(third_opcode, reg, mem);\
-}\
-\
+    { R64FX_JIT_DEBUG_PRINT(#name, reg, mem); sse_ss_instruction(third_opcode_byte, reg, mem); }\
 \
 inline void name(Xmm reg, Base base, Disp8 disp)\
-{\
-    DUMP_IP_AND_NAME(name)\
-    sse_ss_instruction(third_opcode, reg, base, disp);\
-}\
+    { R64FX_JIT_DEBUG_PRINT(#name, reg, base, disp); sse_ss_instruction(third_opcode_byte, reg, base, disp); }
 
 #define ENCODE_SSE_INSTRUCTION(name, opcode)\
     ENCODE_SSE_PS_INSTRUCTION(name##ps, opcode)\
@@ -508,13 +476,23 @@ public:
     ENCODE_SSE_PS_INSTRUCTION(orps,    0x56)
     ENCODE_SSE_PS_INSTRUCTION(xorps,   0x57)
 
-    void cmpps(CmpCode kind, Xmm dst, Xmm src);
-    void cmpps(CmpCode kind, Xmm reg, Mem128 mem);
-    void cmpps(CmpCode kind, Xmm reg, Base base, Disp8 disp = Disp8(0));
+    inline void cmpps(CmpCode kind, Xmm dst, Xmm src)
+        { R64FX_JIT_DEBUG_PRINT("cmp"+kind.name()+"ps", dst, src);  write0x0F(0, 0xC2, dst, src, kind.code()); }
 
-    void cmpss(CmpCode kind, Xmm dst, Xmm src);
-    void cmpss(CmpCode kind, Xmm reg, Mem128 mem);
-    void cmpss(CmpCode kind, Xmm reg, Base base, Disp8 disp = Disp8(0));
+    inline void cmpps(CmpCode kind, Xmm reg, Mem128 mem)
+        { R64FX_JIT_DEBUG_PRINT("cmp"+kind.name()+"ps", reg, mem);  write0x0F(0, 0xC2, reg, mem, kind.code()); }
+
+    inline void cmpps(CmpCode kind, Xmm reg, Base base, Disp8 disp)
+        { R64FX_JIT_DEBUG_PRINT("cmp"+kind.name()+"ps", reg, base, disp);  write0x0F(0, 0xC2, reg, base, disp, kind.code()); }
+
+    inline void cmpss(CmpCode kind, Xmm dst, Xmm src)
+        { R64FX_JIT_DEBUG_PRINT("cmp"+kind.name()+"ss", dst, src);  write0x0F(0xF3, 0xC2, dst, src, kind.code()); }
+
+    inline void cmpss(CmpCode kind, Xmm reg, Mem128 mem)
+        { R64FX_JIT_DEBUG_PRINT("cmp"+kind.name()+"ss", reg, mem);  write0x0F(0xF3, 0xC2, reg, mem, kind.code()); }
+
+    inline void cmpss(CmpCode kind, Xmm reg, Base base, Disp8 disp)
+        { R64FX_JIT_DEBUG_PRINT("cmp"+kind.name()+"ss", reg, base, disp);  write0x0F(0xF3, 0xC2, reg, base, disp, kind.code()); }
 
     inline void cmpltps(Xmm dst, Xmm src) { cmpps(LT, dst, src); }
     inline void cmpltps(Xmm reg, Mem128 mem) { cmpps(LT, reg, mem); }
@@ -525,32 +503,168 @@ public:
     inline void cmpeqps(Xmm dst, Xmm src) { cmpps(EQ, dst, src); }
     inline void cmpeqps(Xmm reg, Mem128 mem) { cmpps(EQ, reg, mem); }
 
-    void movss(Mem32 mem, Xmm reg);
-    void movss(Xmm reg, Mem32 mem);
+    inline void movss(Xmm reg, Mem32 mem)
+        { R64FX_JIT_DEBUG_PRINT("movss", reg, mem);  write0x0F(0xF3, 0x10, reg, mem); }
 
-    void shufps(Xmm dst, Xmm src, unsigned char imm);
-    void shufps(Xmm reg, Mem128 mem, unsigned char imm);
+    inline void movss(Mem32 mem, Xmm reg)
+        { R64FX_JIT_DEBUG_PRINT("movss", mem, reg);  write0x0F(0xF3, 0x11, reg, mem); }
 
-    void pshufd(Xmm dst, Xmm src, unsigned char imm);
-    void pshufd(Xmm reg, Mem128 mem, unsigned char imm);
-    void pshufd(Xmm reg, Base base, Disp8 disp, unsigned char imm);
+    inline void shufps(Xmm dst, Xmm src, Shuf shuf)
+        { R64FX_JIT_DEBUG_PRINT("shufps", dst, src, shuf);  write0x0F(0, 0xC6, dst, src, shuf.byte()); }
 
-    void cvtps2dq(Xmm dst, Xmm src);
-    void cvtps2dq(Xmm reg, Mem128 mem);
-    void cvtps2dq(Xmm reg, Base base, Disp8 disp = Disp8(0));
+    inline void shufps(Xmm reg, Mem128 mem, Shuf shuf)
+        { R64FX_JIT_DEBUG_PRINT("shufps", reg, mem, shuf);  write0x0F(0, 0xC6, reg, mem, shuf.byte()); }
 
-    void cvtdq2ps(Xmm dst, Xmm src);
-    void cvtdq2ps(Xmm reg, Mem128 mem);
-    void cvtdq2ps(Xmm reg, Base base, Disp8 disp = Disp8(0));
+    inline void pshufd(Xmm dst, Xmm src, Shuf shuf)
+        { R64FX_JIT_DEBUG_PRINT("pshufd", dst, src, shuf);  write0x0F(0x66, 0x70, dst, src, shuf.byte()); }
 
-    void paddd(Xmm dst, Xmm src);
-    void paddd(Xmm reg, Mem128 mem);
-    void paddd(Xmm reg, Base base, Disp8 disp = Disp8(0));
+    inline void pshufd(Xmm reg, Mem128 mem, Shuf shuf)
+        { R64FX_JIT_DEBUG_PRINT("pshufd", reg, mem, shuf);  write0x0F(0x66, 0x70, reg, mem, shuf.byte()); }
 
-    void psubd(Xmm dst, Xmm src);
-    void psubd(Xmm reg, Mem128 mem);
-    void psubd(Xmm reg, Base base, Disp8 disp = Disp8(0));
+    inline void pshufd(Xmm reg, Base base, Disp8 disp, Shuf shuf)
+        { R64FX_JIT_DEBUG_PRINT("pshufd", reg, base, disp, shuf);  write0x0F(0x66, 0x70, reg, base, disp, shuf.byte()); }
 
+    inline void cvtps2dq(Xmm dst, Xmm src)
+        { R64FX_JIT_DEBUG_PRINT("cvtps2dq", dst, src);  write0x0F(0x66, 0x5B, dst, src); }
+
+    inline void cvtps2dq(Xmm reg, Mem128 mem)
+        { R64FX_JIT_DEBUG_PRINT("cvtps2dq", reg, mem);  write0x0F(0x66, 0x5B, reg, mem); }
+
+    inline void cvtps2dq(Xmm reg, Base base, Disp8 disp)
+        { R64FX_JIT_DEBUG_PRINT("cvtps2dq", reg, base, disp);  write0x0F(0x66, 0x5B, reg, base, disp); }
+
+    inline void cvtdq2ps(Xmm dst, Xmm src)
+        { R64FX_JIT_DEBUG_PRINT("cvtdq2ps", dst, src);  write0x0F(0, 0x5B, dst, src); }
+
+    inline void cvtdq2ps(Xmm reg, Mem128 mem)
+        { R64FX_JIT_DEBUG_PRINT("cvtdq2ps", reg, mem);  write0x0F(0, 0x5B, reg, mem); }
+
+    inline void cvtdq2ps(Xmm reg, Base base, Disp8 disp)
+        { R64FX_JIT_DEBUG_PRINT("cvtdq2ps", reg, base, disp);  write0x0F(0, 0x5B, reg, base, disp); }
+
+    inline void paddd(Xmm dst, Xmm src)
+        { R64FX_JIT_DEBUG_PRINT("paddd", dst, src);  write0x0F(0x66, 0xFE, dst, src);}
+
+    inline void paddd(Xmm reg, Mem128 mem)
+        { R64FX_JIT_DEBUG_PRINT("paddd", reg, mem); write0x0F(0x66, 0xFE, reg, mem); }
+
+    inline void paddd(Xmm reg, Base base, Disp8 disp)
+        { R64FX_JIT_DEBUG_PRINT("paddd", reg, base, disp); write0x0F(0x66, 0xFE, reg, base, disp); }
+
+    inline void psubd(Xmm dst, Xmm src)
+        { R64FX_JIT_DEBUG_PRINT("psubd", dst, src);  write0x0F(0x66, 0xFA, dst, src); }
+
+    inline void psubd(Xmm reg, Mem128 mem)
+        { R64FX_JIT_DEBUG_PRINT("psubd", reg, mem);  write0x0F(0x66, 0xFA, reg, mem); }
+
+    inline void psubd(Xmm reg, Base base, Disp8 disp)
+        { R64FX_JIT_DEBUG_PRINT("psubd", reg, base, disp);  write0x0F(0x66, 0xFA, reg, base, disp); }
+
+#ifdef R64FX_JIT_DEBUG_STDOUT
+private:
+    inline void printIp() { std::cout << (void*)ip(); }
+
+    inline void printName(const std::string &name)
+    {
+        std::cout << "    " << name;
+        int i = name.size();
+        while(i < 10) { std::cout << ' '; i++; }
+    }
+
+    inline void print(const std::string &name)
+    {
+        printIp(); printName(name); std::cout << "\n";
+    }
+
+    inline void print(const std::string &name, int count)
+    {
+        printIp(); printName(name); std::cout << count << "\n";
+    }
+
+    template<typename RegT>
+    inline void print(const std::string &name, RegT reg)
+    {
+        printIp(); printName(name);
+        std::cout << reg.name() << "\n";
+    }
+
+    inline void print(const std::string &name, Mem8 mem)
+    {
+        printIp(); printName(name);
+        std::cout << "[" << (void*)mem.addr() << "]\n";
+    }
+
+    inline void print(const std::string &name, GPR64 reg, Imm32 imm)
+    {
+        printIp(); printName(name);
+        std::cout << reg.name() << ", " << imm.s << "\n";
+    }
+
+    inline void print(const std::string &name, GPR64 reg, Imm64 imm)
+    {
+        printIp(); printName(name);
+        std::cout << reg.name() << ", " << imm.s << "\n";
+    }
+
+    template<typename RegT>
+    inline void print(const std::string &name, RegT dst, RegT src)
+    {
+        printIp(); printName(name);
+        std::cout << dst.name() << ", " << src.name() << "\n";
+    }
+
+    inline void print(const std::string &name, Xmm dst, Xmm src, Shuf shuf)
+    {
+        printIp(); printName(name);
+        std::cout << dst.name() << ", " << src.name() << ", " << shuf.str() << "\n";
+    }
+
+    template<typename RegT>
+    inline void print(const std::string &name, RegT reg, Mem8 mem)
+    {
+        printIp(); printName(name);
+        std::cout << reg.name() << ", [" << (void*)mem.addr() << "]\n";
+    }
+
+    inline void print(const std::string &name, Xmm reg, Mem8 mem, Shuf shuf)
+    {
+        printIp(); printName(name);
+        std::cout << reg.name() << ", [" << (void*)mem.addr() << "], " << shuf.str() << "\n";
+    }
+
+    template<typename RegT>
+    inline void print(const std::string &name, Mem8 mem, RegT reg)
+    {
+        printIp(); printName(name);
+        std::cout << "[" << (void*)mem.addr() << "], " << reg.name() << "\n";
+    }
+
+    template<typename RegT>
+    inline void print(const std::string &name, RegT reg, Base base, Disp8 disp)
+    {
+        printIp(); printName(name);
+        std::cout << reg.name() << ", [" << base.reg.name() << "]";
+        if(disp.byte) std::cout << " + " << int(disp.byte);
+        std::cout << "\n";
+    }
+
+    inline void print(const std::string &name, Xmm reg, Base base, Disp8 disp, Shuf shuf)
+    {
+        printIp(); printName(name);
+        std::cout << reg.name() << ", [" << base.reg.name() << "]";
+        if(disp.byte) std::cout << " + " << int(disp.byte);
+        std::cout << shuf.str() << "\n";
+    }
+
+    template<typename RegT>
+    inline void print(const std::string &name, Base base, Disp8 disp, RegT reg )
+    {
+        printIp(); printName(name);
+        std::cout << ", [" << base.reg.name() << "]";
+        if(disp.byte) std::cout << " + " << int(disp.byte);
+        std::cout << ", " << reg.name() << "\n";
+    }
+#endif//R64FX_JIT_DEBUG_STDOUT
 };//Assembler
 
 }//namespace r64fx
