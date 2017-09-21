@@ -355,26 +355,5 @@ void Assembler::write(unsigned char opcode, GPR64 reg)
     m_end += 2;
 }
 
-#ifdef R64FX_JIT_DEBUG_STDOUT
-/* Debug stuff to print a single byte as 4 numbers, 2 bits each.*/
-union ShufByte{
-    unsigned char byte;
-    struct{
-        unsigned char b76:2;
-        unsigned char b54:2;
-        unsigned char b32:2;
-        unsigned char b10:2;
-    } pair;
-
-    explicit ShufByte(unsigned char byte) : byte(byte) {}
-};
-
-std::ostream &operator<<(std::ostream &ost, ShufByte shufbyte)
-{
-    ost << (int)shufbyte.pair.b76 << ", " << (int)shufbyte.pair.b54 << ", " << (int)shufbyte.pair.b32 << ", " << (int)shufbyte.pair.b10;
-    return ost;
-}
-#endif//R64FX_JIT_DEBUG_STDOUT
-
 }//namespace r64fx
 
