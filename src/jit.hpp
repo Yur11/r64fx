@@ -263,6 +263,25 @@ const CmpCode
 ;
 
 
+class JumpLabel{
+    friend class Assembler;
+
+    int m_jmp_addr = 0;
+    int m_imm_addr = 0;
+
+    inline void setJmpAddr(int offset) { m_jmp_addr = offset; }
+
+    inline void setImmAddr(int offset) { m_imm_addr = offset; }
+
+    inline int jmpAddr() const { return m_jmp_addr; }
+
+    inline int immAddr() const { return m_imm_addr; }
+
+public:
+    JumpLabel() {};
+};
+
+
 /* Pack four 0..3 values into a sigle byte. To be used with shuffle instructions.
 
     Each parameter defines the source scalar from which to read the data into the current position.
@@ -325,8 +344,6 @@ public:
     /* Pointer to the byte past the end of the written bytes. */
     inline unsigned char* codeEnd() const { return m_end; }
 
-    inline unsigned char* ip() const { return m_end; }
-
     inline void setCodeEnd(void* addr) { m_end = (unsigned char*) addr; }
 
     inline unsigned long size() const { return m_size; }
@@ -360,6 +377,8 @@ private:
     void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, Base base, Disp8 disp, int imm = -1);
 
     void write(unsigned char opcode, GPR64 reg);
+
+    void writeJump(unsigned char opcode1, unsigned char opcode2, JumpLabel &label);
 
 #ifdef R64FX_JIT_DEBUG_STDOUT
 #define R64FX_JIT_DEBUG_PRINT(...) { Assembler::print(__VA_ARGS__); }
@@ -399,12 +418,15 @@ public:
 
     inline void cmp(GPR64 reg, Imm32 imm){ R64FX_JIT_DEBUG_PRINT("cmp", reg, imm);  write(0x81, 7, reg, imm); }
 
-    inline void jmp (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("jmp", mem);  write(0xE9, mem); }
-    inline void jnz (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("jnz", mem);  write(0x0F, 0x85, mem); }
-    inline void jz  (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("jz",  mem);  write(0x0F, 0x84, mem); }
-    inline void je  (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("je",  mem);  write(0x0F, 0x84, mem); }
-    inline void jne (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("jne", mem);  write(0x0F, 0x85, mem); }
-    inline void jl  (Mem8 mem){ R64FX_JIT_DEBUG_PRINT("jl",  mem);  write(0x0F, 0x8C, mem); }
+    JumpLabel ip() const;
+    void put(JumpLabel &label);
+
+    inline void jmp (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jmp", label);  writeJump(0,    0xE9, label); }
+    inline void jnz (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jnz", label);  writeJump(0x0F, 0x85, label); }
+    inline void jz  (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jz",  label);  writeJump(0x0F, 0x84, label); }
+    inline void je  (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("je",  label);  writeJump(0x0F, 0x84, label); }
+    inline void jne (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jne", label);  writeJump(0x0F, 0x85, label); }
+    inline void jl  (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jl",  label);  writeJump(0x0F, 0x8C, label); }
 
     inline void movaps(Xmm dst, Xmm src)    { R64FX_JIT_DEBUG_PRINT("movaps", dst, src);  write0x0F(0, 0x28, dst, src); }
     inline void movaps(Xmm reg, Mem128 mem) { R64FX_JIT_DEBUG_PRINT("movaps", reg, mem);  write0x0F(0, 0x28, reg, mem); }
@@ -562,7 +584,7 @@ public:
 
 #ifdef R64FX_JIT_DEBUG_STDOUT
 private:
-    inline void printIp() { std::cout << (void*)ip(); }
+    inline void printIp() { std::cout << (void*)codeEnd(); }
 
     inline void printName(const std::string &name)
     {
@@ -664,6 +686,8 @@ private:
         if(disp.byte) std::cout << " + " << int(disp.byte);
         std::cout << ", " << reg.name() << "\n";
     }
+
+    void print(const std::string &name, const JumpLabel &label);
 #endif//R64FX_JIT_DEBUG_STDOUT
 };//Assembler
 

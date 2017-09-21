@@ -915,10 +915,16 @@ bool test_jumps(Assembler &as)
         as.rewind();
         as.mov(rax, Imm32S(0));
         as.mov(rcx, Imm32S(1234));
-        auto loop1 = as.ip();
+        JumpLabel loop1 = as.ip();
         as.add(rax, Imm32S(2));
+
+        JumpLabel skip1;
+        as.jmp(skip1);
+        as.add(rax, Imm32S(1));
+        as.put(skip1);
+
         as.sub(rcx, Imm32S(1));
-        as.jnz(Mem8(loop1));
+        as.jnz(loop1);
         as.ret();
         R64FX_EXPECT_EQ(2468, jitfun());
     }

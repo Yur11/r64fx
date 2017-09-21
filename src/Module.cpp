@@ -144,8 +144,7 @@ private:
                     routine = (long (*)()) assembler.codeBegin();
                 }
 
-                long val = routine();
-                cout << val << "\n";
+                routine();
 
                 for(auto item : m.epilogue_list)
                 {

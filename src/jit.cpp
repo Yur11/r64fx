@@ -211,7 +211,7 @@ void Assembler::write(unsigned char opcode, Mem8 mem)
 {
     ensureAvailable(5);
     m_end[0] = opcode;
-    auto rip = Rip32(mem.addr(), ip() + 5);
+    auto rip = Rip32(mem.addr(), m_end + 5);
     for(int i=0; i<4; i++)
         m_end[i + 1] = rip.b[i];
     m_end += 5;
@@ -223,7 +223,7 @@ void Assembler::write(unsigned char opcode1, unsigned char opcode2, Mem8 mem)
     ensureAvailable(6);
     m_end[0] = opcode1;
     m_end[1] = opcode2;
-    auto rip = Rip32(mem.addr(), ip() + 6);
+    auto rip = Rip32(mem.addr(), m_end + 6);
     for(int i=0; i<4; i++)
         m_end[i + 2] = rip.b[i];
     m_end += 6;
@@ -354,6 +354,79 @@ void Assembler::write(unsigned char opcode, GPR64 reg)
     m_end[1] = opcode + (reg.code() & b0111);
     m_end += 2;
 }
+
+
+void Assembler::writeJump(unsigned char opcode1, unsigned char opcode2, JumpLabel &label)
+{
+    int nbytes = 5;
+    if(opcode1)
+        nbytes++;
+
+    ensureAvailable(nbytes);
+
+    int r = 0;
+    if(opcode1)
+        m_end[r++] = opcode1;
+    m_end[r++] = opcode2;
+
+    Imm32 imm = Imm32S(0);
+    if(label.jmpAddr())
+    {
+        imm = Rip32((unsigned long)(m_begin + label.jmpAddr()), m_end + nbytes);
+    }
+    else
+    {
+        long offset = long((m_end - m_begin) + r);
+#ifdef R64FX_DEBUG
+        assert(offset <= 0x7FFFFFFF || offset >= -0x7FFFFFFF);
+        assert(label.immAddr() == 0);
+#endif//R64FX_DEBUG
+        label.setImmAddr(offset);
+    }
+
+    for(int i=0; i<4; i++)
+    {
+        m_end[r++] = imm.b[i];
+    }
+
+    m_end += nbytes;
+}
+
+
+JumpLabel Assembler::ip() const
+{
+    JumpLabel label;
+    long offset = long(m_end - m_begin);
+#ifdef R64FX_DEBUG
+    assert(offset <= 0x7FFFFFFF || offset >= -0x7FFFFFFF);
+#endif//R64FX_DEBUG
+    label.setJmpAddr(int(offset));
+    return label;
+}
+
+
+void Assembler::put(JumpLabel &label)
+{
+#ifdef R64FX_DEBUG
+    assert(label.immAddr() != 0);
+#endif//R64FX_DEBUG
+    unsigned char* imm = m_begin + label.immAddr();
+    Imm32 rip = Rip32((unsigned long)m_end, imm + 4);
+    for(int i=0; i<4; i++)
+    {
+        imm[i] = rip.b[i];
+    }
+    label = ip();
+}
+
+
+#ifdef R64FX_JIT_DEBUG_STDOUT
+void Assembler::print(const std::string &name, const JumpLabel &label)
+{
+    printIp(); printName(name);
+    std::cout << "\n";
+}
+#endif//R64FX_JIT_DEBUG_STDOUT
 
 }//namespace r64fx
 
