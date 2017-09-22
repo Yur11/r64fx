@@ -49,7 +49,7 @@ Imm32 Rip32(long addr, unsigned char* next_ip)
     assert(n_displacement <= 0xFFFFFFFF);
 #endif//R64FX_DEBUG
 
-    return Imm32S((int) n_displacement);
+    return Imm32((int) n_displacement);
 }
 
 }//namespace
@@ -113,7 +113,7 @@ void Assembler::resize(unsigned long page_count)
 }
 
 
-void Assembler::write_bytes(unsigned char byte, int nbytes)
+void Assembler::fill(unsigned char byte, int nbytes)
 {
     ensureAvailable(nbytes);
     for(int i=0; i<nbytes; i++)
@@ -356,7 +356,7 @@ void Assembler::write(unsigned char opcode, GPR64 reg)
 }
 
 
-void Assembler::writeJump(unsigned char opcode1, unsigned char opcode2, JumpLabel &label)
+void Assembler::write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label)
 {
     int nbytes = 5;
     if(opcode1)
@@ -369,7 +369,7 @@ void Assembler::writeJump(unsigned char opcode1, unsigned char opcode2, JumpLabe
         m_end[r++] = opcode1;
     m_end[r++] = opcode2;
 
-    Imm32 imm = Imm32S(0);
+    Imm32 imm = Imm32(0);
     if(label.jmpAddr())
     {
         imm = Rip32((unsigned long)(m_begin + label.jmpAddr()), m_end + nbytes);

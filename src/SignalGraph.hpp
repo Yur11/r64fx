@@ -40,12 +40,15 @@ public:
 
 class SignalGraphNode : public LinkedList<SignalGraphNode>::Node{
     friend class SignalGraph;
-    unsigned long m_index = 0;
+    SignalGraph*  m_parent  = nullptr;
+    unsigned long m_index   = 0;
 
 public:
     SignalGraphNode();
 
     virtual ~SignalGraphNode();
+
+    inline SignalGraph* parent() const { return m_parent; }
 
     virtual void process(SignalGraphProcessingContext* ctx) = 0;
 
@@ -56,6 +59,8 @@ public:
     void disconnectPorts();
 
     inline unsigned long index() const { return m_index; }
+
+    virtual unsigned long enumerate(unsigned long first_index, unsigned long increment);
 };
 
 
@@ -169,7 +174,7 @@ class SignalGraph : public SignalGraphNode{
     unsigned long  m_sample_count  = 0;
 
 public:
-    void process(SignalGraphProcessingContext* sgpctx) override final;
+    virtual void process(SignalGraphProcessingContext* sgpctx) override final;
 
     void insertNode(SignalGraphNode* node);
 
@@ -182,6 +187,8 @@ public:
     void disconnectSource(const NodeSource &node_source);
 
     void disconnectNode(SignalGraphNode* node);
+
+    virtual unsigned long enumerate(unsigned long first_index, unsigned long increment) override final;
 
     inline void setSampleCount(unsigned long sample_count) { m_sample_count = sample_count; }
 

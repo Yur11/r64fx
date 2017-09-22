@@ -51,7 +51,7 @@ bool test_mov(Assembler &as)
     {
         int num = rand();
         as.rewind();
-        as.mov(rax, Imm32S(num));
+        as.mov(rax, Imm32(num));
         as.ret();
         R64FX_EXPECT_EQ(num, jitfun());
     }
@@ -61,8 +61,8 @@ bool test_mov(Assembler &as)
         int num1 = rand();
         int num2 = rand();
         as.rewind();
-        as.mov(rax, Imm32S(num1));
-        as.mov(r8,  Imm32S(num2));
+        as.mov(rax, Imm32(num1));
+        as.mov(r8,  Imm32(num2));
         as.ret();
         R64FX_EXPECT_EQ(num1, jitfun())
     }
@@ -71,7 +71,7 @@ bool test_mov(Assembler &as)
     {
         long int num = rand();
         as.rewind();
-        as.mov(rax, Imm64S(num));
+        as.mov(rax, Imm64(num));
         as.ret();
         R64FX_EXPECT_EQ(num, jitfun());
     }
@@ -81,8 +81,8 @@ bool test_mov(Assembler &as)
         int num1 = rand();
         int num2 = rand();
         as.rewind();
-        as.mov(rax, Imm64S(num1));
-        as.mov(r8,  Imm64S(num2));
+        as.mov(rax, Imm64(num1));
+        as.mov(r8,  Imm64(num2));
         as.ret();
         R64FX_EXPECT_EQ(num1, jitfun());
     }
@@ -91,7 +91,7 @@ bool test_mov(Assembler &as)
     {
         int num = rand();
         as.rewind();
-        as.mov(rcx, Imm32S(num));
+        as.mov(rcx, Imm32(num));
         as.mov(rax, rcx);
         as.ret();
         R64FX_EXPECT_EQ(num, jitfun());
@@ -103,9 +103,9 @@ bool test_mov(Assembler &as)
         int num2 = rand();
         int num3 = rand();
         as.rewind();
-        as.mov(r9,  Imm32S(num1));
-        as.mov(rdx, Imm32S(num2));
-        as.mov(rcx, Imm32S(num3));
+        as.mov(r9,  Imm32(num1));
+        as.mov(rdx, Imm32(num2));
+        as.mov(rcx, Imm32(num3));
         as.mov(rax, r9);
         as.mov(r8,  rdx);
         as.ret();
@@ -137,7 +137,7 @@ bool test_mov(Assembler &as)
         int num = rand();
         *a = rand();
         as.rewind();
-        as.mov(rcx, Imm32S(num));
+        as.mov(rcx, Imm32(num));
         as.mov(Mem64(a), rcx);
         as.ret();
         jitfun();
@@ -150,8 +150,8 @@ bool test_mov(Assembler &as)
         int num2 = rand();
         *a = 0;
         as.rewind();
-        as.mov(rax, Imm32S(num1));
-        as.mov(r8,  Imm32S(num2));
+        as.mov(rax, Imm32(num1));
+        as.mov(r8,  Imm32(num2));
         as.mov(Mem64(a), r8);
         as.ret();
         jitfun();
@@ -182,10 +182,10 @@ bool test_add(Assembler &as)
         int num3 = rand() & 0xFFFF;
         int sum = num1 + num2;
         as.rewind();
-        as.mov(rax, Imm32S(num1));
-        as.add(rax, Imm32S(num2));
-        as.mov(r8,  Imm32S(0));
-        as.add(r8,  Imm32S(num3)); //Corrupt dst. Rex encodes rax instead of r8.
+        as.mov(rax, Imm32(num1));
+        as.add(rax, Imm32(num2));
+        as.mov(r8,  Imm32(0));
+        as.add(r8,  Imm32(num3)); //Corrupt dst. Rex encodes rax instead of r8.
         as.ret();
         R64FX_EXPECT_EQ(sum, jitfun());
     }
@@ -197,9 +197,9 @@ bool test_add(Assembler &as)
         int num3 = rand() & 0xFFFF;
         int sum = num1 + num2;
         as.rewind();
-        as.mov(rax, Imm32S(num1));
-        as.mov(r9,  Imm32S(num2));
-        as.mov(rcx, Imm32S(num3));
+        as.mov(rax, Imm32(num1));
+        as.mov(r9,  Imm32(num2));
+        as.mov(rcx, Imm32(num3));
         as.add(rcx, rdx);
         as.add(rax, r9);
         as.add(r8,  rdx);
@@ -213,7 +213,7 @@ bool test_add(Assembler &as)
         *b = rand();
         long sum = *a + *b;
         as.rewind();
-        as.mov(rax, Imm64S(*b));
+        as.mov(rax, Imm64(*b));
         as.add(rax, Mem64(a));
         as.add(r8,  Mem64(b));
         as.ret();
@@ -225,8 +225,8 @@ bool test_add(Assembler &as)
         *a = 0;
         long num1 = rand();
         as.rewind();
-        as.mov(r8,  Imm32S(num1));
-        as.mov(rax, Imm32S(rand()));
+        as.mov(r8,  Imm32(num1));
+        as.mov(rax, Imm32(rand()));
         as.add(Mem64(a), r8);
         as.ret();
         jitfun();
@@ -240,7 +240,7 @@ bool test_add(Assembler &as)
         *c = rand();
         *d = rand();
         as.rewind();
-        as.mov(rax, Imm32S(0));
+        as.mov(rax, Imm32(0));
         as.mov(r10, ImmAddr(a));
         as.mov(rdx, ImmAddr(c));
         as.add(rax, Base(r10), Disp8(8));
@@ -258,8 +258,8 @@ bool test_add(Assembler &as)
         long int num = rand();
         long int sum = num + *d;
         as.rewind();
-        as.mov(rax, Imm64S(num + 1));
-        as.mov(r8,  Imm64S(num));
+        as.mov(rax, Imm64(num + 1));
+        as.mov(r8,  Imm64(num));
         as.mov(rdx, ImmAddr(a));
         as.mov(r10, ImmAddr(c));
         as.add(Base(r10), Disp8(8), r8);
@@ -292,10 +292,10 @@ bool test_sub(Assembler &as)
         int num3 = rand() & 0xFFFF;
         int dif = num1 - num2;
         as.rewind();
-        as.mov(rax, Imm32S(num1));
-        as.sub(rax, Imm32S(num2));
-        as.mov(r8,  Imm32S(0));
-        as.sub(r8,  Imm32S(num3)); //Corrupt dst. Rex encodes rax instead of r8.
+        as.mov(rax, Imm32(num1));
+        as.sub(rax, Imm32(num2));
+        as.mov(r8,  Imm32(0));
+        as.sub(r8,  Imm32(num3)); //Corrupt dst. Rex encodes rax instead of r8.
         as.ret();
         R64FX_EXPECT_EQ(dif, jitfun());
     }
@@ -307,9 +307,9 @@ bool test_sub(Assembler &as)
         int num3 = rand() & 0xFFFF;
         int dif = num1 - num2;
         as.rewind();
-        as.mov(rax, Imm32S(num1));
-        as.mov(r9,  Imm32S(num2));
-        as.mov(rcx, Imm32S(num3));
+        as.mov(rax, Imm32(num1));
+        as.mov(r9,  Imm32(num2));
+        as.mov(rcx, Imm32(num3));
         as.sub(rcx, rdx);
         as.sub(rax, r9);
         as.sub(r8,  rdx);
@@ -323,7 +323,7 @@ bool test_sub(Assembler &as)
         *b = rand();
         long dif = *b - *a;
         as.rewind();
-        as.mov(rax, Imm64S(*b));
+        as.mov(rax, Imm64(*b));
         as.sub(rax, Mem64(a));
         as.sub(r8,  Mem64(b));
         as.ret();
@@ -335,8 +335,8 @@ bool test_sub(Assembler &as)
         *a = 0;
         long num1 = rand();
         as.rewind();
-        as.mov(r8,  Imm32S(num1));
-        as.mov(rax, Imm32S(rand()));
+        as.mov(r8,  Imm32(num1));
+        as.mov(rax, Imm32(rand()));
         as.sub(Mem64(a), r8);
         as.ret();
         jitfun();
@@ -350,7 +350,7 @@ bool test_sub(Assembler &as)
         *c = rand();
         *d = rand();
         as.rewind();
-        as.mov(rax, Imm32S(0));
+        as.mov(rax, Imm32(0));
         as.mov(r10, ImmAddr(a));
         as.mov(rdx, ImmAddr(c));
         as.sub(rax, Base(r10), Disp8(8));
@@ -368,8 +368,8 @@ bool test_sub(Assembler &as)
         long int num = rand();
         long int dif = *d - num;
         as.rewind();
-        as.mov(rax, Imm64S(num + 1));
-        as.mov(r8,  Imm64S(num));
+        as.mov(rax, Imm64(num + 1));
+        as.mov(r8,  Imm64(num));
         as.mov(rdx, ImmAddr(a));
         as.mov(r10, ImmAddr(c));
         as.sub(Base(r10), Disp8(8), r8);
@@ -391,7 +391,7 @@ bool test_push_pop(Assembler &as)
     {
         long num = rand();
         as.rewind();
-        as.mov(r9, Imm64S(num));
+        as.mov(r9, Imm64(num));
         as.push(r9);
         as.pop(rax);
         as.ret();
@@ -913,17 +913,17 @@ bool test_jumps(Assembler &as)
     cout << "jnz\n";
     {
         as.rewind();
-        as.mov(rax, Imm32S(0));
-        as.mov(rcx, Imm32S(1234));
+        as.mov(rax, Imm32(0));
+        as.mov(rcx, Imm32(1234));
         JumpLabel loop1 = as.ip();
-        as.add(rax, Imm32S(2));
+        as.add(rax, Imm32(2));
 
         JumpLabel skip1;
         as.jmp(skip1);
-        as.add(rax, Imm32S(1));
+        as.add(rax, Imm32(1));
         as.put(skip1);
 
-        as.sub(rcx, Imm32S(1));
+        as.sub(rcx, Imm32(1));
         as.jnz(loop1);
         as.ret();
         R64FX_EXPECT_EQ(2468, jitfun());

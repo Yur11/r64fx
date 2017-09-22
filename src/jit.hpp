@@ -16,91 +16,33 @@
 namespace r64fx{
 
 union Imm8{
-    signed char    s;
-    unsigned char  u;
+    unsigned char c;
+    Imm8(unsigned char c) : c(c) {}
 };
-
-inline Imm8 Imm8S(signed char byte)
-{
-    Imm8 imm;
-    imm.s = byte;
-    return imm;
-}
-
-inline Imm8 Imm8U(unsigned char byte)
-{
-    Imm8 imm;
-    imm.u = byte;
-    return imm;
-}
-
 
 union Imm16{
-    signed short    s;
-    unsigned short  u;
-    unsigned char   b[2];
+    unsigned short s;
+    unsigned char  b[2];
+    Imm16(unsigned short s) : s(s) {}
 };
-
-inline Imm16 Imm16S(signed short word)
-{
-    Imm16 imm;
-    imm.s = word;
-    return imm;
-}
-
-inline Imm16 Imm16U(unsigned short word)
-{
-    Imm16 imm;
-    imm.u = word;
-    return imm;
-}
-
 
 union Imm32{
-    signed int     s;
-    unsigned int   u;
+    unsigned int   i;
     unsigned char  b[4];
+    Imm32(unsigned int i) : i(i) {}
 };
-
-inline Imm32 Imm32S(signed int dword)
-{
-    Imm32 imm;
-    imm.s = dword;
-    return imm;
-}
-
-inline Imm32 Imm32U(unsigned int dword)
-{
-    Imm32 imm;
-    imm.u = dword;
-    return imm;
-}
-
 
 union Imm64{
-    signed long    s;
-    unsigned long  u;
+    unsigned long  l;
     unsigned char  b[8];
+    Imm64(unsigned long l) : l(l) {}
 };
-
-inline Imm64 Imm64S(signed long qword)
-{
-    Imm64 imm;
-    imm.s = qword;
-    return imm;
-}
-
-inline Imm64 Imm64U(unsigned long qword)
-{
-    Imm64 imm;
-    imm.u = qword;
-    return imm;
-}
 
 inline Imm64 ImmAddr(void* addr)
 {
-    return Imm64U((unsigned long)addr);
+    return Imm64((unsigned long)addr);
 }
+
 
 class Register{
     const unsigned char mbits;
@@ -357,7 +299,7 @@ public:
     inline unsigned long pageCount() const { return m_page_count; }
 
 private:
-    void write_bytes(unsigned char byte, int nbytes);
+    void fill(unsigned char byte, int nbytes);
 
     void write(unsigned char byte);
     void write(unsigned char byte0, unsigned char byte1);
@@ -378,7 +320,7 @@ private:
 
     void write(unsigned char opcode, GPR64 reg);
 
-    void writeJump(unsigned char opcode1, unsigned char opcode2, JumpLabel &label);
+    void write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label);
 
 #ifdef R64FX_JIT_DEBUG_STDOUT
 #define R64FX_JIT_DEBUG_PRINT(...) { Assembler::print(__VA_ARGS__); }
@@ -421,12 +363,12 @@ public:
     JumpLabel ip() const;
     void put(JumpLabel &label);
 
-    inline void jmp (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jmp", label);  writeJump(0,    0xE9, label); }
-    inline void jnz (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jnz", label);  writeJump(0x0F, 0x85, label); }
-    inline void jz  (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jz",  label);  writeJump(0x0F, 0x84, label); }
-    inline void je  (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("je",  label);  writeJump(0x0F, 0x84, label); }
-    inline void jne (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jne", label);  writeJump(0x0F, 0x85, label); }
-    inline void jl  (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jl",  label);  writeJump(0x0F, 0x8C, label); }
+    inline void jmp (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jmp", label);  write(0,    0xE9, label); }
+    inline void jnz (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jnz", label);  write(0x0F, 0x85, label); }
+    inline void jz  (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jz",  label);  write(0x0F, 0x84, label); }
+    inline void je  (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("je",  label);  write(0x0F, 0x84, label); }
+    inline void jne (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jne", label);  write(0x0F, 0x85, label); }
+    inline void jl  (JumpLabel &label){ R64FX_JIT_DEBUG_PRINT("jl",  label);  write(0x0F, 0x8C, label); }
 
     inline void movaps(Xmm dst, Xmm src)    { R64FX_JIT_DEBUG_PRINT("movaps", dst, src);  write0x0F(0, 0x28, dst, src); }
     inline void movaps(Xmm reg, Mem128 mem) { R64FX_JIT_DEBUG_PRINT("movaps", reg, mem);  write0x0F(0, 0x28, reg, mem); }
@@ -497,6 +439,10 @@ public:
     ENCODE_SSE_PS_INSTRUCTION(andnps,  0x55)
     ENCODE_SSE_PS_INSTRUCTION(orps,    0x56)
     ENCODE_SSE_PS_INSTRUCTION(xorps,   0x57)
+
+#undef ENCODE_SSE_INSTRUCTION
+#undef ENCODE_SSE_PS_INSTRUCTION
+#undef ENCODE_SSE_SS_INSTRUCTION
 
     inline void cmpps(CmpCode kind, Xmm dst, Xmm src)
         { R64FX_JIT_DEBUG_PRINT("cmp"+kind.name()+"ps", dst, src);  write0x0F(0, 0xC2, dst, src, kind.code()); }

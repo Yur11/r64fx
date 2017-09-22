@@ -138,7 +138,7 @@ private:
                     SignalGraphProcessingContext sgctx(&assembler);
                     m.signal_graph.process(&sgctx);
 
-                    assembler.mov(rax, Imm64S(-123));
+                    assembler.mov(rax, Imm64(0));
                     assembler.ret();
 
                     routine = (long (*)()) assembler.codeBegin();
