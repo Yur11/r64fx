@@ -10,46 +10,22 @@ namespace r64fx{
 
 namespace{
 
-unsigned char ModRM(unsigned char mod, unsigned char reg, unsigned char rm)
+inline unsigned char ModRM(unsigned char mod, unsigned char reg, unsigned char rm)
+    { return (mod << 6) | ((reg & 7) << 3) | (rm & 7); }
+
+inline unsigned char SIB(unsigned char scale, unsigned char index, unsigned char base)
+    { return (scale << 6) | ((index & 7) << 3) | (base & 7); }
+
+inline unsigned char Rex(bool W, bool R, bool X, bool B)
+    { return b01000000 | (int(W) << 3) | (int(R) << 2) | (int(X) << 1) | int(B); }
+
+inline Imm32 Rip32(long addr, unsigned char* next_ip)
 {
-    reg &= b0111;
-    rm  &= b0111;
-    return (mod << 6) | (reg << 3) | rm;
-}
-
-
-unsigned char SIB(unsigned char scale, unsigned char index, unsigned char base)
-{
-    index &= b0111;
-    base &= b0111;
-    return (scale << 6) | (index << 3) | base;
-}
-
-
-unsigned char Rex(unsigned char bits)
-{
-    return (b0100 << 4) | bits;
-}
-
-
-unsigned char Rex(bool W, bool R, bool X, bool B)
-{
-    unsigned char bits = (W << 3) | (R << 2) | (X << 1) | B;
-    return Rex(bits);
-}
-
-
-Imm32 Rip32(long addr, unsigned char* next_ip)
-{
-    long n_addr = (long) addr;
-    long n_next_ip = (long) next_ip;
-
-    long n_displacement = n_addr - n_next_ip;
+    long displacement = long(addr) - long(next_ip);
 #ifdef R64FX_DEBUG
-    assert(n_displacement <= 0xFFFFFFFF);
+    assert(displacement <= 0xFFFFFFFF);
 #endif//R64FX_DEBUG
-
-    return Imm32((int) n_displacement);
+    return Imm32((int) displacement);
 }
 
 }//namespace
