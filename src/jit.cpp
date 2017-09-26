@@ -4,20 +4,15 @@
 #include <cstdlib>
 #include <cstring>
 
-using namespace std;
-
 namespace r64fx{
 
 namespace{
 
-inline unsigned char ModRM(unsigned char mod, unsigned char reg, unsigned char rm)
-    { return (mod << 6) | ((reg & 7) << 3) | (rm & 7); }
-
-inline unsigned char SIB(unsigned char scale, unsigned char index, unsigned char base)
-    { return (scale << 6) | ((index & 7) << 3) | (base & 7); }
-
 inline unsigned char Rex(bool W, bool R, bool X, bool B)
     { return b01000000 | (int(W) << 3) | (int(R) << 2) | (int(X) << 1) | int(B); }
+
+inline unsigned char ModRM(unsigned char mod, unsigned char reg, unsigned char rm)
+    { return (mod << 6) | ((reg & 7) << 3) | (rm & 7); }
 
 inline Imm32 Rip32(long addr, unsigned char* next_ip)
 {
@@ -31,20 +26,36 @@ inline Imm32 Rip32(long addr, unsigned char* next_ip)
 }//namespace
 
 
-#ifdef R64FX_JIT_DEBUG_STDOUT
-const char* GPR64::names[] = {
-    "rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rdi", "rsi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
-};
+unsigned char SIBD::modrmByte(const Register &reg) const
+{
+    unsigned char mod = dispBytes();
+    if(mod == 4) mod = 2;
+    return ModRM(mod, reg.lowerBits(), 4);
+}
 
-const char* Xmm::names[] = {
-    "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7",
-    "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
-};
 
-const char* CmpCode::names[] = {
-    "eq", "lt", "le", "unord", "neq", "nlt", "nle", "ord"
-};
-#endif//R64FX_JIT_DEBUG_STDOUT
+unsigned char SIBD::sibByte() const
+{
+    unsigned char byte = scale() << 6;
+    if(hasIndex())
+        byte |= index().lowerBits() << 3;
+    else
+        byte |= 4 << 3;
+    byte |= base().lowerBits();
+    return byte;
+}
+
+
+int SIBD::dispBytes() const
+{
+    if(disp() != 0 || base().lowerBits() == 6)
+    {
+        if(disp() >= -128 && disp() <= 127)
+            return 1;
+        return 4;
+    }
+    return 0;
+}
 
 
 void Assembler::resize(unsigned long page_count)
@@ -120,7 +131,7 @@ void Assembler::write(unsigned char opcode, unsigned char r, GPR64 reg, Imm32 im
     ensureAvailable(7);
     m_end[0] = Rex(1, 0, 0, reg.prefix_bit());
     m_end[1] = opcode;
-    m_end[2] = ModRM(b11, r, reg.code());
+    m_end[2] = ModRM(b11, r, reg.lowerBits());
     for(int i=0; i<4; i++)
         m_end[i + 3] = imm.b[i];
     m_end += 7;
@@ -131,7 +142,7 @@ void Assembler::write(unsigned char opcode, GPR64 reg, Imm64 imm)
 {
     ensureAvailable(10);
     m_end[0] = Rex(1, 0, 0, reg.prefix_bit());
-    m_end[1] = opcode + (reg.code() & b0111);
+    m_end[1] = opcode + (reg.lowerBits());
     for(int i=0; i<8; i++)
         m_end[i + 2] = imm.b[i];
     m_end += 10;
@@ -143,7 +154,7 @@ void Assembler::write(unsigned char opcode, GPR64 dst, GPR64 src)
     ensureAvailable(3);
     m_end[0] = Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
     m_end[1] = opcode;
-    m_end[2] = ModRM(b11, dst.code(), src.code());
+    m_end[2] = ModRM(b11, dst.lowerBits(), src.lowerBits());
     m_end += 3;
 }
 
@@ -153,32 +164,23 @@ void Assembler::write(unsigned char opcode, GPR64 reg, Mem64 mem)
     ensureAvailable(7);
     m_end[0] = Rex(1, reg.prefix_bit(), 0, 0);
     m_end[1] = opcode;
-    m_end[2] = ModRM(b00, reg.code(), b101);
+    m_end[2] = ModRM(b00, reg.lowerBits(), b101);
     auto rip = Rip32(mem.addr(), codeEnd() + 7);
     for(int i=0; i<4; i++) m_end[i + 3] = rip.b[i];
     m_end += 7;
 }
 
 
-void Assembler::write(unsigned char opcode, GPR64 reg, Base base, Disp8 disp)
+void Assembler::write(unsigned char opcode, GPR64 reg, SIBD sibd)
 {
-    int nbytes = 4;
-
-    bool use_disp = false;
-    if(disp.byte != 0 || (base.reg.code() & b0111) == b101)
-    {
-        use_disp = true;
-        nbytes++;
-    }
-
+    int nbytes = 4 + sibd.dispBytes();
     ensureAvailable(nbytes);
-
-    m_end[0] = Rex(1, reg.prefix_bit(), 0, base.reg.prefix_bit());
+    m_end[0] = Rex(1, reg.prefix_bit(), sibd.index().prefix_bit(), sibd.base().prefix_bit());
     m_end[1] = opcode;
-    m_end[2] = ModRM(use_disp ? b01 : b00, reg.code(), b100);
-    m_end[3] = SIB(b00, b100, base.reg.code());
-    if(use_disp){ m_end[4] = disp.byte; }
-
+    m_end[2] = sibd.modrmByte(reg);
+    m_end[3] = sibd.sibByte();
+    Imm32 disp(sibd.disp());
+    for(int i=0; i<sibd.dispBytes(); i++) { m_end[i + 4] = disp.b[i]; }
     m_end += nbytes;
 }
 
@@ -234,7 +236,7 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm dst, X
         { m_end[r++] = rex; }
     m_end[r++] = 0x0F;
     m_end[r++] = byte1;
-    m_end[r++] = ModRM(b11, dst.code(), src.code());
+    m_end[r++] = ModRM(b11, dst.lowerBits(), src.lowerBits());
     if(imm > 0) { m_end[r++] = (unsigned char)imm; }
 
     m_end += nbytes;
@@ -269,7 +271,7 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, M
         { m_end[r++] = rex; }
     m_end[r++] = 0x0F;
     m_end[r++] = byte1;
-    m_end[r++] = ModRM(b00, reg.code(), b101);
+    m_end[r++] = ModRM(b00, reg.lowerBits(), b101);
     auto rip = Rip32(mem.addr(), m_end + nbytes);
     for(int i=0; i<4; i++)
         m_end[r++] = rip.b[i];
@@ -279,25 +281,20 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, M
 }
 
 
-void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, Base base, Disp8 disp, int imm)
+void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, SIBD sibd, int imm)
 {
     int nbytes = 4;
     if(pre_rex_byte)
         nbytes++;
 
     unsigned char rex = 0;
-    if(reg.prefix_bit() || base.reg.prefix_bit())
+    if(reg.prefix_bit() || sibd.index().prefix_bit() || sibd.base().prefix_bit())
     {
-        rex = Rex(0, reg.prefix_bit(), 0, base.reg.prefix_bit());
+        rex = Rex(0, reg.prefix_bit(), sibd.index().prefix_bit(), sibd.base().prefix_bit());
         nbytes++;
     }
 
-    bool use_disp = false;
-    if(disp.byte != 0 || (base.reg.code() & b0111) == b101)
-    {
-        use_disp = true;
-        nbytes++;
-    }
+    nbytes += sibd.dispBytes();
 
     if(imm > 0)
         nbytes++;
@@ -314,9 +311,10 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, B
         { m_end[r++] = rex; }
     m_end[r++] = 0x0F;
     m_end[r++] = byte1;
-    m_end[r++] = ModRM(use_disp ? b01 : b00, reg.code(), b100);
-    m_end[r++] = SIB(b00, b100, base.reg.code());
-    if(use_disp){ m_end[r++] = disp.byte; }
+    m_end[r++] = sibd.modrmByte(reg);
+    m_end[r++] = sibd.sibByte();
+    Imm32 disp(sibd.disp());
+    for(int i=0; i<sibd.dispBytes(); i++) { m_end[r++] = disp.b[i]; }
     if(imm > 0) { m_end[r++] = (unsigned char)imm; }
 
     m_end += nbytes;
@@ -327,7 +325,7 @@ void Assembler::write(unsigned char opcode, GPR64 reg)
 {
     ensureAvailable(2);
     m_end[0] = Rex(1, 0, 0, reg.prefix_bit());
-    m_end[1] = opcode + (reg.code() & b0111);
+    m_end[1] = opcode + (reg.lowerBits());
     m_end += 2;
 }
 
