@@ -296,17 +296,6 @@ public:
     inline int s1() const { return (m_byte >> 2) & b11; }
     inline int s2() const { return (m_byte >> 4) & b11; }
     inline int s3() const { return (m_byte >> 6) & b11; }
-
-#ifdef R64FX_JIT_DEBUG_STDOUT
-    inline std::string str() const
-    {
-        return "{"
-            + std::string(1, s0() + '0') + ", "
-            + std::string(1, s1() + '0') + ", "
-            + std::string(1, s2() + '0') + ", "
-            + std::string(1, s3() + '0') + "}";
-    }
-#endif//R64FX_JIT_DEBUG_STDOUT
 };
 
 
