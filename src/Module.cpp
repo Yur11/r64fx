@@ -6,7 +6,6 @@
 #include "TimeUtils.hpp"
 #include "InstanceCounter.hpp"
 #include "SignalGraph.hpp"
-#include "SignalGraphProcessingContext.hpp"
 
 #ifdef R64FX_DEBUG
 #include <iostream>
@@ -86,7 +85,7 @@ public:
         m.sd_sync_port  = agent->sd_sync_port;
         m.sample_rate   = agent->sample_rate;
 
-        m.signal_graph.setSampleCount(agent->buffer_size);
+        m.signal_graph.setFrameCount(agent->buffer_size);
     }
 
     void storeWithdrawalArgs(RootModuleWithdrawalAgent* agent)
@@ -111,9 +110,7 @@ private:
     {
         m.sd_sync_port->enable();
 
-        Assembler assembler;
-
-        long (*routine)() = nullptr;
+        SignalGraphProcessor sgp;
 
         m.flags |= (R64FX_MODULE_THREAD_RUNNING | R64FX_GRAPH_REBUILD_ARMED);
         while(m.flags & R64FX_MODULE_THREAD_RUNNING)
@@ -131,20 +128,10 @@ private:
 
                 if(m.flags & R64FX_GRAPH_REBUILD_ARMED)
                 {
+                    sgp.build(m.signal_graph);
                     m.flags &= ~R64FX_GRAPH_REBUILD_ARMED;
-
-                    assembler.rewind();
-
-                    SignalGraphProcessingContext sgctx(&assembler);
-                    m.signal_graph.process(&sgctx);
-
-                    assembler.mov(rax, Imm64(0));
-                    assembler.ret();
-
-                    routine = (long (*)()) assembler.codeBegin();
                 }
-
-                routine();
+                sgp.run();
 
                 for(auto item : m.epilogue_list)
                 {
@@ -262,7 +249,7 @@ void ModuleThreadObjectImpl::setEpilogue(void (*fun)(void* arg), void* arg)
 
 long ModuleThreadObjectImpl::bufferSize() const
 {
-    return R64FX_MODULE_THREAD_ASSETS->signal_graph.sampleCount();
+    return R64FX_MODULE_THREAD_ASSETS->signal_graph.frameCount();
 }
 
 

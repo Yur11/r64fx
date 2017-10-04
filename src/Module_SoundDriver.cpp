@@ -38,13 +38,15 @@ typedef Message<3, SoundDriverAudioOutput,  SignalSink,    Callback_RemovePort> 
 struct Impl_SoundDriverAudioInput : public LinkedList<Impl_SoundDriverAudioInput>::Node{
     friend class SoundDriverThreadObjectImpl;
 
-    SignalGraphNode_BufferReader node;
+    SignalNode_BufferReader node;
     SoundDriverAudioInput*  sd_port  = nullptr;
 
-    Impl_SoundDriverAudioInput(Message_AddAudioInput* message)
+    Impl_SoundDriverAudioInput(Message_AddAudioInput* message, SignalGraph* sg)
     {
         sd_port = message->sd_port;
         message->graph_port = node.source();
+        node.resizeBuffer(sg->frameCount());
+        sg->addNode(&node);
     }
 
     inline void readSamples(int nsamples)
@@ -56,13 +58,15 @@ struct Impl_SoundDriverAudioInput : public LinkedList<Impl_SoundDriverAudioInput
 struct Impl_SoundDriverAudioOutput : public LinkedList<Impl_SoundDriverAudioOutput>::Node{
     friend class SoundDriverThreadObjectImpl;
 
-    SignalGraphNode_BufferWriter  node;
+    SignalNode_BufferWriter  node;
     SoundDriverAudioOutput*  sd_port  = nullptr;
 
-    Impl_SoundDriverAudioOutput(Message_AddAudioOutput* message)
+    Impl_SoundDriverAudioOutput(Message_AddAudioOutput* message, SignalGraph* sg)
     {
         sd_port = message->sd_port;
         message->graph_port = node.sink();
+        node.resizeBuffer(sg->frameCount());
+        sg->addNode(&node);
     }
 
     inline void writeSamples(int nsamples)
@@ -117,19 +121,14 @@ private:
 
     inline void recieved(Message_AddAudioInput* message)
     {
-        auto impl = allocObj<Impl_SoundDriverAudioInput>(message);
-        impl->node.resizeBuffer(bufferSize());
-        auto sg = signalGraph();
-        sg->insertNode(&impl->node);
+        auto impl = allocObj<Impl_SoundDriverAudioInput>(message, signalGraph());
         m_inputs.append(impl);
     }
 
     inline void recieved(Message_AddAudioOutput* message)
     {
-        auto impl = allocObj<Impl_SoundDriverAudioOutput>(message);
+        auto impl = allocObj<Impl_SoundDriverAudioOutput>(message, signalGraph());
         impl->node.resizeBuffer(bufferSize());
-        auto sg = signalGraph();
-        sg->insertNode(&impl->node);
         m_outputs.append(impl);
     }
 

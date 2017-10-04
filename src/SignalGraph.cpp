@@ -1,11 +1,31 @@
 #include "SignalGraph.hpp"
-#include "SignalGraphProcessingContext.hpp"
-#include "jit.hpp"
 
 #include <iostream>
 using namespace std;
 
 namespace r64fx{
+
+template<typename RegT, int MaxRegCount> inline void get_registers(long bits, RegT* regs, int* nregs)
+{
+    bits &= (MaxRegCount - 1);
+    int n = 0;
+    for(int i=0; bits && i<16; i++)
+    {
+        long b = (1 << i);
+        if(bits & b)
+        {
+            regs[n++] = i;
+            bits &= ~b;
+        }
+    }
+    *nregs = n;
+}
+
+void SignalDataStorage_Xmm::getRegisters(Xmm* regs, int* nregs)
+{
+    get_registers<Xmm, 16>(u.l, regs, nregs);
+}
+
 
 SignalSource::SignalSource()
 {
@@ -31,135 +51,77 @@ SignalSink::~SignalSink()
 }
 
 
-SignalGraphNode::SignalGraphNode()
+SignalNode::SignalNode()
 {
 
 }
 
 
-SignalGraphNode::~SignalGraphNode()
+SignalNode::~SignalNode()
 {
-
 }
 
 
-void SignalGraphNode::getSources(SignalSource*&, int &nsources)
+void SignalNode::getSources(SignalSource*&, int &nsources)
 {
     nsources = 0;
 }
 
 
-void SignalGraphNode::getSinks(SignalSink*&, int &nsinks)
+void SignalNode::getSinks(SignalSink*&, int &nsinks)
 {
     nsinks = 0;
 }
 
 
-unsigned long SignalGraphNode::enumerate(unsigned long first_index, unsigned long increment)
+SignalGraph::SignalGraph()
 {
-    m_index = first_index;
-    return first_index + increment;
+
 }
 
 
-void SignalGraph::process(SignalGraphProcessingContext* sgpctx)
+SignalGraph::~SignalGraph()
 {
-    auto a = sgpctx->assembler();
-    a->push(rbx);
-    a->mov(rbx, Imm64(0));
-    auto loop = a->ip();
+
+}
+
+
+void SignalGraph::addNode(SignalNode* node)
+{
+
+}
+
+
+void SignalGraph::removeNode(SignalNode* node)
+{
+
+}
+
+
+void SignalGraph::build(SignalGraphProcessor &sgp)
+{
+    auto &as = sgp.assembler();
+
+    as.push(rax);
+    as.mov(rax, Imm32(-frameCount()));
+    JumpLabel loop = as.ip();
     for(auto node : m_nodes)
-    {
-        node->process(sgpctx);
-    }
-    a->add(rbx, Imm32(1));
-    a->cmp(rbx, Imm32(sampleCount()));
-    a->jne(loop);
-    a->pop(rbx);
+        node->build(sgp);
+    as.add(rax, Imm32(1));
+    as.jnz(loop);
+    as.pop(rax);
 }
 
 
-void SignalGraph::insertNode(SignalGraphNode* node)
+#define R64FX_SIGNAL_GRAPH_PROCESSOR_GPR_BITS 0xF
+#define R64FX_GPR_BITS
+
+
+void SignalGraphProcessor::build(SignalGraph &sg)
 {
-#ifdef R64FX_DEBUG
-    assert(node);
-    assert(node->m_parent == nullptr);
-#endif//R64FX_DEBUG
-
-    SignalSource*  sources       = nullptr;
-    int            source_count  = 0;
-    node->getSources(sources, source_count);
-
-    SignalSink*    sinks         = nullptr;
-    int            sink_count    = 0;
-    node->getSinks(sinks, sink_count);
-
-    if(sink_count)
-    {
-        if(source_count)
-        {
-            
-        }
-        else
-        {
-            m_nodes.append(node);
-        }
-    }
-    else
-    {
-        if(source_count)
-        {
-            m_nodes.preppend(node);
-        }
-        else
-        {
-            m_nodes.append(node);
-        }
-    }
-
-    node->m_parent = this;;
-}
-
-
-void SignalGraph::removeNode(SignalGraphNode* node)
-{
-    m_nodes.remove(node);
-}
-
-
-void SignalGraph::makeConnection(const NodeSource &node_source, const NodeSink &node_sink)
-{
-    
-}
-
-
-void SignalGraph::disconnectSink(const NodeSink &node_sink)
-{
-    
-}
-
-
-void SignalGraph::disconnectSource(const NodeSource &node_source)
-{
-    
-}
-
-
-void SignalGraph::disconnectNode(SignalGraphNode* node)
-{
-    
-}
-
-
-unsigned long SignalGraph::enumerate(unsigned long first_index, unsigned long increment)
-{
-    m_index = first_index;
-    unsigned long index = m_index + increment;
-    for(auto node : m_nodes)
-    {
-        index = node->enumerate(index, increment);
-    }
-    return index;
+    m_assembler.rewind();
+    sg.build(*this);
+    m_assembler.ret();
 }
 
 }//namespace r64fx
