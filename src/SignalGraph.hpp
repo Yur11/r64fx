@@ -10,6 +10,7 @@ namespace r64fx{
 
 class SignalGraph;
 class SignalGraphProcessor;
+class SignalNode;
 
 class SignalDataStorage{
     friend class SignalGraphProcessor;
@@ -92,35 +93,40 @@ public:
 
 /* One SignalSource can be connected to multiple SignalSink instances. */
 class SignalSource{
-    friend class SignalGraphProcessor;
+    friend class SignalGraph;
 
-    SignalDataStorage m_storage;
-    union{
-        unsigned long l = 0;
-        int i[2];
-    }m;
+    SignalDataStorage  m_storage;
+    unsigned int       m_outgoing_connection_count = 0;
+    unsigned int       m_processed_sink_count = 0;
 
 public:
-    SignalSource();
+    SignalSource() {}
 
-    ~SignalSource();
+    ~SignalSource() {}
 
     inline SignalDataStorage* storage() { return &m_storage; }
+
+    inline int outgoingConnectionCount() const { return m_outgoing_connection_count; }
+
+    inline int processedSinkCount() const { return m_processed_sink_count; }
 };
 
 
 /* Each SignalSink can be connected to only one SignalSource. */
 class SignalSink{
-    friend class SignalGraphProcessor;
+    friend class SignalGraph;
 
-    SignalSource* m_connected_source = nullptr;
+    SignalSource*  m_connected_source  = nullptr;
+    SignalNode*    m_connected_node    = nullptr;
 
 public:
-    SignalSink();
+    SignalSink() {}
 
-    ~SignalSink();
+    ~SignalSink() {}
 
     inline SignalSource* connectedSource() const { return m_connected_source; }
+
+    inline SignalNode* connectedNode() const { return m_connected_node; }
 };
 
 
@@ -128,21 +134,117 @@ class SignalNode : public LinkedList<SignalNode>::Node{
     friend class SignalGraph;
     friend class SignalGraphProcessor;
 
-    SignalGraph* m_parent_graph = nullptr;
+    SignalGraph*  m_parent_graph               = nullptr;
+    unsigned int  m_incoming_connection_count  = 0;
+    unsigned int  m_outgoing_connection_count  = 0;
 
 public:
-    SignalNode();
+    SignalNode() {}
 
-    virtual ~SignalNode();
+    virtual ~SignalNode() {}
 
     inline SignalGraph* parentGraph() const { return m_parent_graph; }
 
-private:
-    virtual void getSources(SignalSource* &sources, int &nsources);
+    inline unsigned int incomingConnectionCount() const { return m_incoming_connection_count; }
 
-    virtual void getSinks(SignalSink* &sinks, int &nsinks);
+    inline unsigned int outgoingConnectionCount() const { return m_outgoing_connection_count; }
+
+private:
+    virtual void getSources(SignalSource* &sources, unsigned int &nsources);
+
+    virtual void getSinks(SignalSink* &sinks, unsigned int &nsinks);
 
     virtual void build(SignalGraphProcessor &sgp) = 0;
+};
+
+
+template<unsigned int SourceCount, unsigned int SinkCount> class SignalNode_WithPorts : public SignalNode{
+    SignalSource  m_sources [SourceCount];
+    SignalSink    m_sinks   [SinkCount];
+
+protected:
+    inline SignalSource* source(unsigned int i)
+    {
+#ifdef R64FX_DEBUG
+        assert(i >= 0);
+        assert(i < SourceCount);
+#endif//R64FX_DEBUG
+        return m_sources + i;
+    }
+
+    inline SignalSink* sink(unsigned int i)
+    {
+#ifdef R64FX_DEBUG
+        assert(i >= 0);
+        assert(i < SinkCount);
+#endif//R64FX_DEBUG
+        return m_sinks + i;
+    }
+
+    inline unsigned int sourceCount() const { return SourceCount; }
+
+    inline unsigned int sinkCount() const { return SinkCount; }
+
+private:
+    virtual void getSources(SignalSource* &sources, unsigned int &nsources) override final
+    {
+        sources = m_sources;
+        nsources = SourceCount;
+    }
+
+    virtual void getSinks(SignalSink* &sinks, unsigned int &nsinks) override final
+    {
+        sinks = m_sinks;
+        nsinks = SinkCount;
+    }
+};
+
+
+template<unsigned int SourceCount> class SignalNode_WithSources : public SignalNode{
+    SignalSource m_sources[SourceCount];
+
+protected:
+    inline SignalSource* source(unsigned int i)
+    {
+#ifdef R64FX_DEBUG
+        assert(i >= 0);
+        assert(i < SourceCount);
+#endif//R64FX_DEBUG
+        return m_sources + i;
+    }
+
+    inline unsigned int sourceCount() const { return SourceCount; }
+
+private:
+    virtual void getSources(SignalSource* &sources, unsigned int &nsources) override final
+    {
+        sources = m_sources;
+        nsources = SourceCount;
+    }
+};
+
+
+template<unsigned int SinkCount> class SignalNode_WithSinks : public SignalNode{
+    SignalSink m_sinks[SinkCount];
+
+protected:
+    inline SignalSink* sink(unsigned int i)
+    {
+#ifdef R64FX_DEBUG
+        assert(i >= 0);
+        assert(i < SinkCount);
+#endif//R64FX_DEBUG
+        return m_sinks + i;
+    }
+
+    inline unsigned int sinkCount() const { return SinkCount; }
+
+public:
+    virtual void getSinks(SignalSink* &sinks, unsigned int &nsinks) override final
+    {
+        sinks = m_sinks;
+        nsinks = SinkCount;
+    }
 };
 
 
@@ -163,117 +265,33 @@ typedef NodePort<SignalSource>  NodeSource;
 typedef NodePort<SignalSink>    NodeSink;
 
 
-template<int SourceCount, int SinkCount> class SignalNode_WithPorts : public SignalNode{
-    SignalSource  m_sources [SourceCount];
-    SignalSink    m_sinks   [SinkCount];
-
-protected:
-    inline SignalSource* source(int i)
-    {
-#ifdef R64FX_DEBUG
-        assert(i >= 0);
-        assert(i < SourceCount);
-#endif//R64FX_DEBUG
-        return m_sources + i;
-    }
-
-    inline SignalSink* sink(int i)
-    {
-#ifdef R64FX_DEBUG
-        assert(i >= 0);
-        assert(i < SinkCount);
-#endif//R64FX_DEBUG
-        return m_sinks + i;
-    }
-
-    inline int sourceCount() const { return SourceCount; }
-
-    inline int sinkCount() const { return SinkCount; }
-
-private:
-    virtual void getSources(SignalSource* &sources, int &nsources) override final
-    {
-        sources = m_sources;
-        nsources = SourceCount;
-    }
-
-    virtual void getSinks(SignalSink* &sinks, int &nsinks) override final
-    {
-        sinks = m_sinks;
-        nsinks = SinkCount;
-    }
-};
-
-
-template<int SourceCount> class SignalNode_WithSources : public SignalNode{
-    SignalSource m_sources[SourceCount];
-
-protected:
-    inline SignalSource* source(int i)
-    {
-#ifdef R64FX_DEBUG
-        assert(i >= 0);
-        assert(i < SourceCount);
-#endif//R64FX_DEBUG
-        return m_sources + i;
-    }
-
-    inline int sourceCount() const { return SourceCount; }
-
-private:
-    virtual void getSources(SignalSource* &sources, int &nsources) override final
-    {
-        sources = m_sources;
-        nsources = SourceCount;
-    }
-};
-
-
-template<int SinkCount> class SignalNode_WithSinks : public SignalNode{
-    SignalSink m_sinks[SinkCount];
-
-protected:
-    inline SignalSink* sink(int i)
-    {
-#ifdef R64FX_DEBUG
-        assert(i >= 0);
-        assert(i < SinkCount);
-#endif//R64FX_DEBUG
-        return m_sinks + i;
-    }
-
-    inline int sinkCount() const { return SinkCount; }
-
-public:
-    virtual void getSinks(SignalSink* &sinks, int &nsinks) override final
-    {
-        sinks = m_sinks;
-        nsinks = SinkCount;
-    }
-};
-
-
 class SignalGraph : public SignalNode{
     friend class SignalGraphProcessor;
 
     LinkedList<SignalNode> m_nodes;
-    int m_frame_count = 0;
+    unsigned int m_frame_count = 0;
 
 public:
-    SignalGraph();
+    SignalGraph() {}
 
-    ~SignalGraph();
+    ~SignalGraph() {}
 
     void addNode(SignalNode* node);
 
     void removeNode(SignalNode* node);
 
-    inline void setFrameCount(int frame_count) { m_frame_count = frame_count; }
+    void connect(const NodeSource node_source, const NodeSink &node_sink);
+
+    void disconnect(const NodeSink &node_sink);
+
+    inline void setFrameCount(unsigned frame_count) { m_frame_count = frame_count; }
 
     inline int frameCount() const { return m_frame_count; }
 
 private:
     virtual void build(SignalGraphProcessor &sgp) override final;
+
+    void buildNode(SignalGraphProcessor &sgp, SignalNode* node);
 };
 
 
@@ -281,6 +299,9 @@ class SignalGraphProcessor{
     Assembler  m_assembler;
 
     void* m_data = nullptr;
+
+    void* m_gprs[16];
+    void* m_xmms[16];
 
 public:
     SignalGraphProcessor() {}
