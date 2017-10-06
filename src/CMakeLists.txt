@@ -127,7 +127,9 @@ target_link_libraries(r64fx ${LIBS})
 #########################################################################################
 ## Some Tests ###########################################################################
 #########################################################################################
-add_custom_target(tests DEPENDS test_LinkedList test_Timer test_MemoryUtils test_ThreadObject test_jit test_SoundDriver)
+add_custom_target(tests DEPENDS
+    test_LinkedList test_Timer test_MemoryUtils test_ThreadObject test_jit test_SignalGraph test_SoundDriver
+)
 
 ## test_LinkedList ##
 set(test_LinkedList_SRC
@@ -188,6 +190,18 @@ set(test_jit_SRC
 )
 
 add_executable(test_jit EXCLUDE_FROM_ALL ${test_jit_SRC})
+
+
+## test_SignalGraph ##
+set(test_SignalGraph_SRC
+    test_SignalGraph.cpp
+    SignalGraph.cpp
+    SignalNode_BufferRW.cpp
+    jit.cpp
+    MemoryUtils.cpp
+)
+
+add_executable(test_SignalGraph EXCLUDE_FROM_ALL ${test_SignalGraph_SRC})
 
 
 ## test_SoundDriver ##

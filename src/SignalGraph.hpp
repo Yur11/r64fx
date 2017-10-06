@@ -138,6 +138,9 @@ class SignalNode : public LinkedList<SignalNode>::Node{
     unsigned int  m_incoming_connection_count  = 0;
     unsigned int  m_outgoing_connection_count  = 0;
 
+protected:
+    unsigned long m_flags = 0;
+
 public:
     SignalNode() {}
 
@@ -165,19 +168,13 @@ template<unsigned int SourceCount, unsigned int SinkCount> class SignalNode_With
 protected:
     inline SignalSource* source(unsigned int i)
     {
-#ifdef R64FX_DEBUG
-        assert(i >= 0);
-        assert(i < SourceCount);
-#endif//R64FX_DEBUG
+        R64FX_DEBUG_ASSERT(i < SourceCount);
         return m_sources + i;
     }
 
     inline SignalSink* sink(unsigned int i)
     {
-#ifdef R64FX_DEBUG
-        assert(i >= 0);
-        assert(i < SinkCount);
-#endif//R64FX_DEBUG
+        R64FX_DEBUG_ASSERT(i < SinkCount);
         return m_sinks + i;
     }
 
@@ -206,10 +203,7 @@ template<unsigned int SourceCount> class SignalNode_WithSources : public SignalN
 protected:
     inline SignalSource* source(unsigned int i)
     {
-#ifdef R64FX_DEBUG
-        assert(i >= 0);
-        assert(i < SourceCount);
-#endif//R64FX_DEBUG
+        R64FX_DEBUG_ASSERT(i < SourceCount);
         return m_sources + i;
     }
 
@@ -230,10 +224,7 @@ template<unsigned int SinkCount> class SignalNode_WithSinks : public SignalNode{
 protected:
     inline SignalSink* sink(unsigned int i)
     {
-#ifdef R64FX_DEBUG
-        assert(i >= 0);
-        assert(i < SinkCount);
-#endif//R64FX_DEBUG
+        R64FX_DEBUG_ASSERT(i < SinkCount);
         return m_sinks + i;
     }
 
@@ -265,7 +256,7 @@ typedef NodePort<SignalSource>  NodeSource;
 typedef NodePort<SignalSink>    NodeSink;
 
 
-class SignalGraph : public SignalNode{
+class SignalGraph : public SignalNode_WithPorts<1, 1>{
     friend class SignalGraphProcessor;
 
     LinkedList<SignalNode> m_nodes;
@@ -287,6 +278,10 @@ public:
     inline void setFrameCount(unsigned frame_count) { m_frame_count = frame_count; }
 
     inline int frameCount() const { return m_frame_count; }
+
+    inline NodeSource linkSource() { return {this, source(0)}; }
+
+    inline NodeSink linkSink() { return {this, sink(0)}; }
 
 private:
     virtual void build(SignalGraphProcessor &sgp) override final;

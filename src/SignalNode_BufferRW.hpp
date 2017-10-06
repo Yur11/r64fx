@@ -5,18 +5,20 @@
 
 namespace r64fx{
 
-
-class SignalNode_BufferReader : public SignalNode_WithSources<1>{
+class SignalNodeBuffer{
     float* m_buffer = nullptr;
 
 public:
-    SignalNode_BufferReader();
-
-    void resizeBuffer(int new_size);
+    inline void setBuffer(float* buffer) { m_buffer = buffer; }
 
     inline float* buffer() const { return m_buffer; }
+};
 
-    inline SignalSource* source() { return SignalNode_WithSources<1>::source(0); };
+
+class SignalNode_BufferReader : public SignalNode_WithSources<1>{
+
+public:
+    inline NodeSource source() { return {this, SignalNode_WithSources<1>::source(0)}; }
 
 private:
     virtual void build(SignalGraphProcessor &sgp) override final;
@@ -24,17 +26,9 @@ private:
 
 
 class SignalNode_BufferWriter : public SignalNode_WithSinks<1>{
-    SignalSink  m_sink;
-    float*      m_buffer = nullptr;
 
 public:
-    SignalNode_BufferWriter();
-
-    void resizeBuffer(int new_size);
-
-    inline float* buffer() const { return m_buffer; }
-
-    inline SignalSink* sink() { return SignalNode_WithSinks<1>::sink(0); }
+    inline NodeSink sink() { return {this, SignalNode_WithSinks<1>::sink(0)}; }
 
 private:
     virtual void build(SignalGraphProcessor &sgp) override final;
