@@ -36,6 +36,12 @@ public:
 class SignalDataStorage_Memory : public SignalDataStorage{
     friend class SignalGraphProcessor;
 
+    SignalDataStorage_Memory(int index, int size)
+    {
+        setIndex(index);
+        setSize(size);
+    }
+
 public:
     SignalDataStorage_Memory() {}
     SignalDataStorage_Memory(const SignalDataStorage &sds)
@@ -47,7 +53,29 @@ public:
     inline int index() const { return u.i[0] & ~(1<<31); }
     inline int size()  const { return u.i[1] & ~(1<<31); }
 
-    inline static int maxValue() { return ~(1<<31); }
+    inline constexpr static int maxValue() { return ~(1<<31); }
+
+private:
+    inline void setIndex(int index)
+    {
+        R64FX_DEBUG_ASSERT(index <= maxValue());
+        u.i[0] = index;
+    }
+
+    inline void setSize(int size)
+    {
+        R64FX_DEBUG_ASSERT(size <= maxValue());
+        u.i[1] = size;
+    }
+};
+
+
+namespace RegisterStorageType{
+    constexpr unsigned long GPR32         = 0;
+    constexpr unsigned long GPR32_Stereo  = 1;
+    constexpr unsigned long GPR64         = 2;
+    constexpr unsigned long Xmm           = 3;
+    constexpr unsigned long Ymm           = 4;
 };
 
 class SignalDataStorage_Registers : public SignalDataStorage{
@@ -61,33 +89,15 @@ public:
         u.l = sds.l();
     }
 
-    inline bool isGPR() const { return !isXmm(); }
+    inline unsigned long type() { return (u.l >> 59) & 7; }
 
-    inline bool isXmm() const { return u.l & (1UL<<62); }
-};
-
-class SignalDataStorage_GPR : public SignalDataStorage_Registers{
-public:
-    SignalDataStorage_GPR() {}
-    SignalDataStorage_GPR(const SignalDataStorage_Registers &sdsr)
+private:
+    inline void setType(unsigned long type)
     {
-        R64FX_DEBUG_ASSERT(sdsr.isGPR());
-        u.l = sdsr.l();
+        R64FX_DEBUG_ASSERT(type >= 0 && type <= 4);
+        u.l &= ~(7UL << 59);
+        u.l |= (type << 59);
     }
-};
-
-class SignalDataStorage_Xmm : public SignalDataStorage_Registers{
-    friend class SignalGraphProcessor;
-
-public:
-    SignalDataStorage_Xmm() { u.l |= (1UL<<62); }
-    SignalDataStorage_Xmm(const SignalDataStorage_Registers &sdsr)
-    {
-        R64FX_DEBUG_ASSERT(sdsr.isXmm());
-        u.l = sdsr.l();
-    }
-
-    void getRegisters(Xmm* regs, int* nregs);
 };
 
 
@@ -260,7 +270,6 @@ class SignalGraph : public SignalNode_WithPorts<1, 1>{
     friend class SignalGraphProcessor;
 
     LinkedList<SignalNode> m_nodes;
-    unsigned int m_frame_count = 0;
 
 public:
     SignalGraph() {}
@@ -274,10 +283,6 @@ public:
     void connect(const NodeSource node_source, const NodeSink &node_sink);
 
     void disconnect(const NodeSink &node_sink);
-
-    inline void setFrameCount(unsigned frame_count) { m_frame_count = frame_count; }
-
-    inline int frameCount() const { return m_frame_count; }
 
     inline NodeSource linkSource() { return {this, source(0)}; }
 
@@ -293,23 +298,30 @@ private:
 class SignalGraphProcessor{
     Assembler  m_assembler;
 
-    void* m_data = nullptr;
+    float* m_data = nullptr;
+    long  m_data_size = 0;
 
     void* m_gprs[16];
     void* m_xmms[16];
+
+    unsigned int m_main_buffer_size = 0;
 
 public:
     SignalGraphProcessor() {}
 
     ~SignalGraphProcessor() {}
 
+    void build(SignalGraph &sg, unsigned int main_buffer_size);
+
+    inline void run() { ((void (*)(float* data_ptr)) m_assembler.codeBegin())(m_data); }
+
     inline Assembler &assembler() { return m_assembler; }
 
     inline void* data() const { return m_data; }
 
-    void build(SignalGraph &sg);
+    inline unsigned int mainBufferSize() const { return m_main_buffer_size; }
 
-    inline void run() { ((void (*)()) m_assembler.codeBegin())(); }
+    void memoryStorage(SignalDataStorage* storage, int ndwords, int align_dwords);
 };
 
 

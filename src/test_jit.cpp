@@ -1027,6 +1027,12 @@ int main()
     }
 
     Assembler as;
+    as.mov(rax, rdi);
+    as.ret();
+
+    auto fun = (long (*)(long arg)) as.codeBegin();
+    cout << fun(1236617) << "\n";
+    return 0;
 
     bool ok =
         test_mov(as) &&

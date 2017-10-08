@@ -15,7 +15,7 @@ bool buff_eq(float* a, float* b, int size)
     return true;
 }
 
-constexpr int frame_count = 1024;
+constexpr int frame_count = 8;
 float buff_a[frame_count];
 float buff_b[frame_count];
 
@@ -29,18 +29,22 @@ int main()
     }
 
     SignalGraph sg;
-    sg.setFrameCount(frame_count);
 
-    SignalNode_BufferReader snbr;
-    SignalNode_BufferWriter snbw;
+    SignalNode_BufferReader snbr; snbr.setBuffer(buff_a);
+    SignalNode_BufferWriter snbw; snbw.setBuffer(buff_b);
 
     sg.addNode(&snbr);
     sg.addNode(&snbw);
     sg.connect(snbr.source(), snbw.sink());
 
     SignalGraphProcessor sgp;
-    sgp.build(sg);
+    sgp.build(sg, frame_count);
     sgp.run();
+
+    for(int i=0; i<frame_count; i++)
+    {
+        cout << buff_a[i] << ", " << buff_b[i] << "\n";
+    }
 
     if(buff_eq(buff_a, buff_b, frame_count))
     {

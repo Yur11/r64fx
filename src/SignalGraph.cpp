@@ -23,10 +23,6 @@ template<typename RegT, int MaxRegCount> inline void get_registers(long bits, Re
     *nregs = n;
 }
 
-void SignalDataStorage_Xmm::getRegisters(Xmm* regs, int* nregs)
-{
-    get_registers<Xmm, 16>(u.l, regs, nregs);
-}
 
 
 void SignalNode::getSources(SignalSource*&, unsigned int &nsources)
@@ -118,18 +114,8 @@ void SignalGraph::disconnect(const NodeSink &node_sink)
 
 void SignalGraph::build(SignalGraphProcessor &sgp)
 {
-    auto &as = sgp.assembler();
-
-    as.push(rax);
-    as.mov(rax, Imm32(-frameCount()));
-    JumpLabel loop = as.ip();
-
     for(auto node : m_nodes)
         buildNode(sgp, node);
-
-    as.add(rax, Imm32(1));
-    as.jnz(loop);
-    as.pop(rax);
 }
 
 
@@ -151,11 +137,45 @@ void SignalGraph::buildNode(SignalGraphProcessor &sgp, SignalNode* node)
 }
 
 
-void SignalGraphProcessor::build(SignalGraph &sg)
+void SignalGraphProcessor::build(SignalGraph &sg, unsigned int main_buffer_size)
 {
+    m_main_buffer_size = main_buffer_size;
+    if(m_main_buffer_size == 0)
+        return;
+
+    long old_data_size = m_data_size;
+    m_data_size = 0;
+
     m_assembler.rewind();
+
+    m_assembler.mov(rcx, Imm32(-m_main_buffer_size));
+    JumpLabel loop = m_assembler.ip();
+
     sg.build(*this);
+
+    m_assembler.add(rcx, Imm32(1));
+    m_assembler.jnz(loop);
+
     m_assembler.ret();
+
+    if(m_data_size > old_data_size)
+    {
+        if(old_data_size > 0)
+        {
+            delete[] m_data;
+        }
+        m_data = new float[m_data_size];
+    }
+}
+
+
+void SignalGraphProcessor::memoryStorage(SignalDataStorage *storage, int ndwords, int align_dwords)
+{
+    while(m_data_size & (align_dwords-1))
+        m_data_size++;
+    SignalDataStorage_Memory mem_storage(m_data_size, ndwords);
+    m_data_size += ndwords;
+    storage->u.l = mem_storage.u.l;
 }
 
 }//namespace r64fx

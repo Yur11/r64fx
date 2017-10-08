@@ -59,6 +59,7 @@ struct ModuleConnectionMessage{
 struct ModuleThreadAssets{
     SoundDriverSyncPort*  sd_sync_port   = nullptr;
     long                  sample_rate    = 0;
+    long                  buffer_size    = 0;
     long                  flags          = 0;
     SignalGraph           signal_graph;
 
@@ -84,8 +85,7 @@ public:
     {
         m.sd_sync_port  = agent->sd_sync_port;
         m.sample_rate   = agent->sample_rate;
-
-        m.signal_graph.setFrameCount(agent->buffer_size);
+        m.buffer_size   = agent->buffer_size;
     }
 
     void storeWithdrawalArgs(RootModuleWithdrawalAgent* agent)
@@ -128,7 +128,7 @@ private:
 
                 if(m.flags & R64FX_GRAPH_REBUILD_ARMED)
                 {
-                    sgp.build(m.signal_graph);
+                    sgp.build(m.signal_graph, m.buffer_size);
                     m.flags &= ~R64FX_GRAPH_REBUILD_ARMED;
                 }
                 sgp.run();
@@ -249,7 +249,7 @@ void ModuleThreadObjectImpl::setEpilogue(void (*fun)(void* arg), void* arg)
 
 long ModuleThreadObjectImpl::bufferSize() const
 {
-    return R64FX_MODULE_THREAD_ASSETS->signal_graph.frameCount();
+    return R64FX_MODULE_THREAD_ASSETS->buffer_size;
 }
 
 

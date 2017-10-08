@@ -41,11 +41,11 @@ struct Impl_SoundDriverAudioInput : public LinkedList<Impl_SoundDriverAudioInput
     SignalNode_BufferReader node;
     SoundDriverAudioInput*  sd_port  = nullptr;
 
-    Impl_SoundDriverAudioInput(Message_AddAudioInput* message, SignalGraph* sg)
+    Impl_SoundDriverAudioInput(Message_AddAudioInput* message, SignalGraph* sg, float* buffer)
     {
         sd_port = message->sd_port;
-        message->graph_port = node.source();
-        node.resizeBuffer(sg->frameCount());
+        message->graph_port = node.source().port();
+        node.setBuffer(buffer);
         sg->addNode(&node);
     }
 
@@ -61,11 +61,11 @@ struct Impl_SoundDriverAudioOutput : public LinkedList<Impl_SoundDriverAudioOutp
     SignalNode_BufferWriter  node;
     SoundDriverAudioOutput*  sd_port  = nullptr;
 
-    Impl_SoundDriverAudioOutput(Message_AddAudioOutput* message, SignalGraph* sg)
+    Impl_SoundDriverAudioOutput(Message_AddAudioOutput* message, SignalGraph* sg, float* buffer)
     {
         sd_port = message->sd_port;
-        message->graph_port = node.sink();
-        node.resizeBuffer(sg->frameCount());
+        message->graph_port = node.sink().port();
+        node.setBuffer(buffer);
         sg->addNode(&node);
     }
 
@@ -121,24 +121,24 @@ private:
 
     inline void recieved(Message_AddAudioInput* message)
     {
-        auto impl = allocObj<Impl_SoundDriverAudioInput>(message, signalGraph());
+        auto impl = allocObj<Impl_SoundDriverAudioInput>(message, signalGraph(), new float[bufferSize()]);
         m_inputs.append(impl);
     }
 
     inline void recieved(Message_AddAudioOutput* message)
     {
-        auto impl = allocObj<Impl_SoundDriverAudioOutput>(message, signalGraph());
-        impl->node.resizeBuffer(bufferSize());
+        auto impl = allocObj<Impl_SoundDriverAudioOutput>(message, signalGraph(), new float[bufferSize()]);
         m_outputs.append(impl);
     }
 
     inline void recieved(Message_RemoveAudioInput* message)
     {
         Impl_SoundDriverAudioInput* impl = nullptr;
-        for(auto obj : m_inputs) if(obj->node.source() == message->graph_port){ impl = obj; break; }
+        for(auto obj : m_inputs) if(obj->node.source().port() == message->graph_port){ impl = obj; break; }
         if(impl)
         {
             auto sg = signalGraph();
+            delete[] impl->node.buffer();
             sg->removeNode(&impl->node);
             m_inputs.remove(impl);
             message->sd_port = impl->sd_port;
@@ -149,10 +149,11 @@ private:
     inline void recieved(Message_RemoveAudioOutput* message)
     {
         Impl_SoundDriverAudioOutput* impl = nullptr;
-        for(auto obj : m_outputs) if(obj->node.sink() == message->graph_port){ impl = obj; break; }
+        for(auto obj : m_outputs) if(obj->node.sink().port() == message->graph_port){ impl = obj; break; }
         if(impl)
         {
             auto sg = signalGraph();
+            delete[] impl->node.buffer();
             sg->removeNode(&impl->node);
             m_outputs.remove(impl);
             message->sd_port = impl->sd_port;
