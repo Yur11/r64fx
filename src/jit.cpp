@@ -1,6 +1,5 @@
 #include "jit.hpp"
 #include <sys/mman.h>
-#include <limits>
 #include <cstdlib>
 #include <cstring>
 
@@ -58,153 +57,175 @@ int SIBD::dispBytes() const
 }
 
 
-void Assembler::resize(unsigned long page_count)
+void Assembler::resize(unsigned long data_page_count, unsigned long code_page_count)
 {
-#ifdef R64FX_DEBUG
-    assert(page_count >= 0);
-#endif//R64FX_DEBUG
+    unsigned long new_page_count = data_page_count + code_page_count;
+    unsigned long old_page_count = dataPageCount() + codePageCount();
 
-    unsigned long new_size = page_count * memory_page_size();
-    unsigned long old_size = m_size;
-
-    if(new_size == 0)
+    if(new_page_count == 0)
     {
-        if(old_size > 0)
+        if(old_page_count > 0)
         {
-            mprotect(m_begin, old_size, PROT_READ | PROT_WRITE);
-            free(m_begin);
-            m_begin = m_end = nullptr;
-            m_size = 0;
+            mprotect(m_buffer, old_page_count * memory_page_size(), PROT_READ | PROT_WRITE);
+            free(m_buffer);
+            m_buffer = m_data_begin = m_code_begin = m_code_end = m_buffer_end = nullptr;
         }
     }
     else
     {
-        auto new_buff = (unsigned char*) alloc_aligned(memory_page_size(), new_size);
-        if(old_size > 0)
-        {
-            if(new_size > old_size)
-            {
-                memcpy(new_buff, m_begin, old_size);
-            }
-            mprotect(m_begin, old_size, PROT_READ | PROT_WRITE);
-            free(m_begin);
-        }
-        auto end_offset = (unsigned long)(m_end - m_begin);
-        m_begin = new_buff;
-        m_end = m_begin + end_offset;
-        m_size = new_size;
-        mprotect(m_begin, new_size, PROT_READ | PROT_WRITE | PROT_EXEC);
-    }
+        auto new_size        = new_page_count * memory_page_size();
+        auto new_buff        = (unsigned char*) alloc_aligned(memory_page_size(), new_size);
+        auto new_code_begin  = new_buff + data_page_count * memory_page_size();
+        auto new_code_end    = new_code_begin + codeBytesUsed();
+        auto new_data_begin  = new_code_begin - dataBytesUsed();
 
-    m_page_count = page_count;
+        if(old_page_count > 0)
+        {
+            if(data_page_count >= dataPageCount())
+            {
+                memcpy(new_data_begin, dataBegin(), dataBytesUsed());
+            }
+
+            if(code_page_count >= codePageCount())
+            {
+                memcpy(new_code_begin, codeBegin(), codeBytesUsed());
+            }
+
+            mprotect(m_buffer, old_page_count * memory_page_size(), PROT_READ | PROT_WRITE);
+            free(m_buffer);
+        }
+
+        m_buffer      = new_buff;
+        m_data_begin  = new_data_begin;
+        m_code_begin  = new_code_begin;
+        m_code_end    = new_code_end;
+        m_buffer_end  = m_buffer + new_size;
+
+        if(data_page_count)
+            mprotect(m_buffer,     dataBufferSize(),  PROT_READ | PROT_WRITE);
+        if(code_page_count)
+            mprotect(codeBegin(),  codeBufferSize(),  PROT_READ | PROT_WRITE | PROT_EXEC);
+
+    }
+}
+
+
+int Assembler::growData(int nbytes)
+{
+    return 0;
+}
+
+
+unsigned char* Assembler::growCode(int nbytes)
+{
+    int new_bytes_needed = nbytes - codeBytesAvailable();
+    if(new_bytes_needed > 0)
+    {
+        int new_pages = new_bytes_needed / memory_page_size() + 1;
+        resize(dataPageCount(), codePageCount() + new_pages);
+    }
+    auto result = m_code_end;
+    m_code_end += nbytes;
+    return result;
 }
 
 
 void Assembler::fill(unsigned char byte, int nbytes)
 {
-    ensureAvailable(nbytes);
+    auto p = growCode(nbytes);
     for(int i=0; i<nbytes; i++)
-        m_end[i] = byte;
-    m_end += nbytes;
+        p[i] = byte;
 }
 
 
 void Assembler::write(unsigned char byte)
 {
-    ensureAvailable(1);
-    m_end[0] = byte;
-    m_end += 1;
+    auto p = growCode(1);
+    p[0] = byte;
 }
 
 
 void Assembler::write(unsigned char byte0, unsigned char byte1)
 {
-    ensureAvailable(2);
-    m_end[0] = byte0;
-    m_end[1] = byte1;
-    m_end += 2;
+    auto p = growCode(2);
+    p[0] = byte0;
+    p[1] = byte1;
 }
 
 
 void Assembler::write(unsigned char opcode, unsigned char r, GPR64 reg, Imm32 imm)
 {
-    ensureAvailable(7);
-    m_end[0] = Rex(1, 0, 0, reg.prefix_bit());
-    m_end[1] = opcode;
-    m_end[2] = ModRM(b11, r, reg.lowerBits());
+    auto p = growCode(7);
+    p[0] = Rex(1, 0, 0, reg.prefix_bit());
+    p[1] = opcode;
+    p[2] = ModRM(b11, r, reg.lowerBits());
     for(int i=0; i<4; i++)
-        m_end[i + 3] = imm.b[i];
-    m_end += 7;
+        p[i + 3] = imm.b[i];
 }
 
 
 void Assembler::write(unsigned char opcode, GPR64 reg, Imm64 imm)
 {
-    ensureAvailable(10);
-    m_end[0] = Rex(1, 0, 0, reg.prefix_bit());
-    m_end[1] = opcode + (reg.lowerBits());
+    auto p = growCode(10);
+    p[0] = Rex(1, 0, 0, reg.prefix_bit());
+    p[1] = opcode + (reg.lowerBits());
     for(int i=0; i<8; i++)
-        m_end[i + 2] = imm.b[i];
-    m_end += 10;
+        p[i + 2] = imm.b[i];
 }
 
 
 void Assembler::write(unsigned char opcode, GPR64 dst, GPR64 src)
 {
-    ensureAvailable(3);
-    m_end[0] = Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
-    m_end[1] = opcode;
-    m_end[2] = ModRM(b11, dst.lowerBits(), src.lowerBits());
-    m_end += 3;
+    auto p = growCode(3);
+    p[0] = Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
+    p[1] = opcode;
+    p[2] = ModRM(b11, dst.lowerBits(), src.lowerBits());
 }
 
 
 void Assembler::write(unsigned char opcode, GPR64 reg, Mem64 mem)
 {
-    ensureAvailable(7);
-    m_end[0] = Rex(1, reg.prefix_bit(), 0, 0);
-    m_end[1] = opcode;
-    m_end[2] = ModRM(b00, reg.lowerBits(), b101);
-    auto rip = Rip32(mem.addr(), codeEnd() + 7);
-    for(int i=0; i<4; i++) m_end[i + 3] = rip.b[i];
-    m_end += 7;
+    auto p = growCode(7);
+    p[0] = Rex(1, reg.prefix_bit(), 0, 0);
+    p[1] = opcode;
+    p[2] = ModRM(b00, reg.lowerBits(), b101);
+    auto rip = Rip32(mem.addr(), codeEnd());
+    for(int i=0; i<4; i++) p[i + 3] = rip.b[i];
 }
 
 
 void Assembler::write(unsigned char opcode, GPR64 reg, SIBD sibd)
 {
     int nbytes = 4 + sibd.dispBytes();
-    ensureAvailable(nbytes);
-    m_end[0] = Rex(1, reg.prefix_bit(), sibd.index().prefix_bit(), sibd.base().prefix_bit());
-    m_end[1] = opcode;
-    m_end[2] = sibd.modrmByte(reg);
-    m_end[3] = sibd.sibByte();
+    auto p = growCode(nbytes);
+    p[0] = Rex(1, reg.prefix_bit(), sibd.index().prefix_bit(), sibd.base().prefix_bit());
+    p[1] = opcode;
+    p[2] = sibd.modrmByte(reg);
+    p[3] = sibd.sibByte();
     Imm32 disp(sibd.disp());
-    for(int i=0; i<sibd.dispBytes(); i++) { m_end[i + 4] = disp.b[i]; }
-    m_end += nbytes;
+    for(int i=0; i<sibd.dispBytes(); i++) { p[i + 4] = disp.b[i]; }
 }
 
 
 void Assembler::write(unsigned char opcode, Mem8 mem)
 {
-    ensureAvailable(5);
-    m_end[0] = opcode;
-    auto rip = Rip32(mem.addr(), m_end + 5);
+    auto p = growCode(5);
+    p[0] = opcode;
+    auto rip = Rip32(mem.addr(), codeEnd());
     for(int i=0; i<4; i++)
-        m_end[i + 1] = rip.b[i];
-    m_end += 5;
+        p[i + 1] = rip.b[i];
+    p += 5;
 }
 
 
 void Assembler::write(unsigned char opcode1, unsigned char opcode2, Mem8 mem)
 {
-    ensureAvailable(6);
-    m_end[0] = opcode1;
-    m_end[1] = opcode2;
-    auto rip = Rip32(mem.addr(), m_end + 6);
+    auto p = growCode(6);
+    p[0] = opcode1;
+    p[1] = opcode2;
+    auto rip = Rip32(mem.addr(), codeEnd());
     for(int i=0; i<4; i++)
-        m_end[i + 2] = rip.b[i];
-    m_end += 6;
+        p[i + 2] = rip.b[i];
 }
 
 
@@ -227,19 +248,17 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm dst, X
     assert(imm <= 0xFF);
 #endif//R64FX_DEBUG
 
-    ensureAvailable(nbytes);
+    auto p = growCode(nbytes);
 
     int r = 0;
     if(pre_rex_byte)
-        { m_end[r++] = pre_rex_byte; }
+        { p[r++] = pre_rex_byte; }
     if(rex)
-        { m_end[r++] = rex; }
-    m_end[r++] = 0x0F;
-    m_end[r++] = byte1;
-    m_end[r++] = ModRM(b11, dst.lowerBits(), src.lowerBits());
-    if(imm > 0) { m_end[r++] = (unsigned char)imm; }
-
-    m_end += nbytes;
+        { p[r++] = rex; }
+    p[r++] = 0x0F;
+    p[r++] = byte1;
+    p[r++] = ModRM(b11, dst.lowerBits(), src.lowerBits());
+    if(imm > 0) { p[r++] = (unsigned char)imm; }
 }
 
 
@@ -262,22 +281,20 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, M
     assert(imm <= 0xFF);
 #endif//R64FX_DEBUG
 
-    ensureAvailable(nbytes);
+    auto p = growCode(nbytes);
 
     int r = 0;
     if(pre_rex_byte)
-        { m_end[r++] = pre_rex_byte; }
+        { p[r++] = pre_rex_byte; }
     if(rex)
-        { m_end[r++] = rex; }
-    m_end[r++] = 0x0F;
-    m_end[r++] = byte1;
-    m_end[r++] = ModRM(b00, reg.lowerBits(), b101);
-    auto rip = Rip32(mem.addr(), m_end + nbytes);
+        { p[r++] = rex; }
+    p[r++] = 0x0F;
+    p[r++] = byte1;
+    p[r++] = ModRM(b00, reg.lowerBits(), b101);
+    auto rip = Rip32(mem.addr(), codeEnd());
     for(int i=0; i<4; i++)
-        m_end[r++] = rip.b[i];
-    if(imm > 0) { m_end[r++] = (unsigned char)imm; }
-
-    m_end += nbytes;
+        p[r++] = rip.b[i];
+    if(imm > 0) { p[r++] = (unsigned char)imm; }
 }
 
 
@@ -302,31 +319,28 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, S
     assert(imm <= 0xFF);
 #endif//R64FX_DEBUG
 
-    ensureAvailable(nbytes);
+    auto p = growCode(nbytes);
 
     int r = 0;
     if(pre_rex_byte)
-        { m_end[r++] = pre_rex_byte; }
+        { p[r++] = pre_rex_byte; }
     if(rex)
-        { m_end[r++] = rex; }
-    m_end[r++] = 0x0F;
-    m_end[r++] = byte1;
-    m_end[r++] = sibd.modrmByte(reg);
-    m_end[r++] = sibd.sibByte();
+        { p[r++] = rex; }
+    p[r++] = 0x0F;
+    p[r++] = byte1;
+    p[r++] = sibd.modrmByte(reg);
+    p[r++] = sibd.sibByte();
     Imm32 disp(sibd.disp());
-    for(int i=0; i<sibd.dispBytes(); i++) { m_end[r++] = disp.b[i]; }
-    if(imm > 0) { m_end[r++] = (unsigned char)imm; }
-
-    m_end += nbytes;
+    for(int i=0; i<sibd.dispBytes(); i++) { p[r++] = disp.b[i]; }
+    if(imm > 0) { p[r++] = (unsigned char)imm; }
 }
 
 
 void Assembler::write(unsigned char opcode, GPR64 reg)
 {
-    ensureAvailable(2);
-    m_end[0] = Rex(1, 0, 0, reg.prefix_bit());
-    m_end[1] = opcode + (reg.lowerBits());
-    m_end += 2;
+    auto p = growCode(2);
+    p[0] = Rex(1, 0, 0, reg.prefix_bit());
+    p[1] = opcode + (reg.lowerBits());
 }
 
 
@@ -336,21 +350,21 @@ void Assembler::write(unsigned char opcode1, unsigned char opcode2, JumpLabel &l
     if(opcode1)
         nbytes++;
 
-    ensureAvailable(nbytes);
+    auto p = growCode(nbytes);
 
     int r = 0;
     if(opcode1)
-        m_end[r++] = opcode1;
-    m_end[r++] = opcode2;
+        p[r++] = opcode1;
+    p[r++] = opcode2;
 
     Imm32 imm = Imm32(0);
     if(label.jmpAddr())
     {
-        imm = Rip32((unsigned long)(m_begin + label.jmpAddr()), m_end + nbytes);
+        imm = Rip32((unsigned long)(codeBegin() + label.jmpAddr()), codeEnd());
     }
     else
     {
-        long offset = long((m_end - m_begin) + r);
+        long offset = p - codeBegin() + r;
 #ifdef R64FX_DEBUG
         assert(offset <= 0x7FFFFFFF || offset >= -0x7FFFFFFF);
         assert(label.immAddr() == 0);
@@ -360,47 +374,28 @@ void Assembler::write(unsigned char opcode1, unsigned char opcode2, JumpLabel &l
 
     for(int i=0; i<4; i++)
     {
-        m_end[r++] = imm.b[i];
+        p[r++] = imm.b[i];
     }
-
-    m_end += nbytes;
 }
 
 
-JumpLabel Assembler::ip() const
+void Assembler::mark(JumpLabel &label)
 {
-    JumpLabel label;
-    long offset = long(m_end - m_begin);
-#ifdef R64FX_DEBUG
-    assert(offset <= 0x7FFFFFFF || offset >= -0x7FFFFFFF);
-#endif//R64FX_DEBUG
-    label.setJmpAddr(int(offset));
-    return label;
-}
-
-
-void Assembler::put(JumpLabel &label)
-{
-#ifdef R64FX_DEBUG
-    assert(label.immAddr() != 0);
-#endif//R64FX_DEBUG
-    unsigned char* imm = m_begin + label.immAddr();
-    Imm32 rip = Rip32((unsigned long)m_end, imm + 4);
-    for(int i=0; i<4; i++)
+    if(label.immAddr())
     {
-        imm[i] = rip.b[i];
+        R64FX_DEBUG_ASSERT(label.jmpAddr() == 0);
+        unsigned char* imm = codeBegin() + label.immAddr();
+        Imm32 rip = Rip32((unsigned long)codeEnd(), imm + 4);
+        for(int i=0; i<4; i++)
+        {
+            imm[i] = rip.b[i];
+        }
     }
-    label = ip();
-}
 
-
-#ifdef R64FX_JIT_DEBUG_STDOUT
-void Assembler::print(const std::string &name, const JumpLabel &label)
-{
-    printIp(); printName(name);
-    std::cout << "\n";
+    long offset = codeBytesUsed();
+    R64FX_DEBUG_ASSERT(offset <= 0x7FFFFFFF || offset >= -0x7FFFFFFF);
+    label.setJmpAddr(int(offset));
 }
-#endif//R64FX_JIT_DEBUG_STDOUT
 
 }//namespace r64fx
 

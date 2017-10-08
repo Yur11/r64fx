@@ -1,10 +1,7 @@
 #ifndef X86_64_JIT_ASSEMBLER_H
 #define X86_64_JIT_ASSEMBLER_H
 
-#ifdef R64FX_DEBUG
-#include <assert.h>
-#endif//R64FX_DEBUG
-
+#include "Debug.hpp"
 #include "MemoryUtils.hpp"
 #include "binary_constants.hpp"
 
@@ -269,6 +266,8 @@ class JumpLabel{
 
 public:
     JumpLabel() {};
+
+    ~JumpLabel() { if(immAddr() != 0) { R64FX_DEBUG_ASSERT(jmpAddr() != 0); } }
 };
 
 
@@ -300,42 +299,88 @@ public:
 
 
 class Assembler{
-    unsigned char*  m_begin       = nullptr;
-    unsigned char*  m_end         = nullptr;
-    unsigned long   m_size        = 0;
-    unsigned long   m_page_count  = 0;
+    unsigned char*  m_buffer          = nullptr;
+
+    //Decreases with data allocated.
+    unsigned char*  m_data_begin      = nullptr;
+
+    //Fixed. Points to a location between code and data.
+    unsigned char*  m_code_begin      = nullptr;
+
+    //Increases with code written.
+    unsigned char*  m_code_end        = nullptr;
+
+    unsigned char*  m_buffer_end      = nullptr;
 
 public:
-    Assembler(unsigned long page_count = 1) { resize(page_count); }
+    Assembler() {}
 
-    ~Assembler() { resize(0); }
+    ~Assembler() { resize(0, 0); }
 
-    void resize(unsigned long page_count);
+    void resize(unsigned long data_page_count, unsigned long code_page_count);
 
-    inline void rewind()
+
+    inline unsigned char* dataBegin() const { return m_data_begin; }
+
+    inline void setDataBegin(unsigned char* addr)
     {
-        m_end = m_begin;
+        R64FX_DEBUG_ASSERT(addr >= m_buffer);
+        R64FX_DEBUG_ASSERT(addr <= m_code_begin);
+        m_data_begin = addr;
     }
 
-    /* Pointer to the beginning of the buffer. */
-    inline unsigned char* codeBegin() const { return m_begin; }
+    inline unsigned char* dataEnd() const { return m_code_begin; }
 
-    /* Pointer to the byte past the end of the written bytes. */
-    inline unsigned char* codeEnd() const { return m_end; }
 
-    inline void setCodeEnd(void* addr) { m_end = (unsigned char*) addr; }
+    inline unsigned char* codeBegin() const { return m_code_begin; }
 
-    inline unsigned long size() const { return m_size; }
+    inline unsigned char* codeEnd() const { return m_code_end; }
 
-    inline unsigned long bytesUsed() const { return (unsigned long)(m_end - m_begin); }
+    inline void setCodeEnd(unsigned char* addr)
+    {
+        R64FX_DEBUG_ASSERT(addr >= m_code_begin);
+        R64FX_DEBUG_ASSERT(addr <= m_buffer_end);
+        m_code_end = addr;
+    }
 
-    inline unsigned long bytesAvailable() const { return size() - bytesUsed(); }
+    inline void rewindCode() { setCodeEnd(codeBegin()); }
 
-    inline void ensureAvailable(unsigned long nbytes) { while(bytesAvailable() < nbytes) resize(pageCount() + 1); }
 
-    inline unsigned long pageCount() const { return m_page_count; }
+    inline unsigned long dataBufferSize() const { return m_code_begin - m_buffer; }
+
+    inline unsigned long dataBytesUsed() const { return m_code_begin - m_data_begin; }
+
+    inline unsigned long dataBytesAvailable() const { return m_data_begin - m_buffer; }
+
+
+    inline unsigned long codeBufferSize() const { return m_buffer_end - m_code_begin; }
+
+    inline unsigned long codeBytesUsed() const { return m_code_end - m_code_begin; }
+
+    inline unsigned long codeBytesAvailable() const { return m_buffer_end - m_code_end; }
+
+
+    inline unsigned long dataPageCount() const
+    {
+        R64FX_DEBUG_ASSERT((dataBufferSize() % memory_page_size()) == 0);
+        return dataBufferSize() / memory_page_size();
+    }
+
+    inline unsigned long codePageCount() const
+    {
+        R64FX_DEBUG_ASSERT((codeBufferSize() % memory_page_size()) == 0);
+        return codeBufferSize() / memory_page_size();
+    }
+
+    /* Grow data buffer. Resize if needed.
+     * Returns an offset value. Subtract it from codeBegin().
+     */
+    int growData(int nbytes);
 
 private:
+    /* Ensure that code buffer has room to add nbytes. Resize if needed. */
+    unsigned char* growCode(int nbytes);
+
     void fill(unsigned char byte, int nbytes);
 
     void write(unsigned char byte);
@@ -358,12 +403,6 @@ private:
     void write(unsigned char opcode, GPR64 reg);
 
     void write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label);
-
-#ifdef R64FX_JIT_DEBUG_STDOUT
-#define R64FX_JIT_DEBUG_PRINT(...) { Assembler::print(__VA_ARGS__); }
-#else
-#define R64FX_JIT_DEBUG_PRINT(...)
-#endif//R64FX_JIT_DEBUG_STDOUT
 
 public:
     inline void nop(int count) { write(0x90, count); }
@@ -397,8 +436,7 @@ public:
 
     inline void cmp(GPR64 reg, Imm32 imm){ write(0x81, 7, reg, imm); }
 
-    JumpLabel ip() const;
-    void put(JumpLabel &label);
+    void mark(JumpLabel &label);
 
     inline void jmp (JumpLabel &label){ write(0,    0xE9, label); }
     inline void jnz (JumpLabel &label){ write(0x0F, 0x85, label); }
@@ -406,6 +444,8 @@ public:
     inline void je  (JumpLabel &label){ write(0x0F, 0x84, label); }
     inline void jne (JumpLabel &label){ write(0x0F, 0x85, label); }
     inline void jl  (JumpLabel &label){ write(0x0F, 0x8C, label); }
+
+/* === SSE === */
 
     inline void movaps(Xmm dst, Xmm src)    { write0x0F(0, 0x28, dst, src); }
     inline void movaps(Xmm reg, Mem128 mem) { write0x0F(0, 0x28, reg, mem); }
@@ -439,24 +479,14 @@ private:
         { write0x0F(0xF3, third_opcode_byte, reg, sibd); }
 
 #define ENCODE_SSE_PS_INSTRUCTION(name, second_opcode_byte)\
-inline void name(Xmm dst, Xmm src)\
-    { R64FX_JIT_DEBUG_PRINT(#name, dst, src); sse_ps_instruction(second_opcode_byte, dst, src); }\
-\
-inline void name(Xmm reg, Mem128 mem)\
- { R64FX_JIT_DEBUG_PRINT(#name, reg, mem); sse_ps_instruction(second_opcode_byte, reg, mem); }\
-\
-inline void name(Xmm reg, SIBD sibd)\
- { R64FX_JIT_DEBUG_PRINT(#name, reg, sibd); sse_ps_instruction(second_opcode_byte, reg, sibd); }
+inline void name(Xmm dst, Xmm src)    { sse_ps_instruction(second_opcode_byte, dst, src); }\
+inline void name(Xmm reg, Mem128 mem) { sse_ps_instruction(second_opcode_byte, reg, mem); }\
+inline void name(Xmm reg, SIBD sibd)  { sse_ps_instruction(second_opcode_byte, reg, sibd); }
 
 #define ENCODE_SSE_SS_INSTRUCTION(name, third_opcode_byte)\
-inline void name(Xmm dst, Xmm src)\
-    { R64FX_JIT_DEBUG_PRINT(#name, dst, src); sse_ss_instruction(third_opcode_byte, dst, src); }\
-\
-inline void name(Xmm reg, Mem32 mem)\
-    { R64FX_JIT_DEBUG_PRINT(#name, reg, mem); sse_ss_instruction(third_opcode_byte, reg, mem); }\
-\
-inline void name(Xmm reg, SIBD sibd)\
-    { R64FX_JIT_DEBUG_PRINT(#name, reg, sibd); sse_ss_instruction(third_opcode_byte, reg, sibd); }
+inline void name(Xmm dst, Xmm src)   { sse_ss_instruction(third_opcode_byte, dst, src); }\
+inline void name(Xmm reg, Mem32 mem) { sse_ss_instruction(third_opcode_byte, reg, mem); }\
+inline void name(Xmm reg, SIBD sibd) { sse_ss_instruction(third_opcode_byte, reg, sibd); }
 
 #define ENCODE_SSE_INSTRUCTION(name, opcode)\
     ENCODE_SSE_PS_INSTRUCTION(name##ps, opcode)\
@@ -516,6 +546,8 @@ public:
     inline void cvtdq2ps(Xmm dst, Xmm src)    { write0x0F(0, 0x5B, dst, src); }
     inline void cvtdq2ps(Xmm reg, Mem128 mem) { write0x0F(0, 0x5B, reg, mem); }
     inline void cvtdq2ps(Xmm reg, SIBD sibd)  { write0x0F(0, 0x5B, reg, sibd); }
+
+/* === SSE2 === */
 
     inline void paddd(Xmm dst, Xmm src)    { write0x0F(0x66, 0xFE, dst, src);}
     inline void paddd(Xmm reg, Mem128 mem) { write0x0F(0x66, 0xFE, reg, mem); }

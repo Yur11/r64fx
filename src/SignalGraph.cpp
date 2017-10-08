@@ -146,10 +146,11 @@ void SignalGraphProcessor::build(SignalGraph &sg, unsigned int main_buffer_size)
     long old_data_size = m_data_size;
     m_data_size = 0;
 
-    m_assembler.rewind();
+    m_assembler.setCodeEnd(m_assembler.codeBegin());
 
     m_assembler.mov(rcx, Imm32(-m_main_buffer_size));
-    JumpLabel loop = m_assembler.ip();
+    JumpLabel loop;
+    m_assembler.mark(loop);
 
     sg.build(*this);
 
