@@ -329,6 +329,8 @@ public:
         m_data_begin = addr;
     }
 
+    inline void rewindData() { setDataBegin(dataEnd()); }
+
     inline unsigned char* dataEnd() const { return m_code_begin; }
 
 
@@ -375,7 +377,7 @@ public:
     /* Grow data buffer. Resize if needed.
      * Returns an offset value. Subtract it from codeBegin().
      */
-    int growData(int nbytes);
+    long growData(int nbytes);
 
 private:
     /* Ensure that code buffer has room to add nbytes. Resize if needed. */
@@ -405,7 +407,8 @@ private:
     void write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label);
 
 public:
-    inline void nop(int count) { write(0x90, count); }
+    inline void nop()          { write(0x90); }
+    inline void nop(int count) { fill(0x90, count); }
     inline void ret()          { write(0xC3); }
     inline void rdtsc()        { write(0x0F, 0x31); }
 

@@ -35,14 +35,79 @@ template<typename T> inline void dump(T* v)
 
 typedef long (*JitFun)();
 
-void* g_data = nullptr;
+
+bool test_buffers(Assembler &as)
+{
+    constexpr unsigned char* null_ptr = nullptr;
+
+    cout << "buffers\n";
+    as.resize(1, 1);
+    as.resize(1, 0);
+    as.resize(0, 1);
+    as.resize(1, 1);
+    R64FX_EXPECT_EQ(true, as.dataBegin() == as.codeBegin());
+    as.resize(0, 0);
+    R64FX_EXPECT_EQ(0UL, as.dataPageCount());
+    R64FX_EXPECT_EQ(0UL, as.codePageCount());
+    R64FX_EXPECT_EQ(null_ptr, as.dataBegin());
+    R64FX_EXPECT_EQ(null_ptr, as.codeBegin());
+    R64FX_EXPECT_EQ(null_ptr, as.codeEnd());
+    as.nop(1);
+    R64FX_EXPECT_EQ(0UL, as.dataPageCount());
+    R64FX_EXPECT_EQ(1UL, as.codePageCount());
+    R64FX_EXPECT_EQ(5678, as.growData(5678));
+    R64FX_EXPECT_EQ((unsigned long)(5678 / memory_page_size() + 1), as.dataPageCount());
+
+    /* Check code & data relocations! */
+    as.resize(0, 0);
+    as.resize(1, 1);
+    as.growData(16);
+    R64FX_EXPECT_EQ(long(as.dataBegin()+16), long(as.codeBegin()));
+    ((long*)(as.dataBegin()))[0] = 0x2AAAAAAAAAAAAAAAL;
+    ((long*)(as.dataBegin()))[1] = 0x5555555555555555L;
+    as.rewindCode();
+
+    //Add 1 to 0x2AAAAAAAAAAAAAAAL
+    as.mov(rax, Imm32(1));
+    as.add(Mem64(as.dataBegin()), rax);
+    as.nop(memory_page_size() + (rand() & 0xF));
+
+    as.mov(rdx, Imm32(100));
+    as.nop(memory_page_size() + (rand() & 0xF));
+
+    as.mov(rcx, Imm32(10));
+    as.nop(memory_page_size() + (rand() & 0xF));
+
+    //Sub 16 from 0x5555555555555555L
+    as.mov(rax, Imm32(16));
+    as.sub(Mem64(as.dataBegin() + 8), rax);
+    as.nop(memory_page_size() + (rand() & 0xF));
+
+    as.mov(rax, Imm32(1));
+    as.nop(memory_page_size() + (rand() & 0xF));
+
+    as.add(rax, rcx);
+    as.nop(memory_page_size() + (rand() & 0xF));
+    as.add(rax, rdx);
+    as.ret();
+
+    R64FX_EXPECT_EQ(111, ((JitFun)as.codeBegin())());
+    R64FX_EXPECT_EQ(0x2AAAAAAAAAAAAAABL, ((long*)(as.dataBegin()))[0]); // +1
+    R64FX_EXPECT_EQ(0x5555555555555545L, ((long*)(as.dataBegin()))[1]); // -16
+
+    as.resize(1, 1);
+    cout << "\n";
+    return true;
+}
+
 
 bool test_mov(Assembler &as)
 {
-    as.resize(0, 1);
     auto jitfun = (JitFun) as.codeBegin();
 
-    auto buff = (long int*) g_data;
+    as.rewindData();
+    as.growData(2 * sizeof(long));
+    auto buff = (long*) as.dataBegin();
     auto a = buff;
     auto b = buff + 1;
 
@@ -168,7 +233,9 @@ bool test_add(Assembler &as)
 {
     auto jitfun = (JitFun) as.codeBegin();
 
-    auto buff = (long int*) g_data;
+    as.rewindData();
+    as.growData(4 * sizeof(long));
+    auto buff = (long*) as.dataBegin();
     auto a = buff;
     auto b = buff + 1;
     auto c = buff + 2;
@@ -278,7 +345,9 @@ bool test_sub(Assembler &as)
 {
     auto jitfun = (JitFun) as.codeBegin();
 
-    auto buff = (long int*) g_data;
+    as.rewindData();
+    as.growData(4 * sizeof(long));
+    auto buff = (long*) as.dataBegin();
     auto a = buff;
     auto b = buff + 1;
     auto c = buff + 2;
@@ -407,10 +476,12 @@ bool test_push_pop(Assembler &as)
 bool test_sse(Assembler &as)
 {
     auto jitfun = (JitFun) as.codeBegin();
+    as.rewindData();
+    as.growData(64 * sizeof(float));
 
     cout << "movaps + rex\n";
     {
-        float* buff = (float*) g_data;
+        float* buff = (float*) as.dataBegin();
         auto a = buff;
         auto b = buff + 4;
         auto c = buff + 8;
@@ -443,7 +514,7 @@ bool test_sse(Assembler &as)
 
     cout << "movups + rex\n";
     {
-        float* buff = (float*) g_data;
+        float* buff = (float*) as.dataBegin();
         auto a = buff + 1;
         auto b = buff + 5;
         auto c = buff + 9;
@@ -476,7 +547,7 @@ bool test_sse(Assembler &as)
 
     cout << "(add|sub|mul|div)ps + rex\n";
     {
-        float* buff = (float*) g_data;
+        float* buff = (float*) as.dataBegin();
         auto a = buff + 4;
         auto b = buff + 8;
         auto c = buff + 12;
@@ -550,7 +621,7 @@ bool test_sse(Assembler &as)
 
     cout << "p(add|sub)d + rex\n";
     {
-        int* buff = (int*) g_data;
+        int* buff = (int*) as.dataBegin();
         auto a = buff + 4;
         auto b = buff + 8;
         auto f = buff + 20;
@@ -606,7 +677,7 @@ bool test_sse(Assembler &as)
 
     cout << "(and|andn|or|xor)ps + rex\n";
     {
-        int* buff = (int*) g_data;
+        int* buff = (int*) as.dataBegin();
         auto a = buff + 4;
         auto b = buff + 8;
         auto c = buff + 12;
@@ -721,7 +792,7 @@ bool test_sse(Assembler &as)
 
     cout << "minps\n";
     {
-        float* buff = (float*) g_data;
+        float* buff = (float*) as.dataBegin();
         auto a = buff;
         auto b = buff + 4;
         auto c = buff + 8;
@@ -767,7 +838,7 @@ bool test_sse(Assembler &as)
 
     cout << "maxps\n";
     {
-        float* buff = (float*) g_data;
+        float* buff = (float*) as.dataBegin();
         auto a = buff;
         auto b = buff + 4;
         auto c = buff + 8;
@@ -813,7 +884,7 @@ bool test_sse(Assembler &as)
 
     cout << "pshufd\n";
     {
-        int* buff = (int*) g_data;
+        int* buff = (int*) as.dataBegin();
         auto a1 = buff;
         auto b1 = buff + 4;
         auto c1 = buff + 8;
@@ -874,7 +945,7 @@ bool test_sse(Assembler &as)
 
     cout << "cmpltps\n";
     {
-        float* buff = (float*) g_data;
+        float* buff = (float*) as.dataBegin();
         auto a = buff;
         auto b = buff + 4;
         auto c = (int*)(buff + 8);
@@ -942,7 +1013,9 @@ bool test_sibd(Assembler &as)
 
     cout << "[base + index * 8]\n";
     {
-        auto buff = (long*) g_data;
+        as.rewindData();
+        as.growData(16 * sizeof(long));
+        auto buff = (long*) as.dataBegin();
         buff[10] = rand() & 0xFFFF;
 
         as.rewindCode();
@@ -958,7 +1031,9 @@ bool test_sibd(Assembler &as)
 
     cout << "[base + index * 8 + Disp8]\n";
     {
-        auto buff = (long*) g_data;
+        as.rewindData();
+        as.growData(16 * sizeof(long));
+        auto buff = (long*) as.dataBegin();
         buff[11] = rand() & 0xFFFF;
 
         as.rewindCode();
@@ -974,7 +1049,9 @@ bool test_sibd(Assembler &as)
 
     cout << "[base + index * 8 + Disp32]\n";
     {
-        auto buff = (long*) g_data;
+        as.rewindData();
+        as.growData((128) * sizeof(long));
+        auto buff = (long*) as.dataBegin();
         buff[10 + 64] = rand() & 0xFFFF;
 
         as.rewindCode();
@@ -990,7 +1067,9 @@ bool test_sibd(Assembler &as)
 
     cout << "[base + index * 4]\n";
     {
-        auto buff = (float*) g_data;
+        as.rewindData();
+        as.growData(32 * sizeof(float));
+        auto buff = (float*)as.dataBegin();
         for(int i=0; i<32; i++)
             buff[i] = float(i);
 
@@ -1018,25 +1097,11 @@ bool test_sibd(Assembler &as)
 
 int main()
 {
-    long buff_size = 0;
-    while(buff_size < 1024)
-        buff_size += memory_page_size();
-    g_data = alloc_aligned(memory_page_size(), buff_size);
-    for(int i=0; i<memory_page_size(); i++)
-    {
-        auto buff = (unsigned char*) g_data;
-        buff[i] = 0;
-    }
-
     Assembler as;
-//     as.mov(rax, rdi);
-//     as.ret();
-// 
-//     auto fun = (long (*)(long arg)) as.codeBegin();
-//     cout << fun(1236617) << "\n";
-//     return 0;
+    as.resize(1, 1);
 
     bool ok =
+        test_buffers(as) &&
         test_mov(as) &&
         test_push_pop(as) &&
         test_add(as) &&
@@ -1045,8 +1110,6 @@ int main()
         test_jumps(as) &&
         test_sibd(as)
     ;
-
-    free(g_data);
 
     if(ok)
     {

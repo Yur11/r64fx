@@ -110,9 +110,21 @@ void Assembler::resize(unsigned long data_page_count, unsigned long code_page_co
 }
 
 
-int Assembler::growData(int nbytes)
+long Assembler::growData(int nbytes)
 {
-    return 0;
+    long bytes_available = dataBytesAvailable();
+    long new_page_count = 0;
+    while(bytes_available < nbytes)
+    {
+        bytes_available += memory_page_size();
+        new_page_count++;
+    }
+    if(new_page_count > 0)
+    {
+        resize(dataPageCount() + new_page_count, codePageCount());
+    }
+    m_data_begin -= nbytes;
+    return m_code_begin - m_data_begin;
 }
 
 
