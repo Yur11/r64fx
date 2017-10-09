@@ -1,8 +1,8 @@
 /* Test overall operation.
  *
  * Test REX prefix. Incorrect prefix order may cause cpu to ignore REX prefix altogether
- * thus encoding the wrong register.
- * Checking for rax being encoded instead r8 and rcx instead of r9.
+ * thus encoding a wrong register.
+ * Checking for rax being encoded instead r8, rcx instead of r9 etc...
  */
 
 #include "jit.hpp"
@@ -59,8 +59,7 @@ bool test_buffers(Assembler &as)
     R64FX_EXPECT_EQ((unsigned long)(5678 / memory_page_size() + 1), as.dataPageCount());
 
     /* Check code & data relocations! */
-    as.resize(0, 0);
-    as.resize(1, 1);
+    as.rewindData();
     as.growData(16);
     R64FX_EXPECT_EQ(long(as.dataBegin()+16), long(as.codeBegin()));
     ((long*)(as.dataBegin()))[0] = 0x2AAAAAAAAAAAAAAAL;
@@ -110,8 +109,6 @@ bool test_mov(Assembler &as)
     auto buff = (long*) as.dataBegin();
     auto a = buff;
     auto b = buff + 1;
-
-    srand(time(NULL));
 
     cout << "mov(GPR64, Imm32)\n";
     {
@@ -241,8 +238,6 @@ bool test_add(Assembler &as)
     auto c = buff + 2;
     auto d = buff + 3;
 
-    srand(time(NULL));
-
     cout << "add(GPR64, Imm32) + rex\n";
     {
         int num1 = rand() & 0xFFFF;
@@ -352,8 +347,6 @@ bool test_sub(Assembler &as)
     auto b = buff + 1;
     auto c = buff + 2;
     auto d = buff + 3;
-
-    srand(time(NULL));
 
     cout << "sub(GPR64, Imm32) + rex\n";
     {
@@ -1097,6 +1090,8 @@ bool test_sibd(Assembler &as)
 
 int main()
 {
+    srand(time(NULL));
+
     Assembler as;
     as.resize(1, 1);
 
