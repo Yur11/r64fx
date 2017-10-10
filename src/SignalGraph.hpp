@@ -13,112 +13,124 @@ class SignalGraphProcessor;
 class SignalNode;
 
 class SignalDataStorage{
-    friend class SignalGraphProcessor;
-
-protected:
-    union{
-        unsigned long l = 0;
-        unsigned int i[2];
-    }u;
+    unsigned long m_bits = 0;
 
 public:
     SignalDataStorage() {}
 
-    inline unsigned long l() const { return u.l; }
+    constexpr static unsigned long Memory   = 0x0000000000000000UL;
+    constexpr static unsigned long GPR      = 0x1000000000000000UL;
+    constexpr static unsigned long Xmm      = 0x2000000000000000UL;
+//     constexpr static unsigned long Ymm      = 0x3000000000000000UL;
 
-    inline bool isNull() const { return u.l == 0; }
+    constexpr static unsigned long Single   = 0x0000000000000000UL;
+    constexpr static unsigned long Double   = 0x4000000000000000UL;
 
-    inline bool isMemoryStorage() const { return !isRegisterStorage(); }
+    constexpr static unsigned long Float    = 0x0000000000000000UL;
+    constexpr static unsigned long Int      = 0x8000000000000000UL;
 
-    inline bool isRegisterStorage() const { return u.l & (1UL<<63); }
-};
+    inline unsigned long type() const { return m_bits & 0xF000000000000000UL; }
 
-class SignalDataStorage_Memory : public SignalDataStorage{
-    friend class SignalGraphProcessor;
+    inline bool isInRegisters() const { return m_bits & 0x3000000000000000UL; }
 
-    SignalDataStorage_Memory(int index, int size)
+    inline bool isInMemory() const { return !isInRegisters(); }
+
+    inline unsigned int size() { return (m_bits & (0x0FFFFFFF00000000UL)) >> 32; }
+
+private:
+    inline void setSize(unsigned int size)
     {
-        setIndex(index);
-        setSize(size);
+        R64FX_DEBUG_ASSERT(size <= 0x0FFFFFFF);
+        m_bits &= 0xF0000000FFFFFFFFUL;
+        m_bits |= ((unsigned long)size) << 32;
     }
 
 public:
-    SignalDataStorage_Memory() {}
-    SignalDataStorage_Memory(const SignalDataStorage &sds)
+    inline unsigned int memoryOffset() const
     {
-        R64FX_DEBUG_ASSERT(sds.isMemoryStorage());
-        u.l = sds.l();
-    };
-
-    inline int index() const { return u.i[0] & ~(1<<31); }
-    inline int size()  const { return u.i[1] & ~(1<<31); }
-
-    inline constexpr static int maxValue() { return ~(1<<31); }
+        R64FX_DEBUG_ASSERT(isInMemory());
+        return m_bits & 0x00000000FFFFFFFFUL;
+    }
 
 private:
-    inline void setIndex(int index)
+    inline void setMemoryOffset(unsigned int offset)
     {
-        R64FX_DEBUG_ASSERT(index <= maxValue());
-        u.i[0] = index;
+        R64FX_DEBUG_ASSERT(isInMemory());
+        m_bits &= 0xFFFFFFFF00000000UL;
+        m_bits |= offset;
     }
-
-    inline void setSize(int size)
-    {
-        R64FX_DEBUG_ASSERT(size <= maxValue());
-        u.i[1] = size;
-    }
-};
-
-
-namespace RegisterStorageType{
-    constexpr unsigned long GPR32         = 0;
-    constexpr unsigned long GPR32_Stereo  = 1;
-    constexpr unsigned long GPR64         = 2;
-    constexpr unsigned long Xmm           = 3;
-    constexpr unsigned long Ymm           = 4;
-};
-
-class SignalDataStorage_Registers : public SignalDataStorage{
-    friend class SignalGraphProcessor;
 
 public:
-    SignalDataStorage_Registers() { u.l |= (1UL<<63); }
-    SignalDataStorage_Registers(const SignalDataStorage &sds)
+    template<typename RegT> void listRegisters(RegT* regs, int* nregs)
     {
-        R64FX_DEBUG_ASSERT(sds.isRegisterStorage());
-        u.l = sds.l();
+        checkRegisterType(regs);
+        unsigned long bits = m_bits & 0xFF;
+        int mask = 1;
+        for(int i=0; bits && i<16; i++)
+        {
+            if(m_bits & mask)
+            {
+                regs[(*nregs)++] = regs[i];
+                bits &= ~mask;
+                mask <<= 1;
+            }
+        }
     }
-
-    inline unsigned long type() { return (u.l >> 59) & 7; }
 
 private:
-    inline void setType(unsigned long type)
-    {
-        R64FX_DEBUG_ASSERT(type >= 0 && type <= 4);
-        u.l &= ~(7UL << 59);
-        u.l |= (type << 59);
-    }
+    inline void checkRegisterType(r64fx::GPR64*)
+        { R64FX_DEBUG_ASSERT((m_bits & 0x3000000000000000UL) == SignalDataStorage::GPR); }
+
+    inline void checkReisterType(r64fx::Xmm*)
+        { R64FX_DEBUG_ASSERT((m_bits & 0x3000000000000000UL) == SignalDataStorage::Xmm); }
+/*
+    inline void checkReisterType(r64fx::Ymm*)
+        { R64FX_DEBUG_ASSERT((m_bits & 0x3000000000000000UL) == SignalDataStorage::Ymm); }*/
 };
 
 
 /* One SignalSource can be connected to multiple SignalSink instances. */
 class SignalSource{
     friend class SignalGraph;
+    friend class SignalNode;
 
-    SignalDataStorage  m_storage;
-    unsigned int       m_outgoing_connection_count = 0;
-    unsigned int       m_processed_sink_count = 0;
+    SignalDataStorage m_storage;
+    struct{
+        unsigned long parent_offset        :22;
+        unsigned long connected_sink_count :21;
+        unsigned long processed_sink_count :21;
+    }m = {0, 0, 0};
+
+    inline static long maxParentOffset() { return (1<<22) - 1; }
+
+    inline static long maxSinkCount() { return (1<<22) - 1; }
 
 public:
     SignalSource() {}
 
     ~SignalSource() {}
 
-    inline SignalDataStorage* storage() { return &m_storage; }
+    inline SignalDataStorage &storage()  { return m_storage; }
 
-    inline int outgoingConnectionCount() const { return m_outgoing_connection_count; }
+    inline int connectedSinkCount() const { return m.connected_sink_count; }
 
-    inline int processedSinkCount() const { return m_processed_sink_count; }
+    inline int processedSinkCount() const { return m.processed_sink_count; }
+
+    inline SignalNode* parentNode() const
+    {
+        return (SignalNode*)(long(this) - long(m.parent_offset << 4));
+    }
+
+public:
+    inline void setParentNode(SignalNode* node)
+    {
+        long offset = long(this) - long(node);
+        R64FX_DEBUG_ASSERT(offset > 0);
+        R64FX_DEBUG_ASSERT((offset & 0xF) == 0);
+        offset >>= 4;
+        R64FX_DEBUG_ASSERT(offset <= maxParentOffset());
+        m.parent_offset = offset;
+    }
 };
 
 
@@ -127,7 +139,6 @@ class SignalSink{
     friend class SignalGraph;
 
     SignalSource*  m_connected_source  = nullptr;
-    SignalNode*    m_connected_node    = nullptr;
 
 public:
     SignalSink() {}
@@ -135,8 +146,6 @@ public:
     ~SignalSink() {}
 
     inline SignalSource* connectedSource() const { return m_connected_source; }
-
-    inline SignalNode* connectedNode() const { return m_connected_node; }
 };
 
 
@@ -176,13 +185,19 @@ template<unsigned int SourceCount, unsigned int SinkCount> class SignalNode_With
     SignalSink    m_sinks   [SinkCount];
 
 protected:
-    inline SignalSource* source(unsigned int i)
+    SignalNode_WithPorts()
+    {
+        for(unsigned int i=0; i<SourceCount; i++)
+            m_sources[i].setParentNode(this);
+    }
+
+    inline SignalSource* sources(unsigned int i)
     {
         R64FX_DEBUG_ASSERT(i < SourceCount);
         return m_sources + i;
     }
 
-    inline SignalSink* sink(unsigned int i)
+    inline SignalSink* sinks(unsigned int i)
     {
         R64FX_DEBUG_ASSERT(i < SinkCount);
         return m_sinks + i;
@@ -211,7 +226,13 @@ template<unsigned int SourceCount> class SignalNode_WithSources : public SignalN
     SignalSource m_sources[SourceCount];
 
 protected:
-    inline SignalSource* source(unsigned int i)
+    SignalNode_WithSources()
+    {
+        for(unsigned int i=0; i<SourceCount; i++)
+            m_sources[i].setParentNode(this);
+    }
+
+    inline SignalSource* sources(unsigned int i)
     {
         R64FX_DEBUG_ASSERT(i < SourceCount);
         return m_sources + i;
@@ -232,7 +253,7 @@ template<unsigned int SinkCount> class SignalNode_WithSinks : public SignalNode{
     SignalSink m_sinks[SinkCount];
 
 protected:
-    inline SignalSink* sink(unsigned int i)
+    inline SignalSink* sinks(unsigned int i)
     {
         R64FX_DEBUG_ASSERT(i < SinkCount);
         return m_sinks + i;
@@ -284,9 +305,9 @@ public:
 
     void disconnect(const NodeSink &node_sink);
 
-    inline NodeSource linkSource() { return {this, source(0)}; }
+    inline NodeSource linkSource() { return {this, sources(0)}; }
 
-    inline NodeSink linkSink() { return {this, sink(0)}; }
+    inline NodeSink linkSink() { return {this, sinks(0)}; }
 
 private:
     virtual void build(SignalGraphProcessor &sgp) override final;

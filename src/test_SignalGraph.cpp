@@ -21,6 +21,9 @@ float buff_b[frame_count];
 
 int main()
 {
+    cout << sizeof(SignalSource) << "\n";
+    cout << sizeof(SignalSink) << "\n";
+
     srand(time(0));
     for(int i=0; i<frame_count; i++)
     {
