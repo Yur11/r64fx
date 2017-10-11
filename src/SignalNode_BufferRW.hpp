@@ -18,7 +18,7 @@ public:
 class SignalNode_BufferReader : public SignalNode_WithSources<1>, public SignalNodeBuffer{
 
 public:
-    inline NodeSource source() { return {this, sources(0)}; }
+    inline NodeSource out() { return {this, source(0)}; }
 
 private:
     virtual void build(SignalGraphProcessor &sgp) override final;
@@ -28,7 +28,7 @@ private:
 class SignalNode_BufferWriter : public SignalNode_WithSinks<1>, public SignalNodeBuffer{
 
 public:
-    inline NodeSink sink() { return {this, sinks(0)}; }
+    inline NodeSink in() { return {this, sink(0)}; }
 
 private:
     virtual void build(SignalGraphProcessor &sgp) override final;

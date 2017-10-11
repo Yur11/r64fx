@@ -16,7 +16,7 @@ void SignalNode_BufferReader::build(SignalGraphProcessor &sgp)
 // 
 //     SignalDataStorage_Memory mem_storage(s->storage()[0]);
 //     as.mov(Base(rdi) + Disp(mem_storage.index() * 4), rax);
-    cout << "reader: " << source().port() << ", " << source().port()->connectedSinkCount() << "\n";
+    cout << "reader: " << this << "\n";
 }
 
 void SignalNode_BufferWriter::build(SignalGraphProcessor &sgp)
@@ -33,7 +33,7 @@ void SignalNode_BufferWriter::build(SignalGraphProcessor &sgp)
 // 
 //     as.mov(rsi, ImmAddr(buffer() + sgp.mainBufferSize()));
 //     as.mov(Base(rsi) + Index(rcx, 4), rax);
-    cout << "writer: " << sink().port()->connectedSource() << "\n";
+    cout << "writer: " << this << "\n";
 }
 
 }//namespace r64fx

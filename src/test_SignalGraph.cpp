@@ -35,10 +35,21 @@ int main()
 
     SignalNode_BufferReader snbr; snbr.setBuffer(buff_a);
     SignalNode_BufferWriter snbw; snbw.setBuffer(buff_b);
+    SignalNode_Dummy dummy1;
+    SignalNode_Dummy dummy2;
+    SignalNode_Dummy dummy3;
 
     sg.addNode(&snbr);
     sg.addNode(&snbw);
-    sg.connect(snbr.source(), snbw.sink());
+    sg.addNode(&dummy1);
+    sg.addNode(&dummy2);
+    sg.addNode(&dummy3);
+
+    sg.connect(snbr.out(), dummy1.left());
+    sg.connect(snbr.out(), dummy2.left());
+    sg.connect(dummy1.out(), dummy3.left());
+    sg.connect(dummy2.out(), dummy3.right());
+    sg.connect(dummy3.out(), snbw.in());
 
     SignalGraphProcessor sgp;
     sgp.build(sg, frame_count);

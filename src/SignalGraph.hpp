@@ -191,13 +191,13 @@ protected:
             m_sources[i].setParentNode(this);
     }
 
-    inline SignalSource* sources(unsigned int i)
+    inline SignalSource* source(unsigned int i)
     {
         R64FX_DEBUG_ASSERT(i < SourceCount);
         return m_sources + i;
     }
 
-    inline SignalSink* sinks(unsigned int i)
+    inline SignalSink* sink(unsigned int i)
     {
         R64FX_DEBUG_ASSERT(i < SinkCount);
         return m_sinks + i;
@@ -232,7 +232,7 @@ protected:
             m_sources[i].setParentNode(this);
     }
 
-    inline SignalSource* sources(unsigned int i)
+    inline SignalSource* source(unsigned int i)
     {
         R64FX_DEBUG_ASSERT(i < SourceCount);
         return m_sources + i;
@@ -253,7 +253,7 @@ template<unsigned int SinkCount> class SignalNode_WithSinks : public SignalNode{
     SignalSink m_sinks[SinkCount];
 
 protected:
-    inline SignalSink* sinks(unsigned int i)
+    inline SignalSink* sink(unsigned int i)
     {
         R64FX_DEBUG_ASSERT(i < SinkCount);
         return m_sinks + i;
@@ -290,7 +290,7 @@ typedef NodePort<SignalSink>    NodeSink;
 class SignalGraph : public SignalNode_WithPorts<1, 1>{
     friend class SignalGraphProcessor;
 
-    LinkedList<SignalNode> m_nodes;
+    LinkedList<SignalNode> m_terminal_nodes;
 
 public:
     SignalGraph() {}
@@ -305,9 +305,9 @@ public:
 
     void disconnect(const NodeSink &node_sink);
 
-    inline NodeSource linkSource() { return {this, sources(0)}; }
+    inline NodeSource linkSource() { return {this, source(0)}; }
 
-    inline NodeSink linkSink() { return {this, sinks(0)}; }
+    inline NodeSink linkSink() { return {this, sink(0)}; }
 
 private:
     virtual void build(SignalGraphProcessor &sgp) override final;
@@ -343,6 +343,19 @@ public:
     inline unsigned int mainBufferSize() const { return m_main_buffer_size; }
 
     void memoryStorage(SignalDataStorage* storage, int ndwords, int align_dwords);
+};
+
+
+class SignalNode_Dummy : public SignalNode_WithPorts<1, 2>{
+public:
+    inline NodeSource out() { return {this, source(0)}; }
+
+    inline NodeSink left() { return {this, sink(0)}; }
+
+    inline NodeSink right() { return {this, sink(1)}; }
+
+private:
+    virtual void build(SignalGraphProcessor &sgp) override final;
 };
 
 
