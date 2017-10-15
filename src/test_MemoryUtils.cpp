@@ -381,6 +381,29 @@ bool test_HeapBuffer(HeapBuffer* hb)
     hb->freeChunk(f); f = nullptr;
     R64FX_CHECK_HEADER(sizeof(HeapBuffer)/4, 0);
 
+    cout << "alloc 4 bytes\n";
+    auto dword1 = (int*)hb->allocChunk(4);
+    R64FX_CHECK_HEADER(
+        sizeof(HeapBuffer)/4,
+        sizeof(HeapBuffer)/4 + 1,
+        0
+    );
+
+    cout << "alloc aligned 8 bytes\n";
+    a = (unsigned long*) hb->allocChunk(8, 8);
+    R64FX_CHECK_HEADER(
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4   + 1,           //dword1
+        (sizeof(HeapBuffer)/4  + 2) | 0x8000, //free
+        sizeof(HeapBuffer)/4   + 4,           //a
+        0
+    );
+
+    cout << "free all\n";
+    hb->freeChunk(dword1);
+    hb->freeChunk(a);
+    R64FX_CHECK_HEADER(sizeof(HeapBuffer)/4, 0);
+
     return true;
 }
 
@@ -400,7 +423,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
     for(int i=0; i<nbufs; i++)
     {
         len[i] = ((rand() % maxbuflen) + 1);
-        ptr[i] = (unsigned long*) ha->allocChunk(len[i] * 8);
+        ptr[i] = (unsigned long*) ha->allocChunk(len[i] * 8, 8);
         if(!ptr[i])
         {
             cout << "\nAllocation Failed!\n";
@@ -438,7 +461,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
                 int extraoffset = rand() % 16;
                 int extralen = rand() % 16;
 
-                auto tmpbuf = (unsigned long*) ha->allocChunk((len[i] + extralen + extraoffset) * 8);
+                auto tmpbuf = (unsigned long*) ha->allocChunk((len[i] + extralen + extraoffset) * 8, 8);
                 if(!ptr[i])
                 {
                     cout << "\n1.1 Allocation Failed!\n";
@@ -456,7 +479,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
                     return false;
 
                 ha->freeChunk(ptr[i]);
-                ptr[i] = (unsigned long*) ha->allocChunk(len[i] * 8);
+                ptr[i] = (unsigned long*) ha->allocChunk(len[i] * 8, 8);
                 if(!ptr[i])
                 {
                     cout << "\n1.2 Reallocation Failed!\n";
@@ -493,7 +516,7 @@ bool testha(HeapAllocator* ha, int depth, HeapAllocator* freeha = nullptr, unsig
         case 3:
         {
             int extralen = 16 + (rand() % 64);
-            auto extrabuf = (unsigned long*) ha->allocChunk(extralen * 8);
+            auto extrabuf = (unsigned long*) ha->allocChunk(extralen * 8, 8);
             if(depth > 1)
             {
                 if(!testha(ha, depth - 1, ha, extrabuf))

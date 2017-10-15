@@ -1,4 +1,5 @@
 #include "MemoryUtils.hpp"
+#include "Debug.hpp"
 #include <unistd.h>
 #include <stdlib.h>
 #include <new>
@@ -31,11 +32,9 @@ void* alloc_aligned(int alignment, int nbytes)
 
 void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
 {
-#ifdef R64FX_DEBUG
-    assert((long(buff)  & 3) == 0);
-    assert((buff_bytes  & 3) == 0);
-    assert((chunk_bytes & 3) == 0);
-#endif//R64FX_DEBUG
+    R64FX_DEBUG_ASSERT((long(buff)  & 3) == 0);
+    R64FX_DEBUG_ASSERT((buff_bytes  & 3) == 0);
+    R64FX_DEBUG_ASSERT((chunk_bytes & 3) == 0);
 
     auto wordbuff = (unsigned short*)buff;
     for(int i=0;; i++)
@@ -52,12 +51,11 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
             if(avail_bytes >= chunk_bytes)
             {
                 long new_offset = chunk_bytes + data_bytes;
-#ifdef R64FX_DEBUG
-                assert((new_offset >> 2) < 32767);
-#endif//R64FX_DEBUG
+                R64FX_DEBUG_ASSERT((new_offset >> 2) < 32767);
+                auto addr = (((unsigned char*)buff) + buff_bytes - new_offset);
+
                 wordbuff[i] = (new_offset >> 2);
                 wordbuff[i + 1] = 0;
-                auto addr = (((unsigned char*)buff) + buff_bytes - new_offset);
                 return addr;
             }
             else
@@ -190,6 +188,33 @@ void* HeapBuffer::allocChunk(long nbytes)
 }
 
 
+void* HeapBuffer::allocChunk(long nbytes, long alignment)
+{
+    R64FX_DEBUG_ASSERT(alignment >= 4);
+
+    long alignment_mask = alignment - 1;
+    R64FX_DEBUG_ASSERT((alignment & alignment_mask) == 0);
+
+    void* chunk = allocChunk(nbytes);
+    if(!chunk)
+        return nullptr;
+
+    long alignment_bytes = alignment - (long(chunk) & alignment_mask);
+    if(alignment_bytes == 0)
+        return chunk;
+    freeChunk(chunk);
+
+    void* alignment_chunk = allocChunk(alignment_bytes);
+    if(!alignment_chunk)
+        return nullptr;
+
+    chunk = allocChunk(nbytes);
+    R64FX_DEBUG_ASSERT((long(chunk) & alignment_mask) == 0);
+    freeChunk(alignment_chunk);
+    return chunk;
+}
+
+
 bool HeapBuffer::freeChunk(void* addr)
 {
     return free_chunk(m_buffer, m_size, addr);
@@ -213,12 +238,12 @@ void HeapBuffer::dumpHeader()
 #endif//R64FX_DEBUG
 
 
-void* HeapAllocator::allocChunk(long nbytes)
+void* HeapAllocator::allocChunk(long nbytes, long alignment)
 {
     void* chunk = nullptr;
     for(auto buff : m_buffers)
     {
-        chunk = buff->allocChunk(nbytes);
+        chunk = buff->allocChunk(nbytes, alignment);
         if(chunk)
             break;
     }
@@ -232,7 +257,7 @@ void* HeapAllocator::allocChunk(long nbytes)
         }
         auto buff = HeapBuffer::newSelfHostedInstance(buff_size);
         m_buffers.append(buff);
-        chunk = buff->allocChunk(nbytes);
+        chunk = buff->allocChunk(nbytes, alignment);
     }
 
     return chunk;

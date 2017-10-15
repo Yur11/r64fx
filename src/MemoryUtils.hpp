@@ -32,6 +32,8 @@ public:
 
     void* allocChunk(long nbytes);
 
+    void* allocChunk(long nbytes, long alignment);
+
     bool freeChunk(void* addr);
 
     bool empty() const;
@@ -46,7 +48,7 @@ class HeapAllocator{
     LinkedList<HeapBuffer> m_buffers;
 
 public:
-    void* allocChunk(long nbytes);
+    void* allocChunk(long nbytes, long alignment);
 
     void freeChunk(void* addr);
 
@@ -63,7 +65,7 @@ public:
         int chunksize = sizeof(T);
         while(chunksize & 7)
             chunksize++;
-        void* memchunk = allocChunk(chunksize);
+        void* memchunk = allocChunk(chunksize, alignof(T));
         if(!chunksize)
             return nullptr;
         return new(memchunk) T(ctor_args...);
