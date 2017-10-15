@@ -32,9 +32,9 @@ void* alloc_aligned(int alignment, int nbytes)
 void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
 {
 #ifdef R64FX_DEBUG
-    assert((long(buff)  % 8) == 0);
-    assert((buff_bytes  % 8) == 0);
-    assert((chunk_bytes % 8) == 0);
+    assert((long(buff)  & 3) == 0);
+    assert((buff_bytes  & 3) == 0);
+    assert((chunk_bytes & 3) == 0);
 #endif//R64FX_DEBUG
 
     auto wordbuff = (unsigned short*)buff;
@@ -46,16 +46,16 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
 
             long data_bytes = 0;
             if(i > 0)
-                data_bytes = (long(wordbuff[i - 1]) << 3);
+                data_bytes = (long(wordbuff[i - 1]) << 2);
 
             long avail_bytes = buff_bytes - header_bytes - data_bytes;
             if(avail_bytes >= chunk_bytes)
             {
                 long new_offset = chunk_bytes + data_bytes;
 #ifdef R64FX_DEBUG
-                assert((new_offset >> 3) < 32767);
+                assert((new_offset >> 2) < 32767);
 #endif//R64FX_DEBUG
-                wordbuff[i] = (new_offset >> 3);
+                wordbuff[i] = (new_offset >> 2);
                 wordbuff[i + 1] = 0;
                 auto addr = (((unsigned char*)buff) + buff_bytes - new_offset);
                 return addr;
@@ -72,12 +72,12 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
             {
                 avail_bytes -= wordbuff[i - 1] & 0x7FFF;
             }
-            avail_bytes = avail_bytes << 3;
+            avail_bytes = avail_bytes << 2;
 
             if(avail_bytes == chunk_bytes)
             {
                 wordbuff[i] &= 0x7FFF;
-                auto addr = (((unsigned char*)buff) + buff_bytes - (wordbuff[i] << 3));
+                auto addr = (((unsigned char*)buff) + buff_bytes - (wordbuff[i] << 2));
                 return addr;
             }
             else if(avail_bytes > chunk_bytes)
@@ -86,19 +86,19 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
                 while(wordbuff[n] != 0)
                     n++;
                 long header_bytes = (n + 2) * 2;
-                long data_bytes = (wordbuff[n - 1] << 3);
+                long data_bytes = (wordbuff[n - 1] << 2);
                 long middle_bytes = buff_bytes - header_bytes - data_bytes;
                 if(middle_bytes <= 0)
                 {
                     return nullptr;//No space to grow header!
                 }
 
-                long new_offset = (long(wordbuff[i] & 0x7FFF) << 3) - avail_bytes + chunk_bytes;
+                long new_offset = (long(wordbuff[i] & 0x7FFF) << 2) - avail_bytes + chunk_bytes;
                 for(int j=n; j>=i; j--)
                 {
                     wordbuff[j + 1] = wordbuff[j];
                 }
-                wordbuff[i] = (new_offset >> 3);
+                wordbuff[i] = (new_offset >> 2);
 
                 auto addr = (((unsigned char*)buff) + buff_bytes - new_offset);
                 return addr;
@@ -111,16 +111,16 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
 bool free_chunk(void* buff, long buff_bytes, void* chunk)
 {
 #ifdef R64FX_DEBUG
-    assert((long(buff)  % 8) == 0);
-    assert((buff_bytes  % 8) == 0);
-    assert((long(chunk) % 8) == 0);
+    assert((long(buff)  & 3) == 0);
+    assert((buff_bytes  & 3) == 0);
+    assert((long(chunk) & 3) == 0);
 #endif//R64FX_DEBUG
 
     if(chunk < buff)
         return false;
 
     auto wordbuff = (unsigned short*)buff;
-    long offset = ((long(buff) + buff_bytes - long(chunk)) >> 3);
+    long offset = ((long(buff) + buff_bytes - long(chunk)) >> 2);
     for(int i=0;; i++)
     {
         if(wordbuff[i] == offset)
@@ -293,7 +293,7 @@ void HeapAllocator::debugAddr(void* addr)
         auto uchbuff = (unsigned char*) buff->buffer();
         if(uchaddr >= uchbuff && uchaddr < (uchbuff + buff->size()))
         {
-            std::cout << "buff: " << i << " -> " << ((buff->size() - long(uchaddr - uchbuff)) >> 3) << "\n";
+            std::cout << "buff: " << i << " -> " << ((buff->size() - long(uchaddr - uchbuff)) >> 2) << "\n";
             break;
         }
     }

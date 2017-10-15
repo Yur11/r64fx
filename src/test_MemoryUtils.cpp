@@ -49,7 +49,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     {
         if(!cmp_buffs<unsigned char>(buffend - sizeof(HeapBuffer), hb, sizeof(HeapBuffer)))
             return false;
-        R64FX_CHECK_HEADER(sizeof(HeapBuffer)/8, 0);
+        R64FX_CHECK_HEADER(sizeof(HeapBuffer)/4, 0);
     }
 
     unsigned long num1 = 0x123456789ABCDEF;
@@ -64,8 +64,8 @@ bool test_HeapBuffer(HeapBuffer* hb)
         *a = num1;
         R64FX_CHECK_DATA(8, &num1, 8);
         R64FX_CHECK_HEADER(
-            sizeof(HeapBuffer)/8,     //self
-            sizeof(HeapBuffer)/8 + 1, //a
+            sizeof(HeapBuffer)/4,     //self
+            sizeof(HeapBuffer)/4 + 2, //a
             0
         );
     }
@@ -79,9 +79,9 @@ bool test_HeapBuffer(HeapBuffer* hb)
         unsigned long buff[2] = {num2, num3};
         R64FX_CHECK_DATA(24, buff, 16);
         R64FX_CHECK_HEADER(
-            sizeof(HeapBuffer)/8,     //self
-            sizeof(HeapBuffer)/8 + 1, //a
-            sizeof(HeapBuffer)/8 + 3, //b
+            sizeof(HeapBuffer)/4,     //self
+            sizeof(HeapBuffer)/4 + 2, //a
+            sizeof(HeapBuffer)/4 + 6, //b
             0
         );
     }
@@ -93,10 +93,10 @@ bool test_HeapBuffer(HeapBuffer* hb)
         *c = num4;
         R64FX_CHECK_DATA(32, &num4, 8);
         R64FX_CHECK_HEADER(
-            sizeof(HeapBuffer)/8,     //self
-            sizeof(HeapBuffer)/8 + 1, //a
-            sizeof(HeapBuffer)/8 + 3, //b
-            sizeof(HeapBuffer)/8 + 4, //c
+            sizeof(HeapBuffer)/4,     //self
+            sizeof(HeapBuffer)/4 + 2, //a
+            sizeof(HeapBuffer)/4 + 6, //b
+            sizeof(HeapBuffer)/4 + 8, //c
             0
         );
     }
@@ -104,18 +104,18 @@ bool test_HeapBuffer(HeapBuffer* hb)
     cout << "free b\n";
     hb->freeChunk(b); b = nullptr;
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                 //self
-        sizeof(HeapBuffer)/8 + 1,             //a
-        (sizeof(HeapBuffer)/8 + 3) | 0x8000,  //free
-        sizeof(HeapBuffer)/8 + 4,             //c
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4 + 2,             //a
+        (sizeof(HeapBuffer)/4 + 6) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 8,             //c
         0
     );
 
     cout << "free c\n";
     hb->freeChunk(c); c = nullptr;
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,     //self
-        sizeof(HeapBuffer)/8 + 1, //a
+        sizeof(HeapBuffer)/4,     //self
+        sizeof(HeapBuffer)/4 + 2, //a
         0
     );
 
@@ -123,9 +123,9 @@ bool test_HeapBuffer(HeapBuffer* hb)
     b = (unsigned long*) hb->allocChunk(24);
     R64FX_CHECK_ALIGNMENT(b);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,     //self
-        sizeof(HeapBuffer)/8 + 1, //a
-        sizeof(HeapBuffer)/8 + 4, //b
+        sizeof(HeapBuffer)/4,     //self
+        sizeof(HeapBuffer)/4 + 2, //a
+        sizeof(HeapBuffer)/4 + 8, //b
         0
     );
 
@@ -133,10 +133,10 @@ bool test_HeapBuffer(HeapBuffer* hb)
     c = (unsigned long*) hb->allocChunk(16);
     R64FX_CHECK_ALIGNMENT(c);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,     //self
-        sizeof(HeapBuffer)/8 + 1, //a
-        sizeof(HeapBuffer)/8 + 4, //b
-        sizeof(HeapBuffer)/8 + 6, //c
+        sizeof(HeapBuffer)/4,      //self
+        sizeof(HeapBuffer)/4 + 2,  //a
+        sizeof(HeapBuffer)/4 + 8,  //b
+        sizeof(HeapBuffer)/4 + 12, //c
         0
     );
 
@@ -144,22 +144,22 @@ bool test_HeapBuffer(HeapBuffer* hb)
     auto z = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(z);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,     //self
-        sizeof(HeapBuffer)/8 + 1, //a
-        sizeof(HeapBuffer)/8 + 4, //b
-        sizeof(HeapBuffer)/8 + 6, //c
-        sizeof(HeapBuffer)/8 + 7, //z
+        sizeof(HeapBuffer)/4,      //self
+        sizeof(HeapBuffer)/4 + 2,  //a
+        sizeof(HeapBuffer)/4 + 8,  //b
+        sizeof(HeapBuffer)/4 + 12, //c
+        sizeof(HeapBuffer)/4 + 14, //z
         0
     );
 
     cout << "free a\n";
     hb->freeChunk(a);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        (sizeof(HeapBuffer)/8 + 1) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 4,            //b
-        sizeof(HeapBuffer)/8 + 6,            //c
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        (sizeof(HeapBuffer)/4 + 2) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 8,             //b
+        sizeof(HeapBuffer)/4 + 12,            //c
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
@@ -174,20 +174,20 @@ bool test_HeapBuffer(HeapBuffer* hb)
     cout << "free c\n";
     hb->freeChunk(c); c = nullptr;
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        (sizeof(HeapBuffer)/8 + 1) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 4,            //b
-        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        (sizeof(HeapBuffer)/4 + 2) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 8,             //b
+        (sizeof(HeapBuffer)/4 + 12) | 0x8000, //free
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
     cout << "free b (Merge Free Space)\n";
     hb->freeChunk(b); b = nullptr;
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        (sizeof(HeapBuffer)/4 + 12) | 0x8000, //free
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
@@ -195,10 +195,10 @@ bool test_HeapBuffer(HeapBuffer* hb)
     a = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(a);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        sizeof(HeapBuffer)/8 + 1,            //a
-        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4 + 2,             //a
+        (sizeof(HeapBuffer)/4 + 12) | 0x8000, //free
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
@@ -206,11 +206,11 @@ bool test_HeapBuffer(HeapBuffer* hb)
     b = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(b);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        sizeof(HeapBuffer)/8 + 1,            //a
-        sizeof(HeapBuffer)/8 + 2,            //b
-        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4 + 2,             //a
+        sizeof(HeapBuffer)/4 + 4,             //b
+        (sizeof(HeapBuffer)/4 + 12) | 0x8000, //free
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
@@ -218,12 +218,12 @@ bool test_HeapBuffer(HeapBuffer* hb)
     c = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(c);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        sizeof(HeapBuffer)/8 + 1,            //a
-        sizeof(HeapBuffer)/8 + 2,            //b
-        sizeof(HeapBuffer)/8 + 3,            //c
-        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4 + 2,             //a
+        sizeof(HeapBuffer)/4 + 4,             //b
+        sizeof(HeapBuffer)/4 + 6,             //c
+        (sizeof(HeapBuffer)/4 + 12) | 0x8000, //free
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
@@ -231,13 +231,13 @@ bool test_HeapBuffer(HeapBuffer* hb)
     auto d = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(d);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        sizeof(HeapBuffer)/8 + 1,            //a
-        sizeof(HeapBuffer)/8 + 2,            //b
-        sizeof(HeapBuffer)/8 + 3,            //c
-        sizeof(HeapBuffer)/8 + 4,            //d
-        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4 + 2,             //a
+        sizeof(HeapBuffer)/4 + 4,             //b
+        sizeof(HeapBuffer)/4 + 6,             //c
+        sizeof(HeapBuffer)/4 + 8,             //d
+        (sizeof(HeapBuffer)/4 + 12) | 0x8000, //free
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
@@ -245,14 +245,14 @@ bool test_HeapBuffer(HeapBuffer* hb)
     auto e = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(e);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        sizeof(HeapBuffer)/8 + 1,            //a
-        sizeof(HeapBuffer)/8 + 2,            //b
-        sizeof(HeapBuffer)/8 + 3,            //c
-        sizeof(HeapBuffer)/8 + 4,            //d
-        sizeof(HeapBuffer)/8 + 5,            //e
-        (sizeof(HeapBuffer)/8 + 6) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4 + 2,             //a
+        sizeof(HeapBuffer)/4 + 4,             //b
+        sizeof(HeapBuffer)/4 + 6,             //c
+        sizeof(HeapBuffer)/4 + 8,             //d
+        sizeof(HeapBuffer)/4 + 10,            //e
+        (sizeof(HeapBuffer)/4 + 12) | 0x8000, //free
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
@@ -260,14 +260,14 @@ bool test_HeapBuffer(HeapBuffer* hb)
     auto f = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_ALIGNMENT(f);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,     //self
-        sizeof(HeapBuffer)/8 + 1, //a
-        sizeof(HeapBuffer)/8 + 2, //b
-        sizeof(HeapBuffer)/8 + 3, //c
-        sizeof(HeapBuffer)/8 + 4, //d
-        sizeof(HeapBuffer)/8 + 5, //e
-        sizeof(HeapBuffer)/8 + 6, //f
-        sizeof(HeapBuffer)/8 + 7, //z
+        sizeof(HeapBuffer)/4,      //self
+        sizeof(HeapBuffer)/4 + 2,  //a
+        sizeof(HeapBuffer)/4 + 4,  //b
+        sizeof(HeapBuffer)/4 + 6,  //c
+        sizeof(HeapBuffer)/4 + 8,  //d
+        sizeof(HeapBuffer)/4 + 10, //e
+        sizeof(HeapBuffer)/4 + 12, //f
+        sizeof(HeapBuffer)/4 + 14, //z
         0
     );
 
@@ -275,39 +275,39 @@ bool test_HeapBuffer(HeapBuffer* hb)
     hb->freeChunk(b); b = nullptr;
     hb->freeChunk(d); d = nullptr;
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        sizeof(HeapBuffer)/8 + 1,            //a
-        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 3,            //c
-        (sizeof(HeapBuffer)/8 + 4) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 5,            //e
-        sizeof(HeapBuffer)/8 + 6,            //f
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4 + 2,             //a
+        (sizeof(HeapBuffer)/4 + 4) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 6,             //c
+        (sizeof(HeapBuffer)/4 + 8) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 10,            //e
+        sizeof(HeapBuffer)/4 + 12,            //f
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
     cout << "free a (Merge Down)\n";
     hb->freeChunk(a); a = nullptr;
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 3,            //c
-        (sizeof(HeapBuffer)/8 + 4) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 5,            //e
-        sizeof(HeapBuffer)/8 + 6,            //f
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        (sizeof(HeapBuffer)/4 + 4) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 6,             //c
+        (sizeof(HeapBuffer)/4 + 8) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 10,            //e
+        sizeof(HeapBuffer)/4 + 12,            //f
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
     cout << "free e (Merge Up)\n";
     hb->freeChunk(e); e = nullptr;
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 3,            //c
-        (sizeof(HeapBuffer)/8 + 5) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 6,            //f
-        sizeof(HeapBuffer)/8 + 7,            //z
+        sizeof(HeapBuffer)/4,                 //self
+        (sizeof(HeapBuffer)/4 + 4) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 6,             //c
+        (sizeof(HeapBuffer)/4 + 10) | 0x8000, //free
+        sizeof(HeapBuffer)/4 + 12,            //f
+        sizeof(HeapBuffer)/4 + 14,            //z
         0
     );
 
@@ -332,46 +332,46 @@ bool test_HeapBuffer(HeapBuffer* hb)
     cout << "free z\n";
     hb->freeChunk(z); z = nullptr;
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 3,            //c
-        (sizeof(HeapBuffer)/8 + 5) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 6,            //f
+        sizeof(HeapBuffer)/4,                 //self
+        (sizeof(HeapBuffer)/4 + 4) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 6,             //c
+        (sizeof(HeapBuffer)/4 + 10) | 0x8000, //free
+        sizeof(HeapBuffer)/4 + 12,            //f
         0
     );
 
     cout << "realloc a\n";
     a = (unsigned long*) hb->allocChunk(8);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        sizeof(HeapBuffer)/8 + 1,            //a
-        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 3,            //c
-        (sizeof(HeapBuffer)/8 + 5) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 6,            //f
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4 + 2,             //a
+        (sizeof(HeapBuffer)/4 + 4) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 6,             //c
+        (sizeof(HeapBuffer)/4 + 10) | 0x8000, //free
+        sizeof(HeapBuffer)/4 + 12,            //f
         0
     );
 
     cout << "realloc e\n";
     e = (unsigned long*) hb->allocChunk(16);
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        sizeof(HeapBuffer)/8 + 1,            //a
-        (sizeof(HeapBuffer)/8 + 2) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 3,            //c
-        sizeof(HeapBuffer)/8 + 5,            //e
-        sizeof(HeapBuffer)/8 + 6,            //f
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4 + 2,             //a
+        (sizeof(HeapBuffer)/4 + 4) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 6,             //c
+        sizeof(HeapBuffer)/4 + 10,            //e
+        sizeof(HeapBuffer)/4 + 12,            //f
         0
     );
 
     cout << "free c\n";
     hb->freeChunk(c); c = nullptr;
     R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/8,                //self
-        sizeof(HeapBuffer)/8 + 1,            //a
-        (sizeof(HeapBuffer)/8 + 3) | 0x8000, //free
-        sizeof(HeapBuffer)/8 + 5,            //e
-        sizeof(HeapBuffer)/8 + 6,            //f
+        sizeof(HeapBuffer)/4,                 //self
+        sizeof(HeapBuffer)/4 + 2,             //a
+        (sizeof(HeapBuffer)/4 + 6) | 0x8000,  //free
+        sizeof(HeapBuffer)/4 + 10,            //e
+        sizeof(HeapBuffer)/4 + 12,            //f
         0
     );
 
@@ -379,7 +379,7 @@ bool test_HeapBuffer(HeapBuffer* hb)
     hb->freeChunk(a); a = nullptr;
     hb->freeChunk(e); e = nullptr;
     hb->freeChunk(f); f = nullptr;
-    R64FX_CHECK_HEADER(sizeof(HeapBuffer)/8, 0);
+    R64FX_CHECK_HEADER(sizeof(HeapBuffer)/4, 0);
 
     return true;
 }
