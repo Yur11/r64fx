@@ -163,9 +163,10 @@ bool free_chunk(void* buff, long buff_bytes, void* chunk)
 }
 
 
-HeapBuffer* HeapBuffer::newInstance(long nbytes)
+HeapBuffer* HeapBuffer::newSelfHostedInstance(unsigned int npages)
 {
-    auto buff = (unsigned short*) alloc_aligned(nbytes, nbytes);
+    unsigned int nbytes = memory_page_size() * npages;
+    auto buff = (unsigned short*) alloc_aligned(memory_page_size(), nbytes);
     if(!buff)
         return nullptr;
     buff[0] = 0;
@@ -175,7 +176,7 @@ HeapBuffer* HeapBuffer::newInstance(long nbytes)
 }
 
 
-void HeapBuffer::deleteInstance(HeapBuffer* buffer)
+void HeapBuffer::deleteSelfHostedInstance(HeapBuffer* buffer)
 {
     auto buff = buffer->m_buffer;
     buffer->~HeapBuffer();
@@ -229,7 +230,7 @@ void* HeapAllocator::allocChunk(long nbytes)
         {
             buff_size += memory_page_size();
         }
-        auto buff = HeapBuffer::newInstance(buff_size);
+        auto buff = HeapBuffer::newSelfHostedInstance(buff_size);
         m_buffers.append(buff);
         chunk = buff->allocChunk(nbytes);
     }
@@ -254,7 +255,7 @@ void HeapAllocator::freeChunk(void* addr)
     if(buff_to_remove)
     {
         m_buffers.remove(buff_to_remove);
-        HeapBuffer::deleteInstance(buff_to_remove);
+        HeapBuffer::deleteSelfHostedInstance(buff_to_remove);
     }
 }
 

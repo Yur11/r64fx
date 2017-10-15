@@ -14,18 +14,21 @@ class HeapBuffer : public LinkedList<HeapBuffer>::Node{
     void* m_buffer = nullptr;
     long  m_size = 0;
 
+public:
+    HeapBuffer(){}
     HeapBuffer(void* buffer, long size) : m_buffer(buffer), m_size(size) {};
     HeapBuffer(const HeapBuffer&){};
     ~HeapBuffer(){};
 
-public:
+    inline void setBuffer(void* buffer, long size) { m_buffer = buffer; m_size = size; }
+
     inline void* buffer() const { return m_buffer; }
 
     inline long size() const { return m_size; }
 
-    static HeapBuffer* newInstance(long nbytes);
+    static HeapBuffer* newSelfHostedInstance(unsigned int npages);
 
-    static void deleteInstance(HeapBuffer* buffer);
+    static void deleteSelfHostedInstance(HeapBuffer* buffer);
 
     void* allocChunk(long nbytes);
 

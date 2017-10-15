@@ -567,9 +567,9 @@ int main()
 
     auto ok = true;
 
-    auto hb = HeapBuffer::newInstance(128);
+    auto hb = HeapBuffer::newSelfHostedInstance(1);
     ok = ok && test_HeapBuffer(hb);
-    HeapBuffer::deleteInstance(hb);
+    HeapBuffer::deleteSelfHostedInstance(hb);
 
     auto ha = new HeapAllocator;
     ok = ok && test_HeapAllocator(ha);
