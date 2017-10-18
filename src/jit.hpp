@@ -3,9 +3,57 @@
 
 #include "Debug.hpp"
 #include "MemoryUtils.hpp"
-#include "binary_constants.hpp"
 
 namespace r64fx{
+
+class Register{
+    unsigned char m_bits;
+
+protected:
+    constexpr Register(unsigned char bits) : m_bits(bits) {}
+
+    constexpr unsigned char bits() { return m_bits; }
+
+public:
+
+    constexpr unsigned int code() { return m_bits & 0xF; }
+
+    constexpr unsigned int lowerBits() { return m_bits & 0x7; }
+
+    constexpr bool prefixBit() { return m_bits & 0x8; }
+};
+
+class GPR : public Register{
+public:
+    explicit constexpr GPR(unsigned char code) : Register(code) {}
+
+    constexpr bool is64bit() { return bits() & 0x80; }
+
+    constexpr bool isCalleePreserved()
+        { return (1<<code()) & ((1<<0x3) | (1<<0x5) | (1<<0xC) | (1<<0xD) | (1<<0xE) | (1<<0xF)); }
+};
+
+class GPR32 : public GPR{
+public:
+    explicit constexpr GPR32(unsigned char code) : GPR(code) {}
+};
+constexpr GPR32 eax(0x0), ecx(0x1), edx (0x2), ebx (0x3), esp (0x4), ebp (0x5), esi (0x6), edi (0x7),
+                r8d(0x8), r9d(0x9), r10d(0xA), e11d(0xB), r12d(0xC), r13d(0xD), r14d(0xE), r15d(0xF);
+
+class GPR64 : public GPR{
+public:
+    explicit constexpr GPR64(unsigned char code) : GPR(code | 0x80) {}
+};
+constexpr GPR64 rax(0x0), rcx(0x1), rdx(0x2), rbx(0x3), rsp(0x4), rbp(0x5), rsi(0x6), rdi(0x7),
+                r8 (0x8), r9 (0x9), r10(0xA), r11(0xB), r12(0xC), r13(0xD), r14(0xE), r15(0xF);
+
+class Xmm : public Register{
+public:
+    explicit constexpr Xmm(unsigned char code) : Register(code) {}
+};
+constexpr Xmm xmm0(0x0), xmm1(0x1), xmm2 (0x2), xmm3 (0x3), xmm4 (0x4), xmm5 (0x5), xmm6 (0x6), xmm7 (0x7),
+              xmm8(0x8), xmm9(0x9), xmm10(0xA), xmm11(0xB), xmm12(0xC), xmm13(0xD), xmm14(0xE), xmm15(0xF);
+
 
 union Imm8{
     unsigned char c;
@@ -34,67 +82,6 @@ inline Imm64 ImmAddr(void* addr)
 {
     return Imm64((unsigned long)addr);
 }
-
-
-class Register{
-    unsigned char m_bits;
-
-protected:
-    Register(unsigned char bits) : m_bits(bits) {}
-
-public:
-    inline unsigned int bits() const { return m_bits; }
-
-    inline unsigned int lowerBits() const { return m_bits & 7; }
-
-    /* R or B bit of the REX prefix.*/
-    inline bool prefix_bit() const { return m_bits & 8; }
-};
-
-class GPR64 : public Register{
-public:
-    GPR64(unsigned char code) : Register(code) {}
-};
-
-#define rax GPR64(0x0)
-#define rcx GPR64(0x1)
-#define rdx GPR64(0x2)
-#define rbx GPR64(0x3)
-#define rsb GPR64(0x4)
-#define rbp GPR64(0x5)
-#define rsi GPR64(0x6)
-#define rdi GPR64(0x7)
-#define r8  GPR64(0x8)
-#define r9  GPR64(0x9)
-#define r10 GPR64(0xA)
-#define r11 GPR64(0xB)
-#define r12 GPR64(0xC)
-#define r13 GPR64(0xD)
-#define r14 GPR64(0xE)
-#define r15 GPR64(0xF)
-
-
-class Xmm : public Register{
-public:
-    Xmm(unsigned char code) : Register(code) {}
-};
-
-#define xmm0  Xmm(0x0)
-#define xmm1  Xmm(0x1)
-#define xmm2  Xmm(0x2)
-#define xmm3  Xmm(0x3)
-#define xmm4  Xmm(0x4)
-#define xmm5  Xmm(0x5)
-#define xmm6  Xmm(0x6)
-#define xmm7  Xmm(0x7)
-#define xmm8  Xmm(0x8)
-#define xmm9  Xmm(0x9)
-#define xmm10 Xmm(0xA)
-#define xmm11 Xmm(0xB)
-#define xmm12 Xmm(0xC)
-#define xmm13 Xmm(0xD)
-#define xmm14 Xmm(0xE)
-#define xmm15 Xmm(0xF)
 
 
 #ifdef R64FX_DEBUG
@@ -138,7 +125,7 @@ class Base{
     unsigned char m_bits = 0;
 
 public:
-    explicit Base(GPR64 reg) : m_bits(reg.bits()) {}
+    explicit Base(GPR64 reg) : m_bits(reg.code()) {}
 
     unsigned int bits() const { return m_bits; }
 };
@@ -161,10 +148,10 @@ class Index{
     }
 
 public:
-    explicit Index(GPR64 reg, int scale) : m_bits(0x400 | encodeScale(scale) | (reg.bits() << 4))
+    explicit Index(GPR64 reg, int scale) : m_bits(0x400 | encodeScale(scale) | (reg.code() << 4))
     {
 #ifdef R64FX_DEBUG
-        assert(reg.bits() != 4);
+        assert(reg.code() != rsp.code());
 #endif//R64FX_DEBUG
     }
 
@@ -212,6 +199,11 @@ class SIBD : public SIB{
     unsigned char sibByte() const;
 
     int dispBytes() const;
+
+    inline bool rexW() const
+    {
+        return base().is64bit() || (hasIndex() && index().is64bit());
+    }
 
 public:
     SIBD(Base base) : SIB(base.bits()) {}
@@ -291,10 +283,10 @@ public:
 
     inline unsigned char byte() const { return m_byte; }
 
-    inline int s0() const { return m_byte & b11; }
-    inline int s1() const { return (m_byte >> 2) & b11; }
-    inline int s2() const { return (m_byte >> 4) & b11; }
-    inline int s3() const { return (m_byte >> 6) & b11; }
+    inline int s0() const { return m_byte & 3; }
+    inline int s1() const { return (m_byte >> 2) & 3; }
+    inline int s2() const { return (m_byte >> 4) & 3; }
+    inline int s3() const { return (m_byte >> 6) & 3; }
 };
 
 
@@ -388,11 +380,11 @@ private:
     void write(unsigned char byte);
     void write(unsigned char byte0, unsigned char byte1);
 
-    void write(unsigned char opcode, unsigned char r, GPR64 reg, Imm32 imm);
+    void write(unsigned char opcode, unsigned char r, GPR reg, Imm32 imm);
     void write(unsigned char opcode, GPR64 reg, Imm64 imm);
 
     void write(unsigned char opcode, GPR64 dst, GPR64 src);
-    void write(unsigned char opcode, GPR64 reg, Mem64 mem);
+    void write(unsigned char opcode, GPR   reg, Mem32 mem);
     void write(unsigned char opcode, GPR64 reg, SIBD sibd);
 
     void write(unsigned char opcode, Mem8 mem);
@@ -412,13 +404,22 @@ public:
     inline void ret()          { write(0xC3); }
     inline void rdtsc()        { write(0x0F, 0x31); }
 
+    inline void mov(GPR32 reg, Imm32 imm){ write(0xC7, 0, reg, imm); }
     inline void mov(GPR64 reg, Imm32 imm){ write(0xC7, 0, reg, imm); }
     inline void mov(GPR64 reg, Imm64 imm){ write(0xB8, reg, imm); }
+
     inline void mov(GPR64 dst, GPR64 src){ write(0x8B, dst, src); }
+    inline void mov(GPR32 reg, Mem32 mem){ write(0x8B, reg, mem); }
     inline void mov(GPR64 reg, Mem64 mem){ write(0x8B, reg, mem); }
+
+    inline void mov(Mem32 mem, GPR32 reg){ write(0x89, reg, mem); }
     inline void mov(Mem64 mem, GPR64 reg){ write(0x89, reg, mem); }
+
+//     inline void mov(GPR32 reg, SIBD sibd){ write(0x8B, reg, sibd); }
     inline void mov(GPR64 reg, SIBD sibd){ write(0x8B, reg, sibd); }
+//     inline void mov(SIBD sibd, GPR32 reg){ write(0x89, reg, sibd); }
     inline void mov(SIBD sibd, GPR64 reg){ write(0x89, reg, sibd); }
+
 
     inline void add(GPR64 reg, Imm32 imm){ write(0x81, 0, reg, imm); }
     inline void add(GPR64 dst, GPR64 src){ write(0x03, dst, src); }
@@ -426,6 +427,7 @@ public:
     inline void add(Mem64 mem, GPR64 reg){ write(0x01, reg, mem); }
     inline void add(GPR64 reg, SIBD sibd){ write(0x03, reg, sibd); }
     inline void add(SIBD sibd, GPR64 reg){ write(0x01, reg, sibd); }
+
 
     inline void sub(GPR64 reg, Imm32 imm){ write(0x81, 5, reg, imm); }
     inline void sub(GPR64 dst, GPR64 src){ write(0x2B, dst, src); }

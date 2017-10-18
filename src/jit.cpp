@@ -8,7 +8,7 @@ namespace r64fx{
 namespace{
 
 inline unsigned char Rex(bool W, bool R, bool X, bool B)
-    { return b01000000 | (int(W) << 3) | (int(R) << 2) | (int(X) << 1) | int(B); }
+    { return 64 | (int(W) << 3) | (int(R) << 2) | (int(X) << 1) | int(B); }
 
 inline unsigned char ModRM(unsigned char mod, unsigned char reg, unsigned char rm)
     { return (mod << 6) | ((reg & 7) << 3) | (rm & 7); }
@@ -165,21 +165,24 @@ void Assembler::write(unsigned char byte0, unsigned char byte1)
 }
 
 
-void Assembler::write(unsigned char opcode, unsigned char r, GPR64 reg, Imm32 imm)
+void Assembler::write(unsigned char opcode, unsigned char r, GPR reg, Imm32 imm)
 {
-    auto p = growCode(7);
-    p[0] = Rex(1, 0, 0, reg.prefix_bit());
-    p[1] = opcode;
-    p[2] = ModRM(b11, r, reg.lowerBits());
+    bool use_rex = reg.is64bit() || reg.prefixBit();
+    auto p = growCode(use_rex ? 7 : 6);
+    int n = 0;
+    if(use_rex)
+        { p[n++] = Rex(reg.is64bit(), 0, 0, reg.prefixBit()); }
+    p[n++] = opcode;
+    p[n++] = ModRM(3, r, reg.lowerBits());
     for(int i=0; i<4; i++)
-        p[i + 3] = imm.b[i];
+        p[n++] = imm.b[i];
 }
 
 
 void Assembler::write(unsigned char opcode, GPR64 reg, Imm64 imm)
 {
     auto p = growCode(10);
-    p[0] = Rex(1, 0, 0, reg.prefix_bit());
+    p[0] = Rex(1, 0, 0, reg.prefixBit());
     p[1] = opcode + (reg.lowerBits());
     for(int i=0; i<8; i++)
         p[i + 2] = imm.b[i];
@@ -189,20 +192,23 @@ void Assembler::write(unsigned char opcode, GPR64 reg, Imm64 imm)
 void Assembler::write(unsigned char opcode, GPR64 dst, GPR64 src)
 {
     auto p = growCode(3);
-    p[0] = Rex(1, dst.prefix_bit(), 0, src.prefix_bit());
+    p[0] = Rex(1, dst.prefixBit(), 0, src.prefixBit());
     p[1] = opcode;
-    p[2] = ModRM(b11, dst.lowerBits(), src.lowerBits());
+    p[2] = ModRM(3, dst.lowerBits(), src.lowerBits());
 }
 
 
-void Assembler::write(unsigned char opcode, GPR64 reg, Mem64 mem)
+void Assembler::write(unsigned char opcode, GPR reg, Mem32 mem)
 {
-    auto p = growCode(7);
-    p[0] = Rex(1, reg.prefix_bit(), 0, 0);
-    p[1] = opcode;
-    p[2] = ModRM(b00, reg.lowerBits(), b101);
+    bool use_rex = reg.is64bit() || reg.prefixBit();
+    auto p = growCode(use_rex ? 7 : 6);
+    int r = 0;
+    if(use_rex)
+        { p[r++] = Rex((reg.is64bit() ? 1 : 0), reg.prefixBit(), 0, 0); }
+    p[r++] = opcode;
+    p[r++] = ModRM(0, reg.lowerBits(), 5);
     auto rip = Rip32(mem.addr(), codeEnd());
-    for(int i=0; i<4; i++) p[i + 3] = rip.b[i];
+    for(int i=0; i<4; i++) p[r++] = rip.b[i];
 }
 
 
@@ -210,7 +216,7 @@ void Assembler::write(unsigned char opcode, GPR64 reg, SIBD sibd)
 {
     int nbytes = 4 + sibd.dispBytes();
     auto p = growCode(nbytes);
-    p[0] = Rex(1, reg.prefix_bit(), sibd.index().prefix_bit(), sibd.base().prefix_bit());
+    p[0] = Rex(1, reg.prefixBit(), sibd.index().prefixBit(), sibd.base().prefixBit());
     p[1] = opcode;
     p[2] = sibd.modrmByte(reg);
     p[3] = sibd.sibByte();
@@ -226,7 +232,6 @@ void Assembler::write(unsigned char opcode, Mem8 mem)
     auto rip = Rip32(mem.addr(), codeEnd());
     for(int i=0; i<4; i++)
         p[i + 1] = rip.b[i];
-    p += 5;
 }
 
 
@@ -248,9 +253,9 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm dst, X
         nbytes++;
 
     unsigned char rex = 0;
-    if(dst.prefix_bit() || src.prefix_bit())
+    if(dst.prefixBit() || src.prefixBit())
     {
-        rex = Rex(0, dst.prefix_bit(), 0, src.prefix_bit());
+        rex = Rex(0, dst.prefixBit(), 0, src.prefixBit());
         nbytes++;
     }
 
@@ -269,7 +274,7 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm dst, X
         { p[r++] = rex; }
     p[r++] = 0x0F;
     p[r++] = byte1;
-    p[r++] = ModRM(b11, dst.lowerBits(), src.lowerBits());
+    p[r++] = ModRM(3, dst.lowerBits(), src.lowerBits());
     if(imm > 0) { p[r++] = (unsigned char)imm; }
 }
 
@@ -281,9 +286,9 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, M
         nbytes++;
 
     unsigned char rex = 0;
-    if(reg.prefix_bit())
+    if(reg.prefixBit())
     {
-        rex = Rex(0, reg.prefix_bit(), 0, 0);
+        rex = Rex(0, reg.prefixBit(), 0, 0);
         nbytes++;
     }
 
@@ -302,7 +307,7 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, M
         { p[r++] = rex; }
     p[r++] = 0x0F;
     p[r++] = byte1;
-    p[r++] = ModRM(b00, reg.lowerBits(), b101);
+    p[r++] = ModRM(0, reg.lowerBits(), 5);
     auto rip = Rip32(mem.addr(), codeEnd());
     for(int i=0; i<4; i++)
         p[r++] = rip.b[i];
@@ -317,9 +322,9 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, S
         nbytes++;
 
     unsigned char rex = 0;
-    if(reg.prefix_bit() || sibd.index().prefix_bit() || sibd.base().prefix_bit())
+    if(reg.prefixBit() || sibd.index().prefixBit() || sibd.base().prefixBit())
     {
-        rex = Rex(0, reg.prefix_bit(), sibd.index().prefix_bit(), sibd.base().prefix_bit());
+        rex = Rex(0, reg.prefixBit(), sibd.index().prefixBit(), sibd.base().prefixBit());
         nbytes++;
     }
 
@@ -351,7 +356,7 @@ void Assembler::write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, S
 void Assembler::write(unsigned char opcode, GPR64 reg)
 {
     auto p = growCode(2);
-    p[0] = Rex(1, 0, 0, reg.prefix_bit());
+    p[0] = Rex(1, 0, 0, reg.prefixBit());
     p[1] = opcode + (reg.lowerBits());
 }
 

@@ -40,7 +40,6 @@ bool test_buffers(Assembler &as)
 {
     constexpr unsigned char* null_ptr = nullptr;
 
-    cout << "buffers\n";
     as.resize(1, 1);
     as.resize(1, 0);
     as.resize(0, 1);
@@ -219,6 +218,39 @@ bool test_mov(Assembler &as)
         as.ret();
         jitfun();
         R64FX_EXPECT_EQ(num2, *a);
+    }
+
+    {
+        as.rewindData();
+        as.growData(sizeof(int) * 4);
+        auto ptr = (int*) as.dataBegin();
+
+        cout << "mov(GPR32, Mem32)\n";
+        for(int i=0; i<4; i++)
+            ptr[i] = rand();
+        as.rewindCode();
+        as.mov(eax, Mem32(ptr + 1));
+        as.ret();
+        R64FX_EXPECT_EQ(ptr[1], jitfun());
+
+        cout << "mov(GPR32, Mem32) rex\n";
+        for(int i=0; i<4; i++)
+            ptr[i] = rand();
+        as.rewindCode();
+        as.mov(eax, Mem32(ptr + 1));
+        as.mov(r8d, Mem32(ptr + 2));
+        as.ret();
+        R64FX_EXPECT_EQ(ptr[1], jitfun());
+
+        cout << "mov(Mem32, GPR)\n";
+        for(int i=0; i<4; i++)
+            ptr[i] = rand();
+        as.rewindCode();
+        as.mov(eax, Imm32(ptr[0]));
+        as.mov(Mem32(ptr + 1), eax);
+        as.ret();
+        jitfun();
+        R64FX_EXPECT_EQ(ptr[0], ptr[1]);
     }
 
     cout << "\n";
@@ -1090,6 +1122,9 @@ bool test_sibd(Assembler &as)
 
 int main()
 {
+    cout << rax.is64bit() << "\n";
+    cout << eax.is64bit() << "\n";
+
     srand(time(NULL));
 
     Assembler as;
