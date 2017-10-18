@@ -41,11 +41,10 @@ struct Impl_SoundDriverAudioInput : public LinkedList<Impl_SoundDriverAudioInput
     SignalNode_BufferReader node;
     SoundDriverAudioInput*  sd_port  = nullptr;
 
-    Impl_SoundDriverAudioInput(Message_AddAudioInput* message, SignalGraph* sg, float* buffer)
+    Impl_SoundDriverAudioInput(Message_AddAudioInput* message, SignalGraph* sg)
     {
         sd_port = message->sd_port;
         message->graph_port = node.out().port();
-        node.setBuffer(buffer);
         sg->addNode(&node);
     }
 
@@ -61,11 +60,10 @@ struct Impl_SoundDriverAudioOutput : public LinkedList<Impl_SoundDriverAudioOutp
     SignalNode_BufferWriter  node;
     SoundDriverAudioOutput*  sd_port  = nullptr;
 
-    Impl_SoundDriverAudioOutput(Message_AddAudioOutput* message, SignalGraph* sg, float* buffer)
+    Impl_SoundDriverAudioOutput(Message_AddAudioOutput* message, SignalGraph* sg)
     {
         sd_port = message->sd_port;
         message->graph_port = node.in().port();
-        node.setBuffer(buffer);
         sg->addNode(&node);
     }
 
@@ -121,13 +119,13 @@ private:
 
     inline void recieved(Message_AddAudioInput* message)
     {
-        auto impl = allocObj<Impl_SoundDriverAudioInput>(message, signalGraph(), new float[bufferSize()]);
+        auto impl = allocObj<Impl_SoundDriverAudioInput>(message, signalGraph());
         m_inputs.append(impl);
     }
 
     inline void recieved(Message_AddAudioOutput* message)
     {
-        auto impl = allocObj<Impl_SoundDriverAudioOutput>(message, signalGraph(), new float[bufferSize()]);
+        auto impl = allocObj<Impl_SoundDriverAudioOutput>(message, signalGraph());
         m_outputs.append(impl);
     }
 
@@ -138,7 +136,6 @@ private:
         if(impl)
         {
             auto sg = signalGraph();
-            delete[] impl->node.buffer();
             sg->removeNode(&impl->node);
             m_inputs.remove(impl);
             message->sd_port = impl->sd_port;
@@ -153,7 +150,6 @@ private:
         if(impl)
         {
             auto sg = signalGraph();
-            delete[] impl->node.buffer();
             sg->removeNode(&impl->node);
             m_outputs.remove(impl);
             message->sd_port = impl->sd_port;

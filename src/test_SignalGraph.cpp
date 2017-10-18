@@ -25,35 +25,26 @@ int main()
     cout << sizeof(SignalSink) << "\n";
 
     srand(time(0));
-    for(int i=0; i<frame_count; i++)
-    {
-        buff_a[i] = float(rand() & 0xFFFF) * 0.01f;
-        buff_b[i] = 0.0f;
-    }
 
     SignalGraph sg;
+    sg.setFrameCount(frame_count);
 
-    SignalNode_BufferReader snbr; snbr.setBuffer(buff_a);
-    SignalNode_BufferWriter snbw; snbw.setBuffer(buff_b);
-    SignalNode_Dummy dummy1;
-    SignalNode_Dummy dummy2;
-    SignalNode_Dummy dummy3;
+    SignalNode_BufferReader snbr;
+    SignalNode_BufferWriter snbw;
 
     sg.addNode(&snbr);
     sg.addNode(&snbw);
-    sg.addNode(&dummy1);
-    sg.addNode(&dummy2);
-    sg.addNode(&dummy3);
 
-    sg.connect(snbr.out(), dummy1.left());
-    sg.connect(snbr.out(), dummy2.left());
-    sg.connect(dummy1.out(), dummy3.left());
-    sg.connect(dummy2.out(), dummy3.right());
-    sg.connect(dummy3.out(), snbw.in());
+    for(int i=0; i<frame_count; i++)
+    {
+        snbr.buffer(i) = float(rand() & 0xFFFF) * 0.01f;
+        snbw.buffer(i) = 0.0f;
+    }
 
-    SignalGraphProcessor sgp;
-    sgp.build(sg, frame_count);
-    sgp.run();
+    sg.connect(snbr.out(), snbw.in());
+
+    sg.build();
+    sg.run();
 
     for(int i=0; i<frame_count; i++)
     {

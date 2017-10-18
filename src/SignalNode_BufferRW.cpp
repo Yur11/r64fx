@@ -1,39 +1,51 @@
 #include "SignalNode_BufferRW.hpp"
-
-#include <iostream>
-using namespace std;
+#include "SignalNodeFlags.hpp"
 
 namespace r64fx{
 
-void SignalNode_BufferReader::build(SignalGraphProcessor &sgp)
+float** SignalNode_BufferRW::storeBufferLocation(SignalGraphCompiler &c)
 {
-//     auto s = source().port();
-//     sgp.memoryStorage(s->storage(), 1, 1);
-// 
-//     auto &as = sgp.assembler();
-//     as.mov(rsi, ImmAddr(buffer() + sgp.mainBufferSize()));
-//     as.mov(rax, Base(rsi) + Index(rcx, 4));
-// 
-//     SignalDataStorage_Memory mem_storage(s->storage()[0]);
-//     as.mov(Base(rdi) + Disp(mem_storage.index() * 4), rax);
-    cout << "reader: " << this << "\n";
+    if(!m_buff_ptr_addr)
+    {
+        c.allocStorage(m_buff_ptr_addr, SignalDataStorage::Addr(), 1, 8);
+    }
+
+    auto ptr = (float**) m_buff_ptr_addr.memoryAddr(c);
+    ptr[0] = m_buffer;
+    return ptr;
 }
 
-void SignalNode_BufferWriter::build(SignalGraphProcessor &sgp)
+
+void SignalNode_BufferReader::build(SignalGraphCompiler &c)
 {
-//     auto source = sink().port()->connectedSource();
-//     if(!source)
-//         return;
-// 
-//     R64FX_DEBUG_ASSERT(source->storage()->isMemoryStorage());
-//     SignalDataStorage_Memory mem_storage(source->storage()[0]);
-// 
-//     auto &as = sgp.assembler();
-//     as.mov(rax, Base(rdi) + Disp(mem_storage.index() * 4));
-// 
-//     as.mov(rsi, ImmAddr(buffer() + sgp.mainBufferSize()));
-//     as.mov(Base(rsi) + Index(rcx, 4), rax);
-    cout << "writer: " << this << "\n";
+    if(m_out.connectedSinkCount() == 0)
+        return;
+
+    storeBufferLocation(c);
+
+    for(;;)//Handle reallocations.
+    {
+        auto ce = c.codeEnd();
+        auto bu = c.codeBytesUsed();
+        c.mov(rax, ImmAddr(storeBufferLocation(c)));
+        c.mov(rax, Base(rax));
+        if(ce == c.codeEnd())
+            break;
+        c.setCodeEnd(c.codeBegin() + bu);
+    }
+
+    if(!m_out)
+    {
+        c.allocStorage(m_out, SignalDataStorage::Memory() | SignalDataStorage::Single() | SignalDataStorage::Float(), 1, 4);
+//         c.mov(Mem32(m_out.memoryAddr(c)), rax);
+    }
 }
+
+
+void SignalNode_BufferWriter::build(SignalGraphCompiler &c)
+{
+    storeBufferLocation(c);
+}
+
 
 }//namespace r64fx

@@ -2,38 +2,63 @@
 #define R64FX_SIGNAL_GRAPH_HPP
 
 #include "Debug.hpp"
+#include "FlagUtils.hpp"
 #include "LinkedList.hpp"
-#include "IteratorPair.hpp"
 #include "jit.hpp"
 
 namespace r64fx{
 
-class SignalGraph;
-class SignalGraphProcessor;
 class SignalNode;
+class SignalGraph;
+class SignalSubGraph;
+class SignalGraphCompiler;
+
+
+class SignalDataType          : R64FX_FLAG_TYPE(0xF000000000000000UL);
+
+/* Basic constituents of SignalDataType. */
+class SignalDataStorageType   : R64FX_FLAG_TYPE(0x3000000000000000UL); //Memory, GPR or Xmm
+class SignalDataScalarSize    : R64FX_FLAG_TYPE(0x4000000000000000UL); //Single or Double
+class SignalDataScalarType    : R64FX_FLAG_TYPE(0x8000000000000000UL); //Float or Int
+
+R64FX_COMBINE_3_FLAG_TYPES(SignalDataType,  SignalDataStorageType, SignalDataScalarSize, SignalDataScalarType);
+
 
 class SignalDataStorage{
+    friend class SignalGraphCompiler;
+
     unsigned long m_bits = 0;
 
 public:
     SignalDataStorage() {}
 
-    constexpr static unsigned long Memory   = 0x0000000000000000UL;
-    constexpr static unsigned long GPR      = 0x1000000000000000UL;
-    constexpr static unsigned long Xmm      = 0x2000000000000000UL;
-//     constexpr static unsigned long Ymm      = 0x3000000000000000UL;
+    inline operator bool() const { return m_bits; }
 
-    constexpr static unsigned long Single   = 0x0000000000000000UL;
-    constexpr static unsigned long Double   = 0x4000000000000000UL;
+    inline static SignalDataStorageType Memory()  { return SignalDataStorageType (0x0000000000000000UL); }
+    inline static SignalDataStorageType GPR()     { return SignalDataStorageType (0x1000000000000000UL); }
+    inline static SignalDataStorageType Xmm()     { return SignalDataStorageType (0x2000000000000000UL); }
 
-    constexpr static unsigned long Float    = 0x0000000000000000UL;
-    constexpr static unsigned long Int      = 0x8000000000000000UL;
+    inline static SignalDataScalarSize  Single()  { return SignalDataScalarSize  (0x0000000000000000UL); }
+    inline static SignalDataScalarSize  Double()  { return SignalDataScalarSize  (0x4000000000000000UL); }
 
-    inline unsigned long type() const { return m_bits & 0xF000000000000000UL; }
+    inline static SignalDataScalarType  Float()   { return SignalDataScalarType  (0x0000000000000000UL); }
+    inline static SignalDataScalarType  Int()     { return SignalDataScalarType  (0x8000000000000000UL); }
 
-    inline bool isInRegisters() const { return m_bits & 0x3000000000000000UL; }
+    inline static SignalDataType        Addr()    { return SignalDataStorage::Memory() | SignalDataStorage::Double() | SignalDataStorage::Int(); }
 
-    inline bool isInMemory() const { return !isInRegisters(); }
+    inline SignalDataType type() const { return SignalDataType(m_bits & SignalDataType::mask()); }
+
+private:
+    inline void setType(SignalDataType type)
+    {
+        m_bits &= type.mask();
+        m_bits |= type.bits();
+    }
+
+public:
+    inline bool isInMemory() const { return type() == SignalDataStorage::Memory(); }
+
+    inline bool isInRegisters() const { return type() != SignalDataStorage::Memory(); }
 
     inline unsigned int size() { return (m_bits & (0x0FFFFFFF00000000UL)) >> 32; }
 
@@ -52,12 +77,24 @@ public:
         return m_bits & 0x00000000FFFFFFFFUL;
     }
 
+    inline unsigned char* memoryAddr(const Assembler &as) const
+    {
+        return as.codeBegin() - memoryOffset();
+    }
+
 private:
     inline void setMemoryOffset(unsigned int offset)
     {
         R64FX_DEBUG_ASSERT(isInMemory());
         m_bits &= 0xFFFFFFFF00000000UL;
         m_bits |= offset;
+    }
+
+    inline void setMemoryAddr(unsigned char* addr, const Assembler &as)
+    {
+        long offset = long(as.codeBegin()) - long(addr);
+        R64FX_DEBUG_ASSERT(offset > 0 && offset <= 0xFFFFFFFF);
+        setMemoryOffset(offset);
     }
 
 public:
@@ -79,22 +116,23 @@ public:
 
 private:
     inline void checkRegisterType(r64fx::GPR64*)
-        { R64FX_DEBUG_ASSERT((m_bits & 0x3000000000000000UL) == SignalDataStorage::GPR); }
+        { R64FX_DEBUG_ASSERT((m_bits & SignalDataStorageType::mask()) == SignalDataStorage::GPR()); }
 
-    inline void checkReisterType(r64fx::Xmm*)
-        { R64FX_DEBUG_ASSERT((m_bits & 0x3000000000000000UL) == SignalDataStorage::Xmm); }
-/*
-    inline void checkReisterType(r64fx::Ymm*)
-        { R64FX_DEBUG_ASSERT((m_bits & 0x3000000000000000UL) == SignalDataStorage::Ymm); }*/
+    inline void checkRegisterType(r64fx::Xmm*)
+        { R64FX_DEBUG_ASSERT((m_bits & SignalDataStorageType::mask()) == SignalDataStorage::Xmm()); }
+
+public:
+    inline void clear() { m_bits = 0; }
 };
+
+typedef SignalDataStorage SDS;
 
 
 /* One SignalSource can be connected to multiple SignalSink instances. */
-class SignalSource{
-    friend class SignalGraph;
+class SignalSource : public SignalDataStorage{
+    friend class SignalSubGraph;
     friend class SignalNode;
 
-    SignalDataStorage m_storage;
     struct{
         unsigned long parent_offset        :22;
         unsigned long connected_sink_count :21;
@@ -109,8 +147,6 @@ public:
     SignalSource() {}
 
     ~SignalSource() {}
-
-    inline SignalDataStorage &storage()  { return m_storage; }
 
     inline int connectedSinkCount() const { return m.connected_sink_count; }
 
@@ -136,7 +172,7 @@ public:
 
 /* Each SignalSink can be connected to only one SignalSource. */
 class SignalSink{
-    friend class SignalGraph;
+    friend class SignalSubGraph;
 
     SignalSource*  m_connected_source  = nullptr;
 
@@ -150,33 +186,37 @@ public:
 
 
 class SignalNode : public LinkedList<SignalNode>::Node{
-    friend class SignalGraph;
-    friend class SignalGraphProcessor;
+    friend class SignalSubGraph;
 
-    SignalGraph*  m_parent_graph               = nullptr;
-    unsigned int  m_incoming_connection_count  = 0;
-    unsigned int  m_outgoing_connection_count  = 0;
+    SignalSubGraph*  m_parent_subgraph            = nullptr;
+    unsigned int     m_incoming_connection_count  = 0;
+    unsigned int     m_outgoing_connection_count  = 0;
 
 protected:
-    unsigned long m_flags = 0;
+    unsigned long    m_flags = 0;
 
 public:
     SignalNode() {}
 
     virtual ~SignalNode() {}
 
-    inline SignalGraph* parentGraph() const { return m_parent_graph; }
+    inline SignalSubGraph* parentSubGraph() const { return m_parent_subgraph; }
 
     inline unsigned int incomingConnectionCount() const { return m_incoming_connection_count; }
 
     inline unsigned int outgoingConnectionCount() const { return m_outgoing_connection_count; }
+
+protected:
+    SignalNode* root();
+
+    SignalGraph* rootGraph();
 
 private:
     virtual void getSources(SignalSource* &sources, unsigned int &nsources);
 
     virtual void getSinks(SignalSink* &sinks, unsigned int &nsinks);
 
-    virtual void build(SignalGraphProcessor &sgp) = 0;
+    virtual void build(SignalGraphCompiler &c) = 0;
 };
 
 
@@ -270,6 +310,8 @@ public:
 };
 
 
+/* Decoration class that packs both Node and SignalSource/Signal instances.
+   To be used with SignalSubGraph::connect() method. */
 template<typename PortT> class NodePort{
     SignalNode* m_node = nullptr;
     PortT*      m_port = nullptr;
@@ -287,15 +329,16 @@ typedef NodePort<SignalSource>  NodeSource;
 typedef NodePort<SignalSink>    NodeSink;
 
 
-class SignalGraph : public SignalNode_WithPorts<1, 1>{
-    friend class SignalGraphProcessor;
+/* Collection of potentially connected nodes. */
+class SignalSubGraph : public SignalNode_WithPorts<1, 1>{
+    friend class SignalGraph;
 
     LinkedList<SignalNode> m_terminal_nodes;
 
 public:
-    SignalGraph() {}
+    SignalSubGraph() {}
 
-    ~SignalGraph() {}
+    ~SignalSubGraph() {}
 
     void addNode(SignalNode* node);
 
@@ -310,39 +353,47 @@ public:
     inline NodeSink linkSink() { return {this, sink(0)}; }
 
 private:
-    virtual void build(SignalGraphProcessor &sgp) override final;
+    virtual void build(SignalGraphCompiler &c) override final;
 
-    void buildNode(SignalGraphProcessor &sgp, SignalNode* node);
+    void buildNode(SignalGraphCompiler &c, SignalNode* node);
 };
 
 
-class SignalGraphProcessor{
-    Assembler  m_assembler;
-
-    float* m_data = nullptr;
-    long  m_data_size = 0;
-
-    void* m_gprs[16];
-    void* m_xmms[16];
-
-    unsigned int m_main_buffer_size = 0;
+class SignalGraphCompiler : public Assembler{
+    unsigned long  m_gprs[16];
+    unsigned long  m_frame_count  = 0;
 
 public:
-    SignalGraphProcessor() {}
+    inline unsigned long frameCount() const { return m_frame_count; }
 
-    ~SignalGraphProcessor() {}
+protected:
+    inline void setFrameCount(unsigned long frame_count) { m_frame_count = frame_count; }
 
-    void build(SignalGraph &sg, unsigned int main_buffer_size);
+public:
+    unsigned char* allocMemory(unsigned int nbytes, unsigned int align);
 
-    inline void run() { ((void (*)(float* data_ptr)) m_assembler.codeBegin())(m_data); }
+    void freeMemory(unsigned char* mem);
 
-    inline Assembler &assembler() { return m_assembler; }
+    void* allocStorage(SignalDataStorage &storage, SignalDataType type, unsigned int nitems, unsigned int align);
 
-    inline void* data() const { return m_data; }
+    void freeStorage(SignalDataStorage &storage);
+};
 
-    inline unsigned int mainBufferSize() const { return m_main_buffer_size; }
 
-    void memoryStorage(SignalDataStorage* storage, int ndwords, int align_dwords);
+class SignalGraph : public SignalSubGraph, private SignalGraphCompiler{
+
+public:
+    SignalGraph();
+
+    ~SignalGraph();
+
+    inline void setFrameCount(unsigned long frame_count) { SignalGraphCompiler::setFrameCount(frame_count); }
+
+    inline unsigned long frameCount() const { return SignalGraphCompiler::frameCount();    }
+
+    void build();
+
+    inline long run() { return ((long (*)()) codeBegin())(); }
 };
 
 
@@ -355,7 +406,7 @@ public:
     inline NodeSink right() { return {this, sink(1)}; }
 
 private:
-    virtual void build(SignalGraphProcessor &sgp) override final;
+    virtual void build(SignalGraphCompiler &cg) override final;
 };
 
 
