@@ -5,7 +5,7 @@
 
 namespace r64fx{
 
-int memory_page_size();
+unsigned int memory_page_size();
 
 void* alloc_aligned(int alignment, int nbytes);
 
@@ -37,6 +37,8 @@ public:
     bool freeChunk(void* addr);
 
     bool empty() const;
+
+    unsigned int headerSize() const;
 
 #ifdef R64FX_DEBUG
     void dumpHeader();

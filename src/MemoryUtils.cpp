@@ -11,7 +11,7 @@
 
 namespace r64fx{
 
-int memory_page_size()
+unsigned int memory_page_size()
 {
     return getpagesize();
 }
@@ -51,10 +51,12 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
             if(avail_bytes >= chunk_bytes)
             {
                 long new_offset = chunk_bytes + data_bytes;
-                R64FX_DEBUG_ASSERT((new_offset >> 2) < 32767);
                 auto addr = (((unsigned char*)buff) + buff_bytes - new_offset);
 
-                wordbuff[i] = (new_offset >> 2);
+                new_offset >>= 2;
+                R64FX_DEBUG_ASSERT(new_offset <= 0x7FFF);
+
+                wordbuff[i] = new_offset;
                 wordbuff[i + 1] = 0;
                 return addr;
             }
@@ -224,6 +226,15 @@ bool HeapBuffer::freeChunk(void* addr)
 bool HeapBuffer::empty() const
 {
     return ((unsigned short*)m_buffer)[1] == 0;
+}
+
+
+unsigned int HeapBuffer::headerSize() const
+{
+    auto wordbuff = (unsigned short*)m_buffer;
+    unsigned int i = 0;
+    while(wordbuff[i++]) i++;
+    return i<<1;
 }
 
 
