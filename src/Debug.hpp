@@ -3,6 +3,7 @@
 
 #ifdef R64FX_DEBUG
 #include <iostream>
+#include <cassert>
 #endif//R64FX_DEBUG
 
 #ifdef R64FX_DEBUG
