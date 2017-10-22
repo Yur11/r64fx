@@ -56,8 +56,8 @@ constexpr Xmm xmm0(0x0), xmm1(0x1), xmm2 (0x2), xmm3 (0x3), xmm4 (0x4), xmm5 (0x
 
 
 union Imm8{
-    unsigned char c;
-    explicit Imm8(unsigned char c) : c(c) {}
+    unsigned char b;
+    explicit Imm8(unsigned char b) : b(b) {}
 };
 
 union Imm16{
@@ -263,14 +263,12 @@ public:
 };
 
 
-/* Pack four 0..3 values into a sigle byte. To be used with shuffle instructions.
+/*  Pack four 0..3 values into a sigle byte. To be used with shuffle instructions.
 
     Each parameter defines the source scalar from which to read the data into the current position.
-    For example
-       Setting s3 to 0, means moving the first scalar form the source vector into the last scalar of the destination vector.
-       - shuf(0, 1, 2, 3) - no shuffle.
-       - shuf(3, 2, 1, 0) - reverse order.
-       - etc...
+    Setting s3 to 0, means moving the first scalar form the source vector into the last scalar of the destination vector.
+        - Shuf(0, 1, 2, 3) - no shuffle.
+        - Shuf(3, 2, 1, 0) - reverse order.
  */
 class Shuf{
     unsigned char m_byte = 0;
@@ -367,7 +365,7 @@ public:
     }
 
     /* Grow data buffer. Resize if needed.
-     * Returns an offset value. Subtract it from codeBegin().
+     * Returns an offset value. Subtract it from codeBegin() to get the pointer.
      */
     long growData(int nbytes);
 
@@ -380,6 +378,8 @@ private:
     void write(unsigned char byte);
     void write(unsigned char byte0, unsigned char byte1);
 
+    void write(unsigned char opcode, unsigned char r, GPR reg);
+    void write(unsigned char opcode, unsigned char r, GPR reg, Imm8  imm);
     void write(unsigned char opcode, unsigned char r, GPR reg, Imm32 imm);
     void write(unsigned char opcode, GPR64 reg, Imm64 imm);
 
@@ -399,70 +399,83 @@ private:
     void write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label);
 
 public:
-    inline void nop()          { write(0x90); }
-    inline void nop(int count) { fill(0x90, count); }
-    inline void ret()          { write(0xC3); }
-    inline void rdtsc()        { write(0x0F, 0x31); }
+    inline void NOP()          { write(0x90); }
+    inline void NOP(int count) { fill(0x90, count); }
+    inline void RET()          { write(0xC3); }
+    inline void RDTSC()        { write(0x0F, 0x31); }
 
-    inline void mov(GPR32 reg, Imm32 imm){ write(0xC7, 0, reg, imm); }
-    inline void mov(GPR64 reg, Imm32 imm){ write(0xC7, 0, reg, imm); }
-    inline void mov(GPR64 reg, Imm64 imm){ write(0xB8, reg, imm); }
+    inline void MOV(GPR32 reg, Imm32 imm){ write(0xC7, 0, reg, imm); }
+    inline void MOV(GPR64 reg, Imm32 imm){ write(0xC7, 0, reg, imm); }
+    inline void MOV(GPR64 reg, Imm64 imm){ write(0xB8, reg, imm); }
 
-    inline void mov(GPR64 dst, GPR64 src){ write(0x8B, dst, src); }
-    inline void mov(GPR32 reg, Mem32 mem){ write(0x8B, reg, mem); }
-    inline void mov(GPR64 reg, Mem64 mem){ write(0x8B, reg, mem); }
+    inline void MOV(GPR64 dst, GPR64 src){ write(0x8B, dst, src); }
+    inline void MOV(GPR32 reg, Mem32 mem){ write(0x8B, reg, mem); }
+    inline void MOV(GPR64 reg, Mem64 mem){ write(0x8B, reg, mem); }
 
-    inline void mov(Mem32 mem, GPR32 reg){ write(0x89, reg, mem); }
-    inline void mov(Mem64 mem, GPR64 reg){ write(0x89, reg, mem); }
+    inline void MOV(Mem32 mem, GPR32 reg){ write(0x89, reg, mem); }
+    inline void MOV(Mem64 mem, GPR64 reg){ write(0x89, reg, mem); }
 
 //     inline void mov(GPR32 reg, SIBD sibd){ write(0x8B, reg, sibd); }
-    inline void mov(GPR64 reg, SIBD sibd){ write(0x8B, reg, sibd); }
+    inline void MOV(GPR64 reg, SIBD sibd){ write(0x8B, reg, sibd); }
 //     inline void mov(SIBD sibd, GPR32 reg){ write(0x89, reg, sibd); }
-    inline void mov(SIBD sibd, GPR64 reg){ write(0x89, reg, sibd); }
+    inline void MOV(SIBD sibd, GPR64 reg){ write(0x89, reg, sibd); }
 
+#define R64FX_GPR_INST(name, rrm, r)\
+    inline void name(GPR64 reg, Imm8  imm){ write(0x83, r,  reg, imm); }\
+    inline void name(GPR64 reg, Imm32 imm){ write(0x81, r,  reg, imm); }\
+    inline void name(GPR64 dst, GPR64 src){ write(rrm + 2,  dst, src); }\
+    inline void name(GPR64 reg, Mem64 mem){ write(rrm + 2,  reg, mem); }\
+    inline void name(Mem64 mem, GPR64 reg){ write(rrm,      reg, mem); }\
+    inline void name(GPR64 reg, SIBD sibd){ write(rrm + 2,  reg, sibd); }\
+    inline void name(SIBD sibd, GPR64 reg){ write(rrm, reg, sibd); }\
 
-    inline void add(GPR64 reg, Imm32 imm){ write(0x81, 0, reg, imm); }
-    inline void add(GPR64 dst, GPR64 src){ write(0x03, dst, src); }
-    inline void add(GPR64 reg, Mem64 mem){ write(0x03, reg, mem); }
-    inline void add(Mem64 mem, GPR64 reg){ write(0x01, reg, mem); }
-    inline void add(GPR64 reg, SIBD sibd){ write(0x03, reg, sibd); }
-    inline void add(SIBD sibd, GPR64 reg){ write(0x01, reg, sibd); }
+    R64FX_GPR_INST(ADD,  0x01, 0)
+    R64FX_GPR_INST(SUB,  0x29, 5)
+    R64FX_GPR_INST(XOR, 0x31, 6)
+    R64FX_GPR_INST(AND, 0x21, 4)
+    R64FX_GPR_INST(OR,  0x09, 1)
 
+#undef R64FX_GPR_INST
 
-    inline void sub(GPR64 reg, Imm32 imm){ write(0x81, 5, reg, imm); }
-    inline void sub(GPR64 dst, GPR64 src){ write(0x2B, dst, src); }
-    inline void sub(GPR64 reg, Mem64 mem){ write(0x2B, reg, mem); }
-    inline void sub(Mem64 mem, GPR64 reg){ write(0x29, reg, mem); }
-    inline void sub(GPR64 reg, SIBD sibd){ write(0x2B, reg, sibd); }
-    inline void sub(SIBD sibd, GPR64 reg){ write(0x29, reg, sibd); }
+#define R64FX_GPR_SHIFT_INST(name, r)\
+    inline void name(GPR32 gpr) { write(0xD1, r, gpr); }\
+    inline void name(GPR64 gpr) { write(0xD1, r, gpr); }\
+    inline void name(GPR32 gpr, Imm8 imm) { write(0xC1, r, gpr, imm); }\
+    inline void name(GPR64 gpr, Imm8 imm) { write(0xC1, r, gpr, imm); }
 
-    inline void push (GPR64 reg){ write(0x50, reg); }
-    inline void pop  (GPR64 reg){ write(0x58, reg); }
+    R64FX_GPR_SHIFT_INST(SHL, 4)
+    R64FX_GPR_SHIFT_INST(SHR, 5)
+    R64FX_GPR_SHIFT_INST(SAR, 7)
 
-    inline void cmp(GPR64 reg, Imm32 imm){ write(0x81, 7, reg, imm); }
+#undef R64FX_GPR_SHIFT_INST
+
+    inline void PUSH (GPR64 reg){ write(0x50, reg); }
+    inline void POP  (GPR64 reg){ write(0x58, reg); }
+
+    inline void CMP(GPR64 reg, Imm32 imm){ write(0x81, 7, reg, imm); }
 
     void mark(JumpLabel &label);
 
-    inline void jmp (JumpLabel &label){ write(0,    0xE9, label); }
-    inline void jnz (JumpLabel &label){ write(0x0F, 0x85, label); }
-    inline void jz  (JumpLabel &label){ write(0x0F, 0x84, label); }
-    inline void je  (JumpLabel &label){ write(0x0F, 0x84, label); }
-    inline void jne (JumpLabel &label){ write(0x0F, 0x85, label); }
-    inline void jl  (JumpLabel &label){ write(0x0F, 0x8C, label); }
+    inline void JMP (JumpLabel &label){ write(0,    0xE9, label); }
+    inline void JNZ (JumpLabel &label){ write(0x0F, 0x85, label); }
+    inline void JZ  (JumpLabel &label){ write(0x0F, 0x84, label); }
+    inline void JE  (JumpLabel &label){ write(0x0F, 0x84, label); }
+    inline void JNE (JumpLabel &label){ write(0x0F, 0x85, label); }
+    inline void JL  (JumpLabel &label){ write(0x0F, 0x8C, label); }
 
 /* === SSE === */
 
-    inline void movaps(Xmm dst, Xmm src)    { write0x0F(0, 0x28, dst, src); }
-    inline void movaps(Xmm reg, Mem128 mem) { write0x0F(0, 0x28, reg, mem); }
-    inline void movaps(Mem128 mem, Xmm reg) { write0x0F(0, 0x29, reg, mem); }
-    inline void movaps(Xmm reg, SIBD sibd)  { write0x0F(0, 0x28, reg, sibd); }
-    inline void movaps(SIBD sibd, Xmm reg)  { write0x0F(0, 0x29, reg, sibd); }
+    inline void MOVAPS(Xmm dst, Xmm src)    { write0x0F(0, 0x28, dst, src); }
+    inline void MOVAPS(Xmm reg, Mem128 mem) { write0x0F(0, 0x28, reg, mem); }
+    inline void MOVAPS(Mem128 mem, Xmm reg) { write0x0F(0, 0x29, reg, mem); }
+    inline void MOVAPS(Xmm reg, SIBD sibd)  { write0x0F(0, 0x28, reg, sibd); }
+    inline void MOVAPS(SIBD sibd, Xmm reg)  { write0x0F(0, 0x29, reg, sibd); }
 
-    inline void movups(Xmm dst, Xmm src)   { write0x0F(0, 0x10, dst, src); }
-    inline void movups(Xmm reg, Mem32 mem) { write0x0F(0, 0x10, reg, mem); }
-    inline void movups(Mem32 mem, Xmm reg) { write0x0F(0, 0x11, reg, mem); }
-    inline void movups(Xmm reg, SIBD sibd) { write0x0F(0, 0x10, reg, sibd); }
-    inline void movups(SIBD sibd, Xmm reg) { write0x0F(0, 0x11, reg, sibd); }
+    inline void MOVUPS(Xmm dst, Xmm src)   { write0x0F(0, 0x10, dst, src); }
+    inline void MOVUPS(Xmm reg, Mem32 mem) { write0x0F(0, 0x10, reg, mem); }
+    inline void MOVUPS(Mem32 mem, Xmm reg) { write0x0F(0, 0x11, reg, mem); }
+    inline void MOVUPS(Xmm reg, SIBD sibd) { write0x0F(0, 0x10, reg, sibd); }
+    inline void MOVUPS(SIBD sibd, Xmm reg) { write0x0F(0, 0x11, reg, sibd); }
 
 private:
     inline void sse_ps_instruction(unsigned char second_opcode_byte, Xmm dst, Xmm src)
@@ -494,73 +507,73 @@ inline void name(Xmm reg, Mem32 mem) { sse_ss_instruction(third_opcode_byte, reg
 inline void name(Xmm reg, SIBD sibd) { sse_ss_instruction(third_opcode_byte, reg, sibd); }
 
 #define ENCODE_SSE_INSTRUCTION(name, opcode)\
-    ENCODE_SSE_PS_INSTRUCTION(name##ps, opcode)\
-    ENCODE_SSE_SS_INSTRUCTION(name##ss, opcode)
+    ENCODE_SSE_PS_INSTRUCTION(name##PS, opcode)\
+    ENCODE_SSE_SS_INSTRUCTION(name##SS, opcode)
 
 public:
-    ENCODE_SSE_INSTRUCTION(add,   0x58)
-    ENCODE_SSE_INSTRUCTION(sub,   0x5C)
-    ENCODE_SSE_INSTRUCTION(mul,   0x59)
-    ENCODE_SSE_INSTRUCTION(div,   0x5E)
-    ENCODE_SSE_INSTRUCTION(rcp,   0x53)
-    ENCODE_SSE_INSTRUCTION(sqrt,  0x51)
-    ENCODE_SSE_INSTRUCTION(rsqrt, 0x52)
-    ENCODE_SSE_INSTRUCTION(max,   0x5F)
-    ENCODE_SSE_INSTRUCTION(min,   0x5D)
-    ENCODE_SSE_PS_INSTRUCTION(andps,   0x54)
-    ENCODE_SSE_PS_INSTRUCTION(andnps,  0x55)
-    ENCODE_SSE_PS_INSTRUCTION(orps,    0x56)
-    ENCODE_SSE_PS_INSTRUCTION(xorps,   0x57)
+    ENCODE_SSE_INSTRUCTION(ADD,   0x58)
+    ENCODE_SSE_INSTRUCTION(SUB,   0x5C)
+    ENCODE_SSE_INSTRUCTION(MUL,   0x59)
+    ENCODE_SSE_INSTRUCTION(DIV,   0x5E)
+    ENCODE_SSE_INSTRUCTION(RCP,   0x53)
+    ENCODE_SSE_INSTRUCTION(SQRT,  0x51)
+    ENCODE_SSE_INSTRUCTION(RSQRT, 0x52)
+    ENCODE_SSE_INSTRUCTION(MAX,   0x5F)
+    ENCODE_SSE_INSTRUCTION(MIN,   0x5D)
+    ENCODE_SSE_PS_INSTRUCTION(ANDPS,   0x54)
+    ENCODE_SSE_PS_INSTRUCTION(ANDNPS,  0x55)
+    ENCODE_SSE_PS_INSTRUCTION(ORPS,    0x56)
+    ENCODE_SSE_PS_INSTRUCTION(XORPS,   0x57)
 
 #undef ENCODE_SSE_INSTRUCTION
 #undef ENCODE_SSE_PS_INSTRUCTION
 #undef ENCODE_SSE_SS_INSTRUCTION
 
-    inline void cmpps(CmpCode kind, Xmm dst, Xmm src)    { write0x0F(0, 0xC2, dst, src,  kind.code()); }
-    inline void cmpps(CmpCode kind, Xmm reg, Mem128 mem) { write0x0F(0, 0xC2, reg, mem,  kind.code()); }
-    inline void cmpps(CmpCode kind, Xmm reg, SIBD sibd)  { write0x0F(0, 0xC2, reg, sibd, kind.code()); }
+    inline void CMPPS(CmpCode kind, Xmm dst, Xmm src)    { write0x0F(0, 0xC2, dst, src,  kind.code()); }
+    inline void CMPPS(CmpCode kind, Xmm reg, Mem128 mem) { write0x0F(0, 0xC2, reg, mem,  kind.code()); }
+    inline void CMPPS(CmpCode kind, Xmm reg, SIBD sibd)  { write0x0F(0, 0xC2, reg, sibd, kind.code()); }
 
-    inline void cmpss(CmpCode kind, Xmm dst, Xmm src)    { write0x0F(0xF3, 0xC2, dst, src,  kind.code()); }
-    inline void cmpss(CmpCode kind, Xmm reg, Mem128 mem) { write0x0F(0xF3, 0xC2, reg, mem,  kind.code()); }
-    inline void cmpss(CmpCode kind, Xmm reg, SIBD sibd)  { write0x0F(0xF3, 0xC2, reg, sibd, kind.code()); }
+    inline void CMPSS(CmpCode kind, Xmm dst, Xmm src)    { write0x0F(0xF3, 0xC2, dst, src,  kind.code()); }
+    inline void CMPSS(CmpCode kind, Xmm reg, Mem128 mem) { write0x0F(0xF3, 0xC2, reg, mem,  kind.code()); }
+    inline void CMPSS(CmpCode kind, Xmm reg, SIBD sibd)  { write0x0F(0xF3, 0xC2, reg, sibd, kind.code()); }
 
-    inline void cmpltps(Xmm dst, Xmm src)    { cmpps(LT, dst, src); }
-    inline void cmpltps(Xmm reg, Mem128 mem) { cmpps(LT, reg, mem); }
+    inline void CMPLTPS(Xmm dst, Xmm src)    { CMPPS(LT, dst, src); }
+    inline void CMPLTPS(Xmm reg, Mem128 mem) { CMPPS(LT, reg, mem); }
 
-    inline void cmpnltps(Xmm dst, Xmm src)    { cmpps(NLT, dst, src); }
-    inline void cmpnltps(Xmm reg, Mem128 mem) { cmpps(NLT, reg, mem); }
+    inline void CMPNLTPS(Xmm dst, Xmm src)    { CMPPS(NLT, dst, src); }
+    inline void CMPNLTPS(Xmm reg, Mem128 mem) { CMPPS(NLT, reg, mem); }
 
-    inline void cmpeqps(Xmm dst, Xmm src)    { cmpps(EQ, dst, src); }
-    inline void cmpeqps(Xmm reg, Mem128 mem) { cmpps(EQ, reg, mem); }
+    inline void CMPEQPS(Xmm dst, Xmm src)    { CMPPS(EQ, dst, src); }
+    inline void CMPEQPS(Xmm reg, Mem128 mem) { CMPPS(EQ, reg, mem); }
 
-    inline void movss(Xmm reg, Mem32 mem) { write0x0F(0xF3, 0x10, reg, mem); }
-    inline void movss(Mem32 mem, Xmm reg) { write0x0F(0xF3, 0x11, reg, mem); }
+    inline void MOVSS(Xmm reg, Mem32 mem) { write0x0F(0xF3, 0x10, reg, mem); }
+    inline void MOVSS(Mem32 mem, Xmm reg) { write0x0F(0xF3, 0x11, reg, mem); }
 
-    inline void shufps(Xmm dst, Xmm src,    Shuf shuf) { write0x0F(0, 0xC6, dst, src,  shuf.byte()); }
-    inline void shufps(Xmm reg, Mem128 mem, Shuf shuf) { write0x0F(0, 0xC6, reg, mem,  shuf.byte()); }
-    inline void shufps(Xmm reg, SIBD sibd,  Shuf shuf) { write0x0F(0, 0xC6, reg, sibd, shuf.byte()); }
+    inline void SHUFPS(Xmm dst, Xmm src,    Shuf shuf) { write0x0F(0, 0xC6, dst, src,  shuf.byte()); }
+    inline void SHUFPS(Xmm reg, Mem128 mem, Shuf shuf) { write0x0F(0, 0xC6, reg, mem,  shuf.byte()); }
+    inline void SHUFPS(Xmm reg, SIBD sibd,  Shuf shuf) { write0x0F(0, 0xC6, reg, sibd, shuf.byte()); }
 
-    inline void pshufd(Xmm dst, Xmm src,    Shuf shuf) { write0x0F(0x66, 0x70, dst, src,  shuf.byte()); }
-    inline void pshufd(Xmm reg, Mem128 mem, Shuf shuf) { write0x0F(0x66, 0x70, reg, mem,  shuf.byte()); }
-    inline void pshufd(Xmm reg, SIBD sibd,  Shuf shuf) { write0x0F(0x66, 0x70, reg, sibd, shuf.byte()); }
+    inline void PSHUFD(Xmm dst, Xmm src,    Shuf shuf) { write0x0F(0x66, 0x70, dst, src,  shuf.byte()); }
+    inline void PSHUFD(Xmm reg, Mem128 mem, Shuf shuf) { write0x0F(0x66, 0x70, reg, mem,  shuf.byte()); }
+    inline void PSHUFD(Xmm reg, SIBD sibd,  Shuf shuf) { write0x0F(0x66, 0x70, reg, sibd, shuf.byte()); }
 
-    inline void cvtps2dq(Xmm dst, Xmm src)    { write0x0F(0x66, 0x5B, dst, src); }
-    inline void cvtps2dq(Xmm reg, Mem128 mem) { write0x0F(0x66, 0x5B, reg, mem); }
-    inline void cvtps2dq(Xmm reg, SIBD sibd)  { write0x0F(0x66, 0x5B, reg, sibd); }
+    inline void CVTPS2DQ(Xmm dst, Xmm src)    { write0x0F(0x66, 0x5B, dst, src); }
+    inline void CVTPS2DQ(Xmm reg, Mem128 mem) { write0x0F(0x66, 0x5B, reg, mem); }
+    inline void CVTPS2DQ(Xmm reg, SIBD sibd)  { write0x0F(0x66, 0x5B, reg, sibd); }
 
-    inline void cvtdq2ps(Xmm dst, Xmm src)    { write0x0F(0, 0x5B, dst, src); }
-    inline void cvtdq2ps(Xmm reg, Mem128 mem) { write0x0F(0, 0x5B, reg, mem); }
-    inline void cvtdq2ps(Xmm reg, SIBD sibd)  { write0x0F(0, 0x5B, reg, sibd); }
+    inline void CVTDQ2PS(Xmm dst, Xmm src)    { write0x0F(0, 0x5B, dst, src); }
+    inline void CVTDQ2PS(Xmm reg, Mem128 mem) { write0x0F(0, 0x5B, reg, mem); }
+    inline void CVTDQ2PS(Xmm reg, SIBD sibd)  { write0x0F(0, 0x5B, reg, sibd); }
 
 /* === SSE2 === */
 
-    inline void paddd(Xmm dst, Xmm src)    { write0x0F(0x66, 0xFE, dst, src);}
-    inline void paddd(Xmm reg, Mem128 mem) { write0x0F(0x66, 0xFE, reg, mem); }
-    inline void paddd(Xmm reg, SIBD sibd)  { write0x0F(0x66, 0xFE, reg, sibd); }
+    inline void PADDD(Xmm dst, Xmm src)    { write0x0F(0x66, 0xFE, dst, src);}
+    inline void PADDD(Xmm reg, Mem128 mem) { write0x0F(0x66, 0xFE, reg, mem); }
+    inline void PADDD(Xmm reg, SIBD sibd)  { write0x0F(0x66, 0xFE, reg, sibd); }
 
-    inline void psubd(Xmm dst, Xmm src)    { write0x0F(0x66, 0xFA, dst, src); }
-    inline void psubd(Xmm reg, Mem128 mem) { write0x0F(0x66, 0xFA, reg, mem); }
-    inline void psubd(Xmm reg, SIBD sibd)  { write0x0F(0x66, 0xFA, reg, sibd); }
+    inline void PSUBD(Xmm dst, Xmm src)    { write0x0F(0x66, 0xFA, dst, src); }
+    inline void PSUBD(Xmm reg, Mem128 mem) { write0x0F(0x66, 0xFA, reg, mem); }
+    inline void PSUBD(Xmm reg, SIBD sibd)  { write0x0F(0x66, 0xFA, reg, sibd); }
 
 };//Assembler
 

@@ -235,16 +235,16 @@ void SignalGraph::build()
 
     setCodeEnd(codeBegin());
 
-    mov(rcx, Imm32(-frameCount()));
+    MOV(rcx, Imm32(-frameCount()));
     JumpLabel loop;
     mark(loop);
 
     SignalSubGraph::build(*this);
 
-    add(rcx, Imm32(1));
-    jnz(loop);
+    ADD(rcx, Imm32(1));
+    JNZ(loop);
 
-    ret();
+    RET();
 }
 
 

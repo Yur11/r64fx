@@ -165,6 +165,31 @@ void Assembler::write(unsigned char byte0, unsigned char byte1)
 }
 
 
+void Assembler::write(unsigned char opcode, unsigned char r, GPR reg)
+{
+    bool use_rex = reg.is64bit() || reg.prefixBit();
+    auto p = growCode(use_rex ? 3 : 2);
+    int n = 0;
+    if(use_rex)
+        { p[n++] = Rex(reg.is64bit(), 0, 0, reg.prefixBit()); }
+    p[n++] = opcode;
+    p[n++] = ModRM(3, r, reg.lowerBits());
+}
+
+
+void Assembler::write(unsigned char opcode, unsigned char r, GPR reg, Imm8 imm)
+{
+    bool use_rex = reg.is64bit() || reg.prefixBit();
+    auto p = growCode(use_rex ? 4 : 3);
+    int n = 0;
+    if(use_rex)
+        { p[n++] = Rex(reg.is64bit(), 0, 0, reg.prefixBit()); }
+    p[n++] = opcode;
+    p[n++] = ModRM(3, r, reg.lowerBits());
+    p[n++] = imm.b;
+}
+
+
 void Assembler::write(unsigned char opcode, unsigned char r, GPR reg, Imm32 imm)
 {
     bool use_rex = reg.is64bit() || reg.prefixBit();

@@ -51,7 +51,7 @@ bool test_buffers(Assembler &as)
     R64FX_EXPECT_EQ(null_ptr, as.dataBegin());
     R64FX_EXPECT_EQ(null_ptr, as.codeBegin());
     R64FX_EXPECT_EQ(null_ptr, as.codeEnd());
-    as.nop(1);
+    as.NOP(1);
     R64FX_EXPECT_EQ(0UL, as.dataPageCount());
     R64FX_EXPECT_EQ(1UL, as.codePageCount());
     R64FX_EXPECT_EQ(5678, as.growData(5678));
@@ -66,28 +66,28 @@ bool test_buffers(Assembler &as)
     as.rewindCode();
 
     //Add 1 to 0x2AAAAAAAAAAAAAAAL
-    as.mov(rax, Imm32(1));
-    as.add(Mem64(as.dataBegin()), rax);
-    as.nop(memory_page_size() + (rand() & 0xF));
+    as.MOV(rax, Imm32(1));
+    as.ADD(Mem64(as.dataBegin()), rax);
+    as.NOP(memory_page_size() + (rand() & 0xF));
 
-    as.mov(rdx, Imm32(100));
-    as.nop(memory_page_size() + (rand() & 0xF));
+    as.MOV(rdx, Imm32(100));
+    as.NOP(memory_page_size() + (rand() & 0xF));
 
-    as.mov(rcx, Imm32(10));
-    as.nop(memory_page_size() + (rand() & 0xF));
+    as.MOV(rcx, Imm32(10));
+    as.NOP(memory_page_size() + (rand() & 0xF));
 
     //Sub 16 from 0x5555555555555555L
-    as.mov(rax, Imm32(16));
-    as.sub(Mem64(as.dataBegin() + 8), rax);
-    as.nop(memory_page_size() + (rand() & 0xF));
+    as.MOV(rax, Imm32(16));
+    as.SUB(Mem64(as.dataBegin() + 8), rax);
+    as.NOP(memory_page_size() + (rand() & 0xF));
 
-    as.mov(rax, Imm32(1));
-    as.nop(memory_page_size() + (rand() & 0xF));
+    as.MOV(rax, Imm32(1));
+    as.NOP(memory_page_size() + (rand() & 0xF));
 
-    as.add(rax, rcx);
-    as.nop(memory_page_size() + (rand() & 0xF));
-    as.add(rax, rdx);
-    as.ret();
+    as.ADD(rax, rcx);
+    as.NOP(memory_page_size() + (rand() & 0xF));
+    as.ADD(rax, rdx);
+    as.RET();
 
     R64FX_EXPECT_EQ(111, ((JitFun)as.codeBegin())());
     R64FX_EXPECT_EQ(0x2AAAAAAAAAAAAAABL, ((long*)(as.dataBegin()))[0]); // +1
@@ -109,113 +109,136 @@ bool test_mov(Assembler &as)
     auto a = buff;
     auto b = buff + 1;
 
-    cout << "mov(GPR64, Imm32)\n";
+    cout << "MOV(GPR32, Imm32)\n";
     {
         int num = rand();
         as.rewindCode();
-        as.mov(rax, Imm32(num));
-        as.ret();
+        as.MOV(eax, Imm32(num));
+        as.RET();
         R64FX_EXPECT_EQ(num, jitfun());
     }
 
-    cout << "mov(GPR64, Imm32) rex\n";
+    cout << "MOV(GPR64, Imm32)\n";
+    {
+        int num = rand();
+        as.rewindCode();
+        as.MOV(rax, Imm32(num));
+        as.RET();
+        R64FX_EXPECT_EQ(num, jitfun());
+    }
+
+    cout << "MOV(GPR64, Imm32) rex\n";
     {
         int num1 = rand();
         int num2 = rand();
         as.rewindCode();
-        as.mov(rax, Imm32(num1));
-        as.mov(r8,  Imm32(num2));
-        as.ret();
+        as.MOV(rax, Imm32(num1));
+        as.MOV(r8,  Imm32(num2));
+        as.RET();
         R64FX_EXPECT_EQ(num1, jitfun())
     }
 
-    cout << "mov(GPR64, Imm64)\n";
+    cout << "MOV(GPR64, Imm64)\n";
     {
         long int num = rand();
         as.rewindCode();
-        as.mov(rax, Imm64(num));
-        as.ret();
+        as.MOV(rax, Imm64(num));
+        as.RET();
         R64FX_EXPECT_EQ(num, jitfun());
     }
 
-    cout << "mov(GPR64, Imm64) rex\n";
+    cout << "MOV(GPR64, Imm64) rex\n";
     {
         int num1 = rand();
         int num2 = rand();
         as.rewindCode();
-        as.mov(rax, Imm64(num1));
-        as.mov(r8,  Imm64(num2));
-        as.ret();
+        as.MOV(rax, Imm64(num1));
+        as.MOV(r8,  Imm64(num2));
+        as.RET();
         R64FX_EXPECT_EQ(num1, jitfun());
     }
 
-    cout << "mov(GPR64, GPR64)\n";
+    cout << "MOV(GPR64, GPR64)\n";
     {
         int num = rand();
         as.rewindCode();
-        as.mov(rcx, Imm32(num));
-        as.mov(rax, rcx);
-        as.ret();
+        as.MOV(rcx, Imm32(num));
+        as.MOV(rax, rcx);
+        as.RET();
         R64FX_EXPECT_EQ(num, jitfun());
     }
 
-    cout << "mov(GPR64, GPR64) rex\n";
+    cout << "MOV(GPR64, GPR64) rex\n";
     {
         int num1 = rand();
         int num2 = rand();
         int num3 = rand();
         as.rewindCode();
-        as.mov(r9,  Imm32(num1));
-        as.mov(rdx, Imm32(num2));
-        as.mov(rcx, Imm32(num3));
-        as.mov(rax, r9);
-        as.mov(r8,  rdx);
-        as.ret();
+        as.MOV(r9,  Imm32(num1));
+        as.MOV(rdx, Imm32(num2));
+        as.MOV(rcx, Imm32(num3));
+        as.MOV(rax, r9);
+        as.MOV(r8,  rdx);
+        as.RET();
         R64FX_EXPECT_EQ(num1, jitfun());
     }
 
-    cout << "mov(GPR64, Mem64)\n";
+    cout << "MOV(GPR64, Mem64)\n";
     {
         *a = rand();
         as.rewindCode();
-        as.mov(rax, Mem64(a));
-        as.ret();
+        as.MOV(rax, Mem64(a));
+        as.RET();
         R64FX_EXPECT_EQ(*a, jitfun());
     }
 
-    cout << "mov(GPR64, Mem64) rex\n";
+    cout << "MOV(GPR32, Mem32)\n";
+    {
+        auto aa = (int*)a;
+        auto a1 = aa;
+        auto a2 = aa + 1;
+        *a1 = rand() & 0xFFFFFF;
+        *a2 = rand() & 0xFFFFFF;
+        as.rewindCode();
+        as.MOV(eax, Mem32(a2));
+        as.MOV(r8d, Mem32(a1));
+        as.RET();
+        R64FX_EXPECT_EQ(*a2, jitfun());
+    }
+
+    cout << "MOV(GPR64, Mem64) rex\n";
     {
         *a = rand();
         *b = rand();
         as.rewindCode();
-        as.mov(rax, Mem64(a));
-        as.mov(r8,  Mem64(b));
-        as.ret();
+        as.MOV(rax, Mem64(a));
+        as.MOV(r8,  Mem64(b));
+        as.RET();
         R64FX_EXPECT_EQ(*a, jitfun());
     }
 
-    cout << "mov(Mem64, GPR64)\n";
+    cout << "MOV(Mem64, GPR64)\n";
     {
         int num = rand();
         *a = rand();
         as.rewindCode();
-        as.mov(rcx, Imm32(num));
-        as.mov(Mem64(a), rcx);
-        as.ret();
+        as.MOV(rcx, Imm32(num));
+        as.MOV(Mem64(a), rcx);
+        as.RET();
         jitfun();
         R64FX_EXPECT_EQ(num, *a);
     }
 
-    cout << "mov(Mem64, GPR64) rex\n";
+    cout << "MOV(Mem64, GPR64) rex\n";
     {
         int num1 = rand();
         int num2 = rand();
         *a = 0;
         as.rewindCode();
-        as.mov(rax, Imm32(num1));
-        as.mov(r8,  Imm32(num2));
-        as.mov(Mem64(a), r8);
-        as.ret();
+        as.MOV(rax, Imm32(num1));
+        as.MOV(r8,  Imm32(num2));
+        as.MOV(Mem64(a), r8);
+        as.RET();
         jitfun();
         R64FX_EXPECT_EQ(num2, *a);
     }
@@ -225,30 +248,30 @@ bool test_mov(Assembler &as)
         as.growData(sizeof(int) * 4);
         auto ptr = (int*) as.dataBegin();
 
-        cout << "mov(GPR32, Mem32)\n";
+        cout << "MOV(GPR32, Mem32)\n";
         for(int i=0; i<4; i++)
             ptr[i] = rand();
         as.rewindCode();
-        as.mov(eax, Mem32(ptr + 1));
-        as.ret();
+        as.MOV(eax, Mem32(ptr + 1));
+        as.RET();
         R64FX_EXPECT_EQ(ptr[1], jitfun());
 
-        cout << "mov(GPR32, Mem32) rex\n";
+        cout << "MOV(GPR32, Mem32) rex\n";
         for(int i=0; i<4; i++)
             ptr[i] = rand();
         as.rewindCode();
-        as.mov(eax, Mem32(ptr + 1));
-        as.mov(r8d, Mem32(ptr + 2));
-        as.ret();
+        as.MOV(eax, Mem32(ptr + 1));
+        as.MOV(r8d, Mem32(ptr + 2));
+        as.RET();
         R64FX_EXPECT_EQ(ptr[1], jitfun());
 
-        cout << "mov(Mem32, GPR)\n";
+        cout << "MOV(Mem32, GPR)\n";
         for(int i=0; i<4; i++)
             ptr[i] = rand();
         as.rewindCode();
-        as.mov(eax, Imm32(ptr[0]));
-        as.mov(Mem32(ptr + 1), eax);
-        as.ret();
+        as.MOV(eax, Imm32(ptr[0]));
+        as.MOV(Mem32(ptr + 1), eax);
+        as.RET();
         jitfun();
         R64FX_EXPECT_EQ(ptr[0], ptr[1]);
     }
@@ -258,109 +281,100 @@ bool test_mov(Assembler &as)
 }
 
 
-bool test_add(Assembler &as)
+template<
+    void (Assembler::*gpr64_imm32) (GPR64, Imm32),
+    void (Assembler::*gpr64_imm8 ) (GPR64, Imm8 ),
+    void (Assembler::*gpr64_gpr64) (GPR64, GPR64),
+    void (Assembler::*gpr64_mem64) (GPR64, Mem64),
+    void (Assembler::*gpr64_sibd ) (GPR64, SIBD ),
+    void (Assembler::*mem64_gpr64) (Mem64, GPR64),
+    void (Assembler::* sibd_gpr64) (SIBD,  GPR64)
+> bool test_gpr_inst(const char* name, Assembler &as, int (*expected)(int a, int b))
 {
     auto jitfun = (JitFun) as.codeBegin();
 
     as.rewindData();
     as.growData(4 * sizeof(long));
-    auto buff = (long*) as.dataBegin();
-    auto a = buff;
-    auto b = buff + 1;
-    auto c = buff + 2;
-    auto d = buff + 3;
 
-    cout << "add(GPR64, Imm32) + rex\n";
+    cout << name << "(GPR64, Imm32)\n";
     {
-        int num1 = rand() & 0xFFFF;
-        int num2 = rand() & 0xFFFF;
-        int num3 = rand() & 0xFFFF;
-        int sum = num1 + num2;
+        int a = rand() & 0xFFFFFF;
+        int b = rand() & 0xFFFFFF;
+        int c = rand() & 0xFFFFFF;
+
         as.rewindCode();
-        as.mov(rax, Imm32(num1));
-        as.add(rax, Imm32(num2));
-        as.mov(r8,  Imm32(0));
-        as.add(r8,  Imm32(num3)); //Corrupt dst. Rex encodes rax instead of r8.
-        as.ret();
-        R64FX_EXPECT_EQ(sum, jitfun());
+        as.MOV(rax, Imm32(a));
+        (as.*gpr64_imm32)(rax, Imm32(b));
+        (as.*gpr64_imm32)(r8,  Imm32(c));
+        as.RET();
+        R64FX_EXPECT_EQ(expected(a, b), jitfun());
     }
 
-    cout << "add(GPR64, GPR64) + rex\n";
+    cout << name << "(GPR64, Imm8 )\n";
     {
-        int num1 = rand() & 0xFFFF;
-        int num2 = rand() & 0xFFFF;
-        int num3 = rand() & 0xFFFF;
-        int sum = num1 + num2;
+        char a = rand() & 0xFF;
+        char b = rand() & 0xFF;
+        char c = rand() & 0xFF;
+
         as.rewindCode();
-        as.mov(rax, Imm32(num1));
-        as.mov(r9,  Imm32(num2));
-        as.mov(rcx, Imm32(num3));
-        as.add(rcx, rdx);
-        as.add(rax, r9);
-        as.add(r8,  rdx);
-        as.ret();
-        R64FX_EXPECT_EQ(sum, jitfun());
+        as.MOV(rax, Imm32(a));
+        (as.*gpr64_imm8)(rax, Imm8(b));
+        (as.*gpr64_imm8)(r8,  Imm8(c));
+        as.RET();
+        R64FX_EXPECT_EQ(expected(a, b), jitfun());
     }
 
-    cout << "add(GPR64, Mem64) + rex\n";
+    cout << name << "(GPR64, GPR64)\n";
     {
-        *a = rand();
-        *b = rand();
-        long sum = *a + *b;
+        int a = rand() & 0xFFFFFF;
+        int b = rand() & 0xFFFFFF;
+        int c = rand() & 0xFFFFFF;
+
         as.rewindCode();
-        as.mov(rax, Imm64(*b));
-        as.add(rax, Mem64(a));
-        as.add(r8,  Mem64(b));
-        as.ret();
-        R64FX_EXPECT_EQ(sum, jitfun());
+        as.MOV(rax, Imm32(a));
+        as.MOV(rcx, Imm32(b));
+        as.MOV(rdx, Imm32(c));
+        (as.*gpr64_gpr64)(rax, rcx);
+        (as.*gpr64_gpr64)(r8,  rdx);
+        as.RET();
+        R64FX_EXPECT_EQ(expected(a, b), jitfun());
     }
 
-    cout << "add(Mem64, GPR64) + rex\n";
+    cout << name << "(GPR64, Mem64)\n";
     {
-        *a = 0;
-        long num1 = rand();
+        auto buff = (long*) as.dataBegin();
+        for(int i=0; i<4; i++)
+        {
+            buff[i] = rand() & 0xFFFFFF;
+        }
+
         as.rewindCode();
-        as.mov(r8,  Imm32(num1));
-        as.mov(rax, Imm32(rand()));
-        as.add(Mem64(a), r8);
-        as.ret();
-        jitfun();
-        R64FX_EXPECT_EQ(num1, *a);
+        as.MOV(rax, Imm32(0));
+        as.MOV(rax, Mem64(buff + 0));
+        (as.*gpr64_mem64)(rax, Mem64(buff + 1));
+        (as.*gpr64_mem64)(r8,  Mem64(buff + 2));
+        as.RET();
+        R64FX_EXPECT_EQ(expected(buff[0], buff[1]), jitfun());
     }
 
-    cout << "add(GPR64, Base, Disp8) + rex\n";
+    cout << name << "(GPR64, SIBD )\n";
     {
-        *a = rand();
-        *b = rand();
-        *c = rand();
-        *d = rand();
-        as.rewindCode();
-        as.mov(rax, Imm32(0));
-        as.mov(r10, ImmAddr(a));
-        as.mov(rdx, ImmAddr(c));
-        as.add(rax, Base(r10) + Disp(8));
-        as.add(r8,  Base(r10) + Disp(8));
-        as.ret();
-        R64FX_EXPECT_EQ(*b, jitfun());
-    }
+        auto buff = (long*) as.dataBegin();
+        for(int i=0; i<4; i++)
+        {
+            buff[i] = rand() & 0xFFFFFF;
+        }
 
-    cout << "add(Base, Disp8, GPR64) + rex\n";
-    {
-        *a = rand();
-        *b = rand();
-        *c = rand();
-        *d = rand();
-        long int num = rand();
-        long int sum = num + *d;
         as.rewindCode();
-        as.mov(rax, Imm64(num + 1));
-        as.mov(r8,  Imm64(num));
-        as.mov(rdx, ImmAddr(a));
-        as.mov(r10, ImmAddr(c));
-        as.add(Base(r10) + Disp(8), r8);
-        as.ret();
-        jitfun();
-        R64FX_EXPECT_EQ(sum, *d);
+        as.MOV(rax, Imm32(0));
+        as.MOV(r8,  Imm32(1));
+        as.MOV(rax, Mem64(buff + 0));
+        as.MOV(rdx, ImmAddr(buff + 1));
+        as.MOV(rcx, Imm32(1));
+        (as.*gpr64_sibd)(rax, Base(rdx) + Index(rcx, 8) + Disp(8));
+        (as.*gpr64_sibd)(r8, Base(rdx) + Index(rcx, 8) + Disp(8));
+        as.RET();
+        R64FX_EXPECT_EQ(expected(buff[0], buff[3]), jitfun());
     }
 
     cout << "\n";
@@ -368,113 +382,67 @@ bool test_add(Assembler &as)
 }
 
 
-bool test_sub(Assembler &as)
+bool test_gpr_instrs(Assembler &as)
+{
+#define R64FX_LIST7(a) a,a,a,a,a,a,a
+#define R64FX_TEST_GPR_INSTR(name, op) test_gpr_inst<R64FX_LIST7(&Assembler::name)>(#name, as, [](int a, int b){ return a op b; })
+    return
+        R64FX_TEST_GPR_INSTR(ADD, +) &&
+        R64FX_TEST_GPR_INSTR(SUB, -) &&
+        R64FX_TEST_GPR_INSTR(XOR, ^) &&
+        R64FX_TEST_GPR_INSTR(AND, &) &&
+        R64FX_TEST_GPR_INSTR(OR,  |);
+#undef R64FX_LIST7
+#undef R64FX_TEST_GPR_INSTR
+}
+
+
+template<
+    typename IntT,
+    void (Assembler::*shift1)     (GPR64 gpr),
+    void (Assembler::*shift_imm8) (GPR64 gpr, Imm8)
+>
+bool test_shift_instr(const char* name, Assembler &as, IntT (*expected)(IntT num, IntT shift))
 {
     auto jitfun = (JitFun) as.codeBegin();
 
-    as.rewindData();
-    as.growData(4 * sizeof(long));
-    auto buff = (long*) as.dataBegin();
-    auto a = buff;
-    auto b = buff + 1;
-    auto c = buff + 2;
-    auto d = buff + 3;
-
-    cout << "sub(GPR64, Imm32) + rex\n";
+    cout << name << "(GPR, 1)\n";
     {
-        int num1 = rand() & 0xFFFF;
-        int num2 = rand() & 0xFFFF;
-        int num3 = rand() & 0xFFFF;
-        int dif = num1 - num2;
+        IntT num = rand() & 0xFFFF;
         as.rewindCode();
-        as.mov(rax, Imm32(num1));
-        as.sub(rax, Imm32(num2));
-        as.mov(r8,  Imm32(0));
-        as.sub(r8,  Imm32(num3)); //Corrupt dst. Rex encodes rax instead of r8.
-        as.ret();
-        R64FX_EXPECT_EQ(dif, jitfun());
+        as.MOV(rax, Imm32(num));
+        (as.*shift1)(rax);
+        (as.*shift1)(r8);
+        as.RET();
+        R64FX_EXPECT_EQ(expected(num, 1), jitfun());
     }
 
-    cout << "sub(GPR64, GPR64) + rex\n";
+    cout << name << "(GPR, Imm8)\n";
     {
-        int num1 = rand() & 0xFFFF;
-        int num2 = rand() & 0xFFFF;
-        int num3 = rand() & 0xFFFF;
-        int dif = num1 - num2;
+        IntT num = rand() & 0xFF;
+        IntT shift = ((IntT)(rand() & 0x3)) + 1;
         as.rewindCode();
-        as.mov(rax, Imm32(num1));
-        as.mov(r9,  Imm32(num2));
-        as.mov(rcx, Imm32(num3));
-        as.sub(rcx, rdx);
-        as.sub(rax, r9);
-        as.sub(r8,  rdx);
-        as.ret();
-        R64FX_EXPECT_EQ(dif, jitfun());
+        as.MOV(rax, Imm32(num));
+        (as.*shift_imm8)(rax, Imm8(shift));
+        (as.*shift_imm8)(r8,  Imm8(shift));
+        as.RET();
+        R64FX_EXPECT_EQ(expected(num, shift), jitfun());
     }
 
-    cout << "sub(GPR64, Mem64) + rex\n";
-    {
-        *a = rand();
-        *b = rand();
-        long dif = *b - *a;
-        as.rewindCode();
-        as.mov(rax, Imm64(*b));
-        as.sub(rax, Mem64(a));
-        as.sub(r8,  Mem64(b));
-        as.ret();
-        R64FX_EXPECT_EQ(dif, jitfun());
-    }
-
-    cout << "sub(Mem64, GPR64) + rex\n";
-    {
-        *a = 0;
-        long num1 = rand();
-        as.rewindCode();
-        as.mov(r8,  Imm32(num1));
-        as.mov(rax, Imm32(rand()));
-        as.sub(Mem64(a), r8);
-        as.ret();
-        jitfun();
-        R64FX_EXPECT_EQ(-num1, *a);
-    }
-
-    cout << "sub(GPR64, Base, Disp8) + rex\n";
-    {
-        *a = rand();
-        *b = rand();
-        *c = rand();
-        *d = rand();
-        as.rewindCode();
-        as.mov(rax, Imm32(0));
-        as.mov(r10, ImmAddr(a));
-        as.mov(rdx, ImmAddr(c));
-        as.sub(rax, Base(r10) + Disp(8));
-        as.sub(r8,  Base(r10) + Disp(8));
-        as.ret();
-        R64FX_EXPECT_EQ(-(*b), jitfun());
-    }
-
-    cout << "sub(Base, Disp8, GPR64) + rex\n";
-    {
-        *a = rand();
-        *b = rand();
-        *c = rand();
-        *d = rand();
-        long int num = rand();
-        long int dif = *d - num;
-        as.rewindCode();
-        as.mov(rax, Imm64(num + 1));
-        as.mov(r8,  Imm64(num));
-        as.mov(rdx, ImmAddr(a));
-        as.mov(r10, ImmAddr(c));
-        as.sub(Base(r10) + Disp(8), r8);
-        as.ret();
-        jitfun();
-        R64FX_EXPECT_EQ(dif, *d);
-    }
-
-    cout << "\n";
     return true;
+}
+
+
+bool test_shift_instrs(Assembler &as)
+{
+#define R64FX_LIST2(a) a,a
+#define R64FX_TEST_SHIFT_INSTR(type, name, op) test_shift_instr<type, R64FX_LIST2(&Assembler::name)>(#name, as, [](type num, type shift){ return num op shift; })
+    return
+        R64FX_TEST_SHIFT_INSTR(int,          SHL, <<) &&
+        R64FX_TEST_SHIFT_INSTR(int,          SHR, >>) &&
+        R64FX_TEST_SHIFT_INSTR(unsigned int, SAR, >>);
+#undef R64FX_LIST2
+#undef R64FX_TEST_SHIFT_INSTR
 }
 
 
@@ -482,14 +450,14 @@ bool test_push_pop(Assembler &as)
 {
     auto jitfun = (JitFun) as.codeBegin();
 
-    cout << "push & pop\n";
+    cout << "PUSH & POP\n";
     {
         long num = rand();
         as.rewindCode();
-        as.mov(r9, Imm64(num));
-        as.push(r9);
-        as.pop(rax);
-        as.ret();
+        as.MOV(r9, Imm64(num));
+        as.PUSH(r9);
+        as.POP(rax);
+        as.RET();
         R64FX_EXPECT_EQ(num, jitfun());
     }
 
@@ -504,7 +472,7 @@ bool test_sse(Assembler &as)
     as.rewindData();
     as.growData(64 * sizeof(float));
 
-    cout << "movaps + rex\n";
+    cout << "MOVAPS\n";
     {
         float* buff = (float*) as.dataBegin();
         auto a = buff;
@@ -521,13 +489,13 @@ bool test_sse(Assembler &as)
         }
 
         as.rewindCode();
-        as.movaps(xmm0, Mem128(a));
-        as.movaps(xmm8, Mem128(b));
-        as.movaps(xmm1, xmm8);
-        as.movaps(xmm9, xmm0);
-        as.movaps(Mem128(c), xmm1);
-        as.movaps(Mem128(d), xmm9);
-        as.ret();
+        as.MOVAPS(xmm0, Mem128(a));
+        as.MOVAPS(xmm8, Mem128(b));
+        as.MOVAPS(xmm1, xmm8);
+        as.MOVAPS(xmm9, xmm0);
+        as.MOVAPS(Mem128(c), xmm1);
+        as.MOVAPS(Mem128(d), xmm9);
+        as.RET();
 
         jitfun();
 
@@ -537,7 +505,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "movups + rex\n";
+    cout << "MOVUPS\n";
     {
         float* buff = (float*) as.dataBegin();
         auto a = buff + 1;
@@ -554,13 +522,13 @@ bool test_sse(Assembler &as)
         }
 
         as.rewindCode();
-        as.movups(xmm0, Mem32(a));
-        as.movups(xmm8, Mem32(b));
-        as.movups(xmm1, xmm8);
-        as.movups(xmm9, xmm0);
-        as.movups(Mem32(c), xmm1);
-        as.movups(Mem32(d), xmm9);
-        as.ret();
+        as.MOVUPS(xmm0, Mem32(a));
+        as.MOVUPS(xmm8, Mem32(b));
+        as.MOVUPS(xmm1, xmm8);
+        as.MOVUPS(xmm9, xmm0);
+        as.MOVUPS(Mem32(c), xmm1);
+        as.MOVUPS(Mem32(d), xmm9);
+        as.RET();
 
         jitfun();
 
@@ -570,7 +538,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "(add|sub|mul|div)ps + rex\n";
+    cout << "(ADD|SUB|mul|div)ps\n";
     {
         float* buff = (float*) as.dataBegin();
         auto a = buff + 4;
@@ -594,48 +562,48 @@ bool test_sse(Assembler &as)
 
         as.rewindCode();
 
-        as.movaps(xmm0,  Mem128(n));
-        as.movaps(xmm1,  Mem128(f));
-        as.movaps(xmm2,  Mem128(n));
-        as.movaps(xmm3,  Mem128(n));
+        as.MOVAPS(xmm0,  Mem128(n));
+        as.MOVAPS(xmm1,  Mem128(f));
+        as.MOVAPS(xmm2,  Mem128(n));
+        as.MOVAPS(xmm3,  Mem128(n));
 
-        as.movaps(xmm8,  Mem128(n));
-        as.movaps(xmm9,  Mem128(n));
-        as.movaps(xmm10, Mem128(n));
-        as.movaps(xmm11, Mem128(n));
+        as.MOVAPS(xmm8,  Mem128(n));
+        as.MOVAPS(xmm9,  Mem128(n));
+        as.MOVAPS(xmm10, Mem128(n));
+        as.MOVAPS(xmm11, Mem128(n));
 
-        as.mov(r9, ImmAddr(buff));
+        as.MOV(r9, ImmAddr(buff));
 
-        as.addps(xmm8, Mem128(a));
-        as.addps(xmm0, Mem128(f));
-        as.addps(xmm8, Base(r9) + Disp(4 * 4));
-        as.movaps(xmm9, Mem128(a));
-        as.addps(xmm8, xmm9);
-        as.addps(xmm0, xmm1);
+        as.ADDPS(xmm8, Mem128(a));
+        as.ADDPS(xmm0, Mem128(f));
+        as.ADDPS(xmm8, Base(r9) + Disp(4 * 4));
+        as.MOVAPS(xmm9, Mem128(a));
+        as.ADDPS(xmm8, xmm9);
+        as.ADDPS(xmm0, xmm1);
 
-        as.subps(xmm8, Mem128(b));
-        as.subps(xmm0, Mem128(f));
-        as.subps(xmm8, Base(r9) + Disp(4 * 8));
-        as.movaps(xmm9, Mem128(b));
-        as.subps(xmm8, xmm9);
-        as.subps(xmm0, xmm1);
+        as.SUBPS(xmm8, Mem128(b));
+        as.SUBPS(xmm0, Mem128(f));
+        as.SUBPS(xmm8, Base(r9) + Disp(4 * 8));
+        as.MOVAPS(xmm9, Mem128(b));
+        as.SUBPS(xmm8, xmm9);
+        as.SUBPS(xmm0, xmm1);
 
-        as.mulps(xmm8, Mem128(c));
-        as.mulps(xmm0, Mem128(f));
-        as.mulps(xmm8, Base(r9) + Disp(4 * 12));
-        as.movaps(xmm9, Mem128(c));
-        as.mulps(xmm8, xmm9);
-        as.mulps(xmm0, xmm1);
+        as.MULPS(xmm8, Mem128(c));
+        as.MULPS(xmm0, Mem128(f));
+        as.MULPS(xmm8, Base(r9) + Disp(4 * 12));
+        as.MOVAPS(xmm9, Mem128(c));
+        as.MULPS(xmm8, xmm9);
+        as.MULPS(xmm0, xmm1);
 
-        as.divps(xmm8, Mem128(d));
-        as.divps(xmm0, Mem128(f));
-        as.divps(xmm8, Base(r9) + Disp(4 * 16));
-        as.movaps(xmm9, Mem128(d));
-        as.divps(xmm8, xmm9);
-        as.divps(xmm0, xmm1);
+        as.DIVPS(xmm8, Mem128(d));
+        as.DIVPS(xmm0, Mem128(f));
+        as.DIVPS(xmm8, Base(r9) + Disp(4 * 16));
+        as.MOVAPS(xmm9, Mem128(d));
+        as.DIVPS(xmm8, xmm9);
+        as.DIVPS(xmm0, xmm1);
 
-        as.movaps(Mem128(n), xmm8);
-        as.ret();
+        as.MOVAPS(Mem128(n), xmm8);
+        as.RET();
         jitfun();
 
         if(!vec4_eq(r, n))
@@ -644,7 +612,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "p(add|sub)d + rex\n";
+    cout << "p(ADD|SUB)d\n";
     {
         int* buff = (int*) as.dataBegin();
         auto a = buff + 4;
@@ -664,34 +632,34 @@ bool test_sse(Assembler &as)
 
         as.rewindCode();
 
-        as.movaps(xmm0,  Mem128(n));
-        as.movaps(xmm1,  Mem128(f));
-        as.movaps(xmm2,  Mem128(n));
-        as.movaps(xmm3,  Mem128(n));
+        as.MOVAPS(xmm0,  Mem128(n));
+        as.MOVAPS(xmm1,  Mem128(f));
+        as.MOVAPS(xmm2,  Mem128(n));
+        as.MOVAPS(xmm3,  Mem128(n));
 
-        as.movaps(xmm8,  Mem128(n));
-        as.movaps(xmm9,  Mem128(n));
-        as.movaps(xmm10, Mem128(n));
-        as.movaps(xmm11, Mem128(n));
+        as.MOVAPS(xmm8,  Mem128(n));
+        as.MOVAPS(xmm9,  Mem128(n));
+        as.MOVAPS(xmm10, Mem128(n));
+        as.MOVAPS(xmm11, Mem128(n));
 
-        as.mov(r9, ImmAddr(buff));
+        as.MOV(r9, ImmAddr(buff));
 
-        as.paddd(xmm8, Mem128(a));
-        as.paddd(xmm0, Mem128(f));
-        as.paddd(xmm8, Base(r9) + Disp(4 * 4));
-        as.movaps(xmm9, Mem128(a));
-        as.paddd(xmm8, xmm9);
-        as.paddd(xmm0, xmm1);
+        as.PADDD(xmm8, Mem128(a));
+        as.PADDD(xmm0, Mem128(f));
+        as.PADDD(xmm8, Base(r9) + Disp(4 * 4));
+        as.MOVAPS(xmm9, Mem128(a));
+        as.PADDD(xmm8, xmm9);
+        as.PADDD(xmm0, xmm1);
 
-        as.psubd(xmm8, Mem128(b));
-        as.psubd(xmm0, Mem128(f));
-        as.psubd(xmm8, Base(r9) + Disp(4 * 8));
-        as.movaps(xmm9, Mem128(b));
-        as.psubd(xmm8, xmm9);
-        as.psubd(xmm0, xmm1);
+        as.PSUBD(xmm8, Mem128(b));
+        as.PSUBD(xmm0, Mem128(f));
+        as.PSUBD(xmm8, Base(r9) + Disp(4 * 8));
+        as.MOVAPS(xmm9, Mem128(b));
+        as.PSUBD(xmm8, xmm9);
+        as.PSUBD(xmm0, xmm1);
 
-        as.movaps(Mem128(n), xmm8);
-        as.ret();
+        as.MOVAPS(Mem128(n), xmm8);
+        as.RET();
         jitfun();
 
         if(!vec4_eq(r, n))
@@ -700,7 +668,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "(and|andn|or|xor)ps + rex\n";
+    cout << "(and|andn|or|xor)ps\n";
     {
         int* buff = (int*) as.dataBegin();
         auto a = buff + 4;
@@ -753,60 +721,60 @@ bool test_sse(Assembler &as)
 
         as.rewindCode();
 
-        as.movaps(xmm0,  Mem128(n));
-        as.movaps(xmm1,  Mem128(f));
-        as.movaps(xmm2,  Mem128(n));
-        as.movaps(xmm3,  Mem128(n));
+        as.MOVAPS(xmm0,  Mem128(n));
+        as.MOVAPS(xmm1,  Mem128(f));
+        as.MOVAPS(xmm2,  Mem128(n));
+        as.MOVAPS(xmm3,  Mem128(n));
 
-        as.movaps(xmm8,  Mem128(u));
-        as.movaps(xmm9,  Mem128(u));
-        as.movaps(xmm10, Mem128(u));
-        as.movaps(xmm11, Mem128(u));
+        as.MOVAPS(xmm8,  Mem128(u));
+        as.MOVAPS(xmm9,  Mem128(u));
+        as.MOVAPS(xmm10, Mem128(u));
+        as.MOVAPS(xmm11, Mem128(u));
 
-        as.mov(r9, ImmAddr(buff));
+        as.MOV(r9, ImmAddr(buff));
 
-        as.andps(xmm8, Mem128(a));
-        as.paddd(xmm8, Mem128(u));
-        as.andps(xmm0, Mem128(f));
-        as.andps(xmm8, Base(r9) + Disp(4 * 4));
-        as.paddd(xmm8, Mem128(u));
-        as.movaps(xmm9, Mem128(a));
-        as.andps(xmm8, xmm9);
-        as.paddd(xmm8, Mem128(u));
-        as.andps(xmm0, xmm1);
+        as.ANDPS(xmm8, Mem128(a));
+        as.PADDD(xmm8, Mem128(u));
+        as.ANDPS(xmm0, Mem128(f));
+        as.ANDPS(xmm8, Base(r9) + Disp(4 * 4));
+        as.PADDD(xmm8, Mem128(u));
+        as.MOVAPS(xmm9, Mem128(a));
+        as.ANDPS(xmm8, xmm9);
+        as.PADDD(xmm8, Mem128(u));
+        as.ANDPS(xmm0, xmm1);
 
-        as.andnps(xmm8, Mem128(b));
-        as.paddd(xmm8, Mem128(u));
-        as.andnps(xmm0, Mem128(f));
-        as.andnps(xmm8, Base(r9) + Disp(4 * 8));
-        as.paddd(xmm8, Mem128(u));
-        as.movaps(xmm9, Mem128(b));
-        as.andnps(xmm8, xmm9);
-        as.paddd(xmm8, Mem128(u));
-        as.andnps(xmm0, xmm1);
+        as.ANDNPS(xmm8, Mem128(b));
+        as.PADDD(xmm8, Mem128(u));
+        as.ANDNPS(xmm0, Mem128(f));
+        as.ANDNPS(xmm8, Base(r9) + Disp(4 * 8));
+        as.PADDD(xmm8, Mem128(u));
+        as.MOVAPS(xmm9, Mem128(b));
+        as.ANDNPS(xmm8, xmm9);
+        as.PADDD(xmm8, Mem128(u));
+        as.ANDNPS(xmm0, xmm1);
 
-        as.orps(xmm8, Mem128(c));
-        as.paddd(xmm8, Mem128(u));
-        as.orps(xmm0, Mem128(f));
-        as.orps(xmm8, Base(r9) + Disp(4 * 12));
-        as.paddd(xmm8, Mem128(u));
-        as.movaps(xmm9, Mem128(c));
-        as.orps(xmm8, xmm9);
-        as.paddd(xmm8, Mem128(u));
-        as.orps(xmm0, xmm1);
+        as.ORPS(xmm8, Mem128(c));
+        as.PADDD(xmm8, Mem128(u));
+        as.ORPS(xmm0, Mem128(f));
+        as.ORPS(xmm8, Base(r9) + Disp(4 * 12));
+        as.PADDD(xmm8, Mem128(u));
+        as.MOVAPS(xmm9, Mem128(c));
+        as.ORPS(xmm8, xmm9);
+        as.PADDD(xmm8, Mem128(u));
+        as.ORPS(xmm0, xmm1);
 
-        as.xorps(xmm8, Mem128(d));
-        as.paddd(xmm8, Mem128(u));
-        as.xorps(xmm0, Mem128(f));
-        as.xorps(xmm8, Base(r9) + Disp(4 * 16));
-        as.paddd(xmm8, Mem128(u));
-        as.movaps(xmm9, Mem128(d));
-        as.xorps(xmm8, xmm9);
-        as.paddd(xmm8, Mem128(u));
-        as.xorps(xmm0, xmm1);
+        as.XORPS(xmm8, Mem128(d));
+        as.PADDD(xmm8, Mem128(u));
+        as.XORPS(xmm0, Mem128(f));
+        as.XORPS(xmm8, Base(r9) + Disp(4 * 16));
+        as.PADDD(xmm8, Mem128(u));
+        as.MOVAPS(xmm9, Mem128(d));
+        as.XORPS(xmm8, xmm9);
+        as.PADDD(xmm8, Mem128(u));
+        as.XORPS(xmm0, xmm1);
 
-        as.movaps(Mem128(n), xmm8);
-        as.ret();
+        as.MOVAPS(Mem128(n), xmm8);
+        as.RET();
         jitfun();
 
         if(!vec4_eq(r, n))
@@ -815,7 +783,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "minps\n";
+    cout << "MINPS\n";
     {
         float* buff = (float*) as.dataBegin();
         auto a = buff;
@@ -843,16 +811,16 @@ bool test_sse(Assembler &as)
         }
 
         as.rewindCode();
-        as.movaps(xmm8, Mem128(d));
-        as.minps(xmm8, Mem128(a));
-        as.addps(xmm8, Mem128(m));
-        as.movaps(xmm9, Mem128(b));
-        as.minps(xmm8, xmm9);
-        as.mulps(xmm8, Mem128(m));
-        as.mov(rcx, ImmAddr(buff));
-        as.minps(xmm8, Base(rcx) + Disp(4 * 8));
-        as.movaps(Mem128(n), xmm8);
-        as.ret();
+        as.MOVAPS(xmm8, Mem128(d));
+        as.MINPS(xmm8, Mem128(a));
+        as.ADDPS(xmm8, Mem128(m));
+        as.MOVAPS(xmm9, Mem128(b));
+        as.MINPS(xmm8, xmm9);
+        as.MULPS(xmm8, Mem128(m));
+        as.MOV(rcx, ImmAddr(buff));
+        as.MINPS(xmm8, Base(rcx) + Disp(4 * 8));
+        as.MOVAPS(Mem128(n), xmm8);
+        as.RET();
         jitfun();
 
         if(!vec4_eq(r, n))
@@ -861,7 +829,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "maxps\n";
+    cout << "MAXPS\n";
     {
         float* buff = (float*) as.dataBegin();
         auto a = buff;
@@ -889,16 +857,16 @@ bool test_sse(Assembler &as)
         }
 
         as.rewindCode();
-        as.movaps(xmm8, Mem128(d));
-        as.maxps(xmm8, Mem128(a));
-        as.addps(xmm8, Mem128(m));
-        as.movaps(xmm9, Mem128(b));
-        as.maxps(xmm8, xmm9);
-        as.mulps(xmm8, Mem128(m));
-        as.mov(rcx, ImmAddr(buff));
-        as.maxps(xmm8, Base(rcx) + Disp(4 * 8));
-        as.movaps(Mem128(n), xmm8);
-        as.ret();
+        as.MOVAPS(xmm8, Mem128(d));
+        as.MAXPS(xmm8, Mem128(a));
+        as.ADDPS(xmm8, Mem128(m));
+        as.MOVAPS(xmm9, Mem128(b));
+        as.MAXPS(xmm8, xmm9);
+        as.MULPS(xmm8, Mem128(m));
+        as.MOV(rcx, ImmAddr(buff));
+        as.MAXPS(xmm8, Base(rcx) + Disp(4 * 8));
+        as.MOVAPS(Mem128(n), xmm8);
+        as.RET();
         jitfun();
 
         if(!vec4_eq(r, n))
@@ -907,7 +875,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "pshufd\n";
+    cout << "PSHUFD\n";
     {
         int* buff = (int*) as.dataBegin();
         auto a1 = buff;
@@ -948,18 +916,18 @@ bool test_sse(Assembler &as)
         c3[0] = a3[2];
 
         as.rewindCode();
-        as.pshufd(xmm8, Mem128(a1), Shuf(3, 2, 1, 0));
-        as.movaps(Mem128(b1), xmm8);
+        as.PSHUFD(xmm8, Mem128(a1), Shuf(3, 2, 1, 0));
+        as.MOVAPS(Mem128(b1), xmm8);
 
-        as.movaps(xmm0, Mem128(a2));
-        as.pshufd(xmm0, xmm0, Shuf(1, 1, 1, 1));
-        as.movaps(Mem128(b2), xmm0);
+        as.MOVAPS(xmm0, Mem128(a2));
+        as.PSHUFD(xmm0, xmm0, Shuf(1, 1, 1, 1));
+        as.MOVAPS(Mem128(b2), xmm0);
 
-        as.mov(rcx, ImmAddr(buff));
-        as.pshufd(xmm5, Base(rcx) + Disp(4 * 24), Shuf(2, 0, 2, 0));
-        as.movaps(Mem128(b3), xmm5);
+        as.MOV(rcx, ImmAddr(buff));
+        as.PSHUFD(xmm5, Base(rcx) + Disp(4 * 24), Shuf(2, 0, 2, 0));
+        as.MOVAPS(Mem128(b3), xmm5);
 
-        as.ret();
+        as.RET();
         jitfun();
 
         if(!vec4_eq(b1, c1) || !vec4_eq(b2, c2) || !vec4_eq(b3, c3))
@@ -968,7 +936,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "cmpltps\n";
+    cout << "CMPPLTPS\n";
     {
         float* buff = (float*) as.dataBegin();
         auto a = buff;
@@ -984,12 +952,12 @@ bool test_sse(Assembler &as)
 
         as.rewindCode();
 
-        as.movaps(xmm0, Mem128(a)); 
-        as.movaps(xmm1, Mem128(b));
-        as.cmpltps(xmm0, xmm1);
-        as.movaps(Mem128(c), xmm0);
+        as.MOVAPS(xmm0, Mem128(a));
+        as.MOVAPS(xmm1, Mem128(b));
+        as.CMPLTPS(xmm0, xmm1);
+        as.MOVAPS(Mem128(c), xmm0);
 
-        as.ret();
+        as.RET();
         jitfun();
 
         if(!vec4_eq(c, d))
@@ -1007,23 +975,23 @@ bool test_jumps(Assembler &as)
 {
     auto jitfun = (JitFun) as.codeBegin();
 
-    cout << "jnz\n";
+    cout << "JNZ\n";
     {
         JumpLabel loop, skip;
 
         as.rewindCode();
-        as.mov(rax, Imm32(0));
-        as.mov(rcx, Imm32(1234));
+        as.MOV(rax, Imm32(0));
+        as.MOV(rcx, Imm32(1234));
         as.mark(loop);
-        as.add(rax, Imm32(2));
+        as.ADD(rax, Imm32(2));
 
-        as.jmp(skip);
-        as.add(rax, Imm32(1));
+        as.JMP(skip);
+        as.ADD(rax, Imm32(1));
         as.mark(skip);
 
-        as.sub(rcx, Imm32(1));
-        as.jnz(loop);
-        as.ret();
+        as.SUB(rcx, Imm32(1));
+        as.JNZ(loop);
+        as.RET();
         R64FX_EXPECT_EQ(2468, jitfun());
     }
 
@@ -1045,12 +1013,12 @@ bool test_sibd(Assembler &as)
 
         as.rewindCode();
 
-        as.mov(rax, Imm32(0));
-        as.mov(rcx, ImmAddr(buff));
-        as.mov(rdx, Imm32(10));
-        as.mov(rax, Base(rcx) + Index(rdx, 8));
+        as.MOV(rax, Imm32(0));
+        as.MOV(rcx, ImmAddr(buff));
+        as.MOV(rdx, Imm32(10));
+        as.MOV(rax, Base(rcx) + Index(rdx, 8));
 
-        as.ret();
+        as.RET();
         R64FX_EXPECT_EQ(buff[10], jitfun());
     }
 
@@ -1063,12 +1031,12 @@ bool test_sibd(Assembler &as)
 
         as.rewindCode();
 
-        as.mov(rax, Imm32(0));
-        as.mov(rcx, ImmAddr(buff));
-        as.mov(rdx, Imm32(10));
-        as.mov(rax, Base(rcx) + Index(rdx, 8) + Disp(8));
+        as.MOV(rax, Imm32(0));
+        as.MOV(rcx, ImmAddr(buff));
+        as.MOV(rdx, Imm32(10));
+        as.MOV(rax, Base(rcx) + Index(rdx, 8) + Disp(8));
 
-        as.ret();
+        as.RET();
         R64FX_EXPECT_EQ(buff[11], jitfun());
     }
 
@@ -1081,12 +1049,12 @@ bool test_sibd(Assembler &as)
 
         as.rewindCode();
 
-        as.mov(rax, Imm32(0));
-        as.mov(rcx, ImmAddr(buff));
-        as.mov(rdx, Imm32(10));
-        as.mov(rax, Base(rcx) + Index(rdx, 8) + Disp(64 * 8));
+        as.MOV(rax, Imm32(0));
+        as.MOV(rcx, ImmAddr(buff));
+        as.MOV(rdx, Imm32(10));
+        as.MOV(rax, Base(rcx) + Index(rdx, 8) + Disp(64 * 8));
 
-        as.ret();
+        as.RET();
         R64FX_EXPECT_EQ(buff[10 + 64], jitfun());
     }
 
@@ -1100,13 +1068,13 @@ bool test_sibd(Assembler &as)
 
         as.rewindCode();
 
-        as.mov(rcx, ImmAddr(buff));
-        as.mov(rdx, Imm32(4));
-        as.movaps(xmm0, Base(rcx) + Index(rdx, 4));
-        as.movaps(xmm8, Base(rcx) + Index(rdx, 8));
-        as.movaps(Base(rcx), xmm0);
+        as.MOV(rcx, ImmAddr(buff));
+        as.MOV(rdx, Imm32(4));
+        as.MOVAPS(xmm0, Base(rcx) + Index(rdx, 4));
+        as.MOVAPS(xmm8, Base(rcx) + Index(rdx, 8));
+        as.MOVAPS(Base(rcx), xmm0);
 
-        as.ret();
+        as.RET();
         jitfun();
 
         if(!vec4_eq(buff, buff + 4))
@@ -1122,9 +1090,6 @@ bool test_sibd(Assembler &as)
 
 int main()
 {
-    cout << rax.is64bit() << "\n";
-    cout << eax.is64bit() << "\n";
-
     srand(time(NULL));
 
     Assembler as;
@@ -1133,12 +1098,14 @@ int main()
     bool ok =
         test_buffers(as) &&
         test_mov(as) &&
-        test_push_pop(as) &&
-        test_add(as) &&
-        test_sub(as) &&
-        test_sse(as) &&
-        test_jumps(as) &&
-        test_sibd(as)
+        test_gpr_instrs(as) &&
+        test_shift_instrs(as)
+//         test_push_pop(as) &&
+//         test_add(as) &&
+//         test_sub(as) &&
+//         test_sse(as) &&
+//         test_jumps(as) &&
+//         test_sibd(as)
     ;
 
     if(ok)

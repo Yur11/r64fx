@@ -27,8 +27,8 @@ void SignalNode_BufferReader::build(SignalGraphCompiler &c)
     {
         auto ce = c.codeEnd();
         auto bu = c.codeBytesUsed();
-        c.mov(rax, ImmAddr(storeBufferLocation(c)));
-        c.mov(rax, Base(rax));
+        c.MOV(rax, ImmAddr(storeBufferLocation(c)));
+        c.MOV(rax, Base(rax));
         if(ce == c.codeEnd())
             break;
         c.setCodeEnd(c.codeBegin() + bu);
@@ -37,7 +37,7 @@ void SignalNode_BufferReader::build(SignalGraphCompiler &c)
     if(!m_out)
     {
         c.allocStorage(m_out, SignalDataStorage::Memory() | SignalDataStorage::Single() | SignalDataStorage::Float(), 1, 4);
-//         c.mov(Mem32(m_out.memoryAddr(c)), rax);
+//         c.MOV(Mem32(m_out.memoryAddr(c)), rax);
     }
 }
 
