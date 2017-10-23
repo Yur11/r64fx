@@ -202,7 +202,7 @@ void* HeapBuffer::allocChunk(long nbytes, long alignment)
         return nullptr;
 
     long alignment_bytes = alignment - (long(chunk) & alignment_mask);
-    if(alignment_bytes == 0)
+    if(alignment_bytes == alignment)
         return chunk;
     freeChunk(chunk);
 
