@@ -43,6 +43,8 @@ constexpr GPR32 eax(0x0), ecx(0x1), edx (0x2), ebx (0x3), esp (0x4), ebp (0x5), 
 class GPR64 : public GPR{
 public:
     explicit constexpr GPR64(unsigned char code) : GPR(code | 0x80) {}
+
+    constexpr GPR32 gpr32() { return GPR32(code()); }
 };
 constexpr GPR64 rax(0x0), rcx(0x1), rdx(0x2), rbx(0x3), rsp(0x4), rbp(0x5), rsi(0x6), rdi(0x7),
                 r8 (0x8), r9 (0x9), r10(0xA), r11(0xB), r12(0xC), r13(0xD), r14(0xE), r15(0xF);

@@ -612,7 +612,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "p(ADD|SUB)d\n";
+    cout << "P(ADD|SUB)D\n";
     {
         int* buff = (int*) as.dataBegin();
         auto a = buff + 4;
@@ -668,7 +668,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "(and|andn|or|xor)ps\n";
+    cout << "(AND|ANDN|OR|XOR)PS\n";
     {
         int* buff = (int*) as.dataBegin();
         auto a = buff + 4;
@@ -1099,13 +1099,11 @@ int main()
         test_buffers(as) &&
         test_mov(as) &&
         test_gpr_instrs(as) &&
-        test_shift_instrs(as)
-//         test_push_pop(as) &&
-//         test_add(as) &&
-//         test_sub(as) &&
-//         test_sse(as) &&
-//         test_jumps(as) &&
-//         test_sibd(as)
+        test_shift_instrs(as) &&
+        test_push_pop(as) &&
+        test_sse(as) &&
+        test_jumps(as) &&
+        test_sibd(as)
     ;
 
     if(ok)
