@@ -60,7 +60,7 @@ struct ModuleThreadAssets{
     SoundDriverSyncPort*  sd_sync_port   = nullptr;
     long                  sample_rate    = 0;
     long                  flags          = 0;
-    SignalGraph           signal_graph;
+    SignalGraphCompiler   signal_graph_compiler;
 
     struct Fun : public LinkedList<Fun>::Node{
         void (*fun)(void* arg)        = nullptr;
@@ -84,7 +84,7 @@ public:
     {
         m.sd_sync_port  = agent->sd_sync_port;
         m.sample_rate   = agent->sample_rate;
-        m.signal_graph.setFrameCount(agent->buffer_size);
+        m.signal_graph_compiler.setFrameCount(agent->buffer_size);
     }
 
     void storeWithdrawalArgs(RootModuleWithdrawalAgent* agent)
@@ -125,10 +125,10 @@ private:
 
                 if(m.flags & R64FX_GRAPH_REBUILD_ARMED)
                 {
-                    m.signal_graph.build();
+//                     m.signal_graph_compiler.build(&m.signal_graph);
                     m.flags &= ~R64FX_GRAPH_REBUILD_ARMED;
                 }
-                m.signal_graph.run();
+                m.signal_graph_compiler.run();
 
                 for(auto item : m.epilogue_list)
                 {
@@ -246,7 +246,7 @@ void ModuleThreadObjectImpl::setEpilogue(void (*fun)(void* arg), void* arg)
 
 long ModuleThreadObjectImpl::bufferSize() const
 {
-    return R64FX_MODULE_THREAD_ASSETS->signal_graph.frameCount();
+    return R64FX_MODULE_THREAD_ASSETS->signal_graph_compiler.frameCount();
 }
 
 
@@ -258,7 +258,8 @@ long ModuleThreadObjectImpl::sampleRate() const
 
 SignalGraph* ModuleThreadObjectImpl::signalGraph() const
 {
-    return &(R64FX_MODULE_THREAD_ASSETS->signal_graph);
+//     return &(R64FX_MODULE_THREAD_ASSETS->signal_graph);
+    return nullptr;
 }
 
 

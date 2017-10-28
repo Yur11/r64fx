@@ -26,14 +26,14 @@ int main()
 
     srand(time(0));
 
-    SignalGraph sg;
-    sg.setFrameCount(frame_count);
+    SignalGraphCompiler sgc;
+    sgc.setFrameCount(frame_count);
 
     SignalNode_BufferReader snbr;
     SignalNode_BufferWriter snbw;
+    snbr.setBuffer(buff_a);
+    snbw.setBuffer(buff_b);
 
-    sg.addNode(&snbr);
-    sg.addNode(&snbw);
 
     for(int i=0; i<frame_count; i++)
     {
@@ -41,10 +41,10 @@ int main()
         snbw.buffer(i) = 0.0f;
     }
 
-    sg.connect(snbr.out(), snbw.in());
+    sgc.link(snbr.out(), snbw.in());
 
-    sg.build();
-    sg.run();
+    sgc.build(&snbw, 1);
+    sgc.run();
 
     for(int i=0; i<frame_count; i++)
     {

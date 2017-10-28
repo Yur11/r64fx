@@ -45,7 +45,7 @@ struct Impl_SoundDriverAudioInput : public LinkedList<Impl_SoundDriverAudioInput
     {
         sd_port = message->sd_port;
         message->graph_port = node.out().port();
-        sg->addNode(&node);
+//         sg->addNode(&node);
     }
 
     inline void readSamples(int nsamples)
@@ -64,7 +64,7 @@ struct Impl_SoundDriverAudioOutput : public LinkedList<Impl_SoundDriverAudioOutp
     {
         sd_port = message->sd_port;
         message->graph_port = node.in().port();
-        sg->addNode(&node);
+//         sg->addNode(&node);
     }
 
     inline void writeSamples(int nsamples)
@@ -135,8 +135,8 @@ private:
         for(auto obj : m_inputs) if(obj->node.out().port() == message->graph_port){ impl = obj; break; }
         if(impl)
         {
-            auto sg = signalGraph();
-            sg->removeNode(&impl->node);
+//             auto sg = signalGraph();
+//             sg->removeNode(&impl->node);
             m_inputs.remove(impl);
             message->sd_port = impl->sd_port;
             freeObj(impl);
@@ -149,8 +149,8 @@ private:
         for(auto obj : m_outputs) if(obj->node.in().port() == message->graph_port){ impl = obj; break; }
         if(impl)
         {
-            auto sg = signalGraph();
-            sg->removeNode(&impl->node);
+//             auto sg = signalGraph();
+//             sg->removeNode(&impl->node);
             m_outputs.remove(impl);
             message->sd_port = impl->sd_port;
             freeObj(impl);

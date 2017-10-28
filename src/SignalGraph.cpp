@@ -5,252 +5,294 @@
 
 namespace r64fx{
 
-SignalNode* SignalNode::root()
+SignalGraphCompiler::SignalGraphCompiler()
 {
-     if(m_parent_subgraph)
-         return m_parent_subgraph->root();
-     return this;
+    for(int i=0; i<11; i++)
+    {
+        m_gprs[i] = 0;
+    }
+    m_gprs[mainLoopCounter().code()]  = 0xFFFFFFFFFFFFFFFFUL;
+    m_gprs[rsp.code()]                = 0xFFFFFFFFFFFFFFFFUL;//Never touch!
+
+    resize(1, 1);
+    growData(memory_page_size());
 }
 
 
-SignalGraph* SignalNode::rootGraph()
-{
-    auto node = root();
-    R64FX_DEBUG_ASSERT(dynamic_cast<SignalGraph*>(node));
-    return static_cast<SignalGraph*>(node);
-}
-
-
-void SignalNode::getSources(SignalSource*&, unsigned int &nsources)
-{
-    nsources = 0;
-}
-
-
-void SignalNode::getSinks(SignalSink*&, unsigned int &nsinks)
-{
-    nsinks = 0;
-}
-
-
-void SignalSubGraph::addNode(SignalNode* node)
-{
-    R64FX_DEBUG_ASSERT(node);
-    R64FX_DEBUG_ASSERT(node->parentSubGraph() == nullptr);
-    m_terminal_nodes.append(node);
-    node->m_parent_subgraph = this;
-    node->m_flags &= ~R64FX_NODE_IS_BUILT;
-    node->m_flags |= m_flags & R64FX_NODE_IS_BUILT;
-}
-
-
-void SignalSubGraph::removeNode(SignalNode* node)
-{
-    R64FX_DEBUG_ASSERT(node);
-    R64FX_DEBUG_ASSERT(node->parentSubGraph() == this);
-    R64FX_DEBUG_ASSERT(node->m_incoming_connection_count == 0);
-    R64FX_DEBUG_ASSERT(node->m_outgoing_connection_count == 0);
-    m_terminal_nodes.remove(node);
-    node->m_parent_subgraph = nullptr;
-    node->m_flags = 0;
-}
-
-
-void SignalSubGraph::connect(const NodeSource node_source, const NodeSink &node_sink)
+void SignalGraphCompiler::link(const NodeSource &node_source, const NodeSink &node_sink)
 {
     auto source_node = node_source.node();
-    auto sink_node = node_sink.node();
-    auto source = node_source.port();
-    auto sink = node_sink.port();
-
     R64FX_DEBUG_ASSERT(source_node);
+
+    auto sink_node = node_sink.node();
     R64FX_DEBUG_ASSERT(sink_node);
-    R64FX_DEBUG_ASSERT(source_node != sink_node);
-    R64FX_DEBUG_ASSERT(source_node->parentSubGraph() == sink_node->parentSubGraph());
-    R64FX_DEBUG_ASSERT(source_node->parentSubGraph() != nullptr);
-    R64FX_DEBUG_ASSERT(source_node->m_outgoing_connection_count < 0xFFFFFFFF);
-    R64FX_DEBUG_ASSERT(sink_node->m_incoming_connection_count < 0xFFFFFFFF);
+
+    auto source = node_source.port();
     R64FX_DEBUG_ASSERT(source);
+
+    auto sink = node_sink.port();
     R64FX_DEBUG_ASSERT(sink);
     R64FX_DEBUG_ASSERT(sink->connectedSource() == nullptr);
 
     sink->m_connected_source = source;
-    source->m.connected_sink_count++;
-    source_node->m_outgoing_connection_count++;
-    sink_node->m_incoming_connection_count++;
+    source->m_connected_sink_count++;
 
-    if(source_node->next() || source_node->prev())
-        m_terminal_nodes.remove(source_node);
+    source_node->m_connection_count++;
+    sink_node->m_connection_count++;
 }
 
 
-void SignalSubGraph::disconnect(const NodeSink &node_sink)
+void SignalGraphCompiler::unlink(const NodeSink node_sink)
 {
-    SignalSink* sink = node_sink.port();
-    R64FX_DEBUG_ASSERT(sink);
-
-    SignalNode* sink_node = node_sink.node();
+    auto sink_node = node_sink.node();
     R64FX_DEBUG_ASSERT(sink_node);
 
-    SignalSource* source = sink->m_connected_source;
+    auto sink = node_sink.port();
+    R64FX_DEBUG_ASSERT(sink);
+
+    auto source = sink->m_connected_source;
     R64FX_DEBUG_ASSERT(source);
 
-    SignalNode* source_node = source->parentNode();
+    auto source_node = source->parentNode();
     R64FX_DEBUG_ASSERT(source_node);
 
-    R64FX_DEBUG_ASSERT(source->m.connected_sink_count > 0);
-    source->m.connected_sink_count--;
-
-    R64FX_DEBUG_ASSERT(sink_node->m_incoming_connection_count > 0);
-    sink_node->m_incoming_connection_count--;
-
-    R64FX_DEBUG_ASSERT(source_node->m_outgoing_connection_count > 0);
-    source_node->m_outgoing_connection_count--;
-    if(source_node->m_outgoing_connection_count == 0)
-        m_terminal_nodes.append(source_node);
-
     sink->m_connected_source = nullptr;
-}
+    R64FX_DEBUG_ASSERT(source->m_connected_sink_count > 0);
+    source->m_connected_sink_count--;
 
-
-void SignalSubGraph::build(SignalGraphCompiler &c)
-{
-    for(auto node : m_terminal_nodes)
-    buildNode(c, node);
-}
-
-
-void SignalSubGraph::buildNode(SignalGraphCompiler &c, SignalNode* node)
-{
-#ifdef R64FX_DEBUG
-    assert(!(node->m_flags & R64FX_BUILD_IN_PROGRESS));
-    node->m_flags |= R64FX_BUILD_IN_PROGRESS;
-#endif//R64FX_DEBUG
-
-    if(node->incomingConnectionCount() > 0)
+    R64FX_DEBUG_ASSERT(source_node->m_connection_count > 0);
+    source_node->m_connection_count--;
+    if(source_node->m_connection_count == 0)
     {
-        SignalSink* sinks = nullptr;
-        unsigned int nsinks = 0;
-        node->getSinks(sinks, nsinks);
-        for(unsigned int i=0; i<nsinks; i++)
-        {
-            auto source = sinks[i].connectedSource();
-            if(!source)
-                continue;
-
-            auto source_node = source->parentNode();
-            if(!((source_node->m_flags & R64FX_NODE_IS_BUILT) ^ (node->m_flags & R64FX_NODE_IS_BUILT)))
-                buildNode(c, source_node);
-        }
+        source_node->cleanup(*this);
+        source_node->m_iteration_count = 0;
     }
-    node->build(c);
-    node->m_flags ^= R64FX_NODE_IS_BUILT;
 
-#ifdef R64FX_DEBUG
-    node->m_flags &= ~R64FX_BUILD_IN_PROGRESS;
-#endif//R64FX_DEBUG
+    R64FX_DEBUG_ASSERT(sink_node->m_connection_count > 0);
+    sink_node->m_connection_count--;
+    if(sink_node->m_connection_count == 0)
+    {
+        sink_node->cleanup(*this);
+        sink_node->m_iteration_count = 0;
+    }
 }
 
 
-unsigned char* SignalGraphCompiler::allocMemory(unsigned int nbytes, unsigned int align)
+void SignalGraphCompiler::build(SignalNode* terminal_nodes, unsigned int nnodes)
+{
+    R64FX_DEBUG_ASSERT(frameCount() > 0);
+
+    rewindCode();
+    PUSH(rbx);
+    PUSH(rbp);
+
+    MOV(mainLoopCounter(), Imm32(-frameCount()));
+    JumpLabel loop;
+    mark(loop);
+
+    m_iteration_count++;
+    for(unsigned int i=0; i<nnodes; i++)
+        buildNode(terminal_nodes + i);
+
+    ADD(mainLoopCounter(), Imm32(1));
+    JNZ(loop);
+
+    POP(rbp);
+    POP(rbx);
+    RET();
+}
+
+
+void SignalGraphCompiler::ensureBuilt(SignalSource* source)
+{
+    R64FX_DEBUG_ASSERT(source->m_processed_sink_count < source->m_connected_sink_count);
+    buildNode(source->parentNode());
+    source->m_processed_sink_count++;
+    if(source->m_processed_sink_count == source->m_connected_sink_count)
+        source->m_processed_sink_count = 0;
+}
+
+
+void SignalGraphCompiler::buildNode(SignalNode* node)
+{
+    if(node->m_iteration_count < m_iteration_count)
+    {
+        node->build(*this);
+        node->m_iteration_count = m_iteration_count;
+    }
+}
+
+
+DataBufferPointer SignalGraphCompiler::allocMemory(unsigned int nbytes, unsigned int align)
 {
     R64FX_DEBUG_ASSERT(nbytes > 0);
     R64FX_DEBUG_ASSERT(align > 0);
     unsigned int align_mask = align - 1;
     R64FX_DEBUG_ASSERT((align & align_mask) == 0);
 
-    if(dataBufferSize() == 0)
-        growData(memory_page_size());
-
     for(;;)
     {
         HeapBuffer hb(dataBegin(), dataBufferSize());
         auto chunk = (unsigned char*) hb.allocChunk(nbytes, align);
         if(chunk)
-            return chunk;
+        {
+            long offset = long(codeBegin()) - long(chunk);
+            R64FX_DEBUG_ASSERT(offset > 0);
+            R64FX_DEBUG_ASSERT(offset <= 0xFFFFFFFF);
+            return DataBufferPointer(offset);
+        }
 
         growData(memory_page_size());
         memcpy(dataBegin(), dataBegin() + memory_page_size(), hb.headerSize());
     }
-    return nullptr;
+    return DataBufferPointer(0);
 }
 
 
-void SignalGraphCompiler::freeMemory(unsigned char* mem)
+void SignalGraphCompiler::freeMemory(DataBufferPointer ptr)
 {
-    R64FX_DEBUG_ASSERT(mem);
+    R64FX_DEBUG_ASSERT(ptr);
     HeapBuffer hb(dataBegin(), dataBufferSize());
-    hb.freeChunk(mem);
+    hb.freeChunk(ptrMem<unsigned char*>(ptr));
 }
 
 
-void* SignalGraphCompiler::allocStorage(SignalDataStorage &storage, SignalDataType type, unsigned int nitems, unsigned int align)
-{
-    R64FX_DEBUG_ASSERT(!storage);
-    if((type & SignalDataStorageType()) == SignalDataStorage::Memory())
-    {
-        unsigned int nbytes = nitems;
-        if((type & SignalDataScalarSize()) == SignalDataStorage::Double())
-            nbytes <<= 1;
+namespace{
 
-        auto addr = allocMemory(nbytes, align);
-        storage.setMemoryAddr(addr, *this);
-        storage.setSize(nitems);
-        storage.setType(type);
-        return addr;
+template<typename RegT, unsigned int MaxRegs> inline unsigned int alloc_regs(unsigned long* m_regs, RegT* regs, unsigned int nregs)
+{
+    R64FX_DEBUG_ASSERT(nregs < MaxRegs);
+    unsigned int n = 0;
+    for(unsigned int i=0; i<nregs && n<nregs; i++)
+    {
+        if(m_regs[i] == 0)
+        {
+            regs[n++] = RegT(i);
+            m_regs[i] = 0xFFFFFFFFFFFFFFFFUL;
+        }
     }
-    return nullptr;
+    return n;
+}
+
+
+template<typename RegT, unsigned int MaxRegs> inline void free_regs(unsigned long* m_regs, RegT* regs, unsigned int nregs)
+{
+    R64FX_DEBUG_ASSERT(nregs < MaxRegs);
+    for(unsigned int i=0; i<nregs; i++)
+    {
+        R64FX_DEBUG_ASSERT(m_regs[regs[i].code()]);
+        m_regs[i] = 0;
+    }
+}
+
+
+template<typename RegT> inline unsigned int pack_regs(RegT* regs, unsigned int nregs)
+{
+    unsigned int bits = 0;
+    for(unsigned int i=0; i<nregs; i++)
+    {
+        bits |= (1<<regs[i].code());
+    }
+    return bits;
+}
+
+
+template<typename RegT> inline void unpack_regs(unsigned int bits, RegT* regs, unsigned int* nregs)
+{
+    unsigned int n = 0;
+    for(int i=0; i<16 && bits; i++)
+    {
+        unsigned int bit = (1<<i);
+        if(bits & bit)
+        {
+            regs[n] = RegT(i);
+            bits &= ~bits;
+            n++;
+        }
+    }
+    *nregs = n;
+}
+
+}//namespace
+
+
+unsigned int SignalGraphCompiler::allocGPR(GPR64* gprs, unsigned int ngprs)
+{
+    return alloc_regs<GPR64, 11>(m_gprs, gprs, ngprs);
+}
+
+
+void SignalGraphCompiler::freeGPR(GPR64* gprs, unsigned int ngprs)
+{
+    free_regs<GPR64, 11>(m_gprs, gprs, ngprs);
+}
+
+
+unsigned int SignalGraphCompiler::allocXmm(Xmm* xmms, unsigned int nxmms)
+{
+    return alloc_regs<Xmm, 16>(m_xmms, xmms, nxmms);
+}
+
+
+void SignalGraphCompiler::freeXmm(Xmm* xmms, unsigned int nxmms)
+{
+    free_regs<Xmm, 16>(m_xmms, xmms, nxmms);
+}
+
+
+void SignalGraphCompiler::setStorage(SignalDataStorage &storage, DataBufferPointer ptr)
+{
+    storage.setStorageType(SDS::Memory());
+    storage.setLowerBits(ptr.offset());
+}
+
+
+void SignalGraphCompiler::setStorage(SignalDataStorage &storage, GPR* gprs, unsigned int ngprs)
+{
+    storage.setStorageType(SDS::GPR());
+    storage.setLowerBits(pack_regs(gprs, ngprs));
+}
+
+
+void SignalGraphCompiler::getStorage(SignalDataStorage storage, GPR* gprs, unsigned int* ngprs)
+{
+    unpack_regs(storage.lowerBits(), gprs, ngprs);
+}
+
+
+void SignalGraphCompiler::setStorage(SignalDataStorage &storage, Xmm* xmms, unsigned int nxmms)
+{
+    storage.setStorageType(SDS::Xmm());
+    storage.setLowerBits(pack_regs(xmms, nxmms));
+}
+
+
+void SignalGraphCompiler::getStorage(SignalDataStorage storage, Xmm* xmms, unsigned int* nxmms)
+{
+    unpack_regs(storage.lowerBits(), xmms, nxmms);
 }
 
 
 void SignalGraphCompiler::freeStorage(SignalDataStorage &storage)
 {
-    R64FX_DEBUG_ASSERT(storage);
-    auto type = storage.type();
-    if((type & SignalDataStorageType()) == SignalDataStorage::Memory())
+    auto storage_type = storage.type() & SignalDataStorageType();
+    if(storage_type == SignalDataStorage::Memory())
     {
-        auto addr = storage.memoryAddr(*this);
-        freeMemory(addr);
+        freeMemory(storage.lowerBits());
+    }
+    else if(storage_type == SignalDataStorage::GPR())
+    {
+        GPR64 regs[16]; unsigned int nregs;
+        getStorage(storage, regs, &nregs);
+        freeGPR(regs, nregs);
+    }
+    else if(storage_type == SignalDataStorage::Xmm())
+    {
+        Xmm regs[16]; unsigned int nregs;
+        getStorage(storage, regs, &nregs);
+        freeXmm(regs, nregs);
     }
     storage.clear();
-}
-
-
-SignalGraph::SignalGraph()
-{
-
-}
-
-
-SignalGraph::~SignalGraph()
-{
-    
-}
-
-
-void SignalGraph::build()
-{
-    if(frameCount() == 0)
-        return;
-
-    setCodeEnd(codeBegin());
-
-    MOV(rcx, Imm32(-frameCount()));
-    JumpLabel loop;
-    mark(loop);
-
-    SignalSubGraph::build(*this);
-
-    ADD(rcx, Imm32(1));
-    JNZ(loop);
-
-    RET();
-}
-
-
-void SignalNode_Dummy::build(SignalGraphCompiler &c)
-{
-    std::cout << "dummy: " << this << "\n";
 }
 
 }//namespace r64fx
