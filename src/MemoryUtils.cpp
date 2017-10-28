@@ -32,6 +32,9 @@ void* alloc_aligned(int alignment, int nbytes)
 
 void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
 {
+    if(buff_bytes == 0)
+        return nullptr;
+
     R64FX_DEBUG_ASSERT((long(buff)  & 3) == 0);
     R64FX_DEBUG_ASSERT((buff_bytes  & 3) == 0);
     R64FX_DEBUG_ASSERT((chunk_bytes & 3) == 0);
