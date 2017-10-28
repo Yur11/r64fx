@@ -25,7 +25,7 @@ public:
 
 class GPR : public Register{
 public:
-    explicit constexpr GPR(unsigned char code) : Register(code) {}
+    explicit constexpr GPR(unsigned char code = 0) : Register(code) {}
 
     constexpr bool is64bit() { return bits() & 0x80; }
 
@@ -35,14 +35,14 @@ public:
 
 class GPR32 : public GPR{
 public:
-    explicit constexpr GPR32(unsigned char code) : GPR(code) {}
+    explicit constexpr GPR32(unsigned char code = 0) : GPR(code) {}
 };
 constexpr GPR32 eax(0x0), ecx(0x1), edx (0x2), ebx (0x3), esp (0x4), ebp (0x5), esi (0x6), edi (0x7),
                 r8d(0x8), r9d(0x9), r10d(0xA), e11d(0xB), r12d(0xC), r13d(0xD), r14d(0xE), r15d(0xF);
 
 class GPR64 : public GPR{
 public:
-    explicit constexpr GPR64(unsigned char code) : GPR(code | 0x80) {}
+    explicit constexpr GPR64(unsigned char code = 0) : GPR(code | 0x80) {}
 
     constexpr GPR32 gpr32() { return GPR32(code()); }
 };
@@ -51,7 +51,7 @@ constexpr GPR64 rax(0x0), rcx(0x1), rdx(0x2), rbx(0x3), rsp(0x4), rbp(0x5), rsi(
 
 class Xmm : public Register{
 public:
-    explicit constexpr Xmm(unsigned char code) : Register(code) {}
+    explicit constexpr Xmm(unsigned char code = 0) : Register(code) {}
 };
 constexpr Xmm xmm0(0x0), xmm1(0x1), xmm2 (0x2), xmm3 (0x3), xmm4 (0x4), xmm5 (0x5), xmm6 (0x6), xmm7 (0x7),
               xmm8(0x8), xmm9(0x9), xmm10(0xA), xmm11(0xB), xmm12(0xC), xmm13(0xD), xmm14(0xE), xmm15(0xF);
