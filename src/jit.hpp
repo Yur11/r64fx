@@ -20,13 +20,15 @@ public:
     constexpr unsigned int lowerBits() { return m_bits & 0x7; }
 
     constexpr bool prefixBit() { return m_bits & 0x8; }
+
+    constexpr bool rexW() { return bits() & 0x80; }
+
+    constexpr bool rex() { return rexW() || prefixBit(); }
 };
 
 class GPR : public Register{
 public:
     explicit constexpr GPR(unsigned char code = 0) : Register(code) {}
-
-    constexpr bool is64bit() { return bits() & 0x80; }
 
     constexpr bool isCalleePreserved()
         { return (1<<code()) & ((1<<0x3) | (1<<0x5) | (1<<0xC) | (1<<0xD) | (1<<0xE) | (1<<0xF)); }
@@ -71,20 +73,23 @@ union Imm16{
 
 union Imm32{
     unsigned int   n;
+    float          f;
     unsigned char  b[4];
     explicit Imm32(unsigned int n) : n(n) {}
 };
 
+inline Imm32 Imm32f(float f) { Imm32 imm(0); imm.f = f; return imm; }
+
 union Imm64{
     unsigned long  n;
+    float          f[2];
     unsigned char  b[8];
     explicit Imm64(unsigned long n) : n(n) {}
 };
 
-inline Imm64 ImmAddr(void* addr)
-{
-    return Imm64((unsigned long)addr);
-}
+inline Imm64 Imm64ff(float f0, float f1) { Imm64 imm(0); imm.f[0] = f0; imm.f[1] = f1; return imm; }
+
+inline Imm64 ImmAddr(void* addr) { return Imm64((unsigned long)addr); }
 
 
 #ifdef R64FX_DEBUG
@@ -205,8 +210,14 @@ class SIBD : public SIB{
 
     inline bool rexW() const
     {
-        return base().is64bit() || (hasIndex() && index().is64bit());
+        return base().rexW() || (hasIndex() && index().rexW());
     }
+
+    inline bool rexX() const { return (hasIndex() && index().prefixBit()); }
+
+    inline bool rexB() const { return base().prefixBit(); }
+
+    inline bool rex() const { return rexW() || rexX() || rexB(); }
 
 public:
     SIBD(Base base) : SIB(base.bits()) {}
@@ -390,12 +401,9 @@ private:
     void write(unsigned char opcode, GPR   reg, Mem32 mem);
     void write(unsigned char opcode, GPR64 reg, SIBD sibd);
 
-    void write(unsigned char opcode, Mem8 mem);
-    void write(unsigned char opcode1, unsigned char opcode2, Mem8 mem);
-
-    void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm dst, Xmm src, int imm = -1);
-    void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, Mem8 mem, int imm = -1);
-    void write0x0F(unsigned char pre_rex_byte, unsigned byte1, Xmm reg, SIBD sibd, int imm = -1);
+    void write0x0F(unsigned char prefix, unsigned opcode, Register dst, Register src, int imm = -1);
+    void write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, Mem8 mem, int imm = -1);
+    void write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, SIBD sibd, int imm = -1);
 
     void write(unsigned char opcode, GPR64 reg);
 
@@ -569,6 +577,10 @@ public:
     inline void CVTDQ2PS(Xmm reg, SIBD sibd)  { write0x0F(0, 0x5B, reg, sibd); }
 
 /* === SSE2 === */
+    inline void MOVD(Xmm dst, GPR32 src) { write0x0F(0x66, 0x6E, dst, src); }
+    inline void MOVQ(Xmm dst, GPR64 src) { write0x0F(0x66, 0x6E, dst, src); }
+    inline void MOVD(GPR32 dst, Xmm src) { write0x0F(0x66, 0x7E, src, dst); }
+    inline void MOVQ(GPR64 dst, Xmm src) { write0x0F(0x66, 0x7E, src, dst); }
 
     inline void PADDD(Xmm dst, Xmm src)    { write0x0F(0x66, 0xFE, dst, src);}
     inline void PADDD(Xmm reg, Mem128 mem) { write0x0F(0x66, 0xFE, reg, mem); }
@@ -577,7 +589,6 @@ public:
     inline void PSUBD(Xmm dst, Xmm src)    { write0x0F(0x66, 0xFA, dst, src); }
     inline void PSUBD(Xmm reg, Mem128 mem) { write0x0F(0x66, 0xFA, reg, mem); }
     inline void PSUBD(Xmm reg, SIBD sibd)  { write0x0F(0x66, 0xFA, reg, sibd); }
-
 };//Assembler
 
 }//namespace r64fx

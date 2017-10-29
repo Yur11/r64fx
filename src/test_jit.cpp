@@ -538,7 +538,7 @@ bool test_sse(Assembler &as)
         }
     }
 
-    cout << "(ADD|SUB|mul|div)ps\n";
+    cout << "(ADD|SUB|MUL|DIV)PS\n";
     {
         float* buff = (float*) as.dataBegin();
         auto a = buff + 4;
@@ -1088,6 +1088,45 @@ bool test_sibd(Assembler &as)
 }
 
 
+bool test_movdq(Assembler &as)
+{
+    auto jitfun = (JitFun) as.codeBegin();
+    as.rewindData();
+    as.growData(sizeof(float) * 16);
+    auto buff = (float*) as.dataBegin();
+
+    cout << "MOV(D|Q)\n";
+    {
+        for(int i=0; i<8; i++)
+            buff[i] = float(rand() & 0xFFFF) * 0.01;
+        for(int i=8; i<16   ; i++)
+            buff[i] = 0.0f;
+
+        as.rewindCode();
+        as.MOVAPS(xmm0, Mem128(buff));
+        as.MOVAPS(xmm8, Mem128(buff + 4));
+        as.MOVD(eax, xmm0);
+        as.MOVQ(rcx, xmm8);
+        as.MOVD(xmm8, eax);
+        as.MOVQ(xmm0, rcx);
+        as.MOVAPS(Mem128(buff + 8), xmm8);
+        as.MOVAPS(Mem128(buff + 12), xmm0);
+        as.RET();
+        jitfun();
+
+        buff[1] = buff[2] = buff[3] = buff[6] = buff[7] = 0.0f;
+
+        if(!vec4_eq(buff, buff + 8) || !vec4_eq(buff + 4, buff + 12))
+        {
+            return false;
+        }
+    }
+
+    cout << "\n";
+    return true;
+}
+
+
 int main()
 {
     srand(time(NULL));
@@ -1103,7 +1142,8 @@ int main()
         test_push_pop(as) &&
         test_sse(as) &&
         test_jumps(as) &&
-        test_sibd(as)
+        test_sibd(as) &&
+        test_movdq(as)
     ;
 
     if(ok)
