@@ -15,7 +15,6 @@ protected:
     constexpr unsigned char bits() { return m_bits; }
 
 public:
-
     constexpr unsigned int code() { return m_bits & 0xF; }
 
     constexpr unsigned int lowerBits() { return m_bits & 0x7; }
@@ -56,6 +55,8 @@ public:
 constexpr Xmm xmm0(0x0), xmm1(0x1), xmm2 (0x2), xmm3 (0x3), xmm4 (0x4), xmm5 (0x5), xmm6 (0x6), xmm7 (0x7),
               xmm8(0x8), xmm9(0x9), xmm10(0xA), xmm11(0xB), xmm12(0xC), xmm13(0xD), xmm14(0xE), xmm15(0xF);
 
+template<typename RegT> inline bool operator==(RegT a, RegT b) { return a.code() == b.code(); }
+template<typename RegT> inline bool operator!=(RegT a, RegT b) { return a.code() != b.code(); }
 
 union Imm8{
     unsigned char b;
