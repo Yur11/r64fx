@@ -30,6 +30,7 @@ void SignalNode_BufferReader::build(SignalGraphCompiler &c)
         auto ptr = c.allocMemory(sizeof(float), sizeof(float));
         R64FX_DEBUG_ASSERT(ptr);
         c.MOV(Mem32(c.ptrMem<unsigned char*>(ptr)), GPR32(regs[0].gpr32()));
+        c.setStorage(m_out, ptr);
     }
 
     if(nregs == 0)
@@ -42,14 +43,13 @@ void SignalNode_BufferReader::build(SignalGraphCompiler &c)
     }
 
     m_out.setSize(1);
-    m_out.setScalarType(SDS::Float());
-    m_out.setScalarSize(SDS::Single());
 }
 
 
 void SignalNode_BufferReader::cleanup(SignalGraphCompiler &c)
 {
     R64FX_DEBUG_ASSERT(m_out.connectedSinkCount() == 0);
+    c.freeStorage(m_out);
 }
 
 
@@ -57,26 +57,53 @@ void SignalNode_BufferWriter::build(SignalGraphCompiler &c)
 {
     if(m_in.connectedSource())
         c.ensureBuilt(m_in.connectedSource());
+    else
+        return;
 
     std::cout << this << " Writer::build\n";
 
-    auto &in = m_in.connectedSource()[0];
-    R64FX_DEBUG_ASSERT((in.type() & SignalDataScalarType()) == SDS::Float());
-    R64FX_DEBUG_ASSERT((in.type() & SignalDataScalarSize()) == SDS::Single());
-    R64FX_DEBUG_ASSERT(in.size() == 1);
+    auto &source = m_in.connectedSource()[0];
+    R64FX_DEBUG_ASSERT(source.isSingle());
+    R64FX_DEBUG_ASSERT(source.size() == 1);
 
     GPR64 source_reg;
-    if(in.isInRegisters())
+    bool restore_source_reg = false;
+    if(source.isGPR())
     {
-//         in.registerMap();
+        unsigned int nregs = 0;
+        c.getStorage(source, &source_reg, &nregs);
+        R64FX_DEBUG_ASSERT(nregs == 1);
     }
-    else
+    else if(source.isMemory())
     {
-        
+        restore_source_reg = (c.allocGPR(&source_reg, 1) == 0);
+        if(restore_source_reg)
+            c.PUSH(source_reg);
+        c.MOV(source_reg.gpr32(), Mem32(c.ptrMem<unsigned char*>(c.getPtr(source))));
     }
 
     GPR64 base_reg;
-    auto nregs = c.allocGPR(&base_reg, 1);
+    bool restore_base_reg = (c.allocGPR(&base_reg, 1) == 0);
+    if(restore_base_reg)
+    {
+        base_reg = rax;
+        if(base_reg == source_reg)
+            base_reg = rdx;
+        c.PUSH(base_reg);
+    }
+
+    c.MOV(base_reg, ImmAddr(buffer() + c.frameCount()));
+    c.MOV(Base(base_reg) + Index(c.mainLoopCounter(), 4), source_reg);
+
+    if(restore_base_reg)
+        c.POP(base_reg);
+    else
+        c.freeGPR(&base_reg, 1);
+
+    if(restore_source_reg)
+        c.POP(source_reg);
+    else if(source.isMemory() || source.processedSinkCount() == 0)
+        c.freeGPR(&source_reg, 1);
 }
 
 

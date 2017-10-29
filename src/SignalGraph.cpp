@@ -163,7 +163,7 @@ template<typename RegT, unsigned int MaxRegs> inline unsigned int alloc_regs(uns
 {
     R64FX_DEBUG_ASSERT(nregs < MaxRegs);
     unsigned int n = 0;
-    for(unsigned int i=0; i<nregs && n<nregs; i++)
+    for(unsigned int i=0; i<MaxRegs && n<nregs; i++)
     {
         if(m_regs[i] == 0)
         {
@@ -242,55 +242,61 @@ void SignalGraphCompiler::freeXmm(Xmm* xmms, unsigned int nxmms)
 
 void SignalGraphCompiler::setStorage(SignalDataStorage &storage, DataBufferPointer ptr)
 {
-    storage.setStorageType(SDS::Memory());
-    storage.setLowerBits(ptr.offset());
+    storage.setMemory();
+    storage.u.d[0] = ptr.offset();
+}
+
+
+DataBufferPointer SignalGraphCompiler::getPtr(SignalDataStorage storage) const
+{
+    R64FX_DEBUG_ASSERT(storage.isMemory());
+    return storage.u.d[0];
 }
 
 
 void SignalGraphCompiler::setStorage(SignalDataStorage &storage, GPR* gprs, unsigned int ngprs)
 {
-    storage.setStorageType(SDS::GPR());
-    storage.setLowerBits(pack_regs(gprs, ngprs));
+    storage.setGPR();
+    storage.u.d[0] = pack_regs(gprs, ngprs);
 }
 
 
 void SignalGraphCompiler::getStorage(SignalDataStorage storage, GPR* gprs, unsigned int* ngprs)
 {
-    unpack_regs(storage.lowerBits(), gprs, ngprs);
+    unpack_regs(storage.u.d[0], gprs, ngprs);
 }
 
 
 void SignalGraphCompiler::setStorage(SignalDataStorage &storage, Xmm* xmms, unsigned int nxmms)
 {
-    storage.setStorageType(SDS::Xmm());
-    storage.setLowerBits(pack_regs(xmms, nxmms));
+    storage.setXmm();
+    storage.u.d[0] = pack_regs(xmms, nxmms);
 }
 
 
 void SignalGraphCompiler::getStorage(SignalDataStorage storage, Xmm* xmms, unsigned int* nxmms)
 {
-    unpack_regs(storage.lowerBits(), xmms, nxmms);
+    unpack_regs(storage.u.d[0], xmms, nxmms);
 }
 
 
 void SignalGraphCompiler::freeStorage(SignalDataStorage &storage)
 {
-    auto storage_type = storage.type() & SignalDataStorageType();
-    if(storage_type == SignalDataStorage::Memory())
+    if(storage.isXmm())
     {
-        freeMemory(storage.lowerBits());
+        Xmm regs[16]; unsigned int nregs;
+        getStorage(storage, regs, &nregs);
+        freeXmm(regs, nregs);
     }
-    else if(storage_type == SignalDataStorage::GPR())
+    else if(storage.isGPR())
     {
         GPR64 regs[16]; unsigned int nregs;
         getStorage(storage, regs, &nregs);
         freeGPR(regs, nregs);
     }
-    else if(storage_type == SignalDataStorage::Xmm())
+    else
     {
-        Xmm regs[16]; unsigned int nregs;
-        getStorage(storage, regs, &nregs);
-        freeXmm(regs, nregs);
+        freeMemory(storage.u.d[0]);
     }
     storage.clear();
 }

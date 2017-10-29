@@ -2,7 +2,6 @@
 #define R64FX_SIGNAL_GRAPH_HPP
 
 #include "Debug.hpp"
-#include "FlagUtils.hpp"
 #include "jit.hpp"
 
 #define R64FX_NODE_SOURCE(name) private: SignalSource m_##name; public: inline NodeSource name() { return {this, &m_##name}; } private:
@@ -12,15 +11,6 @@ namespace r64fx{
 
 class SignalNode;
 class SignalGraphCompiler;
-
-class SignalDataType          : R64FX_FLAG_TYPE(0xF000000000000000UL);
-
-/* Basic constituents of SignalDataType. */
-class SignalDataStorageType   : R64FX_FLAG_TYPE(0x3000000000000000UL); //Memory, GPR or Xmm
-class SignalDataScalarSize    : R64FX_FLAG_TYPE(0x4000000000000000UL); //Single or Double
-class SignalDataScalarType    : R64FX_FLAG_TYPE(0x8000000000000000UL); //Float or Int
-
-R64FX_COMBINE_3_FLAG_TYPES(SignalDataType,  SignalDataStorageType, SignalDataScalarSize, SignalDataScalarType);
 
 
 class DataBufferPointer{
@@ -37,58 +27,39 @@ public:
 
 class SignalDataStorage{
     friend class SignalGraphCompiler;
-
-    unsigned long m_bits = 0;
+    union{
+        unsigned long q = 0;
+        unsigned int  d[2];
+    }u;
 
 public:
     SignalDataStorage() {}
 
-    inline operator bool() const { return m_bits; }
+    inline operator bool() const { return u.q; }
 
-    inline static SignalDataStorageType Memory()  { return SignalDataStorageType (0x0000000000000000UL); }
-    inline static SignalDataStorageType GPR()     { return SignalDataStorageType (0x1000000000000000UL); }
-    inline static SignalDataStorageType Xmm()     { return SignalDataStorageType (0x2000000000000000UL); }
+    inline bool isMemory()    const { return !isRegister(); }
+    inline bool isRegister()  const { return u.d[1] & 0x80000000; }
+    inline bool isGPR()       const { return !isVector(); }
+    inline bool isVector()    const { return u.d[1] & 0x40000000; }
+    inline bool isXmm()       const { return !isYmm(); }
+    inline bool isYmm()       const { return u.d[1] & 0x20000000; }
 
-    inline static SignalDataScalarSize  Single()  { return SignalDataScalarSize  (0x0000000000000000UL); }
-    inline static SignalDataScalarSize  Double()  { return SignalDataScalarSize  (0x4000000000000000UL); }
+    inline bool isSingle()    const { return !isDouble(); }
+    inline bool isDouble()    const { return u.d[1] & 0x10000000; }
+    inline void isDouble(bool yes)  { u.d[1] &= 0xEFFFFFFF; u.d[1] |= (yes ? 0x10000000 : 0); }
 
-    inline static SignalDataScalarType  Float()   { return SignalDataScalarType  (0x0000000000000000UL); }
-    inline static SignalDataScalarType  Int()     { return SignalDataScalarType  (0x8000000000000000UL); }
-
-    inline SignalDataType type() const { return SignalDataType(m_bits & SignalDataType::mask()); }
-
-    inline void setScalarSize(SignalDataScalarSize sdss) { setFlagBits(sdss); }
-    inline void setScalarType(SignalDataScalarType sdst) { setFlagBits(sdst); }
-
-private:
-    template<typename FlagT> inline void setFlagBits(FlagT flag)
-        { m_bits &= ~FlagT::mask(); m_bits |= flag.bits(); }
-
-public:
-    inline bool isInMemory() const { return (type() & SignalDataStorageType()) == SignalDataStorage::Memory(); }
-
-    inline bool isInRegisters() const { return type() != SignalDataStorage::Memory(); }
-
-    inline unsigned int size() { return (m_bits & (0x0FFFFFFF00000000UL)) >> 32; }
-
+    inline unsigned int size() const { return u.d[1] & 0x0FFFFFFF; }
     inline void setSize(unsigned int size)
-    {
-        R64FX_DEBUG_ASSERT(size <= 0x0FFFFFFF);
-        m_bits &= 0xF0000000FFFFFFFFUL;
-        m_bits |= ((unsigned long)size) << 32;
-    }
+        { R64FX_DEBUG_ASSERT(size <= 0x0FFFFFFF); u.d[1] &= 0xF0000000; u.d[1] |= size; }
 
 private:
-    inline void setStorageType(SignalDataStorageType sdst) { setFlagBits(sdst); }
+    inline void clear() { u.q = 0; }
 
-    inline void setLowerBits(unsigned long bits) { m_bits &= 0xFFFFFFFF00000000UL; m_bits |= bits; }
-
-    inline unsigned int lowerBits() const { return m_bits & 0x00000000FFFFFFFFUL; }
-
-    inline void clear() { m_bits = 0; }
+    inline void setMemory() { u.d[1] &= 0x0FFFFFFF; }
+    inline void setGPR()    { u.d[1] &= 0x8FFFFFFF; }
+    inline void setXmm()    { u.d[1] &= 0xCFFFFFFF; }
+    inline void setYmm()    { u.d[1] &= 0xEFFFFFFF; }
 };
-
-typedef SignalDataStorage SDS;
 
 
 /* One SignalSource can be connected to multiple SignalSink instances. */
@@ -197,7 +168,8 @@ public:
 
     void freeMemory(DataBufferPointer ptr);
 
-    template<typename MemT> inline MemT ptrMem(DataBufferPointer ptr) const { return MemT(codeBegin() - ptr.m_offset); };
+    template<typename MemT> inline MemT ptrMem(DataBufferPointer ptr) const 
+        { R64FX_DEBUG_ASSERT(ptr); return MemT(codeBegin() - ptr.m_offset); };
 
 
     unsigned int allocGPR(GPR64* gprs, unsigned int ngprs);
@@ -211,6 +183,8 @@ public:
 
 
     void setStorage(SignalDataStorage &storage, DataBufferPointer ptr);
+
+    DataBufferPointer getPtr(SignalDataStorage storage) const;
 
     void setStorage(SignalDataStorage &storage, GPR* gprs, unsigned int ngprs);
 
