@@ -21,6 +21,8 @@ class DataBufferPointer{
     inline unsigned int offset() const { return m_offset; }
 
 public:
+    DataBufferPointer() {}
+
     inline operator bool() const { return m_offset; }
 };
 
@@ -37,16 +39,16 @@ public:
 
     inline operator bool() const { return u.q; }
 
-    inline bool isMemory()    const { return !isRegister(); }
-    inline bool isRegister()  const { return u.d[1] & 0x80000000; }
-    inline bool isGPR()       const { return !isVector(); }
-    inline bool isVector()    const { return u.d[1] & 0x40000000; }
-    inline bool isXmm()       const { return !isYmm(); }
-    inline bool isYmm()       const { return u.d[1] & 0x20000000; }
+    inline bool isMemory()    const { return (u.d[1] & 0x30000000) == 0; }
+    inline bool isRegister()  const { return (u.d[1] & 0x30000000) >= 0x10000000; }
+    inline bool isGPR()       const { return (u.d[1] & 0x30000000) == 0x10000000; }
+    inline bool isVector()    const { return (u.d[1] & 0x30000000) >= 0x20000000; }
+    inline bool isXmm()       const { return (u.d[1] & 0x30000000) == 0x20000000; }
+    inline bool isYmm()       const { return (u.d[1] & 0x30000000) == 0x30000000; }
 
     inline bool isSingle()    const { return !isDouble(); }
-    inline bool isDouble()    const { return u.d[1] & 0x10000000; }
-    inline void isDouble(bool yes)  { u.d[1] &= 0xEFFFFFFF; u.d[1] |= (yes ? 0x10000000 : 0); }
+    inline bool isDouble()    const { return u.d[1] & 0x80000000; }
+    inline void isDouble(bool yes)  { u.d[1] &= 0x7FFFFFFF; u.d[1] |= (yes ? 0x80000000 : 0); }
 
     inline unsigned int size() const { return u.d[1] & 0x0FFFFFFF; }
     inline void setSize(unsigned int size)
@@ -55,10 +57,10 @@ public:
 private:
     inline void clear() { u.q = 0; }
 
-    inline void setMemory() { u.d[1] &= 0x0FFFFFFF; }
-    inline void setGPR()    { u.d[1] &= 0x8FFFFFFF; }
-    inline void setXmm()    { u.d[1] &= 0xCFFFFFFF; }
-    inline void setYmm()    { u.d[1] &= 0xEFFFFFFF; }
+    inline void setMemory() { u.d[1] &= 0x30000000; }
+    inline void setGPR()    { u.d[1] &= 0x30000000; u.d[1] |= 0x10000000; }
+    inline void setXmm()    { u.d[1] &= 0x30000000; u.d[1] |= 0x20000000; }
+    inline void setYmm()    { u.d[1] &= 0x30000000; u.d[1] |= 0x30000000; }
 };
 
 

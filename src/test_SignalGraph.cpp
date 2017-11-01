@@ -1,6 +1,7 @@
 #include <iostream>
 #include "SignalGraph.hpp"
 #include "SignalNode_BufferRW.hpp"
+#include "SignalNode_Oscillator.hpp"
 
 using namespace std;
 using namespace r64fx;
@@ -28,6 +29,22 @@ int main()
 
     SignalGraphCompiler sgc;
     sgc.setFrameCount(frame_count);
+
+//     SignalNode_OscClock clk;
+//     clk.setDelta(0xFFFFFFF);
+// 
+//     SignalNode_BufferWriter bw;
+//     bw.setBuffer(buff_a);
+// 
+//     sgc.link(clk.out(), bw.in());
+// 
+//     sgc.build(&bw, 1);
+//     sgc.run();
+// 
+//     for(int i=0; i<frame_count; i++)
+//         cout << buff_a[i] << "\n";
+// 
+//     return 0;
 
     SignalNode_BufferReader snbr;
     SignalNode_BufferWriter snbw;

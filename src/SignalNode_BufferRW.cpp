@@ -74,8 +74,9 @@ void SignalNode_BufferWriter::build(SignalGraphCompiler &c)
         c.getStorage(source, &source_reg, &nregs);
         R64FX_DEBUG_ASSERT(nregs == 1);
     }
-    else if(source.isMemory())
+    else
     {
+        R64FX_DEBUG_ASSERT(source.isMemory());
         restore_source_reg = (c.allocGPR(&source_reg, 1) == 0);
         if(restore_source_reg)
             c.PUSH(source_reg);
@@ -102,8 +103,15 @@ void SignalNode_BufferWriter::build(SignalGraphCompiler &c)
 
     if(restore_source_reg)
         c.POP(source_reg);
-    else if(source.isMemory() || source.processedSinkCount() == 0)
+    else if(source.isMemory()/* || source.processedSinkCount() == 0*/)
+    {
         c.freeGPR(&source_reg, 1);
+    }
+/*
+    if(source.isMemory() && source.processedSinkCount() == 0)
+    {
+        c.freeStorage(source);
+    }*/
 }
 
 

@@ -66,6 +66,7 @@ set(SRC
     RingSectorPainter.cpp
     SignalGraph.cpp
     SignalNode_BufferRW.cpp
+    SignalNode_Oscillator.cpp
     Shader.cpp
     SoundDriver.cpp
     SoundFile.cpp
@@ -197,6 +198,7 @@ set(test_SignalGraph_SRC
     test_SignalGraph.cpp
     SignalGraph.cpp
     SignalNode_BufferRW.cpp
+    SignalNode_Oscillator.cpp
     jit.cpp
     MemoryUtils.cpp
 )
