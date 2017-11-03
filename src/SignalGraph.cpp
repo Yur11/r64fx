@@ -113,8 +113,16 @@ void SignalGraphCompiler::ensureBuilt(SignalSource* source)
     R64FX_DEBUG_ASSERT(source->m_processed_sink_count < source->m_connected_sink_count);
     buildNode(source->parentNode());
     source->m_processed_sink_count++;
+}
+
+void SignalGraphCompiler::sourceUsed(SignalSource* source)
+{
+    R64FX_DEBUG_ASSERT(source->m_processed_sink_count <= source->m_connected_sink_count);
     if(source->m_processed_sink_count == source->m_connected_sink_count)
+    {
         source->m_processed_sink_count = 0;
+        freeStorage(*source);
+    }
 }
 
 
@@ -172,7 +180,6 @@ template<typename RegT, unsigned int MaxRegs> inline unsigned int alloc_regs(uns
     {
         if(m_regs[i] == 0)
         {
-            std::cout << "alloc: " << i << "\n";
             regs[n++] = RegT(i);
             m_regs[i] = 0xFFFFFFFFFFFFFFFFUL;
         }
@@ -186,7 +193,6 @@ template<typename RegT, unsigned int MaxRegs> inline void free_regs(unsigned lon
     R64FX_DEBUG_ASSERT(nregs < MaxRegs);
     for(unsigned int i=0; i<nregs; i++)
     {
-        std::cout << "free: " << i << "\n";
         R64FX_DEBUG_ASSERT(m_regs[regs[i].code()]);
         m_regs[i] = 0;
     }
@@ -225,28 +231,24 @@ template<typename RegT> inline void unpack_regs(unsigned int bits, RegT* regs, u
 
 unsigned int SignalGraphCompiler::allocGPR(GPR64* gprs, unsigned int ngprs)
 {
-    std::cout << "alloc gpr\n";
     return alloc_regs<GPR64, 11>(m_gprs, gprs, ngprs);
 }
 
 
 void SignalGraphCompiler::freeGPR(GPR64* gprs, unsigned int ngprs)
 {
-    std::cout << "free gpr\n";
     free_regs<GPR64, 11>(m_gprs, gprs, ngprs);
 }
 
 
 unsigned int SignalGraphCompiler::allocXmm(Xmm* xmms, unsigned int nxmms)
 {
-    std::cout << "alloc xmm\n";
     return alloc_regs<Xmm, 16>(m_xmms, xmms, nxmms);
 }
 
 
 void SignalGraphCompiler::freeXmm(Xmm* xmms, unsigned int nxmms)
 {
-    std::cout << "free xmm\n";
     free_regs<Xmm, 16>(m_xmms, xmms, nxmms);
 }
 

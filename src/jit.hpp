@@ -7,7 +7,7 @@
 namespace r64fx{
 
 class Register{
-    unsigned char m_bits;
+    unsigned char m_bits = 0;
 
 protected:
     constexpr Register(unsigned char bits) : m_bits(bits) {}

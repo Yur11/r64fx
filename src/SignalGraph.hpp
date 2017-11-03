@@ -153,6 +153,8 @@ public:
 
     void ensureBuilt(SignalSource* source);
 
+    void sourceUsed(SignalSource* source);
+
 private:
     void buildNode(SignalNode* node);
 
