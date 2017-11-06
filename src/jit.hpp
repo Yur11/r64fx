@@ -9,12 +9,11 @@ namespace r64fx{
 class Register{
     unsigned char m_bits = 0;
 
-protected:
-    constexpr Register(unsigned char bits) : m_bits(bits) {}
+public:
+    explicit constexpr Register(unsigned char bits) : m_bits(bits) {}
 
     constexpr unsigned char bits() { return m_bits; }
 
-public:
     constexpr unsigned int code() { return m_bits & 0xF; }
 
     constexpr unsigned int lowerBits() { return m_bits & 0x7; }
@@ -37,6 +36,7 @@ public:
 class GPR32 : public GPR{
 public:
     explicit constexpr GPR32(unsigned char code = 0) : GPR(code) {}
+    constexpr static unsigned int Count() { return 16; }
 };
 constexpr GPR32 eax(0x0), ecx(0x1), edx (0x2), ebx (0x3), esp (0x4), ebp (0x5), esi (0x6), edi (0x7),
                 r8d(0x8), r9d(0x9), r10d(0xA), e11d(0xB), r12d(0xC), r13d(0xD), r14d(0xE), r15d(0xF);
@@ -44,18 +44,29 @@ constexpr GPR32 eax(0x0), ecx(0x1), edx (0x2), ebx (0x3), esp (0x4), ebp (0x5), 
 class GPR64 : public GPR{
 public:
     explicit constexpr GPR64(unsigned char code = 0) : GPR(code | 0x80) {}
-
+    constexpr static unsigned int Count() { return 16; }
     constexpr GPR32 gpr32() { return GPR32(code()); }
 };
 constexpr GPR64 rax(0x0), rcx(0x1), rdx(0x2), rbx(0x3), rsp(0x4), rbp(0x5), rsi(0x6), rdi(0x7),
                 r8 (0x8), r9 (0x9), r10(0xA), r11(0xB), r12(0xC), r13(0xD), r14(0xE), r15(0xF);
 
+class Mmx : public Register{};
+
 class Xmm : public Register{
 public:
     explicit constexpr Xmm(unsigned char code = 0) : Register(code) {}
+    constexpr static unsigned int Count() { return 16; }
 };
 constexpr Xmm xmm0(0x0), xmm1(0x1), xmm2 (0x2), xmm3 (0x3), xmm4 (0x4), xmm5 (0x5), xmm6 (0x6), xmm7 (0x7),
               xmm8(0x8), xmm9(0x9), xmm10(0xA), xmm11(0xB), xmm12(0xC), xmm13(0xD), xmm14(0xE), xmm15(0xF);
+
+class Ymm : public Register{
+public:
+    explicit constexpr Ymm(unsigned char code = 0) : Register(code) {}
+    constexpr static unsigned int Count() { return 16; }
+};
+constexpr Ymm ymm0(0x0), ymm1(0x1), ymm2 (0x2), ymm3 (0x3), ymm4 (0x4), ymm5 (0x5), ymm6 (0x6), ymm7 (0x7),
+              ymm8(0x8), ymm9(0x9), ymm10(0xA), ymm11(0xB), ymm12(0xC), ymm13(0xD), ymm14(0xE), ymm15(0xF);
 
 template<typename RegT> inline bool operator==(RegT a, RegT b) { return a.code() == b.code(); }
 template<typename RegT> inline bool operator!=(RegT a, RegT b) { return a.code() != b.code(); }

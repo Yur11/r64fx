@@ -12,7 +12,7 @@ SignalNode_OscClock::SignalNode_OscClock()
 void SignalNode_OscClock::build(SignalGraphCompiler &c)
 {
     std::cout << "SignalNode_OscClock\n";
-
+/*
     if(!m_clock)
     {
         m_clock = c.allocMemory(sizeof(float) * 4, sizeof(float) * 4);
@@ -50,17 +50,17 @@ void SignalNode_OscClock::build(SignalGraphCompiler &c)
         c.setStorage(m_out, &gpr, 1);
     }
 
-    m_out.setSize(1);
+    m_out.setSize(1);*/
 }
 
 
 void SignalNode_OscClock::cleanup(SignalGraphCompiler &c)
 {
-    if(m_out)
-        c.freeStorage(m_out);
-
-    if(m_clock)
-        c.freeMemory(m_clock);
+//     if(m_out)
+//         c.freeStorage(m_out);
+// 
+//     if(m_clock)
+//         c.freeMemory(m_clock);
 }
 
 }//namespace r64fx

@@ -9,7 +9,6 @@ class SignalNode_OscClock : public SignalNode{
     R64FX_NODE_SOURCE(out);
 
     int m_delta = 0;
-    DataBufferPointer m_clock;
 
 public:
     SignalNode_OscClock();

@@ -2,6 +2,10 @@
 #include "SignalNodeFlags.hpp"
 #include <cstring>
 
+#define R64FX_REGISTER_NOT_USED               0UL
+#define R64FX_REGISTER_USED_NO_STORAGE        ((unsigned long)this)
+#define R64FX_REGISTER_MUST_NEVER_BE_USED     (((unsigned long)this) + 1)
+
 
 namespace r64fx{
 
@@ -9,10 +13,14 @@ SignalGraphCompiler::SignalGraphCompiler()
 {
     for(int i=0; i<11; i++)
     {
-        m_gprs[i] = 0;
+        m_gprs[i] = R64FX_REGISTER_NOT_USED;
     }
-    m_gprs[mainLoopCounter().code()]  = 0xFFFFFFFFFFFFFFFFUL;
-    m_gprs[rsp.code()]                = 0xFFFFFFFFFFFFFFFFUL;//Never touch!
+    m_gprs[mainLoopCounter().code()]  = R64FX_REGISTER_USED_NO_STORAGE;
+    m_gprs[rsp.code()]                = R64FX_REGISTER_MUST_NEVER_BE_USED;
+    for(int i=11; i<16; i++)
+    {
+        m_gprs[i] = R64FX_REGISTER_MUST_NEVER_BE_USED;
+    }
 
     for(int i=0; i<16; i++)
     {
@@ -26,17 +34,10 @@ SignalGraphCompiler::SignalGraphCompiler()
 
 void SignalGraphCompiler::link(const NodeSource &node_source, const NodeSink &node_sink)
 {
-    auto source_node = node_source.node();
-    R64FX_DEBUG_ASSERT(source_node);
-
-    auto sink_node = node_sink.node();
-    R64FX_DEBUG_ASSERT(sink_node);
-
-    auto source = node_source.port();
-    R64FX_DEBUG_ASSERT(source);
-
-    auto sink = node_sink.port();
-    R64FX_DEBUG_ASSERT(sink);
+    auto source_node  = node_source.node();
+    auto sink_node    = node_sink.node();
+    auto source       = node_source.port();
+    auto sink         = node_sink.port();
     R64FX_DEBUG_ASSERT(sink->connectedSource() == nullptr);
 
     sink->m_connected_source = source;
@@ -49,18 +50,10 @@ void SignalGraphCompiler::link(const NodeSource &node_source, const NodeSink &no
 
 void SignalGraphCompiler::unlink(const NodeSink node_sink)
 {
-    auto sink_node = node_sink.node();
-    R64FX_DEBUG_ASSERT(sink_node);
-
-    auto sink = node_sink.port();
-    R64FX_DEBUG_ASSERT(sink);
-
-    auto source = sink->m_connected_source;
-    R64FX_DEBUG_ASSERT(source);
-
-    auto source_node = source->parentNode();
-    R64FX_DEBUG_ASSERT(source_node);
-
+    auto sink_node    = node_sink.node();
+    auto sink         = node_sink.port();
+    auto source       = sink->m_connected_source;
+    auto source_node  = source->parentNode();
     sink->m_connected_source = nullptr;
     R64FX_DEBUG_ASSERT(source->m_connected_sink_count > 0);
     source->m_connected_sink_count--;
@@ -97,7 +90,7 @@ void SignalGraphCompiler::build(SignalNode* terminal_nodes, unsigned int nnodes)
 
     m_iteration_count++;
     for(unsigned int i=0; i<nnodes; i++)
-        buildNode(terminal_nodes + i);
+        buildNode(terminal_nodes[i]);
 
     ADD(mainLoopCounter(), Imm32(1));
     JNZ(loop);
@@ -111,7 +104,7 @@ void SignalGraphCompiler::build(SignalNode* terminal_nodes, unsigned int nnodes)
 void SignalGraphCompiler::ensureBuilt(SignalSource* source)
 {
     R64FX_DEBUG_ASSERT(source->m_processed_sink_count < source->m_connected_sink_count);
-    buildNode(source->parentNode());
+    buildNode(*source->parentNode());
     source->m_processed_sink_count++;
 }
 
@@ -126,17 +119,17 @@ void SignalGraphCompiler::sourceUsed(SignalSource* source)
 }
 
 
-void SignalGraphCompiler::buildNode(SignalNode* node)
+void SignalGraphCompiler::buildNode(SignalNode &node)
 {
-    if(node->m_iteration_count < m_iteration_count)
+    if(node.m_iteration_count < m_iteration_count)
     {
-        node->build(*this);
-        node->m_iteration_count = m_iteration_count;
+        node.build(*this);
+        node.m_iteration_count = m_iteration_count;
     }
 }
 
 
-DataBufferPointer SignalGraphCompiler::allocMemory(unsigned int nbytes, unsigned int align)
+DataBufferPointer SignalGraphCompiler::allocMemoryBytes(unsigned int nbytes, unsigned int align)
 {
     R64FX_DEBUG_ASSERT(nbytes > 0);
     R64FX_DEBUG_ASSERT(align > 0);
@@ -162,156 +155,103 @@ DataBufferPointer SignalGraphCompiler::allocMemory(unsigned int nbytes, unsigned
 }
 
 
-void SignalGraphCompiler::freeMemory(DataBufferPointer ptr)
+void SignalGraphCompiler::freeMemory(DataBufferPointer dbp)
 {
-    R64FX_DEBUG_ASSERT(ptr);
+    R64FX_DEBUG_ASSERT(dbp);
     HeapBuffer hb(dataBegin(), dataBufferSize());
-    hb.freeChunk(ptrMem<unsigned char*>(ptr));
+    hb.freeChunk(ptr<unsigned char*>(dbp));
 }
 
 
-namespace{
 
-template<typename RegT, unsigned int MaxRegs> inline unsigned int alloc_regs(unsigned long* m_regs, RegT* regs, unsigned int nregs)
+RegisterPack<Register> SignalGraphCompiler::allocRegisters(unsigned int count, unsigned long* register_table, unsigned int register_table_size)
 {
-    R64FX_DEBUG_ASSERT(nregs < MaxRegs);
+    R64FX_DEBUG_ASSERT(count < 16);
+    RegisterPack<Register> regpack;
     unsigned int n = 0;
-    for(unsigned int i=0; i<MaxRegs && n<nregs; i++)
+    for(unsigned int i=0; i<register_table_size; i++)
     {
-        if(m_regs[i] == 0)
+        if(register_table[i] == R64FX_REGISTER_NOT_USED)
         {
-            regs[n++] = RegT(i);
-            m_regs[i] = 0xFFFFFFFFFFFFFFFFUL;
+            register_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
+            regpack.setRegAt(n++, Register(i));
         }
     }
-    return n;
+    return regpack;
 }
 
 
-template<typename RegT, unsigned int MaxRegs> inline void free_regs(unsigned long* m_regs, RegT* regs, unsigned int nregs)
+void SignalGraphCompiler::setStorageRegisters(SignalDataStorage &storage, RegisterPack<Register> regpack, unsigned long* register_table)
 {
-    R64FX_DEBUG_ASSERT(nregs < MaxRegs);
-    for(unsigned int i=0; i<nregs; i++)
-    {
-        R64FX_DEBUG_ASSERT(m_regs[regs[i].code()]);
-        m_regs[i] = 0;
-    }
-}
-
-
-template<typename RegT> inline unsigned int pack_regs(RegT* regs, unsigned int nregs)
-{
+    R64FX_DEBUG_ASSERT(storage.u.w[1] == 0);
     unsigned int bits = 0;
-    for(unsigned int i=0; i<nregs; i++)
+    for(unsigned int i=0; i<regpack.size(); i++)
     {
-        bits |= (1<<regs[i].code());
+        auto reg = regpack.regAt(i);
+        bits |= (1 << reg.code());
+        register_table[i] = (unsigned long)&storage;
     }
-    return bits;
+    R64FX_DEBUG_ASSERT(bits < 0xFF);
+    storage.u.w[1] = bits;
 }
 
 
-template<typename RegT> inline void unpack_regs(unsigned int bits, RegT* regs, unsigned int* nregs)
+RegisterPack<Register> SignalGraphCompiler::getStorageRegisters(SignalDataStorage &storage, unsigned long* register_table) const
 {
+    RegisterPack<Register> regpack;
+    unsigned int bits = storage.u.w[1];
     unsigned int n = 0;
-    for(int i=0; i<16 && bits; i++)
+    for(unsigned int i=0; bits; i++)
     {
-        unsigned int bit = (1<<i);
+        unsigned int bit = (1 << i);
         if(bits & bit)
         {
-            regs[n] = RegT(i);
-            bits &= ~bits;
-            n++;
+            regpack.setRegAt(n++, Register(i));
+            R64FX_DEBUG_ASSERT(register_table[i] == (unsigned long)&storage);
+            bits &= ~bit;
         }
     }
-    *nregs = n;
-}
-
-}//namespace
-
-
-unsigned int SignalGraphCompiler::allocGPR(GPR64* gprs, unsigned int ngprs)
-{
-    return alloc_regs<GPR64, 11>(m_gprs, gprs, ngprs);
+    regpack.setSize(n);
+    return regpack;
 }
 
 
-void SignalGraphCompiler::freeGPR(GPR64* gprs, unsigned int ngprs)
+RegisterPack<Register> SignalGraphCompiler::removeStorageRegisters(SignalDataStorage &storage, unsigned long* register_table)
 {
-    free_regs<GPR64, 11>(m_gprs, gprs, ngprs);
+    RegisterPack<Register> regpack;
+    unsigned int bits = storage.u.w[1];
+    unsigned int n = 0;
+    for(unsigned int i=0; bits; i++)
+    {
+        unsigned int bit = (1 << i);
+        if(bits & bit)
+        {
+            regpack.setRegAt(n++, Register(i));
+            R64FX_DEBUG_ASSERT(register_table[i] == (unsigned long)&storage);
+            register_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
+            bits &= ~bit;
+        }
+    }
+    storage.u.w[1] = 0;
+    return regpack;
 }
 
 
-unsigned int SignalGraphCompiler::allocXmm(Xmm* xmms, unsigned int nxmms)
+void SignalGraphCompiler::freeRegisters(RegisterPack<Register> regpack, unsigned long* register_table, unsigned int register_table_size)
 {
-    return alloc_regs<Xmm, 16>(m_xmms, xmms, nxmms);
-}
-
-
-void SignalGraphCompiler::freeXmm(Xmm* xmms, unsigned int nxmms)
-{
-    free_regs<Xmm, 16>(m_xmms, xmms, nxmms);
-}
-
-
-void SignalGraphCompiler::setStorage(SignalDataStorage &storage, DataBufferPointer ptr)
-{
-    storage.setMemory();
-    storage.u.d[0] = ptr.offset();
-}
-
-
-DataBufferPointer SignalGraphCompiler::getPtr(SignalDataStorage storage) const
-{
-    R64FX_DEBUG_ASSERT(storage.isMemory());
-    return storage.u.d[0];
-}
-
-
-void SignalGraphCompiler::setStorage(SignalDataStorage &storage, GPR* gprs, unsigned int ngprs)
-{
-    storage.setGPR();
-    storage.u.d[0] = pack_regs(gprs, ngprs);
-}
-
-
-void SignalGraphCompiler::getStorage(SignalDataStorage storage, GPR* gprs, unsigned int* ngprs)
-{
-    unpack_regs(storage.u.d[0], gprs, ngprs);
-}
-
-
-void SignalGraphCompiler::setStorage(SignalDataStorage &storage, Xmm* xmms, unsigned int nxmms)
-{
-    storage.setXmm();
-    storage.u.d[0] = pack_regs(xmms, nxmms);
-}
-
-
-void SignalGraphCompiler::getStorage(SignalDataStorage storage, Xmm* xmms, unsigned int* nxmms)
-{
-    unpack_regs(storage.u.d[0], xmms, nxmms);
+    for(unsigned int i=0; i<regpack.size(); i++)
+    {
+        auto reg = regpack.regAt(i);
+        R64FX_DEBUG_ASSERT(reg.code() < register_table_size);
+        R64FX_DEBUG_ASSERT(register_table[reg.code()] == R64FX_REGISTER_USED_NO_STORAGE);
+        register_table[reg.code()] = R64FX_REGISTER_NOT_USED;
+    }
 }
 
 
 void SignalGraphCompiler::freeStorage(SignalDataStorage &storage)
 {
-    if(storage.isXmm())
-    {
-        Xmm regs[16]; unsigned int nregs;
-        getStorage(storage, regs, &nregs);
-        freeXmm(regs, nregs);
-    }
-    else if(storage.isGPR())
-    {
-        GPR64 regs[16]; unsigned int nregs;
-        getStorage(storage, regs, &nregs);
-        freeGPR(regs, nregs);
-    }
-    else
-    {
-        freeMemory(storage.u.d[0]);
-    }
-    storage.clear();
+
 }
 
 }//namespace r64fx
