@@ -1,27 +1,19 @@
 #ifndef R64FX_SIGNAL_GRAPH_HPP
 #define R64FX_SIGNAL_GRAPH_HPP
 
-/*  */
-
 #include "Debug.hpp"
+#include "TypeUtils.hpp"
 #include "jit.hpp"
 
 #define R64FX_NODE_SOURCE(name) private: SignalSource m_##name; public: inline NodeSource name() { return {this, &m_##name}; } private:
 #define R64FX_NODE_SINK(name)   private: SignalSink   m_##name; public: inline NodeSink   name() { return {this, &m_##name}; } private:
-
-#define R64FX_VALUE_TYPE(name, type)\
-    class name{ type m_value = {}; public: explicit name(type value) : m_value(value) {};\
-        inline type value() const{ return m_value; }\
-        inline bool operator==(const name &other) { return value() == other.value(); }\
-        inline bool operator!=(const name &other) { return value() != other.value(); }\
-    }
 
 
 namespace r64fx{
 
 class SignalGraphCompiler;
 
-/*  */
+
 class SignalNode{
     friend class SignalGraphCompiler;
     unsigned long m_iteration_count = 0;
@@ -43,33 +35,42 @@ private:
 class SignalDataStorage{
     friend class SignalGraphCompiler;
 
-    union{
-        unsigned long   q = 0;
-        unsigned int    d[2];
-        unsigned short  w[4];
-        unsigned char   b[8];
-    }u;
+    unsigned long m = 0;
 
-    R64FX_VALUE_TYPE(DataType, unsigned int);
-    R64FX_VALUE_TYPE(RegType,  unsigned int);
+    R64FX_VALUE_TYPE(DataType, unsigned long);
+    R64FX_VALUE_TYPE(RegType,  unsigned long);
 
-    inline void setRegType(RegType rt) { u.b[6] = rt.value(); }
+    inline void setRegType(RegType rt) { m &= ~(0xFFUL << 48); m |= (rt.value() << 48); }
+
+    inline void setMemoryOffset(unsigned long offset)
+        { R64FX_DEBUG_ASSERT(offset < 0xFFFFUL); m &= ~(0xFFFFUL << 16); m |= (offset << 16); }
+    inline unsigned long memoryOffset() const { return (m >> 16) & 0xFFFF; }
+
+    inline void setRegisterBits(unsigned long bits)
+        { R64FX_DEBUG_ASSERT(bits < 0xFFFFUL); m &= ~(0xFFFFUL << 32); m |= (bits << 32); }
+    inline unsigned long registerBits() const { return (m >> 32) & 0xFFFFUL; }
 
 public:
-    inline bool empty() const { return u.d[0] != 0; }
+    inline bool isInMemory() const { return memoryOffset(); }
 
-    inline void setSize(unsigned int size) { R64FX_DEBUG_ASSERT(size < 0xFFFF); u.w[2] = size; }
-    inline unsigned int size() const { return u.w[2]; }
+    inline bool isInRegisters() const { return registerBits(); }
 
-    inline void setType(DataType dt) { u.b[7] = dt.value(); }
-    inline DataType type() const { return DataType(u.b[7]); }
+    inline void setSize(unsigned long size)
+        { R64FX_DEBUG_ASSERT(size < 0xFFFFUL); m &= ~0xFFFFUL; m |= size; }
+    inline unsigned int size() const { return m & 0xFFFFUL; }
+
+    inline unsigned int elementSize() const { return (type().value() & 1) ? 8 : 4; }
+
+    inline void setType(DataType dt) 
+        { m &= ~(0xFFUL << 40); m |= (dt.value() << 40); }
+    inline DataType type() const { return DataType((m >> 40) & 0xFFUL); }
 
     inline static DataType Type(float)   { return DataType(0); }
     inline static DataType Type(double)  { return DataType(1); }
     inline static DataType Type(int)     { return DataType(2); }
     inline static DataType Type(long)    { return DataType(3); }
 
-    inline RegType regType() const { return RegType(u.b[6]); }
+    inline RegType regType() const { return RegType((m >> 48) & 0xFFUL); }
 
     inline static RegType Type(GPR) { return RegType(0); }
     inline static RegType Type(Xmm) { return RegType(1); }
@@ -94,7 +95,7 @@ template<typename RegT> class RegisterPack{
 
     unsigned long bits = 0;
 
-    RegisterPack(unsigned long bits = 0) : bits(bits) {}
+    RegisterPack(unsigned long bits) : bits(bits) {}
 
     inline void setSize(unsigned int size) { R64FX_DEBUG_ASSERT(size < 16); bits &= ~0xFUL; bits |= size; }
 
@@ -106,6 +107,19 @@ template<typename RegT> class RegisterPack{
     }
 
 public:
+    RegisterPack() {}
+
+    RegisterPack(std::initializer_list<RegT> regs)
+    {
+        R64FX_DEBUG_ASSERT(regs.size() < 16);
+        unsigned int i = 0;
+        for(auto reg : regs)
+        {
+            setRegAt(i++, reg);
+        }
+        setSize(regs.size());
+    }
+
     inline operator bool() const { return bits; }
 
     inline unsigned int size() const { return bits & 0xFUL; }
@@ -115,6 +129,8 @@ public:
         R64FX_DEBUG_ASSERT(i < size());
         return RegT((bits >> ((i+1) << 2)) & 0xFUL);
     }
+
+    inline RegT operator[](unsigned int i) { return regAt(i); }
 };
 
 
@@ -179,10 +195,12 @@ class SignalGraphCompiler : public Assembler{
     unsigned long  m_frame_count  = 0;
 
     unsigned long m_gprs[16];
-    inline unsigned long* registerTable(GPR64) { return m_gprs; }
+    inline unsigned long* registerTable      (GPR64) { return m_gprs; }
+    inline unsigned int   registerTableSize  (GPR64) { return 16; }
 
     unsigned long m_xmms[16];
-    inline unsigned long* registerTable(Xmm)   { return m_xmms; }
+    inline unsigned long* registerTable      (Xmm)   { return m_xmms; }
+    inline unsigned int   registerTableSize  (Xmm)   { return 16; }
 
 public:
     SignalGraphCompiler();
@@ -223,25 +241,31 @@ public:
         allocMemoryBytes(nitems * sizeof(T), align);
     }
 
-    template<typename T> inline T ptr(SignalDataStorage storage)
+    template<typename T = void*> inline T ptr(SignalDataStorage storage)
     {
         R64FX_DEBUG_ASSERT(storage.type() == SignalDataStorage::type(T()));
-        return ptr<T>(storage.u.w[0]);
+        return ptr<T>(storage.memoryOffset());
     }
 
-    template<typename T> inline T ptr(DataBufferPointer ptr)
+    template<typename T = void*> inline T ptr(DataBufferPointer ptr)
     {
         R64FX_DEBUG_ASSERT(ptr.offset > 0);
-        return ((T)codeBegin()) - ptr.offset;
+        return (T)(codeBegin() - ptr.offset);
     }
 
-    inline void setStorageMemory(SignalDataStorage &storage, DataBufferPointer dbp)
-        { storage.u.w[0] = dbp.offset; }
+    inline DataBufferPointer allocStorageMemory(SignalDataStorage &storage)
+    {
+        R64FX_DEBUG_ASSERT(storage.size() > 0);
+        R64FX_DEBUG_ASSERT(storage.memoryOffset() == 0);
+        auto mem = allocMemoryBytes(storage.size() * storage.elementSize(), storage.elementSize());
+        storage.setMemoryOffset(mem.offset);
+        return mem;
+    }
 
-    inline DataBufferPointer getStorageMemory(SignalDataStorage &storage) const { return storage.u.w[1]; }
+    inline DataBufferPointer getStorageMemory(SignalDataStorage &storage) const { return storage.memoryOffset(); }
 
     inline DataBufferPointer removeStorageMemory(SignalDataStorage &storage)
-        { auto val = storage.u.w[0]; storage.u.w[0] = 0; return val; }
+        { auto val = storage.memoryOffset(); storage.setMemoryOffset(0); return val; }
 
     inline void freeStorageMemory(SignalDataStorage &storage) { freeMemory(removeStorageMemory(storage)); }
 
@@ -249,21 +273,23 @@ public:
 
 
 private:
-    RegisterPack<Register> allocRegisters(unsigned int count, unsigned long* register_table, unsigned int register_table_size);
+    RegisterPack<Register> allocRegisters(
+        unsigned int count, unsigned long* reg_table, unsigned int reg_table_size, unsigned int reg_size);
 public:
-    template<typename T> inline RegisterPack<T> allocRegisters(unsigned int count) { return allocRegisters(count, regs(T())).bits; }
+    template<typename T> inline RegisterPack<T> allocRegisters(unsigned int count)
+        { return allocRegisters(count, registerTable(T()), registerTableSize(T()), T::Size()).bits; }
 
 private:
-    void setStorageRegisters(SignalDataStorage &storage, RegisterPack<Register> regpack, unsigned long* register_table);
+    void setStorageRegisters(SignalDataStorage &storage, RegisterPack<Register> regpack, unsigned long* reg_table);
 public:
     template<typename T> inline void setStorageRegisters(SignalDataStorage &storage, RegisterPack<T> regpack)
     {
         setStorageRegisters(storage, regpack.bits, registerTable(T()));
-        storage.u.b[6] == SignalDataStorage::RegType(T()).value();
+        storage.regType() == SignalDataStorage::RegType(T());
     }
 
 private:
-    RegisterPack<Register> getStorageRegisters(SignalDataStorage &storage, unsigned long* register_table) const;
+    RegisterPack<Register> getStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table) const;
 public:
     template<typename T> inline RegisterPack<T> getStorageRegisters(SignalDataStorage &storage) const
     {
@@ -272,7 +298,7 @@ public:
     }
 
 private:
-    RegisterPack<Register> removeStorageRegisters(SignalDataStorage &storage, unsigned long* register_table);
+    RegisterPack<Register> removeStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table);
 public:
     template<typename T> inline RegisterPack<T> removeStorageRegisters(SignalDataStorage &storage)
     {
@@ -280,12 +306,14 @@ public:
         return removeStorageRegisters(storage, registerTable(T())).bits;
     }
 
-    template<typename T> inline void freeStorageRegisters(SignalDataStorage &storage) { freeRegisters<T>(removeStorageRegisters<T>(storage)); }
+    template<typename T> inline void freeStorageRegisters(SignalDataStorage &storage)
+        { freeRegisters<T>(removeStorageRegisters<T>(storage)); }
 
 private:
-    void freeRegisters(RegisterPack<Register> pack, unsigned long* register_table, unsigned int register_table_size);
+    void freeRegisters(RegisterPack<Register> pack, unsigned long* reg_table, unsigned int reg_table_size);
 public:
-    template<typename T> void freeRegisters(RegisterPack<T> regpack) { freeRegisters(regpack.bits, registerTable(T()), T::Count()); }
+    template<typename T> void freeRegisters(RegisterPack<T> regpack)
+        { freeRegisters(regpack.bits, registerTable(T()), registerTableSize(T())); }
 
     void freeStorage(SignalDataStorage &storage);
 };

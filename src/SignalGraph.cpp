@@ -2,9 +2,9 @@
 #include "SignalNodeFlags.hpp"
 #include <cstring>
 
-#define R64FX_REGISTER_NOT_USED               0UL
-#define R64FX_REGISTER_USED_NO_STORAGE        ((unsigned long)this)
-#define R64FX_REGISTER_MUST_NEVER_BE_USED     (((unsigned long)this) + 1)
+#define R64FX_REGISTER_NOT_USED               (((unsigned long) this)    )
+#define R64FX_REGISTER_USED_NO_STORAGE        (((unsigned long) this) + 1)
+#define R64FX_REGISTER_MUST_NEVER_BE_USED     (((unsigned long) this) + 2)
 
 
 namespace r64fx{
@@ -24,7 +24,7 @@ SignalGraphCompiler::SignalGraphCompiler()
 
     for(int i=0; i<16; i++)
     {
-        m_xmms[i] = 0;
+        m_xmms[i] = R64FX_REGISTER_NOT_USED;
     }
 
     resize(1, 1);
@@ -164,42 +164,76 @@ void SignalGraphCompiler::freeMemory(DataBufferPointer dbp)
 
 
 
-RegisterPack<Register> SignalGraphCompiler::allocRegisters(unsigned int count, unsigned long* register_table, unsigned int register_table_size)
+RegisterPack<Register> SignalGraphCompiler::allocRegisters(
+    unsigned int count, unsigned long* reg_table, unsigned int reg_table_size, unsigned int reg_size)
 {
     R64FX_DEBUG_ASSERT(count < 16);
     RegisterPack<Register> regpack;
+
     unsigned int n = 0;
-    for(unsigned int i=0; i<register_table_size; i++)
+    for(unsigned int i=0; i<reg_table_size; i++)
     {
-        if(register_table[i] == R64FX_REGISTER_NOT_USED)
+        if(reg_table[i] == R64FX_REGISTER_NOT_USED)
         {
-            register_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
+            reg_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
             regpack.setRegAt(n++, Register(i));
         }
     }
+
+    for(unsigned int i=0; i<reg_table_size; i++)
+    {
+        if(n == count)
+            break;
+
+        if(reg_table[i] == R64FX_REGISTER_MUST_NEVER_BE_USED || reg_table[i] == R64FX_REGISTER_USED_NO_STORAGE)
+            continue;
+
+        auto storage = (SignalDataStorage*)reg_table[i];
+        if(storage->isInMemory())
+            continue;
+
+        auto mem = allocMemoryBytes(reg_size, reg_size);
+        if(reg_size == 128)
+        {
+            MOVAPS(Mem128(ptr(mem)), Xmm(i));
+        }
+        else if(reg_size == 8)
+        {
+            MOV(Mem64(ptr(mem)), GPR64(i));
+        }
+        else if(reg_size == 4)
+        {
+            MOV(Mem32(ptr(mem)), GPR32(i));
+        }
+        auto storage_reg_bits = storage->registerBits();
+        storage_reg_bits &= ~(1 << i);
+        storage->setRegisterBits(storage_reg_bits);
+//         setStorageMemory(*storage, mem);
+    }
+
     return regpack;
 }
 
 
-void SignalGraphCompiler::setStorageRegisters(SignalDataStorage &storage, RegisterPack<Register> regpack, unsigned long* register_table)
+void SignalGraphCompiler::setStorageRegisters(SignalDataStorage &storage, RegisterPack<Register> regpack, unsigned long* reg_table)
 {
-    R64FX_DEBUG_ASSERT(storage.u.w[1] == 0);
+    R64FX_DEBUG_ASSERT(storage.registerBits() == 0);
     unsigned int bits = 0;
     for(unsigned int i=0; i<regpack.size(); i++)
     {
         auto reg = regpack.regAt(i);
         bits |= (1 << reg.code());
-        register_table[i] = (unsigned long)&storage;
+        reg_table[i] = (unsigned long)&storage;
     }
     R64FX_DEBUG_ASSERT(bits < 0xFF);
-    storage.u.w[1] = bits;
+    storage.setRegisterBits(bits);
 }
 
 
-RegisterPack<Register> SignalGraphCompiler::getStorageRegisters(SignalDataStorage &storage, unsigned long* register_table) const
+RegisterPack<Register> SignalGraphCompiler::getStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table) const
 {
     RegisterPack<Register> regpack;
-    unsigned int bits = storage.u.w[1];
+    unsigned int bits = storage.registerBits();
     unsigned int n = 0;
     for(unsigned int i=0; bits; i++)
     {
@@ -207,7 +241,7 @@ RegisterPack<Register> SignalGraphCompiler::getStorageRegisters(SignalDataStorag
         if(bits & bit)
         {
             regpack.setRegAt(n++, Register(i));
-            R64FX_DEBUG_ASSERT(register_table[i] == (unsigned long)&storage);
+            R64FX_DEBUG_ASSERT(reg_table[i] == (unsigned long)&storage);
             bits &= ~bit;
         }
     }
@@ -216,10 +250,10 @@ RegisterPack<Register> SignalGraphCompiler::getStorageRegisters(SignalDataStorag
 }
 
 
-RegisterPack<Register> SignalGraphCompiler::removeStorageRegisters(SignalDataStorage &storage, unsigned long* register_table)
+RegisterPack<Register> SignalGraphCompiler::removeStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table)
 {
     RegisterPack<Register> regpack;
-    unsigned int bits = storage.u.w[1];
+    unsigned int bits = storage.registerBits();
     unsigned int n = 0;
     for(unsigned int i=0; bits; i++)
     {
@@ -227,24 +261,24 @@ RegisterPack<Register> SignalGraphCompiler::removeStorageRegisters(SignalDataSto
         if(bits & bit)
         {
             regpack.setRegAt(n++, Register(i));
-            R64FX_DEBUG_ASSERT(register_table[i] == (unsigned long)&storage);
-            register_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
+            R64FX_DEBUG_ASSERT(reg_table[i] == (unsigned long)&storage);
+            reg_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
             bits &= ~bit;
         }
     }
-    storage.u.w[1] = 0;
+    storage.setRegisterBits(0);
     return regpack;
 }
 
 
-void SignalGraphCompiler::freeRegisters(RegisterPack<Register> regpack, unsigned long* register_table, unsigned int register_table_size)
+void SignalGraphCompiler::freeRegisters(RegisterPack<Register> regpack, unsigned long* reg_table, unsigned int reg_table_size)
 {
     for(unsigned int i=0; i<regpack.size(); i++)
     {
         auto reg = regpack.regAt(i);
-        R64FX_DEBUG_ASSERT(reg.code() < register_table_size);
-        R64FX_DEBUG_ASSERT(register_table[reg.code()] == R64FX_REGISTER_USED_NO_STORAGE);
-        register_table[reg.code()] = R64FX_REGISTER_NOT_USED;
+        R64FX_DEBUG_ASSERT(reg.code() < reg_table_size);
+        R64FX_DEBUG_ASSERT(reg_table[reg.code()] == R64FX_REGISTER_USED_NO_STORAGE);
+        reg_table[reg.code()] = R64FX_REGISTER_NOT_USED;
     }
 }
 

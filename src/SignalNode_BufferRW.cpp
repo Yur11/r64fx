@@ -5,44 +5,38 @@ namespace r64fx{
 
 void SignalNode_BufferReader::build(SignalGraphCompiler &c)
 {
-    std::cout << this << " Reader::build\n";
-/*
-    if(m_out.connectedSinkCount() == 0)
-        return;
-
-    GPR64 regs[2];
-    auto nregs = c.allocGPR(regs, 2);
-    if(nregs == 0)
-    {
-        regs[0] = rax;
-        c.PUSH(rax);
-    }
-
-    c.MOV(regs[0], ImmAddr(buffer() + c.frameCount()));
-    if(nregs == 2)
-    {
-        c.MOV(regs[1], Base(regs[0]) + Index(c.mainLoopCounter(), 4));
-        c.setStorage(m_out, regs + 1, 1);
-    }
-    else
-    {
-        c.MOV(regs[0], Base(regs[0]) + Index(c.mainLoopCounter(), 4));
-        auto ptr = c.allocMemory(sizeof(float), sizeof(float));
-        R64FX_DEBUG_ASSERT(ptr);
-        c.MOV(Mem32(c.ptrMem<unsigned char*>(ptr)), GPR32(regs[0].gpr32()));
-        c.setStorage(m_out, ptr);
-    }
-
-    if(nregs == 0)
-    {
-        c.POP(rax);
-    }
-    else
-    {
-        c.freeGPR(regs, 1);
-    }
-
-    m_out.setSize(1);*/
+//     std::cout << this << " Reader::build\n";
+// 
+//     if(m_out.connectedSinkCount() == 0)
+//         return;
+// 
+//     auto regs = c.allocRegisters<GPR64>(2);
+// 
+//     c.MOV(regs[0], ImmAddr(buffer() + c.frameCount()));
+//     if(nregs == 2)
+//     {
+//         c.MOV(regs[1], Base(regs[0]) + Index(c.mainLoopCounter(), 4));
+//         c.setStorage(m_out, regs + 1, 1);
+//     }
+//     else
+//     {
+//         c.MOV(regs[0], Base(regs[0]) + Index(c.mainLoopCounter(), 4));
+//         auto ptr = c.allocMemory(sizeof(float), sizeof(float));
+//         R64FX_DEBUG_ASSERT(ptr);
+//         c.MOV(Mem32(c.ptrMem<unsigned char*>(ptr)), GPR32(regs[0].gpr32()));
+//         c.setStorage(m_out, ptr);
+//     }
+// 
+//     if(nregs == 0)
+//     {
+//         c.POP(rax);
+//     }
+//     else
+//     {
+//         c.freeGPR(regs, 1);
+//     }
+// 
+//     m_out.setSize(1);
 }
 
 
