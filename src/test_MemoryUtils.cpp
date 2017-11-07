@@ -1,3 +1,4 @@
+#include "test.hpp"
 #include "MemoryUtils.hpp"
 #include <iostream>
 
@@ -403,6 +404,23 @@ bool test_HeapBuffer(HeapBuffer* hb)
     hb->freeChunk(dword1);
     hb->freeChunk(a);
     R64FX_CHECK_HEADER(sizeof(HeapBuffer)/4, 0);
+
+    cout << "chunk size\n";
+    {
+        int size_a = (((rand() & 0xF) + 1) << 2);
+        int size_b = (((rand() & 0xF) + 1) << 2);
+        int size_c = (((rand() & 0xF) + 1) << 2);
+        int size_d = (((rand() & 0xF) + 1) << 2);
+        auto a = hb->allocChunk(size_a);
+        auto b = hb->allocChunk(size_b);
+        auto c = hb->allocChunk(size_c);
+        auto d = hb->allocChunk(size_d);
+        hb->freeChunk(c);
+        R64FX_EXPECT_EQ(size_a, hb->chunkSize(a));
+        R64FX_EXPECT_EQ(size_b, hb->chunkSize(b));
+        R64FX_EXPECT_EQ(size_c, hb->chunkSize(c));
+        R64FX_EXPECT_EQ(size_d, hb->chunkSize(d));
+    }
 
     return true;
 }

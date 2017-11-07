@@ -34,6 +34,8 @@ public:
 
     void* allocChunk(long nbytes, long alignment);
 
+    long chunkSize(void* addr);
+
     bool freeChunk(void* addr);
 
     bool empty() const;

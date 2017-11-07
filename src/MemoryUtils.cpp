@@ -16,6 +16,7 @@ unsigned int memory_page_size()
     return getpagesize();
 }
 
+
 void* alloc_aligned(int alignment, int nbytes)
 {
     void* memptr = nullptr;
@@ -108,6 +109,36 @@ void* alloc_chunk(void* buff, long buff_bytes, long chunk_bytes)
             }
         }
     }
+}
+
+
+long chunk_size(void* buff, long buff_bytes, void* chunk)
+{
+#ifdef R64FX_DEBUG
+    assert((long(buff)  & 3) == 0);
+    assert((buff_bytes  & 3) == 0);
+    assert((long(chunk) & 3) == 0);
+#endif//R64FX_DEBUG
+
+    if(chunk < buff)
+        return 0;
+
+    auto wordbuff = (unsigned short*)buff;
+    long offset = ((long(buff) + buff_bytes - long(chunk)) >> 2);
+    for(int i=0; wordbuff[i]!=0; i++)
+    {
+        auto bufval = wordbuff[i] & 0x7FFF;
+        if(bufval == offset)
+        {
+            if(i > 0)
+            {
+                auto prevbufval = wordbuff[i - 1] & 0x7FFF;
+                bufval -= prevbufval;
+            }
+            return bufval << 2;
+        }
+    }
+    return 0;
 }
 
 
@@ -217,6 +248,12 @@ void* HeapBuffer::allocChunk(long nbytes, long alignment)
     R64FX_DEBUG_ASSERT((long(chunk) & alignment_mask) == 0);
     freeChunk(alignment_chunk);
     return chunk;
+}
+
+
+long HeapBuffer::chunkSize(void* addr)
+{
+    return chunk_size(m_buffer, m_size, addr);
 }
 
 

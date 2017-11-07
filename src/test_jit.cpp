@@ -5,22 +5,13 @@
  * Checking for rax being encoded instead r8, rcx instead of r9 etc...
  */
 
+#include "test.hpp"
 #include "jit.hpp"
 #include <iostream>
 
 using namespace std;
 using namespace r64fx;
 
-template<typename T1, typename T2> bool expect_eq(T1 expected, T2 got)
-{
-    if(expected != got)
-    {
-        std::cout << "Expected " << expected << ", Got " << got << "!\n";
-        return false;
-    }
-    return true;
-}
-#define R64FX_EXPECT_EQ(expected, got) { auto evaled = (got); if(!expect_eq(expected, evaled)) return false; }
 
 template<typename T> bool vec4_eq(T* a, T* b)
 {
