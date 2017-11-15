@@ -171,7 +171,7 @@ RegisterPack<Register> SignalGraphCompiler::allocRegisters(
     RegisterPack<Register> regpack;
 
     unsigned int n = 0;
-    for(unsigned int i=0; i<reg_table_size; i++)
+    for(unsigned int i=0; i<reg_table_size && n<count; i++)
     {
         if(reg_table[i] == R64FX_REGISTER_NOT_USED)
         {
@@ -180,35 +180,47 @@ RegisterPack<Register> SignalGraphCompiler::allocRegisters(
         }
     }
 
-    for(unsigned int i=0; i<reg_table_size; i++)
+    if(n == count)
+        return regpack;
+    R64FX_DEBUG_ASSERT(n < count);
+
+    for(unsigned int i=0; i<reg_table_size && n<count; i++)
     {
-        if(n == count)
-            break;
-
-        if(reg_table[i] == R64FX_REGISTER_MUST_NEVER_BE_USED || reg_table[i] == R64FX_REGISTER_USED_NO_STORAGE)
-            continue;
-
-        auto storage = (SignalDataStorage*)reg_table[i];
-        if(storage->isInMemory())
-            continue;
-
-        auto mem = allocMemoryBytes(reg_size, reg_size);
-        if(reg_size == 128)
+        if(reg_table[i] != R64FX_REGISTER_MUST_NEVER_BE_USED && reg_table[i] != R64FX_REGISTER_USED_NO_STORAGE)
         {
-            MOVAPS(Mem128(ptr(mem)), Xmm(i));
+            auto storage = (SignalDataStorage*)reg_table[i];
+            if(!storage->isInMemory())
+            {
+                auto mem = allocMemoryBytes(storage->registerCount() * storage->registerSize(), storage->registerSize());
+                setStorageMemory(*storage, mem);
+            }
+            unsigned long reg_bits = storage->registerBits();
+            unsigned int j = 0;
+            for(;;)
+            {
+                unsigned long bit = 1UL << j;
+                if(reg_bits & bit)
+                {
+                    reg_bits &= ~bit;
+                    break;
+                }
+                j++;
+            }
+            unsigned int storage_reg_count = 0;
+            {
+                unsigned long bits = reg_bits;
+                while(bits)
+                {
+                    unsigned long bit = 1UL << j;
+                    if(reg_bits & bit)
+                        storage_reg_count++;
+                    j++;
+                }
+            }
+            storage->setRegisterBits(reg_bits);
+            reg_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
+            regpack.setRegAt(n++, Register(i));
         }
-        else if(reg_size == 8)
-        {
-            MOV(Mem64(ptr(mem)), GPR64(i));
-        }
-        else if(reg_size == 4)
-        {
-            MOV(Mem32(ptr(mem)), GPR32(i));
-        }
-        auto storage_reg_bits = storage->registerBits();
-        storage_reg_bits &= ~(1 << i);
-        storage->setRegisterBits(storage_reg_bits);
-//         setStorageMemory(*storage, mem);
     }
 
     return regpack;

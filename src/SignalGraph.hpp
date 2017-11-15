@@ -5,6 +5,7 @@
 #include "TypeUtils.hpp"
 #include "jit.hpp"
 
+/* Convenience macros for declaring SignalNode ports. */
 #define R64FX_NODE_SOURCE(name) private: SignalSource m_##name; public: inline NodeSource name() { return {this, &m_##name}; } private:
 #define R64FX_NODE_SINK(name)   private: SignalSink   m_##name; public: inline NodeSink   name() { return {this, &m_##name}; } private:
 
@@ -14,6 +15,7 @@ namespace r64fx{
 class SignalGraphCompiler;
 
 
+/* Base class for elements of a signal graph. */
 class SignalNode{
     friend class SignalGraphCompiler;
     unsigned long m_iteration_count = 0;
@@ -31,7 +33,9 @@ private:
 };
 
 
-/*  */
+/* A class used for sharing intermediate data between SignalNode instances.
+ * Its instances represent vectors of data that are stored in registers and memory.
+ * Our goal is to make the best use of register space thus minimizing memory access. */
 class SignalDataStorage{
     friend class SignalGraphCompiler;
 
@@ -51,30 +55,40 @@ class SignalDataStorage{
     inline unsigned long registerBits() const { return (m >> 32) & 0xFFFFUL; }
 
 public:
-    inline bool isInMemory() const { return memoryOffset(); }
-
+    /* Signal data can be stored either in registers or in memory. */
+    inline bool isInMemory()    const { return memoryOffset(); }
     inline bool isInRegisters() const { return registerBits(); }
 
-    inline void setSize(unsigned long size)
-        { R64FX_DEBUG_ASSERT(size < 0xFFFFUL); m &= ~0xFFFFUL; m |= size; }
-    inline unsigned int size() const { return m & 0xFFFFUL; }
+    /* Chunks of signal data vector will inevitably end up in registers during processing.
+       Therefore we shall store the size of the vector as register count. */
+    inline void setRegisterCount(unsigned long count)
+        { R64FX_DEBUG_ASSERT(count < 0xFFFFUL); m &= ~0xFFFFUL; m |= count; }
+    inline unsigned int registerCount() const { return m & 0xFFFFUL; }
 
-    inline unsigned int elementSize() const { return (type().value() & 1) ? 8 : 4; }
+    /* Only one register type shall be used in a SignalDataStorage insstance. */
+    inline static RegType Type(GPR) { return RegType(0); }
+    inline static RegType Type(Xmm) { return RegType(1); }
+    inline static RegType Type(Ymm) { return RegType(2); }
 
-    inline void setType(DataType dt) 
-        { m &= ~(0xFFUL << 40); m |= (dt.value() << 40); }
-    inline DataType type() const { return DataType((m >> 40) & 0xFFUL); }
+    inline RegType registerType() const { return RegType((m >> 48) & 0xFFUL); }
 
+    /* Size of current register type in bytes. */
+    inline unsigned int registerSize() const { static char s[3] = {8, 16, 32}; return s[registerType().value()]; }
+
+    inline unsigned int byteCount() const { return registerCount() * registerSize(); }
+
+
+    /* The type of data stored by this instance. */
     inline static DataType Type(float)   { return DataType(0); }
     inline static DataType Type(double)  { return DataType(1); }
     inline static DataType Type(int)     { return DataType(2); }
     inline static DataType Type(long)    { return DataType(3); }
 
-    inline RegType regType() const { return RegType((m >> 48) & 0xFFUL); }
+    inline void setType(DataType dt)
+        { m &= ~(0xFFUL << 40); m |= (dt.value() << 40); }
+    inline DataType type() const { return DataType((m >> 40) & 0xFFUL); }
 
-    inline static RegType Type(GPR) { return RegType(0); }
-    inline static RegType Type(Xmm) { return RegType(1); }
-    inline static RegType Type(Ymm) { return RegType(2); }
+    inline bool isDouble() const { return type().value() & 1; }
 };
 
 
@@ -170,7 +184,7 @@ public:
 };
 
 
-/*  */
+/* Convenience decoration class used for function args. */
 template<typename SignalPortT> class NodePort{
     SignalNode*   m_node  = nullptr;
     SignalPortT*  m_port  = nullptr;
@@ -205,31 +219,31 @@ class SignalGraphCompiler : public Assembler{
 public:
     SignalGraphCompiler();
 
-    void link(const NodeSource &node_source, const NodeSink &node_sink);
+    void link(const NodeSource &node_source, const NodeSink &node_sink);//+
 
-    void unlink(const NodeSink node_sink);
+    void unlink(const NodeSink node_sink);//+
 
-    void build(SignalNode* terminal_nodes, unsigned int nnodes);
+    void build(SignalNode* terminal_nodes, unsigned int nnodes);//+
 
-    void ensureBuilt(SignalSource* source);
+    void ensureBuilt(SignalSource* source);//-
 
-    void sourceUsed(SignalSource* source);
+    void sourceUsed(SignalSource* source);//-
 
 private:
-    void buildNode(SignalNode &node);
+    void buildNode(SignalNode &node);//-
 
 public:
-    inline long run() { return ((long (*)())codeBegin())(); }
+    inline long run() { return ((long (*)())codeBegin())(); }//+
 
-    inline unsigned long frameCount() const { return m_frame_count; }
+    inline unsigned long frameCount() const { return m_frame_count; }//+-
 
-    inline void setFrameCount(unsigned long frame_count) { m_frame_count = frame_count; }
+    inline void setFrameCount(unsigned long frame_count) { m_frame_count = frame_count; }//+
 
-    inline GPR64 mainLoopCounter() const { return rcx; }
+    inline GPR64 mainLoopCounter() const { return rcx; }//-
 
 
 private:
-    DataBufferPointer allocMemoryBytes(unsigned int nbytes, unsigned int align);
+    DataBufferPointer allocMemoryBytes(unsigned int nbytes, unsigned int align);//-1
 
 public:
     template<typename T> inline DataBufferPointer allocMemory(unsigned int nitems) { return allocMemory<T>(nitems, sizeof(T)); }
@@ -253,13 +267,10 @@ public:
         return (T)(codeBegin() - ptr.offset);
     }
 
-    inline DataBufferPointer allocStorageMemory(SignalDataStorage &storage)
+    inline void setStorageMemory(SignalDataStorage &storage, DataBufferPointer dbp)
     {
-        R64FX_DEBUG_ASSERT(storage.size() > 0);
-        R64FX_DEBUG_ASSERT(storage.memoryOffset() == 0);
-        auto mem = allocMemoryBytes(storage.size() * storage.elementSize(), storage.elementSize());
-        storage.setMemoryOffset(mem.offset);
-        return mem;
+        R64FX_DEBUG_ASSERT(HeapBuffer(dataBegin(), dataBufferSize()).chunkSize(ptr(storage.memoryOffset())) == storage.byteCount());
+        storage.setMemoryOffset(dbp.offset);
     }
 
     inline DataBufferPointer getStorageMemory(SignalDataStorage &storage) const { return storage.memoryOffset(); }
@@ -285,7 +296,7 @@ public:
     template<typename T> inline void setStorageRegisters(SignalDataStorage &storage, RegisterPack<T> regpack)
     {
         setStorageRegisters(storage, regpack.bits, registerTable(T()));
-        storage.regType() == SignalDataStorage::RegType(T());
+        storage.registerType() == SignalDataStorage::RegType(T());
     }
 
 private:
