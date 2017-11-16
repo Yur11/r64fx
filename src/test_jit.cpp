@@ -273,13 +273,13 @@ bool test_mov(Assembler &as)
 
 
 template<
-    void (Assembler::*gpr64_imm32) (GPR64, Imm32),
-    void (Assembler::*gpr64_imm8 ) (GPR64, Imm8 ),
-    void (Assembler::*gpr64_gpr64) (GPR64, GPR64),
-    void (Assembler::*gpr64_mem64) (GPR64, Mem64),
-    void (Assembler::*gpr64_sibd ) (GPR64, SIBD ),
-    void (Assembler::*mem64_gpr64) (Mem64, GPR64),
-    void (Assembler::* sibd_gpr64) (SIBD,  GPR64)
+    void (AssemblerInstructions::*gpr64_imm32) (GPR64, Imm32),
+    void (AssemblerInstructions::*gpr64_imm8 ) (GPR64, Imm8 ),
+    void (AssemblerInstructions::*gpr64_gpr64) (GPR64, GPR64),
+    void (AssemblerInstructions::*gpr64_mem64) (GPR64, Mem64),
+    void (AssemblerInstructions::*gpr64_sibd ) (GPR64, SIBD ),
+    void (AssemblerInstructions::*mem64_gpr64) (Mem64, GPR64),
+    void (AssemblerInstructions::* sibd_gpr64) (SIBD,  GPR64)
 > bool test_gpr_inst(const char* name, Assembler &as, int (*expected)(int a, int b))
 {
     auto jitfun = (JitFun) as.codeBegin();
@@ -376,7 +376,7 @@ template<
 bool test_gpr_instrs(Assembler &as)
 {
 #define R64FX_LIST7(a) a,a,a,a,a,a,a
-#define R64FX_TEST_GPR_INSTR(name, op) test_gpr_inst<R64FX_LIST7(&Assembler::name)>(#name, as, [](int a, int b){ return a op b; })
+#define R64FX_TEST_GPR_INSTR(name, op) test_gpr_inst<R64FX_LIST7(&AssemblerInstructions::name)>(#name, as, [](int a, int b){ return a op b; })
     return
         R64FX_TEST_GPR_INSTR(ADD, +) &&
         R64FX_TEST_GPR_INSTR(SUB, -) &&
@@ -390,8 +390,8 @@ bool test_gpr_instrs(Assembler &as)
 
 template<
     typename IntT,
-    void (Assembler::*shift1)     (GPR64 gpr),
-    void (Assembler::*shift_imm8) (GPR64 gpr, Imm8)
+    void (AssemblerInstructions::*shift1)     (GPR64 gpr),
+    void (AssemblerInstructions::*shift_imm8) (GPR64 gpr, Imm8)
 >
 bool test_shift_instr(const char* name, Assembler &as, IntT (*expected)(IntT num, IntT shift))
 {

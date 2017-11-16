@@ -57,7 +57,7 @@ int SIBD::dispBytes() const
 }
 
 
-void Assembler::resize(unsigned long data_page_count, unsigned long code_page_count)
+void AssemblerBuffers::resize(unsigned long data_page_count, unsigned long code_page_count)
 {
     unsigned long new_page_count = data_page_count + code_page_count;
     unsigned long old_page_count = dataPageCount() + codePageCount();
@@ -110,7 +110,7 @@ void Assembler::resize(unsigned long data_page_count, unsigned long code_page_co
 }
 
 
-long Assembler::growData(int nbytes)
+long AssemblerBuffers::growData(int nbytes)
 {
     long bytes_available = dataBytesAvailable();
     long new_page_count = 0;
@@ -128,7 +128,7 @@ long Assembler::growData(int nbytes)
 }
 
 
-unsigned char* Assembler::growCode(int nbytes)
+unsigned char* AssemblerBuffers::growCode(int nbytes)
 {
     int new_bytes_needed = nbytes - codeBytesAvailable();
     if(new_bytes_needed > 0)
@@ -142,7 +142,7 @@ unsigned char* Assembler::growCode(int nbytes)
 }
 
 
-void Assembler::fill(unsigned char byte, int nbytes)
+void AssemblerBuffers::fill(unsigned char byte, int nbytes)
 {
     auto p = growCode(nbytes);
     for(int i=0; i<nbytes; i++)
@@ -150,14 +150,14 @@ void Assembler::fill(unsigned char byte, int nbytes)
 }
 
 
-void Assembler::write(unsigned char byte)
+void AssemblerBuffers::write(unsigned char byte)
 {
     auto p = growCode(1);
     p[0] = byte;
 }
 
 
-void Assembler::write(unsigned char byte0, unsigned char byte1)
+void AssemblerBuffers::write(unsigned char byte0, unsigned char byte1)
 {
     auto p = growCode(2);
     p[0] = byte0;
@@ -165,7 +165,7 @@ void Assembler::write(unsigned char byte0, unsigned char byte1)
 }
 
 
-void Assembler::write(unsigned char opcode, unsigned char r, GPR reg)
+void AssemblerBuffers::write(unsigned char opcode, unsigned char r, GPR reg)
 {
     unsigned char rex = 0;
     if(reg.rex())
@@ -178,7 +178,7 @@ void Assembler::write(unsigned char opcode, unsigned char r, GPR reg)
 }
 
 
-void Assembler::write(unsigned char opcode, unsigned char r, GPR reg, Imm8 imm)
+void AssemblerBuffers::write(unsigned char opcode, unsigned char r, GPR reg, Imm8 imm)
 {
     unsigned char rex = 0;
     if(reg.rex())
@@ -192,7 +192,7 @@ void Assembler::write(unsigned char opcode, unsigned char r, GPR reg, Imm8 imm)
 }
 
 
-void Assembler::write(unsigned char opcode, unsigned char r, GPR reg, Imm32 imm)
+void AssemblerBuffers::write(unsigned char opcode, unsigned char r, GPR reg, Imm32 imm)
 {
     unsigned char rex = 0;
     if(reg.rex())
@@ -207,7 +207,7 @@ void Assembler::write(unsigned char opcode, unsigned char r, GPR reg, Imm32 imm)
 }
 
 
-void Assembler::write(unsigned char opcode, GPR64 reg, Imm64 imm)
+void AssemblerBuffers::write(unsigned char opcode, GPR64 reg, Imm64 imm)
 {
     auto p = growCode(10);
     p[0] = Rex(1, 0, 0, reg.prefixBit());
@@ -217,7 +217,7 @@ void Assembler::write(unsigned char opcode, GPR64 reg, Imm64 imm)
 }
 
 
-void Assembler::write(unsigned char opcode, GPR64 dst, GPR64 src)
+void AssemblerBuffers::write(unsigned char opcode, GPR64 dst, GPR64 src)
 {
     auto p = growCode(3);
     p[0] = Rex(1, dst.prefixBit(), 0, src.prefixBit());
@@ -226,7 +226,7 @@ void Assembler::write(unsigned char opcode, GPR64 dst, GPR64 src)
 }
 
 
-void Assembler::write(unsigned char opcode, GPR reg, Mem32 mem)
+void AssemblerBuffers::write(unsigned char opcode, GPR reg, Mem32 mem)
 {
     unsigned char rex = 0;
     if(reg.rex())
@@ -242,7 +242,7 @@ void Assembler::write(unsigned char opcode, GPR reg, Mem32 mem)
 }
 
 
-void Assembler::write(unsigned char opcode, GPR64 reg, SIBD sibd)
+void AssemblerBuffers::write(unsigned char opcode, GPR64 reg, SIBD sibd)
 {
     int nbytes = 4 + sibd.dispBytes();
     auto p = growCode(nbytes);
@@ -255,7 +255,7 @@ void Assembler::write(unsigned char opcode, GPR64 reg, SIBD sibd)
 }
 
 
-void Assembler::write0x0F(unsigned char prefix, unsigned opcode, Register reg, Register rm, int imm)
+void AssemblerBuffers::write0x0F(unsigned char prefix, unsigned opcode, Register reg, Register rm, int imm)
 {
     int nbytes = 3;
     if(prefix)
@@ -288,7 +288,7 @@ void Assembler::write0x0F(unsigned char prefix, unsigned opcode, Register reg, R
 }
 
 
-void Assembler::write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, Mem8 mem, int imm)
+void AssemblerBuffers::write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, Mem8 mem, int imm)
 {
     int nbytes = 7;
     if(prefix)
@@ -324,7 +324,7 @@ void Assembler::write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, Mem8 m
 }
 
 
-void Assembler::write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, SIBD sibd, int imm)
+void AssemblerBuffers::write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, SIBD sibd, int imm)
 {
     int nbytes = 4;
     if(prefix)
@@ -362,7 +362,7 @@ void Assembler::write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, SIBD s
 }
 
 
-void Assembler::write(unsigned char opcode, GPR64 reg)
+void AssemblerBuffers::write(unsigned char opcode, GPR64 reg)
 {
     auto p = growCode(2);
     p[0] = Rex(1, 0, 0, reg.prefixBit());
@@ -370,7 +370,7 @@ void Assembler::write(unsigned char opcode, GPR64 reg)
 }
 
 
-void Assembler::write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label)
+void AssemblerBuffers::write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label)
 {
     int nbytes = 5;
     if(opcode1)
@@ -405,7 +405,7 @@ void Assembler::write(unsigned char opcode1, unsigned char opcode2, JumpLabel &l
 }
 
 
-void Assembler::mark(JumpLabel &label)
+void AssemblerBuffers::mark(JumpLabel &label)
 {
     if(label.immAddr())
     {
