@@ -316,8 +316,6 @@ public:
 
 
 class AssemblerBuffers{
-    friend class AssemblerInstructions;
-
     unsigned char*  m_buffer          = nullptr;
 
     //Decreases with data allocated.
@@ -333,28 +331,6 @@ class AssemblerBuffers{
 
     /* Ensure that code buffer has room to add nbytes. Resize if needed. */
     unsigned char* growCode(int nbytes);
-
-    void fill(unsigned char byte, int nbytes);
-
-    void write(unsigned char byte);
-    void write(unsigned char byte0, unsigned char byte1);
-
-    void write(unsigned char opcode, unsigned char r, GPR reg);
-    void write(unsigned char opcode, unsigned char r, GPR reg, Imm8  imm);
-    void write(unsigned char opcode, unsigned char r, GPR reg, Imm32 imm);
-    void write(unsigned char opcode, GPR64 reg, Imm64 imm);
-
-    void write(unsigned char opcode, GPR64 dst, GPR64 src);
-    void write(unsigned char opcode, GPR   reg, Mem32 mem);
-    void write(unsigned char opcode, GPR64 reg, SIBD sibd);
-
-    void write0x0F(unsigned char prefix, unsigned opcode, Register dst, Register src, int imm = -1);
-    void write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, Mem8 mem, int imm = -1);
-    void write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, SIBD sibd, int imm = -1);
-
-    void write(unsigned char opcode, GPR64 reg);
-
-    void write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label);
 
 public:
     AssemblerBuffers() {}
@@ -423,47 +399,67 @@ public:
      */
     long growData(int nbytes);
 
-    void mark(JumpLabel &label);
+    void markLabel(JumpLabel &label);
+
+    void fill(unsigned char byte, int nbytes);
+
+    void write(unsigned char byte);
+    void write(unsigned char byte0, unsigned char byte1);
+
+    void write(unsigned char opcode, unsigned char r, GPR reg);
+    void write(unsigned char opcode, unsigned char r, GPR reg, Imm8  imm);
+    void write(unsigned char opcode, unsigned char r, GPR reg, Imm32 imm);
+    void write(unsigned char opcode, GPR64 reg, Imm64 imm);
+
+    void write(unsigned char opcode, GPR64 dst, GPR64 src);
+    void write(unsigned char opcode, GPR   reg, Mem32 mem);
+    void write(unsigned char opcode, GPR64 reg, SIBD sibd);
+
+    void write0x0F(unsigned char prefix, unsigned opcode, Register dst, Register src, int imm = -1);
+    void write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, Mem8 mem, int imm = -1);
+    void write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, SIBD sibd, int imm = -1);
+
+    void write(unsigned char opcode, GPR64 reg);
+
+    void write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label);
 };
 
 
-class AssemblerInstructions{
-    AssemblerBuffers &m;
-
+/* AssemblerInstructions mixin class.
+   Make sure that AssemblerBaseT containes AssemblerBase member called m. */
+template<class AssemblerBaseT> class AssemblerInstructions : public AssemblerBaseT{
 public:
-    AssemblerInstructions(AssemblerBuffers &buffers) : m(buffers) {}
+    using AssemblerBaseT::AssemblerBaseT;
 
-    inline AssemblerBuffers& buffers() { return m; }
+    inline void NOP()          { this->m.write(0x90); }
+    inline void NOP(int count) { this->m.fill(0x90, count); }
+    inline void RET()          { this->m.write(0xC3); }
+    inline void RDTSC()        { this->m.write(0x0F, 0x31); }
 
-    inline void NOP()          { m.write(0x90); }
-    inline void NOP(int count) { m.fill(0x90, count); }
-    inline void RET()          { m.write(0xC3); }
-    inline void RDTSC()        { m.write(0x0F, 0x31); }
+    inline void MOV(GPR32 reg, Imm32 imm){ this->m.write(0xC7, 0, reg, imm); }
+    inline void MOV(GPR64 reg, Imm32 imm){ this->m.write(0xC7, 0, reg, imm); }
+    inline void MOV(GPR64 reg, Imm64 imm){ this->m.write(0xB8, reg, imm); }
 
-    inline void MOV(GPR32 reg, Imm32 imm){ m.write(0xC7, 0, reg, imm); }
-    inline void MOV(GPR64 reg, Imm32 imm){ m.write(0xC7, 0, reg, imm); }
-    inline void MOV(GPR64 reg, Imm64 imm){ m.write(0xB8, reg, imm); }
+    inline void MOV(GPR64 dst, GPR64 src){ this->m.write(0x8B, dst, src); }
+    inline void MOV(GPR32 reg, Mem32 mem){ this->m.write(0x8B, reg, mem); }
+    inline void MOV(GPR64 reg, Mem64 mem){ this->m.write(0x8B, reg, mem); }
 
-    inline void MOV(GPR64 dst, GPR64 src){ m.write(0x8B, dst, src); }
-    inline void MOV(GPR32 reg, Mem32 mem){ m.write(0x8B, reg, mem); }
-    inline void MOV(GPR64 reg, Mem64 mem){ m.write(0x8B, reg, mem); }
-
-    inline void MOV(Mem32 mem, GPR32 reg){ m.write(0x89, reg, mem); }
-    inline void MOV(Mem64 mem, GPR64 reg){ m.write(0x89, reg, mem); }
+    inline void MOV(Mem32 mem, GPR32 reg){ this->m.write(0x89, reg, mem); }
+    inline void MOV(Mem64 mem, GPR64 reg){ this->m.write(0x89, reg, mem); }
 
 //     inline void mov(GPR32 reg, SIBD sibd){ m.write(0x8B, reg, sibd); }
-    inline void MOV(GPR64 reg, SIBD sibd){ m.write(0x8B, reg, sibd); }
+    inline void MOV(GPR64 reg, SIBD sibd){ this->m.write(0x8B, reg, sibd); }
 //     inline void mov(SIBD sibd, GPR32 reg){ m.write(0x89, reg, sibd); }
-    inline void MOV(SIBD sibd, GPR64 reg){ m.write(0x89, reg, sibd); }
+    inline void MOV(SIBD sibd, GPR64 reg){ this->m.write(0x89, reg, sibd); }
 
 #define R64FX_GPR_INST(name, rrm, r)\
-    inline void name(GPR64 reg, Imm8  imm){ m.write(0x83, r,  reg, imm); }\
-    inline void name(GPR64 reg, Imm32 imm){ m.write(0x81, r,  reg, imm); }\
-    inline void name(GPR64 dst, GPR64 src){ m.write(rrm + 2,  dst, src); }\
-    inline void name(GPR64 reg, Mem64 mem){ m.write(rrm + 2,  reg, mem); }\
-    inline void name(Mem64 mem, GPR64 reg){ m.write(rrm,      reg, mem); }\
-    inline void name(GPR64 reg, SIBD sibd){ m.write(rrm + 2,  reg, sibd); }\
-    inline void name(SIBD sibd, GPR64 reg){ m.write(rrm, reg, sibd); }\
+    inline void name(GPR64 reg, Imm8  imm){ this->m.write(0x83, r,  reg, imm); }\
+    inline void name(GPR64 reg, Imm32 imm){ this->m.write(0x81, r,  reg, imm); }\
+    inline void name(GPR64 dst, GPR64 src){ this->m.write(rrm + 2,  dst, src); }\
+    inline void name(GPR64 reg, Mem64 mem){ this->m.write(rrm + 2,  reg, mem); }\
+    inline void name(Mem64 mem, GPR64 reg){ this->m.write(rrm,      reg, mem); }\
+    inline void name(GPR64 reg, SIBD sibd){ this->m.write(rrm + 2,  reg, sibd); }\
+    inline void name(SIBD sibd, GPR64 reg){ this->m.write(rrm, reg, sibd); }\
 
     R64FX_GPR_INST(ADD,  0x01, 0)
     R64FX_GPR_INST(SUB,  0x29, 5)
@@ -474,10 +470,10 @@ public:
 #undef R64FX_GPR_INST
 
 #define R64FX_GPR_SHIFT_INST(name, r)\
-    inline void name(GPR32 gpr) { m.write(0xD1, r, gpr); }\
-    inline void name(GPR64 gpr) { m.write(0xD1, r, gpr); }\
-    inline void name(GPR32 gpr, Imm8 imm) { m.write(0xC1, r, gpr, imm); }\
-    inline void name(GPR64 gpr, Imm8 imm) { m.write(0xC1, r, gpr, imm); }
+    inline void name(GPR32 gpr) { this->m.write(0xD1, r, gpr); }\
+    inline void name(GPR64 gpr) { this->m.write(0xD1, r, gpr); }\
+    inline void name(GPR32 gpr, Imm8 imm) { this->m.write(0xC1, r, gpr, imm); }\
+    inline void name(GPR64 gpr, Imm8 imm) { this->m.write(0xC1, r, gpr, imm); }
 
     R64FX_GPR_SHIFT_INST(SHL, 4)
     R64FX_GPR_SHIFT_INST(SHR, 5)
@@ -485,50 +481,52 @@ public:
 
 #undef R64FX_GPR_SHIFT_INST
 
-    inline void PUSH (GPR64 reg){ m.write(0x50, reg); }
-    inline void POP  (GPR64 reg){ m.write(0x58, reg); }
+    inline void PUSH (GPR64 reg){ this->m.write(0x50, reg); }
+    inline void POP  (GPR64 reg){ this->m.write(0x58, reg); }
 
-    inline void CMP(GPR64 reg, Imm32 imm){ m.write(0x81, 7, reg, imm); }
+    inline void mark(JumpLabel &label) { this->m.markLabel(label); }
 
-    inline void JMP (JumpLabel &label){ m.write(0,    0xE9, label); }
-    inline void JNZ (JumpLabel &label){ m.write(0x0F, 0x85, label); }
-    inline void JZ  (JumpLabel &label){ m.write(0x0F, 0x84, label); }
-    inline void JE  (JumpLabel &label){ m.write(0x0F, 0x84, label); }
-    inline void JNE (JumpLabel &label){ m.write(0x0F, 0x85, label); }
-    inline void JL  (JumpLabel &label){ m.write(0x0F, 0x8C, label); }
+    inline void CMP(GPR64 reg, Imm32 imm){ this->m.write(0x81, 7, reg, imm); }
+
+    inline void JMP (JumpLabel &label){ this->m.write(0,    0xE9, label); }
+    inline void JNZ (JumpLabel &label){ this->m.write(0x0F, 0x85, label); }
+    inline void JZ  (JumpLabel &label){ this->m.write(0x0F, 0x84, label); }
+    inline void JE  (JumpLabel &label){ this->m.write(0x0F, 0x84, label); }
+    inline void JNE (JumpLabel &label){ this->m.write(0x0F, 0x85, label); }
+    inline void JL  (JumpLabel &label){ this->m.write(0x0F, 0x8C, label); }
 
 /* === SSE === */
 
-    inline void MOVAPS(Xmm dst, Xmm src)    { m.write0x0F(0, 0x28, dst, src); }
-    inline void MOVAPS(Xmm reg, Mem128 mem) { m.write0x0F(0, 0x28, reg, mem); }
-    inline void MOVAPS(Mem128 mem, Xmm reg) { m.write0x0F(0, 0x29, reg, mem); }
-    inline void MOVAPS(Xmm reg, SIBD sibd)  { m.write0x0F(0, 0x28, reg, sibd); }
-    inline void MOVAPS(SIBD sibd, Xmm reg)  { m.write0x0F(0, 0x29, reg, sibd); }
+    inline void MOVAPS(Xmm dst, Xmm src)    { this->m.write0x0F(0, 0x28, dst, src); }
+    inline void MOVAPS(Xmm reg, Mem128 mem) { this->m.write0x0F(0, 0x28, reg, mem); }
+    inline void MOVAPS(Mem128 mem, Xmm reg) { this->m.write0x0F(0, 0x29, reg, mem); }
+    inline void MOVAPS(Xmm reg, SIBD sibd)  { this->m.write0x0F(0, 0x28, reg, sibd); }
+    inline void MOVAPS(SIBD sibd, Xmm reg)  { this->m.write0x0F(0, 0x29, reg, sibd); }
 
-    inline void MOVUPS(Xmm dst, Xmm src)   { m.write0x0F(0, 0x10, dst, src); }
-    inline void MOVUPS(Xmm reg, Mem32 mem) { m.write0x0F(0, 0x10, reg, mem); }
-    inline void MOVUPS(Mem32 mem, Xmm reg) { m.write0x0F(0, 0x11, reg, mem); }
-    inline void MOVUPS(Xmm reg, SIBD sibd) { m.write0x0F(0, 0x10, reg, sibd); }
-    inline void MOVUPS(SIBD sibd, Xmm reg) { m.write0x0F(0, 0x11, reg, sibd); }
+    inline void MOVUPS(Xmm dst, Xmm src)   { this->m.write0x0F(0, 0x10, dst, src); }
+    inline void MOVUPS(Xmm reg, Mem32 mem) { this->m.write0x0F(0, 0x10, reg, mem); }
+    inline void MOVUPS(Mem32 mem, Xmm reg) { this->m.write0x0F(0, 0x11, reg, mem); }
+    inline void MOVUPS(Xmm reg, SIBD sibd) { this->m.write0x0F(0, 0x10, reg, sibd); }
+    inline void MOVUPS(SIBD sibd, Xmm reg) { this->m.write0x0F(0, 0x11, reg, sibd); }
 
 private:
     inline void sse_ps_instruction(unsigned char second_opcode_byte, Xmm dst, Xmm src)
-        { m.write0x0F(0, second_opcode_byte, dst, src); }
+        { this->m.write0x0F(0, second_opcode_byte, dst, src); }
 
     inline void sse_ps_instruction(unsigned char second_opcode_byte, Xmm reg, Mem128 mem)
-        { m.write0x0F(0, second_opcode_byte, reg, mem); }
+        { this->m.write0x0F(0, second_opcode_byte, reg, mem); }
 
     inline void sse_ps_instruction(unsigned char second_opcode_byte, Xmm reg, SIBD sibd)
-        { m.write0x0F(0, second_opcode_byte, reg, sibd); }
+        { this->m.write0x0F(0, second_opcode_byte, reg, sibd); }
 
     inline void sse_ss_instruction(unsigned char third_opcode_byte, Xmm dst, Xmm src)
-        { m.write0x0F(0xF3, third_opcode_byte, dst, src); }
+        { this->m.write0x0F(0xF3, third_opcode_byte, dst, src); }
 
     inline void sse_ss_instruction(unsigned char third_opcode_byte, Xmm reg, Mem32 mem)
-        { m.write0x0F(0xF3, third_opcode_byte, reg, mem); }
+        { this->m.write0x0F(0xF3, third_opcode_byte, reg, mem); }
 
     inline void sse_ss_instruction(unsigned char third_opcode_byte, Xmm reg, SIBD sibd)
-        { m.write0x0F(0xF3, third_opcode_byte, reg, sibd); }
+        { this->m.write0x0F(0xF3, third_opcode_byte, reg, sibd); }
 
 #define ENCODE_SSE_PS_INSTRUCTION(name, second_opcode_byte)\
 inline void name(Xmm dst, Xmm src)    { sse_ps_instruction(second_opcode_byte, dst, src); }\
@@ -563,13 +561,13 @@ public:
 #undef ENCODE_SSE_PS_INSTRUCTION
 #undef ENCODE_SSE_SS_INSTRUCTION
 
-    inline void CMPPS(CmpCode kind, Xmm dst, Xmm src)    { m.write0x0F(0, 0xC2, dst, src,  kind.code()); }
-    inline void CMPPS(CmpCode kind, Xmm reg, Mem128 mem) { m.write0x0F(0, 0xC2, reg, mem,  kind.code()); }
-    inline void CMPPS(CmpCode kind, Xmm reg, SIBD sibd)  { m.write0x0F(0, 0xC2, reg, sibd, kind.code()); }
+    inline void CMPPS(CmpCode kind, Xmm dst, Xmm src)    { this->m.write0x0F(0, 0xC2, dst, src,  kind.code()); }
+    inline void CMPPS(CmpCode kind, Xmm reg, Mem128 mem) { this->m.write0x0F(0, 0xC2, reg, mem,  kind.code()); }
+    inline void CMPPS(CmpCode kind, Xmm reg, SIBD sibd)  { this->m.write0x0F(0, 0xC2, reg, sibd, kind.code()); }
 
-    inline void CMPSS(CmpCode kind, Xmm dst, Xmm src)    { m.write0x0F(0xF3, 0xC2, dst, src,  kind.code()); }
-    inline void CMPSS(CmpCode kind, Xmm reg, Mem128 mem) { m.write0x0F(0xF3, 0xC2, reg, mem,  kind.code()); }
-    inline void CMPSS(CmpCode kind, Xmm reg, SIBD sibd)  { m.write0x0F(0xF3, 0xC2, reg, sibd, kind.code()); }
+    inline void CMPSS(CmpCode kind, Xmm dst, Xmm src)    { this->m.write0x0F(0xF3, 0xC2, dst, src,  kind.code()); }
+    inline void CMPSS(CmpCode kind, Xmm reg, Mem128 mem) { this->m.write0x0F(0xF3, 0xC2, reg, mem,  kind.code()); }
+    inline void CMPSS(CmpCode kind, Xmm reg, SIBD sibd)  { this->m.write0x0F(0xF3, 0xC2, reg, sibd, kind.code()); }
 
     inline void CMPLTPS(Xmm dst, Xmm src)    { CMPPS(LT, dst, src); }
     inline void CMPLTPS(Xmm reg, Mem128 mem) { CMPPS(LT, reg, mem); }
@@ -580,45 +578,50 @@ public:
     inline void CMPEQPS(Xmm dst, Xmm src)    { CMPPS(EQ, dst, src); }
     inline void CMPEQPS(Xmm reg, Mem128 mem) { CMPPS(EQ, reg, mem); }
 
-    inline void MOVSS(Xmm reg, Mem32 mem) { m.write0x0F(0xF3, 0x10, reg, mem); }
-    inline void MOVSS(Mem32 mem, Xmm reg) { m.write0x0F(0xF3, 0x11, reg, mem); }
+    inline void MOVSS(Xmm reg, Mem32 mem) { this->m.write0x0F(0xF3, 0x10, reg, mem); }
+    inline void MOVSS(Mem32 mem, Xmm reg) { this->m.write0x0F(0xF3, 0x11, reg, mem); }
 
-    inline void SHUFPS(Xmm dst, Xmm src,    Shuf shuf) { m.write0x0F(0, 0xC6, dst, src,  shuf.byte()); }
-    inline void SHUFPS(Xmm reg, Mem128 mem, Shuf shuf) { m.write0x0F(0, 0xC6, reg, mem,  shuf.byte()); }
-    inline void SHUFPS(Xmm reg, SIBD sibd,  Shuf shuf) { m.write0x0F(0, 0xC6, reg, sibd, shuf.byte()); }
+    inline void SHUFPS(Xmm dst, Xmm src,    Shuf shuf) { this->m.write0x0F(0, 0xC6, dst, src,  shuf.byte()); }
+    inline void SHUFPS(Xmm reg, Mem128 mem, Shuf shuf) { this->m.write0x0F(0, 0xC6, reg, mem,  shuf.byte()); }
+    inline void SHUFPS(Xmm reg, SIBD sibd,  Shuf shuf) { this->m.write0x0F(0, 0xC6, reg, sibd, shuf.byte()); }
 
-    inline void PSHUFD(Xmm dst, Xmm src,    Shuf shuf) { m.write0x0F(0x66, 0x70, dst, src,  shuf.byte()); }
-    inline void PSHUFD(Xmm reg, Mem128 mem, Shuf shuf) { m.write0x0F(0x66, 0x70, reg, mem,  shuf.byte()); }
-    inline void PSHUFD(Xmm reg, SIBD sibd,  Shuf shuf) { m.write0x0F(0x66, 0x70, reg, sibd, shuf.byte()); }
+    inline void PSHUFD(Xmm dst, Xmm src,    Shuf shuf) { this->m.write0x0F(0x66, 0x70, dst, src,  shuf.byte()); }
+    inline void PSHUFD(Xmm reg, Mem128 mem, Shuf shuf) { this->m.write0x0F(0x66, 0x70, reg, mem,  shuf.byte()); }
+    inline void PSHUFD(Xmm reg, SIBD sibd,  Shuf shuf) { this->m.write0x0F(0x66, 0x70, reg, sibd, shuf.byte()); }
 
-    inline void CVTPS2DQ(Xmm dst, Xmm src)    { m.write0x0F(0x66, 0x5B, dst, src); }
-    inline void CVTPS2DQ(Xmm reg, Mem128 mem) { m.write0x0F(0x66, 0x5B, reg, mem); }
-    inline void CVTPS2DQ(Xmm reg, SIBD sibd)  { m.write0x0F(0x66, 0x5B, reg, sibd); }
+    inline void CVTPS2DQ(Xmm dst, Xmm src)    { this->m.write0x0F(0x66, 0x5B, dst, src); }
+    inline void CVTPS2DQ(Xmm reg, Mem128 mem) { this->m.write0x0F(0x66, 0x5B, reg, mem); }
+    inline void CVTPS2DQ(Xmm reg, SIBD sibd)  { this->m.write0x0F(0x66, 0x5B, reg, sibd); }
 
-    inline void CVTDQ2PS(Xmm dst, Xmm src)    { m.write0x0F(0, 0x5B, dst, src); }
-    inline void CVTDQ2PS(Xmm reg, Mem128 mem) { m.write0x0F(0, 0x5B, reg, mem); }
-    inline void CVTDQ2PS(Xmm reg, SIBD sibd)  { m.write0x0F(0, 0x5B, reg, sibd); }
+    inline void CVTDQ2PS(Xmm dst, Xmm src)    { this->m.write0x0F(0, 0x5B, dst, src); }
+    inline void CVTDQ2PS(Xmm reg, Mem128 mem) { this->m.write0x0F(0, 0x5B, reg, mem); }
+    inline void CVTDQ2PS(Xmm reg, SIBD sibd)  { this->m.write0x0F(0, 0x5B, reg, sibd); }
 
 /* === SSE2 === */
-    inline void MOVD(Xmm dst, GPR32 src) { m.write0x0F(0x66, 0x6E, dst, src); }
-    inline void MOVQ(Xmm dst, GPR64 src) { m.write0x0F(0x66, 0x6E, dst, src); }
-    inline void MOVD(GPR32 dst, Xmm src) { m.write0x0F(0x66, 0x7E, src, dst); }
-    inline void MOVQ(GPR64 dst, Xmm src) { m.write0x0F(0x66, 0x7E, src, dst); }
+    inline void MOVD(Xmm dst, GPR32 src) { this->m.write0x0F(0x66, 0x6E, dst, src); }
+    inline void MOVQ(Xmm dst, GPR64 src) { this->m.write0x0F(0x66, 0x6E, dst, src); }
+    inline void MOVD(GPR32 dst, Xmm src) { this->m.write0x0F(0x66, 0x7E, src, dst); }
+    inline void MOVQ(GPR64 dst, Xmm src) { this->m.write0x0F(0x66, 0x7E, src, dst); }
 
-    inline void PADDD(Xmm dst, Xmm src)    { m.write0x0F(0x66, 0xFE, dst, src);}
-    inline void PADDD(Xmm reg, Mem128 mem) { m.write0x0F(0x66, 0xFE, reg, mem); }
-    inline void PADDD(Xmm reg, SIBD sibd)  { m.write0x0F(0x66, 0xFE, reg, sibd); }
+    inline void PADDD(Xmm dst, Xmm src)    { this->m.write0x0F(0x66, 0xFE, dst, src);}
+    inline void PADDD(Xmm reg, Mem128 mem) { this->m.write0x0F(0x66, 0xFE, reg, mem); }
+    inline void PADDD(Xmm reg, SIBD sibd)  { this->m.write0x0F(0x66, 0xFE, reg, sibd); }
 
-    inline void PSUBD(Xmm dst, Xmm src)    { m.write0x0F(0x66, 0xFA, dst, src); }
-    inline void PSUBD(Xmm reg, Mem128 mem) { m.write0x0F(0x66, 0xFA, reg, mem); }
-    inline void PSUBD(Xmm reg, SIBD sibd)  { m.write0x0F(0x66, 0xFA, reg, sibd); }
+    inline void PSUBD(Xmm dst, Xmm src)    { this->m.write0x0F(0x66, 0xFA, dst, src); }
+    inline void PSUBD(Xmm reg, Mem128 mem) { this->m.write0x0F(0x66, 0xFA, reg, mem); }
+    inline void PSUBD(Xmm reg, SIBD sibd)  { this->m.write0x0F(0x66, 0xFA, reg, sibd); }
 };
 
 
-class Assembler : public AssemblerBuffers, public AssemblerInstructions{
+class AssemblerBase : public AssemblerBuffers{
+protected:
+    AssemblerBuffers &m;
 public:
-    Assembler() : AssemblerInstructions((AssemblerBuffers&)*this) {}
+    AssemblerBase() : m(*this) {}
 };
+
+typedef AssemblerInstructions<AssemblerBase> Assembler;
+
 
 }//namespace r64fx
 

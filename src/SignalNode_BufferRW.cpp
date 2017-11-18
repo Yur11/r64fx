@@ -3,7 +3,7 @@
 
 namespace r64fx{
 
-void SignalNode_BufferReader::build(SignalGraphCompiler &c)
+void SignalNode_BufferReader::build()
 {
 //     std::cout << this << " Reader::build\n";
 // 
@@ -40,23 +40,16 @@ void SignalNode_BufferReader::build(SignalGraphCompiler &c)
 }
 
 
-void SignalNode_BufferReader::cleanup(SignalGraphCompiler &c)
+void SignalNode_BufferWriter::build()
 {
-    R64FX_DEBUG_ASSERT(m_out.connectedSinkCount() == 0);
-//     c.freeStorage(m_out);
-}
-
-
-void SignalNode_BufferWriter::build(SignalGraphCompiler &c)
-{
-    if(m_in.connectedSource())
-        c.ensureBuilt(m_in.connectedSource());
-    else
-        return;
-
-    std::cout << this << " Writer::build\n";
-
-    auto source = m_in.connectedSource();
+//     if(m_in.connectedSource())
+//         c.ensureBuilt(m_in.connectedSource());
+//     else
+//         return;
+// 
+//     std::cout << this << " Writer::build\n";
+// 
+//     auto source = m_in.connectedSource();
 //     R64FX_DEBUG_ASSERT(source->isSingle());
 //     R64FX_DEBUG_ASSERT(source->size() == 1);
 // 
@@ -98,73 +91,7 @@ void SignalNode_BufferWriter::build(SignalGraphCompiler &c)
 //     if(restore_source_reg)
 //         c.POP(source_reg);
 
-    c.sourceUsed(source);
-}
-
-
-void SignalNode_BufferWriter::cleanup(SignalGraphCompiler &c)
-{
-    R64FX_DEBUG_ASSERT(m_in.connectedSource() == nullptr);
-}
-
-
-void SignalNode_ValueReader::build(SignalGraphCompiler &c)
-{
-//     R64FX_DEBUG_ASSERT(size() == 4);
-//     R64FX_DEBUG_ASSERT(ptr() != nullptr);
-// 
-//     Xmm result;
-//     auto nxmm = c.allocXmm(&result, 1);
-//     R64FX_DEBUG_ASSERT(nxmm == 1);
-// 
-//     GPR64 base;
-//     auto ngpr = c.allocGPR(&base, 1);
-//     R64FX_DEBUG_ASSERT(ngpr == 1);
-// 
-//     c.MOV(base, ImmAddr(ptr()));
-//     c.MOVAPS(result, Base(base));
-// 
-//     c.setStorage(m_out, &result, 1);
-}
-
-
-void SignalNode_ValueReader::cleanup(SignalGraphCompiler &c)
-{
-    
-}
-
-
-void SignalNode_ValueWriter::build(SignalGraphCompiler &c)
-{
-    R64FX_DEBUG_ASSERT(size() == 4);
-    R64FX_DEBUG_ASSERT(ptr() != nullptr);
-    
-    auto source = m_in.connectedSource();
-    if(!source)
-        return;
-/*
-    R64FX_DEBUG_ASSERT(source->isXmm());
-    R64FX_DEBUG_ASSERT(source->isSingle());
-    R64FX_DEBUG_ASSERT(source->size() == 4);
-
-    Xmm input; unsigned int nxmm = 0;
-    c.getStorage(*source, &input, &nxmm);
-    R64FX_DEBUG_ASSERT(nxmm == 1);
-
-    GPR64 base;
-    auto ngpr = c.allocGPR(&base, 1);
-    R64FX_DEBUG_ASSERT(ngpr == 1);
-
-    c.MOV(base, ImmAddr(ptr()));
-    c.MOVAPS(Base(base), input);*/
-
-    c.sourceUsed(source);
-}
-
-
-void SignalNode_ValueWriter::cleanup(SignalGraphCompiler &c)
-{
-    
+//     sourceUsed(source);
 }
 
 }//namespace r64fx

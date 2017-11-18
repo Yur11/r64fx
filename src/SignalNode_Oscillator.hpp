@@ -11,16 +11,14 @@ class SignalNode_OscClock : public SignalNode{
     int m_delta = 0;
 
 public:
-    SignalNode_OscClock();
+    SignalNode_OscClock(SignalGraph &sg);
 
     inline void setDelta(int delta) { m_delta = delta; }
 
     inline int delta() const { return m_delta; }
 
 private:
-    virtual void build(SignalGraphCompiler &c) override final;
-
-    virtual void cleanup(SignalGraphCompiler &c) override final;
+    virtual void build() override final;
 };
 
 }//namespace r64fx

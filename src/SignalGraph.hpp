@@ -12,33 +12,13 @@
 
 namespace r64fx{
 
-class SignalGraphCompiler;
-
-
-/* Base class for elements of a signal graph. */
-class SignalNode{
-    friend class SignalGraphCompiler;
-    unsigned long m_iteration_count = 0;
-    unsigned long m_connection_count = 0;
-
-public:
-    SignalNode() {}
-
-    virtual ~SignalNode() {}
-
-private:
-    virtual void build(SignalGraphCompiler &c) = 0;
-
-    virtual void cleanup(SignalGraphCompiler &c) = 0;
-};
+class SignalGraph;
+class SignalNode;
 
 
 /* A class used for sharing intermediate data between SignalNode instances.
- * Its instances represent vectors of data that are stored in registers and memory.
- * Our goal is to make the best use of register space thus minimizing memory access. */
+ * It represents vectors of data that are stored in registers and(or) memory. */
 class SignalDataStorage{
-    friend class SignalGraphCompiler;
-
     unsigned long m = 0;
 
     R64FX_VALUE_TYPE(DataType, unsigned long);
@@ -89,24 +69,25 @@ public:
     inline DataType type() const { return DataType((m >> 40) & 0xFFUL); }
 
     inline bool isDouble() const { return type().value() & 1; }
+
+    friend class SignalNode;
 };
 
 
 class DataBufferPointer{
-    friend class SignalGraphCompiler;
-
     unsigned short offset = 0;
 
     DataBufferPointer(unsigned short offset) : offset(offset) {}
 
 public:
     inline operator bool() const { return offset; }
+
+    friend class SignalGraphImpl;
+    friend class SignalNode;
 };
 
 
 template<typename RegT> class RegisterPack{
-    friend class SignalGraphCompiler;
-
     unsigned long bits = 0;
 
     RegisterPack(unsigned long bits) : bits(bits) {}
@@ -145,12 +126,13 @@ public:
     }
 
     inline RegT operator[](unsigned int i) { return regAt(i); }
+
+    friend class SignalNode;
 };
 
 
 /* One SignalSource can be connected to multiple SignalSink instances. */
 class SignalSource : public SignalDataStorage{
-    friend class SignalGraphCompiler;
     SignalNode* m_parent_node = nullptr;
     unsigned int m_connected_sink_count = 0;
     unsigned int m_processed_sink_count = 0;
@@ -166,13 +148,14 @@ public:
     inline int connectedSinkCount() const { return m_connected_sink_count; }
 
     inline int processedSinkCount() const { return m_processed_sink_count; }
+
+    friend class SignalGraph;
+    friend class SignalNode;
 };
 
 
 /* Each SignalSink can be connected to only one SignalSource. */
 class SignalSink{
-    friend class SignalGraphCompiler;
-
     SignalSource*  m_connected_source  = nullptr;
 
 public:
@@ -181,6 +164,8 @@ public:
     ~SignalSink() {}
 
     inline SignalSource* connectedSource() const { return m_connected_source; }
+
+    friend class SignalGraph;
 };
 
 
@@ -202,131 +187,198 @@ typedef NodePort<SignalSource> NodeSource;
 typedef NodePort<SignalSink> NodeSink;
 
 
-/*  */
-class SignalGraphCompiler : public Assembler{
-    unsigned long  m_iteration_count = 0;
-    unsigned long  m_flags        = 0;
-    unsigned long  m_frame_count  = 0;
+/* Common implementation structure used by SignalGraph and SignalNode instanes.*/
+class SignalGraphImpl : public AssemblerBuffers{
+    friend class SignalGraph;
+    friend class SignalNode;
+    friend class SignalGraphImplVar;
 
-    unsigned long m_gprs[16];
-    inline unsigned long* registerTable      (GPR64) { return m_gprs; }
+    unsigned long  iteration_count = 0;
+    unsigned long  flags        = 0;
+    unsigned long  frame_count  = 0;
+
+    unsigned long gprs[16];
+    inline unsigned long* registerTable      (GPR64) { return gprs; }
     inline unsigned int   registerTableSize  (GPR64) { return 16; }
 
-    unsigned long m_xmms[16];
-    inline unsigned long* registerTable      (Xmm)   { return m_xmms; }
+    unsigned long xmms[16];
+    inline unsigned long* registerTable      (Xmm)   { return xmms; }
     inline unsigned int   registerTableSize  (Xmm)   { return 16; }
 
+    SignalGraphImpl();
+
+    void buildNode(SignalNode &node);
+
+    inline HeapBuffer heapBuffer() const { return HeapBuffer(dataBegin(), dataBufferSize()); }
+
+    DataBufferPointer allocMemoryBytes(unsigned int nbytes, unsigned int align);
+
+    inline void freeMemory(DataBufferPointer ptr) { heapBuffer().freeChunk(codeBegin() - ptr.offset); }
+};
+
+class SignalGraphImplVar{
+protected:
+    SignalGraphImpl m;
+    SignalGraphImplVar() {}
+};
+
+class SignalGraphImplRef{
+protected:
+    SignalGraphImpl &m;
+    SignalGraphImplRef(SignalGraphImpl &ref) : m(ref) {}
+};
+
+/*  */
+class SignalGraph : private AssemblerInstructions<SignalGraphImplVar>{
 public:
-    SignalGraphCompiler();
+    SignalGraph();
 
-    void link(const NodeSource &node_source, const NodeSink &node_sink);//+
+    void link(const NodeSource &node_source, const NodeSink &node_sink);
 
-    void unlink(const NodeSink node_sink);//+
+    void unlink(const NodeSink node_sink);
 
-    void build(SignalNode* terminal_nodes, unsigned int nnodes);//+
+    void build(SignalNode* terminal_nodes, unsigned int node_count);
 
-    void ensureBuilt(SignalSource* source);//-
+    inline long run() { return ((long (*)())m.codeBegin())(); }
 
-    void sourceUsed(SignalSource* source);//-
+    inline unsigned long frameCount() const { return m.frame_count; }
+
+    inline void setFrameCount(unsigned long frame_count) { m.frame_count = frame_count; }
+
+    friend class SignalNode;
+};
+
+
+/* Base class for elements of a signal graph. */
+class SignalNode : protected AssemblerInstructions<SignalGraphImplRef>{
+    unsigned long m_iteration_count = 0;
+    unsigned long m_connection_count = 0;
+
+public:
+    /* All nodes must exist within the context of a parent graph. */
+    SignalNode(SignalGraph &sg) : AssemblerInstructions(sg.m) {}
+
+    virtual ~SignalNode() {}
 
 private:
-    void buildNode(SignalNode &node);//-
+    /* Main build routine. Reimplement in a sub-class. */
+    virtual void build() = 0;
 
-public:
-    inline long run() { return ((long (*)())codeBegin())(); }//+
+protected:
+    /* Make sure that source node has been built.
+       Call this in the build routine before using the source data.*/
+    void ensureBuilt(SignalSource* source);
 
-    inline unsigned long frameCount() const { return m_frame_count; }//+-
-
-    inline void setFrameCount(unsigned long frame_count) { m_frame_count = frame_count; }//+
-
-    inline GPR64 mainLoopCounter() const { return rcx; }//-
+    /* Call this in the build routine after you are done using the source data. */
+    void sourceUsed(SignalSource* source);
 
 
-private:
-    DataBufferPointer allocMemoryBytes(unsigned int nbytes, unsigned int align);//-1
-
-public:
+    /* Allocate some memory in the data buffer. */
     template<typename T> inline DataBufferPointer allocMemory(unsigned int nitems) { return allocMemory<T>(nitems, sizeof(T)); }
 
     template<typename T> inline DataBufferPointer allocMemory(unsigned int nitems, unsigned align)
     {
         R64FX_DEBUG_ASSERT(!(align & (align - 1)));
         R64FX_DEBUG_ASSERT(align >= sizeof(T));
-        allocMemoryBytes(nitems * sizeof(T), align);
+        m.allocMemoryBytes(nitems * sizeof(T), align);
     }
 
-    template<typename T = void*> inline T ptr(SignalDataStorage storage)
-    {
-        R64FX_DEBUG_ASSERT(storage.type() == SignalDataStorage::type(T()));
-        return ptr<T>(storage.memoryOffset());
-    }
 
-    template<typename T = void*> inline T ptr(DataBufferPointer ptr)
+    /* Get actual memory address. Do not cache the value returned, use it immediately! */
+    template<typename T = float> inline T* addr(DataBufferPointer ptr)
     {
         R64FX_DEBUG_ASSERT(ptr.offset > 0);
-        return (T)(codeBegin() - ptr.offset);
+        return (T*)(m.codeBegin() - ptr.offset);
     }
 
-    inline void setStorageMemory(SignalDataStorage &storage, DataBufferPointer dbp)
+    template<typename T = float> inline T* addr(SignalDataStorage storage)
     {
-        R64FX_DEBUG_ASSERT(HeapBuffer(dataBegin(), dataBufferSize()).chunkSize(ptr(storage.memoryOffset())) == storage.byteCount());
-        storage.setMemoryOffset(dbp.offset);
+        R64FX_DEBUG_ASSERT(storage.type() == SignalDataStorage::type(T()));
+        return addr<T>(storage.memoryOffset());
     }
 
+
+    /* Assing memory to storage. */
+    inline void setStorageMemory(SignalDataStorage &storage, DataBufferPointer ptr)
+    {
+        R64FX_DEBUG_ASSERT(m.heapBuffer().chunkSize(addr(storage.memoryOffset())) == storage.byteCount());
+        storage.setMemoryOffset(ptr.offset);
+    }
+
+    /* Get storage memory. */
     inline DataBufferPointer getStorageMemory(SignalDataStorage &storage) const { return storage.memoryOffset(); }
 
+    /* Detach memory from storage but do not free it. */
     inline DataBufferPointer removeStorageMemory(SignalDataStorage &storage)
         { auto val = storage.memoryOffset(); storage.setMemoryOffset(0); return val; }
 
+    /* Detach memory from storage and free it. */
     inline void freeStorageMemory(SignalDataStorage &storage) { freeMemory(removeStorageMemory(storage)); }
 
-    void freeMemory(DataBufferPointer ptr);
+    inline void freeMemory(DataBufferPointer ptr) { m.freeMemory(ptr); }
 
 
+    /* Allocate registers. */
 private:
     RegisterPack<Register> allocRegisters(
         unsigned int count, unsigned long* reg_table, unsigned int reg_table_size, unsigned int reg_size);
-public:
+protected:
     template<typename T> inline RegisterPack<T> allocRegisters(unsigned int count)
         { return allocRegisters(count, registerTable(T()), registerTableSize(T()), T::Size()).bits; }
 
+
+    /* Assign registers to storage. */
 private:
     void setStorageRegisters(SignalDataStorage &storage, RegisterPack<Register> regpack, unsigned long* reg_table);
-public:
+protected:
     template<typename T> inline void setStorageRegisters(SignalDataStorage &storage, RegisterPack<T> regpack)
     {
         setStorageRegisters(storage, regpack.bits, registerTable(T()));
         storage.registerType() == SignalDataStorage::RegType(T());
     }
 
+
+    /* Get storage registers. */
 private:
     RegisterPack<Register> getStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table) const;
-public:
+protected:
     template<typename T> inline RegisterPack<T> getStorageRegisters(SignalDataStorage &storage) const
     {
         R64FX_DEBUG_ASSERT(storage.type() == SignalDataStorage::Type(T()));
         return getStorageRegisters(storage, registerTable(T())).bits;
     }
 
+
+    /* Remove registers from storage. */
 private:
     RegisterPack<Register> removeStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table);
-public:
+protected:
     template<typename T> inline RegisterPack<T> removeStorageRegisters(SignalDataStorage &storage)
     {
         R64FX_DEBUG_ASSERT(storage.type() == SignalDataStorage::Type(T()));
         return removeStorageRegisters(storage, registerTable(T())).bits;
     }
 
-    template<typename T> inline void freeStorageRegisters(SignalDataStorage &storage)
-        { freeRegisters<T>(removeStorageRegisters<T>(storage)); }
 
+    /* Free registers. */
 private:
     void freeRegisters(RegisterPack<Register> pack, unsigned long* reg_table, unsigned int reg_table_size);
-public:
+protected:
     template<typename T> void freeRegisters(RegisterPack<T> regpack)
         { freeRegisters(regpack.bits, registerTable(T()), registerTableSize(T())); }
 
+
+    /* Remove registers from storage and free them. */
+    template<typename T> inline void freeStorageRegisters(SignalDataStorage &storage)
+        { freeRegisters<T>(removeStorageRegisters<T>(storage)); }
+
+
+    /* Free storage memory and(or) registers. */
     void freeStorage(SignalDataStorage &storage);
+
+
+    friend class SignalGraph;
+    friend class SignalGraphImpl;
 };
 
 }//namespace r64fx

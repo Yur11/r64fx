@@ -2,14 +2,15 @@
 
 namespace r64fx{
 
-SignalNode_OscClock::SignalNode_OscClock()
-: m_out(this)
+SignalNode_OscClock::SignalNode_OscClock(SignalGraph &sg)
+: SignalNode(sg)
+, m_out(this)
 {
     
 }
 
 
-void SignalNode_OscClock::build(SignalGraphCompiler &c)
+void SignalNode_OscClock::build()
 {
     std::cout << "SignalNode_OscClock\n";
 /*
@@ -51,16 +52,6 @@ void SignalNode_OscClock::build(SignalGraphCompiler &c)
     }
 
     m_out.setSize(1);*/
-}
-
-
-void SignalNode_OscClock::cleanup(SignalGraphCompiler &c)
-{
-//     if(m_out)
-//         c.freeStorage(m_out);
-// 
-//     if(m_clock)
-//         c.freeMemory(m_clock);
 }
 
 }//namespace r64fx

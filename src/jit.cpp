@@ -405,7 +405,7 @@ void AssemblerBuffers::write(unsigned char opcode1, unsigned char opcode2, JumpL
 }
 
 
-void AssemblerBuffers::mark(JumpLabel &label)
+void AssemblerBuffers::markLabel(JumpLabel &label)
 {
     if(label.immAddr())
     {

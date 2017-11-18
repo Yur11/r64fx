@@ -27,8 +27,8 @@ int main()
 
     srand(time(0));
 
-    SignalGraphCompiler sgc;
-    sgc.setFrameCount(frame_count);
+    SignalGraph sg;
+    sg.setFrameCount(frame_count);
 
 //     SignalNode_OscClock clk;
 //     clk.setDelta(0xFFFFFFF);
@@ -46,8 +46,8 @@ int main()
 // 
 //     return 0;
 
-    SignalNode_BufferReader snbr;
-    SignalNode_BufferWriter snbw;
+    SignalNode_BufferReader snbr(sg);
+    SignalNode_BufferWriter snbw(sg);
     snbr.setBuffer(buff_a);
     snbw.setBuffer(buff_b);
 
@@ -58,10 +58,10 @@ int main()
         snbw.buffer(i) = 0.0f;
     }
 
-    sgc.link(snbr.out(), snbw.in());
+    sg.link(snbr.out(), snbw.in());
 
-    sgc.build(&snbw, 1);
-    sgc.run();
+    sg.build(&snbw, 1);
+    sg.run();
 
     for(int i=0; i<frame_count; i++)
     {
