@@ -142,109 +142,75 @@ struct Mem128 : public Mem64{
 #undef R64FX_JIT_DEBUG_MEM_ALIGN
 
 
-class Base{
-    unsigned char m_bits = 0;
+struct MemArg{
+    unsigned int bits = 0;
+    unsigned int disp = 0;
 
-public:
-    explicit Base(GPR64 reg) : m_bits(reg.code()) {}
+    MemArg() {}
+    explicit MemArg(unsigned int bits) : bits(bits) {}
 
-    unsigned int bits() const { return m_bits; }
-};
+    inline void setBase(GPR64 reg)   { bits |= (0x400 | reg.code()); }
+    inline bool hasBase() const      { return bits & 0x400; }
+    inline GPR64 base() const        { return GPR64(bits & 0xF);  }
 
-class Index{
-    unsigned long m_bits = 0;
+    inline void setIndex(GPR64 reg)  { bits |= (0x800 | (reg.code() << 4)); }
+    inline bool hasIndex() const     { return bits & 0x800; }
+    inline GPR64 index() const       { return GPR64((bits >> 4) & 0xF);  }
 
-    inline static unsigned long encodeScale(int scale)
+    inline void setScale(unsigned int scale)
     {
-#ifdef R64FX_DEBUG
-        assert(scale == 1 || scale == 2 || scale == 4 || scale == 8);
-#endif//R64FX_DEBUG
-        if(scale == 1)
-            return 0;
-        if(scale == 2)
-            return 1 << 8;
-        if(scale == 4)
-            return 2 << 8;
-        return 3 << 8;
+        R64FX_DEBUG_ASSERT(scale == 1 || scale == 2 || scale == 4 || scale == 8);
+        if(scale == 1) scale = 0; else
+        if(scale == 2) scale = 1; else
+        if(scale == 4) scale = 2; else
+        if(scale == 8) scale = 3;
+        bits |= scale << 8;
     }
+    inline unsigned int scaleBits() const { return (bits >> 8) & 3; }
 
-public:
-    explicit Index(GPR64 reg, int scale) : m_bits(0x400 | encodeScale(scale) | (reg.code() << 4))
-    {
-#ifdef R64FX_DEBUG
-        assert(reg.code() != rsp.code());
-#endif//R64FX_DEBUG
-    }
-
-    inline unsigned long bits() const { return m_bits; }
+    inline void setDisplacement(int val)  { disp = val; bits |= (0x1000); }
+    inline bool hasDisplacement() const   { return bits & 0x1000; }
+    inline int  displacement() const      { return disp; }
 };
 
-class Disp{
-    int m_disp = 0;
 
-public:
-    explicit Disp(int disp) : m_disp(disp) {}
-
-    inline int value() const { return m_disp; };
+struct Base : public MemArg{
+    explicit Base(GPR64 reg) { setBase(reg); }
 };
 
-class SIB{
-    friend SIB operator+(Base base, Index index);
-
-    unsigned long m_bits = 0;
-
-protected:
-    SIB(unsigned long bits) : m_bits(bits) {}
-
-public:
-    inline unsigned long bits() const { return m_bits; }
-
-    inline GPR64 base() const { return GPR64(m_bits & 0xF); }
-
-    inline GPR64 index() const { return GPR64((m_bits & 0xF0) >> 4); }
-
-    inline unsigned char scale() const { return (m_bits & 0x300) >> 8; }
-
-    inline bool hasIndex() const { return m_bits & 0x400; }
+struct Index : public MemArg{
+    explicit Index(GPR64 reg) { R64FX_DEBUG_ASSERT(reg != rsp); setIndex(reg); }
 };
 
-class SIBD : public SIB{
-    friend class AssemblerBuffers;
-    friend SIBD operator+(SIB sib, Disp disp);
-    friend SIBD operator+(Base base, Disp disp);
-
-    SIBD(unsigned long bits) : SIB(bits) {}
-
-    unsigned char modrmByte(const Register &reg) const;
-
-    unsigned char sibByte() const;
-
-    int dispBytes() const;
-
-    inline bool rexW() const
-    {
-        return base().rexW() || (hasIndex() && index().rexW());
-    }
-
-    inline bool rexX() const { return (hasIndex() && index().prefixBit()); }
-
-    inline bool rexB() const { return base().prefixBit(); }
-
-    inline bool rex() const { return rexW() || rexX() || rexB(); }
-
-public:
-    SIBD(Base base) : SIB(base.bits()) {}
-
-    SIBD(SIB sib) : SIB(sib.bits()) {}
-
-    inline int disp() const { return (bits() >> 32) & 0xFFFFFFFF; }
+struct ScaledIndex : public MemArg{
+    explicit ScaledIndex(Index index, unsigned int scale) : MemArg(index.bits) { setScale(scale); }
 };
 
-inline SIB operator+(Base base, Index index) { return SIB(base.bits() | index.bits()); }
+inline ScaledIndex operator*(Index index, unsigned int scale) { return ScaledIndex(index, scale); }
 
-inline SIBD operator+(Base base, Disp disp) { return SIBD(base.bits() | long(disp.value()) << 32); }
+struct SIB : public MemArg{
+    SIB(Base base) : MemArg(base.bits) {}
 
-inline SIBD operator+(SIB sib, Disp disp) { return SIBD(sib.bits() | long(disp.value()) << 32); }
+    explicit SIB(Base base,       Index index) : MemArg(base.bits | index.bits) {}
+    explicit SIB(Base base, ScaledIndex index) : MemArg(base.bits | index.bits) {}
+};
+
+inline SIB operator+(Base base,       Index index) { return SIB(base, index); }
+inline SIB operator+(Base base, ScaledIndex index) { return SIB(base, index); }
+
+struct Disp{ int disp = 0;
+    explicit Disp(int disp) : disp(disp) {}
+};
+
+struct SIBD : public MemArg{
+    SIBD(Base base) : MemArg(base.bits) {}
+    SIBD(SIB   sib) : MemArg(sib.bits) {}
+    explicit SIBD(SIB sib, Disp disp) : MemArg(sib.bits) { setDisplacement(disp.disp); }
+    explicit SIBD(Index index, Disp disp) : MemArg(index.bits) { setDisplacement(disp.disp); }
+    explicit SIBD(ScaledIndex index, Disp disp) : MemArg(index.bits) { setDisplacement(disp.disp); }
+};
+
+template<typename A, typename B> inline SIBD operator+(A a, B b) { return SIBD(a, b); }
 
 
 class CmpCode{

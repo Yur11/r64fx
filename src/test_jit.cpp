@@ -362,8 +362,8 @@ template<
         as.MOV(rax, Mem64(buff + 0));
         as.MOV(rdx, ImmAddr(buff + 1));
         as.MOV(rcx, Imm32(1));
-        (as.*gpr64_sibd)(rax, Base(rdx) + Index(rcx, 8) + Disp(8));
-        (as.*gpr64_sibd)(r8, Base(rdx) + Index(rcx, 8) + Disp(8));
+        (as.*gpr64_sibd)(rax, Base(rdx) + Index(rcx) * 8 + Disp(8));
+        (as.*gpr64_sibd)(r8, Base(rdx) + Index(rcx) * 8 + Disp(8));
         as.RET();
         R64FX_EXPECT_EQ(expected(buff[0], buff[3]), jitfun());
     }
@@ -1007,7 +1007,7 @@ bool test_sibd(Assembler &as)
         as.MOV(rax, Imm32(0));
         as.MOV(rcx, ImmAddr(buff));
         as.MOV(rdx, Imm32(10));
-        as.MOV(rax, Base(rcx) + Index(rdx, 8));
+        as.MOV(rax, Base(rcx) + Index(rdx) * 8);
 
         as.RET();
         R64FX_EXPECT_EQ(buff[10], jitfun());
@@ -1025,7 +1025,7 @@ bool test_sibd(Assembler &as)
         as.MOV(rax, Imm32(0));
         as.MOV(rcx, ImmAddr(buff));
         as.MOV(rdx, Imm32(10));
-        as.MOV(rax, Base(rcx) + Index(rdx, 8) + Disp(8));
+        as.MOV(rax, Base(rcx) + Index(rdx) * 8 + Disp(8));
 
         as.RET();
         R64FX_EXPECT_EQ(buff[11], jitfun());
@@ -1043,7 +1043,7 @@ bool test_sibd(Assembler &as)
         as.MOV(rax, Imm32(0));
         as.MOV(rcx, ImmAddr(buff));
         as.MOV(rdx, Imm32(10));
-        as.MOV(rax, Base(rcx) + Index(rdx, 8) + Disp(64 * 8));
+        as.MOV(rax, Base(rcx) + Index(rdx) * 8 + Disp(64 * 8));
 
         as.RET();
         R64FX_EXPECT_EQ(buff[10 + 64], jitfun());
@@ -1061,8 +1061,8 @@ bool test_sibd(Assembler &as)
 
         as.MOV(rcx, ImmAddr(buff));
         as.MOV(rdx, Imm32(4));
-        as.MOVAPS(xmm0, Base(rcx) + Index(rdx, 4));
-        as.MOVAPS(xmm8, Base(rcx) + Index(rdx, 8));
+        as.MOVAPS(xmm0, Base(rcx) + Index(rdx) * 4);
+        as.MOVAPS(xmm8, Base(rcx) + Index(rdx) * 8);
         as.MOVAPS(Base(rcx), xmm0);
 
         as.RET();
@@ -1072,6 +1072,27 @@ bool test_sibd(Assembler &as)
         {
             return false;
         }
+    }
+
+    cout << "[index + disp8]\n";
+    {
+        as.rewindData();
+        auto buff = (long*)as.dataBegin();
+        for(int i=0; i<8; i++)
+            buff[i] = long(i);
+
+        as.rewindCode();
+
+        as.MOV(rcx, ImmAddr(buff));
+        as.SAR(rcx, Imm8(1));
+        as.MOV(rax, Index(rcx)*2 + Disp(8));
+        as.SAR(rcx, Imm8(1));
+        as.MOV(Index(rcx)*4 + Disp(16), rax);
+
+        as.RET();
+        jitfun();
+
+        R64FX_EXPECT_EQ(buff[1], buff[2]);
     }
 
     cout << "\n";
@@ -1124,6 +1145,18 @@ int main()
 
     Assembler as;
     as.resize(1, 1);
+
+//     as.rewindCode();
+// 
+//     as.MOV(rcx, Imm32(16));
+//     as.SAR(rcx, Imm8(1));
+//     as.MOV(rax, rcx);
+// 
+//     as.RET();
+//     auto jitfun = (JitFun) as.codeBegin();
+//     cout << jitfun() << "\n";
+// 
+//     return 0;
 
     bool ok =
         test_buffers(as) &&

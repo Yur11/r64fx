@@ -22,39 +22,55 @@ inline Imm32 Rip32(long addr, unsigned char* next_ip)
     return Imm32(int(offset));
 }
 
-}//namespace
+struct SibEncoding{
+    unsigned char rex              = 0;
+    unsigned char modrm            = 0;
+    unsigned char sib              = 0;
+    unsigned char disp_byte_count  = 0;
 
-
-unsigned char SIBD::modrmByte(const Register &reg) const
-{
-    unsigned char mod = dispBytes();
-    if(mod == 4) mod = 2;
-    return ModRM(mod, reg.lowerBits(), 4);
-}
-
-
-unsigned char SIBD::sibByte() const
-{
-    unsigned char byte = scale() << 6;
-    if(hasIndex())
-        byte |= index().lowerBits() << 3;
-    else
-        byte |= 4 << 3;
-    byte |= base().lowerBits();
-    return byte;
-}
-
-
-int SIBD::dispBytes() const
-{
-    if(disp() != 0 || base().lowerBits() == 6)
+    SibEncoding(Register reg, SIBD sibd)
     {
-        if(disp() >= -128 && disp() <= 127)
-            return 1;
-        return 4;
+        rex = Rex(
+            reg.rexW() || sibd.base().rexW() || sibd.index().rexW(),
+            reg.prefixBit(),
+            sibd.index().prefixBit(),
+            sibd.base().prefixBit()
+        );
+
+        if(sibd.hasDisplacement())
+        {
+            disp_byte_count = (sibd.displacement() & ~0xFF ? 4 : 1);
+        }
+
+        modrm = (reg.lowerBits() << 3) | 4;
+        if(sibd.hasBase())
+        {
+            if(disp_byte_count == 0 && sibd.base().lowerBits() == 5)
+            {
+                disp_byte_count = 1;
+            }
+
+            if(disp_byte_count == 1)
+            {
+                modrm |= (1 << 6);
+            }
+            else if(disp_byte_count == 4)
+            {
+                modrm |= (2 << 6);
+            }
+
+            sib = ((sibd.hasIndex() ? sibd.index().lowerBits() : 4) << 3) | sibd.base().lowerBits();
+        }
+        else
+        {
+            disp_byte_count = 4;
+            sib = ((sibd.hasIndex() ? sibd.index().lowerBits() : 4) << 3) | 5;
+        }
+        sib |= (sibd.scaleBits() << 6);
     }
-    return 0;
-}
+};
+
+}//namespace
 
 
 void AssemblerBuffers::resize(unsigned long data_page_count, unsigned long code_page_count)
@@ -244,14 +260,16 @@ void AssemblerBuffers::write(unsigned char opcode, GPR reg, Mem32 mem)
 
 void AssemblerBuffers::write(unsigned char opcode, GPR64 reg, SIBD sibd)
 {
-    int nbytes = 4 + sibd.dispBytes();
+    SibEncoding e(reg, sibd);
+
+    int nbytes = 4 + e.disp_byte_count;
     auto p = growCode(nbytes);
-    p[0] = Rex(1, reg.prefixBit(), sibd.index().prefixBit(), sibd.base().prefixBit());
+    p[0] = e.rex;
     p[1] = opcode;
-    p[2] = sibd.modrmByte(reg);
-    p[3] = sibd.sibByte();
-    Imm32 disp(sibd.disp());
-    for(int i=0; i<sibd.dispBytes(); i++) { p[i + 4] = disp.b[i]; }
+    p[2] = e.modrm;
+    p[3] = e.sib;
+    Imm32 disp(sibd.displacement());
+    for(int i=0; i<e.disp_byte_count; i++) { p[i + 4] = disp.b[i]; }
 }
 
 
@@ -330,14 +348,12 @@ void AssemblerBuffers::write0x0F(unsigned char prefix, unsigned opcode, Xmm reg,
     if(prefix)
         nbytes++;
 
-    unsigned char rex = 0;
-    if(reg.rex() || sibd.rex())
-    {
-        rex = Rex(reg.rexW() || sibd.rexW(), reg.prefixBit(), sibd.rexX(), sibd.rexB());
-        nbytes++;
-    }
+    SibEncoding e(reg, sibd);
 
-    nbytes += sibd.dispBytes();
+    unsigned char rex = 0;
+    if((e.rex & 0xF) != 0)
+        { rex = e.rex; nbytes++; }
+    nbytes += e.disp_byte_count;
 
     if(imm >= 0)
         nbytes++;
@@ -354,10 +370,10 @@ void AssemblerBuffers::write0x0F(unsigned char prefix, unsigned opcode, Xmm reg,
         p[r++] = rex;
     p[r++] = 0x0F;
     p[r++] = opcode;
-    p[r++] = sibd.modrmByte(reg);
-    p[r++] = sibd.sibByte();
-    Imm32 disp(sibd.disp());
-    for(int i=0; i<sibd.dispBytes(); i++) { p[r++] = disp.b[i]; }
+    p[r++] = e.modrm;
+    p[r++] = e.sib;
+    Imm32 disp(sibd.displacement());
+    for(int i=0; i<e.disp_byte_count; i++) { p[r++] = disp.b[i]; }
     if(imm >= 0) { p[r++] = (unsigned char)imm; }
 }
 
