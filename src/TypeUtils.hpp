@@ -6,6 +6,7 @@
         inline type value() const{ return m_value; }\
         inline bool operator==(const name &other) { return value() == other.value(); }\
         inline bool operator!=(const name &other) { return value() != other.value(); }\
+        inline explicit operator type() { return value(); }\
     }
 
 #endif//R64FX_TYPE_UTILS_HPP

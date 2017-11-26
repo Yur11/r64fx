@@ -5,93 +5,48 @@ namespace r64fx{
 
 void SignalNode_BufferReader::build()
 {
-//     std::cout << this << " Reader::build\n";
-// 
-//     if(m_out.connectedSinkCount() == 0)
-//         return;
-// 
-//     auto regs = c.allocRegisters<GPR64>(2);
-// 
-//     c.MOV(regs[0], ImmAddr(buffer() + c.frameCount()));
-//     if(nregs == 2)
-//     {
-//         c.MOV(regs[1], Base(regs[0]) + Index(c.mainLoopCounter(), 4));
-//         c.setStorage(m_out, regs + 1, 1);
-//     }
-//     else
-//     {
-//         c.MOV(regs[0], Base(regs[0]) + Index(c.mainLoopCounter(), 4));
-//         auto ptr = c.allocMemory(sizeof(float), sizeof(float));
-//         R64FX_DEBUG_ASSERT(ptr);
-//         c.MOV(Mem32(c.ptrMem<unsigned char*>(ptr)), GPR32(regs[0].gpr32()));
-//         c.setStorage(m_out, ptr);
-//     }
-// 
-//     if(nregs == 0)
-//     {
-//         c.POP(rax);
-//     }
-//     else
-//     {
-//         c.freeGPR(regs, 1);
-//     }
-// 
-//     m_out.setSize(1);
+    auto regs = allocRegisters<GPR64>(1);
+    R64FX_DEBUG_ASSERT(regs);
+    MOV(regs[0], ImmAddr(buffer() + frameCount()));
+    MOV(regs[0], Base(regs[0]) + Index(rcx));
+    initStorage<float, GPR64>(m_out, regs[0]);
 }
 
 
 void SignalNode_BufferWriter::build()
 {
-//     if(m_in.connectedSource())
-//         c.ensureBuilt(m_in.connectedSource());
-//     else
-//         return;
-// 
-//     std::cout << this << " Writer::build\n";
+//     RegisterPack<GPR64> source_regs;
 // 
 //     auto source = m_in.connectedSource();
-//     R64FX_DEBUG_ASSERT(source->isSingle());
-//     R64FX_DEBUG_ASSERT(source->size() == 1);
-// 
-//     GPR64 source_reg;
-//     bool restore_source_reg = false;
-//     if(source->isGPR())
+//     if(source)
 //     {
-//         unsigned int nregs = 0;
-//         c.getStorage(*source, &source_reg, &nregs);
-//         R64FX_DEBUG_ASSERT(nregs == 1);
+//         ensureBuilt(source);
+// 
+//         if(source->isInRegisters())
+//         {
+//             source_regs = getStorageRegisters<GPR64>(*source);
+//             removeStorageRegisters<GPR64>(*source);
+//         }
+//         else
+//         {
+//             source_regs = allocRegisters<GPR64>(1);
+//             R64FX_DEBUG_ASSERT(source_regs);
+//             MOV(source_regs[0], Mem64(addr(*source)));
+//         }
 //     }
 //     else
 //     {
-//         R64FX_DEBUG_ASSERT(source->isMemory());
-//         restore_source_reg = (c.allocGPR(&source_reg, 1) == 0);
-//         if(restore_source_reg)
-//             c.PUSH(source_reg);
-//         c.MOV(source_reg.gpr32(), Mem32(c.ptrMem<unsigned char*>(c.getPtr(*source))));
+//         source_regs = allocRegisters<GPR64>(1);
+//         R64FX_DEBUG_ASSERT(source_regs);
+//         XOR(source_regs[0], source_regs[0]);
 //     }
 // 
-//     GPR64 base_reg;
-//     bool restore_base_reg = (c.allocGPR(&base_reg, 1) == 0);
-//     if(restore_base_reg)
-//     {
-//         base_reg = rax;
-//         if(base_reg == source_reg)
-//             base_reg = rdx;
-//         c.PUSH(base_reg);
-//     }
+//     auto base_regs = allocRegisters<GPR64>(1);
+//     R64FX_DEBUG_ASSERT(base_regs);
+//     MOV(base_regs[0], ImmAddr(buffer() + frameCount()));
+//     MOV(Base(base_regs[0]) + Index(rcx), source_regs[0]);
 // 
-//     c.MOV(base_reg, ImmAddr(buffer() + c.frameCount()));
-//     c.MOV(Base(base_reg) + Index(c.mainLoopCounter(), 4), source_reg);
-// 
-//     if(restore_base_reg)
-//         c.POP(base_reg);
-//     else
-//         c.freeGPR(&base_reg, 1);
-// 
-//     if(restore_source_reg)
-//         c.POP(source_reg);
-
-//     sourceUsed(source);
+//     freeRegisters(base_regs);
 }
 
 }//namespace r64fx

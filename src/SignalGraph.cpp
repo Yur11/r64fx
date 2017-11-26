@@ -42,12 +42,6 @@ void SignalGraphImpl::buildNode(SignalNode &node)
 }
 
 
-SignalGraph::SignalGraph()
-{
-
-}
-
-
 void SignalGraph::link(const NodeSource &node_source, const NodeSink &node_sink)
 {
     auto source_node  = node_source.node();
@@ -117,7 +111,7 @@ void SignalGraph::build(SignalNode* terminal_nodes, unsigned int node_count)
     PUSH(rbx);
     PUSH(rbp);
 
-    MOV(rcx, Imm32(m.frame_count));
+    MOV(rcx, Imm32(-m.frame_count));
     JumpLabel loop;
     mark(loop);
 
@@ -185,35 +179,21 @@ RegisterPack<Register> SignalNode::allocRegisters(
         if(reg_table[i] != R64FX_REGISTER_MUST_NEVER_BE_USED && reg_table[i] != R64FX_REGISTER_USED_NO_STORAGE)
         {
             auto storage = (SignalDataStorage*)reg_table[i];
-            if(!storage->isInMemory())
+            if(storage->isLocked())
+                continue;
+
+            DataBufferPointer ptr;
+            if(storage->hasMemory())
             {
-                auto mem = m.allocMemoryBytes(storage->registerCount() * storage->registerSize(), storage->registerSize());
-                setStorageMemory(*storage, mem);
+                ptr = getStorageMemory(*storage);
             }
-            unsigned long reg_bits = storage->registerBits();
-            unsigned int j = 0;
-            for(;;)
+            else
             {
-                unsigned long bit = 1UL << j;
-                if(reg_bits & bit)
-                {
-                    reg_bits &= ~bit;
-                    break;
-                }
-                j++;
+                ptr = m.allocMemoryBytes(storage->totalSize(), storage->registerSize());
+                setStorageMemory(*storage, ptr);
             }
-            unsigned int storage_reg_count = 0;
-            {
-                unsigned long bits = reg_bits;
-                while(bits)
-                {
-                    unsigned long bit = 1UL << j;
-                    if(reg_bits & bit)
-                        storage_reg_count++;
-                    j++;
-                }
-            }
-            storage->setRegisterBits(reg_bits);
+            R64FX_DEBUG_ASSERT(ptr);
+
             reg_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
             regpack.setRegAt(n++, Register(i));
         }
@@ -225,32 +205,23 @@ RegisterPack<Register> SignalNode::allocRegisters(
 
 void SignalNode::setStorageRegisters(SignalDataStorage &storage, RegisterPack<Register> regpack, unsigned long* reg_table)
 {
-    R64FX_DEBUG_ASSERT(storage.registerBits() == 0);
-    unsigned int bits = 0;
     for(unsigned int i=0; i<regpack.size(); i++)
     {
-        auto reg = regpack.regAt(i);
-        bits |= (1 << reg.code());
-        reg_table[i] = (unsigned long)&storage;
+        R64FX_DEBUG_ASSERT(reg_table[regpack[i].code()] == R64FX_REGISTER_USED_NO_STORAGE);
+        reg_table[regpack[i].code()] = (unsigned long)&storage;
     }
-    R64FX_DEBUG_ASSERT(bits < 0xFF);
-    storage.setRegisterBits(bits);
 }
 
 
-RegisterPack<Register> SignalNode::getStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table) const
+RegisterPack<Register> SignalNode::getStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table, unsigned int reg_table_size) const
 {
     RegisterPack<Register> regpack;
-    unsigned int bits = storage.registerBits();
     unsigned int n = 0;
-    for(unsigned int i=0; bits; i++)
+    for(unsigned int i=0; i<reg_table_size && n<storage.size(); i++)
     {
-        unsigned int bit = (1 << i);
-        if(bits & bit)
+        if(reg_table[i] == (unsigned long)&storage)
         {
             regpack.setRegAt(n++, Register(i));
-            R64FX_DEBUG_ASSERT(reg_table[i] == (unsigned long)&storage);
-            bits &= ~bit;
         }
     }
     regpack.setSize(n);
@@ -258,23 +229,19 @@ RegisterPack<Register> SignalNode::getStorageRegisters(SignalDataStorage &storag
 }
 
 
-RegisterPack<Register> SignalNode::removeStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table)
+RegisterPack<Register> SignalNode::removeStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table, unsigned int reg_table_size)
 {
     RegisterPack<Register> regpack;
-    unsigned int bits = storage.registerBits();
     unsigned int n = 0;
-    for(unsigned int i=0; bits; i++)
+    for(unsigned int i=0; i<reg_table_size && n<storage.size(); i++)
     {
-        unsigned int bit = (1 << i);
-        if(bits & bit)
+        if(reg_table[i] == (unsigned long)&storage)
         {
             regpack.setRegAt(n++, Register(i));
-            R64FX_DEBUG_ASSERT(reg_table[i] == (unsigned long)&storage);
             reg_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
-            bits &= ~bit;
         }
     }
-    storage.setRegisterBits(0);
+    regpack.setSize(n);
     return regpack;
 }
 
@@ -291,9 +258,58 @@ void SignalNode::freeRegisters(RegisterPack<Register> regpack, unsigned long* re
 }
 
 
+void SignalNode::initStorage_(
+    SignalDataStorage &storage, DataBufferPointer memptr, unsigned int size, RegisterPack<Register> regpack, unsigned long* reg_table)
+{
+    storage.setSize(size);
+
+    if(memptr)
+    {
+        storage.setMemoryOffset(memptr.offset());
+    }
+
+    if(regpack)
+    {
+        for(unsigned int i=0; i<regpack.size(); i++)
+        {
+            R64FX_DEBUG_ASSERT(reg_table[regpack[i].code()] == R64FX_REGISTER_USED_NO_STORAGE);
+            reg_table[regpack[i].code()] = (unsigned long)&storage;
+        }
+    }
+}
+
+
 void SignalNode::freeStorage(SignalDataStorage &storage)
 {
+    if(storage.hasRegisters())
+    {
+        R64FX_DEBUG_ASSERT(storage.registerType() != SignalRegisterType::Bad);
+        switch(storage.registerType())
+        {
+            case SignalRegisterType::GPR:
+            {
+                break;
+            }
 
+            case SignalRegisterType::Xmm:
+            {
+                break;
+            }
+
+            case SignalRegisterType::Ymm:
+            {
+                break;
+            }
+
+            default:
+                break;
+        }
+    }
+
+    if(storage.hasMemory())
+    {
+        freeStorageMemory(storage);
+    }
 }
 
 }//namespace r64fx

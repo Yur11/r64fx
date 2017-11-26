@@ -15,7 +15,7 @@ public:
 
     inline float* buffer() const { return m_buffer; }
 
-    inline float& buffer(int i) { return m_buffer[i]; }
+    inline float &buffer(unsigned int i) { return m_buffer[i]; }
 };
 
 
