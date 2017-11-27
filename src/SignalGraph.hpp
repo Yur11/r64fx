@@ -55,16 +55,6 @@ public:
 template<typename RegisterT> class RegisterPack{
     unsigned long m_bits = 0;
 
-    inline void setSize(unsigned int size)
-        { R64FX_DEBUG_ASSERT(size < 16); m_bits &= ~(0xFUL << 60); m_bits |= (((unsigned long)size) << 60); }
-
-    inline void setRegAt(unsigned int i, RegisterT reg)
-    {
-        R64FX_DEBUG_ASSERT(i < 16);
-        m_bits &= ~(0xFUL << (i<<2));
-        m_bits |= (((unsigned long)reg.code()) << (i<<2));
-    }
-
 public:
     RegisterPack() {}
 
@@ -79,15 +69,28 @@ public:
         setSize(regs.size());
     }
 
-    template<typename OtherT>
+    template<typename OtherT> explicit
     RegisterPack(RegisterPack<OtherT> other) : m_bits(other.bits()) {}
 
     inline unsigned long bits() const { return m_bits; }
 
     inline operator bool() const { return m_bits; }
 
+private:
+    inline void setSize(unsigned int size)
+        { R64FX_DEBUG_ASSERT(size < 16); m_bits &= ~(0xFUL << 60); m_bits |= (((unsigned long)size) << 60); }
+public:
     inline unsigned int size() const { return (m_bits>>60) & 0xFUL; }
 
+private:
+    inline void setRegAt(unsigned int i, RegisterT reg)
+    {
+        R64FX_DEBUG_ASSERT(i < 16);
+        m_bits &= ~(0xFUL << (i<<2));
+        m_bits |= (((unsigned long)reg.code()) << (i<<2));
+    }
+
+public:
     inline RegisterT regAt(unsigned int i) const
     {
         R64FX_DEBUG_ASSERT(i < size());
@@ -101,14 +104,11 @@ public:
 
 
 /* A class used for sharing intermediate data between SignalNode instances.
- * It represents vectors of data that are stored in registers and(or) memory. */
+ * It represents vectors of data that are stored in registers and/or memory. */
 class SignalDataStorage{
     unsigned long m = 0;
 
-public:
-    inline bool empty() const { return m == 0; }
-
-
+    /* SignalDataStorage always uses a particular reigister type. */
 private:
     inline void setRegisterType(SignalRegisterType regtype) { m &= ~(3UL<<62); m |= (((unsigned long)(regtype))<<62); }
 public:
@@ -116,6 +116,14 @@ public:
 
     /* Size of current register type in bytes. */
     inline unsigned int registerSize() const { static char s[4] = {0, 8, 16, 32}; return s[(unsigned long)registerType()]; }
+
+    /* Storage size expressed as a number of registers. */
+private:
+    inline void setSize(unsigned int size) { R64FX_DEBUG_ASSERT(size < ((1UL<<32)-1)); m &= ~((1UL<<32)-1); m |= size;}
+public:
+    inline unsigned int size() const { return m & ((1UL<<32)-1); }
+
+    inline bool empty() const { return size() == 0; }
 
 
     /* True if at least some of the data is stored in registers. */
@@ -134,21 +142,16 @@ public:
     inline bool isLocked() { return m & LockedBit; }
 
 
-    /* Storage size expressed as a number of registers. */
-    inline unsigned int size() const { return m & ((1UL<<32)-1);  }
-    inline void setSize(unsigned int size) { R64FX_DEBUG_ASSERT(size < ((1UL<<32)-1)); m &= ~((1UL<<32)-1); m |= size;}
-
-
 private:
-    inline void setMemoryOffset(unsigned int offset)
-        { R64FX_DEBUG_ASSERT(offset < 0xFFFFFF); m &= ~(0xFFFFFFUL<<32); m |= ((unsigned long)offset)<<32; }
+    inline void setMemory(DataBufferPointer ptr)
+        { R64FX_DEBUG_ASSERT(ptr.offset() < 0xFFFFFF); m &= ~(0xFFFFFFUL<<32); m |= ((unsigned long)(ptr.offset()))<<32; }
 public:
-    inline unsigned int memoryOffset() const { return (m>>32) & 0xFFFFFF; }
+    inline DataBufferPointer memory() const { return DataBufferPointer((m>>32) & 0xFFFFFF); }
 
-    inline bool hasMemory() const { return memoryOffset(); }
+    inline bool hasMemory() const { return memory(); }
 
 
-    /* Total size of storage in bytes. */
+    /* Total size in bytes. */
     inline unsigned int totalSize() const { return size() * registerSize(); }
 
     friend class SignalNode;
@@ -281,7 +284,7 @@ public:
 };
 
 
-/* Base class for elements of a signal graph. */
+/* Base class for SignalGraph nodes. */
 class SignalNode : protected AssemblerInstructions<SignalGraphImplRef>{
     unsigned long m_iteration_count = 0;
     unsigned long m_connection_count = 0;
@@ -331,23 +334,16 @@ protected:
 
     template<typename T = float> inline T* addr(SignalDataStorage storage)
     {
-        return addr<T>(storage.memoryOffset());
+        return addr<T>(storage.memory());
     }
 
-
-    /* Assing memory to storage. */
-    inline void setStorageMemory(SignalDataStorage &storage, DataBufferPointer ptr)
-    {
-        R64FX_DEBUG_ASSERT(m.heapBuffer().chunkSize(addr(storage.memoryOffset())) == storage.totalSize());
-        storage.setMemoryOffset(ptr.offset());
-    }
 
     /* Get memory assigned to storage. */
-    inline DataBufferPointer getStorageMemory(SignalDataStorage &storage) const { return storage.memoryOffset(); }
+    inline DataBufferPointer getStorageMemory(SignalDataStorage &storage) const { return storage.memory(); }
 
     /* Detach memory from storage but do not free it. */
     inline DataBufferPointer removeStorageMemory(SignalDataStorage &storage)
-        { auto val = storage.memoryOffset(); storage.setMemoryOffset(0); return val; }
+        { auto val = storage.memory(); storage.setMemory(0); return val; }
 
     /* Detach memory from storage and free it. */
     inline void freeStorageMemory(SignalDataStorage &storage) { freeMemory(removeStorageMemory(storage)); }
@@ -361,7 +357,7 @@ private:
         unsigned int count, unsigned long* reg_table, unsigned int reg_table_size, unsigned int reg_size);
 protected:
     template<typename RegisterT> inline RegisterPack<RegisterT> allocRegisters(unsigned int count)
-        { return allocRegisters(count, m.registerTable(RegisterT()), m.registerTableSize(RegisterT()), RegisterT::Size()); }
+        { return RegisterPack<RegisterT>(allocRegisters(count, m.registerTable(RegisterT()), m.registerTableSize(RegisterT()), RegisterT::Size())); }
 
 
     /* Assign registers to storage. */
@@ -419,7 +415,7 @@ public:
     {
         R64FX_DEBUG_ASSERT(storage.empty());
         storage.setRegisterType(register_type<RegisterT>());
-        initStorage_(storage, memptr, memsize, regpack, m.registerTable(RegisterT()));
+        initStorage_(storage, memptr, memsize, RegisterPack<Register>(regpack), m.registerTable(RegisterT()));
     }
 
     template<typename DataT, typename RegisterT> inline

@@ -190,7 +190,7 @@ RegisterPack<Register> SignalNode::allocRegisters(
             else
             {
                 ptr = m.allocMemoryBytes(storage->totalSize(), storage->registerSize());
-                setStorageMemory(*storage, ptr);
+                storage->setMemory(ptr);
             }
             R64FX_DEBUG_ASSERT(ptr);
 
@@ -265,7 +265,8 @@ void SignalNode::initStorage_(
 
     if(memptr)
     {
-        storage.setMemoryOffset(memptr.offset());
+        R64FX_DEBUG_ASSERT(m.heapBuffer().chunkSize(addr(storage.memory().offset())) == storage.totalSize());
+        storage.setMemory(memptr);
     }
 
     if(regpack)
