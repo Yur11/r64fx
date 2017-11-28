@@ -2,9 +2,9 @@
 #include "SignalNodeFlags.hpp"
 #include <cstring>
 
-#define R64FX_REGISTER_NOT_USED               (((unsigned long) this)    )
-#define R64FX_REGISTER_USED_NO_STORAGE        (((unsigned long) this) + 1)
-#define R64FX_REGISTER_MUST_NEVER_BE_USED     (((unsigned long) this) + 2)
+#define R64FX_REGISTER_NOT_USED               0
+#define R64FX_REGISTER_USED_NO_STORAGE        1
+#define R64FX_REGISTER_MUST_NEVER_BE_USED     2
 
 
 namespace r64fx{
@@ -170,46 +170,36 @@ RegisterPack<Register> SignalNode::allocRegisters(
         }
     }
 
-    if(n == count)
-        return regpack;
-    R64FX_DEBUG_ASSERT(n < count);
-
-    for(unsigned int i=0; i<reg_table_size && n<count; i++)
+    if(n < count)
     {
-        if(reg_table[i] != R64FX_REGISTER_MUST_NEVER_BE_USED && reg_table[i] != R64FX_REGISTER_USED_NO_STORAGE)
+        for(unsigned int i=0; i<reg_table_size && n<count; i++)
         {
-            auto storage = (SignalDataStorage*)reg_table[i];
-            if(storage->isLocked())
-                continue;
-
-            DataBufferPointer ptr;
-            if(storage->hasMemory())
+            if(reg_table[i] != R64FX_REGISTER_MUST_NEVER_BE_USED && reg_table[i] != R64FX_REGISTER_USED_NO_STORAGE)
             {
-                ptr = getStorageMemory(*storage);
-            }
-            else
-            {
-                ptr = m.allocMemoryBytes(storage->totalSize(), storage->registerSize());
-                storage->setMemory(ptr);
-            }
-            R64FX_DEBUG_ASSERT(ptr);
+                auto storage = (SignalDataStorage*)reg_table[i];
+                if(storage->isLocked())
+                    continue;
 
-            reg_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
-            regpack.setRegAt(n++, Register(i));
+                DataBufferPointer ptr;
+                if(storage->hasMemory())
+                {
+                    ptr = getStorageMemory(*storage);
+                }
+                else
+                {
+                    ptr = m.allocMemoryBytes(storage->totalSize(), storage->registerSize());
+                    storage->setMemory(ptr);
+                }
+                R64FX_DEBUG_ASSERT(ptr);
+
+                reg_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
+                regpack.setRegAt(n++, Register(i));
+            }
         }
     }
 
+    regpack.setSize(n);
     return regpack;
-}
-
-
-void SignalNode::setStorageRegisters(SignalDataStorage &storage, RegisterPack<Register> regpack, unsigned long* reg_table)
-{
-    for(unsigned int i=0; i<regpack.size(); i++)
-    {
-        R64FX_DEBUG_ASSERT(reg_table[regpack[i].code()] == R64FX_REGISTER_USED_NO_STORAGE);
-        reg_table[regpack[i].code()] = (unsigned long)&storage;
-    }
 }
 
 
@@ -222,23 +212,6 @@ RegisterPack<Register> SignalNode::getStorageRegisters(SignalDataStorage &storag
         if(reg_table[i] == (unsigned long)&storage)
         {
             regpack.setRegAt(n++, Register(i));
-        }
-    }
-    regpack.setSize(n);
-    return regpack;
-}
-
-
-RegisterPack<Register> SignalNode::removeStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table, unsigned int reg_table_size)
-{
-    RegisterPack<Register> regpack;
-    unsigned int n = 0;
-    for(unsigned int i=0; i<reg_table_size && n<storage.size(); i++)
-    {
-        if(reg_table[i] == (unsigned long)&storage)
-        {
-            regpack.setRegAt(n++, Register(i));
-            reg_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
         }
     }
     regpack.setSize(n);
@@ -276,6 +249,7 @@ void SignalNode::initStorage_(
             R64FX_DEBUG_ASSERT(reg_table[regpack[i].code()] == R64FX_REGISTER_USED_NO_STORAGE);
             reg_table[regpack[i].code()] = (unsigned long)&storage;
         }
+        storage.m |= SignalDataStorage::HasRegistersBit;
     }
 }
 

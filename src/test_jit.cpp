@@ -1077,6 +1077,7 @@ bool test_sibd(Assembler &as)
     cout << "[index + disp8]\n";
     {
         as.rewindData();
+        as.growData(sizeof(long) * 8);
         auto buff = (long*)as.dataBegin();
         for(int i=0; i<8; i++)
             buff[i] = long(i);
@@ -1093,6 +1094,55 @@ bool test_sibd(Assembler &as)
         jitfun();
 
         R64FX_EXPECT_EQ(buff[1], buff[2]);
+    }
+
+    {
+        as.rewindData();
+        as.growData(sizeof(int) * 8);
+        auto buff = (int*)as.dataBegin();
+        for(int i=0; i<8; i++)
+            buff[i] = rand() & 0xFFFFFFFF;
+
+        cout << "MOV(GPR32, Base)\n";
+        as.rewindCode();
+        as.MOV(rax, ImmAddr(buff + 3));
+        as.MOV(eax, Base(rax));
+        as.RET();
+        R64FX_EXPECT_EQ(buff[3], jitfun());
+
+        cout << "MOV(GPR32, Base) + rex 1\n";
+        as.rewindCode();
+        as.MOV(r9, ImmAddr(buff + 3));
+        as.MOV(eax, Base(r9));
+        as.RET();
+        R64FX_EXPECT_EQ(buff[3], jitfun());
+
+        cout << "MOV(GPR32, Base) + rex 2\n";
+        as.rewindCode();
+        as.MOV(r9, ImmAddr(buff + 3));
+        as.MOV(r9d, Base(r9));
+        as.MOV(rax, r9);
+        as.RET();
+        R64FX_EXPECT_EQ(buff[3], jitfun());
+
+        cout << "MOV(Base, GPR32)\n";
+        as.rewindCode();
+        as.MOV(rax, Imm32(1234567));
+        as.MOV(rdx, ImmAddr(buff + 3));
+        as.MOV(Base(rdx), rax);
+        as.RET();
+        jitfun();
+        R64FX_EXPECT_EQ(1234567, buff[3]);
+
+        cout << "MOV(Base, GPR32) + rex\n";
+        as.rewindCode();
+        as.MOV(rax, Imm32(555666));
+        as.MOV(r8, Imm32(121213));
+        as.MOV(rdx, ImmAddr(buff + 3));
+        as.MOV(Base(rdx), r8);
+        as.RET();
+        jitfun();
+        R64FX_EXPECT_EQ(121213, buff[3]);
     }
 
     cout << "\n";
@@ -1145,18 +1195,6 @@ int main()
 
     Assembler as;
     as.resize(1, 1);
-
-//     as.rewindCode();
-// 
-//     as.MOV(rcx, Imm32(16));
-//     as.SAR(rcx, Imm8(1));
-//     as.MOV(rax, rcx);
-// 
-//     as.RET();
-//     auto jitfun = (JitFun) as.codeBegin();
-//     cout << jitfun() << "\n";
-// 
-//     return 0;
 
     bool ok =
         test_buffers(as) &&

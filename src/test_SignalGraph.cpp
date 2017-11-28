@@ -30,22 +30,6 @@ int main()
     SignalGraph sg;
     sg.setFrameCount(frame_count);
 
-//     SignalNode_OscClock clk;
-//     clk.setDelta(0xFFFFFFF);
-// 
-//     SignalNode_BufferWriter bw;
-//     bw.setBuffer(buff_a);
-// 
-//     sgc.link(clk.out(), bw.in());
-// 
-//     sgc.build(&bw, 1);
-//     sgc.run();
-// 
-//     for(int i=0; i<frame_count; i++)
-//         cout << buff_a[i] << "\n";
-// 
-//     return 0;
-
     SignalNode_BufferReader snbr(sg);
     SignalNode_BufferWriter snbw(sg);
     snbr.setBuffer(buff_a);

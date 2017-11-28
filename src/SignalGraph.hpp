@@ -97,7 +97,9 @@ public:
         return RegisterT((m_bits >> (i<<2)) & 0xFUL);
     }
 
-    inline RegisterT operator[](unsigned int i) { return regAt(i); }
+    inline RegisterT operator[](unsigned int i) const { return regAt(i); }
+
+    inline operator RegisterT() const { return regAt(0); }
 
     friend class SignalNode;
 };
@@ -112,7 +114,7 @@ class SignalDataStorage{
 private:
     inline void setRegisterType(SignalRegisterType regtype) { m &= ~(3UL<<62); m |= (((unsigned long)(regtype))<<62); }
 public:
-    inline SignalRegisterType registerType() const { return (SignalRegisterType)((m>>60) & 3); }
+    inline SignalRegisterType registerType() const { return (SignalRegisterType)((m>>62) & 3); }
 
     /* Size of current register type in bytes. */
     inline unsigned int registerSize() const { static char s[4] = {0, 8, 16, 32}; return s[(unsigned long)registerType()]; }
@@ -360,36 +362,14 @@ protected:
         { return RegisterPack<RegisterT>(allocRegisters(count, m.registerTable(RegisterT()), m.registerTableSize(RegisterT()), RegisterT::Size())); }
 
 
-    /* Assign registers to storage. */
-private:
-    void setStorageRegisters(SignalDataStorage &storage, RegisterPack<Register> regpack, unsigned long* reg_table);
-protected:
-    template<typename T> inline void setStorageRegisters(SignalDataStorage &storage, RegisterPack<T> regpack)
-    {
-        R64FX_DEBUG_ASSERT(register_type<T>() != SignalRegisterType::Bad);
-        setStorageRegisters(storage, regpack.bits, m.registerTable(T()));
-        storage.setRegisterType(register_type<T>());
-    }
-
-
     /* Retrieve registers from storage. */
 private:
     RegisterPack<Register> getStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table, unsigned int reg_table_size) const;
 protected:
-    template<typename T> inline RegisterPack<T> getStorageRegisters(SignalDataStorage &storage) const
+    template<typename RegisterT> inline RegisterPack<RegisterT> getStorageRegisters(SignalDataStorage &storage) const
     {
-        R64FX_DEBUG_ASSERT(storage.registerType() == register_type<T>());
-        return getStorageRegisters(storage, m.registerTable(T()), m.registerTableSize(T())).bits;
-    }
-
-    /* Remove registers from storage. */
-private:
-    RegisterPack<Register> removeStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table, unsigned int reg_table_size);
-protected:
-    template<typename T> inline RegisterPack<T> removeStorageRegisters(SignalDataStorage &storage)
-    {
-        R64FX_DEBUG_ASSERT(storage.registerType() == register_type<T>());
-        return removeStorageRegisters(storage, m.registerTable(T()), m.registerTableSize(T())).bits;
+        R64FX_DEBUG_ASSERT(storage.registerType() == register_type<RegisterT>());
+        return RegisterPack<RegisterT>(getStorageRegisters(storage, m.registerTable(RegisterT()), m.registerTableSize(RegisterT())));
     }
 
 
@@ -399,11 +379,6 @@ private:
 protected:
     template<typename T> void freeRegisters(RegisterPack<T> regpack)
         { freeRegisters(regpack.bits, m.registerTable(T()), m.registerTableSize(T())); }
-
-
-    /* Remove registers from storage and free them. */
-    template<typename T> inline void freeStorageRegisters(SignalDataStorage &storage)
-        { freeRegisters<T>(removeStorageRegisters<T>(storage)); }
 
 
 private:

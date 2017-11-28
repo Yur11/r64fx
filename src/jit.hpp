@@ -43,7 +43,7 @@ class GPR64 : public GPR{
 public:
     explicit constexpr GPR64(unsigned char code = 0) : GPR(code | 0x80) {}
 
-    constexpr GPR32 gpr32() { return GPR32(code()); }
+    constexpr GPR32 low32() { return GPR32(code()); }
 
     constexpr static unsigned int Size() { return 8; }
 };
@@ -377,9 +377,9 @@ public:
     void write(unsigned char opcode, unsigned char r, GPR reg, Imm32 imm);
     void write(unsigned char opcode, GPR64 reg, Imm64 imm);
 
-    void write(unsigned char opcode, GPR64 dst, GPR64 src);
-    void write(unsigned char opcode, GPR   reg, Mem32 mem);
-    void write(unsigned char opcode, GPR64 reg, SIBD sibd);
+    void write(unsigned char opcode, GPR dst, GPR64 src);
+    void write(unsigned char opcode, GPR reg, Mem32 mem);
+    void write(unsigned char opcode, GPR reg, SIBD sibd);
 
     void write0x0F(unsigned char prefix, unsigned opcode, Register dst, Register src, int imm = -1);
     void write0x0F(unsigned char prefix, unsigned opcode, Xmm reg, Mem8 mem, int imm = -1);
@@ -413,9 +413,9 @@ public:
     inline void MOV(Mem32 mem, GPR32 reg){ this->m.write(0x89, reg, mem); }
     inline void MOV(Mem64 mem, GPR64 reg){ this->m.write(0x89, reg, mem); }
 
-//     inline void mov(GPR32 reg, SIBD sibd){ m.write(0x8B, reg, sibd); }
+    inline void MOV(GPR32 reg, SIBD sibd){ this->m.write(0x8B, reg, sibd); }
     inline void MOV(GPR64 reg, SIBD sibd){ this->m.write(0x8B, reg, sibd); }
-//     inline void mov(SIBD sibd, GPR32 reg){ m.write(0x89, reg, sibd); }
+    inline void MOV(SIBD sibd, GPR32 reg){ this->m.write(0x89, reg, sibd); }
     inline void MOV(SIBD sibd, GPR64 reg){ this->m.write(0x89, reg, sibd); }
 
 #define R64FX_GPR_INST(name, rrm, r)\

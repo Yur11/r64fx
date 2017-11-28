@@ -31,7 +31,7 @@ struct SibEncoding{
     SibEncoding(Register reg, SIBD sibd)
     {
         rex = Rex(
-            reg.rexW() || sibd.base().rexW() || sibd.index().rexW(),
+            reg.rexW(),
             reg.prefixBit(),
             sibd.index().prefixBit(),
             sibd.base().prefixBit()
@@ -233,10 +233,10 @@ void AssemblerBuffers::write(unsigned char opcode, GPR64 reg, Imm64 imm)
 }
 
 
-void AssemblerBuffers::write(unsigned char opcode, GPR64 dst, GPR64 src)
+void AssemblerBuffers::write(unsigned char opcode, GPR dst, GPR64 src)
 {
     auto p = growCode(3);
-    p[0] = Rex(1, dst.prefixBit(), 0, src.prefixBit());
+    p[0] = Rex((dst.rexW() || src.rexW()), dst.prefixBit(), 0, src.prefixBit());
     p[1] = opcode;
     p[2] = ModRM(3, dst.lowerBits(), src.lowerBits());
 }
@@ -258,7 +258,7 @@ void AssemblerBuffers::write(unsigned char opcode, GPR reg, Mem32 mem)
 }
 
 
-void AssemblerBuffers::write(unsigned char opcode, GPR64 reg, SIBD sibd)
+void AssemblerBuffers::write(unsigned char opcode, GPR reg, SIBD sibd)
 {
     SibEncoding e(reg, sibd);
 
