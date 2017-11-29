@@ -9,13 +9,9 @@ class SignalNode_BufferRW : public SignalNode{
     float* m_buffer = nullptr;
 
 public:
-    SignalNode_BufferRW(SignalGraph &sg) : SignalNode(sg) {}
-
-    inline void setBuffer(float* buffer) { m_buffer = buffer; }
+    SignalNode_BufferRW(SignalGraph &sg, float* buffer) : SignalNode(sg), m_buffer(buffer) {}
 
     inline float* buffer() const { return m_buffer; }
-
-    inline float &buffer(unsigned int i) { return m_buffer[i]; }
 };
 
 
@@ -23,7 +19,7 @@ class SignalNode_BufferReader : public SignalNode_BufferRW{
     R64FX_NODE_SOURCE(out)
 
 public:
-    SignalNode_BufferReader(SignalGraph &sg) : SignalNode_BufferRW(sg), m_out(this) {}
+    SignalNode_BufferReader(SignalGraph &sg, float* buffer) : SignalNode_BufferRW(sg, buffer), m_out(this) {}
 
 private:
     virtual void build() override final;
@@ -34,7 +30,7 @@ class SignalNode_BufferWriter : public SignalNode_BufferRW{
     R64FX_NODE_SINK(in)
 
 public:
-    SignalNode_BufferWriter(SignalGraph &sg) : SignalNode_BufferRW(sg) {}
+    SignalNode_BufferWriter(SignalGraph &sg, float* buffer) : SignalNode_BufferRW(sg, buffer) {}
 
 private:
     virtual void build() override final;

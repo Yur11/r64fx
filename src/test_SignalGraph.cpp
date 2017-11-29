@@ -1,4 +1,4 @@
-#include <iostream>
+#include "test.hpp"
 #include "SignalGraph.hpp"
 #include "SignalNode_BufferRW.hpp"
 #include "SignalNode_Oscillator.hpp"
@@ -6,60 +6,47 @@
 using namespace std;
 using namespace r64fx;
 
-bool buff_eq(float* a, float* b, int size)
+
+bool test_BufferRW(SignalGraph &sg)
 {
-    for(int i=0; i<size; i++)
+    constexpr int frame_count = 8;
+    float buff_a[frame_count];
+    float buff_b[frame_count];
+    for(int i=0; i<frame_count; i++)
     {
-        if(a[i] != b[i])
-            return false;
+        buff_a[i] = float(rand() & 0xFFFF) * 0.01f;
+        buff_b[i] = 0.0f;
     }
+    sg.setFrameCount(frame_count);
+
+    SignalNode_BufferReader snbr(sg, buff_a);
+    SignalNode_BufferWriter snbw(sg, buff_b);
+
+    sg.link(snbr.out(), snbw.in());
+    sg.build(&snbw, 1);
+    sg.run();
+    R64FX_EXPECT_VEC_EQ(buff_a, buff_b, frame_count);
+
     return true;
 }
 
-constexpr int frame_count = 8;
-float buff_a[frame_count];
-float buff_b[frame_count];
 
 int main()
 {
-    cout << sizeof(SignalSource) << "\n";
-    cout << sizeof(SignalSink) << "\n";
-
     srand(time(0));
 
     SignalGraph sg;
-    sg.setFrameCount(frame_count);
 
-    SignalNode_BufferReader snbr(sg);
-    SignalNode_BufferWriter snbw(sg);
-    snbr.setBuffer(buff_a);
-    snbw.setBuffer(buff_b);
+    bool ok = test_BufferRW(sg);
 
-
-    for(int i=0; i<frame_count; i++)
+    if(ok)
     {
-        snbr.buffer(i) = float(rand() & 0xFFFF) * 0.01f;
-        snbw.buffer(i) = 0.0f;
-    }
-
-    sg.link(snbr.out(), snbw.in());
-
-    sg.build(&snbw, 1);
-    sg.run();
-
-    for(int i=0; i<frame_count; i++)
-    {
-        cout << buff_a[i] << ", " << buff_b[i] << "\n";
-    }
-
-    if(buff_eq(buff_a, buff_b, frame_count))
-    {
-        cout << "OK\n";
+        std::cout << "OK!\n";
         return 0;
     }
     else
     {
-        cout << "Fail!\n";
+        std::cout << "Fail!\n";
         return 1;
     }
 }

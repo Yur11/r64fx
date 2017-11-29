@@ -5,17 +5,16 @@ namespace r64fx{
 
 void SignalNode_BufferReader::build()
 {
-    auto regs = allocRegisters<GPR64>(1);
-    R64FX_DEBUG_ASSERT(regs.size() == 1);
-    MOV(regs[0], ImmAddr(buffer() + frameCount()));
-    MOV(regs[0], Base(regs[0]) + Index(rcx)*4);
-    initStorage<float, GPR64>(m_out, regs[0]);
+    GPR64 reg = allocRegisters<GPR64>(1);
+    MOV(reg, ImmAddr(buffer() + frameCount()));
+    MOV(reg.low32(), Base(reg) + Index(rcx)*4);
+    initStorage<float, GPR64>(m_out, reg);
 }
 
 
 void SignalNode_BufferWriter::build()
 {
-    GPR64 value;
+    GPR64 srcval;
 
     auto source = m_in.connectedSource();
     if(source)
@@ -23,34 +22,32 @@ void SignalNode_BufferWriter::build()
         ensureBuilt(source);
 
         R64FX_DEBUG_ASSERT(source->size() == 1);
-        std::cout << "reg_type: " << int(source->registerType()) << "\n";
         R64FX_DEBUG_ASSERT(source->registerType() == register_type<GPR64>());
         if(source->hasRegisters())
         {
             source->lock();
+            srcval = getStorageRegisters<GPR64>(*source);
         }
         else
         {
             R64FX_DEBUG_ASSERT(source->hasMemory());
+            srcval = allocRegisters<GPR64>(1);
         }
-        value = getStorageRegisters<GPR64>(*source)[0];
     }
     else
     {
-        auto pack = allocRegisters<GPR64>(1);
-        R64FX_DEBUG_ASSERT(pack.size() == 0);
-        value = pack[0];
-        XOR(value, value);
+        srcval = allocRegisters<GPR64>(1);
+        XOR(srcval, srcval);
     }
 
-    auto base = allocRegisters<GPR64>(1);
-    R64FX_DEBUG_ASSERT(base.size() == 1);
-    MOV(base[0], ImmAddr(buffer() + frameCount()));
-    MOV(Base(base[0]) + Index(rcx)*4, value);
+    GPR64 base = allocRegisters<GPR64>(1);
+    MOV(base, ImmAddr(buffer() + frameCount()));
+    MOV(Base(base) + Index(rcx)*4, srcval.low32());
 
     if(source)
     {
         source->unlock();
+        sourceUsed(source);
     }
 }
 
