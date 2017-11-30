@@ -390,19 +390,8 @@ bool test_HeapBuffer(HeapBuffer* hb)
         0
     );
 
-    cout << "alloc aligned 8 bytes\n";
-    a = (unsigned long*) hb->allocChunk(8, 8);
-    R64FX_CHECK_HEADER(
-        sizeof(HeapBuffer)/4,                 //self
-        sizeof(HeapBuffer)/4   + 1,           //dword1
-        (sizeof(HeapBuffer)/4  + 2) | 0x8000, //free
-        sizeof(HeapBuffer)/4   + 4,           //a
-        0
-    );
-
     cout << "free all\n";
     hb->freeChunk(dword1);
-    hb->freeChunk(a);
     R64FX_CHECK_HEADER(sizeof(HeapBuffer)/4, 0);
 
     cout << "chunk size\n";
@@ -420,7 +409,42 @@ bool test_HeapBuffer(HeapBuffer* hb)
         R64FX_EXPECT_EQ(size_b, hb->chunkSize(b));
         R64FX_EXPECT_EQ(size_c, hb->chunkSize(c));
         R64FX_EXPECT_EQ(size_d, hb->chunkSize(d));
+
+        hb->freeChunk(a);
+        hb->freeChunk(b);
+        hb->freeChunk(d);
+        R64FX_CHECK_HEADER(sizeof(HeapBuffer)/4, 0);
     }
+
+    cout << "align 4\n";
+    a = (unsigned long*) hb->allocChunk(4, 4);
+    R64FX_CHECK_HEADER(
+        sizeof(HeapBuffer)/4,
+        sizeof(HeapBuffer)/4 + 1,
+        0
+    );
+
+    cout << "align 8\n";
+    b = (unsigned long*) hb->allocChunk(8, 8);
+    R64FX_CHECK_HEADER(
+        sizeof(HeapBuffer)/4,
+        sizeof(HeapBuffer)/4 + 1,
+        (sizeof(HeapBuffer)/4 + 2) | 0x8000,
+        sizeof(HeapBuffer)/4 + 4,
+        0
+    );
+
+    cout << "align 64\n";
+    c = (unsigned long*) hb->allocChunk(1024, 64);
+    R64FX_CHECK_HEADER(
+        sizeof(HeapBuffer)/4,
+        sizeof(HeapBuffer)/4 + 1,
+        (sizeof(HeapBuffer)/4 + 2) | 0x8000,
+        sizeof(HeapBuffer)/4 + 4,
+        (sizeof(HeapBuffer)/4 + 8) | 0x8000,
+        sizeof(HeapBuffer)/4 + 264,
+        0
+    );
 
     return true;
 }

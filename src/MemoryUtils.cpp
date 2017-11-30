@@ -227,6 +227,7 @@ void* HeapBuffer::allocChunk(long nbytes)
 void* HeapBuffer::allocChunk(long nbytes, long alignment)
 {
     R64FX_DEBUG_ASSERT(alignment >= 4);
+    R64FX_DEBUG_ASSERT(nbytes >= alignment);
 
     long alignment_mask = alignment - 1;
     R64FX_DEBUG_ASSERT((alignment & alignment_mask) == 0);
@@ -235,8 +236,8 @@ void* HeapBuffer::allocChunk(long nbytes, long alignment)
     if(!chunk)
         return nullptr;
 
-    long alignment_bytes = alignment - (long(chunk) & alignment_mask);
-    if(alignment_bytes == alignment)
+    long alignment_bytes = long(chunk) & alignment_mask;
+    if(alignment_bytes == 0)
         return chunk;
     freeChunk(chunk);
 
