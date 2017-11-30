@@ -225,13 +225,8 @@ class SignalGraphImpl : public AssemblerBuffers{
     unsigned long  iteration_count  = 0;
     unsigned long  frame_count      = 0;
 
-    unsigned long gprs[16];
-    inline unsigned long* registerTable      (GPR64) { return gprs; }
-    inline unsigned int   registerTableSize  (GPR64) { return 16; }
-
-    unsigned long xmms[16];
-    inline unsigned long* registerTable      (Xmm)   { return xmms; }
-    inline unsigned int   registerTableSize  (Xmm)   { return 16; }
+    unsigned long  gprs[16];
+    unsigned long  xmms[16];
 
     SignalGraphImpl();
 
@@ -353,36 +348,55 @@ protected:
     inline void freeMemory(DataBufferPointer ptr) { m.freeMemory(ptr); }
 
 
-    /* Allocate registers. */
+    /* Registers */
 private:
-    RegisterPack<Register> allocRegisters(
-        unsigned int count, unsigned long* reg_table, unsigned int reg_table_size, unsigned int reg_size);
+    struct RegisterTable{
+        unsigned long*       regs = nullptr;
+        const unsigned long  size = 0;
+
+        RegisterTable(unsigned long* regs, unsigned long size) : regs(regs), size(size) {}
+        inline unsigned long &operator[](unsigned int i) { R64FX_DEBUG_ASSERT(i < size); return regs[i]; }
+    };
+    inline RegisterTable registerTable(GPR64) const { return {m.gprs, sizeof(m.gprs) >> 3}; }
+    inline RegisterTable registerTable(Xmm)   const { return {m.xmms, sizeof(m.xmms) >> 3}; }
+
+
+    /* Allocate registers. */
+    RegisterPack<Register> allocRegisters(unsigned int count, RegisterTable rt);
 protected:
     template<typename RegisterT> inline RegisterPack<RegisterT> allocRegisters(unsigned int count)
-        { return RegisterPack<RegisterT>(allocRegisters(count, m.registerTable(RegisterT()), m.registerTableSize(RegisterT()), RegisterT::Size())); }
+        { return RegisterPack<RegisterT>(allocRegisters(count, registerTable(RegisterT()))); }
 
 
     /* Retrieve registers from storage. */
 private:
-    RegisterPack<Register> getStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table, unsigned int reg_table_size) const;
+    RegisterPack<Register> getStorageRegisters(SignalDataStorage &storage, RegisterTable rt) const;
 protected:
     template<typename RegisterT> inline RegisterPack<RegisterT> getStorageRegisters(SignalDataStorage &storage) const
     {
         R64FX_DEBUG_ASSERT(storage.registerType() == register_type<RegisterT>());
-        return RegisterPack<RegisterT>(getStorageRegisters(storage, m.registerTable(RegisterT()), m.registerTableSize(RegisterT())));
+        return RegisterPack<RegisterT>(getStorageRegisters(storage, registerTable(RegisterT())));
+    }
+
+private:
+    RegisterPack<Register> removeStorageRegisters(SignalDataStorage &storage, RegisterTable rt);
+public:
+    template<typename RegisterT> inline RegisterPack<RegisterT> removeStorageRegisters(SignalDataStorage &storage)
+    {
+        R64FX_DEBUG_ASSERT(storage.registerType() == register_type<RegisterT>());
     }
 
 
     /* Free registers. */
 private:
-    void freeRegisters(RegisterPack<Register> pack, unsigned long* reg_table, unsigned int reg_table_size);
+    void freeRegisters(RegisterPack<Register> pack, RegisterTable rt);
 protected:
-    template<typename T> void freeRegisters(RegisterPack<T> regpack)
-        { freeRegisters(regpack.bits, m.registerTable(T()), m.registerTableSize(T())); }
+    template<typename RegisterT> void freeRegisters(RegisterPack<RegisterT> regpack)
+        { freeRegisters(regpack.bits, registerTable(RegisterT())); }
 
 
 private:
-    void initStorage_(SignalDataStorage &storage, DataBufferPointer memptr, unsigned int memsize, RegisterPack<Register> regpack, unsigned long* reg_table);
+    void initStorage_(SignalDataStorage &storage, DataBufferPointer memptr, unsigned int memsize, RegisterPack<Register> regpack, RegisterTable rt);
 public:
     template<typename DataT, typename RegisterT> inline
     void initStorage(
@@ -390,7 +404,7 @@ public:
     {
         R64FX_DEBUG_ASSERT(storage.empty());
         storage.setRegisterType(register_type<RegisterT>());
-        initStorage_(storage, memptr, memsize, RegisterPack<Register>(regpack), m.registerTable(RegisterT()));
+        initStorage_(storage, memptr, memsize, RegisterPack<Register>(regpack), registerTable(RegisterT()));
     }
 
     template<typename DataT, typename RegisterT> inline

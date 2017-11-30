@@ -154,29 +154,28 @@ DataBufferPointer SignalGraphImpl::allocMemoryBytes(unsigned int nbytes, unsigne
 }
 
 
-RegisterPack<Register> SignalNode::allocRegisters(
-    unsigned int count, unsigned long* reg_table, unsigned int reg_table_size, unsigned int reg_size)
+RegisterPack<Register> SignalNode::allocRegisters(unsigned int count, RegisterTable rt)
 {
     R64FX_DEBUG_ASSERT(count < 16);
     RegisterPack<Register> regpack;
 
     unsigned int n = 0;
-    for(unsigned int i=0; i<reg_table_size && n<count; i++)
+    for(unsigned int i=0; i<rt.size && n<count; i++)
     {
-        if(reg_table[i] == R64FX_REGISTER_NOT_USED)
+        if(rt[i] == R64FX_REGISTER_NOT_USED)
         {
-            reg_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
+            rt[i] = R64FX_REGISTER_USED_NO_STORAGE;
             regpack.setRegAt(n++, Register(i));
         }
     }
 
     if(n < count)
     {
-        for(unsigned int i=0; i<reg_table_size && n<count; i++)
+        for(unsigned int i=0; i<rt.size && n<count; i++)
         {
-            if(reg_table[i] != R64FX_REGISTER_MUST_NEVER_BE_USED && reg_table[i] != R64FX_REGISTER_USED_NO_STORAGE)
+            if(rt[i] != R64FX_REGISTER_MUST_NEVER_BE_USED && rt[i] != R64FX_REGISTER_USED_NO_STORAGE)
             {
-                auto storage = (SignalDataStorage*)reg_table[i];
+                auto storage = (SignalDataStorage*)rt[i];
                 if(storage->isLocked())
                     continue;
 
@@ -192,7 +191,7 @@ RegisterPack<Register> SignalNode::allocRegisters(
                 }
                 R64FX_DEBUG_ASSERT(ptr);
 
-                reg_table[i] = R64FX_REGISTER_USED_NO_STORAGE;
+                rt[i] = R64FX_REGISTER_USED_NO_STORAGE;
                 regpack.setRegAt(n++, Register(i));
             }
         }
@@ -203,13 +202,13 @@ RegisterPack<Register> SignalNode::allocRegisters(
 }
 
 
-RegisterPack<Register> SignalNode::getStorageRegisters(SignalDataStorage &storage, unsigned long* reg_table, unsigned int reg_table_size) const
+RegisterPack<Register> SignalNode::getStorageRegisters(SignalDataStorage &storage, RegisterTable rt) const
 {
     RegisterPack<Register> regpack;
     unsigned int n = 0;
-    for(unsigned int i=0; i<reg_table_size && n<storage.size(); i++)
+    for(unsigned int i=0; i<rt.size && n<storage.size(); i++)
     {
-        if(reg_table[i] == (unsigned long)&storage)
+        if(rt[i] == (unsigned long)&storage)
         {
             regpack.setRegAt(n++, Register(i));
         }
@@ -219,20 +218,20 @@ RegisterPack<Register> SignalNode::getStorageRegisters(SignalDataStorage &storag
 }
 
 
-void SignalNode::freeRegisters(RegisterPack<Register> regpack, unsigned long* reg_table, unsigned int reg_table_size)
+void SignalNode::freeRegisters(RegisterPack<Register> regpack, RegisterTable rt)
 {
     for(unsigned int i=0; i<regpack.size(); i++)
     {
         auto reg = regpack.regAt(i);
-        R64FX_DEBUG_ASSERT(reg.code() < reg_table_size);
-        R64FX_DEBUG_ASSERT(reg_table[reg.code()] == R64FX_REGISTER_USED_NO_STORAGE);
-        reg_table[reg.code()] = R64FX_REGISTER_NOT_USED;
+        R64FX_DEBUG_ASSERT(reg.code() < rt.size);
+        R64FX_DEBUG_ASSERT(rt[reg.code()] == R64FX_REGISTER_USED_NO_STORAGE);
+        rt[reg.code()] = R64FX_REGISTER_NOT_USED;
     }
 }
 
 
 void SignalNode::initStorage_(
-    SignalDataStorage &storage, DataBufferPointer memptr, unsigned int size, RegisterPack<Register> regpack, unsigned long* reg_table)
+    SignalDataStorage &storage, DataBufferPointer memptr, unsigned int size, RegisterPack<Register> regpack, RegisterTable rt)
 {
     storage.setSize(size);
 
@@ -246,8 +245,8 @@ void SignalNode::initStorage_(
     {
         for(unsigned int i=0; i<regpack.size(); i++)
         {
-            R64FX_DEBUG_ASSERT(reg_table[regpack[i].code()] == R64FX_REGISTER_USED_NO_STORAGE);
-            reg_table[regpack[i].code()] = (unsigned long)&storage;
+            R64FX_DEBUG_ASSERT(rt[regpack[i].code()] == R64FX_REGISTER_USED_NO_STORAGE);
+            rt[regpack[i].code()] = (unsigned long)&storage;
         }
         storage.m |= SignalDataStorage::HasRegistersBit;
     }
