@@ -256,35 +256,35 @@ void SignalNode::initStorage_(
 
 void SignalNode::freeStorage(SignalDataStorage &storage)
 {
-    if(storage.hasRegisters())
-    {
-        R64FX_DEBUG_ASSERT(storage.registerType() != SignalRegisterType::Bad);
-        switch(storage.registerType())
-        {
-            case SignalRegisterType::GPR:
-            {
-                break;
-            }
-
-            case SignalRegisterType::Xmm:
-            {
-                break;
-            }
-
-            case SignalRegisterType::Ymm:
-            {
-                break;
-            }
-
-            default:
-                break;
-        }
-    }
-
-    if(storage.hasMemory())
-    {
-        freeStorageMemory(storage);
-    }
+//     if(storage.hasRegisters())
+//     {
+//         R64FX_DEBUG_ASSERT(storage.registerType() != SignalRegisterType::Bad);
+//         switch(storage.registerType())
+//         {
+//             case SignalRegisterType::GPR:
+//             {
+//                 break;
+//             }
+// 
+//             case SignalRegisterType::Xmm:
+//             {
+//                 break;
+//             }
+// 
+//             case SignalRegisterType::Ymm:
+//             {
+//                 break;
+//             }
+// 
+//             default:
+//                 break;
+//         }
+//     }
+// 
+//     if(storage.hasMemory())
+//     {
+//         freeStorageMemory(storage);
+//     }
 }
 
 }//namespace r64fx

@@ -209,7 +209,11 @@ public:
 
     inline SignalNode*  node() const { return m_node; }
 
+    inline operator SignalNode*() { return m_node; }
+
     inline SignalPortT* port() const { return m_port; }
+
+    inline operator SignalPortT*() { return m_port; }
 };
 
 typedef NodePort<SignalSource> NodeSource;
@@ -339,9 +343,9 @@ protected:
     }
 
 
-    template<typename T = float> inline T* addr(DataBufferPointer ptr) { return m.addr<T>(ptr); }
+    template<typename T = float> inline T* addr(DataBufferPointer ptr) const { return m.addr<T>(ptr); }
 
-    template<typename T = float> inline T* addr(SignalDataStorage storage)
+    template<typename T = float> inline T* addr(SignalDataStorage storage) const
     {
         return addr<T>(storage.memory());
     }

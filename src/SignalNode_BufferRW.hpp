@@ -9,7 +9,9 @@ class SignalNode_BufferRW : public SignalNode{
     DataBufferPointer m_buffer;
 public:
     SignalNode_BufferRW(SignalGraph &sg, DataBufferPointer buffer) : SignalNode(sg), m_buffer(buffer) {}
+    inline void setBuffer(DataBufferPointer buffer) { m_buffer = buffer; }
     inline DataBufferPointer buffer() const { return m_buffer; }
+    inline float* bufferAddr() const { return addr<float>(m_buffer); }
 };
 
 

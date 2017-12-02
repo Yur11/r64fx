@@ -298,6 +298,8 @@ class AssemblerBuffers{
     /* Ensure that code buffer has room to add nbytes. Resize if needed. */
     unsigned char* growCode(int nbytes);
 
+    AssemblerBuffers(const AssemblerBuffers &other) {} //No Copy!
+
 public:
     AssemblerBuffers() {}
 

@@ -258,8 +258,7 @@ long ModuleThreadObjectImpl::sampleRate() const
 
 SignalGraph* ModuleThreadObjectImpl::signalGraph() const
 {
-//     return &(R64FX_MODULE_THREAD_ASSETS->signal_graph);
-    return nullptr;
+    return &(R64FX_MODULE_THREAD_ASSETS->signal_graph);
 }
 
 
