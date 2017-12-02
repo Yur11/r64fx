@@ -2,6 +2,7 @@
 #define R64FX_MODULE_PRIVATE_HPP
 
 #include "ThreadObject.hpp"
+#include "SignalGraph.hpp"
 
 
 #define R64FX_DECL_MODULE_AGENTS(NAME)\
@@ -74,10 +75,6 @@ class ModuleThreadObjectImplHandle;
 class ModuleDeploymentAgent;
 class SoundDriver;
 class SoundDriverSyncPort;
-class SignalGraphElement;
-class SignalSink;
-class SignalSource;
-class SignalGraph;
 
 /*
  * === Impl ===================================================================
@@ -104,6 +101,10 @@ protected:
     long sampleRate() const;
 
     SignalGraph* signalGraph() const;
+
+    void addTerminalNode(SignalNode* node);
+
+    void removeTerminalNode(SignalNode* node);
 
     void armRebuild();
 

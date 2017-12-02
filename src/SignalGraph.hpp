@@ -237,6 +237,12 @@ class SignalGraphImpl : public AssemblerBuffers{
     DataBufferPointer allocMemoryBytes(unsigned int nbytes, unsigned int align);
 
     inline void freeMemory(DataBufferPointer ptr) { heapBuffer().freeChunk(codeBegin() - ptr.offset()); }
+
+    template<typename T = float> inline T* addr(DataBufferPointer ptr)
+    {
+        R64FX_DEBUG_ASSERT(ptr.offset() > 0);
+        return (T*)(codeBegin() - ptr.offset());
+    }
 };
 
 class SignalGraphImplVar{
@@ -267,7 +273,7 @@ public:
     void unlink(const NodeSink node_sink);
 
     /* Build signal graph function. */
-    void build(SignalNode* terminal_nodes, unsigned int node_count);
+    void build(SignalNode* terminal_node);
 
     /* Run signal graph function. */
     inline long run() { return ((long (*)())m.codeBegin())(); }
@@ -276,6 +282,17 @@ public:
     inline unsigned long frameCount() const { return m.frame_count; }
 
     inline void setFrameCount(unsigned long frame_count) { m.frame_count = frame_count; }
+
+    inline DataBufferPointer allocBuffer()
+    {
+        R64FX_DEBUG_ASSERT(frameCount() > 0);
+        unsigned int nbytes = frameCount() * sizeof(float);
+        return m.allocMemoryBytes(nbytes, nbytes >= 64 ? 64 : nbytes);
+    }
+
+    inline void freeBuffer(DataBufferPointer ptr) { m.freeMemory(ptr); }
+
+    template<typename T = float> inline T* addr(DataBufferPointer ptr) { return m.addr<T>(ptr); }
 
     friend class SignalNode;
 };
@@ -322,12 +339,7 @@ protected:
     }
 
 
-    /* Get actual memory address. Do not cache the value returned, use it immediately! */
-    template<typename T = float> inline T* addr(DataBufferPointer ptr)
-    {
-        R64FX_DEBUG_ASSERT(ptr.offset() > 0);
-        return (T*)(m.codeBegin() - ptr.offset());
-    }
+    template<typename T = float> inline T* addr(DataBufferPointer ptr) { return m.addr<T>(ptr); }
 
     template<typename T = float> inline T* addr(SignalDataStorage storage)
     {

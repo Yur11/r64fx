@@ -10,22 +10,23 @@ using namespace r64fx;
 bool test_BufferRW(SignalGraph &sg)
 {
     constexpr int frame_count = 8;
-    float buff_a[frame_count];
-    float buff_b[frame_count];
+
+    sg.setFrameCount(frame_count);
+    auto buff_a = sg.allocBuffer();
+    auto buff_b = sg.allocBuffer();
     for(int i=0; i<frame_count; i++)
     {
-        buff_a[i] = float(rand() & 0xFFFF) * 0.01f;
-        buff_b[i] = 0.0f;
+        sg.addr(buff_a)[i] = float(rand() & 0xFFFF) * 0.01f;
+        sg.addr(buff_b)[i] = 0.0f;
     }
-    sg.setFrameCount(frame_count);
 
     SignalNode_BufferReader snbr(sg, buff_a);
     SignalNode_BufferWriter snbw(sg, buff_b);
 
     sg.link(snbr.out(), snbw.in());
-    sg.build(&snbw, 1);
+    sg.build(&snbw);
     sg.run();
-    R64FX_EXPECT_VEC_EQ(buff_a, buff_b, frame_count);
+    R64FX_EXPECT_VEC_EQ(sg.addr(buff_a), sg.addr(buff_b), frame_count);
 
     return true;
 }

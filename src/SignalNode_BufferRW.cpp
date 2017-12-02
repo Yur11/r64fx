@@ -6,7 +6,7 @@ namespace r64fx{
 void SignalNode_BufferReader::build()
 {
     GPR64 reg = allocRegisters<GPR64>(1);
-    MOV(reg, ImmAddr(buffer() + frameCount()));
+    MOV(reg, ImmAddr(addr(buffer()) + frameCount()));
     MOV(reg.low32(), Base(reg) + Index(rcx)*4);
     initStorage<float, GPR64>(m_out, reg);
 }
@@ -41,7 +41,7 @@ void SignalNode_BufferWriter::build()
     }
 
     GPR64 base = allocRegisters<GPR64>(1);
-    MOV(base, ImmAddr(buffer() + frameCount()));
+    MOV(base, ImmAddr(addr(buffer()) + frameCount()));
     MOV(Base(base) + Index(rcx)*4, srcval.low32());
 
     if(source)

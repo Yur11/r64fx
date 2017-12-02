@@ -35,48 +35,55 @@ typedef Message<3, SoundDriverAudioOutput,  SignalSink,    Callback_RemovePort> 
 
 /*======= Worker Thread =======*/
 
-struct Impl_SoundDriverAudioInput : public LinkedList<Impl_SoundDriverAudioInput>::Node{
-    friend class SoundDriverThreadObjectImpl;
+// struct Impl_SoundDriverAudioInput : public LinkedList<Impl_SoundDriverAudioInput>::Node{
+//     friend class SoundDriverThreadObjectImpl;
+// 
+//     SignalNode_BufferReader node;
+//     SoundDriverAudioInput*  sd_port  = nullptr;
+// 
+//     Impl_SoundDriverAudioInput(Message_AddAudioInput* message, SignalGraph* sg)
+//     {
+//         sd_port = message->sd_port;
+//         message->graph_port = node.out().port();
+// //         sg->addNode(&node);
+//     }
+// 
+//     inline void readSamples(int nsamples)
+//     {
+//         sd_port->readSamples(node.buffer(), nsamples);
+//     }
+// };
+// 
+// struct Impl_SoundDriverAudioOutput : public LinkedList<Impl_SoundDriverAudioOutput>::Node{
+//     friend class SoundDriverThreadObjectImpl;
+// 
+//     SignalNode_BufferWriter  node;
+//     SoundDriverAudioOutput*  sd_port  = nullptr;
+// 
+//     Impl_SoundDriverAudioOutput(Message_AddAudioOutput* message, SignalGraph* sg)
+//     {
+//         sd_port = message->sd_port;
+//         message->graph_port = node.in().port();
+// //         sg->addNode(&node);
+//     }
+// 
+//     inline void writeSamples(int nsamples)
+//     {
+//         sd_port->writeSamples(node.buffer(), nsamples);
+//     }
+// };
 
-    SignalNode_BufferReader node;
-    SoundDriverAudioInput*  sd_port  = nullptr;
 
-    Impl_SoundDriverAudioInput(Message_AddAudioInput* message, SignalGraph* sg)
-    {
-        sd_port = message->sd_port;
-        message->graph_port = node.out().port();
-//         sg->addNode(&node);
-    }
-
-    inline void readSamples(int nsamples)
-    {
-        sd_port->readSamples(node.buffer(), nsamples);
-    }
-};
-
-struct Impl_SoundDriverAudioOutput : public LinkedList<Impl_SoundDriverAudioOutput>::Node{
-    friend class SoundDriverThreadObjectImpl;
-
-    SignalNode_BufferWriter  node;
-    SoundDriverAudioOutput*  sd_port  = nullptr;
-
-    Impl_SoundDriverAudioOutput(Message_AddAudioOutput* message, SignalGraph* sg)
-    {
-        sd_port = message->sd_port;
-        message->graph_port = node.in().port();
-//         sg->addNode(&node);
-    }
-
-    inline void writeSamples(int nsamples)
-    {
-        sd_port->writeSamples(node.buffer(), nsamples);
-    }
+struct SoundDriverPortsImpl : public LinkedList<SoundDriverPortsImpl>{
+    SoundDriverAudioInput*    input   = nullptr;
+    SoundDriverAudioOutput*   output  = nullptr;
+    SignalNode_BufferReader*  reader  = nullptr;
+    SignalNode_BufferWriter*  writer  = nullptr;
 };
 
 
 class SoundDriverThreadObjectImpl : public ModuleThreadObjectImpl{
-    LinkedList<Impl_SoundDriverAudioInput>   m_inputs;
-    LinkedList<Impl_SoundDriverAudioOutput>  m_outputs;
+    LinkedList<SoundDriverPortsImpl> m_ports;
 
 public:
     SoundDriverThreadObjectImpl(SoundDriverDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
@@ -119,58 +126,30 @@ private:
 
     inline void recieved(Message_AddAudioInput* message)
     {
-        auto impl = allocObj<Impl_SoundDriverAudioInput>(message, signalGraph());
-        m_inputs.append(impl);
+
     }
 
     inline void recieved(Message_AddAudioOutput* message)
     {
-        auto impl = allocObj<Impl_SoundDriverAudioOutput>(message, signalGraph());
-        m_outputs.append(impl);
+
     }
 
     inline void recieved(Message_RemoveAudioInput* message)
     {
-        Impl_SoundDriverAudioInput* impl = nullptr;
-        for(auto obj : m_inputs) if(obj->node.out().port() == message->graph_port){ impl = obj; break; }
-        if(impl)
-        {
-//             auto sg = signalGraph();
-//             sg->removeNode(&impl->node);
-            m_inputs.remove(impl);
-            message->sd_port = impl->sd_port;
-            freeObj(impl);
-        }
+
     }
 
     inline void recieved(Message_RemoveAudioOutput* message)
     {
-        Impl_SoundDriverAudioOutput* impl = nullptr;
-        for(auto obj : m_outputs) if(obj->node.in().port() == message->graph_port){ impl = obj; break; }
-        if(impl)
-        {
-//             auto sg = signalGraph();
-//             sg->removeNode(&impl->node);
-            m_outputs.remove(impl);
-            message->sd_port = impl->sd_port;
-            freeObj(impl);
-        }
+
     }
 
     inline void prologue()
     {
-        for(auto input : m_inputs)
-        {
-            input->readSamples(bufferSize());
-        }
     }
 
     inline void epilogue()
     {
-        for(auto output : m_outputs)
-        {
-            output->writeSamples(bufferSize());
-        }
     }
 };
 

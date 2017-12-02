@@ -102,9 +102,8 @@ void SignalNode::sourceUsed(SignalSource* source)
 }
 
 
-void SignalGraph::build(SignalNode* terminal_nodes, unsigned int node_count)
+void SignalGraph::build(SignalNode* terminal_node)
 {
-    R64FX_DEBUG_ASSERT(terminal_nodes);
     R64FX_DEBUG_ASSERT(m.frame_count > 0);
 
     m.rewindCode();
@@ -115,9 +114,11 @@ void SignalGraph::build(SignalNode* terminal_nodes, unsigned int node_count)
     JumpLabel loop;
     mark(loop);
 
-    m.iteration_count++;
-    for(unsigned int i=0; i<node_count; i++)
-        m.buildNode(terminal_nodes[i]);
+    if(terminal_node)
+    {
+        m.iteration_count++;
+        m.buildNode(*terminal_node);
+    }
 
     ADD(rcx, Imm32(1));
     JNZ(loop);

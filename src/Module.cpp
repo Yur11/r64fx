@@ -5,7 +5,6 @@
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
 #include "InstanceCounter.hpp"
-#include "SignalGraph.hpp"
 
 #ifdef R64FX_DEBUG
 #include <iostream>
@@ -60,7 +59,8 @@ struct ModuleThreadAssets{
     SoundDriverSyncPort*  sd_sync_port   = nullptr;
     long                  sample_rate    = 0;
     long                  flags          = 0;
-    SignalGraphCompiler   signal_graph_compiler;
+    SignalGraph           signal_graph;
+    SignalNode*           terminal_node  = nullptr;
 
     struct Fun : public LinkedList<Fun>::Node{
         void (*fun)(void* arg)        = nullptr;
@@ -84,7 +84,7 @@ public:
     {
         m.sd_sync_port  = agent->sd_sync_port;
         m.sample_rate   = agent->sample_rate;
-        m.signal_graph_compiler.setFrameCount(agent->buffer_size);
+        m.signal_graph.setFrameCount(agent->buffer_size);
     }
 
     void storeWithdrawalArgs(RootModuleWithdrawalAgent* agent)
@@ -125,10 +125,10 @@ private:
 
                 if(m.flags & R64FX_GRAPH_REBUILD_ARMED)
                 {
-//                     m.signal_graph_compiler.build(&m.signal_graph);
+                    m.signal_graph.build(m.terminal_node);
                     m.flags &= ~R64FX_GRAPH_REBUILD_ARMED;
                 }
-                m.signal_graph_compiler.run();
+                m.signal_graph.run();
 
                 for(auto item : m.epilogue_list)
                 {
@@ -246,7 +246,7 @@ void ModuleThreadObjectImpl::setEpilogue(void (*fun)(void* arg), void* arg)
 
 long ModuleThreadObjectImpl::bufferSize() const
 {
-    return R64FX_MODULE_THREAD_ASSETS->signal_graph_compiler.frameCount();
+    return R64FX_MODULE_THREAD_ASSETS->signal_graph.frameCount();
 }
 
 
@@ -260,6 +260,21 @@ SignalGraph* ModuleThreadObjectImpl::signalGraph() const
 {
 //     return &(R64FX_MODULE_THREAD_ASSETS->signal_graph);
     return nullptr;
+}
+
+
+void ModuleThreadObjectImpl::addTerminalNode(SignalNode* node)
+{
+    R64FX_DEBUG_ASSERT(node);
+    R64FX_DEBUG_ASSERT(R64FX_MODULE_THREAD_ASSETS->terminal_node == nullptr);
+    R64FX_MODULE_THREAD_ASSETS->terminal_node = node;
+}
+
+
+void ModuleThreadObjectImpl::removeTerminalNode(SignalNode* node)
+{
+    R64FX_DEBUG_ASSERT(node == R64FX_MODULE_THREAD_ASSETS->terminal_node);
+    R64FX_MODULE_THREAD_ASSETS->terminal_node = nullptr;
 }
 
 
