@@ -53,8 +53,8 @@ void SignalGraph::link(const NodeSource &node_source, const NodeSink &node_sink)
     sink->m_connected_source = source;
     source->m_connected_sink_count++;
 
-    source_node->m_connection_count++;
-    sink_node->m_connection_count++;
+    source_node->m_link_count++;
+    sink_node->m_link_count++;
 }
 
 
@@ -68,16 +68,16 @@ void SignalGraph::unlink(const NodeSink node_sink)
     R64FX_DEBUG_ASSERT(source->m_connected_sink_count > 0);
     source->m_connected_sink_count--;
 
-    R64FX_DEBUG_ASSERT(source_node->m_connection_count > 0);
-    source_node->m_connection_count--;
-    if(source_node->m_connection_count == 0)
+    R64FX_DEBUG_ASSERT(source_node->m_link_count > 0);
+    source_node->m_link_count--;
+    if(source_node->m_link_count == 0)
     {
         source_node->m_iteration_count = 0;
     }
 
-    R64FX_DEBUG_ASSERT(sink_node->m_connection_count > 0);
-    sink_node->m_connection_count--;
-    if(sink_node->m_connection_count == 0)
+    R64FX_DEBUG_ASSERT(sink_node->m_link_count > 0);
+    sink_node->m_link_count--;
+    if(sink_node->m_link_count == 0)
     {
         sink_node->m_iteration_count = 0;
     }

@@ -45,7 +45,7 @@ struct RootModuleWithdrawalArgs{
 
 R64FX_DECL_MODULE_AGENTS(RootModule);
 
-struct ModuleConnectionMessage{
+struct ModuleLinkMessage{
     SignalSource* source         = nullptr;
     SignalSink*   sink           = nullptr;
 };
@@ -151,7 +151,7 @@ private:
 
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override final
     {
-        auto* msgs = (ModuleConnectionMessage*) msg.value();
+        auto* msgs = (ModuleLinkMessage*) msg.value();
         long nmsgs = msg.key();
 #ifdef R64FX_DEBUG
         assert(msgs);
@@ -368,7 +368,7 @@ class RootModuleThreadObjectIface : public ModuleThreadObjectIface{
 
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg) override final
     {
-        auto msgs = (ModuleConnectionMessage*) msg.value();
+        auto msgs = (ModuleLinkMessage*) msg.value();
         long nmsgs = msg.key();
 #ifdef R64FX_DEBUG
         assert(msgs);
@@ -409,7 +409,7 @@ class ModuleGlobal : public InstanceCounter{
 
     virtual void initEvent() override final
     {
-        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Stub);
+        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Jack);
         m_sound_driver->enable();
 
         m_timer = new(std::nothrow) Timer;
@@ -644,6 +644,18 @@ void Module::genThreads(ModuleThreadHandle** threads, int nthreads)
 int Module::freeThreads(ModuleThreadHandle** threads, int nthreads)
 {
     return g_Module.freeThreads(threads, nthreads);
+}
+
+
+void ModuleLink::enable(ModuleLink* links, int nlinks, ModuleLink::Callback* callback, void* arg)
+{
+    
+}
+
+
+void ModuleLink::disable(ModuleLink* links, int nlinks, ModuleLink::Callback* callback, void* arg)
+{
+    
 }
 
 }//namespace r64fx

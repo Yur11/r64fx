@@ -119,8 +119,8 @@ private:
         while(impl && impl->port(message)) impl = impl->next();
         if(impl)
         {
-            R64FX_DEBUG_ASSERT(impl->output);
-            R64FX_DEBUG_ASSERT(impl->writer);
+            R64FX_DEBUG_ASSERT(impl->second_port(message));
+            R64FX_DEBUG_ASSERT(impl->second_node(message));
             buffer = impl->second_node(message)->buffer();
         }
         else
@@ -188,8 +188,7 @@ private:
         auto impl = m_impls.first();
         while(impl && impl->input)
         {
-            auto count = impl->input->readSamples(impl->reader->bufferAddr(), signalGraph()->frameCount());
-            R64FX_DEBUG_ASSERT(count == int(signalGraph()->frameCount()));
+            impl->input->readSamples(impl->reader->bufferAddr(), signalGraph()->frameCount());
             impl = impl->next();
         }
     }
@@ -199,8 +198,7 @@ private:
         auto impl = m_impls.first();
         while(impl && impl->output)
         {
-            auto count = impl->output->writeSamples(impl->writer->bufferAddr(), signalGraph()->frameCount());
-            R64FX_DEBUG_ASSERT(count == int(signalGraph()->frameCount()));
+            impl->output->writeSamples(impl->writer->bufferAddr(), signalGraph()->frameCount());
             impl = impl->next();
         }
     }

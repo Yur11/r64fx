@@ -63,13 +63,14 @@ public:
 };
 
 
-class ModuleConnection{
+class ModuleLink{
     ModuleSource*  m_source   = nullptr;
     ModuleSink*    m_sink     = nullptr;
     void*          m_payload  = nullptr;
 
 public:
-    ModuleConnection(ModuleSource* source_port, ModuleSink* sink_port);
+    ModuleLink(ModuleSource* source, ModuleSink* sink)
+    : m_source(source), m_sink(sink) {}
 
     inline ModuleSource* source() const { return m_source; }
 
@@ -77,11 +78,11 @@ public:
 
     bool enabled();
 
-    typedef void (Callback)(ModuleConnection* connections, int nconnections, void* arg);
+    typedef void (Callback)(ModuleLink* links, int nlinks, void* arg);
 
-    static void enableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg);
+    static void enable(ModuleLink* links, int nlinks, ModuleLink::Callback* callback, void* arg);
 
-    static void disableBulk(ModuleConnection* connections, int nconnections, ModuleConnection::Callback* callback, void* arg);
+    static void disable(ModuleLink* links, int nlinks, ModuleLink::Callback* callback, void* arg);
 };
 
 }//namespace r64fx

@@ -36,6 +36,8 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     Module_SoundDriver* m_module_sound_driver = nullptr;
     ModuleSource* m_source = nullptr;
+    ModuleSink* m_sink = nullptr;
+    ModuleLink* m_link = nullptr;
 
     SoundFileLoader sfl;
     SoundFileLoader::Port* m_sflp = nullptr;
@@ -126,16 +128,47 @@ struct ProgramPrivate : public View_ProgramEventIface{
     void engagedModuleSoundDriver(Module_SoundDriver* module_sound_driver)
     {
         cout << "engagedModuleSoundDriver\n";
-        module_sound_driver->addAudioInput("blablafoo", [](ModuleSource* source, void* arg1, void* arg2){
+
+        module_sound_driver->addAudioInput("in", [](ModuleSource* source, void* arg1, void* arg2){
             auto self = (ProgramPrivate*) arg1;
             self->portAdded(source, (Module_SoundDriver*)arg2);
+        }, this, module_sound_driver);
+
+        module_sound_driver->addAudioOutput("out", [](ModuleSink* sink, void* arg1, void* arg2){
+            auto self = (ProgramPrivate*) arg1;
+            self->portAdded(sink, (Module_SoundDriver*)arg2);
         }, this, module_sound_driver);
     }
 
     void portAdded(ModuleSource* source, Module_SoundDriver* module_sound_driver)
     {
-        cout << "portAdded\n";
+        cout << "Source Added\n";
         m_source = source;
+        if(m_sink)
+            connectPorts();
+    }
+
+    void portAdded(ModuleSink* sink, Module_SoundDriver* module_sound_driver)
+    {
+        cout << "Sink Added\n";
+        m_sink = sink;
+        if(m_source)
+            connectPorts();
+    }
+
+    void connectPorts()
+    {
+        cout << "Connect Ports\n";
+        m_link = new ModuleLink(m_source, m_sink);
+        ModuleLink::enable(m_link, 1, [](ModuleLink* links, int nlinks, void* arg){
+            auto self = (ProgramPrivate*) arg;
+            self->portsConnected(links, nlinks);
+        }, this);
+    }
+
+    void portsConnected(ModuleLink* links, int nlinks)
+    {
+        cout << "Ports Connected\n";
     }
 
     void portRemoved(Module_SoundDriver* module_sound_driver)

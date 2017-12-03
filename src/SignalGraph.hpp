@@ -305,7 +305,7 @@ public:
 /* Base class for SignalGraph nodes. */
 class SignalNode : protected AssemblerInstructions<SignalGraphImplRef>{
     unsigned long m_iteration_count = 0;
-    unsigned long m_connection_count = 0;
+    unsigned long m_link_count = 0;
 
 public:
     /* All nodes must exist within the context of a parent graph. */
