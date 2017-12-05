@@ -1,5 +1,6 @@
 #include "SoundFileLoader.hpp"
 #include "Thread.hpp"
+#include "TimeUtils.hpp"
 #include "CircularBuffer.hpp"
 #include "LinkedList.hpp"
 #include "SoundFile.hpp"
@@ -314,6 +315,7 @@ public:
                     }
                 }
             }
+            sleep_nanoseconds(500 * 1000);
         }//while
 
 #ifdef R64FX_DEBUG
