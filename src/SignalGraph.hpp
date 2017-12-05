@@ -93,6 +93,10 @@ private:
 public:
     inline RegisterT regAt(unsigned int i) const
     {
+        if(i >= size())
+        {
+            std::cout << "i: " << i << ", size: " << size() << "\n";
+        }
         R64FX_DEBUG_ASSERT(i < size());
         return RegisterT((m_bits >> (i<<2)) & 0xFUL);
     }
@@ -425,7 +429,7 @@ private:
     void freeRegisters(RegisterPack<Register> pack, RegisterTable rt);
 protected:
     template<typename RegisterT> void freeRegisters(RegisterPack<RegisterT> regpack)
-        { freeRegisters(regpack.bits, registerTable(RegisterT())); }
+        { freeRegisters(RegisterPack<Register>(regpack), registerTable(RegisterT())); }
 
 
 private:

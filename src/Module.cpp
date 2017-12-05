@@ -111,6 +111,7 @@ private:
         while(m.flags & R64FX_MODULE_THREAD_RUNNING)
         {
             readMessagesFromIface();
+            m.flags |= R64FX_GRAPH_REBUILD_ARMED;
 
             SoundDriverSyncMessage sync_msg[R64FX_SOUND_DRIVER_SYNC_PORT_BUFFER_SIZE];
             long nmsgs = m.sd_sync_port->readMessages(sync_msg, R64FX_SOUND_DRIVER_SYNC_PORT_BUFFER_SIZE);
@@ -128,8 +129,9 @@ private:
                     m.flags &= ~R64FX_GRAPH_REBUILD_ARMED;
                     m.signal_graph.beginBuild();
                     item = m.ports.first();
-                    while(item && item->input)
+                    while(item && item->writer)
                     {
+                        m.signal_graph.buildNode(item->writer);
                         item = item->next();
                     }
                     m.signal_graph.endBuild();
@@ -145,7 +147,7 @@ private:
             }
             else
             {
-                sleep_nanoseconds(30000 * 1000);
+                sleep_nanoseconds(300 * 1000);
             }
         }
 
@@ -357,7 +359,7 @@ class ModuleGlobal : public InstanceCounter{
 
     virtual void initEvent() override final
     {
-        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Jack);
+        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Stub);
         m_sound_driver->enable();
 
         m_timer = new(std::nothrow) Timer;

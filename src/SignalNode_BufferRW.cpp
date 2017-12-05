@@ -7,6 +7,15 @@ void SignalNode_BufferReader::build()
     GPR64 reg = allocRegisters<GPR64>(1);
     MOV(reg, ImmAddr(addr(buffer()) + frameCount()));
     MOV(reg.low32(), Base(reg) + Index(rcx)*4);
+    XOR(reg, reg);
+
+//     JumpLabel foo;
+//     MOV(r8, rcx);
+//     AND(r8, Imm8(1));
+//     JNZ(foo);
+//     XOR(reg, reg);
+//     mark(foo);
+
     initStorage<float, GPR64>(m_out, reg);
 }
 
@@ -48,6 +57,11 @@ void SignalNode_BufferWriter::build()
         source->unlock();
         sourceUsed(source);
     }
+    else
+    {
+        freeRegisters(RegisterPack<GPR64>{srcval});
+    }
+    freeRegisters(RegisterPack<GPR64>{base});
 }
 
 }//namespace r64fx

@@ -175,6 +175,9 @@ RegisterPack<Register> SignalNode::allocRegisters(unsigned int count, RegisterTa
             rt[i] = R64FX_REGISTER_USED_NO_STORAGE;
             regpack.setRegAt(n++, Register(i));
         }
+        else
+        {
+        }
     }
 
     if(n < count)
@@ -204,6 +207,7 @@ RegisterPack<Register> SignalNode::allocRegisters(unsigned int count, RegisterTa
             }
         }
     }
+    R64FX_DEBUG_ASSERT(n == count);
 
     regpack.setSize(n);
     return regpack;
@@ -263,35 +267,35 @@ void SignalNode::initStorage_(
 
 void SignalNode::freeStorage(SignalDataStorage &storage)
 {
-//     if(storage.hasRegisters())
-//     {
-//         R64FX_DEBUG_ASSERT(storage.registerType() != SignalRegisterType::Bad);
-//         switch(storage.registerType())
-//         {
-//             case SignalRegisterType::GPR:
-//             {
-//                 break;
-//             }
-// 
-//             case SignalRegisterType::Xmm:
-//             {
-//                 break;
-//             }
-// 
-//             case SignalRegisterType::Ymm:
-//             {
-//                 break;
-//             }
-// 
-//             default:
-//                 break;
-//         }
-//     }
-// 
-//     if(storage.hasMemory())
-//     {
-//         freeStorageMemory(storage);
-//     }
+    if(storage.hasRegisters())
+    {
+        R64FX_DEBUG_ASSERT(storage.registerType() != SignalRegisterType::Bad);
+        switch(storage.registerType())
+        {
+            case SignalRegisterType::GPR:
+            {
+                break;
+            }
+
+            case SignalRegisterType::Xmm:
+            {
+                break;
+            }
+
+            case SignalRegisterType::Ymm:
+            {
+                break;
+            }
+
+            default:
+                break;
+        }
+    }
+
+    if(storage.hasMemory())
+    {
+        freeStorageMemory(storage);
+    }
 }
 
 }//namespace r64fx
