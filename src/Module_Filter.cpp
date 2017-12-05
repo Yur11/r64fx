@@ -52,16 +52,6 @@ public:
     {
         m_audio_input_port   = agent->audio_input_port;
         m_audio_output_port  = agent->audio_output_port;
-
-        setPrologue([](void* arg){
-            auto self = (FilterThreadObjectImpl*) arg;
-            self->prologue();
-        }, this);
-
-        setEpilogue([](void* arg){
-            auto self = (FilterThreadObjectImpl*) arg;
-            self->epilogue();
-        }, this);
     }
 
     ~FilterThreadObjectImpl()

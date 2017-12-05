@@ -1,11 +1,12 @@
-#include "Module_SoundDriver.hpp"
-#include "ModulePrivate.hpp"
-#include "SoundDriver.hpp"
-#include "SignalNode_BufferRW.hpp"
+/* To be included in Module.cpp */
 
 namespace r64fx{
 
 namespace{
+
+/*
+ * === Agents & Messages ==============================================================
+ */
 
 R64FX_DECL_DEFAULT_MODULE_AGENTS(SoundDriver);
 
@@ -32,23 +33,15 @@ typedef Message<3, SoundDriverAudioOutput,  SignalSink,    Callback_RemovePort> 
 #define R64FX_CASE_RECIEVED(A) case Message_##A ::Key() : { recieved((Message_##A*)msg.value());  break; }
 
 
+/*
+ * === Worker Thread ===================================================================
+ */
 
-/*======= Worker Thread =======*/
-
-
-/* A pair of reader and writer noded can share a single buffer. */
-struct SoundDriverPortsImpl : public LinkedList<SoundDriverPortsImpl>::Node{
-    SoundDriverAudioInput*    input   = nullptr;
-    SoundDriverAudioOutput*   output  = nullptr;
-    SignalNode_BufferReader*  reader  = nullptr;
-    SignalNode_BufferWriter*  writer  = nullptr;
-
-/* For access to members from template functions. */
 #define R64FX_ACCESS_METHODS(AddOrRemove, Name, Member1, Member2)\
-    inline auto  Name           (Message_##AddOrRemove##AudioInput*)  ->decltype(Member1)& { return Member1; }\
-    inline auto  Name           (Message_##AddOrRemove##AudioOutput*) ->decltype(Member2)& { return Member2; }\
-    inline auto  second_##Name  (Message_##AddOrRemove##AudioInput*)  ->decltype(Member2)& { return Member2; }\
-    inline auto  second_##Name  (Message_##AddOrRemove##AudioOutput*) ->decltype(Member1)& { return Member1; }
+    inline auto  Name           (SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioInput*)  ->decltype(impl->Member1)& { return impl->Member1; }\
+    inline auto  Name           (SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioOutput*) ->decltype(impl->Member2)& { return impl->Member2; }\
+    inline auto  second_##Name  (SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioInput*)  ->decltype(impl->Member2)& { return impl->Member2; }\
+    inline auto  second_##Name  (SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioOutput*) ->decltype(impl->Member1)& { return impl->Member1; }
     R64FX_ACCESS_METHODS(Add,     port,  input,  output)
     R64FX_ACCESS_METHODS(Remove,  port,  input,  output)
     R64FX_ACCESS_METHODS(Add,     node,  reader, writer)
@@ -56,31 +49,19 @@ struct SoundDriverPortsImpl : public LinkedList<SoundDriverPortsImpl>::Node{
 #undef R64FX_ACCESS_METHODS
 
 #define R64FX_ACCESS_METHODS(AddOrRemove)\
-    inline SignalSource* node_port(Message_##AddOrRemove##AudioInput*) { return reader->out(); }\
-    inline SignalSink*   node_port(Message_##AddOrRemove##AudioOutput*) { return writer->in(); }
+    inline SignalSource* node_port(SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioInput*) { return impl->reader->out(); }\
+    inline SignalSink*   node_port(SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioOutput*) { return impl->writer->in(); }
     R64FX_ACCESS_METHODS(Add)
     R64FX_ACCESS_METHODS(Remove)
 #undef R64FX_ACCESS_METHODS
 
-};
 
-
-class SoundDriverThreadObjectImpl : public ModuleThreadObjectImpl{
-    LinkedList<SoundDriverPortsImpl> m_impls;
+class SoundDriverThreadObjectImpl : public ModuleSoundDriverThreadObjectImpl{
 
 public:
     SoundDriverThreadObjectImpl(SoundDriverDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
-    : ModuleThreadObjectImpl(agent, R64FX_THREAD_OBJECT_IMPL_ARGS)
+    : ModuleSoundDriverThreadObjectImpl(agent, R64FX_THREAD_OBJECT_IMPL_ARGS)
     {
-        setPrologue([](void* arg){
-            auto self = (SoundDriverThreadObjectImpl*) arg;
-            self->prologue();
-        }, this);
-
-        setEpilogue([](void* arg){
-            auto self = (SoundDriverThreadObjectImpl*) arg;
-            self->epilogue();
-        }, this);
     }
 
     ~SoundDriverThreadObjectImpl()
@@ -115,25 +96,25 @@ private:
         auto sg = signalGraph();
 
         DataBufferPointer buffer;
-        auto impl = m_impls.first();
-        while(impl && impl->port(message)) impl = impl->next();
+        auto impl = ports().first();
+        while(impl && port(impl, message)) impl = impl->next();
         if(impl)
         {
-            R64FX_DEBUG_ASSERT(impl->second_port(message));
-            R64FX_DEBUG_ASSERT(impl->second_node(message));
-            buffer = impl->second_node(message)->buffer();
+            R64FX_DEBUG_ASSERT(second_port(impl, message));
+            R64FX_DEBUG_ASSERT(second_node(impl, message));
+            buffer = second_node(impl, message)->buffer();
         }
         else
         {
             impl = allocObj<SoundDriverPortsImpl>();
-            m_impls.append(impl);
+            ports().append(impl);
             R64FX_DEBUG_ASSERT(signalGraph());
             buffer = signalGraph()->allocBuffer();
         }
 
-        impl->port(message) = message->sd_port;
-        impl->node(message) = allocObj<NodeT, SignalGraph&, DataBufferPointer>(*sg, buffer);
-        message->node_port = impl->node_port(message);
+        port(impl, message) = message->sd_port;
+        node(impl, message) = allocObj<NodeT, SignalGraph&, DataBufferPointer>(*sg, buffer);
+        message->node_port = node_port(impl, message);
     }
 
     inline void recieved(Message_AddAudioInput* message)
@@ -150,25 +131,25 @@ private:
     {
         R64FX_DEBUG_ASSERT(message->node_port);
 
-        auto impl = m_impls.first();
-        while(impl && impl->node_port(message) != message->node_port) impl = impl->next();
+        auto impl = ports().first();
+        while(impl && node_port(impl, message) != message->node_port) impl = impl->next();
         R64FX_DEBUG_ASSERT(impl);
-        auto buffer = impl->node(message)->buffer();
-        message->sd_port = impl->port(message);
-        freeObj(impl->node(message));
+        auto buffer = node(impl, message)->buffer();
+        message->sd_port = port(impl, message);
+        freeObj(node(impl, message));
         while(impl->next())
         {
-            auto next_node = impl->next()->node(message);
-            impl->node(message) = next_node;
+            auto next_node = node(impl->next(), message);
+            node(impl, message) = next_node;
             auto next_buffer = next_node->buffer();
             next_node->setBuffer(buffer);
             buffer = next_buffer;
             impl = impl->next();
         }
-        if(!impl->second_node(message))
+        if(!second_node(impl, message))
         {
             signalGraph()->freeBuffer(buffer);
-            m_impls.remove(impl);
+            ports().remove(impl);
             freeObj(impl);
         }
     }
@@ -185,7 +166,7 @@ private:
 
     inline void prologue()
     {
-        auto impl = m_impls.first();
+        auto impl = ports().first();
         while(impl && impl->input)
         {
             impl->input->readSamples(impl->reader->bufferAddr(), signalGraph()->frameCount());
@@ -195,7 +176,7 @@ private:
 
     inline void epilogue()
     {
-        auto impl = m_impls.first();
+        auto impl = ports().first();
         while(impl && impl->output)
         {
             impl->output->writeSamples(impl->writer->bufferAddr(), signalGraph()->frameCount());

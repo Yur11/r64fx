@@ -228,13 +228,20 @@ class SignalGraphImpl : public AssemblerBuffers{
 
     unsigned long  iteration_count  = 0;
     unsigned long  frame_count      = 0;
+    unsigned long  build_bits       = 0;
+
+    JumpLabel loop;
 
     unsigned long  gprs[16];
     unsigned long  xmms[16];
 
     SignalGraphImpl();
 
-    void buildNode(SignalNode &node);
+    void beginBuild();
+
+    void buildNode(SignalNode* node);
+
+    void endBuild();
 
     inline HeapBuffer heapBuffer() const { return HeapBuffer(dataBegin(), dataBufferSize()); }
 
@@ -276,8 +283,18 @@ public:
     /* Disconnect node from its source. */
     void unlink(const NodeSink node_sink);
 
-    /* Build signal graph function. */
-    void build(SignalNode* terminal_node);
+    void beginBuild();
+
+    void endBuild();
+
+    inline void buildNode(SignalNode* node) { m.buildNode(node); }
+
+    inline void build(SignalNode* terminal_node)
+    {
+        beginBuild();
+        buildNode(terminal_node);
+        endBuild();
+    }
 
     /* Run signal graph function. */
     inline long run() { return ((long (*)())m.codeBegin())(); }

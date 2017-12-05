@@ -1,10 +1,11 @@
 #include "SignalGraph.hpp"
-#include "SignalNodeFlags.hpp"
 #include <cstring>
 
 #define R64FX_REGISTER_NOT_USED               0
 #define R64FX_REGISTER_USED_NO_STORAGE        1
 #define R64FX_REGISTER_MUST_NEVER_BE_USED     2
+
+#define R64FX_BUILD_IN_PROGRESS               1
 
 
 namespace r64fx{
@@ -32,12 +33,14 @@ SignalGraphImpl::SignalGraphImpl()
 }
 
 
-void SignalGraphImpl::buildNode(SignalNode &node)
+void SignalGraphImpl::buildNode(SignalNode* node)
 {
-    if(node.m_iteration_count < iteration_count)
+    R64FX_DEBUG_ASSERT(build_bits & R64FX_BUILD_IN_PROGRESS);
+
+    if(node->m_iteration_count != iteration_count)
     {
-        node.m_iteration_count = iteration_count;
-        node.build();
+        node->m_iteration_count = iteration_count;
+        node->build();
     }
 }
 
@@ -84,10 +87,41 @@ void SignalGraph::unlink(const NodeSink node_sink)
 }
 
 
+void SignalGraph::beginBuild()
+{
+    R64FX_DEBUG_ASSERT(!(m.build_bits & R64FX_BUILD_IN_PROGRESS));
+    m.build_bits |= R64FX_BUILD_IN_PROGRESS;
+    R64FX_DEBUG_ASSERT(m.frame_count > 0);
+
+    m.rewindCode();
+    PUSH(rbx);
+    PUSH(rbp);
+
+    MOV(rcx, Imm32(-m.frame_count));
+    mark(m.loop);
+
+    m.iteration_count++;
+}
+
+
+void SignalGraph::endBuild()
+{
+    R64FX_DEBUG_ASSERT(m.build_bits & R64FX_BUILD_IN_PROGRESS);
+    m.build_bits &= ~R64FX_BUILD_IN_PROGRESS;
+
+    ADD(rcx, Imm32(1));
+    JNZ(m.loop);
+
+    POP(rbp);
+    POP(rbx);
+    RET();
+}
+
+
 void SignalNode::ensureBuilt(SignalSource* source)
 {
     R64FX_DEBUG_ASSERT(source->m_processed_sink_count < source->m_connected_sink_count);
-    m.buildNode(*source->parentNode());
+    m.buildNode(source->parentNode());
     source->m_processed_sink_count++;
 }
 
@@ -99,33 +133,6 @@ void SignalNode::sourceUsed(SignalSource* source)
         source->m_processed_sink_count = 0;
         freeStorage(*source);
     }
-}
-
-
-void SignalGraph::build(SignalNode* terminal_node)
-{
-    R64FX_DEBUG_ASSERT(m.frame_count > 0);
-
-    m.rewindCode();
-    PUSH(rbx);
-    PUSH(rbp);
-
-    MOV(rcx, Imm32(-m.frame_count));
-    JumpLabel loop;
-    mark(loop);
-
-    if(terminal_node)
-    {
-        m.iteration_count++;
-        m.buildNode(*terminal_node);
-    }
-
-    ADD(rcx, Imm32(1));
-    JNZ(loop);
-
-    POP(rbp);
-    POP(rbx);
-    RET();
 }
 
 

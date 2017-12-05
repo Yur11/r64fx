@@ -1,5 +1,4 @@
 #include "SignalNode_BufferRW.hpp"
-#include "SignalNodeFlags.hpp"
 
 namespace r64fx{
 

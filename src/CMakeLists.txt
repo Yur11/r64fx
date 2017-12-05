@@ -55,7 +55,6 @@ set(SRC
     Module_Filter.cpp
     Module_Oscillator.cpp
     Module_Player.cpp
-    Module_SoundDriver.cpp
     Mouse.cpp
     Mutex.cpp
     Painter.cpp

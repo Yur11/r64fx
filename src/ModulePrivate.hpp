@@ -92,19 +92,11 @@ public:
 protected:
     SoundDriverSyncPort* syncPort() const;
 
-    void setPrologue(void (*fun)(void* arg), void* arg = nullptr);
-
-    void setEpilogue(void (*fun)(void* arg), void* arg = nullptr);
-
     long bufferSize() const;
 
     long sampleRate() const;
 
     SignalGraph* signalGraph() const;
-
-    void addTerminalNode(SignalNode* node);
-
-    void removeTerminalNode(SignalNode* node);
 
     void armRebuild();
 

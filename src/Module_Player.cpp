@@ -48,16 +48,6 @@ public:
     {
         m_audio_input_port   = agent->audio_input_port;
         m_audio_output_port  = agent->audio_output_port;
-
-        setPrologue([](void* arg){
-            auto self = (PlayerThreadObjectImpl*) arg;
-            self->prologue();
-        }, this);
-
-        setEpilogue([](void* arg){
-            auto self = (PlayerThreadObjectImpl*) arg;
-            self->epilogue();
-        }, this);
     }
 
     ~PlayerThreadObjectImpl()
@@ -89,16 +79,6 @@ private:
                 break;
             }
         }
-    }
-
-    inline void prologue()
-    {
-
-    }
-
-    inline void epilogue()
-    {
-
     }
 };
 

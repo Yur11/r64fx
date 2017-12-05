@@ -34,16 +34,6 @@ public:
     {
         m_audio_output_port  = agent->audio_output_port;
         m_midi_input_port    = agent->midi_input_port;
-
-        setPrologue([](void* arg){
-            auto self = (OscillatorThreadObjectImpl*) arg;
-            self->prologue();
-        }, this);
-
-        setEpilogue([](void* arg){
-            auto self = (OscillatorThreadObjectImpl*) arg;
-            self->epilogue();
-        }, this);
     }
 
     ~OscillatorThreadObjectImpl()
@@ -60,51 +50,6 @@ private:
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg)
     {
         cout << "msg: " << long(msg.value()) << "\n";
-    }
-
-    inline void prologue()
-    {
-        MidiEvent midi_event;
-        while(m_midi_input_port->readEvents(&midi_event, 1))
-        {
-            MidiMessage msg = midi_event.message();
-            switch(msg.type())
-            {
-                case MidiMessage::Type::NoteOn:
-                {
-                    cout << "NoteOn:  "  << msg.channel() << ", note: " << msg.noteNumber() << ", vel: " << msg.velocity() << "\n";
-                    break;
-                }
-
-                case MidiMessage::Type::NoteOff:
-                {
-                    cout << "NoteOff: "  << msg.channel() << ", note: " << msg.noteNumber() << ", vel: " << msg.velocity() << "\n";
-                    break;
-                }
-
-                case MidiMessage::Type::ControlChange:
-                {
-                    cout << "CC: " << msg.channel() << ", " << msg.controllerNumber() << ", " << msg.controllerValue() << "\n";
-                    break;
-                }
-
-                default:
-                {
-                    break;
-                }
-            }
-        }//while
-
-        float val = 0.0f;
-        for(int i=0; i<bufferSize(); i++)
-        {
-            m_audio_output_port->writeSamples(&val, 1);
-        }
-    }
-
-    inline void epilogue()
-    {
-
     }
 };
 

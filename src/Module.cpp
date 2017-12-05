@@ -1,7 +1,8 @@
 #include "Module.hpp"
-#define R64FX_MODULE_PRIVATE_IMPL
 #include "ModulePrivate.hpp"
+#include "Module_SoundDriver.hpp"
 #include "SoundDriver.hpp"
+#include "SignalNode_BufferRW.hpp"
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
 #include "InstanceCounter.hpp"
@@ -55,23 +56,20 @@ struct ModuleLinkMessage{
  * === Worker Thread ===================================================================
  */
 
+/* A pair of reader and writer noded can share a single buffer. */
+struct SoundDriverPortsImpl : public LinkedList<SoundDriverPortsImpl>::Node{
+    SoundDriverAudioInput*    input   = nullptr;
+    SoundDriverAudioOutput*   output  = nullptr;
+    SignalNode_BufferReader*  reader  = nullptr;
+    SignalNode_BufferWriter*  writer  = nullptr;
+};
+
 struct ModuleThreadAssets{
     SoundDriverSyncPort*  sd_sync_port   = nullptr;
     long                  sample_rate    = 0;
     long                  flags          = 0;
     SignalGraph           signal_graph;
-    SignalNode*           terminal_node  = nullptr;
-
-    struct Fun : public LinkedList<Fun>::Node{
-        void (*fun)(void* arg)        = nullptr;
-        void*  arg                    = nullptr;
-        ModuleThreadObjectImpl* impl  = nullptr;
-
-        Fun(void (*fun)(void* arg), void* arg, ModuleThreadObjectImpl* impl)
-        : fun(fun), arg(arg), impl(impl) {}
-    };
-    LinkedList<Fun> prologue_list;
-    LinkedList<Fun> epilogue_list;
+    LinkedList<SoundDriverPortsImpl> ports;
 };
 
 
@@ -118,21 +116,31 @@ private:
             long nmsgs = m.sd_sync_port->readMessages(sync_msg, R64FX_SOUND_DRIVER_SYNC_PORT_BUFFER_SIZE);
             if(nmsgs > 0)
             {
-                for(auto item : m.prologue_list)
+                auto item = m.ports.first();
+                while(item && item->input)
                 {
-                    item->fun(item->arg);
+                    item->input->readSamples(item->reader->bufferAddr(), m.signal_graph.frameCount());
+                    item = item->next();
                 }
 
                 if(m.flags & R64FX_GRAPH_REBUILD_ARMED)
                 {
-                    m.signal_graph.build(m.terminal_node);
                     m.flags &= ~R64FX_GRAPH_REBUILD_ARMED;
+                    m.signal_graph.beginBuild();
+                    item = m.ports.first();
+                    while(item && item->input)
+                    {
+                        item = item->next();
+                    }
+                    m.signal_graph.endBuild();
                 }
                 m.signal_graph.run();
 
-                for(auto item : m.epilogue_list)
+                item = m.ports.first();
+                while(item && item->input)
                 {
-                    item->fun(item->arg);
+                    item->output->writeSamples(item->writer->bufferAddr(), m.signal_graph.frameCount());
+                    item = item->next();
                 }
             }
             else
@@ -142,11 +150,6 @@ private:
         }
 
         m.sd_sync_port->disable();
-
-#ifdef R64FX_DEBUG
-        assert(m.prologue_list.empty());
-        assert(m.epilogue_list.empty());
-#endif///R64FX_DEBUG
     }
 
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override final
@@ -183,64 +186,16 @@ ModuleThreadObjectImpl::ModuleThreadObjectImpl(ModuleDeploymentAgent* agent, R64
 
 
 void ModuleThreadObjectImpl::clearHooks()
-{
-    setPrologue(nullptr);
-    setEpilogue(nullptr);
-}
+{}
 
 
 ModuleThreadObjectImpl::~ModuleThreadObjectImpl()
-{
-}
+{}
 
 
 SoundDriverSyncPort* ModuleThreadObjectImpl::syncPort() const
 {
     return R64FX_MODULE_THREAD_ASSETS->sd_sync_port;
-}
-
-
-namespace{
-
-void set_list_item(LinkedList<ModuleThreadAssets::Fun> &item_list, HeapAllocator* ha, void (*fun)(void* arg), void* arg, ModuleThreadObjectImpl* impl)
-{
-    for(auto item : item_list)
-    {
-        if(item->impl == impl)
-        {
-            if(fun)
-            {
-                item->fun = fun;
-                item->arg = arg;
-            }
-            else
-            {
-                item_list.remove(item);
-                ha->freeObj(item);
-            }
-            return;
-        }
-    }
-
-    if(fun)
-    {
-        auto item = ha->allocObj<ModuleThreadAssets::Fun>(fun, arg, impl);
-        item_list.append(item);
-    }
-}
-
-}//namespace
-
-
-void ModuleThreadObjectImpl::setPrologue(void (*fun)(void* arg), void* arg)
-{
-    set_list_item(R64FX_MODULE_THREAD_ASSETS->prologue_list, heapAllocator(), fun, arg, this);
-}
-
-
-void ModuleThreadObjectImpl::setEpilogue(void (*fun)(void* arg), void* arg)
-{
-    set_list_item(R64FX_MODULE_THREAD_ASSETS->epilogue_list, heapAllocator(), fun, arg, this);
 }
 
 
@@ -259,21 +214,6 @@ long ModuleThreadObjectImpl::sampleRate() const
 SignalGraph* ModuleThreadObjectImpl::signalGraph() const
 {
     return &(R64FX_MODULE_THREAD_ASSETS->signal_graph);
-}
-
-
-void ModuleThreadObjectImpl::addTerminalNode(SignalNode* node)
-{
-    R64FX_DEBUG_ASSERT(node);
-    R64FX_DEBUG_ASSERT(R64FX_MODULE_THREAD_ASSETS->terminal_node == nullptr);
-    R64FX_MODULE_THREAD_ASSETS->terminal_node = node;
-}
-
-
-void ModuleThreadObjectImpl::removeTerminalNode(SignalNode* node)
-{
-    R64FX_DEBUG_ASSERT(node == R64FX_MODULE_THREAD_ASSETS->terminal_node);
-    R64FX_MODULE_THREAD_ASSETS->terminal_node = nullptr;
 }
 
 
@@ -299,6 +239,14 @@ void ModuleThreadObjectImpl::exitThread()
 {
     R64FX_MODULE_THREAD_ASSETS->flags &= ~R64FX_MODULE_THREAD_RUNNING;
 }
+
+
+class ModuleSoundDriverThreadObjectImpl : public ModuleThreadObjectImpl{
+public:
+    using ModuleThreadObjectImpl::ModuleThreadObjectImpl;
+
+    inline LinkedList<SoundDriverPortsImpl> &ports() { return R64FX_MODULE_THREAD_ASSETS->ports; }
+};
 
 
 /*
@@ -409,7 +357,7 @@ class ModuleGlobal : public InstanceCounter{
 
     virtual void initEvent() override final
     {
-        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Jack);
+        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Stub);
         m_sound_driver->enable();
 
         m_timer = new(std::nothrow) Timer;
@@ -659,3 +607,5 @@ void ModuleLink::disable(ModuleLink* links, int nlinks, ModuleLink::Callback* ca
 }
 
 }//namespace r64fx
+
+#include "Module_SoundDriver.cxx"
