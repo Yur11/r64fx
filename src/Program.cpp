@@ -14,7 +14,7 @@
 #include "Module_Player.hpp"
 #include "Module_SoundDriver.hpp"
 
-#include <iostream>
+#include "Debug.hpp"
 
 using namespace std;
 
@@ -171,13 +171,27 @@ struct ProgramPrivate : public View_ProgramEventIface{
         cout << "Ports Connected\n";
     }
 
-    void portRemoved(Module_SoundDriver* module_sound_driver)
+    void portRemoved(ModulePort* port)
     {
         cout << "portRemoved\n";
-        m_module_sound_driver->disengage([](Module* module, void* arg){
-            auto p = (ProgramPrivate*) arg;
-            p->disengagedModuleSoundDriver(static_cast<Module_SoundDriver*>(module));
-        }, this);
+        if(port == m_sink)
+        {
+            R64FX_DEBUG_ASSERT(port->isSink());
+            m_sink = nullptr;
+        }
+        else
+        {
+            R64FX_DEBUG_ASSERT(port->isSource());
+            m_source = nullptr;
+        }
+
+        if(!m_sink && !m_source)
+        {
+            m_module_sound_driver->disengage([](Module* module, void* arg){
+                auto p = (ProgramPrivate*) arg;
+                p->disengagedModuleSoundDriver(static_cast<Module_SoundDriver*>(module));
+            }, this);
+        }
     }
 
     void disengagedModuleSoundDriver(Module_SoundDriver* module_sound_driver)
@@ -278,10 +292,21 @@ struct ProgramPrivate : public View_ProgramEventIface{
     {
         if(m_module_sound_driver)
         {
-            m_module_sound_driver->removePort(m_source, [](void* arg1, void* arg2){
-                auto self = (ProgramPrivate*) arg1;
-                self->portRemoved((Module_SoundDriver*)arg2);
-            }, this, m_module_sound_driver);
+            if(m_source)
+            {
+                m_module_sound_driver->removePort(m_source, [](void* arg1, void* arg2){
+                    auto self = (ProgramPrivate*) arg1;
+                    self->portRemoved((ModulePort*)arg2);
+                }, this, static_cast<ModulePort*>(m_source));
+            }
+
+            if(m_sink)
+            {
+                m_module_sound_driver->removePort(m_sink, [](void* arg1, void* arg2){
+                    auto self = (ProgramPrivate*) arg1;
+                    self->portRemoved((ModulePort*)arg2);
+                }, this, static_cast<ModulePort*>(m_sink));
+            }
         }
     }
 

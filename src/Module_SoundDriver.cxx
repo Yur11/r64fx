@@ -137,6 +137,7 @@ private:
         auto buffer = node(impl, message)->buffer();
         message->sd_port = port(impl, message);
         freeObj(node(impl, message));
+        node(impl, message) = nullptr;
         while(impl->next())
         {
             auto next_node = node(impl->next(), message);

@@ -145,7 +145,7 @@ private:
             }
             else
             {
-                sleep_nanoseconds(3000 * 1000);
+                sleep_nanoseconds(30000 * 1000);
             }
         }
 
@@ -357,7 +357,7 @@ class ModuleGlobal : public InstanceCounter{
 
     virtual void initEvent() override final
     {
-        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Stub);
+        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Jack);
         m_sound_driver->enable();
 
         m_timer = new(std::nothrow) Timer;
