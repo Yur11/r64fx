@@ -46,11 +46,21 @@ struct RootModuleWithdrawalArgs{
 
 R64FX_DECL_MODULE_AGENTS(RootModule);
 
-struct ModuleLinkMessage{
-    SignalSource* source         = nullptr;
-    SignalSink*   sink           = nullptr;
 
-    constexpr static unsigned long Key() { return 1; }
+struct ModuleLinkMessage{
+    enum class Key : unsigned long { Link, Unlink };
+
+    struct Item{
+        SignalSource* source  = nullptr;
+        SignalSink*   sink    = nullptr;
+    };
+    Item*                  items     = nullptr;
+    unsigned long          nitems    = 0;
+
+    ModuleLink::Callback*  callback  = nullptr;
+    void*                  arg       = nullptr;
+    ModuleLink**           links     = nullptr;
+    unsigned int           nlinks    = 0;
 };
 
 
@@ -88,21 +98,13 @@ public:
     }
 
     void storeWithdrawalArgs(RootModuleWithdrawalAgent* agent)
-    {
-        agent->sd_sync_port = m.sd_sync_port;
-    }
+        { agent->sd_sync_port = m.sd_sync_port; }
 
     ~RootModuleThreadObjectImpl(){}
 
-    inline void readMessagesFromIface()
-    {
-        ThreadObjectImpl::readMessagesFromIface();
-    }
+    inline void readMessagesFromIface() { ThreadObjectImpl::readMessagesFromIface(); }
 
-    inline ModuleThreadAssets* assets()
-    {
-        return &m;
-    }
+    inline ModuleThreadAssets* assets() { return &m; }
 
 private:
     virtual void runThread() override final
@@ -158,17 +160,23 @@ private:
 
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override final
     {
-        switch(msg.key() >> 32)
+        switch(msg.key())
         {
-            case ModuleLinkMessage::Key():
+            case (unsigned long)ModuleLinkMessage::Key::Link:
             {
                 auto mlm = (ModuleLinkMessage*)msg.value();
-                unsigned int nmsgs = msg.key() & 0xFFFFFFFFUL;
-                for(unsigned int i=0; i<nmsgs; i++)
-                {
-                    auto source = mlm[i].source;
-                    auto sink = mlm[i].sink;
-                }
+                std::cout << "Link: " << mlm->nitems << "\n";
+                for(unsigned int i=0; i<mlm->nitems; i++)
+                    { m.signal_graph.link(mlm->items[i].source, mlm->items[i].sink); }
+                break;
+            }
+
+            case (unsigned long)ModuleLinkMessage::Key::Unlink:
+            {
+                auto mlm = (ModuleLinkMessage*)msg.value();
+                std::cout << "Unlink: " << mlm->nitems << "\n";
+                for(unsigned int i=0; i<mlm->nitems; i++)
+                    { m.signal_graph.unlink(mlm->items[i].sink);}
                 break;
             }
 
@@ -324,18 +332,31 @@ class RootModuleThreadObjectIface : public ModuleThreadObjectIface{
 
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg) override final
     {
-        auto msgs = (ModuleLinkMessage*) msg.value();
-        long nmsgs = msg.key();
-#ifdef R64FX_DEBUG
-        assert(msgs);
-        assert(nmsgs > 0);
-#endif//R64FX_DEBUG
-        delete[] msgs;
+        switch(msg.key())
+        {
+            case (unsigned long)ModuleLinkMessage::Key::Link:
+            case (unsigned long)ModuleLinkMessage::Key::Unlink:
+            {
+                auto mlm = (ModuleLinkMessage*) msg.value();
+                if(mlm->callback)
+                    mlm->callback(mlm->links, mlm->nlinks, mlm->arg);
+                delete[] mlm->items;
+                delete mlm;
+                break;
+            }
+
+            default:
+            {
+                std::cerr << "Bad message type!\n";
+                abort();
+            }
+        }
     }
 
-    inline void linkNodes(ModuleLinkMessage* msgs, unsigned int nmsgs)
+public:
+    inline void sendToImpl(ModuleLinkMessage::Key key, ModuleLinkMessage* mlm)
     {
-         ThreadObjectMessage msg((ModuleLinkMessage::Key() << 32) | nmsgs, msgs);
+         ThreadObjectMessage msg((unsigned long)key, mlm);
          sendMessagesToImpl(&msg, 1);
     }
 };
@@ -514,6 +535,34 @@ public:
     }
 
     inline SoundDriver* soundDriver() const { return m_sound_driver; }
+
+    inline void changeModuleLinks(ModuleLinkMessage::Key key, ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg)
+    {
+        R64FX_DEBUG_ASSERT(links);
+        R64FX_DEBUG_ASSERT(nlinks > 0);
+
+        ModuleThreadHandle* thread = links[0]->source()->thread();
+        R64FX_DEBUG_ASSERT(links[0]->sink()->thread() == thread);
+
+        auto mlm       = new ModuleLinkMessage;
+        mlm->items     = new ModuleLinkMessage::Item[nlinks];
+        mlm->nitems    = nlinks;
+        mlm->callback  = callback;
+        mlm->arg       = arg;
+        mlm->links     = links;
+        mlm->nlinks    = nlinks;
+
+        for(unsigned int i=0; i<nlinks; i++)
+        {
+            auto link = links[i];
+            R64FX_DEBUG_ASSERT(link->source()->thread() == thread);
+            R64FX_DEBUG_ASSERT(link->sink()->thread() == thread);
+            ModulePrivate::getPortPayload(link->source(), mlm->items[i].source);
+            ModulePrivate::getPortPayload(link->sink(),   mlm->items[i].sink);
+        }
+
+        ((RootModuleThreadObjectIface*)thread)->sendToImpl(key, mlm);
+    }
 } g_Module;
 
 }//namespace
@@ -594,54 +643,22 @@ ModuleSource::ModuleSource()
 
 
 Module::Module()
-{
-    g_Module.created();
-}
-
+    { g_Module.created(); }
 
 Module::~Module()
-{
-    g_Module.destroyed();
-}
-
+    { g_Module.destroyed(); }
 
 void Module::genThreads(ModuleThreadHandle** threads, int nthreads)
-{
-    g_Module.genThreads(threads, nthreads);
-}
-
+    { g_Module.genThreads(threads, nthreads); }
 
 int Module::freeThreads(ModuleThreadHandle** threads, int nthreads)
-{
-    return g_Module.freeThreads(threads, nthreads);
-}
-
+    { return g_Module.freeThreads(threads, nthreads); }
 
 void ModuleLink::enable(ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg)
-{
-    R64FX_DEBUG_ASSERT(links);
-    R64FX_DEBUG_ASSERT(nlinks > 0);
-
-    ModuleThreadHandle* thread = links[0]->source()->thread();
-    R64FX_DEBUG_ASSERT(links[0]->sink()->thread() == thread);
-
-    auto msgs = new ModuleLinkMessage[nlinks];
-
-    for(unsigned int i=0; i<nlinks; i++)
-    {
-        auto link = links[i];
-        R64FX_DEBUG_ASSERT(link->source()->thread() == thread);
-        R64FX_DEBUG_ASSERT(link->sink()->thread() == thread);
-        ModulePrivate::getPortPayload(link->source(), msgs[i].source);
-        ModulePrivate::getPortPayload(link->sink(),   msgs[i].sink);
-    }
-}
-
+    { g_Module.changeModuleLinks(ModuleLinkMessage::Key::Link, links, nlinks, callback, arg); }
 
 void ModuleLink::disable(ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg)
-{
-    
-}
+    { g_Module.changeModuleLinks(ModuleLinkMessage::Key::Unlink, links, nlinks, callback, arg); }
 
 }//namespace r64fx
 

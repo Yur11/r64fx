@@ -385,20 +385,18 @@ protected:
 
     /* Retrieve registers from storage. */
 private:
-    RegisterPack<Register> getStorageRegisters(SignalDataStorage &storage, RegisterTable rt) const;
+    RegisterPack<Register> getStorageRegisters(SignalDataStorage &storage, RegisterTable rt, bool remove);
 protected:
-    template<typename RegisterT> inline RegisterPack<RegisterT> getStorageRegisters(SignalDataStorage &storage) const
+    template<typename RegisterT> inline RegisterPack<RegisterT> getStorageRegisters(SignalDataStorage &storage)
     {
         R64FX_DEBUG_ASSERT(storage.registerType() == register_type<RegisterT>());
-        return RegisterPack<RegisterT>(getStorageRegisters(storage, registerTable(RegisterT())));
+        return RegisterPack<RegisterT>(getStorageRegisters(storage, registerTable(RegisterT()), false));
     }
 
-private:
-    RegisterPack<Register> removeStorageRegisters(SignalDataStorage &storage, RegisterTable rt);
-public:
     template<typename RegisterT> inline RegisterPack<RegisterT> removeStorageRegisters(SignalDataStorage &storage)
     {
         R64FX_DEBUG_ASSERT(storage.registerType() == register_type<RegisterT>());
+        return RegisterPack<RegisterT>(getStorageRegisters(storage, registerTable(RegisterT()), true));
     }
 
 
@@ -406,8 +404,11 @@ public:
 private:
     void freeRegisters(RegisterPack<Register> pack, RegisterTable rt);
 protected:
-    template<typename RegisterT> void freeRegisters(RegisterPack<RegisterT> regpack)
+    template<typename RegisterT> inline void freeRegisters(RegisterPack<RegisterT> regpack)
         { freeRegisters(RegisterPack<Register>(regpack), registerTable(RegisterT())); }
+
+    template<typename RegisterT> inline void freeStorageRegisters(SignalDataStorage &storage)
+        { freeRegisters<RegisterT>(removeStorageRegisters<RegisterT>(storage)); }
 
 
 private:

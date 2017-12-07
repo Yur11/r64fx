@@ -8,13 +8,8 @@ void SignalNode_BufferReader::build()
     MOV(reg, ImmAddr(addr(buffer()) + frameCount()));
     MOV(reg.low32(), Base(reg) + Index(rcx)*4);
 //     XOR(reg, reg);
-
-//     JumpLabel foo;
-//     MOV(r8, rcx);
-//     AND(r8, Imm8(1));
-//     JNZ(foo);
-//     XOR(reg, reg);
-//     mark(foo);
+//     SHL(reg);
+    OR(reg, Imm32(0x555555));
 
     initStorage<float, GPR64>(m_out, reg);
 }

@@ -150,9 +150,6 @@ RegisterPack<Register> SignalNode::allocRegisters(unsigned int count, RegisterTa
             rt[i] = R64FX_REGISTER_USED_NO_STORAGE;
             regpack.setRegAt(n++, Register(i));
         }
-        else
-        {
-        }
     }
 
     if(n < count)
@@ -189,15 +186,17 @@ RegisterPack<Register> SignalNode::allocRegisters(unsigned int count, RegisterTa
 }
 
 
-RegisterPack<Register> SignalNode::getStorageRegisters(SignalDataStorage &storage, RegisterTable rt) const
+RegisterPack<Register> SignalNode::getStorageRegisters(SignalDataStorage &storage, RegisterTable rt, bool remove)
 {
     RegisterPack<Register> regpack;
     unsigned int n = 0;
-    for(unsigned int i=0; i<rt.size && n<storage.size(); i++)
+    for(unsigned int i=0; i<rt.size; i++)
     {
         if(rt[i] == (unsigned long)&storage)
         {
             regpack.setRegAt(n++, Register(i));
+            if(remove)
+                rt[i] = R64FX_REGISTER_USED_NO_STORAGE;
         }
     }
     regpack.setSize(n);
@@ -209,7 +208,7 @@ void SignalNode::freeRegisters(RegisterPack<Register> regpack, RegisterTable rt)
 {
     for(unsigned int i=0; i<regpack.size(); i++)
     {
-        auto reg = regpack.regAt(i);
+        auto reg = regpack[i];
         R64FX_DEBUG_ASSERT(reg.code() < rt.size);
         R64FX_DEBUG_ASSERT(rt[reg.code()] == R64FX_REGISTER_USED_NO_STORAGE);
         rt[reg.code()] = R64FX_REGISTER_NOT_USED;
@@ -249,21 +248,27 @@ void SignalNode::freeStorage(SignalDataStorage &storage)
         {
             case SignalRegisterType::GPR:
             {
+                freeStorageRegisters<GPR64>(storage);
                 break;
             }
 
             case SignalRegisterType::Xmm:
             {
+                freeStorageRegisters<Xmm>(storage);
                 break;
             }
 
-            case SignalRegisterType::Ymm:
-            {
-                break;
-            }
+//             case SignalRegisterType::Ymm:
+//             {
+//                 freeStorageRegisters<Ymm>(storage);
+//                 break;
+//             }
 
             default:
+            {
+                abort();
                 break;
+            }
         }
     }
 
@@ -271,6 +276,8 @@ void SignalNode::freeStorage(SignalDataStorage &storage)
     {
         freeStorageMemory(storage);
     }
+
+    storage.setSize(0);
 }
 
 }//namespace r64fx
