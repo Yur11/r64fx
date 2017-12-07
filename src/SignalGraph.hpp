@@ -5,8 +5,8 @@
 #include "jit.hpp"
 
 /* Convenience macros for declaring SignalNode ports. */
-#define R64FX_NODE_SOURCE(name) private: SignalSource m_##name; public: inline NodeSource name() { return {this, &m_##name}; } private:
-#define R64FX_NODE_SINK(name)   private: SignalSink   m_##name; public: inline NodeSink   name() { return {this, &m_##name}; } private:
+#define R64FX_NODE_SOURCE(name) private: SignalSource m_##name; public: inline SignalSource* name() { return &m_##name; } private:
+#define R64FX_NODE_SINK(name)   private: SignalSink   m_##name; public: inline SignalSink*   name() { return &m_##name; } private:
 
 
 namespace r64fx{
@@ -202,28 +202,6 @@ public:
 };
 
 
-/* Convenience decoration class used for function args. */
-template<typename SignalPortT> class NodePort{
-    SignalNode*   m_node  = nullptr;
-    SignalPortT*  m_port  = nullptr;
-
-public:
-    NodePort(SignalNode* node, SignalPortT* port)
-    : m_node(node), m_port(port) {}
-
-    inline SignalNode*  node() const { return m_node; }
-
-    inline operator SignalNode*() { return m_node; }
-
-    inline SignalPortT* port() const { return m_port; }
-
-    inline operator SignalPortT*() { return m_port; }
-};
-
-typedef NodePort<SignalSource> NodeSource;
-typedef NodePort<SignalSink> NodeSink;
-
-
 /* Common implementation structure used by SignalGraph and SignalNode instanes.*/
 class SignalGraphImpl : public AssemblerBuffers{
     friend class SignalGraph;
@@ -282,10 +260,10 @@ public:
     }
 
     /* Connect two nodes together. */
-    void link(const NodeSource &node_source, const NodeSink &node_sink);
+    void link(SignalSource* source, SignalSink* sink);
 
     /* Disconnect node from its source. */
-    void unlink(const NodeSink node_sink);
+    void unlink(SignalSink* sink);
 
     void beginBuild();
 

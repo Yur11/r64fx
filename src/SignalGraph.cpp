@@ -45,45 +45,20 @@ void SignalGraphImpl::buildNode(SignalNode* node)
 }
 
 
-void SignalGraph::link(const NodeSource &node_source, const NodeSink &node_sink)
+void SignalGraph::link(SignalSource* source, SignalSink* sink)
 {
-    auto source_node  = node_source.node();
-    auto sink_node    = node_sink.node();
-    auto source       = node_source.port();
-    auto sink         = node_sink.port();
     R64FX_DEBUG_ASSERT(sink->connectedSource() == nullptr);
-
     sink->m_connected_source = source;
     source->m_connected_sink_count++;
-
-    source_node->m_link_count++;
-    sink_node->m_link_count++;
 }
 
 
-void SignalGraph::unlink(const NodeSink node_sink)
+void SignalGraph::unlink(SignalSink* sink)
 {
-    auto sink_node    = node_sink.node();
-    auto sink         = node_sink.port();
     auto source       = sink->m_connected_source;
-    auto source_node  = source->parentNode();
     sink->m_connected_source = nullptr;
     R64FX_DEBUG_ASSERT(source->m_connected_sink_count > 0);
     source->m_connected_sink_count--;
-
-    R64FX_DEBUG_ASSERT(source_node->m_link_count > 0);
-    source_node->m_link_count--;
-    if(source_node->m_link_count == 0)
-    {
-        source_node->m_iteration_count = 0;
-    }
-
-    R64FX_DEBUG_ASSERT(sink_node->m_link_count > 0);
-    sink_node->m_link_count--;
-    if(sink_node->m_link_count == 0)
-    {
-        sink_node->m_iteration_count = 0;
-    }
 }
 
 

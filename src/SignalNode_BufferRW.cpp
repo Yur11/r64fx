@@ -7,7 +7,7 @@ void SignalNode_BufferReader::build()
     GPR64 reg = allocRegisters<GPR64>(1);
     MOV(reg, ImmAddr(addr(buffer()) + frameCount()));
     MOV(reg.low32(), Base(reg) + Index(rcx)*4);
-    XOR(reg, reg);
+//     XOR(reg, reg);
 
 //     JumpLabel foo;
 //     MOV(r8, rcx);
