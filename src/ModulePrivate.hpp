@@ -141,9 +141,10 @@ class ModuleThreadObjectIface : public ThreadObjectIface{
 protected:
     SoundDriver* soundDriver();
 
+    ModuleThreadHandle* thread() const;
+
 private:
     inline ModuleThreadObjectImplHandle* impl() const { return (ModuleThreadObjectImplHandle*) ThreadObjectIface::impl(); }
-
 
     virtual ThreadObjectDeploymentAgent* newDeploymentAgent() override final;
 
@@ -190,6 +191,16 @@ public:
     inline static void getPortPayload(ModuleSource* source, SignalSource* &payload)
     {
         payload = (SignalSource*) source->m_payload;
+    }
+
+    inline static void setPortThread(ModulePort* port, ModuleThreadHandle* handle)
+    {
+        port->m_thread_handle = handle;
+    }
+
+    inline static void getPortThread(ModulePort* port, ModuleThreadHandle* &handle)
+    {
+        handle = port->m_thread_handle;
     }
 };
 

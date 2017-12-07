@@ -160,13 +160,13 @@ struct ProgramPrivate : public View_ProgramEventIface{
     {
         cout << "Connect Ports\n";
         m_link = new ModuleLink(m_source, m_sink);
-        ModuleLink::enable(m_link, 1, [](ModuleLink* links, int nlinks, void* arg){
+        ModuleLink::enable(&m_link, 1, [](ModuleLink** links, unsigned int nlinks, void* arg){
             auto self = (ProgramPrivate*) arg;
             self->portsConnected(links, nlinks);
         }, this);
     }
 
-    void portsConnected(ModuleLink* links, int nlinks)
+    void portsConnected(ModuleLink** links, int nlinks)
     {
         cout << "Ports Connected\n";
     }

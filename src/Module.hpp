@@ -6,36 +6,6 @@ namespace r64fx{
 class Module;
 class ModuleThreadHandle;
 
-class ModulePort{
-    friend class ModuleSink;
-    friend class ModuleSource;
-    friend class ModulePrivate;
-
-    unsigned long        m_flags          = 0;
-    Module*              m_parent         = nullptr;
-    void*                m_payload        = nullptr;
-    ModuleThreadHandle*  m_thread_handle  = nullptr;
-
-public:
-    ModulePort();
-
-    inline Module* parent() const { return m_parent; };
-
-    inline bool isSink() const { return !isSource(); }
-
-    bool isSource() const;
-};
-
-class ModuleSink : public ModulePort{
-public:
-    ModuleSink();
-};
-
-class ModuleSource : public ModulePort{
-public:
-    ModuleSource();
-};
-
 
 class Module{
     friend class ModulePrivate;
@@ -63,6 +33,39 @@ public:
 };
 
 
+class ModulePort{
+    friend class ModuleSink;
+    friend class ModuleSource;
+    friend class ModulePrivate;
+
+    unsigned long        m_flags          = 0;
+    Module*              m_parent         = nullptr;
+    void*                m_payload        = nullptr;
+    ModuleThreadHandle*  m_thread_handle  = nullptr;
+
+public:
+    ModulePort();
+
+    inline Module* parent() const { return m_parent; };
+
+    inline ModuleThreadHandle* thread() const { return m_thread_handle; }
+
+    inline bool isSink() const { return !isSource(); }
+
+    bool isSource() const;
+};
+
+class ModuleSink : public ModulePort{
+public:
+    ModuleSink();
+};
+
+class ModuleSource : public ModulePort{
+public:
+    ModuleSource();
+};
+
+
 class ModuleLink{
     ModuleSource*  m_source   = nullptr;
     ModuleSink*    m_sink     = nullptr;
@@ -78,11 +81,11 @@ public:
 
     bool enabled();
 
-    typedef void (Callback)(ModuleLink* links, int nlinks, void* arg);
+    typedef void (Callback)(ModuleLink** links, unsigned int nlinks, void* arg);
 
-    static void enable(ModuleLink* links, int nlinks, ModuleLink::Callback* callback, void* arg);
+    static void enable(ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg);
 
-    static void disable(ModuleLink* links, int nlinks, ModuleLink::Callback* callback, void* arg);
+    static void disable(ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg);
 };
 
 }//namespace r64fx

@@ -49,6 +49,8 @@ R64FX_DECL_MODULE_AGENTS(RootModule);
 struct ModuleLinkMessage{
     SignalSource* source         = nullptr;
     SignalSink*   sink           = nullptr;
+
+    constexpr static unsigned long Key() { return 1; }
 };
 
 
@@ -156,22 +158,26 @@ private:
 
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override final
     {
-        auto* msgs = (ModuleLinkMessage*) msg.value();
-        long nmsgs = msg.key();
-#ifdef R64FX_DEBUG
-        assert(msgs);
-        assert(nmsgs > 0);
-#endif//R64FX_DEBUG
-
-        for(int i=0; i<nmsgs; i++)
+        switch(msg.key() >> 32)
         {
-            auto &message = msgs[i];
-#ifdef R64FX_DEBUG
-            assert(message.source);
-            assert(message.sink);
-#endif//R64FX_DEBUG
-        }
+            case ModuleLinkMessage::Key():
+            {
+                auto mlm = (ModuleLinkMessage*)msg.value();
+                unsigned int nmsgs = msg.key() & 0xFFFFFFFFUL;
+                for(unsigned int i=0; i<nmsgs; i++)
+                {
+                    auto source = mlm[i].source;
+                    auto sink = mlm[i].sink;
+                }
+                break;
+            }
 
+            default:
+            {
+                std::cerr << "Bad message type!\n";
+                abort();
+            }
+        }
         sendMessagesToIface(&msg, 1);
     }
 };
@@ -325,6 +331,12 @@ class RootModuleThreadObjectIface : public ModuleThreadObjectIface{
         assert(nmsgs > 0);
 #endif//R64FX_DEBUG
         delete[] msgs;
+    }
+
+    inline void linkNodes(ModuleLinkMessage* msgs, unsigned int nmsgs)
+    {
+         ThreadObjectMessage msg((ModuleLinkMessage::Key() << 32) | nmsgs, msgs);
+         sendMessagesToImpl(&msg, 1);
     }
 };
 
@@ -512,6 +524,14 @@ SoundDriver* ModuleThreadObjectIface::soundDriver()
     return g_Module.soundDriver();
 }
 
+
+ModuleThreadHandle* ModuleThreadObjectIface::thread() const
+{
+    R64FX_DEBUG_ASSERT(dynamic_cast<RootModuleThreadObjectIface*>(parent()));
+    return (ModuleThreadHandle*)parent();
+}
+
+
 ThreadObjectDeploymentAgent* ModuleThreadObjectIface::newDeploymentAgent()
 {
     return newModuleDeploymentAgent();
@@ -597,13 +617,28 @@ int Module::freeThreads(ModuleThreadHandle** threads, int nthreads)
 }
 
 
-void ModuleLink::enable(ModuleLink* links, int nlinks, ModuleLink::Callback* callback, void* arg)
+void ModuleLink::enable(ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg)
 {
-    
+    R64FX_DEBUG_ASSERT(links);
+    R64FX_DEBUG_ASSERT(nlinks > 0);
+
+    ModuleThreadHandle* thread = links[0]->source()->thread();
+    R64FX_DEBUG_ASSERT(links[0]->sink()->thread() == thread);
+
+    auto msgs = new ModuleLinkMessage[nlinks];
+
+    for(unsigned int i=0; i<nlinks; i++)
+    {
+        auto link = links[i];
+        R64FX_DEBUG_ASSERT(link->source()->thread() == thread);
+        R64FX_DEBUG_ASSERT(link->sink()->thread() == thread);
+        ModulePrivate::getPortPayload(link->source(), msgs[i].source);
+        ModulePrivate::getPortPayload(link->sink(),   msgs[i].sink);
+    }
 }
 
 
-void ModuleLink::disable(ModuleLink* links, int nlinks, ModuleLink::Callback* callback, void* arg)
+void ModuleLink::disable(ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg)
 {
     
 }

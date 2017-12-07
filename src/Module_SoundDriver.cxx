@@ -271,6 +271,7 @@ private:
 #endif//R64FX_DEBUG
         auto module_port = newPortFromMessageType(message);
         ModulePrivate::setPortPayload(module_port, message->node_port);
+        ModulePrivate::setPortThread(module_port, thread());
         message->response(module_port, message->arg1, message->arg2);
         delete message;
     }
