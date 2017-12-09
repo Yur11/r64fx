@@ -428,12 +428,14 @@ public:
     inline void name(Mem64 mem, GPR64 reg){ this->m.write(rrm,      reg, mem); }\
     inline void name(GPR64 reg, SIBD sibd){ this->m.write(rrm + 2,  reg, sibd); }\
     inline void name(SIBD sibd, GPR64 reg){ this->m.write(rrm, reg, sibd); }\
+    inline void name(GPR32 reg, SIBD sibd){ this->m.write(rrm + 2,  reg, sibd); }\
+    inline void name(SIBD sibd, GPR32 reg){ this->m.write(rrm, reg, sibd); }\
 
     R64FX_GPR_INST(ADD,  0x01, 0)
     R64FX_GPR_INST(SUB,  0x29, 5)
-    R64FX_GPR_INST(XOR, 0x31, 6)
-    R64FX_GPR_INST(AND, 0x21, 4)
-    R64FX_GPR_INST(OR,  0x09, 1)
+    R64FX_GPR_INST(XOR,  0x31, 6)
+    R64FX_GPR_INST(AND,  0x21, 4)
+    R64FX_GPR_INST(OR,   0x09, 1)
 
 #undef R64FX_GPR_INST
 
