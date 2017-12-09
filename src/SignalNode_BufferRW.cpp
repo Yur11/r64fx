@@ -4,20 +4,40 @@ namespace r64fx{
 
 void SignalNode_BufferReader::build()
 {
-    GPR64 reg = allocRegisters<GPR64>(1);
-    MOV(reg, ImmAddr(addr(buffer()) + frameCount()));
-    MOV(reg.low32(), Base(reg) + Index(rcx)*4);
-//     XOR(reg, reg);
-//     SHL(reg);
-    OR(reg, Imm32(0x555555));
+    R64FX_DEBUG_ASSERT(buffer0());
 
-    initStorage<float, GPR64>(m_out, reg);
+    DataBufferPointer buffer[2] = {
+        buffer1() ? buffer1() : buffer0(), buffer0()
+    };
+
+    auto reg = allocRegisters<GPR64>(buffer1() ? 2 : 1);
+
+    MOV(reg[0], ImmAddr(addr(buffer[0]) + frameCount()));
+    MOV(reg[0].low32(), Base(reg[0]) + Index(rcx)*4);
+    if(buffer1())
+    {
+        MOV(reg[1], ImmAddr(addr(buffer[1]) + frameCount()));
+        MOV(reg[1].low32(), Base(reg[1]) + Index(rcx)*4);
+        SHL(reg[0], Imm8(32));
+        ADD(reg[0], reg[1]);
+        freeRegisters(RegisterPack<GPR64>{reg[1]});
+
+        m_out.setDataType(SignalDataType::Float32_Packed2);
+    }
+    else
+    {
+        m_out.setDataType(SignalDataType::Float32);
+    }
+
+    initStorage<float, GPR64>(m_out, reg[0]);
 }
 
 
 void SignalNode_BufferWriter::build()
 {
-    GPR64 srcval;
+    R64FX_DEBUG_ASSERT(buffer0());
+
+    GPR64 val0;
 
     auto source = m_in.connectedSource();
     if(source)
@@ -29,23 +49,32 @@ void SignalNode_BufferWriter::build()
         if(source->hasRegisters())
         {
             source->lock();
-            srcval = getStorageRegisters<GPR64>(*source);
+            val0 = getStorageRegisters<GPR64>(*source);
         }
         else
         {
             R64FX_DEBUG_ASSERT(source->hasMemory());
-            srcval = allocRegisters<GPR64>(1);
+            val0 = allocRegisters<GPR64>(1);
         }
     }
     else
     {
-        srcval = allocRegisters<GPR64>(1);
-        XOR(srcval, srcval);
+        val0 = allocRegisters<GPR64>(1);
+        XOR(val0, val0);
     }
 
     GPR64 base = allocRegisters<GPR64>(1);
-    MOV(base, ImmAddr(addr(buffer()) + frameCount()));
-    MOV(Base(base) + Index(rcx)*4, srcval.low32());
+    MOV(base, ImmAddr(addr(buffer0()) + frameCount()));
+    MOV(Base(base) + Index(rcx)*4, val0.low32());
+    if(buffer1())
+    {
+        GPR64 val1 = allocRegisters<GPR64>(1);
+        MOV(val1, val0);
+        SHR(val1, Imm8(32));
+        MOV(base, ImmAddr(addr(buffer1()) + frameCount()));
+        MOV(Base(base) + Index(rcx)*4, val1.low32());
+        freeRegisters(RegisterPack<GPR64>{val1});
+    }
 
     if(source)
     {
@@ -54,7 +83,7 @@ void SignalNode_BufferWriter::build()
     }
     else
     {
-        freeRegisters(RegisterPack<GPR64>{srcval});
+        freeRegisters(RegisterPack<GPR64>{val0});
     }
     freeRegisters(RegisterPack<GPR64>{base});
 }

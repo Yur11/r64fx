@@ -16,7 +16,7 @@ class SignalNode;
 
 
 enum class SignalDataType : unsigned long{
-    Bad, Float32, Float64, Int32, Int64
+    Bad, Float32, Float64, Float32_Packed2, Int32, Int64, Int32_Packed2
 };
 
 template<typename T>
@@ -114,51 +114,59 @@ public:
 class SignalDataStorage{
     unsigned long m = 0;
 
-    /* SignalDataStorage always uses a particular reigister type. */
+    /* (Bit 63) True if at least some of the data is stored in registers. */
 private:
-    inline void setRegisterType(SignalRegisterType regtype) { m &= ~(3UL<<62); m |= (((unsigned long)(regtype))<<62); }
-public:
-    inline SignalRegisterType registerType() const { return (SignalRegisterType)((m>>62) & 3); }
-
-    /* Size of current register type in bytes. */
-    inline unsigned int registerSize() const { static char s[4] = {0, 8, 16, 32}; return s[(unsigned long)registerType()]; }
-
-    /* Storage size expressed as a number of registers. */
-private:
-    inline void setSize(unsigned int size) { R64FX_DEBUG_ASSERT(size < ((1UL<<32)-1)); m &= ~((1UL<<32)-1); m |= size;}
-public:
-    inline unsigned int size() const { return m & ((1UL<<32)-1); }
-
-    inline bool empty() const { return size() == 0; }
-
-
-    /* True if at least some of the data is stored in registers. */
-private:
-    constexpr static unsigned long HasRegistersBit = (1UL << 61);
+    constexpr static unsigned long HasRegistersBit = (1UL << 63);
 public:
     inline bool hasRegisters() const { return m & HasRegistersBit; }
 
 
-    /* Prevent storage registers from being reallocated by allocRegisters() method. */
+    /* (Bit 62) Prevent storage registers from being reallocated by allocRegisters() method. */
 private:
-    constexpr static unsigned long LockedBit = (1UL << 60);
+    constexpr static unsigned long LockedBit = (1UL << 62);
 public:
     inline void lock()     { m |= LockedBit; }
     inline void unlock()   { m &= ~LockedBit; }
     inline bool isLocked() { return m & LockedBit; }
 
 
+    /* (Bits 61,60) SignalDataStorage always uses a particular reigister type. */
 private:
-    inline void setMemory(DataBufferPointer ptr)
-        { R64FX_DEBUG_ASSERT(ptr.offset() < 0xFFFFFF); m &= ~(0xFFFFFFUL<<32); m |= ((unsigned long)(ptr.offset()))<<32; }
+    inline void setRegisterType(SignalRegisterType regtype) { m &= ~(3UL<<59); m |= (((unsigned long)(regtype))<<59); }
 public:
-    inline DataBufferPointer memory() const { return DataBufferPointer((m>>32) & 0xFFFFFF); }
+    inline SignalRegisterType registerType() const { return (SignalRegisterType)((m>>59) & 3UL); }
 
-    inline bool hasMemory() const { return memory(); }
+    /* Size of current register type in bytes. */
+    inline unsigned int registerSize() const { static char s[4] = {0, 8, 16, 32}; return s[(unsigned long)registerType()]; }
 
+
+    /* (Bits 59,59,57,56) SignalDataType. */
+    inline void setDataType(SignalDataType datatype) { m &= ~(7UL<<55); m |= (((unsigned long)(datatype))<<55); }
+
+    inline SignalDataType dataType() const { return (SignalDataType)((m>>55) & 3UL); }
+
+
+    /* (Bits 55..32) Storage size expressed as a number of registers. */
+private:
+    inline void setSize(unsigned int size) { R64FX_DEBUG_ASSERT(size < (0x7FFFFFUL)); m &= ~(0x7FFFFFUL<<32); m |= (((unsigned long)size)<<32);}
+public:
+    inline unsigned int size() const { return (m>>32) & 0x7FFFFFUL; }
 
     /* Total size in bytes. */
     inline unsigned int totalSize() const { return size() * registerSize(); }
+
+    inline bool empty() const { return size() == 0; }
+
+
+    /* (Bits 31..0) Offset in SignalGraphImpl memory buffer. */
+private:
+    inline void setMemory(DataBufferPointer ptr)
+        { R64FX_DEBUG_ASSERT(ptr.offset() < 0xFFFFFFFFUL); m &= ~0xFFFFFFFFUL; m |= ((unsigned long)(ptr.offset())); }
+public:
+    inline DataBufferPointer memory() const { return DataBufferPointer(m & 0xFFFFFFFFUL); }
+
+    inline bool hasMemory() const { return memory(); }
+
 
     friend class SignalNode;
 };
