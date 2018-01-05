@@ -1,7 +1,7 @@
 #ifndef R64FX_TEST_HPP
 #define R64FX_TEST_HPP
 
-#include <iostream>
+#include "Debug.hpp"
 
 #define R64FX_EXPECT_TRUE(val) { if(!val) return false; }
 
