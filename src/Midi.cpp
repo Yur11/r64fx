@@ -1,26 +1,10 @@
 #include "Midi.hpp"
 
-
 namespace r64fx{
 
-MidiMessage::MidiMessage(unsigned char* bytes, unsigned char nbytes)
+MidiMessage::Type chan_mode(MidiMessage msg)
 {
-    for(int i=0; i<nbytes; i++)
-    {
-        m_bytes[i] = bytes[i];
-    }
-}
-
-
-MidiMessage::MidiMessage(unsigned int bits)
-{
-    m_bits = bits;
-}
-
-
-MidiMessage::Type chan_mode(const unsigned char* bytes)
-{
-    switch(bytes[1])
+    switch(msg.byte(1))
     {
         case 120:
             return MidiMessage::Type::AllSoundOff;
@@ -30,9 +14,9 @@ MidiMessage::Type chan_mode(const unsigned char* bytes)
 
         case 122:
         {
-            if(bytes[1] == 0)
+            if(msg.byte(1) == 0)
                 return MidiMessage::Type::LocalControlOff;
-            else if(bytes[1] == 127)
+            else if(msg.byte(1) == 127)
                 return MidiMessage::Type::LocalControlOn;
             else
                 return MidiMessage::Type::Bad;
@@ -59,9 +43,9 @@ MidiMessage::Type chan_mode(const unsigned char* bytes)
 }
 
 
-MidiMessage::Type system_common(const unsigned char* bytes)
+MidiMessage::Type system_common(MidiMessage msg)
 {
-    switch(bytes[0])
+    switch(msg.byte(0))
     {
         case 0xF0:
             return MidiMessage::Type::SysEx;
@@ -117,7 +101,7 @@ MidiMessage::Type system_common(const unsigned char* bytes)
 
 MidiMessage::Type MidiMessage::type() const
 {
-    switch(m_bytes[0] & 0xF0)
+    switch(byte(0) & 0xF0)
     {
         case 0x80:
             return MidiMessage::Type::NoteOff;
@@ -130,10 +114,10 @@ MidiMessage::Type MidiMessage::type() const
 
         case 0xB0:
         {
-            if(m_bytes[1] < 120)
+            if(byte(1) < 120)
                 return MidiMessage::Type::ControlChange;
             else
-                return chan_mode(m_bytes);
+                return chan_mode(*this);
         }
 
         case 0xC0:
@@ -146,7 +130,7 @@ MidiMessage::Type MidiMessage::type() const
             return MidiMessage::Type::PitchBend;
 
         case 0xF0:
-            return system_common(m_bytes);
+            return system_common(*this);
 
         default:
             return MidiMessage::Type::Bad;
@@ -206,93 +190,54 @@ int MidiMessage::byteCount() const
 }
 
 
-unsigned char* MidiMessage::bytes()
+bool MidiEventBuffer::read(MidiEvent &event)
 {
-    return m_bytes;
+    if(m_ptr >= m_end)
+        return false;
+
+    auto dword = *m_ptr;
+    m_ptr++;
+    if((dword & 0xFF000000) == 0xFF000000)
+    {
+        R64FX_DEBUG_ASSERT(m_ptr < m_end);
+        m_time = dword & 0x00FFFFFF;
+        dword = *m_ptr;
+        R64FX_DEBUG_ASSERT((dword & 0xFF000000) == 0);
+        m_ptr++;
+    }
+    else
+    {
+        R64FX_DEBUG_ASSERT(m_ptr <= m_end);
+        m_time += (dword >> 24);
+    }
+    event = MidiEvent(MidiMessage(dword & 0x00FFFFFF), m_time);
+    return true;
 }
 
 
-int MidiMessage::channel() const
+bool MidiEventBuffer::write(MidiEvent event)
 {
-    return (m_bytes[0] & 0x0F);
-}
-
-
-int MidiMessage::noteNumber() const
-{
-    return m_bytes[1];
-}
-
-
-int MidiMessage::velocity() const
-{
-    return m_bytes[2];
-}
-
-
-int MidiMessage::polyaftPressure() const
-{
-    return m_bytes[2];
-}
-
-
-int MidiMessage::controllerNumber() const
-{
-    return m_bytes[1];
-}
-
-
-int MidiMessage::controllerValue() const
-{
-    return m_bytes[2];
-}
-
-
-int MidiMessage::programNuber() const
-{
-    return m_bytes[1];
-}
-
-
-int MidiMessage::channelPressure() const
-{
-    return m_bytes[1];
-}
-
-
-int MidiMessage::pitchBend() const
-{
-    int l = m_bytes[1];
-    int m = m_bytes[2];
-    return l | (m<<7);
-}
-
-
-int MidiMessage::songPosition() const
-{
-    int l = m_bytes[1];
-    int m = m_bytes[2];
-    return l | (m<<7);
-}
-
-
-MidiMessage MidiMessage::NoteOn(int channel, int note, int velocity)
-{
-    MidiMessage msg;
-    msg.bytes()[0] = 0x80 + channel;
-    msg.bytes()[1] = note;
-    msg.bytes()[2] = velocity;
-    return msg;
-}
-
-
-MidiMessage MidiMessage::NoteOff(int channel, int note, int velocity)
-{
-    MidiMessage msg;
-    msg.bytes()[0] = 0x90 + channel;
-    msg.bytes()[1] = note;
-    msg.bytes()[2] = velocity;
-    return msg;
+    R64FX_DEBUG_ASSERT(event.time >= m_time);
+    R64FX_DEBUG_ASSERT(event.time <= 0x00FFFFFF);
+    auto dt = event.time - m_time;
+    if(dt >= 0xFF)
+    {
+        if(m_end - m_ptr < 2)
+            return false;
+        *m_ptr = 0xFF000000 | event.time;
+        m_ptr++;
+        *m_ptr = 0;
+    }
+    else
+    {
+        if(m_end - m_ptr < 1)
+            return false;
+        *m_ptr = dt << 24;
+    }
+    *m_ptr |= event.bits & 0x00FFFFFF;
+    m_ptr++;
+    m_time += dt;
+    return true;
 }
 
 }//namespace r64fx
