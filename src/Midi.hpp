@@ -73,6 +73,8 @@ struct MidiMessage{
 
     MidiMessage::Type type() const;
 
+    inline unsigned char* bytes() { return (unsigned char*)&bits; }
+
     int byteCount() const;
 
     inline int channel() const
@@ -140,7 +142,7 @@ template<typename StreamT> inline StreamT &operator<<(StreamT &stream, MidiMessa
             << msg.channel() << ", " << msg.noteNumber() << ", " << msg.polyaftPressure(); break; }
 
         case MidiMessage::Type::ControlChange:  { stream << "ControlChange "
-            << msg.channel() << ", " << msg.controllerValue() << ", " << msg.controllerValue(); break; }
+            << msg.channel() << ", " << msg.controllerNumber() << ", " << msg.controllerValue(); break; }
 
         case MidiMessage::Type::ProgramChange:  { stream << "ProgramChange "
             << msg.channel() << ", " << msg.programNuber(); break; }
@@ -202,31 +204,24 @@ public:
     MidiEventBuffer(unsigned int* begin, unsigned int* end, unsigned int time = 0)
     : m_begin(begin), m_ptr(begin), m_end(end), m_time(time) {}
 
+    MidiEventBuffer() {}
+
     inline unsigned int* begin() const { return m_begin; }
 
     inline unsigned int* ptr() const { return m_ptr; }
 
     inline unsigned int* end() const { return m_end; }
 
-protected:
+    inline unsigned long size() const { return end() - begin(); }
+
+    inline void clear() { m_ptr = m_begin; m_time = 0; }
+
     bool read(MidiEvent &event);
 
     bool write(MidiEvent event);
 
     inline bool write(MidiMessage msg, unsigned int time)
         { return write(MidiEvent(msg, time)); }
-};
-
-class MidiEventInputBuffer : public MidiEventBuffer{
-public:
-    using MidiEventBuffer::MidiEventBuffer;
-    inline bool read(MidiEvent &event) { return MidiEventBuffer::read(event); }
-};
-
-class MidiEventOutputBuffer : public MidiEventBuffer{
-public:
-    using MidiEventBuffer::MidiEventBuffer;
-    template<typename... T> inline bool write(T...t) { return MidiEventBuffer::write(t...); }
 };
 
 }//namespace r64fx
