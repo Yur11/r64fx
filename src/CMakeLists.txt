@@ -163,6 +163,14 @@ set(test_MemoryUtils_SRC
 
 add_executable(test_MemoryUtils EXCLUDE_FROM_ALL ${test_MemoryUtils_SRC})
 
+## test_MidiEventBuffer ##
+set(test_MidiEventBuffer_SRC
+    test_MidiEventBuffer
+    Midi.cpp
+)
+
+add_executable(test_MidiEventBuffer EXCLUDE_FROM_ALL ${test_MidiEventBuffer_SRC})
+
 
 ## test_ThreadObject ##
 set(test_ThreadObject_SRC
@@ -210,9 +218,9 @@ set(test_SoundDriver_SRC
     test_SoundDriver.cpp
     SoundDriver.cpp
     Midi.cpp
+    MemoryUtils.cpp
     TimeUtils.cpp
     Thread.cpp
-    Mutex.cpp
 )
 
 add_executable(test_SoundDriver EXCLUDE_FROM_ALL ${test_SoundDriver_SRC})

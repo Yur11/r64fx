@@ -5,97 +5,71 @@
 
 namespace r64fx{
 
-R64FX_SOUND_DRIVER_PORT_CLASSES(Jack, jack_port_t*)
+namespace{
 
-class JackThreadImplHandle;
-
-class JackThreadImpl : public SoundDriverThreadImpl<jack_port_t*>{
-public:
-    using SoundDriverThreadImpl<jack_port_t*>::SoundDriverThreadImpl;
-
-    inline int process(int nframes)
-    {
-        prologue();
-
-        for(auto port : ports())
-        {
-            void* port_buffer = jack_port_get_buffer(port->handle(), nframes);
-
-            unsigned long option = port->flags() & R64FX_PORT_OPTION_MASK;
-            switch(option)
-            {
-                case R64FX_PORT_IS_AUDIO_INPUT:
-                {
-                    auto audio_in_port = (InputPortImpl<float, jack_port_t*>*)(port);
-                    int nsamples = audio_in_port->write((float*)port_buffer, nframes);
-                    (void)nsamples;
-                    break;
-                }
-
-                case R64FX_PORT_IS_AUDIO_OUTPUT:
-                {
-                    auto audio_out_port = (OutputPortImpl<float, jack_port_t*>*)(port);
-                    int nsamples = audio_out_port->read((float*)port_buffer, nframes);
-                    (void)nsamples;
-                    break;
-                }
-
-                case R64FX_PORT_IS_MIDI_INPUT:
-                {
-                    int nevents = jack_midi_get_event_count(port_buffer);
-                    for(int i=0; i<nevents; i++)
-                    {
-                        jack_midi_event_t event;
-                        jack_midi_event_get(&event, port_buffer, i);
-
-                        auto midi_in_port = (InputPortImpl<MidiEvent, jack_port_t*>*)(port);
-                        MidiEvent midi_event(MidiMessage(event.buffer, event.size), event.time);
-                        midi_in_port->write(&midi_event, 1);
-                    }
-                    break;
-                }
-
-                case R64FX_PORT_IS_MIDI_OUTPUT:
-                {
-                    jack_midi_clear_buffer(port_buffer);
-
-                    auto midi_out_port = (OutputPortImpl<MidiEvent, jack_port_t*>*)(port);
-
-                    MidiEvent midi_event;
-                    while(midi_out_port->read(&midi_event, 1))
-                    {
-                        if(midi_event.message().byteCount() > 0)
-                        {
-                            jack_midi_event_write(
-                                port_buffer,
-                                midi_event.time(),
-                                midi_event.message().bytes(),
-                                midi_event.message().byteCount()
-                            );
-                        }
-                    }
-                    break;
-                }
-
-                default:
-                    break;
-            }
-        }
-
-        epilogue();
-        return 0;
-    }
+struct JackPortImpl : public SoundDriverPortImpl{
+    jack_port_t* jack_port;
 };
 
 
-class Jack : public SoundDriverPartial<jack_port_t*>{
-    jack_client_t*         m_jack_client  = nullptr;
-    JackThreadImplHandle*  m_impl         = nullptr;
+struct SoundDriverImplJack{
+    inline static void* portBuffer(SoundDriverPortImpl* port, int nframes)
+    {
+        auto port_impl = (JackPortImpl*)port;
+        return jack_port_get_buffer(port_impl->jack_port, nframes);
+    }
+
+    inline static void processAudioInput(SoundDriverPortImpl* port, int nframes, float* buffer)
+    {
+        memcpy(buffer, portBuffer(port, nframes), nframes * sizeof(float));
+    }
+
+    inline static void processAudioOutput(SoundDriverPortImpl* port, int nframes, float* buffer)
+    {
+        memcpy(portBuffer(port, nframes), buffer, nframes * sizeof(float));
+    }
+
+    inline static void processMidiInput(SoundDriverPortImpl* port, int nframes, MidiEventBuffer &buffer)
+    {
+        auto port_buffer = portBuffer(port, nframes);
+        int nevents = jack_midi_get_event_count(port_buffer);
+        for(int i=0; i<nevents; i++)
+        {
+            jack_midi_event_t event;
+            jack_midi_event_get(&event, port_buffer, i);
+            MidiMessage midimsg(event.buffer, event.size);
+            buffer.write(midimsg, event.time);
+        }
+    }
+
+    inline static void processMidiOutput(SoundDriverPortImpl* port, int nframes, MidiEventBuffer &buffer)
+    {
+        auto port_buffer = portBuffer(port, nframes);
+        jack_midi_clear_buffer(port_buffer);
+
+        MidiEvent event;
+        while(buffer.read(event))
+        {
+            jack_midi_event_write(port_buffer, event.time, event.bytes(), event.byteCount());
+        }
+    }
+
+    inline void exitThread() { /* Not used with jack! */ }
+};
+
+}//namespace
+
+class SoundDriverImplJackHandle;
+
+
+class SoundDriver_Jack : public SoundDriver{
+    jack_client_t*              m_jack_client  = nullptr;
+    SoundDriverImplJackHandle*  m_impl         = nullptr;
 
 public:
-    Jack()
+    SoundDriver_Jack(const char* client_name)
     {
-        m_jack_client = jack_client_open("r64fx", JackNullOption, nullptr);
+        m_jack_client = jack_client_open(client_name, JackNullOption, nullptr);
         if(!m_jack_client)
             return;
 
@@ -103,7 +77,7 @@ public:
             std::cout << "Jack Error: " << message << "\n";
         });
 
-        m_impl = (JackThreadImplHandle*) new(std::nothrow) JackThreadImpl(toImpl(), fromImpl());
+        m_impl = (SoundDriverImplJackHandle*) new(std::nothrow) SoundDriverImpl<SoundDriverImplJack>(&m_to_impl, &m_from_impl);
         if(!m_impl)
         {
             jack_client_close(m_jack_client);
@@ -111,8 +85,9 @@ public:
         }
 
         if(jack_set_process_callback(m_jack_client, [](jack_nframes_t nframes, void* arg) -> int {
-            auto self = (JackThreadImpl*) arg;
-            return self->process(nframes);
+            auto self = (SoundDriverImpl<SoundDriverImplJack>*) arg;
+            self->process(nframes);
+            return 0;
         }, m_impl) != 0)
         {
             jack_client_close(m_jack_client);
@@ -120,13 +95,13 @@ public:
         }
     }
 
-    virtual ~Jack()
+    virtual ~SoundDriver_Jack()
     {
         if(m_jack_client)
             jack_client_close(m_jack_client);
 
         if(m_impl)
-            delete (JackThreadImpl*)m_impl;
+            delete (SoundDriverImpl<SoundDriverImplJack>*)m_impl;
     }
 
 private:
@@ -160,87 +135,59 @@ private:
         return jack_get_sample_rate(m_jack_client);
     }
 
-    template<typename PortT> PortT* newPort(const std::string &name, int buffer_size)
-    {
-        auto jack_port = jack_port_register(
-            m_jack_client, name.c_str(),
-            PortT::typeTraits().type() == SoundDriverPort::Type::Audio ? JACK_DEFAULT_AUDIO_TYPE : JACK_DEFAULT_MIDI_TYPE,
-            PortT::portDirectionFlag() == R64FX_PORT_IS_AUDIO_INPUT ?  JackPortIsInput : JackPortIsOutput,
-            0
-        );
-        if(!jack_port)
-        {
-            return nullptr;
-        }
-
-        auto port = new(std::nothrow) PortT(jack_port, buffer_size);
-        if(!port)
-        {
-            jack_port_unregister(m_jack_client, jack_port);
-            return nullptr;
-        }
-
-        if(!addPort(port))
-        {
-            jack_port_unregister(m_jack_client, jack_port);
-            delete port;
-            return nullptr;
-        }
-
-        return port;
-    }
-
     virtual SoundDriverAudioInput* newAudioInput(const std::string &name)
     {
-        return newPort<JackAudioInput>(name, bufferSize() * 2);
+        auto port_impl = new JackPortImpl;
+        port_impl->bits |= R64FX_PORT_IS_AUDIO_INPUT;
+        port_impl->jack_port = jack_port_register(m_jack_client, name.c_str(), JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+        return (SoundDriverAudioInput*)port_impl;
     }
 
     virtual SoundDriverAudioOutput* newAudioOutput(const std::string &name)
     {
-        return newPort<JackAudioOutput>(name, bufferSize() * 2);
+        auto port_impl = new JackPortImpl;
+        port_impl->bits |= R64FX_PORT_IS_AUDIO_OUTPUT;
+        port_impl->jack_port = jack_port_register(m_jack_client, name.c_str(), JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+        return (SoundDriverAudioOutput*)port_impl;
     }
 
     virtual SoundDriverMidiInput* newMidiInput(const std::string &name)
     {
-        return newPort<JackMidiInput>(name, 32);
+        auto port_impl = new JackPortImpl;
+        port_impl->bits |= R64FX_PORT_IS_MIDI_INPUT;
+        port_impl->jack_port = jack_port_register(m_jack_client, name.c_str(), JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
+        return (SoundDriverMidiInput*)port_impl;
     }
 
     virtual SoundDriverMidiOutput* newMidiOutput(const std::string &name)
     {
-        return newPort<JackMidiOutput>(name, 32);
+        auto port_impl = new JackPortImpl;
+        port_impl->bits |= R64FX_PORT_IS_MIDI_OUTPUT;
+        port_impl->jack_port = jack_port_register(m_jack_client, name.c_str(), JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+        return (SoundDriverMidiOutput*)port_impl;
     }
 
     virtual void deletePort(SoundDriverPort* port)
     {
-        auto p = dynamic_cast<BasePortIface<jack_port_t*>*>(port);
-        if(p)
-        {
-            removePort(p);
-        }
-    }
-
-    virtual void portRemoved(BasePortIface<jack_port_t*>* port)
-    {
-        jack_port_unregister(m_jack_client, port->handle());
-        delete port;
+        auto port_impl = (JackPortImpl*)port;
+        R64FX_DEBUG_ASSERT(port_impl->buffer == nullptr);
+        R64FX_DEBUG_ASSERT(port_impl->jack_port);
+        jack_port_unregister(m_jack_client, port_impl->jack_port);
+        delete port_impl;
     }
 
     virtual void setPortName(SoundDriverPort* port, const std::string &name)
     {
-        auto p = dynamic_cast<BasePortIface<jack_port_t*>*>(port);
-        if(p)
-        {
-            jack_port_rename(m_jack_client, p->handle(), name.c_str());
-        }
+        auto port_impl = (JackPortImpl*)port;
+        R64FX_DEBUG_ASSERT(port_impl->jack_port);
+        jack_port_rename(m_jack_client, port_impl->jack_port, name.c_str());
     }
 
     virtual void getPortName(SoundDriverPort* port, std::string &name)
     {
-        auto p = dynamic_cast<BasePortIface<jack_port_t*>*>(port);
-        if(p)
-        {
-            name = std::string(jack_port_short_name(p->handle()));
-        }
+        auto port_impl = (JackPortImpl*)port;
+        R64FX_DEBUG_ASSERT(port_impl->jack_port);
+        name = std::string(jack_port_short_name(port_impl->jack_port));
     }
 
     virtual bool connect(const std::string &src, const std::string &dst)

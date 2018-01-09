@@ -17,113 +17,84 @@
 
 namespace r64fx{
 
-R64FX_SOUND_DRIVER_PORT_CLASSES(Stub, void*)
+namespace{
 
-class StubThreadImplHandle;
+struct SoundDriverStubImpl{
+    bool m_running = true;
 
-class StubThreadImpl : public SoundDriverThreadImpl<void*>{
-    float  m_silence  [R64FX_STUB_BUFFER_SIZE];
-    float  m_stub     [R64FX_STUB_BUFFER_SIZE];
-    CircularBuffer<long>* m_thread_terminator = nullptr;
-
-public:
-    StubThreadImpl(
-        CircularBuffer<long>*                thread_terminator,
-        CircularBuffer<SoundDriverMessage>*  to_impl,
-        CircularBuffer<SoundDriverMessage>*  from_impl
-    )
-    : SoundDriverThreadImpl<void*>(to_impl, from_impl)
-    , m_thread_terminator(thread_terminator)
+    inline void processPort(SoundDriverPortImpl* port, int nframes)
     {
-        for(int i=0; i<R64FX_STUB_BUFFER_SIZE; i++)
+        unsigned long option = port->bits & R64FX_PORT_OPTION_MASK;
+        switch(option)
         {
-            m_silence[i] = 0.0f;
-        }
-    }
+            case R64FX_PORT_IS_AUDIO_INPUT:
+                break;
 
-    inline int process(int nframes)
-    {
-        prologue();
-
-        for(auto port : ports())
-        {
-            unsigned long option = port->flags() & R64FX_PORT_OPTION_MASK;
-            switch(option)
+            case R64FX_PORT_IS_AUDIO_OUTPUT:
             {
-                case R64FX_PORT_IS_AUDIO_INPUT:
-                {
-                    auto audio_in_port = (InputPortImpl<float, void*>*)(port);
-                    for(int i=0; i<R64FX_STUB_BUFFER_SIZE; i++)
-                    {
-                        audio_in_port->write(m_silence, nframes);
-                    }
-                    break;
-                }
-
-                case R64FX_PORT_IS_AUDIO_OUTPUT:
-                {
-                    auto audio_out_port = (OutputPortImpl<float, void*>*)(port);
-                    for(int i=0; i<R64FX_STUB_BUFFER_SIZE; i++)
-                    {
-                        audio_out_port->read(m_stub, nframes);
-                    }
-                    break;
-                }
-
-                case R64FX_PORT_IS_MIDI_INPUT:
-                {
-                    break;
-                }
-
-                case R64FX_PORT_IS_MIDI_OUTPUT:
-                {
-                    auto midi_out_port = (OutputPortImpl<MidiEvent, void*>*)(port);
-                    MidiEvent midi_event[4];
-                    while(midi_out_port->read(midi_event, 4)) {}
-                    break;
-                }
-
-                default:
-                    break;
+                
+                break;
             }
-        }
 
-        epilogue();
-        return 0;
+            case R64FX_PORT_IS_MIDI_INPUT:
+                break;
+
+            case R64FX_PORT_IS_MIDI_OUTPUT:
+                break;
+
+            default:
+                break;
+        }
     }
+
+    inline static void processAudioInput(SoundDriverPortImpl* port, int nframes, float* buffer) {}
+
+    inline static void processAudioOutput(SoundDriverPortImpl* port, int nframes, float* buffer)
+    {
+        auto buff = (float*) port->buffer;
+        for(int i=0; i<nframes; i++)
+            buff[i] = 0.0f;
+    }
+
+    inline static void processMidiInput(SoundDriverPortImpl* port, int nframes, MidiEventBuffer &buffer) {}
+
+    inline static void processMidiOutput(SoundDriverPortImpl* port, int nframes, MidiEventBuffer &buffer) {}
+
+    inline void exitThread() { m_running = false; }
+};
+
+struct SoundDriverStubThread : public SoundDriverImpl<SoundDriverStubImpl>{
+    using SoundDriverImpl<SoundDriverStubImpl>::SoundDriverImpl;
 
     inline void runThread()
     {
-        bool running = true;
-        while(running)
+        while(m_running)
         {
-            long msg = 0;
-            if(m_thread_terminator->read(&msg, 1))
-                running = false;
-
             process(R64FX_STUB_BUFFER_SIZE);
             sleep_nanoseconds(R64FX_STUB_SLEEP_NANOSECONDS);
         }
     }
 };
 
+}//namespace
 
-class Stub : public SoundDriverPartial<void*>{
-    StubThreadImplHandle*  m_impl         = nullptr;
-    Thread*                m_thread       = nullptr;
-    CircularBuffer<long>   m_thread_terminator;
+class SoundDriverStubThreadHandle;
+
+
+class SoundDriver_Stub : public SoundDriver{
+    SoundDriverStubThreadHandle*  m_impl    = nullptr;
+    Thread*                       m_thread  = nullptr;
 
 public:
-    Stub()
-    : m_thread_terminator(2)
+    SoundDriver_Stub()
     {
-        m_impl = (StubThreadImplHandle*) new(std::nothrow) StubThreadImpl(&m_thread_terminator, toImpl(), fromImpl());
+        m_impl = (SoundDriverStubThreadHandle*) new SoundDriverStubThread(&m_to_impl, &m_from_impl);
     }
 
-    virtual ~Stub()
+    virtual ~SoundDriver_Stub()
     {
         if(m_impl)
-            delete (StubThreadImpl*)m_impl;
+            delete (SoundDriverStubThread*)m_impl;
     }
 
 private:
@@ -149,7 +120,7 @@ private:
         {
             m_thread = new(std::nothrow) Thread;
             m_thread->run([](void* arg) -> void*{
-                auto impl = (StubThreadImpl*) arg;
+                auto impl = (SoundDriverStubThread*) arg;
                 impl->runThread();
                 return nullptr;
             }, m_impl);
@@ -158,8 +129,8 @@ private:
 
     virtual void disable()
     {
-        long msg = 1;
-        m_thread_terminator.write(&msg, 1);
+        unsigned long msg = R64FX_STUB_THREAD_EXIT;
+        m_to_impl.write(&msg, 1);
         m_thread->join();
         delete m_thread;
         m_thread = nullptr;
@@ -175,53 +146,39 @@ private:
         return R64FX_STUB_SAMPLE_RATE;
     }
 
-    template<typename PortT> PortT* newPort(const std::string &name, int buffer_size)
-    {
-        auto port = new(std::nothrow) PortT(nullptr, buffer_size);
-        if(!port)
-            return nullptr;
-
-        if(!addPort(port))
-        {
-            delete port;
-            return nullptr;
-        }
-
-        return port;
-    }
-
     virtual SoundDriverAudioInput* newAudioInput(const std::string &name)
     {
-        return newPort<StubAudioInput>(name, bufferSize());
+        auto port = new SoundDriverPortImpl;
+        port->bits |= R64FX_PORT_IS_AUDIO_INPUT;
+        return (SoundDriverAudioInput*)port;
     }
 
     virtual SoundDriverAudioOutput* newAudioOutput(const std::string &name)
     {
-        return newPort<StubAudioOutput>(name, bufferSize());
+        auto port = new SoundDriverPortImpl;
+        port->bits |= R64FX_PORT_IS_AUDIO_OUTPUT;
+        return (SoundDriverAudioOutput*)port;
     }
 
     virtual SoundDriverMidiInput* newMidiInput(const std::string &name)
     {
-        return newPort<StubMidiInput>(name, 32);
+        auto port = new SoundDriverPortImpl;
+        port->bits |= R64FX_PORT_IS_MIDI_INPUT;
+        return (SoundDriverMidiInput*)port;
     }
 
     virtual SoundDriverMidiOutput* newMidiOutput(const std::string &name)
     {
-        return newPort<StubMidiOutput>(name, 32);
+        auto port = new SoundDriverPortImpl;
+        port->bits |= R64FX_PORT_IS_MIDI_OUTPUT;
+        return (SoundDriverMidiOutput*)port;
     }
 
     virtual void deletePort(SoundDriverPort* port)
     {
-        auto p = dynamic_cast<BasePortIface<void*>*>(port);
-        if(p)
-        {
-            removePort(p);
-        }
-    }
-
-    virtual void portRemoved(BasePortIface<void*>* port)
-    {
-        delete port;
+        auto port_impl = (SoundDriverPortImpl*)port;
+        R64FX_DEBUG_ASSERT(port_impl->buffer == 0);
+        delete port_impl;
     }
 
     virtual void setPortName(SoundDriverPort* port, const std::string &name)

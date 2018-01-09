@@ -1,561 +1,354 @@
 #include "SoundDriver.hpp"
-#include "CircularBuffer.hpp"
 #include "LinkedList.hpp"
-#include <new>
-#include <iostream>
+#include "Debug.hpp"
+#include "MemoryUtils.hpp"
 
-#define R64FX_PORT_IS_INPUT         0
-#define R64FX_PORT_IS_OUTPUT        1
+/* Used with SoundDriverPortImpl::bits */
+#define R64FX_PORT_IS_AUDIO_INPUT   0UL
+#define R64FX_PORT_IS_AUDIO_OUTPUT  1UL
+#define R64FX_PORT_IS_MIDI_INPUT    2UL
+#define R64FX_PORT_IS_MIDI_OUTPUT   3UL
+#define R64FX_PORT_IS_OUTPUT        1UL
+#define R64FX_PORT_IS_MIDI          2UL
+#define R64FX_PORT_OPTION_MASK      3UL
 
-#define R64FX_PORT_IS_AUDIO         (0 << 1)
-#define R64FX_PORT_IS_MIDI          (1 << 1)
 
-#define R64FX_PORT_IS_AUDIO_INPUT   0
-#define R64FX_PORT_IS_AUDIO_OUTPUT  1
-#define R64FX_PORT_IS_MIDI_INPUT    2
-#define R64FX_PORT_IS_MIDI_OUTPUT   3
+#define R64FX_PORT_GROUP_SYNC_BITS  (0xFFFFFFFFUL << 32)
 
-#define R64FX_PORT_OPTION_MASK      3
+#define R64FX_INITIAL_STATE         0
+#define R64FX_PORT_GROUP_ADD        1
+#define R64FX_PORT_GROUP_REMOVE     2
+#define R64FX_PORT_GROUP_ENABLE     3
+#define R64FX_PORT_GROUP_DISABLE    4
+#define R64FX_PORT_UPDATE           5
+#define R64FX_PORT_UPDATE_BUFFER    6
+#define R64FX_STUB_THREAD_EXIT      7
 
+
+#define R64FX_MESSAGE_BUFFER_SIZE   32
 
 namespace r64fx{
 
-/* No definitions. Using these to store pointers. */
-class PortImplHandle;
-class PortIfaceHandle;
-class SyncPortImplHandle;
-class SyncPortIfaceHandle;
 
-
-template<typename> struct PortTypeTraits{};
-
-template<> struct PortTypeTraits<float>{
-    static const SoundDriverPort::Type  type()  { return SoundDriverPort::Type::Audio; }
-    static const unsigned long          flags() { return R64FX_PORT_IS_AUDIO; }
-};
-
-template<> struct PortTypeTraits<MidiEvent>{
-    static const SoundDriverPort::Type  type()  { return SoundDriverPort::Type::Midi; }
-    static const unsigned long          flags() { return R64FX_PORT_IS_MIDI; }
+struct SoundDriverPortImpl : public LinkedList<SoundDriverPortImpl>::Node{
+    unsigned long bits    = 0;
+    void*         buffer  = nullptr;
 };
 
 
-template<typename HandleT> class BasePortImpl : public LinkedList<BasePortImpl<HandleT>>::Node{
-    HandleT           m_handle  = nullptr;
-    PortIfaceHandle*  m_iface   = nullptr;
-    unsigned long     m_flags   = 0;
-
-public:
-    BasePortImpl(HandleT handle, PortIfaceHandle* iface, unsigned long flags) : m_handle(handle), m_iface(iface), m_flags(flags) {}
-
-    inline HandleT  handle() const { return m_handle; }
-
-    inline PortIfaceHandle* iface() const { return m_iface; }
-
-    inline unsigned long flags() const { return m_flags; }
+struct SoundDriverPortGroupImpl : public LinkedList<SoundDriverPortGroupImpl>::Node{
+    LinkedList<SoundDriverPortImpl>  ports;
+    CircularBuffer<unsigned long>*   from_iface;
+    CircularBuffer<unsigned long>*   to_iface;
+    unsigned long                    sync_value = 0;
 };
 
 
-template<typename T, typename HandleT>  class PortImpl : public BasePortImpl<HandleT>{
-protected:
-    CircularBuffer<T>*  m_buffer  = nullptr;
+template<class ImplBaseT> struct SoundDriverImpl : public ImplBaseT{
+    LinkedList<SoundDriverPortGroupImpl>   port_groups;
+    CircularBuffer<unsigned long>*         from_iface;
+    CircularBuffer<unsigned long>*         to_iface;
+    unsigned long                          msgs[R64FX_MESSAGE_BUFFER_SIZE];
+    MidiEventBuffer                        midi_input_buffer;
 
-public:
-    PortImpl(HandleT handle, PortIfaceHandle* iface, unsigned long flags, CircularBuffer<T>* buffer)
-    : BasePortImpl<HandleT>(handle, iface, flags)
-    , m_buffer(buffer)
+    SoundDriverImpl(
+        CircularBuffer<unsigned long>* from_iface,
+        CircularBuffer<unsigned long>* to_iface
+    )
+    : from_iface(from_iface), to_iface(to_iface)
     {
+        auto buff = (unsigned int*) alloc_aligned(memory_page_size(), memory_page_size()*4);
+        midi_input_buffer = MidiEventBuffer(buff, buff + memory_page_size());
+    }
 
+    ~SoundDriverImpl()
+    {
+        free(midi_input_buffer.begin());
+    }
+
+    void process(unsigned int nframes)
+    {
+        midi_input_buffer.clear();
+
+        unsigned long state = R64FX_INITIAL_STATE;
+
+        int nmsgs = from_iface->read(msgs, R64FX_MESSAGE_BUFFER_SIZE);
+        for(int i=0; i<nmsgs; i++)
+        {
+            switch(state)
+            {
+                case R64FX_INITIAL_STATE:
+                {
+                    if(msgs[i] == R64FX_PORT_GROUP_ADD)
+                        state = R64FX_PORT_GROUP_ADD;
+                    else if(msgs[i] == R64FX_PORT_GROUP_REMOVE)
+                        state = R64FX_PORT_GROUP_REMOVE;
+                    else if(msgs[i] == R64FX_STUB_THREAD_EXIT)
+                        ImplBaseT::exitThread();
+                    else
+                        R64FX_DEBUG_ABORT("Bad Message!\n");
+                    break;
+                }
+
+                case R64FX_PORT_GROUP_ADD:
+                case R64FX_PORT_GROUP_REMOVE:
+                {
+                    auto sdpgi = (SoundDriverPortGroupImpl*)msgs[i];
+                    if(state == R64FX_PORT_GROUP_ADD)
+                    {
+                        port_groups.append(sdpgi);
+                    }
+                    else
+                    {
+                        port_groups.remove(sdpgi);
+                    }
+                    unsigned long msgs[2] = { state, (unsigned long)sdpgi };
+                    to_iface->write(msgs, 2);
+                    state = R64FX_INITIAL_STATE;
+                    break;
+                }
+
+                default:
+                {
+                    R64FX_DEBUG_ABORT("Bad State!\n")
+                    break;
+                }
+            }
+        }
+        R64FX_DEBUG_ASSERT(state == R64FX_INITIAL_STATE);
+
+        SoundDriverPortImpl* updated_port = nullptr;
+        for(auto sdpgi : port_groups)
+        {
+            nmsgs = sdpgi->from_iface->read(msgs, R64FX_MESSAGE_BUFFER_SIZE);
+
+            for(int i=0; i<nmsgs; i++)
+            {
+                switch(state)
+                {
+                    case R64FX_INITIAL_STATE:
+                    {
+                        if(msgs[i] == sdpgi->sync_value)//Got sync message.
+                        {
+                            for(auto port : sdpgi->ports)
+                            {
+                                unsigned long option = port->bits & R64FX_PORT_OPTION_MASK;
+                                switch(option)
+                                {
+                                    case R64FX_PORT_IS_AUDIO_INPUT:
+                                    {
+                                        ImplBaseT::processAudioInput(port, nframes, (float*)port->buffer);
+                                        break;
+                                    }
+
+                                    case R64FX_PORT_IS_AUDIO_OUTPUT:
+                                    {
+                                        ImplBaseT::processAudioOutput(port, nframes, (float*)port->buffer);
+                                        break;
+                                    }
+
+                                    case R64FX_PORT_IS_MIDI_INPUT:
+                                    {
+                                        auto begin = midi_input_buffer.ptr();
+                                        ImplBaseT::processMidiInput(port, nframes, midi_input_buffer);
+                                        *((MidiEventBuffer*)port->buffer) = MidiEventBuffer(begin, midi_input_buffer.ptr());
+                                        break;
+                                    }
+
+                                    case R64FX_PORT_IS_MIDI_OUTPUT:
+                                    {
+                                        ImplBaseT::processMidiOutput(port, nframes, *((MidiEventBuffer*)port->buffer));
+                                        break;
+                                    }
+                                }
+                            }
+
+                            sdpgi->sync_value++;
+                            sdpgi->sync_value |= R64FX_PORT_GROUP_SYNC_BITS;
+                            sdpgi->to_iface->write(&sdpgi->sync_value, 1);
+                        }
+                        else if(msgs[i] == R64FX_PORT_GROUP_ENABLE)
+                        {
+                            sdpgi->sync_value = R64FX_PORT_GROUP_SYNC_BITS;
+                            sdpgi->to_iface->write(&sdpgi->sync_value, 1);
+                        }
+                        else if(msgs[i] == R64FX_PORT_GROUP_DISABLE)
+                        {
+                            sdpgi->sync_value = 0;
+                        }
+                        else if(msgs[i] == R64FX_PORT_UPDATE)
+                        {
+                            state = R64FX_PORT_UPDATE;
+                        }
+                        break;
+                    }
+
+                    case R64FX_PORT_UPDATE:
+                    {
+                        updated_port = (SoundDriverPortImpl*)msgs[i];
+                        state = R64FX_PORT_UPDATE_BUFFER;
+                        break;
+                    }
+
+                    case R64FX_PORT_UPDATE_BUFFER:
+                    {
+                        R64FX_DEBUG_ASSERT(updated_port);
+                        auto new_buffer = (void*)msgs[i];
+                        if(updated_port->buffer && !new_buffer)
+                        {
+                            sdpgi->ports.remove(updated_port);
+                        }
+                        else if(!updated_port->buffer && new_buffer)
+                        {
+                            if(updated_port->bits & R64FX_PORT_IS_OUTPUT)
+                                sdpgi->ports.preppend(updated_port);
+                            else
+                                sdpgi->ports.append(updated_port);
+                        }
+                        updated_port->buffer = new_buffer;
+                        updated_port = nullptr;
+                        state = R64FX_INITIAL_STATE;
+                        break;
+                    }
+
+                    default:
+                    {
+                        R64FX_DEBUG_ABORT("Bad State!\n")
+                        break;
+                    }
+                }
+            }
+            if(state != R64FX_INITIAL_STATE)
+            {
+                std::cout << "state: " << state << "\n";
+            }
+            R64FX_DEBUG_ASSERT(state == R64FX_INITIAL_STATE);
+        }
     }
 };
 
 
-template<typename T, typename HandleT>  class InputPortImpl : public PortImpl<T, HandleT>{
-public:
-    InputPortImpl(HandleT handle, PortIfaceHandle* iface, CircularBuffer<T>* buffer)
-    : PortImpl<T, HandleT>(handle, iface, R64FX_PORT_IS_INPUT | PortTypeTraits<T>::flags(), buffer)
-    {
-
-    }
-
-    inline int write(T* items, int nitems)
-    {
-        return this->m_buffer->write(items, nitems);
-    }
-};
-
-
-template<typename T, typename HandleT>  class OutputPortImpl : public PortImpl<T, HandleT>{
-public:
-    OutputPortImpl(HandleT handle, PortIfaceHandle* iface, CircularBuffer<T>* buffer)
-    : PortImpl<T, HandleT>(handle, iface, R64FX_PORT_IS_OUTPUT | PortTypeTraits<T>::flags(), buffer)
-    {
-
-    }
-
-    inline int read(T* items, int nitems)
-    {
-        return this->m_buffer->read(items, nitems);
-    }
-};
-
-
-template<typename HandleT> class BasePortIface : public LinkedList<BasePortIface<HandleT>>::Node{
-    HandleT          m_handle  = nullptr;
-
-protected:
-    PortImplHandle*  m_impl    = nullptr;
-
-public:
-    BasePortIface(HandleT handle) : m_handle(handle) {}
-
-    virtual ~BasePortIface() {}
-
-    inline HandleT handle() const { return m_handle; }
-
-    inline PortImplHandle* impl() const { return m_impl; }
-};
-
-
-template<typename T, typename HandleT, typename PortImplT>  class PortIface : public BasePortIface<HandleT>{
-protected:
-    CircularBuffer<T>*  m_buffer  = nullptr;
-
-public:
-    PortIface(HandleT handle, int nitems)
-    : BasePortIface<HandleT>(handle)
-    {
-        m_buffer = new(std::nothrow) CircularBuffer<T>(nitems);
-        this->m_impl = (PortImplHandle*) new(std::nothrow) PortImplT(this->handle(), (PortIfaceHandle*)this, m_buffer);
-    }
-
-    virtual ~PortIface()
-    {
-        delete m_buffer;
-        delete (InputPortImpl<T, HandleT>*) this->impl();
-    }
-
-    inline static const PortTypeTraits<T> typeTraits() { return PortTypeTraits<T>(); }
-};
-
-
-template<typename T, typename HandleT> class InputPortIface : public PortIface<T, HandleT, InputPortImpl<T, HandleT>>{
-public:
-    using PortIface<T, HandleT, InputPortImpl<T, HandleT>>::PortIface;
-
-    inline int read(T* items, int nitems)
-    {
-        return this->m_buffer->read(items, nitems);
-    }
-
-    inline static const unsigned long portDirectionFlag() { return R64FX_PORT_IS_AUDIO_INPUT; }
-};
-
-
-template<typename T, typename HandleT> class OutputPortIface : public PortIface<T, HandleT, OutputPortImpl<T, HandleT>>{
-public:
-    using PortIface<T, HandleT, OutputPortImpl<T, HandleT>>::PortIface;
-
-    inline int write(T* items, int nitems)
-    {
-        return this->m_buffer->write(items, nitems);
-    }
-
-    inline static const unsigned long portDirectionFlag() { return R64FX_PORT_IS_AUDIO_OUTPUT; }
-};
-
-
-#define R64FX_PORT_GUTS(DIRECTION, TYPE, OPERATION, ITEMS, H)\
-using DIRECTION##PortIface<TYPE, H>::DIRECTION##PortIface;\
-\
-virtual SoundDriverPort::Type type()\
-{\
-    return PortTypeTraits<TYPE>::type();\
-}\
-\
-virtual SoundDriverPort::Direction direction()\
-{\
-    return SoundDriverPort::Direction::DIRECTION;\
-}\
-\
-virtual int OPERATION##ITEMS(TYPE* items, int nitems)\
-{\
-    return OPERATION(items, nitems);\
+SoundDriverPortGroup::SoundDriverPortGroup()
+{
 }
 
 
-#define R64FX_SOUND_DRIVER_PORT_CLASSES(PREFIX, H)\
-struct PREFIX##AudioInput  : public SoundDriverAudioInput,  public InputPortIface  <float,     H> { R64FX_PORT_GUTS(Input,  float,     read,  Samples, H) };\
-struct PREFIX##AudioOutput : public SoundDriverAudioOutput, public OutputPortIface <float,     H> { R64FX_PORT_GUTS(Output, float,     write, Samples, H) };\
-struct PREFIX##MidiInput   : public SoundDriverMidiInput,   public InputPortIface  <MidiEvent, H> { R64FX_PORT_GUTS(Input,  MidiEvent, read,  Events,  H) };\
-struct PREFIX##MidiOutput  : public SoundDriverMidiOutput,  public OutputPortIface <MidiEvent, H> { R64FX_PORT_GUTS(Output, MidiEvent, write, Events,  H) };\
+void SoundDriverPortGroup::updatePort(SoundDriverPort* port, void* buffer)
+{
+    R64FX_DEBUG_ASSERT(port);
+    unsigned long msgs[3] = {R64FX_PORT_UPDATE, (unsigned long)port, (unsigned long)buffer};
+    m_to_impl->write(msgs, 3);
+}
 
 
+void SoundDriverPortGroup::enable()
+{
+    unsigned long msgs[2] = {R64FX_PORT_GROUP_ENABLE, (unsigned long)this};
+    m_to_impl->write(msgs, 2);
+}
 
-class SyncPortImpl : public LinkedList<SyncPortImpl>::Node{
-    SyncPortIfaceHandle*                     m_iface       = nullptr;
-    CircularBuffer<SoundDriverSyncMessage>*  m_to_iface    = nullptr;
-    CircularBuffer<SoundDriverSyncMessage>*  m_from_iface  = nullptr;
 
-public:
-    bool is_enabled = false;
+void SoundDriverPortGroup::disable()
+{
+    unsigned long msgs[2] = {R64FX_PORT_GROUP_DISABLE, (unsigned long)this};
+    m_to_impl->write(msgs, 2);
+}
 
-    SyncPortImpl(SyncPortIfaceHandle* iface, CircularBuffer<SoundDriverSyncMessage>* to_iface, CircularBuffer<SoundDriverSyncMessage>* from_iface)
-    : m_iface((SyncPortIfaceHandle*)iface)
-    , m_to_iface(to_iface)
-    , m_from_iface(from_iface)
+
+bool SoundDriverPortGroup::sync()
+{
+    unsigned long msgs[R64FX_MESSAGE_BUFFER_SIZE];
+    int nmsgs = m_from_impl->read(msgs, R64FX_MESSAGE_BUFFER_SIZE);
+    if(nmsgs > 0)
     {
-    }
-
-    ~SyncPortImpl()
-    {
-        delete m_to_iface;
-        delete m_from_iface;
-    }
-
-    inline SyncPortIfaceHandle* iface() const { return m_iface; }
-
-    inline int writeMessages(SoundDriverSyncMessage* msgs, int nmsgs)
-    {
-        return m_to_iface->write(msgs, nmsgs);
-    }
-
-    inline int readMessages(SoundDriverSyncMessage* msgs, int nmsgs)
-    {
-        return m_from_iface->read(msgs, nmsgs);
-    }
-};
-
-
-class SyncPortIface : public SoundDriverSyncPort, public LinkedList<SyncPortIface>::Node{
-    SyncPortImplHandle*                      m_impl       = nullptr;
-    CircularBuffer<SoundDriverSyncMessage>*  m_to_impl    = nullptr;
-    CircularBuffer<SoundDriverSyncMessage>*  m_from_impl  = nullptr;
-
-public:
-    SyncPortIface(int nitems)
-    {
-        m_to_impl = new(std::nothrow) CircularBuffer<SoundDriverSyncMessage>(nitems);
-        m_from_impl = new(std::nothrow) CircularBuffer<SoundDriverSyncMessage>(nitems);
-    }
-
-    ~SyncPortIface()
-    {
-        if(m_impl)
-            delete (SyncPortImpl*) m_impl;
-
-        if(m_to_impl)
-            delete m_to_impl;
-
-        if(m_from_impl)
-            delete m_from_impl;
-    }
-
-    virtual void enable()
-    {
-        SoundDriverSyncMessage msg(1);
-        m_to_impl->write(&msg, 1);
-    }
-
-    virtual void disable()
-    {
-        SoundDriverSyncMessage msg(0);
-        m_to_impl->write(&msg, 1);
-    }
-
-    virtual int writeMessages(SoundDriverSyncMessage* msgs, int nmsgs)
-    {
-        return m_to_impl->read(msgs, nmsgs);
-    }
-
-    virtual int readMessages(SoundDriverSyncMessage* msgs, int nmsgs)
-    {
-        return m_from_impl->read(msgs, nmsgs);
-    }
-
-    inline SyncPortImplHandle* impl() const
-    {
-        return m_impl;
-    }
-
-    inline SyncPortImplHandle* newImpl()
-    {
-#ifdef R64FX_DEBUG
-        assert(m_impl == nullptr);
-#endif//R64FX_DEBUG
-        m_impl = (SyncPortImplHandle*) new(std::nothrow) SyncPortImpl((SyncPortIfaceHandle*)this, m_from_impl, m_to_impl);
-        return m_impl;
-    }
-};
-
-
-class SoundDriverMessage{
-    unsigned long m_key    = 0;
-    void* m_value  = 0;
-
-public:
-    SoundDriverMessage(){}
-
-    SoundDriverMessage(unsigned long key, void* value)
-    : m_key(key)
-    , m_value(value)
-    {}
-
-    inline unsigned long key() const { return m_key; }
-
-    inline void* value() const { return m_value; }
-};
-
-
-enum{
-    AddPort,
-    RemovePort,
-    AddSyncPort,
-    RemoveSyncPort
-};
-
-enum{
-    PortAdded,
-    PortRemoved,
-    SyncPortAdded,
-    SyncPortRemoved
-};
-
-
-template<typename HandleT> class SoundDriverThreadImpl{
-    LinkedList<BasePortImpl<HandleT>>    m_ports;
-    LinkedList<SyncPortImpl>             m_sync_ports;
-    CircularBuffer<SoundDriverMessage>*  m_from_iface  = nullptr;
-    CircularBuffer<SoundDriverMessage>*  m_to_iface    = nullptr;
-    unsigned long                        m_counter     = 0;
-
-protected:
-    inline const LinkedList<BasePortImpl<HandleT>> &ports() const { return m_ports; }
-
-public:
-    SoundDriverThreadImpl(CircularBuffer<SoundDriverMessage>* to_impl, CircularBuffer<SoundDriverMessage>* from_impl)
-    : m_from_iface(to_impl)
-    , m_to_iface(from_impl)
-    {
-#ifdef R64FX_DEBUG
-        assert(m_from_iface != nullptr);
-        assert(m_to_iface != nullptr);
-#endif//R64FX_DEBUG
-    }
-
-protected:
-    void prologue()
-    {
-#ifdef R64FX_DEBUG
-        assert(m_from_iface != nullptr);
-#endif//R64FX_DEBUG
-        SoundDriverMessage msg;
-        while(m_from_iface->read(&msg, 1))
-        {
-            switch(msg.key())
-            {
-                case AddPort:
-                {
-                    msgAddPort((BasePortImpl<HandleT>*) msg.value());
-                    break;
-                }
-
-                case RemovePort:
-                {
-                    msgRemovePort((BasePortImpl<HandleT>*) msg.value());
-                    break;
-                }
-
-                case AddSyncPort:
-                {
-                    msgAddSyncPort((SyncPortImpl*) msg.value());
-                    break;
-                }
-
-                case RemoveSyncPort:
-                {
-                    msgRemoveSyncPort((SyncPortImpl*) msg.value());
-                    break;
-                }
-            }
-        }
-    }
-
-    void epilogue()
-    {
-        for(auto sync_port : m_sync_ports)
-        {
-            SoundDriverSyncMessage msg;
-            while(sync_port->readMessages(&msg, 1))
-            {
-                if(msg.bits == 0)
-                    sync_port->is_enabled = false;
-                else if(msg.bits == 1)
-                    sync_port->is_enabled = true;
-
-            }
-
-            if(sync_port->is_enabled)
-            {
-                SoundDriverSyncMessage msg(m_counter);
-                sync_port->writeMessages(&msg, 1);
-            }
-        }
-        m_counter++;
-    }
-
-private:
-    inline void msgAddPort(BasePortImpl<HandleT>* port_impl)
-    {
-        m_ports.append(port_impl);
-        SoundDriverMessage msg(PortAdded, port_impl->iface());
-        m_to_iface->write(&msg, 1);
-    }
-
-    inline void msgRemovePort(BasePortImpl<HandleT>* port_impl)
-    {
-        m_ports.remove(port_impl);
-        SoundDriverMessage msg(PortRemoved, port_impl->iface());
-        m_to_iface->write(&msg, 1);
-    }
-
-    inline void msgAddSyncPort(SyncPortImpl* port_impl)
-    {
-        m_sync_ports.append(port_impl);
-        SoundDriverMessage msg(SyncPortAdded, port_impl->iface());
-        m_to_iface->write(&msg, 1);
-    }
-
-    inline void msgRemoveSyncPort(SyncPortImpl* port_impl)
-    {
-        m_sync_ports.remove(port_impl);
-        SoundDriverMessage msg(SyncPortRemoved, port_impl->iface());
-        m_to_iface->write(&msg, 1);
-    }
-};
-
-
-template<typename HandleT> class SoundDriverPartial : public SoundDriver{
-    CircularBuffer<SoundDriverMessage>*  m_to_impl      = nullptr;
-    CircularBuffer<SoundDriverMessage>*  m_from_impl    = nullptr;
-    LinkedList<BasePortIface<HandleT>>   m_ports;
-    LinkedList<SyncPortIface>            m_sync_ports;
-
-protected:
-    SoundDriverPartial()
-    {
-        m_to_impl   = new(std::nothrow) CircularBuffer<SoundDriverMessage>(16);
-        m_from_impl = new(std::nothrow) CircularBuffer<SoundDriverMessage>(16);
-    }
-
-    virtual ~SoundDriverPartial()
-    {
-        if(m_to_impl)
-            delete m_to_impl;
-
-        if(m_from_impl)
-            delete m_from_impl;
-    }
-
-    inline CircularBuffer<SoundDriverMessage>* toImpl()   const { return m_to_impl; }
-    inline CircularBuffer<SoundDriverMessage>* fromImpl() const { return m_from_impl; }
-
-    template<typename PortT> bool addPort(PortT* port)
-    {
-        if(!port->impl())
-            return false;
-        SoundDriverMessage msg(AddPort, port->impl());
-        m_to_impl->write(&msg, 1);
-        m_ports.append(port);
+        auto msg = msgs[nmsgs - 1];
+        R64FX_DEBUG_ASSERT((msg & R64FX_PORT_GROUP_SYNC_BITS) == R64FX_PORT_GROUP_SYNC_BITS);
+        m_sync_value = msg;
         return true;
     }
+    return false;
+}
 
-    void removePort(BasePortIface<HandleT>* port)
+
+void SoundDriverPortGroup::done()
+{
+    R64FX_DEBUG_ASSERT(m_sync_value & R64FX_PORT_GROUP_SYNC_BITS);
+    m_to_impl->write(&m_sync_value, 1);
+}
+
+
+SoundDriver::SoundDriver()
+: m_to_impl(R64FX_MESSAGE_BUFFER_SIZE)
+, m_from_impl(R64FX_MESSAGE_BUFFER_SIZE)
+{
+}
+
+
+SoundDriver::~SoundDriver()
+{
+}
+
+
+SoundDriverPortGroup* SoundDriver::newPortGroup()
+{
+    auto sdpg = new SoundDriverPortGroup;
+    auto sdpgi = new SoundDriverPortGroupImpl;
+    sdpg->m_to_impl = sdpgi->from_iface = new CircularBuffer<unsigned long>(R64FX_MESSAGE_BUFFER_SIZE);
+    sdpg->m_from_impl = sdpgi->to_iface = new CircularBuffer<unsigned long>(R64FX_MESSAGE_BUFFER_SIZE);
+    unsigned long msgs[2] = { R64FX_PORT_GROUP_ADD, (unsigned long)sdpgi };
+    m_to_impl.write(msgs, 2);
+    sdpg->m_impl = sdpgi;
+    m_port_group_count++;
+    return sdpg;
+}
+
+
+void SoundDriver::deletePortGroup(SoundDriverPortGroup* sdpg)
+{
+    unsigned long msgs[2] = { R64FX_PORT_GROUP_REMOVE, (unsigned long)sdpg->m_impl };
+    m_to_impl.write(msgs, 2);
+    delete sdpg;
+}
+
+
+void SoundDriver::sync()
+{
+    unsigned long msgs[R64FX_MESSAGE_BUFFER_SIZE];
+    int nmsgs = m_from_impl.read(msgs, R64FX_MESSAGE_BUFFER_SIZE);
+    unsigned long state = R64FX_INITIAL_STATE;
+    for(int i=0; i<nmsgs; i++)
     {
-        SoundDriverMessage msg(RemovePort, port->impl());
-        m_to_impl->write(&msg, 1);
-    }
-
-    virtual void portAdded(BasePortIface<HandleT>* port)
-    {
-
-    }
-
-    virtual void portRemoved(BasePortIface<HandleT>* port)
-    {
-
-    }
-
-
-private:
-    virtual SoundDriverSyncPort* newSyncPort()
-    {
-        auto port_iface = new(std::nothrow) SyncPortIface(R64FX_SOUND_DRIVER_SYNC_PORT_BUFFER_SIZE);
-        auto port_impl = port_iface->newImpl();
-        if(!port_impl)
+        switch(state)
         {
-            delete port_iface;
-            return nullptr;
-        }
-
-        SoundDriverMessage msg(AddSyncPort, port_impl);
-        m_to_impl->write(&msg, 1);
-        m_sync_ports.append(port_iface);
-
-        return port_iface;
-    }
-
-    virtual void deleteSyncPort(SoundDriverSyncPort* port)
-    {
-        auto port_iface = dynamic_cast<SyncPortIface*>(port);
-#ifdef R64FX_DEBUG
-        assert(port_iface != nullptr);
-#endif//R64FX_DEBUG
-        SoundDriverMessage msg(RemoveSyncPort, port_iface->impl());
-        m_sync_ports.remove(port_iface);
-    }
-
-    virtual bool hasPorts()
-    {
-        return !m_ports.empty();
-    }
-
-    virtual void processEvents()
-    {
-        SoundDriverMessage msg;
-        while(m_from_impl->read(&msg, 1))
-        {
-            switch(msg.key())
+            case R64FX_INITIAL_STATE:
             {
-                case PortAdded:
-                {
-                    portAdded((BasePortIface<HandleT>*) msg.value());
-                    break;
-                }
+                if(msgs[i] == R64FX_PORT_GROUP_ADD)
+                    state = R64FX_PORT_GROUP_ADD;
+                else if(msgs[i] == R64FX_PORT_GROUP_REMOVE)
+                    state = R64FX_PORT_GROUP_REMOVE;
+                break;
+            }
 
-                case PortRemoved:
-                {
-                    auto port = (BasePortIface<HandleT>*) msg.value();
-                    m_ports.remove(port);
-                    portRemoved(port);
-                    break;
-                }
+            case R64FX_PORT_GROUP_ADD:
+            {
+                state = R64FX_INITIAL_STATE;
+                break;
+            }
 
-                case SyncPortAdded:
-                {
-                    break;
-                }
-
-                case SyncPortRemoved:
-                {
-                    auto sync_port = (SoundDriverSyncPort*) msg.value();
-                    delete sync_port;
-                    break;
-                }
+            case R64FX_PORT_GROUP_REMOVE:
+            {
+                auto sdpgi = (SoundDriverPortGroupImpl*)msgs[i];
+                delete sdpgi->from_iface;
+                delete sdpgi->to_iface;
+                delete sdpgi;
+                state = R64FX_INITIAL_STATE;
+                m_port_group_count--;
+                break;
             }
         }
     }
-};
+    R64FX_DEBUG_ASSERT(state == R64FX_INITIAL_STATE);
+}
 
 }//namespace r64fx
 
@@ -567,20 +360,20 @@ private:
 
 namespace r64fx{
 
-SoundDriver* SoundDriver::newInstance(SoundDriver::Type type)
+SoundDriver* SoundDriver::newInstance(SoundDriver::Type type, const char* client_name)
 {
     switch(type)
     {
         case SoundDriver::Type::Default:
         case SoundDriver::Type::Stub:
         {
-            return new(std::nothrow) Stub;
+            return new(std::nothrow) SoundDriver_Stub;
             break;
         }
 
         case SoundDriver::Type::Jack:
         {
-            return new(std::nothrow) Jack;
+            return new(std::nothrow) SoundDriver_Jack(client_name);
         }
 
         default:
