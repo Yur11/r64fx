@@ -4,19 +4,19 @@ namespace r64fx{
 
 void SignalNode_BufferReader::build()
 {
-    R64FX_DEBUG_ASSERT(buffer0());
+    R64FX_DEBUG_ASSERT(buffer(0));
 
-    DataBufferPointer buffer[2] = {
-        buffer1() ? buffer1() : buffer0(), buffer0()
+    float* buff[2] = {
+        buffer(1) ? buffer(1) : buffer(0), buffer(0)
     };
 
-    auto reg = allocRegisters<GPR64>(buffer1() ? 2 : 1);
+    auto reg = allocRegisters<GPR64>(buffer(1) ? 2 : 1);
 
-    MOV(reg[0], ImmAddr(addr(buffer[0]) + frameCount()));
+    MOV(reg[0], ImmAddr(buff[0] + frameCount()));
     MOV(reg[0].low32(), Base(reg[0]) + Index(rcx)*4);
-    if(buffer1())
+    if(buffer(1))
     {
-        MOV(reg[1], ImmAddr(addr(buffer[1]) + frameCount()));
+        MOV(reg[1], ImmAddr(buff[1] + frameCount()));
         MOV(reg[1].low32(), Base(reg[1]) + Index(rcx)*4);
         SHL(reg[0], Imm8(32));
         ADD(reg[0], reg[1]);
@@ -35,7 +35,7 @@ void SignalNode_BufferReader::build()
 
 void SignalNode_BufferWriter::build()
 {
-    R64FX_DEBUG_ASSERT(buffer0());
+    R64FX_DEBUG_ASSERT(buffer(0));
 
     GPR64 val0;
 
@@ -64,14 +64,14 @@ void SignalNode_BufferWriter::build()
     }
 
     GPR64 base = allocRegisters<GPR64>(1);
-    MOV(base, ImmAddr(addr(buffer0()) + frameCount()));
+    MOV(base, ImmAddr(buffer(0) + frameCount()));
     MOV(Base(base) + Index(rcx)*4, val0.low32());
-    if(buffer1())
+    if(buffer(1))
     {
         GPR64 val1 = allocRegisters<GPR64>(1);
         MOV(val1, val0);
         SHR(val1, Imm8(32));
-        MOV(base, ImmAddr(addr(buffer1()) + frameCount()));
+        MOV(base, ImmAddr(buffer(1) + frameCount()));
         MOV(Base(base) + Index(rcx)*4, val1.low32());
         freeRegisters(RegisterPack<GPR64>{val1});
     }

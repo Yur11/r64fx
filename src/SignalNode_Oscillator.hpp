@@ -11,7 +11,7 @@ class SignalNode_OscClock : public SignalNode{
     int m_delta = 0;
 
 public:
-    SignalNode_OscClock(SignalGraph &sg);
+    SignalNode_OscClock(SignalGraph* sg);
 
     inline void setDelta(int delta) { m_delta = delta; }
 

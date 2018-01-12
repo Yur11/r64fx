@@ -2,7 +2,7 @@
 
 namespace r64fx{
 
-SignalNode_OscClock::SignalNode_OscClock(SignalGraph &sg)
+SignalNode_OscClock::SignalNode_OscClock(SignalGraph* sg)
 : SignalNode(sg)
 , m_out(this)
 {

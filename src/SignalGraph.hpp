@@ -316,9 +316,9 @@ class SignalNode : protected AssemblerInstructions<SignalGraphImplRef>{
 
 public:
     /* All nodes must exist within the context of a parent graph. */
-    SignalNode(SignalGraph &sg)
-    : AssemblerInstructions(sg.m)
-    , m_iteration_count(sg.m.iteration_count)
+    SignalNode(SignalGraph* sg)
+    : AssemblerInstructions(sg->m)
+    , m_iteration_count(sg->m.iteration_count)
     {}
 
     virtual ~SignalNode() {}
