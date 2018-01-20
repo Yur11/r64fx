@@ -97,6 +97,36 @@ public:
 
 void* worker_thread(void* arg)
 {
+    auto sd = SoundDriver::newInstance(SoundDriver::Type::Jack  , CLIENT_NAME);
+    sd->enable();
+
+    g_port_group    = sd->newPortGroup();
+    g_synth_output  = sd->newAudioOutput("synth");
+    g_audio_input   = sd->newAudioInput("in");
+    g_audio_output  = sd->newAudioOutput("out");
+    g_midi_input    = sd->newMidiInput("midi_in");
+    g_midi_output   = sd->newMidiOutput("midi_out");
+
+    g_frame_count = sd->bufferSize();
+    g_sample_rate = sd->sampleRate();
+    g_sample_rate_rcp = 1.0f / float(g_sample_rate);
+
+    sd->connect("system:capture_1",      CLIENT_NAME":in");
+    sd->connect("system:capture_2",      CLIENT_NAME":in");
+    sd->connect(CLIENT_NAME":synth",     CLIENT_NAME":in");
+    sd->connect(CLIENT_NAME":out",       "system:playback_1");
+    sd->connect(CLIENT_NAME":out",       "system:playback_2");
+    sd->connect(CLIENT_NAME":midi_out",  CLIENT_NAME":midi_in");
+
+        /* Connect to Your midi stuff here. */
+//     sd->connect("alsa_midi:A-PRO 1 (out)", "r64fx:midi_in");
+//     sd->connect("alsa_midi:A-PRO 2 (out)", "r64fx:midi_in");
+//     sd->connect("alsa_midi:A-PRO MIDI (out)", "r64fx:midi_in");
+//     sd->connect("alsa_midi:Akai MPD32 MIDI 1 (out)", "r64fx:midi_in");
+//     sd->connect("alsa_midi:Akai MPD32 MIDI 2 (out)", "r64fx:midi_in");
+//     sd->connect("alsa_midi:Akai MPD32 MIDI 3 (out)", "r64fx:midi_in");
+//     sd->connect("alsa_midi:LPD8 MIDI 1 (out)", "r64fx:midi_in");
+
     Voice voice[VOICE_COUNT];
 
     cout << g_frame_count << " frames @ " << g_sample_rate << "Hz\n";
@@ -225,6 +255,22 @@ void* worker_thread(void* arg)
     g_port_group->disable();
     delete[] audio_buffer;
     delete[] synth_buffer;
+
+    sd->deletePort(g_synth_output);
+    sd->deletePort(g_audio_input);
+    sd->deletePort(g_audio_output);
+    sd->deletePort(g_midi_input);
+    sd->deletePort(g_midi_output);
+    sd->deletePortGroup(g_port_group);
+
+    while(!sd->isClean())
+    {
+        sd->sync();
+        sleep_nanoseconds(300 * 1000 * 1000);
+    }
+
+    sd->disable();
+    SoundDriver::deleteInstance(sd);
     return nullptr;
 }
 
@@ -233,36 +279,6 @@ void* worker_thread(void* arg)
 
 int main()
 {
-    auto sd = SoundDriver::newInstance(SoundDriver::Type::Jack, CLIENT_NAME);
-    sd->enable();
-
-    g_port_group    = sd->newPortGroup();
-    g_synth_output  = sd->newAudioOutput("synth");
-    g_audio_input   = sd->newAudioInput("in");
-    g_audio_output  = sd->newAudioOutput("out");
-    g_midi_input    = sd->newMidiInput("midi_in");
-    g_midi_output   = sd->newMidiOutput("midi_out");
-
-    g_frame_count = sd->bufferSize();
-    g_sample_rate = sd->sampleRate();
-    g_sample_rate_rcp = 1.0f / float(g_sample_rate);
-
-    sd->connect("system:capture_1",      CLIENT_NAME":in");
-    sd->connect("system:capture_2",      CLIENT_NAME":in");
-    sd->connect(CLIENT_NAME":synth",     CLIENT_NAME":in");
-    sd->connect(CLIENT_NAME":out",       "system:playback_1");
-    sd->connect(CLIENT_NAME":out",       "system:playback_2");
-    sd->connect(CLIENT_NAME":midi_out",  CLIENT_NAME":midi_in");
-
-    /* Connect to Your midi stuff here. */
-//     sd->connect("alsa_midi:A-PRO 1 (out)", "r64fx:midi_in");
-//     sd->connect("alsa_midi:A-PRO 2 (out)", "r64fx:midi_in");
-//     sd->connect("alsa_midi:A-PRO MIDI (out)", "r64fx:midi_in");
-//     sd->connect("alsa_midi:Akai MPD32 MIDI 1 (out)", "r64fx:midi_in");
-//     sd->connect("alsa_midi:Akai MPD32 MIDI 2 (out)", "r64fx:midi_in");
-//     sd->connect("alsa_midi:Akai MPD32 MIDI 3 (out)", "r64fx:midi_in");
-//     sd->connect("alsa_midi:LPD8 MIDI 1 (out)", "r64fx:midi_in");
-
     Thread wt;
     wt.run(worker_thread);
 
@@ -281,21 +297,5 @@ int main()
     }
 
     wt.join();
-
-    sd->deletePort(g_synth_output);
-    sd->deletePort(g_audio_input);
-    sd->deletePort(g_audio_output);
-    sd->deletePort(g_midi_input);
-    sd->deletePort(g_midi_output);
-    sd->deletePortGroup(g_port_group);
-
-    while(!sd->isClean())
-    {
-        sd->sync();
-        sleep_nanoseconds(300 * 1000 * 1000);
-    }
-
-    sd->disable();
-    SoundDriver::deleteInstance(sd);
     return 0;
 }

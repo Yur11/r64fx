@@ -22,31 +22,6 @@ namespace{
 struct SoundDriverStubImpl{
     bool m_running = true;
 
-    inline void processPort(SoundDriverPortImpl* port, int nframes)
-    {
-        unsigned long option = port->bits & R64FX_PORT_OPTION_MASK;
-        switch(option)
-        {
-            case R64FX_PORT_IS_AUDIO_INPUT:
-                break;
-
-            case R64FX_PORT_IS_AUDIO_OUTPUT:
-            {
-                
-                break;
-            }
-
-            case R64FX_PORT_IS_MIDI_INPUT:
-                break;
-
-            case R64FX_PORT_IS_MIDI_OUTPUT:
-                break;
-
-            default:
-                break;
-        }
-    }
-
     inline static void processAudioInput(SoundDriverPortImpl* port, int nframes, float* buffer) {}
 
     inline static void processAudioOutput(SoundDriverPortImpl* port, int nframes, float* buffer)

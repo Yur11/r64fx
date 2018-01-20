@@ -28,14 +28,24 @@ class SoundDriverPortGroup{
 
     SoundDriverPortGroup();
 
-    void updatePort(SoundDriverPort* port, void* buffer);
+    typedef void (AudioPortUpdateCallback)(SoundDriverAudioPort*, float* buffer, void* arg);
+    typedef void (MidiPortUpdateCallback)(SoundDriverMidiPort*, MidiEventBuffer* buffer, void* arg);
+    typedef void (PortUpdateCallback)(SoundDriverPort*, void* buffer, void* arg);
+
+    void updatePort(
+        SoundDriverPort* port, void* buffer, PortUpdateCallback* callback = nullptr, void* arg = nullptr
+    );
 
 public:
-    inline void updatePort(SoundDriverAudioPort* port, float* buffer)
-        { updatePort((SoundDriverPort*)port, buffer); }
+    inline void updatePort(
+        SoundDriverAudioPort* port, float* buffer, AudioPortUpdateCallback* callback = nullptr, void* arg = nullptr
+    )
+    { updatePort((SoundDriverPort*)port, (void*)buffer, (PortUpdateCallback*)callback, (void*)arg); }
 
-    inline void updatePort(SoundDriverMidiPort* port, MidiEventBuffer* buffer)
-        { updatePort((SoundDriverPort*)port, buffer); }
+    inline void updatePort(
+        SoundDriverMidiPort* port, MidiEventBuffer* buffer, MidiPortUpdateCallback* callback = nullptr, void* arg = nullptr
+    )
+    { updatePort((SoundDriverPort*)port, (void*)buffer, (PortUpdateCallback*)callback, (void*)arg); }
 
     /* Enable/Disable sync/done mechanism for this port group.*/
     void enable();
