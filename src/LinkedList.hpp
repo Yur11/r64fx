@@ -65,6 +65,8 @@ public:
     public:
         inline T* next() const { return static_cast<T*>(next_node); }
         inline T* prev() const { return static_cast<T*>(prev_node); }
+
+        inline bool isLinked() const { return next() || prev(); }
     };//Node
 
 
