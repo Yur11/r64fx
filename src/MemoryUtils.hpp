@@ -2,12 +2,17 @@
 #define R64FX_MEMORY_UTILS_HPP
 
 #include "LinkedList.hpp"
+#include <new>
 
 namespace r64fx{
 
 unsigned int memory_page_size();
 
 void* alloc_aligned(int alignment, int nbytes);
+
+inline void* alloc_pages(int npages) { return alloc_aligned(memory_page_size(), memory_page_size() * npages); }
+
+template<typename T> inline T* alloc_buffer(int size) { return (T*)alloc_aligned(64, sizeof(T)*size); }
 
 
 class HeapBuffer : public LinkedList<HeapBuffer>::Node{
