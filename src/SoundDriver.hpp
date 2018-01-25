@@ -28,24 +28,24 @@ class SoundDriverPortGroup{
 
     SoundDriverPortGroup();
 
-    typedef void (AudioPortUpdateCallback)(SoundDriverAudioPort*, float* buffer, void* arg);
-    typedef void (MidiPortUpdateCallback)(SoundDriverMidiPort*, MidiEventBuffer* buffer, void* arg);
-    typedef void (PortUpdateCallback)(SoundDriverPort*, void* buffer, void* arg);
+    typedef void (AudioPortUpdateCallback)(SoundDriverAudioPort*, float* buffer, void* arg0, void* arg1);
+    typedef void (MidiPortUpdateCallback)(SoundDriverMidiPort*, MidiEventBuffer* buffer, void* arg, void* arg1);
+    typedef void (PortUpdateCallback)(SoundDriverPort*, void* buffer, void* arg, void* arg1);
 
     void updatePort(
-        SoundDriverPort* port, void* buffer, PortUpdateCallback* callback = nullptr, void* arg = nullptr
+        SoundDriverPort* port, void* buffer, PortUpdateCallback* callback = nullptr, void* arg0 = nullptr, void* arg1 = nullptr
     );
 
 public:
     inline void updatePort(
-        SoundDriverAudioPort* port, float* buffer, AudioPortUpdateCallback* callback = nullptr, void* arg = nullptr
+        SoundDriverAudioPort* port, float* buffer, AudioPortUpdateCallback* callback = nullptr, void* arg0 = nullptr, void* arg1 = nullptr
     )
-    { updatePort((SoundDriverPort*)port, (void*)buffer, (PortUpdateCallback*)callback, (void*)arg); }
+    { updatePort((SoundDriverPort*)port, (void*)buffer, (PortUpdateCallback*)callback, (void*)arg0, (void*)arg1); }
 
     inline void updatePort(
-        SoundDriverMidiPort* port, MidiEventBuffer* buffer, MidiPortUpdateCallback* callback = nullptr, void* arg = nullptr
+        SoundDriverMidiPort* port, MidiEventBuffer* buffer, MidiPortUpdateCallback* callback = nullptr, void* arg0 = nullptr, void* arg1 = nullptr
     )
-    { updatePort((SoundDriverPort*)port, (void*)buffer, (PortUpdateCallback*)callback, (void*)arg); }
+    { updatePort((SoundDriverPort*)port, (void*)buffer, (PortUpdateCallback*)callback, (void*)arg0, (void*)arg1); }
 
     /* Enable/Disable sync/done mechanism for this port group.*/
     void enable();

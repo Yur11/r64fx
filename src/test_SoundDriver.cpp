@@ -6,6 +6,7 @@
 #include "Thread.hpp"
 
 #define CLIENT_NAME "test_SoundDriver"
+#define SOUND_DRIVER_TYPE SoundDriver::Type::Jack
 
 using namespace std;
 using namespace r64fx;
@@ -14,6 +15,7 @@ using namespace r64fx;
 namespace{
 
 bool                     g_running          = true;
+bool                     g_ok               = false;
 long                     g_frame_count      = 0;
 long                     g_sample_rate      = 0;
 float                    g_sample_rate_rcp  = 0.0f;
@@ -95,9 +97,27 @@ public:
 };
 
 
+inline void wait_sync()
+{
+    while(!g_port_group->sync())
+        sleep_nanoseconds(1000 * 1000);
+}
+
+inline void done()
+{
+    g_port_group->done();
+}
+
+inline void one_cycle()
+{
+    wait_sync();
+    done();
+}
+
+
 void* worker_thread(void* arg)
 {
-    auto sd = SoundDriver::newInstance(SoundDriver::Type::Jack  , CLIENT_NAME);
+    auto sd = SoundDriver::newInstance(SOUND_DRIVER_TYPE, CLIENT_NAME);
     sd->enable();
 
     g_port_group    = sd->newPortGroup();
@@ -129,8 +149,11 @@ void* worker_thread(void* arg)
 
     Voice voice[VOICE_COUNT];
 
+
     cout << g_frame_count << " frames @ " << g_sample_rate << "Hz\n";
     g_port_group->enable();
+
+    wait_sync();
 
     auto synth_buffer = new float[g_frame_count];
     g_port_group->updatePort(g_synth_output, synth_buffer);
@@ -145,6 +168,9 @@ void* worker_thread(void* arg)
     unsigned int buff_storage[32];
     MidiEventBuffer midi_output_buffer;
     g_port_group->updatePort(g_midi_output, &midi_output_buffer);
+
+    done();
+
 
     while(g_running)
     {
@@ -235,22 +261,47 @@ void* worker_thread(void* arg)
         }
         else
         {
-            sleep_nanoseconds(1 * 1000 * 1000);
+            sleep_nanoseconds(1000 * 1000);
         }
     }
 
+    /* No Callback */
+    wait_sync();
     g_port_group->updatePort(g_synth_output,  nullptr);
     g_port_group->updatePort(g_audio_input,   nullptr);
-    g_port_group->updatePort(g_audio_output,  nullptr);
-    g_port_group->updatePort(g_midi_input,    nullptr);
-    g_port_group->updatePort(g_midi_output,   nullptr);
+    done();
 
-    for(int i=0; i<10; i++)
-    {
-        while(!g_port_group->sync())
-            sleep_nanoseconds(5 * 1000 * 1000);
-        g_port_group->done();
-    }
+    /* No Args */
+    wait_sync();
+    g_ok = false;
+    g_port_group->updatePort(g_audio_output,  nullptr, [](SoundDriverAudioPort* port, float* buffer, void* arg0, void* arg1){ g_ok = true; });
+    done();
+    one_cycle();
+    assert(g_ok);
+
+    /* One Arg */
+    wait_sync();
+    g_ok = false;
+    g_port_group->updatePort(g_midi_input,    nullptr, [](SoundDriverMidiPort* port, MidiEventBuffer* buffer, void* arg0, void* arg1){
+        assert(arg0 == port);
+        g_ok = true;
+    }, g_midi_input);
+    done();
+    one_cycle();
+    assert(g_ok);
+
+    /* Two Args */
+    wait_sync();
+    g_ok = false;
+    g_port_group->updatePort(g_midi_output,   nullptr, [](SoundDriverMidiPort* port, MidiEventBuffer* buffer, void* arg0, void* arg1){
+        assert(arg0 == port);
+        assert(arg1 == g_port_group);
+        g_ok = true;
+    }, g_midi_output, g_port_group);
+    done();
+    one_cycle();
+    assert(g_ok);
+
 
     g_port_group->disable();
     delete[] audio_buffer;

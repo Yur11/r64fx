@@ -24,7 +24,8 @@
 #define R64FX_PORT_GROUP_KEY_MASK   0x7
 
 #define R64FX_CALLBACK              0x08
-#define R64FX_CALLBACK_ARG          0x10
+#define R64FX_CALLBACK_ARG0         0x10
+#define R64FX_CALLBACK_ARG1         0x20
 
 
 #define R64FX_MESSAGE_BUFFER_SIZE   256
@@ -77,8 +78,8 @@ template<class ImplBaseT> struct SoundDriverImpl : public ImplBaseT{
         {
             if(msgs[i] == R64FX_PORT_GROUP_ADD)
             {
-                int nmsgs_avail = nmsgs - i;
-                R64FX_DEBUG_ASSERT(nmsgs_avail >= 2);
+                int avail = nmsgs - i;
+                R64FX_DEBUG_ASSERT(avail >= 2);
 
                 auto sdpgi = (SoundDriverPortGroupImpl*)msgs[i + 1];
                 port_groups.append(sdpgi);
@@ -89,8 +90,8 @@ template<class ImplBaseT> struct SoundDriverImpl : public ImplBaseT{
             }
             else if(msgs[i] == R64FX_PORT_GROUP_REMOVE)
             {
-                int nmsgs_avail = nmsgs - i;
-                R64FX_DEBUG_ASSERT(nmsgs_avail >= 2);
+                int avail = nmsgs - i;
+                R64FX_DEBUG_ASSERT(avail >= 2);
 
                 auto sdpgi = (SoundDriverPortGroupImpl*)msgs[i + 1];
                 port_groups.remove(sdpgi);
@@ -113,7 +114,8 @@ template<class ImplBaseT> struct SoundDriverImpl : public ImplBaseT{
         {
             nmsgs = sdpgi->from_iface->read(msgs, R64FX_MESSAGE_BUFFER_SIZE);
 
-            for(int i=0; i<nmsgs; i++)
+            int i=0;
+            while(i<nmsgs)
             {
                 if(msgs[i] == sdpgi->sync_value)//Got sync message.
                 {
@@ -154,21 +156,24 @@ template<class ImplBaseT> struct SoundDriverImpl : public ImplBaseT{
                     sdpgi->sync_value |= R64FX_PORT_GROUP_SYNC_BITS;
                     auto nmsgs_written = sdpgi->to_iface->write(&sdpgi->sync_value, 1);
                     R64FX_DEBUG_ASSERT(nmsgs_written == 1);
+                    i++;
                 }
                 else if(msgs[i] == R64FX_PORT_GROUP_ENABLE)
                 {
                     sdpgi->sync_value = R64FX_PORT_GROUP_SYNC_BITS;
                     auto nmsgs_written = sdpgi->to_iface->write(&sdpgi->sync_value, 1);
                     R64FX_DEBUG_ASSERT(nmsgs_written == 1);
+                    i++;
                 }
                 else if(msgs[i] == R64FX_PORT_GROUP_DISABLE)
                 {
                     sdpgi->sync_value = 0;
+                    i++;
                 }
                 else if((msgs[i] & R64FX_PORT_GROUP_KEY_MASK) == R64FX_PORT_UPDATE)
                 {
-                    int nmsgs_avail = nmsgs - i;
-                    R64FX_DEBUG_ASSERT(nmsgs_avail >= 3);
+                    int avail = nmsgs - i;
+                    R64FX_DEBUG_ASSERT(avail >= 3);
 
                     auto updated_port = (SoundDriverPortImpl*)msgs[i + 1];
                     R64FX_DEBUG_ASSERT(updated_port);
@@ -190,27 +195,21 @@ template<class ImplBaseT> struct SoundDriverImpl : public ImplBaseT{
                         }
                     }
 
+                    int response_size = 3;
                     if(msgs[i] & R64FX_CALLBACK)
                     {
-                        R64FX_DEBUG_ASSERT(nmsgs_avail >= 4);
-                        unsigned long response_msgs[5] = {msgs[i], (unsigned long)updated_port, (unsigned long)new_buffer, msgs[i + 3], 0};
-                        if(msgs[i] & R64FX_CALLBACK_ARG)
+                        response_size++;
+                        if(msgs[i] & R64FX_CALLBACK_ARG0)
                         {
-                            R64FX_DEBUG_ASSERT(nmsgs_avail >= 5);
-                            response_msgs[4] = msgs[i + 4];
-                            sdpgi->to_iface->write(response_msgs, 5);
-                            i += 4;
+                            response_size++;
+                            if(msgs[i] & R64FX_CALLBACK_ARG1)
+                            {
+                                response_size++;
+                            }
                         }
-                        else
-                        {
-                            sdpgi->to_iface->write(response_msgs, 4);
-                            i += 3;
-                        }
+                        sdpgi->to_iface->write(msgs + i, response_size);
                     }
-                    else
-                    {
-                        i += 2;
-                    }
+                    i += response_size;
 
                     updated_port->buffer = new_buffer;
                     updated_port = nullptr;
@@ -230,21 +229,24 @@ SoundDriverPortGroup::SoundDriverPortGroup()
 }
 
 
-void SoundDriverPortGroup::updatePort(SoundDriverPort* port, void* buffer, PortUpdateCallback* callback, void* arg)
+void SoundDriverPortGroup::updatePort(SoundDriverPort* port, void* buffer, PortUpdateCallback* callback, void* arg0, void* arg1)
 {
     R64FX_DEBUG_ASSERT(port);
-    unsigned long msgs[5] = {R64FX_PORT_UPDATE, (unsigned long)port, (unsigned long)buffer, 0, 0};
+    unsigned long msgs[6] = {R64FX_PORT_UPDATE, (unsigned long)port, (unsigned long)buffer, 0, 0, 0};
     int nmsgs = 3;
     if(callback)
     {
         msgs[0] |= R64FX_CALLBACK;
-        msgs[3] = (unsigned long)callback;
-        nmsgs++;
-        if(arg)
+        msgs[nmsgs++] = (unsigned long)callback;
+        if(arg0)
         {
-            msgs[0] |= R64FX_CALLBACK_ARG;
-            msgs[4] = (unsigned long)arg;
-            nmsgs++;
+            msgs[0] |= R64FX_CALLBACK_ARG0;
+            msgs[nmsgs++] = (unsigned long)arg0;
+            if(arg1)
+            {
+                msgs[0] |= R64FX_CALLBACK_ARG1;
+                msgs[nmsgs++] = (unsigned long)arg1;
+            }
         }
     }
     auto nmsgs_written = m_to_impl->write(msgs, nmsgs);
@@ -273,35 +275,40 @@ bool SoundDriverPortGroup::sync()
     unsigned long msgs[R64FX_MESSAGE_BUFFER_SIZE];
     int nmsgs = m_from_impl->read(msgs, R64FX_MESSAGE_BUFFER_SIZE);
     bool result = false;
-    for(int i=0; i<nmsgs; i++)
+    int i=0;
+    while(i<nmsgs)
     {
         if((msgs[i] & R64FX_PORT_GROUP_SYNC_BITS) == R64FX_PORT_GROUP_SYNC_BITS)
         {
-            m_sync_value = msgs[i];
+            m_sync_value = msgs[i++];
             result = true;
         }
         else if((msgs[i] & R64FX_PORT_GROUP_KEY_MASK) == R64FX_PORT_UPDATE)
         {
-            int nmsgs_avail = nmsgs - i;
-            R64FX_DEBUG_ASSERT(nmsgs_avail >= 4);
-            R64FX_DEBUG_ASSERT(msgs[i] & R64FX_CALLBACK);
-            auto port      = (SoundDriverPort*)    msgs[i + 1];
-            auto buffer    = (void*)               msgs[i + 2];
-            auto callback  = (PortUpdateCallback*) msgs[i + 2];
-            void* arg = nullptr;
-            if(msgs[i] & R64FX_CALLBACK_ARG)
+            int avail = nmsgs - i;
+            R64FX_DEBUG_ASSERT(avail >= 4);
+
+            int key = msgs[i++];
+            R64FX_DEBUG_ASSERT(key & R64FX_CALLBACK);
+
+            auto port      = (SoundDriverPort*)    msgs[i++];
+            auto buffer    = (void*)               msgs[i++];
+            auto callback  = (PortUpdateCallback*) msgs[i++];
+            void* arg0 = nullptr;
+            void* arg1 = nullptr;
+            if(key & R64FX_CALLBACK_ARG0)
             {
-                R64FX_DEBUG_ASSERT(nmsgs_avail >= 5);
-                arg = (void*)msgs[i];
-                i += 4;
-            }
-            else
-            {
-                i += 3;
+                R64FX_DEBUG_ASSERT(avail >= 5);
+                arg0 = (void*)msgs[i++];
+                if(key & R64FX_CALLBACK_ARG1)
+                {
+                    R64FX_DEBUG_ASSERT(avail >= 6);
+                    arg1 = (void*)msgs[i++];
+                }
             }
             R64FX_DEBUG_ASSERT(callback);
             R64FX_DEBUG_ASSERT(port);
-            callback(port, buffer, arg);
+            callback(port, buffer, arg0, arg1);
         }
         else
         {
@@ -368,8 +375,8 @@ void SoundDriver::sync()
         }
         else if(msgs[i] == R64FX_PORT_GROUP_REMOVE)
         {
-            int nmsgs_avail = nmsgs - i;
-            R64FX_DEBUG_ASSERT(nmsgs_avail >= 2);
+            int avail = nmsgs - i;
+            R64FX_DEBUG_ASSERT(avail >= 2);
 
             auto sdpgi = (SoundDriverPortGroupImpl*)msgs[i + 1];
             delete sdpgi->from_iface;
