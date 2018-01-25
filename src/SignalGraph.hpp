@@ -143,7 +143,7 @@ public:
     /* (Bits 59,59,57,56) SignalDataType. */
     inline void setDataType(SignalDataType datatype) { m &= ~(7UL<<55); m |= (((unsigned long)(datatype))<<55); }
 
-    inline SignalDataType dataType() const { return (SignalDataType)((m>>55) & 3UL); }
+    inline SignalDataType dataType() const { return (SignalDataType)((m>>55) & 7UL); }
 
 
     /* (Bits 55..32) Storage size expressed as a number of registers. */
