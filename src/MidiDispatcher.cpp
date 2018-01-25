@@ -29,8 +29,7 @@ MidiDispatcherRule_CC_Port_Chan_Num::MidiDispatcherRule_CC_Port_Chan_Num
 
 bool MidiDispatcherRule_CC_Port_Chan_Num::match(void* port, const MidiEvent &event)
 {
-    const MidiMessage &msg = event.message();
-    return m_port == port && m_chan == msg.channel() && m_num == msg.controllerNumber();
+    return m_port == port && m_chan == event.channel() && m_num == event.controllerNumber();
 }
 
 
