@@ -35,13 +35,13 @@ namespace r64fx{
 namespace{
 
 struct RootModuleDeploymentArgs{
-    SoundDriverSyncPort* sd_sync_port = nullptr;
-    long buffer_size = 0;
-    long sample_rate = 0;
+    SoundDriverPortGroup*  sdpg         = nullptr;
+    long                   buffer_size  = 0;
+    long                   sample_rate  = 0;
 };
 
 struct RootModuleWithdrawalArgs{
-    SoundDriverSyncPort* sd_sync_port = nullptr;
+    SoundDriverPortGroup* sdpg = nullptr;
 };
 
 R64FX_DECL_MODULE_AGENTS(RootModule);
@@ -68,20 +68,18 @@ struct ModuleLinkMessage{
  * === Worker Thread ===================================================================
  */
 
-/* A pair of reader and writer noded can share a single buffer. */
-struct SoundDriverPortsImpl : public LinkedList<SoundDriverPortsImpl>::Node{
-    SoundDriverAudioInput*    input   = nullptr;
-    SoundDriverAudioOutput*   output  = nullptr;
-    SignalNode_BufferReader*  reader  = nullptr;
-    SignalNode_BufferWriter*  writer  = nullptr;
+struct GraphOutput : public LinkedList<GraphOutput>::Node{
+    SignalNode* node = nullptr;
+    GraphOutput(SignalNode* node) : node(node) {}
 };
 
 struct ModuleThreadAssets{
-    SoundDriverSyncPort*  sd_sync_port   = nullptr;
-    long                  sample_rate    = 0;
-    long                  flags          = 0;
-    SignalGraph           signal_graph;
-    LinkedList<SoundDriverPortsImpl> ports;
+    SoundDriverPortGroup*    sdpg            = nullptr;
+    long                     sample_rate     = 0;
+    long                     flags           = 0;
+    SignalGraph              signal_graph;
+
+    LinkedList<GraphOutput>  graph_outputs;
 };
 
 
@@ -92,13 +90,13 @@ public:
     RootModuleThreadObjectImpl(RootModuleDeploymentAgent* agent, R64FX_DEF_THREAD_OBJECT_IMPL_ARGS)
     : ModuleThreadObjectImpl(agent, R64FX_THREAD_OBJECT_IMPL_ARGS)
     {
-        m.sd_sync_port  = agent->sd_sync_port;
-        m.sample_rate   = agent->sample_rate;
+        m.sdpg         = agent->sdpg;
+        m.sample_rate  = agent->sample_rate;
         m.signal_graph.setFrameCount(agent->buffer_size);
     }
 
     void storeWithdrawalArgs(RootModuleWithdrawalAgent* agent)
-        { agent->sd_sync_port = m.sd_sync_port; }
+        { agent->sdpg = m.sdpg; }
 
     ~RootModuleThreadObjectImpl(){}
 
@@ -109,45 +107,29 @@ public:
 private:
     virtual void runThread() override final
     {
-        m.sd_sync_port->enable();
+        m.sdpg->enable();
 
         m.flags |= (R64FX_MODULE_THREAD_RUNNING | R64FX_GRAPH_REBUILD_ARMED);
         while(m.flags & R64FX_MODULE_THREAD_RUNNING)
         {
-            readMessagesFromIface();
             m.flags |= R64FX_GRAPH_REBUILD_ARMED;
 
-            SoundDriverSyncMessage sync_msg[R64FX_SOUND_DRIVER_SYNC_PORT_BUFFER_SIZE];
-            long nmsgs = m.sd_sync_port->readMessages(sync_msg, R64FX_SOUND_DRIVER_SYNC_PORT_BUFFER_SIZE);
-            if(nmsgs > 0)
+            if(m.sdpg->sync())
             {
-                auto item = m.ports.first();
-                while(item && item->input)
-                {
-                    item->input->readSamples(item->reader->bufferAddr(), m.signal_graph.frameCount());
-                    item = item->next();
-                }
+                readMessagesFromIface();
 
                 if(m.flags & R64FX_GRAPH_REBUILD_ARMED)
                 {
                     m.flags &= ~R64FX_GRAPH_REBUILD_ARMED;
                     m.signal_graph.beginBuild();
-                    item = m.ports.first();
-                    while(item && item->writer)
+                    for(auto output : m.graph_outputs)
                     {
-                        m.signal_graph.buildNode(item->writer);
-                        item = item->next();
+                        m.signal_graph.buildNode(output->node);
                     }
                     m.signal_graph.endBuild();
                 }
                 m.signal_graph.run();
-
-                item = m.ports.first();
-                while(item && item->input)
-                {
-                    item->output->writeSamples(item->writer->bufferAddr(), m.signal_graph.frameCount());
-                    item = item->next();
-                }
+                m.sdpg->done();
             }
             else
             {
@@ -155,7 +137,7 @@ private:
             }
         }
 
-        m.sd_sync_port->disable();
+        m.sdpg->disable();
     }
 
     virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override final
@@ -209,12 +191,6 @@ ModuleThreadObjectImpl::~ModuleThreadObjectImpl()
 {}
 
 
-SoundDriverSyncPort* ModuleThreadObjectImpl::syncPort() const
-{
-    return R64FX_MODULE_THREAD_ASSETS->sd_sync_port;
-}
-
-
 long ModuleThreadObjectImpl::bufferSize() const
 {
     return R64FX_MODULE_THREAD_ASSETS->signal_graph.frameCount();
@@ -227,9 +203,30 @@ long ModuleThreadObjectImpl::sampleRate() const
 }
 
 
+SoundDriverPortGroup* ModuleThreadObjectImpl::soundDriverPortGroup() const
+{
+    return R64FX_MODULE_THREAD_ASSETS->sdpg;
+}
+
+
 SignalGraph* ModuleThreadObjectImpl::signalGraph() const
 {
     return &(R64FX_MODULE_THREAD_ASSETS->signal_graph);
+}
+
+
+void ModuleThreadObjectImpl::addGraphOutput(SignalNode* node)
+{
+    R64FX_MODULE_THREAD_ASSETS->graph_outputs.append(allocObj<GraphOutput>(node));
+}
+
+
+void ModuleThreadObjectImpl::removeGraphOutput(SignalNode* node)
+{
+    auto go = R64FX_MODULE_THREAD_ASSETS->graph_outputs.first();
+    while(go && go->node != node) go = go->next();
+    R64FX_MODULE_THREAD_ASSETS->graph_outputs.remove(go);
+    freeObj(go);
 }
 
 
@@ -260,8 +257,6 @@ void ModuleThreadObjectImpl::exitThread()
 class ModuleSoundDriverThreadObjectImpl : public ModuleThreadObjectImpl{
 public:
     using ModuleThreadObjectImpl::ModuleThreadObjectImpl;
-
-    inline LinkedList<SoundDriverPortsImpl> &ports() { return R64FX_MODULE_THREAD_ASSETS->ports; }
 };
 
 
@@ -298,9 +293,9 @@ class RootModuleThreadObjectIface : public ModuleThreadObjectIface{
 #endif//R64FX_DEBUG
 
         auto agent = new RootModuleDeploymentAgent;
-        agent->sd_sync_port  = sd->newSyncPort();
-        agent->buffer_size   = sd->bufferSize();
-        agent->sample_rate   = sd->sampleRate();
+        agent->sdpg         = sd->newPortGroup();
+        agent->buffer_size  = sd->bufferSize();
+        agent->sample_rate  = sd->sampleRate();
         return agent;
     }
 
@@ -316,17 +311,13 @@ class RootModuleThreadObjectIface : public ModuleThreadObjectIface{
 
     virtual void deleteModuleWithdrawalAgent(ModuleWithdrawalAgent* agent) override final
     {
-#ifdef R64FX_DEBUG
-        assert(dynamic_cast<RootModuleWithdrawalAgent*>(agent));
-#endif//R64FX_DEBUG
+        R64FX_DEBUG_ASSERT(dynamic_cast<RootModuleWithdrawalAgent*>(agent));
         auto withdrawal_agent = static_cast<RootModuleWithdrawalAgent*>(agent);
 
         auto sd = soundDriver();
-#ifdef R64FX_DEBUG
-        assert(sd);
-        assert(withdrawal_agent->sd_sync_port);
-#endif//R64FX_DEBUG
-        sd->deleteSyncPort(withdrawal_agent->sd_sync_port);
+        R64FX_DEBUG_ASSERT(sd);
+        R64FX_DEBUG_ASSERT(withdrawal_agent->sdpg);
+        sd->deletePortGroup(withdrawal_agent->sdpg);
         delete withdrawal_agent;
     }
 
@@ -392,14 +383,14 @@ class ModuleGlobal : public InstanceCounter{
 
     virtual void initEvent() override final
     {
-        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Stub);
+        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Stub, "r64fx");
         m_sound_driver->enable();
 
         m_timer = new(std::nothrow) Timer;
         m_timer->setInterval(5000 * 1000);
         m_timer->onTimeout([](Timer* timer, void* arg){
             auto sd = (SoundDriver*) arg;
-            sd->processEvents();
+            sd->sync();
         }, m_sound_driver);
     }
 
@@ -536,12 +527,15 @@ public:
 
     inline SoundDriver* soundDriver() const { return m_sound_driver; }
 
-    inline void changeModuleLinks(ModuleLinkMessage::Key key, ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg)
+    inline void changeModuleLinks(
+        ModuleLinkMessage::Key key, ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg
+    )
     {
         R64FX_DEBUG_ASSERT(links);
         R64FX_DEBUG_ASSERT(nlinks > 0);
 
         ModuleThreadHandle* thread = links[0]->source()->thread();
+        R64FX_DEBUG_ASSERT(thread);
         R64FX_DEBUG_ASSERT(links[0]->sink()->thread() == thread);
 
         auto mlm       = new ModuleLinkMessage;
@@ -557,8 +551,12 @@ public:
             auto link = links[i];
             R64FX_DEBUG_ASSERT(link->source()->thread() == thread);
             R64FX_DEBUG_ASSERT(link->sink()->thread() == thread);
-            ModulePrivate::getPortPayload(link->source(), mlm->items[i].source);
-            ModulePrivate::getPortPayload(link->sink(),   mlm->items[i].sink);
+
+            auto source_impl = ModuleSignalSourceImpl::From(link->source());
+            auto sink_impl   = ModuleSignalSinkImpl::From(link->sink());
+
+            mlm->items[i].source = source_impl->signal_port;
+            mlm->items[i].sink = sink_impl->signal_port;
         }
 
         ((RootModuleThreadObjectIface*)thread)->sendToImpl(key, mlm);
@@ -618,30 +616,6 @@ void ModulePrivate::withdraw(ModuleThreadObjectIface* iface, Module::Callback do
 }
 
 
-ModulePort::ModulePort()
-{
-
-}
-
-
-bool ModulePort::isSource() const
-{
-    return m_flags & R64FX_MODULE_PORT_IS_SOURCE;
-}
-
-
-ModuleSink::ModuleSink()
-{
-
-}
-
-
-ModuleSource::ModuleSource()
-{
-    m_flags |= R64FX_MODULE_PORT_IS_SOURCE;
-}
-
-
 Module::Module()
     { g_Module.created(); }
 
@@ -653,6 +627,11 @@ void Module::genThreads(ModuleThreadHandle** threads, int nthreads)
 
 int Module::freeThreads(ModuleThreadHandle** threads, int nthreads)
     { return g_Module.freeThreads(threads, nthreads); }
+
+ModuleThreadHandle* ModulePort::thread()
+{
+    return ModulePortImpl::From(this)->thread;
+}
 
 void ModuleLink::enable(ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg)
     { g_Module.changeModuleLinks(ModuleLinkMessage::Key::Link, links, nlinks, callback, arg); }

@@ -1,6 +1,8 @@
 #ifndef R64FX_MODULE_HPP
 #define R64FX_MODULE_HPP
 
+#include "TypeUtils.hpp"
+
 namespace r64fx{
 
 class Module;
@@ -33,36 +35,21 @@ public:
 };
 
 
-class ModulePort{
-    friend class ModuleSink;
-    friend class ModuleSource;
-    friend class ModulePrivate;
-
-    unsigned long        m_flags          = 0;
-    Module*              m_parent         = nullptr;
-    void*                m_payload        = nullptr;
-    ModuleThreadHandle*  m_thread_handle  = nullptr;
-
-public:
-    ModulePort();
-
-    inline Module* parent() const { return m_parent; };
-
-    inline ModuleThreadHandle* thread() const { return m_thread_handle; }
-
-    inline bool isSink() const { return !isSource(); }
-
-    bool isSource() const;
+enum class ModulePortType : unsigned long{
+    SignalSource, SignalSink
 };
 
-class ModuleSink : public ModulePort{
+class ModulePort{
+    R64FX_OPAQUE_HANDLE(ModulePort)
+
 public:
-    ModuleSink();
+    ModuleThreadHandle* thread();
 };
 
 class ModuleSource : public ModulePort{
-public:
-    ModuleSource();
+};
+
+class ModuleSink : public ModulePort{
 };
 
 

@@ -133,21 +133,21 @@ private:
         return val;
     }
 
-    inline void prologue()
-    {
-        for(int i=0; i<bufferSize(); i++)
-        {
-            float val = 0.0f;
-            m_audio_input_port->readSamples(&val, 1);
-            val = filter(val);
-            m_audio_output_port->writeSamples(&val, 1);
-        }
-    }
-
-    inline void epilogue()
-    {
-
-    }
+//     inline void prologue()
+//     {
+//         for(int i=0; i<bufferSize(); i++)
+//         {
+//             float val = 0.0f;
+//             m_audio_input_port->readSamples(&val, 1);
+//             val = filter(val);
+//             m_audio_output_port->writeSamples(&val, 1);
+//         }
+//     }
+// 
+//     inline void epilogue()
+//     {
+// 
+//     }
 };
 
 R64FX_DEF_MODULE_AGENTS(Filter)

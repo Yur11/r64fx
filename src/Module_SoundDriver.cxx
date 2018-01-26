@@ -1,60 +1,81 @@
 /* To be included in Module.cpp */
 
+#define R64FX_SAME_TYPE(A, B) (std::is_same<A, B>::value)
+
 namespace r64fx{
 
 namespace{
 
-/*
- * === Agents & Messages ==============================================================
- */
+template<typename ModulePortT_, typename SDPortT_, typename SGNodeT_> struct PortImplRec{
+    typedef ModulePortT_  ModulePortT;
+    typedef SDPortT_      SDPortT;
+    typedef SGNodeT_      SGNodeT;
 
-R64FX_DECL_DEFAULT_MODULE_AGENTS(SoundDriver);
+    /* SoundDriver port. Created & destroyed in main thread. Used in worker thread. */
+    SDPortT* sd_port[2] = {nullptr, nullptr};
 
-template<unsigned long MsgKey, typename SDPortT, typename NodePortT, typename ResponseT>
+    /* SignalGraph node. Created, destroyed & used in worker thread. */
+    SGNodeT* sg_node = nullptr;
+};
+
+
+/* We have 2 valid Module_SoundDriver port types. */
+template<typename T> struct PortImpl{};
+
+template<> struct PortImpl<ModuleSoundDriverInputSource>
+: public ModuleSignalSourceImpl, public PortImplRec<ModuleSoundDriverInputSource, SoundDriverAudioInput, SignalNode_BufferReader>{
+    inline void setNode(SGNodeT* node) { sg_node = node; signal_port = node->out(); }
+
+    inline ModuleSoundDriverInputSource* handle() { return (ModuleSoundDriverInputSource*)this; }
+
+    inline static PortImpl<ModuleSoundDriverInputSource>* From(ModuleSoundDriverInputSource* handle)
+        { return (PortImpl<ModuleSoundDriverInputSource>*)handle; }
+};
+
+template<> struct PortImpl<ModuleSoundDriverOutputSink>
+: public ModuleSignalSinkImpl, public PortImplRec<ModuleSoundDriverOutputSink, SoundDriverAudioOutput, SignalNode_BufferWriter>{
+    inline void setNode(SGNodeT* node) { sg_node = node; signal_port = node->in(); }
+
+    inline ModuleSoundDriverOutputSink* handle() { return (ModuleSoundDriverOutputSink*)this; }
+
+    inline static PortImpl<ModuleSoundDriverOutputSink>* From(ModuleSoundDriverOutputSink* handle)
+        { return (PortImpl<ModuleSoundDriverOutputSink>*)handle; }
+};
+
+
+template<unsigned long MsgKey, typename ModulePortT_, typename CallbackT>
 struct Message{
     inline constexpr static unsigned long Key() { return MsgKey; }
 
-    Message(ResponseT* response, void* arg1, void* arg2)
-    : response(response), arg1(arg1), arg2(arg2) {}
+    typedef          ModulePortT_           ModulePortT;
+    typedef          PortImpl<ModulePortT>  PortImplT;
+    typedef typename PortImplT::SGNodeT     SGNodeT;
 
-    SDPortT*    sd_port     = nullptr;
-    NodePortT*  node_port   = nullptr;
+    PortImplT* port_impl = nullptr;
 
-    ResponseT*  response    = nullptr;
-    void*       arg1        = nullptr;
-    void*       arg2        = nullptr;
+    CallbackT*     callback    = nullptr;
+    void*          arg1        = nullptr;
+    void*          arg2        = nullptr;
+
+    Message(CallbackT* callback, void* arg1, void* arg2)
+    : callback(callback), arg1(arg1), arg2(arg2) {}
+
+    inline static PortImplT* ImplFrom(ModulePortT* handle)
+        { return (PortImplT*)handle; }
 };
 
-typedef Message<0, SoundDriverAudioInput,   SignalSource,  Callback_AddAudioInput>   Message_AddAudioInput;
-typedef Message<1, SoundDriverAudioOutput,  SignalSink,    Callback_AddAudioOutput>  Message_AddAudioOutput;
-typedef Message<2, SoundDriverAudioInput,   SignalSource,  Callback_RemovePort>      Message_RemoveAudioInput;
-typedef Message<3, SoundDriverAudioOutput,  SignalSink,    Callback_RemovePort>      Message_RemoveAudioOutput;
+typedef Message<0, ModuleSoundDriverInputSource, Callback_AddAudioInput>      Message_AddAudioInput;
+typedef Message<1, ModuleSoundDriverOutputSink,  Callback_AddAudioOutput>     Message_AddAudioOutput;
+typedef Message<2, ModuleSoundDriverInputSource, Callback_RemoveAudioInput>   Message_RemoveAudioInput;
+typedef Message<3, ModuleSoundDriverOutputSink,  Callback_RemoveAudioOutput>  Message_RemoveAudioOutput;
 
-#define R64FX_CASE_RECIEVED(A) case Message_##A ::Key() : { recieved((Message_##A*)msg.value());  break; }
-
+#define R64FX_CASE_RECIEVED(M) case Message_##M::Key(): { recieved((Message_##M*)msg.value()); break; }
 
 /*
  * === Worker Thread ===================================================================
  */
 
-#define R64FX_ACCESS_METHODS(AddOrRemove, Name, Member1, Member2)\
-    inline auto  Name           (SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioInput*)  ->decltype(impl->Member1)& { return impl->Member1; }\
-    inline auto  Name           (SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioOutput*) ->decltype(impl->Member2)& { return impl->Member2; }\
-    inline auto  second_##Name  (SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioInput*)  ->decltype(impl->Member2)& { return impl->Member2; }\
-    inline auto  second_##Name  (SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioOutput*) ->decltype(impl->Member1)& { return impl->Member1; }
-    R64FX_ACCESS_METHODS(Add,     port,  input,  output)
-    R64FX_ACCESS_METHODS(Remove,  port,  input,  output)
-    R64FX_ACCESS_METHODS(Add,     node,  reader, writer)
-    R64FX_ACCESS_METHODS(Remove,  node,  reader, writer)
-#undef R64FX_ACCESS_METHODS
-
-#define R64FX_ACCESS_METHODS(AddOrRemove)\
-    inline SignalSource* node_port(SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioInput*) { return impl->reader->out(); }\
-    inline SignalSink*   node_port(SoundDriverPortsImpl* impl, Message_##AddOrRemove##AudioOutput*) { return impl->writer->in(); }
-    R64FX_ACCESS_METHODS(Add)
-    R64FX_ACCESS_METHODS(Remove)
-#undef R64FX_ACCESS_METHODS
-
+R64FX_DECL_DEFAULT_MODULE_AGENTS(SoundDriver);
 
 class SoundDriverThreadObjectImpl : public ModuleSoundDriverThreadObjectImpl{
 
@@ -73,7 +94,7 @@ public:
     }
 
 private:
-    virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg)
+    virtual void messageFromIfaceRecieved(const ThreadObjectMessage &msg) override final
     {
         switch(msg.key())
         {
@@ -84,105 +105,76 @@ private:
             default:
                 abort(); //Must never happen!
         }
-
-        sendMessagesToIface(&msg, 1); //Always respond so that iface can free the message payload.
     }
 
-    /* Using message type with oveloaded methods in SoundDriverPortsImpl. */
-    template<typename MsgT, typename NodeT> inline void addAudioPort(MsgT* message)
+    inline void recieved(Message_AddAudioInput*      msg) { addAudioPort    (msg); }
+    inline void recieved(Message_AddAudioOutput*     msg) { addAudioPort    (msg); }
+    inline void recieved(Message_RemoveAudioInput*   msg) { removeAudioPort (msg); }
+    inline void recieved(Message_RemoveAudioOutput*  msg) { removeAudioPort (msg); }
+
+    template<typename MsgT> inline void addAudioPort(MsgT* msg)
     {
-        R64FX_DEBUG_ASSERT(message->sd_port);
+        auto pi = msg->port_impl;
+        R64FX_DEBUG_ASSERT(pi);
 
-        auto sg = signalGraph();
+        R64FX_DEBUG_ASSERT(pi->sd_port[0]);
+        float* buff0 = alloc_buffer<float>(bufferSize());
+        soundDriverPortGroup()->updatePort(pi->sd_port[0], buff0);
 
-        DataBufferPointer buffer;
-        auto impl = ports().first();
-        while(impl && port(impl, message)) impl = impl->next();
-        if(impl)
+        float* buff1 = nullptr;
+        if(pi->sd_port[1])
         {
-            R64FX_DEBUG_ASSERT(second_port(impl, message));
-            R64FX_DEBUG_ASSERT(second_node(impl, message));
-            buffer = second_node(impl, message)->buffer();
-        }
-        else
-        {
-            impl = allocObj<SoundDriverPortsImpl>();
-            ports().append(impl);
-            R64FX_DEBUG_ASSERT(signalGraph());
-            buffer = signalGraph()->allocBuffer();
+            buff1 = alloc_buffer<float>(bufferSize());
+            soundDriverPortGroup()->updatePort(pi->sd_port[1], buff1);
         }
 
-        port(impl, message) = message->sd_port;
-        node(impl, message) = allocObj<NodeT, SignalGraph&, DataBufferPointer>(*sg, buffer);
-        message->node_port = node_port(impl, message);
-    }
-
-    inline void recieved(Message_AddAudioInput* message)
-    {
-        addAudioPort<Message_AddAudioInput, SignalNode_BufferReader>(message);
-    }
-
-    inline void recieved(Message_AddAudioOutput* message)
-    {
-        addAudioPort<Message_AddAudioOutput, SignalNode_BufferWriter>(message);
-    }
-
-    template<typename MsgT> void removeAudioPort(MsgT* message)
-    {
-        R64FX_DEBUG_ASSERT(message->node_port);
-
-        auto impl = ports().first();
-        while(impl && node_port(impl, message) != message->node_port) impl = impl->next();
-        R64FX_DEBUG_ASSERT(impl);
-        auto buffer = node(impl, message)->buffer();
-        message->sd_port = port(impl, message);
-        freeObj(node(impl, message));
-        node(impl, message) = nullptr;
-        while(impl->next())
+        auto node = allocObj<typename MsgT::SGNodeT>(signalGraph(), buff0, buff1);
+        pi->setNode(node);
+        if constexpr(std::is_same<typename MsgT::SGNodeT, SignalNode_BufferWriter>::value)
         {
-            auto next_node = node(impl->next(), message);
-            node(impl, message) = next_node;
-            auto next_buffer = next_node->buffer();
-            next_node->setBuffer(buffer);
-            buffer = next_buffer;
-            impl = impl->next();
+            addGraphOutput(node);
         }
-        if(!second_node(impl, message))
+        ThreadObjectMessage response(MsgT::Key(), msg);
+        sendMessagesToIface(&response, 1);
+    }
+
+    template<typename MsgT> void removeAudioPort(MsgT* msg)
+    {
+        auto pi = msg->port_impl;
+        R64FX_DEBUG_ASSERT(pi);
+
+        R64FX_DEBUG_ASSERT(pi->sg_node);
+        R64FX_DEBUG_ASSERT(pi->sg_node->buffer(0));
+        R64FX_DEBUG_ASSERT(pi->sd_port[0]);
+
+        if(pi->sg_node->buffer(1))
         {
-            signalGraph()->freeBuffer(buffer);
-            ports().remove(impl);
-            freeObj(impl);
+            soundDriverPortGroup()->updatePort(pi->sd_port[1], nullptr);
+            free(pi->sg_node->buffer(1));
         }
-    }
 
-    inline void recieved(Message_RemoveAudioInput* message)
-    {
-        removeAudioPort(message);
-    }
+        /* Make sure that callback is issued only when all other ports have been updated. */
+        soundDriverPortGroup()->updatePort(pi->sd_port[0], nullptr,
+        [](SoundDriverAudioPort* port, float* buffer, void* arg0, void* arg1){
+            ((SoundDriverThreadObjectImpl*)arg0)->portBufferRemoved<MsgT>((MsgT*)arg1, port, buffer);
+        }, this, msg);
+        free(pi->sg_node->buffer(0));
 
-    inline void recieved(Message_RemoveAudioOutput* message)
-    {
-        removeAudioPort(message);
-    }
-
-    inline void prologue()
-    {
-        auto impl = ports().first();
-        while(impl && impl->input)
+        if constexpr(R64FX_SAME_TYPE(typename MsgT::SGNodeT, SignalNode_BufferWriter))
         {
-            impl->input->readSamples(impl->reader->bufferAddr(), signalGraph()->frameCount());
-            impl = impl->next();
+            removeGraphOutput(pi->sg_node);
         }
+        freeObj(pi->sg_node);
+        pi->sg_node = nullptr;
+        pi->signal_port = nullptr;
+
+        armRebuild();
     }
 
-    inline void epilogue()
+    template<typename MsgT> inline void portBufferRemoved(MsgT* msg, SoundDriverAudioPort* port, float* buffer)
     {
-        auto impl = ports().first();
-        while(impl && impl->output)
-        {
-            impl->output->writeSamples(impl->writer->bufferAddr(), signalGraph()->frameCount());
-            impl = impl->next();
-        }
+        ThreadObjectMessage response(MsgT::Key(), msg);
+        sendMessagesToIface(&response, 1);
     }
 };
 
@@ -195,41 +187,8 @@ R64FX_DEF_MODULE_AGENTS(SoundDriver)
 class SoundDriverThreadObjectIface : public ModuleThreadObjectIface{
     R64FX_USE_EMPTY_MODULE_AGENTS(SoundDriver)
 
-public:
-    template<typename MessageT, typename ResponseT>
-    inline void addAudioPort(const char* name, ResponseT* response, void* arg1, void* arg2)
-    {
-        auto sd = soundDriver();
-#ifdef R64FX_DEBUG
-        assert(sd);
-        assert(name);
-        assert(response);
-#endif//R64FX_DEBUG
+    /* Recieving Replies from Worker Thread */
 
-        auto message = new MessageT(response, arg1, arg2);
-        sd->newPort(&message->sd_port, name);
-#ifdef R64FX_DEBUG
-        assert(message->sd_port);
-#endif//R64FX_DEBUG
-
-        ThreadObjectMessage msg(MessageT::Key(), message);
-        sendMessagesToImpl(&msg, 1);
-    }
-
-    template<typename ModulePortT, typename MessageT>
-    inline void removeAudioPort(ModulePortT* port, Callback_RemovePort* response, void* arg1, void* arg2)
-    {
-        auto message = new MessageT(response, arg1, arg2);
-        ModulePrivate::getPortPayload(port, message->node_port);
-#ifdef R64FX_DEBUG
-        assert(message->node_port);
-#endif//R64FX_DEBUG
-
-        ThreadObjectMessage msg(MessageT::Key(), message);
-        sendMessagesToImpl(&msg, 1);
-    }
-
-private:
     virtual void messageFromImplRecieved(const ThreadObjectMessage &msg) override final
     {
         switch(msg.key())
@@ -243,61 +202,79 @@ private:
         }
     }
 
-    inline void recieved(Message_AddAudioInput* message)
+    inline void recieved(Message_AddAudioInput*     msg)  { recievedAddAudioPort    (msg); }
+    inline void recieved(Message_AddAudioOutput*    msg)  { recievedAddAudioPort    (msg); }
+    inline void recieved(Message_RemoveAudioInput*  msg)  { recievedRemoveAudioPort (msg); }
+    inline void recieved(Message_RemoveAudioOutput* msg)  { recievedRemoveAudioPort (msg); }
+
+    template<typename MsgT> inline void recievedAddAudioPort(MsgT* msg)
     {
-        recievedAddAudioPort(message);
+        auto pi = msg->port_impl;
+        R64FX_DEBUG_ASSERT(pi);
+
+        R64FX_DEBUG_ASSERT(msg->callback);
+        msg->callback(pi->handle(), msg->arg1, msg->arg2);
+
+        delete msg;
     }
 
-    inline void recieved(Message_AddAudioOutput* message)
-    {
-        recievedAddAudioPort(message);
-    }
-
-    inline void recieved(Message_RemoveAudioInput* message)
-    {
-        recievedRemoveAudioPort(message);
-    }
-
-    inline void recieved(Message_RemoveAudioOutput* message)
-    {
-        recievedRemoveAudioPort(message);
-    }
-
-    template<typename MessageT> inline void recievedAddAudioPort(MessageT* message)
-    {
-#ifdef R64FX_DEBUG
-        assert(message->response);
-        assert(message->node_port);
-#endif//R64FX_DEBUG
-        auto module_port = newPortFromMessageType(message);
-        ModulePrivate::setPortPayload(module_port, message->node_port);
-        ModulePrivate::setPortThread(module_port, thread());
-        message->response(module_port, message->arg1, message->arg2);
-        delete message;
-    }
-
-    template<typename MessageT> inline void recievedRemoveAudioPort(MessageT* message)
+    template<typename MsgT> inline void recievedRemoveAudioPort(MsgT* msg)
     {
         auto sd = soundDriver();
-#ifdef R64FX_DEBUG
-        assert(message->response);
-        assert(message->node_port);
-        assert(message->sd_port);
-        assert(sd);
-#endif//R64FX_DEBUG
-        sd->deletePort(message->sd_port);
-        message->response(message->arg1, message->arg2);
-        delete message;
+        R64FX_DEBUG_ASSERT(sd);
+
+        auto pi = msg->port_impl;
+        R64FX_DEBUG_ASSERT(pi);
+
+        sd->deletePort(pi->sd_port[0]);
+        if(pi->sd_port[1])
+            sd->deletePort(pi->sd_port[1]);
+        delete pi;
+
+        R64FX_DEBUG_ASSERT(msg->callback);
+        msg->callback(msg->arg1, msg->arg2);
+
+        delete msg;
     }
 
-    inline ModuleSource* newPortFromMessageType(Message_AddAudioInput*)
+public:
+    /* Sending Messages to Worker Thread */
+
+    template<typename MsgT, typename CallbackT>
+    inline void addAudioPort(const std::string &name, unsigned int chan_count, CallbackT* callback, void* arg1, void* arg2)
     {
-        return new ModuleSource;
+        R64FX_DEBUG_ASSERT(!name.empty());
+        R64FX_DEBUG_ASSERT(chan_count == 1 || chan_count == 2);
+
+        auto sd = soundDriver();
+        R64FX_DEBUG_ASSERT(sd);
+        R64FX_DEBUG_ASSERT(callback);
+
+        auto msg = new MsgT(callback, arg1, arg2);
+        auto pi = msg->port_impl = new typename MsgT::PortImplT;
+        if(chan_count == 1)
+        {
+            sd->newPort(pi->sd_port, name);
+        }
+        else
+        {
+            sd->newPort(pi->sd_port,     name + "1");
+            sd->newPort(pi->sd_port + 1, name + "2");
+        }
+        pi->thread = thread();
+        std::cout << "thread: " << pi->thread << "\n";
+
+        ThreadObjectMessage msgs(MsgT::Key(), msg);
+        sendMessagesToImpl(&msgs, 1);
     }
 
-    inline ModuleSink* newPortFromMessageType(Message_AddAudioOutput*)
+    template<typename MsgT, typename CallbackT>
+    inline void removeAudioPort(typename MsgT::ModulePortT* port, CallbackT* callback, void* arg1, void* arg2)
     {
-        return new ModuleSink;
+        auto msg = new MsgT(callback, arg1, arg2);
+        msg->port_impl = MsgT::ImplFrom(port);
+        ThreadObjectMessage msgs(MsgT::Key(), msg);
+        sendMessagesToImpl(&msgs, 1);
     }
 };
 
@@ -314,20 +291,16 @@ Module_SoundDriver::Module_SoundDriver()
 
 Module_SoundDriver::~Module_SoundDriver()
 {
-#ifdef R64FX_DEBUG
-    assert(!isEngaged());
-    assert(!engagementPending());
-#endif//R64FX_DEBUG
+    R64FX_DEBUG_ASSERT(!isEngaged());
+    R64FX_DEBUG_ASSERT(!engagementPending());
     delete m_thread_object_iface;
 }
 
 
 bool Module_SoundDriver::engage(Module::Callback* done, void* done_arg, ModuleThreadHandle* threads, int nthreads)
 {
-#ifdef R64FX_DEBUG
-    assert(!isEngaged());
-    assert(!engagementPending());
-#endif//R64FX_DEBUG
+    R64FX_DEBUG_ASSERT(!isEngaged());
+    R64FX_DEBUG_ASSERT(!engagementPending());
     ModulePrivate::deploy(m_thread_object_iface, nullptr, done, done_arg, this);
     return true;
 }
@@ -335,10 +308,8 @@ bool Module_SoundDriver::engage(Module::Callback* done, void* done_arg, ModuleTh
 
 void Module_SoundDriver::disengage(Module::Callback* done, void* done_arg)
 {
-#ifdef R64FX_DEBUG
-    assert(isEngaged());
-    assert(!engagementPending());
-#endif//R64FX_DEBUG
+    R64FX_DEBUG_ASSERT(isEngaged());
+    R64FX_DEBUG_ASSERT(!engagementPending());
     ModulePrivate::withdraw(m_thread_object_iface, done, done_arg, this);
 }
 
@@ -355,28 +326,43 @@ bool Module_SoundDriver::engagementPending()
 }
 
 
-void Module_SoundDriver::addAudioInput(const char* name, Callback_AddAudioInput* response, void* arg1, void* arg2)
+void Module_SoundDriver::addAudioInput(
+    const char* name, unsigned int chan_count, Callback_AddAudioInput* callback, void* arg1, void* arg2
+)
 {
-    m_thread_object_iface->addAudioPort<Message_AddAudioInput, Callback_AddAudioInput>(name, response, arg1, arg2);
+    m_thread_object_iface->addAudioPort<Message_AddAudioInput>(
+        name, chan_count, callback, arg1, arg2
+    );
 }
 
 
-void Module_SoundDriver::addAudioOutput(const char* name, Callback_AddAudioOutput* response, void* arg1, void* arg2)
+void Module_SoundDriver::addAudioOutput(
+    const char* name, unsigned int chan_count, Callback_AddAudioOutput* callback, void* arg1, void* arg2
+)
 {
-    m_thread_object_iface->addAudioPort<Message_AddAudioOutput, Callback_AddAudioOutput>(name, response, arg1, arg2);
+    m_thread_object_iface->addAudioPort<Message_AddAudioOutput>(
+        name, chan_count, callback, arg1, arg2
+    );
 }
 
 
-void Module_SoundDriver::removePort(ModulePort* port, Callback_RemovePort* response, void* arg1, void* arg2)
+void Module_SoundDriver::removePort(
+    ModuleSoundDriverInputSource* source, Callback_RemoveAudioInput* callback, void* arg1, void* arg2
+)
 {
-    if(port->isSource())
-    {
-        m_thread_object_iface->removeAudioPort<ModuleSource, Message_RemoveAudioInput>((ModuleSource*)port, response, arg1, arg2);
-    }
-    else
-    {
-        m_thread_object_iface->removeAudioPort<ModuleSink, Message_RemoveAudioOutput>((ModuleSink*)port, response, arg1, arg2);
-    }
+    m_thread_object_iface->removeAudioPort<Message_RemoveAudioInput>(
+        source, callback, arg1, arg2
+    );
+}
+
+
+void Module_SoundDriver::removePort(
+    ModuleSoundDriverOutputSink* sink,  Callback_RemoveAudioOutput* callback, void* arg1, void* arg2
+)
+{
+    m_thread_object_iface->removeAudioPort<Message_RemoveAudioOutput>(
+        sink, callback, arg1, arg2
+    );
 }
 
 }//namespace r64fx

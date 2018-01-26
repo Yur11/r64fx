@@ -1,6 +1,7 @@
 #ifndef R64FX_MODULE_PRIVATE_HPP
 #define R64FX_MODULE_PRIVATE_HPP
 
+#include "Module.hpp"
 #include "ThreadObject.hpp"
 #include "SignalGraph.hpp"
 
@@ -74,7 +75,7 @@ class ModuleThreadObjectIfaceHandle;
 class ModuleThreadObjectImplHandle;
 class ModuleDeploymentAgent;
 class SoundDriver;
-class SoundDriverSyncPort;
+class SoundDriverPortGroup;
 
 /*
  * === Impl ===================================================================
@@ -90,13 +91,17 @@ public:
     virtual ~ModuleThreadObjectImpl();
 
 protected:
-    SoundDriverSyncPort* syncPort() const;
-
     long bufferSize() const;
 
     long sampleRate() const;
 
+    SoundDriverPortGroup* soundDriverPortGroup() const;
+
     SignalGraph* signalGraph() const;
+
+    void addGraphOutput(SignalNode* node);
+
+    void removeGraphOutput(SignalNode* node);
 
     void armRebuild();
 
@@ -172,36 +177,45 @@ public:
     static void deploy(ModuleThreadObjectIface* iface, ModuleThreadHandle* thread, Module::Callback* done, void* done_arg, Module* module);
 
     static void withdraw(ModuleThreadObjectIface* iface, Module::Callback* done, void* done_arg, Module* module);
+};
 
-    inline static void setPortPayload(ModuleSink* sink, SignalSink* payload)
-    {
-        sink->m_payload = (void*) payload;
-    }
 
-    inline static void setPortPayload(ModuleSource* source, SignalSource* payload)
-    {
-        source->m_payload = (void*) payload;
-    }
+/* ModulePort Implementations */
 
-    inline static void getPortPayload(ModuleSink* sink, SignalSink* &payload)
-    {
-        payload = (SignalSink*) sink->m_payload;
-    }
+struct ModulePortImpl{
+    unsigned long        bits    = 0; //Maps to m_bits in ModuePort.
+    ModuleThreadHandle*  thread  = nullptr;
 
-    inline static void getPortPayload(ModuleSource* source, SignalSource* &payload)
-    {
-        payload = (SignalSource*) source->m_payload;
-    }
+    inline bool isSink() const { return bits & 1; }
+    inline bool isSource() const { return !isSink(); }
 
-    inline static void setPortThread(ModulePort* port, ModuleThreadHandle* handle)
-    {
-        port->m_thread_handle = handle;
-    }
+    inline bool isSignal() const { return bits & 2; }
+    inline bool isSequence() const { return !isSignal(); }
 
-    inline static void getPortThread(ModulePort* port, ModuleThreadHandle* &handle)
-    {
-        handle = port->m_thread_handle;
-    }
+    inline static ModulePortImpl* From(ModulePort* port)
+        { return (ModulePortImpl*)port; }
+};
+
+struct ModuleSignalSourceImpl : public ModulePortImpl{
+    SignalSource* signal_port = nullptr;
+
+    ModuleSignalSourceImpl() { bits = 2; }
+
+    inline ModuleSource* modulePort() const { return (ModuleSource*)this; }
+
+    inline static ModuleSignalSourceImpl* From(ModuleSource* source)
+        { return (ModuleSignalSourceImpl*)source; }
+};
+
+struct ModuleSignalSinkImpl : public ModulePortImpl{
+    SignalSink* signal_port = nullptr;
+
+    ModuleSignalSinkImpl() { bits = 3; }
+
+    inline ModuleSink* modulePort() const { return (ModuleSink*)this; }
+
+    inline static ModuleSignalSinkImpl* From(ModuleSink* sink)
+        { return (ModuleSignalSinkImpl*)sink; }
 };
 
 }//namespace r64fx

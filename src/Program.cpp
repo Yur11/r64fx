@@ -35,9 +35,10 @@ struct ProgramPrivate : public View_ProgramEventIface{
     Module_Player* m_module_player = nullptr;
 
     Module_SoundDriver* m_module_sound_driver = nullptr;
-    ModuleSource* m_source = nullptr;
-    ModuleSink* m_sink = nullptr;
+    ModuleSoundDriverInputSource* m_source = nullptr;
+    ModuleSoundDriverOutputSink* m_sink = nullptr;
     ModuleLink* m_link = nullptr;
+    bool m_connected = false;
 
     SoundFileLoader sfl;
     SoundFileLoader::Port* m_sflp = nullptr;
@@ -129,18 +130,18 @@ struct ProgramPrivate : public View_ProgramEventIface{
     {
         cout << "engagedModuleSoundDriver\n";
 
-        module_sound_driver->addAudioInput("in", [](ModuleSource* source, void* arg1, void* arg2){
+        module_sound_driver->addAudioInput("in", 1, [](ModuleSoundDriverInputSource* source, void* arg1, void* arg2){
             auto self = (ProgramPrivate*) arg1;
             self->portAdded(source, (Module_SoundDriver*)arg2);
         }, this, module_sound_driver);
 
-        module_sound_driver->addAudioOutput("out", [](ModuleSink* sink, void* arg1, void* arg2){
+        module_sound_driver->addAudioOutput("out", 1, [](ModuleSoundDriverOutputSink* sink, void* arg1, void* arg2){
             auto self = (ProgramPrivate*) arg1;
             self->portAdded(sink, (Module_SoundDriver*)arg2);
         }, this, module_sound_driver);
     }
 
-    void portAdded(ModuleSource* source, Module_SoundDriver* module_sound_driver)
+    void portAdded(ModuleSoundDriverInputSource* source, Module_SoundDriver* module_sound_driver)
     {
         cout << "Source Added\n";
         m_source = source;
@@ -148,7 +149,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
             connectPorts();
     }
 
-    void portAdded(ModuleSink* sink, Module_SoundDriver* module_sound_driver)
+    void portAdded(ModuleSoundDriverOutputSink* sink, Module_SoundDriver* module_sound_driver)
     {
         cout << "Sink Added\n";
         m_sink = sink;
@@ -169,19 +170,30 @@ struct ProgramPrivate : public View_ProgramEventIface{
     void portsConnected(ModuleLink** links, int nlinks)
     {
         cout << "Ports Connected\n";
+        m_connected = true;
     }
+
+    void disconnectPorts()
+    {
+        cout << "Ports Disconnected\n";
+        m_connected = false;
+    }
+
+    void portsDisconnected(ModuleLink** links, int nlinks)
+    {
+        
+    }
+
 
     void portRemoved(ModulePort* port)
     {
         cout << "portRemoved\n";
         if(port == m_sink)
         {
-            R64FX_DEBUG_ASSERT(port->isSink());
             m_sink = nullptr;
         }
         else
         {
-            R64FX_DEBUG_ASSERT(port->isSource());
             m_source = nullptr;
         }
 
@@ -290,6 +302,7 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     void quit()
     {
+        std::cout << "quit(): " << m_module_sound_driver << "\n";
         if(m_module_sound_driver)
         {
             if(m_source)
