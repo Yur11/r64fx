@@ -228,3 +228,21 @@ add_executable(test_SoundDriver EXCLUDE_FROM_ALL ${test_SoundDriver_SRC})
 set(test_SoundDriver_LIBS jack pthread)
 
 target_link_libraries(test_SoundDriver ${test_SoundDriver_LIBS})
+
+
+## test_Synth ##
+set(test_Synth_SRC
+    test_Synth.cpp
+    SoundDriver.cpp
+    Midi.cpp
+    MemoryUtils.cpp
+    TimeUtils.cpp
+    Thread.cpp
+    jit.cpp
+)
+
+add_executable(test_Synth EXCLUDE_FROM_ALL ${test_Synth_SRC})
+
+set(test_Synth_LIBS jack pthread)
+
+target_link_libraries(test_Synth ${test_Synth_LIBS})
