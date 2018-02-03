@@ -30,6 +30,10 @@ SignalGraphImpl::SignalGraphImpl()
 
     resize(1, 1);
     growData(memory_page_size());
+
+    common_data = allocMemoryBytes(128, 16);
+    auto ptr = addr(common_data);
+    std::cout << (unsigned long*)ptr << "\n";
 }
 
 

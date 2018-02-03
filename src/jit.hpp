@@ -550,14 +550,11 @@ public:
 
     inline void MOVSS(Xmm reg, Mem32 mem) { this->m.write0x0F(0xF3, 0x10, reg, mem); }
     inline void MOVSS(Mem32 mem, Xmm reg) { this->m.write0x0F(0xF3, 0x11, reg, mem); }
+    inline void MOVSS(Xmm reg, SIBD sibd) { this->m.write0x0F(0xF3, 0x10, reg, sibd); }
 
     inline void SHUFPS(Xmm dst, Xmm src,    Shuf shuf) { this->m.write0x0F(0, 0xC6, dst, src,  shuf.byte()); }
     inline void SHUFPS(Xmm reg, Mem128 mem, Shuf shuf) { this->m.write0x0F(0, 0xC6, reg, mem,  shuf.byte()); }
     inline void SHUFPS(Xmm reg, SIBD sibd,  Shuf shuf) { this->m.write0x0F(0, 0xC6, reg, sibd, shuf.byte()); }
-
-    inline void PSHUFD(Xmm dst, Xmm src,    Shuf shuf) { this->m.write0x0F(0x66, 0x70, dst, src,  shuf.byte()); }
-    inline void PSHUFD(Xmm reg, Mem128 mem, Shuf shuf) { this->m.write0x0F(0x66, 0x70, reg, mem,  shuf.byte()); }
-    inline void PSHUFD(Xmm reg, SIBD sibd,  Shuf shuf) { this->m.write0x0F(0x66, 0x70, reg, sibd, shuf.byte()); }
 
     inline void CVTPS2DQ(Xmm dst, Xmm src)    { this->m.write0x0F(0x66, 0x5B, dst, src); }
     inline void CVTPS2DQ(Xmm reg, Mem128 mem) { this->m.write0x0F(0x66, 0x5B, reg, mem); }
@@ -572,6 +569,10 @@ public:
     inline void MOVQ(Xmm dst, GPR64 src) { this->m.write0x0F(0x66, 0x6E, dst, src); }
     inline void MOVD(GPR32 dst, Xmm src) { this->m.write0x0F(0x66, 0x7E, src, dst); }
     inline void MOVQ(GPR64 dst, Xmm src) { this->m.write0x0F(0x66, 0x7E, src, dst); }
+
+    inline void PSHUFD(Xmm dst, Xmm src,    Shuf shuf) { this->m.write0x0F(0x66, 0x70, dst, src,  shuf.byte()); }
+    inline void PSHUFD(Xmm reg, Mem128 mem, Shuf shuf) { this->m.write0x0F(0x66, 0x70, reg, mem,  shuf.byte()); }
+    inline void PSHUFD(Xmm reg, SIBD sibd,  Shuf shuf) { this->m.write0x0F(0x66, 0x70, reg, sibd, shuf.byte()); }
 
     inline void PADDD(Xmm dst, Xmm src)    { this->m.write0x0F(0x66, 0xFE, dst, src);}
     inline void PADDD(Xmm reg, Mem128 mem) { this->m.write0x0F(0x66, 0xFE, reg, mem); }

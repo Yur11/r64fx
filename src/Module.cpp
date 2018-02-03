@@ -112,7 +112,7 @@ private:
         m.flags |= (R64FX_MODULE_THREAD_RUNNING | R64FX_GRAPH_REBUILD_ARMED);
         while(m.flags & R64FX_MODULE_THREAD_RUNNING)
         {
-            m.flags |= R64FX_GRAPH_REBUILD_ARMED;
+            m.flags |= R64FX_GRAPH_REBUILD_ARMED;//Remove Me!
 
             if(m.sdpg->sync())
             {
@@ -383,7 +383,7 @@ class ModuleGlobal : public InstanceCounter{
 
     virtual void initEvent() override final
     {
-        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Stub, "r64fx");
+        m_sound_driver = SoundDriver::newInstance(SoundDriver::Type::Jack, "r64fx");
         m_sound_driver->enable();
 
         m_timer = new(std::nothrow) Timer;
@@ -631,6 +631,11 @@ int Module::freeThreads(ModuleThreadHandle** threads, int nthreads)
 ModuleThreadHandle* ModulePort::thread()
 {
     return ModulePortImpl::From(this)->thread;
+}
+
+bool ModuleLink::isEnabled() const
+{
+    return false;
 }
 
 void ModuleLink::enable(ModuleLink** links, unsigned int nlinks, ModuleLink::Callback* callback, void* arg)

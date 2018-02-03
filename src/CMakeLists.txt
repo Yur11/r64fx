@@ -55,6 +55,7 @@ set(SRC
     Module_Filter.cpp
     Module_Oscillator.cpp
     Module_Player.cpp
+    Module_SineGenerator.cpp
     Mouse.cpp
     Mutex.cpp
     Painter.cpp
@@ -66,6 +67,7 @@ set(SRC
     SignalGraph.cpp
     SignalNode_BufferRW.cpp
     SignalNode_Oscillator.cpp
+    SignalNode_SineGenerator.cpp
     Shader.cpp
     SoundDriver.cpp
     SoundFile.cpp

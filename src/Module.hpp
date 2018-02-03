@@ -66,7 +66,7 @@ public:
 
     inline ModuleSink* sink() const { return m_sink; }
 
-    bool enabled();
+    bool isEnabled() const;
 
     typedef void (Callback)(ModuleLink** links, unsigned int nlinks, void* arg);
 

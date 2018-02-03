@@ -13,6 +13,7 @@
 #include "Module_Filter.hpp"
 #include "Module_Player.hpp"
 #include "Module_SoundDriver.hpp"
+#include "Module_SineGenerator.hpp"
 
 #include "Debug.hpp"
 
@@ -27,21 +28,12 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     View_Program* view_program = nullptr;
 
-//     View_Filter* view_filter = nullptr;
-//     Module_Filter* module_filter = nullptr;
-// 
-//     FilterClass fc;
-
-    Module_Player* m_module_player = nullptr;
+    Module_SineGenerator* m_module_sine_generator = nullptr;
 
     Module_SoundDriver* m_module_sound_driver = nullptr;
-    ModuleSoundDriverInputSource* m_source = nullptr;
-    ModuleSoundDriverOutputSink* m_sink = nullptr;
-    ModuleLink* m_link = nullptr;
-    bool m_connected = false;
+    ModuleSoundDriverOutputSink* m_output_sink = nullptr;
 
-    SoundFileLoader sfl;
-    SoundFileLoader::Port* m_sflp = nullptr;
+    ModuleLink* m_link = nullptr;
 
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
@@ -53,37 +45,6 @@ struct ProgramPrivate : public View_ProgramEventIface{
         view_program = new View_Program(this);
         view_program->openWindow();
 
-//         fc.newRoot<Pole>({0.0f, 0.1f});
-//         fc.newRoot<Zero>({-0.5f, 0.5f});
-//         fc.newRoot<Pole>({0.0f, 0.1f});
-//         fc.newRoot<Zero>({-0.5f, 0.5});
-//         fc.newRoot<Pole>({0.0f, 0.1f});
-//         fc.newRoot<Zero>({-0.5f, 0.5f});
-//         fc.newRoot<Pole>({0.0f, 0.1f});
-//         fc.newRoot<Zero>({-0.5f, 0.5});
-//         fc.updateIndices();
-
-//         view_filter = new View_Filter(nullptr);
-//         view_filter->openWindow();
-//         view_filter->setFilterClass(&fc);
-
-//         module_filter = new Module_Filter;
-//         module_filter->engage([](Module* module, void* arg){
-//             auto pp = (ProgramPrivate*) arg;
-//             pp->filterEngaged(pp->module_filter);
-//         }, this);
-// 
-//         view_filter->onChanged([](FilterClass* fc, void* data){
-//             auto mf = (Module_Filter*) data;
-//             mf->setFilterClass(fc);
-//         }, module_filter);
-
-//         m_module_player = new Module_Player;
-//         m_module_player->engage([](Module* module, void* arg){
-//             auto pp = (ProgramPrivate*) arg;
-//             pp->playerEngaged(pp->m_module_player);
-//         }, this);
-
         m_module_sound_driver = new Module_SoundDriver;
         m_module_sound_driver->engage([](Module* module, void* arg){
             auto pp = (ProgramPrivate*) arg;
@@ -92,30 +53,15 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
         newProject();
 
-//         m_sflp = sfl.newPort();
-//         m_sflp->open("./35-Kick1Alt-5.wav", [](SoundFileHandle* handle, void* data){
-//             auto self = (ProgramPrivate*) data;
-//             self->fileOpened(handle);
-//         }, this);
-
         while(running)
         {
-//             m_sflp->run();
-
             auto time = Timer::runTimers();
             sleep_nanoseconds(time);
         }
 
-//         sfl.deletePort(m_sflp);
-
         delete m_module_sound_driver;
 
-//         view_filter->closeWindow();
-//         delete view_filter;
-// 
-//         delete module_filter;
-
-//         delete m_module_player;
+        delete m_module_sine_generator;
 
         view_program->closeWindow();
         closeAllProjects();
@@ -128,39 +74,34 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     void engagedModuleSoundDriver(Module_SoundDriver* module_sound_driver)
     {
-        cout << "engagedModuleSoundDriver\n";
-
-        module_sound_driver->addAudioInput("in", 1, [](ModuleSoundDriverInputSource* source, void* arg1, void* arg2){
-            auto self = (ProgramPrivate*) arg1;
-            self->portAdded(source, (Module_SoundDriver*)arg2);
-        }, this, module_sound_driver);
-
         module_sound_driver->addAudioOutput("out", 1, [](ModuleSoundDriverOutputSink* sink, void* arg1, void* arg2){
             auto self = (ProgramPrivate*) arg1;
-            self->portAdded(sink, (Module_SoundDriver*)arg2);
+            self->outputSinkAdded(sink, (Module_SoundDriver*)arg2);
         }, this, module_sound_driver);
+
+        m_module_sine_generator = new Module_SineGenerator;
+        m_module_sine_generator->engage([](Module* module, void* arg){
+            auto pp = (ProgramPrivate*) arg;
+            pp->engagedModuleSineGenerator();
+        }, this);
     }
 
-    void portAdded(ModuleSoundDriverInputSource* source, Module_SoundDriver* module_sound_driver)
+    void engagedModuleSineGenerator()
     {
-        cout << "Source Added\n";
-        m_source = source;
-        if(m_sink)
+        if(m_output_sink)
             connectPorts();
     }
 
-    void portAdded(ModuleSoundDriverOutputSink* sink, Module_SoundDriver* module_sound_driver)
+    void outputSinkAdded(ModuleSoundDriverOutputSink* sink, Module_SoundDriver* module_sound_driver)
     {
-        cout << "Sink Added\n";
-        m_sink = sink;
-        if(m_source)
+        m_output_sink = sink;
+        if(m_module_sine_generator->isEngaged())
             connectPorts();
     }
 
     void connectPorts()
     {
-        cout << "Connect Ports\n";
-        m_link = new ModuleLink(m_source, m_sink);
+        m_link = new ModuleLink(m_module_sine_generator->source(), m_output_sink);
         ModuleLink::enable(&m_link, 1, [](ModuleLink** links, unsigned int nlinks, void* arg){
             auto self = (ProgramPrivate*) arg;
             self->portsConnected(links, nlinks);
@@ -170,114 +111,54 @@ struct ProgramPrivate : public View_ProgramEventIface{
     void portsConnected(ModuleLink** links, int nlinks)
     {
         cout << "Ports Connected\n";
-        m_connected = true;
     }
 
     void disconnectPorts()
     {
-        cout << "Ports Disconnected\n";
-        m_connected = false;
-    }
-
-    void portsDisconnected(ModuleLink** links, int nlinks)
-    {
-        
-    }
-
-
-    void portRemoved(ModulePort* port)
-    {
-        cout << "portRemoved\n";
-        if(port == m_sink)
-        {
-            m_sink = nullptr;
-        }
-        else
-        {
-            m_source = nullptr;
-        }
-
-        if(!m_sink && !m_source)
-        {
-            m_module_sound_driver->disengage([](Module* module, void* arg){
-                auto p = (ProgramPrivate*) arg;
-                p->disengagedModuleSoundDriver(static_cast<Module_SoundDriver*>(module));
-            }, this);
-        }
-    }
-
-    void disengagedModuleSoundDriver(Module_SoundDriver* module_sound_driver)
-    {
-        cout << "disengagedModuleSoundDriver\n";
-        doQuit();
-    }
-
-    void fileOpened(SoundFileHandle* handle)
-    {
-        if(handle)
-        {
-            cout << "fileOpened!\n";
-            cout << handle << "\n";
-            m_sflp->getFileProperties(handle, [](SoundFileHandle* handle, float sample_rate, int frame_count, int component_count, void* data){
-                auto self = (ProgramPrivate*) data;
-                self->fileStats(handle, sample_rate, component_count, frame_count);
-            }, this);
-        }
-    }
-
-    void fileStats(SoundFileHandle* handle, float sample_rate, float component_count, float frame_count)
-    {
-        cout << ">> " << sample_rate << ", " << component_count << ", " << frame_count << "\n";
-        m_sflp->loadChunk(handle, 0, 32, [](SoundFileHandle* handle, float* chunk, int index, int nframes, void* data){
-            auto self = (ProgramPrivate*) data;
-            self->fileChunk(handle, chunk, nframes);
+        ModuleLink::disable(&m_link, 1, [](ModuleLink** links, unsigned int nlinks, void* arg){
+            auto self = (ProgramPrivate*) arg;
+            self->portsDisconnected();
         }, this);
     }
 
-    void fileChunk(SoundFileHandle* handle, float* chunk, int nframes)
+    void portsDisconnected()
     {
-        cout << "chunk: " << chunk << " -> " << nframes << "\n";
-        m_sflp->freeChunk(handle, chunk, [](SoundFileHandle* handle, void* data){
-            auto self = (ProgramPrivate*) data;
-            self->freeChunk(handle);
+        m_module_sine_generator->disengage([](Module* module, void* arg){
+            auto self = (ProgramPrivate*) arg;
+            self->disengagedModuleSineGenerator();
+        }, this);
+
+        m_module_sound_driver->removePort(m_output_sink, [](void* arg0, void* arg1){
+            auto self = (ProgramPrivate*) arg0;
+            self->outputSinkRemoved();
+        }, this, nullptr);
+    }
+
+
+    void outputSinkRemoved()
+    {
+        m_output_sink = nullptr;
+
+        m_module_sound_driver->disengage([](Module* module, void* arg){
+            auto p = (ProgramPrivate*) arg;
+            p->disengagedModuleSoundDriver();
         }, this);
     }
 
-    void freeChunk(SoundFileHandle* handle)
+    void disengagedModuleSoundDriver()
     {
-        cout << "free\n";
-        m_sflp->close(handle, [](void* data){
-            auto self = (ProgramPrivate*) data;
-            self->fileClosed();
-        }, this);
+        delete m_module_sound_driver;
+        m_module_sound_driver = nullptr;
+        if(!m_module_sine_generator)
+            doQuit();
     }
 
-    void fileClosed()
+    void disengagedModuleSineGenerator()
     {
-        cout << "file closed!\n";
-    }
-
-    void filterEngaged(Module_Filter* module_filter)
-    {
-//         cout << "Filter Engaged: " << module_filter << ", " << osc << "\n";
-//         module_filter->setFilterClass(&fc);
-    }
-
-    void filterDisengaged(Module_Filter* module_filter)
-    {
-//         cout << "Filter Disengaged: " << module_filter << ", " << osc << "\n";
-//         doQuit();
-    }
-
-    void playerEngaged(Module_Player* module_player)
-    {
-        cout << "Player Engaged: " << module_player << "\n";
-    }
-
-    void playerDisengaged(Module_Player* module_player)
-    {
-        cout << "Player Disengaged: " << module_player << "\n";
-        doQuit();
+        delete m_module_sine_generator;
+        m_module_sine_generator = nullptr;
+        if(!m_module_sound_driver)
+            doQuit();
     }
 
     void newSession()
@@ -302,25 +183,8 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     void quit()
     {
-        std::cout << "quit(): " << m_module_sound_driver << "\n";
-        if(m_module_sound_driver)
-        {
-            if(m_source)
-            {
-                m_module_sound_driver->removePort(m_source, [](void* arg1, void* arg2){
-                    auto self = (ProgramPrivate*) arg1;
-                    self->portRemoved((ModulePort*)arg2);
-                }, this, static_cast<ModulePort*>(m_source));
-            }
-
-            if(m_sink)
-            {
-                m_module_sound_driver->removePort(m_sink, [](void* arg1, void* arg2){
-                    auto self = (ProgramPrivate*) arg1;
-                    self->portRemoved((ModulePort*)arg2);
-                }, this, static_cast<ModulePort*>(m_sink));
-            }
-        }
+        if(m_link->isEnabled())
+            disconnectPorts();
     }
 
     void doQuit()

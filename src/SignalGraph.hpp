@@ -93,10 +93,6 @@ private:
 public:
     inline RegisterT regAt(unsigned int i) const
     {
-        if(i >= size())
-        {
-            std::cout << "i: " << i << ", size: " << size() << "\n";
-        }
         R64FX_DEBUG_ASSERT(i < size());
         return RegisterT((m_bits >> (i<<2)) & 0xFUL);
     }
@@ -186,9 +182,9 @@ public:
 
     inline SignalNode* parentNode() const { return m_parent_node; }
 
-    inline int connectedSinkCount() const { return m_connected_sink_count; }
+    inline unsigned int connectedSinkCount() const { return m_connected_sink_count; }
 
-    inline int processedSinkCount() const { return m_processed_sink_count; }
+    inline unsigned int processedSinkCount() const { return m_processed_sink_count; }
 
     friend class SignalGraph;
     friend class SignalNode;
@@ -215,6 +211,8 @@ class SignalGraphImpl : public AssemblerBuffers{
     friend class SignalGraph;
     friend class SignalNode;
     friend class SignalGraphImplVar;
+
+    DataBufferPointer common_data;
 
     unsigned long  iteration_count  = 0;
     unsigned long  frame_count      = 0;
@@ -310,7 +308,7 @@ public:
 
 
 /* Base class for SignalGraph nodes. */
-class SignalNode : protected AssemblerInstructions<SignalGraphImplRef>{
+class SignalNode : public AssemblerInstructions<SignalGraphImplRef>{
     unsigned long m_iteration_count = 0;
     unsigned long m_link_count = 0;
 
@@ -346,7 +344,7 @@ protected:
     {
         R64FX_DEBUG_ASSERT(!(align & (align - 1)));
         R64FX_DEBUG_ASSERT(align >= sizeof(T));
-        m.allocMemoryBytes(nitems * sizeof(T), align);
+        return m.allocMemoryBytes(nitems * sizeof(T), align);
     }
 
 
