@@ -465,6 +465,7 @@ public:
     inline void JNE (JumpLabel &label){ this->m.write(0x0F, 0x85, label); }
     inline void JL  (JumpLabel &label){ this->m.write(0x0F, 0x8C, label); }
 
+
 /* === SSE === */
 
     inline void MOVAPS(Xmm dst, Xmm src)    { this->m.write0x0F(0, 0x28, dst, src); }
@@ -564,6 +565,7 @@ public:
     inline void CVTDQ2PS(Xmm reg, Mem128 mem) { this->m.write0x0F(0, 0x5B, reg, mem); }
     inline void CVTDQ2PS(Xmm reg, SIBD sibd)  { this->m.write0x0F(0, 0x5B, reg, sibd); }
 
+
 /* === SSE2 === */
     inline void MOVD(Xmm dst, GPR32 src) { this->m.write0x0F(0x66, 0x6E, dst, src); }
     inline void MOVQ(Xmm dst, GPR64 src) { this->m.write0x0F(0x66, 0x6E, dst, src); }
@@ -574,13 +576,21 @@ public:
     inline void PSHUFD(Xmm reg, Mem128 mem, Shuf shuf) { this->m.write0x0F(0x66, 0x70, reg, mem,  shuf.byte()); }
     inline void PSHUFD(Xmm reg, SIBD sibd,  Shuf shuf) { this->m.write0x0F(0x66, 0x70, reg, sibd, shuf.byte()); }
 
-    inline void PADDD(Xmm dst, Xmm src)    { this->m.write0x0F(0x66, 0xFE, dst, src);}
-    inline void PADDD(Xmm reg, Mem128 mem) { this->m.write0x0F(0x66, 0xFE, reg, mem); }
-    inline void PADDD(Xmm reg, SIBD sibd)  { this->m.write0x0F(0x66, 0xFE, reg, sibd); }
+#define R64FX_SSE2_INSTRUCTION(name, opcode)\
+    inline void name(Xmm dst, Xmm src)    { this->m.write0x0F(0x66, opcode, dst, src);}\
+    inline void name(Xmm reg, Mem128 mem) { this->m.write0x0F(0x66, opcode, reg, mem); }\
+    inline void name(Xmm reg, SIBD sibd)  { this->m.write0x0F(0x66, opcode, reg, sibd); }
 
-    inline void PSUBD(Xmm dst, Xmm src)    { this->m.write0x0F(0x66, 0xFA, dst, src); }
-    inline void PSUBD(Xmm reg, Mem128 mem) { this->m.write0x0F(0x66, 0xFA, reg, mem); }
-    inline void PSUBD(Xmm reg, SIBD sibd)  { this->m.write0x0F(0x66, 0xFA, reg, sibd); }
+    R64FX_SSE2_INSTRUCTION(PADDD,   0xFE)
+    R64FX_SSE2_INSTRUCTION(PSUBD,   0xFA)
+    R64FX_SSE2_INSTRUCTION(PADDQ,   0xD4)
+    R64FX_SSE2_INSTRUCTION(PSUBQ,   0xFB)
+    R64FX_SSE2_INSTRUCTION(PCMPEQB, 0x74)
+    R64FX_SSE2_INSTRUCTION(PCMPEQW, 0x75)
+    R64FX_SSE2_INSTRUCTION(PCMPEQD, 0x76)
+    R64FX_SSE2_INSTRUCTION(PCMPGTB, 0x64)
+    R64FX_SSE2_INSTRUCTION(PCMPGTW, 0x65)
+    R64FX_SSE2_INSTRUCTION(PCMPGTD, 0x66)
 };
 
 
@@ -592,6 +602,11 @@ public:
 };
 
 typedef AssemblerInstructions<AssemblerBase> Assembler;
+
+
+template<typename ReturnT, typename... ArgT> struct JitFun{
+    typedef ReturnT (T)(ArgT...);
+};
 
 
 }//namespace r64fx

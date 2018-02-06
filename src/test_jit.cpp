@@ -12,19 +12,11 @@
 using namespace std;
 using namespace r64fx;
 
-
-template<typename T> bool vec4_eq(T* a, T* b)
+template<typename T> inline void dump(T* v, unsigned long size)
 {
-    return (a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]) && (a[3] == b[3]);
+    for(unsigned long i=0; i<size; i++)
+        cout << v[i] << (i == (size-1) ? "\n" : ", ");
 }
-
-template<typename T> inline void dump(T* v)
-{
-    cout << v[0] << ", " << v[1] << ", " << v[2] << ", " << v[3] << "\n";
-}
-
-
-typedef long (*JitFun)();
 
 
 bool test_buffers(Assembler &as)
@@ -80,7 +72,8 @@ bool test_buffers(Assembler &as)
     as.ADD(rax, rdx);
     as.RET();
 
-    R64FX_EXPECT_EQ(111, ((JitFun)as.codeBegin())());
+    auto fun = (JitFun<long>::T*) as.codeBegin();
+    R64FX_EXPECT_EQ(111, fun());
     R64FX_EXPECT_EQ(0x2AAAAAAAAAAAAAABL, ((long*)(as.dataBegin()))[0]); // +1
     R64FX_EXPECT_EQ(0x5555555555555545L, ((long*)(as.dataBegin()))[1]); // -16
 
@@ -92,7 +85,7 @@ bool test_buffers(Assembler &as)
 
 bool test_mov(Assembler &as)
 {
-    auto jitfun = (JitFun) as.codeBegin();
+    auto fun = (JitFun<long>::T*) as.codeBegin();
 
     as.rewindData();
     as.growData(2 * sizeof(long));
@@ -106,7 +99,7 @@ bool test_mov(Assembler &as)
         as.rewindCode();
         as.MOV(eax, Imm32(num));
         as.RET();
-        R64FX_EXPECT_EQ(num, jitfun());
+        R64FX_EXPECT_EQ(num, fun());
     }
 
     cout << "MOV(GPR64, Imm32)\n";
@@ -115,7 +108,7 @@ bool test_mov(Assembler &as)
         as.rewindCode();
         as.MOV(rax, Imm32(num));
         as.RET();
-        R64FX_EXPECT_EQ(num, jitfun());
+        R64FX_EXPECT_EQ(num, fun());
     }
 
     cout << "MOV(GPR64, Imm32) rex\n";
@@ -126,7 +119,7 @@ bool test_mov(Assembler &as)
         as.MOV(rax, Imm32(num1));
         as.MOV(r8,  Imm32(num2));
         as.RET();
-        R64FX_EXPECT_EQ(num1, jitfun())
+        R64FX_EXPECT_EQ(num1, fun())
     }
 
     cout << "MOV(GPR64, Imm64)\n";
@@ -135,7 +128,7 @@ bool test_mov(Assembler &as)
         as.rewindCode();
         as.MOV(rax, Imm64(num));
         as.RET();
-        R64FX_EXPECT_EQ(num, jitfun());
+        R64FX_EXPECT_EQ(num, fun());
     }
 
     cout << "MOV(GPR64, Imm64) rex\n";
@@ -146,7 +139,7 @@ bool test_mov(Assembler &as)
         as.MOV(rax, Imm64(num1));
         as.MOV(r8,  Imm64(num2));
         as.RET();
-        R64FX_EXPECT_EQ(num1, jitfun());
+        R64FX_EXPECT_EQ(num1, fun());
     }
 
     cout << "MOV(GPR64, GPR64)\n";
@@ -156,7 +149,7 @@ bool test_mov(Assembler &as)
         as.MOV(rcx, Imm32(num));
         as.MOV(rax, rcx);
         as.RET();
-        R64FX_EXPECT_EQ(num, jitfun());
+        R64FX_EXPECT_EQ(num, fun());
     }
 
     cout << "MOV(GPR64, GPR64) rex\n";
@@ -171,7 +164,7 @@ bool test_mov(Assembler &as)
         as.MOV(rax, r9);
         as.MOV(r8,  rdx);
         as.RET();
-        R64FX_EXPECT_EQ(num1, jitfun());
+        R64FX_EXPECT_EQ(num1, fun());
     }
 
     cout << "MOV(GPR64, Mem64)\n";
@@ -180,7 +173,7 @@ bool test_mov(Assembler &as)
         as.rewindCode();
         as.MOV(rax, Mem64(a));
         as.RET();
-        R64FX_EXPECT_EQ(*a, jitfun());
+        R64FX_EXPECT_EQ(*a, fun());
     }
 
     cout << "MOV(GPR32, Mem32)\n";
@@ -194,7 +187,7 @@ bool test_mov(Assembler &as)
         as.MOV(eax, Mem32(a2));
         as.MOV(r8d, Mem32(a1));
         as.RET();
-        R64FX_EXPECT_EQ(*a2, jitfun());
+        R64FX_EXPECT_EQ(*a2, fun());
     }
 
     cout << "MOV(GPR64, Mem64) rex\n";
@@ -205,7 +198,7 @@ bool test_mov(Assembler &as)
         as.MOV(rax, Mem64(a));
         as.MOV(r8,  Mem64(b));
         as.RET();
-        R64FX_EXPECT_EQ(*a, jitfun());
+        R64FX_EXPECT_EQ(*a, fun());
     }
 
     cout << "MOV(Mem64, GPR64)\n";
@@ -216,7 +209,7 @@ bool test_mov(Assembler &as)
         as.MOV(rcx, Imm32(num));
         as.MOV(Mem64(a), rcx);
         as.RET();
-        jitfun();
+        fun();
         R64FX_EXPECT_EQ(num, *a);
     }
 
@@ -230,7 +223,7 @@ bool test_mov(Assembler &as)
         as.MOV(r8,  Imm32(num2));
         as.MOV(Mem64(a), r8);
         as.RET();
-        jitfun();
+        fun();
         R64FX_EXPECT_EQ(num2, *a);
     }
 
@@ -245,7 +238,7 @@ bool test_mov(Assembler &as)
         as.rewindCode();
         as.MOV(eax, Mem32(ptr + 1));
         as.RET();
-        R64FX_EXPECT_EQ(ptr[1], jitfun());
+        R64FX_EXPECT_EQ(ptr[1], fun());
 
         cout << "MOV(GPR32, Mem32) rex\n";
         for(int i=0; i<4; i++)
@@ -254,7 +247,7 @@ bool test_mov(Assembler &as)
         as.MOV(eax, Mem32(ptr + 1));
         as.MOV(r8d, Mem32(ptr + 2));
         as.RET();
-        R64FX_EXPECT_EQ(ptr[1], jitfun());
+        R64FX_EXPECT_EQ(ptr[1], fun());
 
         cout << "MOV(Mem32, GPR)\n";
         for(int i=0; i<4; i++)
@@ -263,7 +256,7 @@ bool test_mov(Assembler &as)
         as.MOV(eax, Imm32(ptr[0]));
         as.MOV(Mem32(ptr + 1), eax);
         as.RET();
-        jitfun();
+        fun();
         R64FX_EXPECT_EQ(ptr[0], ptr[1]);
     }
 
@@ -282,7 +275,7 @@ template<
     void (Assembler::* sibd_gpr64) (SIBD,  GPR64)
 > bool test_gpr_inst(const char* name, Assembler &as, int (*expected)(int a, int b))
 {
-    auto jitfun = (JitFun) as.codeBegin();
+    auto jitfun = (JitFun<long>::T*) as.codeBegin();
 
     as.rewindData();
     as.growData(4 * sizeof(long));
@@ -395,7 +388,7 @@ template<
 >
 bool test_shift_instr(const char* name, Assembler &as, IntT (*expected)(IntT num, IntT shift))
 {
-    auto jitfun = (JitFun) as.codeBegin();
+    auto jitfun = (JitFun<long>::T*) as.codeBegin();
 
     cout << name << "(GPR, 1)\n";
     {
@@ -439,7 +432,7 @@ bool test_shift_instrs(Assembler &as)
 
 bool test_push_pop(Assembler &as)
 {
-    auto jitfun = (JitFun) as.codeBegin();
+    auto jitfun = (JitFun<long>::T*) as.codeBegin();
 
     cout << "PUSH & POP\n";
     {
@@ -459,7 +452,7 @@ bool test_push_pop(Assembler &as)
 
 bool test_sse(Assembler &as)
 {
-    auto jitfun = (JitFun) as.codeBegin();
+    auto jitfun = (JitFun<long>::T*) as.codeBegin();
     as.rewindData();
     as.growData(64 * sizeof(float));
 
@@ -490,7 +483,7 @@ bool test_sse(Assembler &as)
 
         jitfun();
 
-        if(!vec4_eq(c, b) || !vec4_eq(a, d))
+        if(!vec_eq(c, b, 4) || !vec_eq(a, d, 4))
         {
             return false;
         }
@@ -523,7 +516,7 @@ bool test_sse(Assembler &as)
 
         jitfun();
 
-        if(!vec4_eq(c, b) || !vec4_eq(a, d))
+        if(!vec_eq(c, b, 4) || !vec_eq(a, d, 4))
         {
             return false;
         }
@@ -597,7 +590,7 @@ bool test_sse(Assembler &as)
         as.RET();
         jitfun();
 
-        if(!vec4_eq(r, n))
+        if(!vec_eq(r, n, 4))
         {
             return false;
         }
@@ -653,7 +646,7 @@ bool test_sse(Assembler &as)
         as.RET();
         jitfun();
 
-        if(!vec4_eq(r, n))
+        if(!vec_eq(r, n, 4))
         {
             return false;
         }
@@ -768,7 +761,7 @@ bool test_sse(Assembler &as)
         as.RET();
         jitfun();
 
-        if(!vec4_eq(r, n))
+        if(!vec_eq(r, n, 4))
         {
             return false;
         }
@@ -814,7 +807,7 @@ bool test_sse(Assembler &as)
         as.RET();
         jitfun();
 
-        if(!vec4_eq(r, n))
+        if(!vec_eq(r, n, 4))
         {
             return false;
         }
@@ -860,7 +853,7 @@ bool test_sse(Assembler &as)
         as.RET();
         jitfun();
 
-        if(!vec4_eq(r, n))
+        if(!vec_eq(r, n, 4))
         {
             return false;
         }
@@ -921,7 +914,7 @@ bool test_sse(Assembler &as)
         as.RET();
         jitfun();
 
-        if(!vec4_eq(b1, c1) || !vec4_eq(b2, c2) || !vec4_eq(b3, c3))
+        if(!vec_eq(b1, c1, 4) || !vec_eq(b2, c2, 4) || !vec_eq(b3, c3, 4))
         {
             return false;
         }
@@ -951,7 +944,7 @@ bool test_sse(Assembler &as)
         as.RET();
         jitfun();
 
-        if(!vec4_eq(c, d))
+        if(!vec_eq(c, d, 4))
         {
             return false;
         }
@@ -964,7 +957,7 @@ bool test_sse(Assembler &as)
 
 bool test_jumps(Assembler &as)
 {
-    auto jitfun = (JitFun) as.codeBegin();
+    auto jitfun = (JitFun<long>::T*) as.codeBegin();
 
     cout << "JNZ\n";
     {
@@ -993,7 +986,7 @@ bool test_jumps(Assembler &as)
 
 bool test_sibd(Assembler &as)
 {
-    auto jitfun = (JitFun) as.codeBegin();
+    auto jitfun = (JitFun<long>::T*) as.codeBegin();
 
     cout << "[base + index * 8]\n";
     {
@@ -1053,7 +1046,7 @@ bool test_sibd(Assembler &as)
     {
         as.rewindData();
         as.growData(32 * sizeof(float));
-        auto buff = (float*)as.dataBegin();
+        auto buff = (float*) as.dataBegin();
         for(int i=0; i<32; i++)
             buff[i] = float(i);
 
@@ -1068,7 +1061,7 @@ bool test_sibd(Assembler &as)
         as.RET();
         jitfun();
 
-        if(!vec4_eq(buff, buff + 4))
+        if(!vec_eq(buff, buff + 4, 4))
         {
             return false;
         }
@@ -1078,7 +1071,7 @@ bool test_sibd(Assembler &as)
     {
         as.rewindData();
         as.growData(sizeof(long) * 8);
-        auto buff = (long*)as.dataBegin();
+        auto buff = (long*) as.dataBegin();
         for(int i=0; i<8; i++)
             buff[i] = long(i);
 
@@ -1099,7 +1092,7 @@ bool test_sibd(Assembler &as)
     {
         as.rewindData();
         as.growData(sizeof(int) * 8);
-        auto buff = (int*)as.dataBegin();
+        auto buff = (int*) as.dataBegin();
         for(int i=0; i<8; i++)
             buff[i] = rand() & 0xFFFFFFFF;
 
@@ -1152,7 +1145,7 @@ bool test_sibd(Assembler &as)
 
 bool test_movdq(Assembler &as)
 {
-    auto jitfun = (JitFun) as.codeBegin();
+    auto jitfun = (JitFun<long>::T*) as.codeBegin();
     as.rewindData();
     as.growData(sizeof(float) * 16);
     auto buff = (float*) as.dataBegin();
@@ -1178,7 +1171,7 @@ bool test_movdq(Assembler &as)
 
         buff[1] = buff[2] = buff[3] = buff[6] = buff[7] = 0.0f;
 
-        if(!vec4_eq(buff, buff + 8) || !vec4_eq(buff + 4, buff + 12))
+        if(!vec_eq(buff, buff + 8, 4) || !vec_eq(buff + 4, buff + 12, 4))
         {
             return false;
         }
@@ -1189,12 +1182,71 @@ bool test_movdq(Assembler &as)
 }
 
 
+
+#define R64FX_TEST_PCMP(instr, op, type, buff)\
+    test_PCMP<type, 16/sizeof(type)>(#instr, as, (type*)buff, (&Assembler::instr), [](auto a, auto b){ return a op b; })
+
+
+template<typename T, int VectorSize> bool test_PCMP(
+    const char* name, Assembler &as, T* buff,
+    void (Assembler::*instr)(Xmm, Mem128),
+    bool (*expected)(T, T)
+)
+{
+    cout << name << "\n";
+
+    auto a = buff;
+    auto b = buff + VectorSize;
+    auto r = buff + VectorSize*2;
+    auto e = buff + VectorSize*3;
+
+    for(int i=0; i<VectorSize*2; i++)
+        buff[i] = rand() & T(-1);
+    {
+        int i = rand() & (VectorSize - 1);
+        b[i] = a[i];
+    }
+    for(int i=0; i<VectorSize; i++)
+        e[i] = (expected(a[i], b[i]) ? T(-1) : 0);
+
+    as.rewindCode();
+    auto fun = (JitFun<void>::T*) as.codeBegin();
+
+    as.MOVAPS(xmm0, Mem128(a));
+    (as.*instr)(xmm0, Mem128(b));
+    as.MOVAPS(Mem128(r), xmm0);
+    as.RET();
+    fun();
+
+    R64FX_EXPECT_VEC_EQ(e, r, VectorSize);
+    return true;
+}
+
+
+bool test_pcmp(Assembler &as)
+{
+    as.rewindData();
+
+    as.growData(64);
+    auto data = (void*)as.dataBegin();
+
+    bool result =
+        R64FX_TEST_PCMP(PCMPEQD, ==, int,   data) &&
+        R64FX_TEST_PCMP(PCMPEQW, ==, short, data) &&
+        R64FX_TEST_PCMP(PCMPEQB, ==, char,  data) &&
+        R64FX_TEST_PCMP(PCMPGTD, >,  int,   data) &&
+        R64FX_TEST_PCMP(PCMPGTW, >,  short, data) &&
+        R64FX_TEST_PCMP(PCMPGTB, >,  char,  data);
+    cout << "\n";
+    return result;
+}
+
+
 int main()
 {
     srand(time(NULL));
 
     Assembler as;
-    as.resize(1, 1);
 
     bool ok =
         test_buffers(as) &&
@@ -1205,7 +1257,8 @@ int main()
         test_sse(as) &&
         test_jumps(as) &&
         test_sibd(as) &&
-        test_movdq(as)
+        test_movdq(as) &&
+        test_pcmp(as)
     ;
 
     if(ok)
