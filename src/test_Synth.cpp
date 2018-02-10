@@ -32,11 +32,6 @@ JitAlgorithmConstants g_contants __attribute__((aligned(64)));
 SineOscBuffers g_buffers __attribute__((aligned(64)));
 
 
-template<typename ReturnT, typename... ArgT> struct Fun{
-    typedef ReturnT (T)(ArgT...);
-};
-
-
 inline void wait_sync()
 {
     while(!g_port_group->sync())
@@ -84,7 +79,7 @@ public:
         auto fun_addr = codeEnd();
         gen_sine_osc(this, rdi, rsi, xmm0, xmm1, xmm2, xmm3, xmm4);
         RET();
-        return (Fun<float, JitAlgorithmConstants*, SineOscBuffers*>::T*)fun_addr;
+        return (float (*)(JitAlgorithmConstants*, SineOscBuffers*))fun_addr;
     }
 
     auto genFun()
@@ -92,7 +87,7 @@ public:
         auto fun_addr = codeEnd();
         MOV(rax, rsi);
         RET();
-        return (Fun<long, long, long>::T*)fun_addr;
+        return (long(*)(long, long))fun_addr;
     }
 };
 

@@ -72,7 +72,7 @@ bool test_buffers(Assembler &as)
     as.ADD(rax, rdx);
     as.RET();
 
-    auto fun = (JitFun<long>::T*) as.codeBegin();
+    auto fun = (long(*)()) as.codeBegin();
     R64FX_EXPECT_EQ(111, fun());
     R64FX_EXPECT_EQ(0x2AAAAAAAAAAAAAABL, ((long*)(as.dataBegin()))[0]); // +1
     R64FX_EXPECT_EQ(0x5555555555555545L, ((long*)(as.dataBegin()))[1]); // -16
@@ -85,7 +85,7 @@ bool test_buffers(Assembler &as)
 
 bool test_mov(Assembler &as)
 {
-    auto fun = (JitFun<long>::T*) as.codeBegin();
+    auto fun = (long(*)()) as.codeBegin();
 
     as.rewindData();
     as.growData(2 * sizeof(long));
@@ -275,7 +275,7 @@ template<
     void (Assembler::* sibd_gpr64) (SIBD,  GPR64)
 > bool test_gpr_inst(const char* name, Assembler &as, int (*expected)(int a, int b))
 {
-    auto jitfun = (JitFun<long>::T*) as.codeBegin();
+    auto jitfun = (long(*)()) as.codeBegin();
 
     as.rewindData();
     as.growData(4 * sizeof(long));
@@ -388,7 +388,7 @@ template<
 >
 bool test_shift_instr(const char* name, Assembler &as, IntT (*expected)(IntT num, IntT shift))
 {
-    auto jitfun = (JitFun<long>::T*) as.codeBegin();
+    auto jitfun = (long(*)()) as.codeBegin();
 
     cout << name << "(GPR, 1)\n";
     {
@@ -432,7 +432,7 @@ bool test_shift_instrs(Assembler &as)
 
 bool test_push_pop(Assembler &as)
 {
-    auto jitfun = (JitFun<long>::T*) as.codeBegin();
+    auto jitfun = (long(*)()) as.codeBegin();
 
     cout << "PUSH & POP\n";
     {
@@ -452,7 +452,7 @@ bool test_push_pop(Assembler &as)
 
 bool test_sse(Assembler &as)
 {
-    auto jitfun = (JitFun<long>::T*) as.codeBegin();
+    auto jitfun = (long(*)()) as.codeBegin();
     as.rewindData();
     as.growData(64 * sizeof(float));
 
@@ -957,7 +957,7 @@ bool test_sse(Assembler &as)
 
 bool test_jumps(Assembler &as)
 {
-    auto jitfun = (JitFun<long>::T*) as.codeBegin();
+    auto jitfun = (long(*)()) as.codeBegin();
 
     cout << "JNZ\n";
     {
@@ -986,7 +986,7 @@ bool test_jumps(Assembler &as)
 
 bool test_sibd(Assembler &as)
 {
-    auto jitfun = (JitFun<long>::T*) as.codeBegin();
+    auto jitfun = (long(*)()) as.codeBegin();
 
     cout << "[base + index * 8]\n";
     {
@@ -1145,7 +1145,7 @@ bool test_sibd(Assembler &as)
 
 bool test_movdq(Assembler &as)
 {
-    auto jitfun = (JitFun<long>::T*) as.codeBegin();
+    auto jitfun = (long(*)()) as.codeBegin();
     as.rewindData();
     as.growData(sizeof(float) * 16);
     auto buff = (float*) as.dataBegin();
@@ -1210,7 +1210,7 @@ template<typename T, int VectorSize> bool test_PCMP(
         e[i] = (expected(a[i], b[i]) ? T(-1) : 0);
 
     as.rewindCode();
-    auto fun = (JitFun<void>::T*) as.codeBegin();
+    auto fun = (void(*)()) as.codeBegin();
 
     as.MOVAPS(xmm0, Mem128(a));
     (as.*instr)(xmm0, Mem128(b));
