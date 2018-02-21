@@ -39,7 +39,7 @@ struct SibEncoding{
 
         if(sibd.hasDisplacement())
         {
-            disp_byte_count = (sibd.displacement() & ~0xFF ? 4 : 1);
+            disp_byte_count = ((sibd.displacement() > 127 || sibd.displacement() < -128) ? 4 : 1);
         }
 
         modrm = (reg.lowerBits() << 3) | 4;

@@ -1242,6 +1242,66 @@ bool test_pcmp(Assembler &as)
 }
 
 
+#define R64FX_TEST_PUNPCK(instr, type, high)\
+    test_PUNPCK<type>(as, #instr, (&Assembler::instr), high)
+
+template<typename T> bool test_PUNPCK(
+    Assembler &as, const char* name, void (Assembler::*instr)(Xmm, Xmm), int high
+)
+{
+    constexpr int VectorSize = 16 / sizeof(T);
+
+    as.rewindData();
+    as.growData(32);
+
+    cout << name << "\n";
+    {
+        auto buff = (T*)as.dataBegin();
+        auto a = buff;
+        auto b = buff + VectorSize;
+        T c[VectorSize] = {};
+        for(int i=0; i<VectorSize; i++)
+        {
+            auto val = T(rand() & T(-1));
+            c[i] = val;
+            if(i & 1)
+                b[(i >> 1) + (high ? VectorSize/2 : 0)] = val;
+            else
+                a[(i >> 1) + (high ? VectorSize/2 : 0)] = val;
+        }
+
+        as.rewindCode();
+        auto fun = (void(*)()) as.codeBegin();
+
+        as.MOVDQA  (xmm0, Mem128(a));
+        as.MOVDQA  (xmm1, Mem128(b));
+        (as.*instr)(xmm0, xmm1);
+        as.MOVDQA  (Mem128(a), xmm0);
+        as.RET();
+
+        fun();
+        R64FX_EXPECT_VEC_EQ(c, a, 4);
+    }
+
+    return true;
+}
+
+
+bool test_punpck(Assembler &as)
+{
+     bool result =
+        R64FX_TEST_PUNPCK(PUNPCKLBW, char,  0) &&
+        R64FX_TEST_PUNPCK(PUNPCKHBW, char,  1) &&
+        R64FX_TEST_PUNPCK(PUNPCKLWD, short, 0) &&
+        R64FX_TEST_PUNPCK(PUNPCKHWD, short, 1) &&
+        R64FX_TEST_PUNPCK(PUNPCKLDQ, int,   0) &&
+        R64FX_TEST_PUNPCK(PUNPCKHDQ, int,   1)
+    ;
+    cout << "\n";
+    return result;
+}
+
+
 int main()
 {
     srand(time(NULL));
@@ -1258,7 +1318,8 @@ int main()
         test_jumps(as) &&
         test_sibd(as) &&
         test_movdq(as) &&
-        test_pcmp(as)
+        test_pcmp(as) &&
+        test_punpck(as)
     ;
 
     if(ok)

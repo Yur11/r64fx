@@ -591,19 +591,27 @@ public:
     inline void name(Xmm reg, Mem128 mem) { m.write0x0F(0x66, opcode, reg, mem); }\
     inline void name(Xmm reg, SIBD sibd)  { m.write0x0F(0x66, opcode, reg, sibd); }
 
-    R64FX_SSE2_INSTRUCTION(PADDD,   0xFE)
-    R64FX_SSE2_INSTRUCTION(PSUBD,   0xFA)
-    R64FX_SSE2_INSTRUCTION(PADDQ,   0xD4)
-    R64FX_SSE2_INSTRUCTION(PSUBQ,   0xFB)
-    R64FX_SSE2_INSTRUCTION(PAND,    0xDB)
-    R64FX_SSE2_INSTRUCTION(PXOR,    0xEF)
-    R64FX_SSE2_INSTRUCTION(POR,     0xEB)
-    R64FX_SSE2_INSTRUCTION(PCMPEQB, 0x74)
-    R64FX_SSE2_INSTRUCTION(PCMPEQW, 0x75)
-    R64FX_SSE2_INSTRUCTION(PCMPEQD, 0x76)
-    R64FX_SSE2_INSTRUCTION(PCMPGTB, 0x64)
-    R64FX_SSE2_INSTRUCTION(PCMPGTW, 0x65)
-    R64FX_SSE2_INSTRUCTION(PCMPGTD, 0x66)
+    R64FX_SSE2_INSTRUCTION(PADDD,      0xFE)
+    R64FX_SSE2_INSTRUCTION(PSUBD,      0xFA)
+    R64FX_SSE2_INSTRUCTION(PADDQ,      0xD4)
+    R64FX_SSE2_INSTRUCTION(PSUBQ,      0xFB)
+    R64FX_SSE2_INSTRUCTION(PAND,       0xDB)
+    R64FX_SSE2_INSTRUCTION(PXOR,       0xEF)
+    R64FX_SSE2_INSTRUCTION(POR,        0xEB)
+    R64FX_SSE2_INSTRUCTION(PCMPEQB,    0x74)
+    R64FX_SSE2_INSTRUCTION(PCMPEQW,    0x75)
+    R64FX_SSE2_INSTRUCTION(PCMPEQD,    0x76)
+    R64FX_SSE2_INSTRUCTION(PCMPGTB,    0x64)
+    R64FX_SSE2_INSTRUCTION(PCMPGTW,    0x65)
+    R64FX_SSE2_INSTRUCTION(PCMPGTD,    0x66)
+    R64FX_SSE2_INSTRUCTION(PUNPCKLBW,  0x60)
+    R64FX_SSE2_INSTRUCTION(PUNPCKHBW,  0x68)
+    R64FX_SSE2_INSTRUCTION(PUNPCKLWD,  0x61)
+    R64FX_SSE2_INSTRUCTION(PUNPCKHWD,  0x69)
+    R64FX_SSE2_INSTRUCTION(PUNPCKLDQ,  0x62)
+    R64FX_SSE2_INSTRUCTION(PUNPCKHDQ,  0x6A)
+
+    inline void PSRAD(Xmm reg, Imm8 imm) { m.write(0x66, 0x0F); m.write(0x72, 4, reg, imm); }
 };
 
 
@@ -616,36 +624,90 @@ public:
 
 typedef AssemblerInstructions<AssemblerBase> Assembler;
 
+#define R64FX_USING_JIT_METHODS(T)\
+    using T::resize;\
+    \
+    using T::NOP;\
+    using T::RET;\
+    using T::RDTSC;\
+    using T::CPUID;\
+    \
+    using T::MOV;\
+    using T::ADD;\
+    using T::SUB;\
+    using T::XOR;\
+    using T::AND;\
+    using T::OR;\
+    using T::SHL;\
+    using T::SHR;\
+    using T::SAR;\
+    \
+    using T::PUSH;\
+    using T::POP;\
+    \
+    using T::mark;\
+    using T::CMP;\
+    using T::JMP;\
+    using T::JNZ;\
+    using T::JZ;\
+    using T::JE;\
+    using T::JNE;\
+    using T::JL;\
+    \
+    using T::MOVAPS;\
+    using T::MOVUPS;\
+    using T::ADDPS;\
+    using T::SUBPS;\
+    using T::MULPS;\
+    using T::DIVPS;\
+    using T::RCPPS;\
+    using T::SQRTPS;\
+    using T::RSQRTPS;\
+    using T::MAXPS;\
+    using T::MINPS;\
+    using T::ANDPS;\
+    using T::ANDNPS;\
+    using T::ORPS;\
+    using T::XORPS;\
+    using T::CMPPS;\
+    using T::CMPSS;\
+    using T::CMPLTPS;\
+    using T::CMPNLTPS;\
+    using T::CMPEQPS;\
+    using T::MOVSS;\
+    using T::SHUFPS;\
+    using T::CVTPS2DQ;\
+    using T::CVTDQ2PS;\
+    \
+    using T::MOVDQA;\
+    using T::MOVD;\
+    using T::MOVQ;\
+    using T::PSHUFD;\
+    using T::PADDD;\
+    using T::PSUBD;\
+    using T::PADDQ;\
+    using T::PSUBQ;\
+    using T::PAND;\
+    using T::PXOR;\
+    using T::POR;\
+    using T::PCMPEQB;\
+    using T::PCMPEQW;\
+    using T::PCMPEQD;\
+    using T::PCMPGTB;\
+    using T::PCMPGTW;\
+    using T::PCMPGTD;\
+    using T::PUNPCKLBW;\
+    using T::PUNPCKHBW;\
+    using T::PUNPCKLWD;\
+    using T::PUNPCKHWD;\
+    using T::PUNPCKLDQ;\
+    using T::PUNPCKHDQ;
 
-template<typename AssemblerT> class JitCpuFeatures{
+
+struct JitCpuFeatures{
     unsigned int m_ecx_bits1;
     unsigned int m_edx_bits1;
     unsigned int m_ebx_bits7;
-
-public:
-    JitCpuFeatures(AssemblerT* as)
-    {
-        auto ptr = as->codeEnd();
-
-        as->PUSH  (rbx);
-
-        as->MOV   (rax, Imm32(1));
-        as->CPUID ();
-        as->MOV   (Base(rdi), ecx);
-        as->MOV   (Base(rdi) + Disp(4), edx);
-
-        as->MOV   (rax, Imm32(7));
-        as->MOV   (rcx, Imm32(0));
-        as->CPUID ();
-        as->MOV   (Base(rdi) + Disp(8), ebx);
-
-        as->POP   (rbx);
-        as->RET   ();
-
-        ((void(*)(void*))ptr)(this);
-
-        as->setCodeEnd(ptr);
-    }
 
     inline bool hasSSE   () const { return m_edx_bits1 & (1<<25); }
     inline bool hasSSE2  () const { return m_edx_bits1 & (1<<26); }
@@ -659,11 +721,52 @@ public:
     inline bool hasFMA   () const { return m_ecx_bits1 & (1<<12); }
 };
 
-template<typename StreamT, typename AssemblerT> StreamT &operator<<(StreamT &stream, const JitCpuFeatures<AssemblerT> &cpu)
+
+template<typename AssemblerT> JitCpuFeatures get_cpu_features(AssemblerT* as)
+{
+    JitCpuFeatures features;
+
+    bool must_free = false;
+    if(!as->codeEnd())
+    {
+        as->resize(0, 1);
+        must_free = true;
+    }
+    auto ptr = as->codeEnd();
+
+    as->PUSH  (rbx);
+
+    as->MOV   (rax, Imm32(1));
+    as->CPUID ();
+    as->MOV   (Base(rdi), ecx);
+    as->MOV   (Base(rdi) + Disp(4), edx);
+
+    as->MOV   (rax, Imm32(7));
+    as->MOV   (rcx, Imm32(0));
+    as->CPUID ();
+    as->MOV   (Base(rdi) + Disp(8), ebx);
+
+    as->POP   (rbx);
+    as->RET   ();
+
+    ((void(*)(void*))ptr)(&features);
+
+    as->setCodeEnd(ptr);
+
+    if(must_free)
+    {
+        as->resize(0, 0);
+    }
+    return features;
+}
+
+
+template<typename StreamT> StreamT &operator<<(StreamT &stream, const JitCpuFeatures &cpu)
 {
     stream << "SSE:    " << cpu.hasSSE() << "\n";
     stream << "SSE2:   " << cpu.hasSSE2() << "\n";
     stream << "SSE3:   " << cpu.hasSSE3() << "\n";
+    stream << "SSSE3:  " << cpu.hasSSE3() << "\n";
     stream << "SSE4.1: " << cpu.hasSSE41() << "\n";
     stream << "SSE4.2: " << cpu.hasSSE42() << "\n";
     stream << "AVX:    " << cpu.hasAVX() << "\n";
@@ -671,7 +774,6 @@ template<typename StreamT, typename AssemblerT> StreamT &operator<<(StreamT &str
     stream << "FMA:    " << cpu.hasFMA() << "\n";
     return stream;
 }
-
 
 }//namespace r64fx
 

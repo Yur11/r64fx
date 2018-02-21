@@ -96,6 +96,20 @@ template<typename AssemblerT> inline void gen_sine_osc(AssemblerT* as,
     as->SUBPS  (v, f);
 }
 
+
+
+
+template<typename AssemblerT> inline void gen_loop_player(AssemblerT* as,
+    GPR64 playhead,
+    GPR64 sound,
+    Xmm p,
+    Xmm m
+)
+{
+    as->MOVAPS(p, Base(playhead));
+    as->PADDQ(p, Base(playhead) + Disp(16));
+}
+
 }//namespace
 
 #endif//R64FX_JIT_ALGORITHMS_HPP
