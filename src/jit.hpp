@@ -654,6 +654,15 @@ public:
     R64FX_SSE2_INSTRUCTION(PUNPCKHWD,  0x69)
     R64FX_SSE2_INSTRUCTION(PUNPCKLDQ,  0x62)
     R64FX_SSE2_INSTRUCTION(PUNPCKHDQ,  0x6A)
+
+    inline void PSRLW(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x71), Operands(2, reg, imm)); }
+    inline void PSRLD(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x72), Operands(2, reg, imm)); }
+    inline void PSRLQ(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x73), Operands(2, reg, imm)); }
+    inline void PSRAW(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x71), Operands(4, reg, imm)); }
+    inline void PSRAD(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x72), Operands(4, reg, imm)); }
+    inline void PSLLW(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x71), Operands(6, reg, imm)); }
+    inline void PSLLD(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x72), Operands(6, reg, imm)); }
+    inline void PSLLQ(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x73), Operands(6, reg, imm)); }
 };
 
 

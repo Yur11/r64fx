@@ -1302,6 +1302,67 @@ bool test_punpck(Assembler &as)
 }
 
 
+
+template<typename T> bool test_SSE2_SHIFT(Assembler &as, const char* name, void (Assembler::*instr)(Xmm, Imm8), T(*expected)(T, int))
+{
+    std::cout << name << "\n";
+
+    constexpr int VectorSize = 16 / sizeof(T);
+
+    as.rewindCode();
+    as.rewindData();
+    as.growData(32);
+
+    auto buff = (T*)as.dataBegin();
+    auto a = buff;
+    auto b = buff + VectorSize;
+
+    unsigned char s = (rand() & 0x7) + 1;
+    for(int i=0; i<VectorSize; i++)
+    {
+        /* Make sure to check for Logical/Arithmetic shifts by setting MSB. */
+        T n = T(rand() & T(-1)) | (T(1) << ((sizeof(T)<<3) - 1));
+
+        a[i] = n;
+        b[i] = expected(n, s);
+    }
+
+    auto fun = (void(*)())as.codeBegin();
+    as.MOVDQA(xmm0, Mem128(a));
+    as.MOVDQA(xmm8, xmm0);
+    (as.*instr)(xmm0, Imm8(s));
+    (as.*instr)(xmm8, Imm8(s+1));
+    as.MOVDQA(Mem128(a), xmm0);
+    as.RET();
+
+    fun();
+    R64FX_EXPECT_VEC_EQ(b, a, VectorSize);
+    return true;
+}
+
+
+bool test_sse2_shift(Assembler &as)
+{
+#define R64FX_TEST_SSE2_SHIFT(instr, type, op) test_SSE2_SHIFT<type>(as, #instr, (&Assembler::instr), [](type n, int s)->type{ return n op s; })
+    bool result =
+        R64FX_TEST_SSE2_SHIFT(PSRLW, unsigned short,  >>) &&
+        R64FX_TEST_SSE2_SHIFT(PSRLD, unsigned int,    >>) &&
+        R64FX_TEST_SSE2_SHIFT(PSRLQ, unsigned long,   >>) &&
+        R64FX_TEST_SSE2_SHIFT(PSRAW,          short,  >>) &&
+        R64FX_TEST_SSE2_SHIFT(PSRAD,          int,    >>) &&
+        R64FX_TEST_SSE2_SHIFT(PSLLW, unsigned short,  <<) &&
+        R64FX_TEST_SSE2_SHIFT(PSLLW,          short,  <<) &&
+        R64FX_TEST_SSE2_SHIFT(PSLLD, unsigned int,    <<) &&
+        R64FX_TEST_SSE2_SHIFT(PSLLD,          int,    <<) &&
+        R64FX_TEST_SSE2_SHIFT(PSLLQ, unsigned long,   <<) &&
+        R64FX_TEST_SSE2_SHIFT(PSLLQ,          long,   <<)
+    ;
+    std::cout << "\n";
+    return result;
+#undef R64FX_TEST_SSE2_SHIFT
+}
+
+
 int main()
 {
     srand(time(NULL));
@@ -1319,7 +1380,8 @@ int main()
         test_sibd(as) &&
         test_movdq(as) &&
         test_pcmp(as) &&
-        test_punpck(as)
+        test_punpck(as) &&
+        test_sse2_shift(as)
     ;
 
     if(ok)
