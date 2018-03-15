@@ -1357,9 +1357,63 @@ bool test_sse2_shift(Assembler &as)
         R64FX_TEST_SSE2_SHIFT(PSLLQ, unsigned long,   <<) &&
         R64FX_TEST_SSE2_SHIFT(PSLLQ,          long,   <<)
     ;
-    std::cout << "\n";
+    cout << "\n";
     return result;
 #undef R64FX_TEST_SSE2_SHIFT
+}
+
+
+bool test_movlhps(Assembler &as)
+{
+    as.rewindCode();
+    as.rewindData();
+    as.growData(16 * 3);
+    auto data = (float*)as.dataBegin();
+    for(int i=0; i<4; i++)
+    {
+        data[i] =
+        data[i + 4] = float(rand() & 0xFFF) * (rand()&1 ? 0.1f : 0.01f);
+        data[i + 8] = 0.0f;
+    }
+
+    std::cout << "MOVLPS + MOVHPS\n";
+    auto fun = (void(*)())as.codeEnd();
+    as.MOVLPS(xmm0, Mem64(data));
+    as.MOVHPS(xmm0, Mem64(data + 2));
+    as.MOVAPS(Mem128(data + 8), xmm0);
+    as.RET();
+
+    fun();
+    R64FX_EXPECT_VEC_EQ(data, data + 8, 4);
+
+    std::cout << "\n";
+    return true;
+}
+
+bool test_movlhlps(Assembler &as)
+{
+    as.rewindCode();
+    as.rewindData();
+    as.growData(16 * 2);
+    auto data = (float*)as.dataBegin();
+    data[0] = data[6] = float(rand() & 0xFFF);
+    data[1] = data[7] = float(rand() & 0xFFF);
+    data[2] = data[4] = float(rand() & 0xFFF);
+    data[3] = data[5] = float(rand() & 0xFFF);
+
+    std::cout << "MOVLHPS + MOVHLPS\n";
+    auto fun = (void(*)())as.codeEnd();
+    as.MOVAPS(xmm0, Mem128(data));
+    as.MOVLHPS(xmm1, xmm0);
+    as.MOVHLPS(xmm1, xmm0);
+    as.MOVAPS(Mem128(data), xmm1);
+    as.RET();
+
+    fun();
+    R64FX_EXPECT_VEC_EQ(data + 4, data, 4);
+
+    std::cout << "\n";
+    return true;
 }
 
 
@@ -1381,7 +1435,9 @@ int main()
         test_movdq(as) &&
         test_pcmp(as) &&
         test_punpck(as) &&
-        test_sse2_shift(as)
+        test_sse2_shift(as) &&
+        test_movlhps(as) &&
+        test_movlhlps(as)
     ;
 
     if(ok)
