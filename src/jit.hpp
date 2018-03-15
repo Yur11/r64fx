@@ -95,6 +95,7 @@ inline Imm32 Imm32f(float f) { Imm32 imm(0); imm.f = f; return imm; }
 
 union Imm64{
     unsigned long  n;
+    double         d;
     float          f[2];
     unsigned char  b[8];
     explicit Imm64(unsigned long n) : n(n) {}
@@ -102,7 +103,11 @@ union Imm64{
 
 inline Imm64 Imm64ff(float f0, float f1) { Imm64 imm(0); imm.f[0] = f0; imm.f[1] = f1; return imm; }
 
+inline Imm64 Imm64D(double d) { Imm64 imm(0); imm.d = d; return imm; }
+
 inline Imm64 ImmAddr(void* addr) { return Imm64((unsigned long)addr); }
+
+
 
 
 #ifdef R64FX_DEBUG
@@ -306,6 +311,8 @@ inline Opcode Opcode_F30F (unsigned long code) { return Opcode(0x500 | code); }
 struct Operands{
     unsigned long m = 0;
 
+    explicit Operands(unsigned char r);
+
     explicit Operands(unsigned char r, Register rm);
 
     explicit Operands(unsigned char r, Register rm, Imm8 imm);
@@ -444,12 +451,16 @@ public:
     using AssemblerBaseT::AssemblerBaseT;
     using AssemblerBaseT::m;
     using AssemblerBaseT::codeEnd;
+    using AssemblerBaseT::dataEnd;
 
     inline void NOP()          { m.write(0x90); }
     inline void NOP(int count) { m.fill(0x90, count); }
     inline void RET()          { m.write(0xC3); }
     inline void RDTSC()        { m.write(0x0F, 0x31); }
     inline void CPUID()        { m.write(0x0F, 0xA2); }
+    inline void LFENCE()       { m.write(Opcode_0F(0xAE), Operands(5)); }
+    inline void MFENCE()       { m.write(Opcode_0F(0xAE), Operands(6)); }
+    inline void SFENCE()       { m.write(Opcode_0F(0xAE), Operands(7)); }
 
     inline void MOV(GPR32 reg, Imm32 imm){ m.write(Opcode(0xC7), Operands(0, reg, imm)); }
     inline void MOV(GPR64 reg, Imm32 imm){ m.write(Opcode(0xC7), Operands(0, reg, imm)); }
@@ -526,6 +537,19 @@ public:
     inline void MOVUPS(Mem32 mem, Xmm reg) { m.write(Opcode_0F(0x11), Operands(reg, mem, codeEnd() + 7)); }
     inline void MOVUPS(Xmm reg, SIBD sibd) { m.write(Opcode_0F(0x10), Operands(reg, sibd)); }
     inline void MOVUPS(SIBD sibd, Xmm reg) { m.write(Opcode_0F(0x11), Operands(reg, sibd)); }
+
+    inline void MOVLPS(Xmm reg, Mem64 mem) { m.write(Opcode_0F(0x12), Operands(reg, mem, codeEnd() + 7)); }
+    inline void MOVLPS(Xmm reg, SIBD sibd) { m.write(Opcode_0F(0x12), Operands(reg, sibd)); }
+    inline void MOVLPS(Mem64 mem, Xmm reg) { m.write(Opcode_0F(0x13), Operands(reg, mem, codeEnd() + 7));}
+    inline void MOVLPS(SIBD sibd, Xmm reg) { m.write(Opcode_0F(0x13), Operands(reg, sibd)); }
+
+    inline void MOVHPS(Xmm reg, Mem64 mem) { m.write(Opcode_0F(0x16), Operands(reg, mem, codeEnd() + 7)); }
+    inline void MOVHPS(Xmm reg, SIBD sibd) { m.write(Opcode_0F(0x16), Operands(reg, sibd)); }
+    inline void MOVHPS(Mem64 mem, Xmm reg) { m.write(Opcode_0F(0x17), Operands(reg, mem, codeEnd() + 7));}
+    inline void MOVHPS(SIBD sibd, Xmm reg) { m.write(Opcode_0F(0x17), Operands(reg, sibd)); }
+
+    inline void MOVHLPS(Xmm dst, Xmm src)  { m.write(Opcode_0F(0x12), Operands(dst, src)); }
+    inline void MOVLHPS(Xmm dst, Xmm src)  { m.write(Opcode_0F(0x16), Operands(dst, src)); }
 
 private:
     inline void sse_ps_instruction(unsigned char opcode, Xmm dst, Xmm src)
@@ -625,6 +649,8 @@ public:
     inline void MOVQ(Xmm dst, GPR64 src) { m.write(Opcode_660F(0x6E), Operands(dst, src)); }
     inline void MOVD(GPR32 dst, Xmm src) { m.write(Opcode_660F(0x7E), Operands(src, dst)); }
     inline void MOVQ(GPR64 dst, Xmm src) { m.write(Opcode_660F(0x7E), Operands(src, dst)); }
+    inline void MOVD(Xmm dst, GPR64 src) { MOVD(dst, src.low32()); }
+    inline void MOVD(GPR64 dst, Xmm src) { MOVD(dst.low32(), src); }
 
     inline void PSHUFD(Xmm dst, Xmm src,    Shuf shuf) { m.write(Opcode_660F(0x70), Operands(dst, src,  shuf.byte())); }
     inline void PSHUFD(Xmm reg, Mem128 mem, Shuf shuf) { m.write(Opcode_660F(0x70), Operands(reg, mem, codeEnd() + 9, shuf.byte())); }
@@ -663,6 +689,30 @@ public:
     inline void PSLLW(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x71), Operands(6, reg, imm)); }
     inline void PSLLD(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x72), Operands(6, reg, imm)); }
     inline void PSLLQ(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x73), Operands(6, reg, imm)); }
+
+
+    /* Time measurments are stored in the 16 bytes at the end of data pages
+       adjacent to the code. */
+
+    inline void getTime(unsigned long* t)
+    {
+        LFENCE();
+        RDTSC ();
+        SHL   (rdx, Imm8(32));
+        OR    (rax, rdx);
+        MOV   (Mem64(t), rax);
+    }
+
+    inline void getBeginTime() { getTime(beginTimeAddr()); }
+    inline void getEndTime()   { getTime(endTimeAddr()); }
+
+    inline unsigned long* beginTimeAddr()  const { return (unsigned long*)(dataEnd() - 8); }
+    inline unsigned long  beginTime()      const { return *beginTimeAddr(); }
+
+    inline unsigned long* endTimeAddr()    const { return (unsigned long*)(dataEnd() - 16); }
+    inline unsigned long  endTime()        const { return *endTimeAddr(); }
+
+    inline unsigned long  time()           const { return endTime() - beginTime(); }
 };
 
 
@@ -677,6 +727,13 @@ typedef AssemblerInstructions<AssemblerBase> Assembler;
 
 #define R64FX_USING_JIT_METHODS(T)\
     using T::resize;\
+    using T::rewindCode;\
+    using T::codeBegin;\
+    using T::codeEnd;\
+    using T::growData;\
+    using T::rewindData;\
+    using T::dataBegin;\
+    using T::dataEnd;\
     \
     using T::NOP;\
     using T::RET;\
@@ -707,6 +764,10 @@ typedef AssemblerInstructions<AssemblerBase> Assembler;
     \
     using T::MOVAPS;\
     using T::MOVUPS;\
+    using T::MOVLPS;\
+    using T::MOVHPS;\
+    using T::MOVLHPS;\
+    using T::MOVHLPS;\
     using T::ADDPS;\
     using T::SUBPS;\
     using T::MULPS;\
@@ -752,7 +813,19 @@ typedef AssemblerInstructions<AssemblerBase> Assembler;
     using T::PUNPCKLWD;\
     using T::PUNPCKHWD;\
     using T::PUNPCKLDQ;\
-    using T::PUNPCKHDQ;
+    using T::PUNPCKHDQ;\
+    using T::PSRLW;\
+    using T::PSRLD;\
+    using T::PSRLQ;\
+    using T::PSRAW;\
+    using T::PSRAD;\
+    using T::PSLLW;\
+    using T::PSLLD;\
+    using T::PSLLQ;\
+    \
+    using T::getBeginTime;\
+    using T::getEndTime;\
+    using T::time;
 
 
 struct JitCpuFeatures{

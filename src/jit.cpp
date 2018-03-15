@@ -84,6 +84,13 @@ inline void pack_operands(unsigned long &m, unsigned char r, Register rm, int nb
 }//namespace
 
 
+Operands::Operands(unsigned char r)
+{
+    m |= ModRM(3, r, 0);
+    m <<=8; m |= 1;
+}
+
+
 Operands::Operands(unsigned char r, Register rm)
 {
     pack_operands(m, r, rm, 1);
