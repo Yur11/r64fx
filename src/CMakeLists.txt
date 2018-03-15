@@ -215,6 +215,16 @@ set(test_SignalGraph_SRC
 add_executable(test_SignalGraph EXCLUDE_FROM_ALL ${test_SignalGraph_SRC})
 
 
+## test_jit_perf ##
+set(test_jit_perf_SRC
+    test_jit_perf.cpp
+    jit.cpp
+    MemoryUtils.cpp
+)
+
+add_executable(test_jit_perf EXCLUDE_FROM_ALL ${test_jit_perf_SRC})
+
+
 ## test_SoundDriver ##
 set(test_SoundDriver_SRC
     test_SoundDriver.cpp
