@@ -478,6 +478,8 @@ public:
     inline void MOV(SIBD sibd, GPR32 reg){ m.write(Opcode(0x89), Operands(reg, sibd)); }
     inline void MOV(SIBD sibd, GPR64 reg){ m.write(Opcode(0x89), Operands(reg, sibd)); }
 
+    inline void CMOVZ(GPR64 dst, GPR64 src) { m.write(Opcode_0F(0x44), Operands(dst, src)); }
+
 #define R64FX_GPR_INST(name, rrm, r)\
     inline void name(GPR64 reg, Imm8  imm){ m.write(Opcode(0x83),     Operands(r,  reg, imm)); }\
     inline void name(GPR64 reg, Imm32 imm){ m.write(Opcode(0x81),     Operands(r,  reg, imm)); }\
@@ -741,6 +743,7 @@ typedef AssemblerInstructions<AssemblerBase> Assembler;
     using T::CPUID;\
     \
     using T::MOV;\
+    using T::CMOV;\
     using T::ADD;\
     using T::SUB;\
     using T::XOR;\

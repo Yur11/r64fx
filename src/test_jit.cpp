@@ -265,6 +265,25 @@ bool test_mov(Assembler &as)
 }
 
 
+bool test_cmov(Assembler &as)
+{
+    auto fun = (long(*)(long, long)) as.codeBegin();
+
+    cout << "CMOVZ(GPR64, GPR64)\n";
+    as.rewindCode();
+    as.MOV   (rax, rdi);
+    as.XOR   (rcx, rcx);
+    as.ADD   (rcx, Imm32(1));
+    as.XOR   (rcx, rcx);
+    as.CMOVZ (rax, rsi);
+    as.RET   ();
+    R64FX_EXPECT_EQ(456, fun(123, 456));
+
+    cout << "\n";
+    return true;
+}
+
+
 template<
     void (Assembler::*gpr64_imm32) (GPR64, Imm32),
     void (Assembler::*gpr64_imm8 ) (GPR64, Imm8 ),
