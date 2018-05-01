@@ -999,7 +999,19 @@ bool test_sse(Assembler &as)
 
 bool test_jumps(Assembler &as)
 {
-    auto jitfun = (long(*)()) as.codeBegin();
+    auto fun = (long(*)(unsigned char*)) as.codeBegin();
+
+    cout << "JMP\n";
+    {
+        as.rewindCode();
+        as.XOR(rax, rax);
+        as.JMP(rdi);
+        as.ADD(rax, Imm32(123));
+        auto addr = as.codeEnd();
+        as.ADD(rax, Imm32(456));
+        as.RET();
+        R64FX_EXPECT_EQ(456, fun(addr));
+    }
 
     cout << "JNZ\n";
     {
@@ -1018,7 +1030,7 @@ bool test_jumps(Assembler &as)
         as.SUB(rcx, Imm32(1));
         as.JNZ(loop);
         as.RET();
-        R64FX_EXPECT_EQ(2468, jitfun());
+        R64FX_EXPECT_EQ(2468, fun(nullptr));
     }
 
     cout << "\n";

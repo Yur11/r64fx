@@ -523,6 +523,8 @@ public:
 
     inline void CMP(GPR64 reg, Imm32 imm){ m.write(0x81, 7, reg, imm); }
 
+    inline void JMP(GPR64 reg) { m.write(Opcode(0xFF), Operands(4, reg)); }
+
     inline void JMP (JumpLabel &label){ m.write(0,    0xE9, label); }
     inline void JNZ (JumpLabel &label){ m.write(0x0F, 0x85, label); }
     inline void JZ  (JumpLabel &label){ m.write(0x0F, 0x84, label); }
