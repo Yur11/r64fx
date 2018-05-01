@@ -83,6 +83,29 @@ bool test_buffers(Assembler &as)
 }
 
 
+bool test_lea(Assembler &as)
+{
+    auto fun = (long(*)()) as.codeBegin();
+
+    cout << "LEA RIP\n";
+    as.rewindCode();
+    as.LEA(rax, Mem8(as.codeBegin()));
+    as.RET();
+    R64FX_EXPECT_EQ((long)as.codeBegin(), fun());
+
+    cout << "LEA SIB\n";
+    as.rewindCode();
+    as.MOV(rcx, Imm32(123));
+    as.MOV(rdx, Imm32(1));
+    as.LEA(rax, Base(rcx) + Index(rdx)*8 + Disp(-1));
+    as.RET();
+    R64FX_EXPECT_EQ(130, fun());
+
+    cout << "\n";
+    return true;
+}
+
+
 bool test_mov(Assembler &as)
 {
     auto fun = (long(*)()) as.codeBegin();

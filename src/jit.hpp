@@ -462,6 +462,11 @@ public:
     inline void MFENCE()       { m.write(Opcode_0F(0xAE), Operands(6)); }
     inline void SFENCE()       { m.write(Opcode_0F(0xAE), Operands(7)); }
 
+    inline void LEA(GPR64 reg, Mem8 mem)  { m.write(Opcode(0x8D), Operands(reg, mem, codeEnd() + 6)); }
+    inline void LEA(GPR64 reg, SIBD sibd) { m.write(Opcode(0x8D), Operands(reg, sibd)); }
+
+    inline void leaNextInstruction(GPR64 reg) { LEA(reg, Mem8(m.codeEnd() + 7)); }
+
     inline void MOV(GPR32 reg, Imm32 imm){ m.write(Opcode(0xC7), Operands(0, reg, imm)); }
     inline void MOV(GPR64 reg, Imm32 imm){ m.write(Opcode(0xC7), Operands(0, reg, imm)); }
     inline void MOV(GPR64 reg, Imm64 imm){ m.write(0xB8, reg, imm); }
@@ -741,6 +746,9 @@ typedef AssemblerInstructions<AssemblerBase> Assembler;
     using T::RET;\
     using T::RDTSC;\
     using T::CPUID;\
+    \
+    using LEA;\
+    using leaNextInstruction;\
     \
     using T::MOV;\
     using T::CMOV;\
