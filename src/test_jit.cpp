@@ -1476,10 +1476,13 @@ int main()
     srand(time(NULL));
 
     Assembler as;
+    as.resize(1, 1);
 
     bool ok =
         test_buffers(as) &&
+        test_lea(as) &&
         test_mov(as) &&
+        test_cmov(as) &&
         test_gpr_instrs(as) &&
         test_shift_instrs(as) &&
         test_push_pop(as) &&
