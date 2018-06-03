@@ -1,13 +1,12 @@
 #include "MemoryUtils.hpp"
 #include "Debug.hpp"
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
 #include <new>
+#include <algorithm>
 
-#ifdef R64FX_DEBUG
-#include <assert.h>
-#include <iostream>
-#endif//R64FX_DEBUG
+using namespace std;
 
 namespace r64fx{
 
@@ -28,6 +27,141 @@ void* alloc_aligned(int alignment, int nbytes)
         return nullptr;
     }
     return memptr;
+}
+
+
+void MemoryBuffer::resize(unsigned long npages)
+{
+    R64FX_DEBUG_ASSERT(m_begin <= m_ptr);
+    R64FX_DEBUG_ASSERT(m_ptr <= m_end);
+
+    if(npages == this->npages())
+        return;
+
+    auto old_buff = m_begin;
+    unsigned long ptr_offset = m_ptr - m_begin;
+    unsigned long old_size = m_end - m_begin;
+
+    m_begin = m_ptr = m_end = nullptr;
+
+    unsigned long new_size = npages * memory_page_size();
+    if(new_size)
+    {
+        m_begin = (unsigned char*)alloc_aligned(memory_page_size(), new_size);
+        m_end = m_begin + new_size;
+        m_ptr = m_begin + ptr_offset;
+        if(m_ptr > m_end) //In case the buffer has shrunk.
+            m_ptr = m_end;
+    }
+
+    if(old_buff)
+    {
+        if(m_begin)
+        {
+            memcpy(m_begin, old_buff, min(old_size, new_size));
+        }
+
+        free(old_buff);
+    }
+}
+
+
+void MemoryBuffer::ensure(unsigned long nbytes)
+{
+    if(bytesAvail() < nbytes)
+    {
+        unsigned long bytes_needed = nbytes + bytesUsed();
+        unsigned long pages_needed = bytes_needed / memory_page_size() + (bytes_needed % memory_page_size() ? 1 : 0);
+        resize(pages_needed);
+    }
+}
+
+
+void DivergingBuffers::resize(unsigned long decr_page_count, unsigned long incr_page_count)
+{
+    unsigned long new_page_count = decr_page_count + incr_page_count;
+    unsigned long old_page_count = incrPageCount() + decrPageCount();
+
+    if(new_page_count == 0)
+    {
+        if(old_page_count > 0)
+        {
+            free(m_begin);
+            m_begin = m_incr_ptr = m_middle = m_decr_ptr = m_end = nullptr;
+        }
+    }
+    else
+    {
+        auto new_size      = new_page_count * memory_page_size();
+        auto new_buff      = (unsigned char*) alloc_aligned(memory_page_size(), new_size);
+        auto new_middle    = new_buff + decr_page_count * memory_page_size();
+        auto new_decr_ptr  = new_middle - decrBytesUsed();
+        auto new_incr_ptr  = new_middle + incrBytesUsed();
+
+        if(old_page_count > 0)
+        {
+            if(decr_page_count >= decrPageCount())
+            {
+                memcpy(new_decr_ptr, decrBegin(), decrBytesUsed());
+            }
+
+            if(incr_page_count >= incrPageCount())
+            {
+                memcpy(new_incr_ptr, incrBegin(), incrBytesUsed());
+            }
+
+            free(m_begin);
+        }
+
+        m_begin     = new_buff;
+        m_decr_ptr  = new_decr_ptr;
+        m_middle    = new_middle;
+        m_incr_ptr  = new_incr_ptr;
+        m_end       = m_begin + new_size;
+    }
+}
+
+
+void DivergingBuffers::ensure(unsigned long decr_byte_count, unsigned long incr_byte_count)
+{
+    unsigned long decr_pages_needed = 0;
+    unsigned long incr_pages_needed = 0;
+
+    if(decrBytesAvail() < decr_byte_count)
+    {
+        unsigned long decr_bytes_needed = decr_byte_count + decrBytesUsed();
+        decr_pages_needed = decr_bytes_needed / memory_page_size() + (decr_bytes_needed % memory_page_size() ? 1 : 0);
+    }
+
+    if(incrBytesAvail() < incr_byte_count)
+    {
+        unsigned long incr_bytes_needed = incr_byte_count + incrBytesUsed();
+        incr_pages_needed = incr_bytes_needed / memory_page_size() + (incr_bytes_needed % memory_page_size() ? 1 : 0);
+    }
+
+    resize(decr_pages_needed, incr_pages_needed);
+}
+
+
+void DivergingBuffers::ensureDecr(unsigned long decr_byte_count)
+{
+    if(decrBytesAvail() < decr_byte_count)
+    {
+        unsigned long decr_bytes_needed = decr_byte_count + decrBytesUsed();
+        unsigned long decr_pages_needed = decr_bytes_needed / memory_page_size() + (decr_bytes_needed % memory_page_size() ? 1 : 0);
+        resize(decr_pages_needed, incrPageCount());
+    }
+}
+
+
+void DivergingBuffers::ensureIncr(unsigned long incr_byte_count)
+{
+    if(incrBytesAvail() < incr_byte_count)
+    {
+        unsigned long incr_bytes_needed = incr_byte_count + incrBytesUsed();
+        unsigned long incr_pages_needed = incr_bytes_needed / memory_page_size() + (incr_bytes_needed % memory_page_size() ? 1 : 0);
+        resize(decrPageCount(), incr_pages_needed);
+    }
 }
 
 
