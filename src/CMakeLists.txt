@@ -7,8 +7,8 @@ set(CMAKE_CXX_FLAGS "-std=c++17")
 ### Pick one of these!
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2 -pg")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g -fno-omit-frame-pointer")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g -fno-omit-frame-pointer -fsanitize=address")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g -fno-omit-frame-pointer")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O0 -g -fno-omit-frame-pointer -fsanitize=address")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_DEBUG")
 
@@ -258,3 +258,21 @@ add_executable(test_Synth EXCLUDE_FROM_ALL ${test_Synth_SRC})
 set(test_Synth_LIBS jack pthread)
 
 target_link_libraries(test_Synth ${test_Synth_LIBS})
+
+
+
+## test_jit_algorithms ##
+set(test_jit_algorithms_SRC
+    test_jit_algorithms.cpp
+    Midi.cpp
+    MemoryUtils.cpp
+    TimeUtils.cpp
+    Thread.cpp
+    jit.cpp
+)
+
+add_executable(test_jit_algorithms EXCLUDE_FROM_ALL ${test_jit_algorithms_SRC})
+
+# set(test_jit_algorithms_LIBS)
+# 
+# target_link_libraries(test_jit_algorithms ${test_jit_algorithms_LIBS})

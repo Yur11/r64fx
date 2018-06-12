@@ -65,26 +65,6 @@ bool test_MemoryBuffer()
 }
 
 
-bool test_DivergingBuffers()
-{
-    cout << "Testing DivergingBuffers\n";
-
-    DivergingBuffers db(1, 1);
-    R64FX_EXPECT_EQ((long)db.decrPtr(), (long)db.incrPtr());
-
-    db.growDecr(123);
-    R64FX_EXPECT_EQ((long)db.decrEnd() - 123, (long)db.decrPtr());
-
-    db.growIncr(10);
-    R64FX_EXPECT_EQ((long)db.incrPtr() - 133, (long)db.decrPtr());
-
-    db.ensure(memory_page_size(), memory_page_size());
-    R64FX_EXPECT_EQ((long)(memory_page_size() * 4), (long)(db.incrEnd() - db.decrBegin()));
-
-    return true;
-}
-
-
 bool test_HeapBuffer(HeapBuffer* hb)
 {
     auto buffuchar = (unsigned char*) hb->buffer();
@@ -677,7 +657,6 @@ int main()
     auto ok = true;
 
     ok = ok && test_MemoryBuffer();
-    ok = ok && test_DivergingBuffers();
 
     auto hb = HeapBuffer::newSelfHostedInstance(1);
     ok = ok && test_HeapBuffer(hb);
