@@ -1771,6 +1771,40 @@ bool test_sse_movs()
     return true;
 }
 
+template<
+    void (Assembler::*xmmxmm)(Xmm, Xmm),
+    void (Assembler::*xmmrip)(Xmm, Mem128),
+    void (Assembler::*xmmsib)(Xmm, SIBD)
+>
+bool test_sse_ps_instr(const char* name, float (*expected)(float, float))
+{
+    cout << name << "\n";
+    for(int i=0; i<24; i++)
+    {
+        f0[i] = float((rand() & 0xFFF) + 1) * 0.1f;
+    }
+
+    for(int i=0; i<4; i++)
+    {
+        f0[i + 20] = expected(expected(expected(f0[i], f0[i + 4]), f0[i + 8]), f0[i + 12]);
+    }
+
+    rewind();
+    MOVAPS          (xmm0, Mem128(f0));
+    MOVAPS          (xmm8, Mem128(f0 + 4));
+    (this->*xmmxmm) (xmm0, xmm8);
+    (this->*xmmrip) (xmm0, Mem128(f0 + 8));
+    (this->*xmmsib) (xmm0, Base(rdi));
+    MOVAPS          (Mem128(f0 + 16), xmm0);
+    RET();
+
+    lfunp(f0 + 12);
+
+    R64FX_EXPECT_VEC_EQ(f0 + 20, f0 + 16, 4);
+
+    return true;
+}
+
 bool test()
 {
     return
@@ -1795,6 +1829,13 @@ bool test()
         test_jumps() &&
 
         test_sse_movs() &&
+
+#define R64FX_TEST_SSE_PS_INSTR(name, op) test_sse_ps_instr<R64FX_LIST(&Assembler::name, 3)>(#name, [](float a, float b){ return a op b; })
+        R64FX_TEST_SSE_PS_INSTR(ADDPS, +) &&
+        R64FX_TEST_SSE_PS_INSTR(SUBPS, -) &&
+        R64FX_TEST_SSE_PS_INSTR(MULPS, *) &&
+        R64FX_TEST_SSE_PS_INSTR(DIVPS, /) &&
+#undef  R64FX_TEST_SSE_PS_INSTR
 
         true;
 }};
