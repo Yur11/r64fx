@@ -34,17 +34,26 @@ public:
     void resize(unsigned long npages);
 
     /* Make sure that this buffer has at least nbytes available between ptr() and end().
-       This method calls resize() method if reallocation is needed.*/
+       This method calls resize() method if reallocation is needed. */
     void ensure(unsigned long nbytes);
 
-    /* Ensure that nbytes are available an move ptr forward by nbytes. */
-    inline unsigned char* grow(unsigned long nbytes) { ensure(nbytes); m_ptr += nbytes; return m_ptr; }
+    /* Ensure that nbytes are available an move ptr forward by nbytes.
+       Returns ptr value before advancing, but after any reallocations. */
+    inline unsigned char* grow(unsigned long nbytes)
+        { ensure(nbytes); auto p = m_ptr; m_ptr += nbytes; return p; }
 
     /* Move ptr nbytes back. */
     inline unsigned char* shrink(unsigned long nbytes)
     {
         R64FX_DEBUG_ASSERT(nbytes <= bytesUsed());
         m_ptr -= nbytes;
+        return m_ptr;
+    }
+
+    /* Move ptr back to the beginning of the buffer. */
+    inline unsigned char* rewind()
+    {
+        m_ptr = m_begin;
         return m_ptr;
     }
 
@@ -64,65 +73,6 @@ public:
     inline unsigned long bytesUsed() const { return m_ptr - m_begin; }
 
     inline unsigned long bytesAvail() const { return m_end - m_ptr; }
-};
-
-
-/* Two memory buffers concatenated together.
-   One is called increasing buffer and grows towards larger addresses.
-   The other is called decreasing buffer and grows towards smaller addresses.
-   Both meet in the middle and are reallocated together if any of them has grow. */
-class DivergingBuffers{
-    unsigned char*  m_begin     = nullptr;
-    unsigned char*  m_decr_ptr  = nullptr;
-    unsigned char*  m_middle    = nullptr;
-    unsigned char*  m_incr_ptr  = nullptr;
-    unsigned char*  m_end       = nullptr;
-
-public:
-    DivergingBuffers(unsigned long decr_page_count, unsigned long incr_page_count)
-    {
-        resize(decr_page_count, incr_page_count);
-    }
-
-    DivergingBuffers() {}
-
-    ~DivergingBuffers() { resize(0, 0); }
-
-    /* Similar to resize method in MemoryBuffer but for both buffers. */
-    void resize(unsigned long decr_page_count, unsigned long incr_page_count);
-
-    /* Similar to ensure method in MemoryBuffer but for both buffers. */
-    void ensure(unsigned long decr_byte_count, unsigned long incr_byte_count);
-
-    void ensureDecr(unsigned long decr_byte_count);
-
-    void ensureIncr(unsigned long incr_byte_count);
-
-    inline unsigned char* growDecr(unsigned long decr_byte_count)
-        { ensureDecr(decr_byte_count); m_decr_ptr -= decr_byte_count; return m_decr_ptr; }
-
-    inline unsigned char* growIncr(unsigned long incr_byte_count)
-        { ensureIncr(incr_byte_count); m_incr_ptr += incr_byte_count; return m_incr_ptr; }
-
-    inline unsigned long decrByteCount() const { R64FX_DEBUG_ASSERT(m_middle >= m_begin); return m_middle - m_begin; }
-    inline unsigned long incrByteCount() const { R64FX_DEBUG_ASSERT(m_end >= m_middle); return m_end - m_middle; }
-
-    inline unsigned long decrPageCount() const { return decrByteCount() / memory_page_size(); }
-    inline unsigned long incrPageCount() const { return incrByteCount() / memory_page_size(); }
-
-    inline unsigned long decrBytesUsed() const { R64FX_DEBUG_ASSERT(m_middle >= m_decr_ptr); return m_middle - m_decr_ptr; }
-    inline unsigned long incrBytesUsed() const { R64FX_DEBUG_ASSERT(m_incr_ptr >= m_middle); return m_incr_ptr - m_middle; }
-
-    inline unsigned long decrBytesAvail() const { R64FX_DEBUG_ASSERT(m_decr_ptr >= m_begin); return m_decr_ptr - m_begin; }
-    inline unsigned long incrBytesAvail() const { R64FX_DEBUG_ASSERT(m_end >= m_incr_ptr); return m_end - m_incr_ptr; }
-
-    inline unsigned char* decrBegin() const { return m_begin; }
-    inline unsigned char* decrPtr() const { return m_decr_ptr; }
-    inline unsigned char* decrEnd() const { return m_middle; }
-
-    inline unsigned char* incrBegin() const { return m_middle; }
-    inline unsigned char* incrPtr() const { return m_incr_ptr; }
-    inline unsigned char* incrEnd() const { return m_end; }
 };
 
 
