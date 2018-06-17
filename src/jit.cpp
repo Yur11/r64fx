@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <iostream>
+
 namespace r64fx{
 
 namespace{
@@ -200,117 +202,44 @@ Operands::Operands(Register r, SIBD sibd, int imm)
 }
 
 
-void AssemblerBuffers::resize(unsigned long data_page_count, unsigned long code_page_count)
+void AssemblerBuffer::permitExecution()
 {
-    unsigned long new_page_count = data_page_count + code_page_count;
-    unsigned long old_page_count = dataPageCount() + codePageCount();
-
-    if(new_page_count == 0)
-    {
-        if(old_page_count > 0)
-        {
-            mprotect(m_buffer, old_page_count * memory_page_size(), PROT_READ | PROT_WRITE);
-            free(m_buffer);
-            m_buffer = m_data_begin = m_code_begin = m_code_end = m_buffer_end = nullptr;
-        }
-    }
-    else
-    {
-        auto new_size        = new_page_count * memory_page_size();
-        auto new_buff        = (unsigned char*) alloc_aligned(memory_page_size(), new_size);
-        auto new_code_begin  = new_buff + data_page_count * memory_page_size();
-        auto new_code_end    = new_code_begin + codeBytesUsed();
-        auto new_data_begin  = new_code_begin - dataBytesUsed();
-
-        if(old_page_count > 0)
-        {
-            if(data_page_count >= dataPageCount())
-            {
-                memcpy(new_data_begin, dataBegin(), dataBytesUsed());
-            }
-
-            if(code_page_count >= codePageCount())
-            {
-                memcpy(new_code_begin, codeBegin(), codeBytesUsed());
-            }
-
-            mprotect(m_buffer, old_page_count * memory_page_size(), PROT_READ | PROT_WRITE);
-            free(m_buffer);
-        }
-
-        m_buffer      = new_buff;
-        m_data_begin  = new_data_begin;
-        m_code_begin  = new_code_begin;
-        m_code_end    = new_code_end;
-        m_buffer_end  = m_buffer + new_size;
-
-        if(data_page_count)
-            mprotect(m_buffer,     dataBufferSize(),  PROT_READ | PROT_WRITE);
-        if(code_page_count)
-            mprotect(codeBegin(),  codeBufferSize(),  PROT_READ | PROT_WRITE | PROT_EXEC);
-
-    }
+    mprotect(begin(), nbytes(), PROT_READ | PROT_WRITE | PROT_EXEC);
 }
 
 
-long AssemblerBuffers::growData(int nbytes)
+void AssemblerBuffer::prohibitExecution()
 {
-    long bytes_available = dataBytesAvailable();
-    long new_page_count = 0;
-    while(bytes_available < nbytes)
-    {
-        bytes_available += memory_page_size();
-        new_page_count++;
-    }
-    if(new_page_count > 0)
-    {
-        resize(dataPageCount() + new_page_count, codePageCount());
-    }
-    m_data_begin -= nbytes;
-    return m_code_begin - m_data_begin;
+    mprotect(begin(), nbytes(), PROT_READ | PROT_WRITE);
 }
 
 
-unsigned char* AssemblerBuffers::growCode(int nbytes)
+void AssemblerBuffer::fill(unsigned char byte, int nbytes)
 {
-    int new_bytes_needed = nbytes - codeBytesAvailable();
-    if(new_bytes_needed > 0)
-    {
-        int new_pages = new_bytes_needed / memory_page_size() + 1;
-        resize(dataPageCount(), codePageCount() + new_pages);
-    }
-    auto result = m_code_end;
-    m_code_end += nbytes;
-    return result;
-}
-
-
-void AssemblerBuffers::fill(unsigned char byte, int nbytes)
-{
-    auto p = growCode(nbytes);
+    auto p = MemoryBuffer::grow(nbytes);
     for(int i=0; i<nbytes; i++)
         p[i] = byte;
 }
 
 
-void AssemblerBuffers::write(unsigned char byte)
+void AssemblerBuffer::write(unsigned char byte)
 {
-    auto p = growCode(1);
+    auto p = MemoryBuffer::grow(1);
     p[0] = byte;
 }
 
 
-void AssemblerBuffers::write(unsigned char byte0, unsigned char byte1)
+void AssemblerBuffer::write(unsigned char byte0, unsigned char byte1)
 {
-    auto p = growCode(2);
+    auto p = MemoryBuffer::grow(2);
     p[0] = byte0;
     p[1] = byte1;
 }
 
 
-void AssemblerBuffers::write(unsigned char opcode, Register reg, Imm64 imm)
+void AssemblerBuffer::write(unsigned char opcode, Register reg, Imm64 imm)
 {
-    auto p = growCode(10);
+    auto p = MemoryBuffer::grow(10);
     p[0] = Rex(1, 0, 0, reg.prefixBit());
     p[1] = opcode + (reg.lowerBits());
     for(int i=0; i<8; i++)
@@ -318,21 +247,21 @@ void AssemblerBuffers::write(unsigned char opcode, Register reg, Imm64 imm)
 }
 
 
-void AssemblerBuffers::write(unsigned char opcode, Register reg)
+void AssemblerBuffer::write(unsigned char opcode, Register reg)
 {
-    auto p = growCode(2);
+    auto p = MemoryBuffer::grow(2);
     p[0] = Rex(1, 0, 0, reg.prefixBit());
     p[1] = opcode + (reg.lowerBits());
 }
 
 
-void AssemblerBuffers::write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label)
+void AssemblerBuffer::write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label)
 {
     int nbytes = 5;
     if(opcode1)
         nbytes++;
 
-    auto p = growCode(nbytes);
+    auto p = MemoryBuffer::grow(nbytes);
 
     int r = 0;
     if(opcode1)
@@ -342,11 +271,11 @@ void AssemblerBuffers::write(unsigned char opcode1, unsigned char opcode2, JumpL
     Imm32 imm = Imm32(0);
     if(label.jmpAddr())
     {
-        imm = Rip((unsigned long)(codeBegin() + label.jmpAddr()), codeEnd());
+        imm = Rip((unsigned long)(MemoryBuffer::begin() + label.jmpAddr()), MemoryBuffer::ptr());
     }
     else
     {
-        long offset = p - codeBegin() + r;
+        long offset = p - MemoryBuffer::begin() + r;
 #ifdef R64FX_DEBUG
         assert(offset <= 0x7FFFFFFF || offset >= -0x7FFFFFFF);
         assert(label.immAddr() == 0);
@@ -361,9 +290,9 @@ void AssemblerBuffers::write(unsigned char opcode1, unsigned char opcode2, JumpL
 }
 
 
-void AssemblerBuffers::write(const Opcode &opcode, const Operands &operands)
+void AssemblerBuffer::write(const Opcode &opcode, const Operands &operands)
 {
-    auto p = growCode(opcode.byteCount() + operands.totalByteCount());
+    auto p = MemoryBuffer::grow(opcode.byteCount() + operands.totalByteCount());
     int r = 0;
     if(opcode.has66())
         p[r++] = 0x66;
@@ -380,20 +309,20 @@ void AssemblerBuffers::write(const Opcode &opcode, const Operands &operands)
 }
 
 
-void AssemblerBuffers::markLabel(JumpLabel &label)
+void AssemblerBuffer::markLabel(JumpLabel &label)
 {
     if(label.immAddr())
     {
         R64FX_DEBUG_ASSERT(label.jmpAddr() == 0);
-        unsigned char* imm = codeBegin() + label.immAddr();
-        Imm32 rip = Rip((unsigned long)codeEnd(), imm + 4);
+        unsigned char* imm = begin() + label.immAddr();
+        Imm32 rip = Rip((unsigned long)ptr(), imm + 4);
         for(int i=0; i<4; i++)
         {
             imm[i] = rip.b[i];
         }
     }
 
-    long offset = codeBytesUsed();
+    long offset = bytesUsed();
     R64FX_DEBUG_ASSERT(offset <= 0x7FFFFFFF || offset >= -0x7FFFFFFF);
     label.setJmpAddr(int(offset));
 }

@@ -112,6 +112,8 @@ inline Imm64 ImmAddr(void* addr) { return Imm64((unsigned long)addr); }
 
 #ifdef R64FX_DEBUG
 #define R64FX_JIT_DEBUG_MEM_ALIGN(bytes) assert((long int)addr % bytes == 0);
+#else
+#define R64FX_JIT_DEBUG_MEM_ALIGN(bytes)
 #endif//R64FX_DEBUG
 
 struct Mem8{
@@ -241,7 +243,7 @@ const CmpCode
 
 
 class JumpLabel{
-    friend class AssemblerBuffers;
+    friend class AssemblerBuffer;
 
     int m_jmp_addr = 0;
     int m_imm_addr = 0;
@@ -259,6 +261,9 @@ public:
 
     ~JumpLabel() { if(immAddr() != 0) { R64FX_DEBUG_ASSERT(jmpAddr() != 0); } }
 };
+
+
+#define R64FX_JIT_JUMP_LABEL(label) r64fx::JumpLabel label; mark(label);
 
 
 /*  Pack four 0..3 values into a sigle byte. To be used with shuffle instructions.
@@ -340,93 +345,17 @@ struct Operands{
 };
 
 
-class AssemblerBuffers{
-    unsigned char*  m_buffer          = nullptr;
-
-    //Decreases with data allocated.
-    unsigned char*  m_data_begin      = nullptr;
-
-    //Fixed. Points to a location between code and data.
-    unsigned char*  m_code_begin      = nullptr;
-
-    //Increases with code written.
-    unsigned char*  m_code_end        = nullptr;
-
-    unsigned char*  m_buffer_end      = nullptr;
-
-    /* Ensure that code buffer has room to add nbytes. Resize if needed. */
-    unsigned char* growCode(int nbytes);
-
-    AssemblerBuffers(const AssemblerBuffers &other) {} //No Copy!
+class AssemblerBuffer : public MemoryBuffer{
+    AssemblerBuffer(const AssemblerBuffer &other) {} //No Copy!
 
 public:
-    AssemblerBuffers() {}
+    AssemblerBuffer() {}
 
-    ~AssemblerBuffers() { resize(0, 0); }
+    ~AssemblerBuffer() {}
 
-    void resize(unsigned long data_page_count, unsigned long code_page_count);
+    void permitExecution();
 
-
-    inline unsigned char* dataBegin() const { return m_data_begin; }
-
-    inline void setDataBegin(unsigned char* addr)
-    {
-        R64FX_DEBUG_ASSERT(addr >= m_buffer);
-        R64FX_DEBUG_ASSERT(addr <= m_code_begin);
-        m_data_begin = addr;
-    }
-
-    inline void rewindData() { setDataBegin(dataEnd()); }
-
-    inline unsigned char* dataEnd() const { return m_code_begin; }
-
-
-    inline unsigned char* codeBegin() const { return m_code_begin; }
-
-    inline unsigned char* codeEnd() const { return m_code_end; }
-
-    inline void setCodeEnd(unsigned char* addr)
-    {
-        R64FX_DEBUG_ASSERT(addr >= m_code_begin);
-        R64FX_DEBUG_ASSERT(addr <= m_buffer_end);
-        m_code_end = addr;
-    }
-
-    inline void rewindCode() { setCodeEnd(codeBegin()); }
-
-
-    inline unsigned long dataBufferSize() const { return m_code_begin - m_buffer; }
-
-    inline unsigned long dataBytesUsed() const { return m_code_begin - m_data_begin; }
-
-    inline unsigned long dataBytesAvailable() const { return m_data_begin - m_buffer; }
-
-
-    inline unsigned long codeBufferSize() const { return m_buffer_end - m_code_begin; }
-
-    inline unsigned long codeBytesUsed() const { return m_code_end - m_code_begin; }
-
-    inline unsigned long codeBytesAvailable() const { return m_buffer_end - m_code_end; }
-
-
-    inline unsigned long dataPageCount() const
-    {
-        R64FX_DEBUG_ASSERT((dataBufferSize() % memory_page_size()) == 0);
-        return dataBufferSize() / memory_page_size();
-    }
-
-    inline unsigned long codePageCount() const
-    {
-        R64FX_DEBUG_ASSERT((codeBufferSize() % memory_page_size()) == 0);
-        return codeBufferSize() / memory_page_size();
-    }
-
-    /* Grow data buffer. Resize if needed.
-     * Returns an offset value. Subtract it from codeBegin() to get the pointer.
-     */
-    long growData(int nbytes);
-
-    void markLabel(JumpLabel &label);
+    void prohibitExecution();
 
     void fill(unsigned char byte, int nbytes);
 
@@ -440,6 +369,8 @@ public:
 
     void write(const Opcode &opcode, const Operands &operands);
 
+    void markLabel(JumpLabel &label);
+
     unsigned long cpu_features = 0;
 };
 
@@ -450,8 +381,6 @@ template<class AssemblerBaseT> class AssemblerInstructions : public AssemblerBas
 public:
     using AssemblerBaseT::AssemblerBaseT;
     using AssemblerBaseT::m;
-    using AssemblerBaseT::codeEnd;
-    using AssemblerBaseT::dataEnd;
 
     inline void NOP()          { m.write(0x90); }
     inline void NOP(int count) { m.fill(0x90, count); }
@@ -462,21 +391,21 @@ public:
     inline void MFENCE()       { m.write(Opcode_0F(0xAE), Operands(6)); }
     inline void SFENCE()       { m.write(Opcode_0F(0xAE), Operands(7)); }
 
-    inline void LEA(GPR64 reg, Mem8 mem)  { m.write(Opcode(0x8D), Operands(reg, mem, codeEnd() + 6)); }
+    inline void LEA(GPR64 reg, Mem8 mem)  { m.write(Opcode(0x8D), Operands(reg, mem, m.ptr() + 6)); }
     inline void LEA(GPR64 reg, SIBD sibd) { m.write(Opcode(0x8D), Operands(reg, sibd)); }
 
-    inline void leaNextInstruction(GPR64 reg) { LEA(reg, Mem8(m.codeEnd() + 7)); }
+    inline void leaNextInstruction(GPR64 reg) { LEA(reg, Mem8(m.ptr() + 7)); }
 
     inline void MOV(GPR32 reg, Imm32 imm){ m.write(Opcode(0xC7), Operands(0, reg, imm)); }
     inline void MOV(GPR64 reg, Imm32 imm){ m.write(Opcode(0xC7), Operands(0, reg, imm)); }
     inline void MOV(GPR64 reg, Imm64 imm){ m.write(0xB8, reg, imm); }
 
     inline void MOV(GPR64 dst, GPR64 src){ m.write(Opcode(0x8B), Operands(dst, src)); }
-    inline void MOV(GPR32 reg, Mem32 mem){ m.write(Opcode(0x8B), Operands(reg, mem, codeEnd() + 6)); }
-    inline void MOV(GPR64 reg, Mem64 mem){ m.write(Opcode(0x8B), Operands(reg, mem, codeEnd() + 6)); }
+    inline void MOV(GPR32 reg, Mem32 mem){ m.write(Opcode(0x8B), Operands(reg, mem, m.ptr() + 6)); }
+    inline void MOV(GPR64 reg, Mem64 mem){ m.write(Opcode(0x8B), Operands(reg, mem, m.ptr() + 6)); }
 
-    inline void MOV(Mem32 mem, GPR32 reg){ m.write(Opcode(0x89), Operands(reg, mem, codeEnd() + 6)); }
-    inline void MOV(Mem64 mem, GPR64 reg){ m.write(Opcode(0x89), Operands(reg, mem, codeEnd() + 6)); }
+    inline void MOV(Mem32 mem, GPR32 reg){ m.write(Opcode(0x89), Operands(reg, mem, m.ptr() + 6)); }
+    inline void MOV(Mem64 mem, GPR64 reg){ m.write(Opcode(0x89), Operands(reg, mem, m.ptr() + 6)); }
 
     inline void MOV(GPR32 reg, SIBD sibd){ m.write(Opcode(0x8B), Operands(reg, sibd)); }
     inline void MOV(GPR64 reg, SIBD sibd){ m.write(Opcode(0x8B), Operands(reg, sibd)); }
@@ -489,8 +418,8 @@ public:
     inline void name(GPR64 reg, Imm8  imm){ m.write(Opcode(0x83),     Operands(r,  reg, imm)); }\
     inline void name(GPR64 reg, Imm32 imm){ m.write(Opcode(0x81),     Operands(r,  reg, imm)); }\
     inline void name(GPR64 dst, GPR64 src){ m.write(Opcode(rrm + 2),  Operands(dst, src)); }\
-    inline void name(GPR64 reg, Mem64 mem){ m.write(Opcode(rrm + 2),  Operands(reg, mem, codeEnd() + 6)); }\
-    inline void name(Mem64 mem, GPR64 reg){ m.write(Opcode(rrm),      Operands(reg, mem, codeEnd() + 6)); }\
+    inline void name(GPR64 reg, Mem64 mem){ m.write(Opcode(rrm + 2),  Operands(reg, mem, m.ptr() + 6)); }\
+    inline void name(Mem64 mem, GPR64 reg){ m.write(Opcode(rrm),      Operands(reg, mem, m.ptr() + 6)); }\
     inline void name(GPR64 reg, SIBD sibd){ m.write(Opcode(rrm + 2),  Operands(reg, sibd)); }\
     inline void name(SIBD sibd, GPR64 reg){ m.write(Opcode(rrm),      Operands(reg, sibd)); }\
     inline void name(GPR32 reg, SIBD sibd){ m.write(Opcode(rrm + 2),  Operands(reg, sibd)); }\
@@ -536,25 +465,25 @@ public:
 /* === SSE === */
 
     inline void MOVAPS(Xmm dst, Xmm src)    { m.write(Opcode_0F(0x28), Operands(dst, src)); }
-    inline void MOVAPS(Xmm reg, Mem128 mem) { m.write(Opcode_0F(0x28), Operands(reg, mem, codeEnd() + 7)); }
-    inline void MOVAPS(Mem128 mem, Xmm reg) { m.write(Opcode_0F(0x29), Operands(reg, mem, codeEnd() + 7)); }
+    inline void MOVAPS(Xmm reg, Mem128 mem) { m.write(Opcode_0F(0x28), Operands(reg, mem, m.ptr() + 7)); }
+    inline void MOVAPS(Mem128 mem, Xmm reg) { m.write(Opcode_0F(0x29), Operands(reg, mem, m.ptr() + 7)); }
     inline void MOVAPS(Xmm reg, SIBD sibd)  { m.write(Opcode_0F(0x28), Operands(reg, sibd)); }
     inline void MOVAPS(SIBD sibd, Xmm reg)  { m.write(Opcode_0F(0x29), Operands(reg, sibd)); }
 
     inline void MOVUPS(Xmm dst, Xmm src)   { m.write(Opcode_0F(0x10), Operands(dst, src)); }
-    inline void MOVUPS(Xmm reg, Mem32 mem) { m.write(Opcode_0F(0x10), Operands(reg, mem, codeEnd() + 7)); }
-    inline void MOVUPS(Mem32 mem, Xmm reg) { m.write(Opcode_0F(0x11), Operands(reg, mem, codeEnd() + 7)); }
+    inline void MOVUPS(Xmm reg, Mem32 mem) { m.write(Opcode_0F(0x10), Operands(reg, mem, m.ptr() + 7)); }
+    inline void MOVUPS(Mem32 mem, Xmm reg) { m.write(Opcode_0F(0x11), Operands(reg, mem, m.ptr() + 7)); }
     inline void MOVUPS(Xmm reg, SIBD sibd) { m.write(Opcode_0F(0x10), Operands(reg, sibd)); }
     inline void MOVUPS(SIBD sibd, Xmm reg) { m.write(Opcode_0F(0x11), Operands(reg, sibd)); }
 
-    inline void MOVLPS(Xmm reg, Mem64 mem) { m.write(Opcode_0F(0x12), Operands(reg, mem, codeEnd() + 7)); }
+    inline void MOVLPS(Xmm reg, Mem64 mem) { m.write(Opcode_0F(0x12), Operands(reg, mem, m.ptr() + 7)); }
     inline void MOVLPS(Xmm reg, SIBD sibd) { m.write(Opcode_0F(0x12), Operands(reg, sibd)); }
-    inline void MOVLPS(Mem64 mem, Xmm reg) { m.write(Opcode_0F(0x13), Operands(reg, mem, codeEnd() + 7));}
+    inline void MOVLPS(Mem64 mem, Xmm reg) { m.write(Opcode_0F(0x13), Operands(reg, mem, m.ptr() + 7));}
     inline void MOVLPS(SIBD sibd, Xmm reg) { m.write(Opcode_0F(0x13), Operands(reg, sibd)); }
 
-    inline void MOVHPS(Xmm reg, Mem64 mem) { m.write(Opcode_0F(0x16), Operands(reg, mem, codeEnd() + 7)); }
+    inline void MOVHPS(Xmm reg, Mem64 mem) { m.write(Opcode_0F(0x16), Operands(reg, mem, m.ptr() + 7)); }
     inline void MOVHPS(Xmm reg, SIBD sibd) { m.write(Opcode_0F(0x16), Operands(reg, sibd)); }
-    inline void MOVHPS(Mem64 mem, Xmm reg) { m.write(Opcode_0F(0x17), Operands(reg, mem, codeEnd() + 7));}
+    inline void MOVHPS(Mem64 mem, Xmm reg) { m.write(Opcode_0F(0x17), Operands(reg, mem, m.ptr() + 7));}
     inline void MOVHPS(SIBD sibd, Xmm reg) { m.write(Opcode_0F(0x17), Operands(reg, sibd)); }
 
     inline void MOVHLPS(Xmm dst, Xmm src)  { m.write(Opcode_0F(0x12), Operands(dst, src)); }
@@ -565,7 +494,7 @@ private:
         { m.write(Opcode_0F(opcode), Operands(dst, src)); }
 
     inline void sse_ps_instruction(unsigned char opcode, Xmm reg, Mem128 mem)
-        { m.write(Opcode_0F(opcode), Operands(reg, mem, codeEnd() + 7)); }
+        { m.write(Opcode_0F(opcode), Operands(reg, mem, m.ptr() + 7)); }
 
     inline void sse_ps_instruction(unsigned char opcode, Xmm reg, SIBD sibd)
         { m.write(Opcode_0F(opcode), Operands(reg, sibd)); }
@@ -574,7 +503,7 @@ private:
         { m.write(Opcode_F30F(opcode), Operands(dst, src)); }
 
     inline void sse_ss_instruction(unsigned char opcode, Xmm reg, Mem32 mem)
-        { m.write(Opcode_F30F(opcode), Operands(reg, mem, codeEnd() + 8)); }
+        { m.write(Opcode_F30F(opcode), Operands(reg, mem, m.ptr() + 8)); }
 
     inline void sse_ss_instruction(unsigned char opcode, Xmm reg, SIBD sibd)
         { m.write(Opcode_F30F(opcode), Operands(reg, sibd)); }
@@ -630,28 +559,28 @@ public:
     inline void CMPEQPS(Xmm dst, Xmm src)    { CMPPS(EQ, dst, src); }
     inline void CMPEQPS(Xmm reg, Mem128 mem) { CMPPS(EQ, reg, mem); }
 
-    inline void MOVSS(Xmm reg, Mem32 mem) { m.write(Opcode_F30F(0x10), Operands(reg, mem, codeEnd() + 8)); }
-    inline void MOVSS(Mem32 mem, Xmm reg) { m.write(Opcode_F30F(0x11), Operands(reg, mem, codeEnd() + 8)); }
+    inline void MOVSS(Xmm reg, Mem32 mem) { m.write(Opcode_F30F(0x10), Operands(reg, mem, m.ptr() + 8)); }
+    inline void MOVSS(Mem32 mem, Xmm reg) { m.write(Opcode_F30F(0x11), Operands(reg, mem, m.ptr() + 8)); }
     inline void MOVSS(Xmm reg, SIBD sibd) { m.write(Opcode_F30F(0x10), Operands(reg, sibd)); }
 
     inline void SHUFPS(Xmm dst, Xmm src,    Shuf shuf) { m.write(Opcode_0F(0xC6), Operands(dst, src,  shuf.byte())); }
-    inline void SHUFPS(Xmm reg, Mem128 mem, Shuf shuf) { m.write(Opcode_0F(0xC6), Operands(reg, mem, codeEnd() + 8, shuf.byte())); }
+    inline void SHUFPS(Xmm reg, Mem128 mem, Shuf shuf) { m.write(Opcode_0F(0xC6), Operands(reg, mem, m.ptr() + 8, shuf.byte())); }
     inline void SHUFPS(Xmm reg, SIBD sibd,  Shuf shuf) { m.write(Opcode_0F(0xC6), Operands(reg, sibd, shuf.byte())); }
 
     inline void CVTPS2DQ(Xmm dst, Xmm src)    { m.write(Opcode_660F(0x5B), Operands(dst, src)); }
-    inline void CVTPS2DQ(Xmm reg, Mem128 mem) { m.write(Opcode_660F(0x5B), Operands(reg, mem, codeEnd() + 8)); }
+    inline void CVTPS2DQ(Xmm reg, Mem128 mem) { m.write(Opcode_660F(0x5B), Operands(reg, mem, m.ptr() + 8)); }
     inline void CVTPS2DQ(Xmm reg, SIBD sibd)  { m.write(Opcode_660F(0x5B), Operands(reg, sibd)); }
 
     inline void CVTDQ2PS(Xmm dst, Xmm src)    { m.write(Opcode_0F(0x5B), Operands(dst, src)); }
-    inline void CVTDQ2PS(Xmm reg, Mem128 mem) { m.write(Opcode_0F(0x5B), Operands(reg, mem, codeEnd() + 7)); }
+    inline void CVTDQ2PS(Xmm reg, Mem128 mem) { m.write(Opcode_0F(0x5B), Operands(reg, mem, m.ptr() + 7)); }
     inline void CVTDQ2PS(Xmm reg, SIBD sibd)  { m.write(Opcode_0F(0x5B), Operands(reg, sibd)); }
 
 
 /* === SSE2 === */
     inline void MOVDQA(Xmm dst, Xmm src)    { m.write(Opcode_660F(0x6F), Operands(dst, src)); }
-    inline void MOVDQA(Xmm dst, Mem128 mem) { m.write(Opcode_660F(0x6F), Operands(dst, mem, codeEnd() + 8)); }
+    inline void MOVDQA(Xmm dst, Mem128 mem) { m.write(Opcode_660F(0x6F), Operands(dst, mem, m.ptr() + 8)); }
     inline void MOVDQA(Xmm dst, SIBD sibd)  { m.write(Opcode_660F(0x6F), Operands(dst, sibd)); }
-    inline void MOVDQA(Mem128 mem, Xmm src) { m.write(Opcode_660F(0x7F), Operands(src, mem, codeEnd() + 8)); }
+    inline void MOVDQA(Mem128 mem, Xmm src) { m.write(Opcode_660F(0x7F), Operands(src, mem, m.ptr() + 8)); }
     inline void MOVDQA(SIBD sibd, Xmm src)  { m.write(Opcode_660F(0x7F), Operands(src, sibd)); }
 
     inline void MOVD(Xmm dst, GPR32 src) { m.write(Opcode_660F(0x6E), Operands(dst, src)); }
@@ -662,12 +591,12 @@ public:
     inline void MOVD(GPR64 dst, Xmm src) { MOVD(dst.low32(), src); }
 
     inline void PSHUFD(Xmm dst, Xmm src,    Shuf shuf) { m.write(Opcode_660F(0x70), Operands(dst, src,  shuf.byte())); }
-    inline void PSHUFD(Xmm reg, Mem128 mem, Shuf shuf) { m.write(Opcode_660F(0x70), Operands(reg, mem, codeEnd() + 9, shuf.byte())); }
+    inline void PSHUFD(Xmm reg, Mem128 mem, Shuf shuf) { m.write(Opcode_660F(0x70), Operands(reg, mem, m.ptr() + 9, shuf.byte())); }
     inline void PSHUFD(Xmm reg, SIBD sibd,  Shuf shuf) { m.write(Opcode_660F(0x70), Operands(reg, sibd, shuf.byte())); }
 
 #define R64FX_SSE2_INSTRUCTION(name, opcode)\
     inline void name(Xmm dst, Xmm src)    { m.write(Opcode_660F(opcode), Operands(dst, src));}\
-    inline void name(Xmm reg, Mem128 mem) { m.write(Opcode_660F(opcode), Operands(reg, mem, codeEnd() + 8)); }\
+    inline void name(Xmm reg, Mem128 mem) { m.write(Opcode_660F(opcode), Operands(reg, mem, m.ptr() + 8)); }\
     inline void name(Xmm reg, SIBD sibd)  { m.write(Opcode_660F(opcode), Operands(reg, sibd)); }
 
     R64FX_SSE2_INSTRUCTION(PADDD,      0xFE)
@@ -703,31 +632,31 @@ public:
     /* Time measurments are stored in the 16 bytes at the end of data pages
        adjacent to the code. */
 
-    inline void getTime(unsigned long* t)
-    {
-        LFENCE();
-        RDTSC ();
-        SHL   (rdx, Imm8(32));
-        OR    (rax, rdx);
-        MOV   (Mem64(t), rax);
-    }
+//     inline void getTime(unsigned long* t)
+//     {
+//         LFENCE();
+//         RDTSC ();
+//         SHL   (rdx, Imm8(32));
+//         OR    (rax, rdx);
+//         MOV   (Mem64(t), rax);
+//     }
+// 
+//     inline void getBeginTime() { getTime(beginTimeAddr()); }
+//     inline void getEndTime()   { getTime(endTimeAddr()); }
 
-    inline void getBeginTime() { getTime(beginTimeAddr()); }
-    inline void getEndTime()   { getTime(endTimeAddr()); }
-
-    inline unsigned long* beginTimeAddr()  const { return (unsigned long*)(dataEnd() - 8); }
-    inline unsigned long  beginTime()      const { return *beginTimeAddr(); }
-
-    inline unsigned long* endTimeAddr()    const { return (unsigned long*)(dataEnd() - 16); }
-    inline unsigned long  endTime()        const { return *endTimeAddr(); }
-
-    inline unsigned long  time()           const { return endTime() - beginTime(); }
+//     inline unsigned long* beginTimeAddr()  const { return (unsigned long*)(dataEnd() - 8); }
+//     inline unsigned long  beginTime()      const { return *beginTimeAddr(); }
+// 
+//     inline unsigned long* endTimeAddr()    const { return (unsigned long*)(dataEnd() - 16); }
+//     inline unsigned long  endTime()        const { return *endTimeAddr(); }
+// 
+//     inline unsigned long  time()           const { return endTime() - beginTime(); }
 };
 
 
-class AssemblerBase : public AssemblerBuffers{
+class AssemblerBase : public AssemblerBuffer{
 protected:
-    AssemblerBuffers &m;
+    AssemblerBuffer &m;
 public:
     AssemblerBase() : m(*this) {}
 };
@@ -738,7 +667,7 @@ typedef AssemblerInstructions<AssemblerBase> Assembler;
     using T::resize;\
     using T::rewindCode;\
     using T::codeBegin;\
-    using T::codeEnd;\
+    using T::ptr;\
     using T::growData;\
     using T::rewindData;\
     using T::dataBegin;\
@@ -749,11 +678,11 @@ typedef AssemblerInstructions<AssemblerBase> Assembler;
     using T::RDTSC;\
     using T::CPUID;\
     \
-    using LEA;\
-    using leaNextInstruction;\
+    using T::LEA;\
+    using T::leaNextInstruction;\
     \
     using T::MOV;\
-    using T::CMOV;\
+    using T::CMOVZ;\
     using T::ADD;\
     using T::SUB;\
     using T::XOR;\
@@ -864,12 +793,12 @@ template<typename AssemblerT> JitCpuFeatures get_cpu_features(AssemblerT* as)
     JitCpuFeatures features;
 
     bool must_free = false;
-    if(!as->codeEnd())
+    if(!as->m.ptr())
     {
         as->resize(0, 1);
         must_free = true;
     }
-    auto ptr = as->codeEnd();
+    auto ptr = as->m.ptr();
 
     as->PUSH  (rbx);
 
