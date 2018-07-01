@@ -3,13 +3,21 @@
 
 #include "Debug.hpp"
 
-#define R64FX_EXPECT_TRUE(val) { if(!val) return false; }
+#define R64FX_FILE_LINE { std::cout << __FILE__ << ":" << __LINE__ << "\n"; }
 
-#define R64FX_EXPECT_FALSE(val) { if(val) return false; }
+#define R64FX_EXPECT_TRUE(val)\
+    { if(!(val)){ R64FX_FILE_LINE std::cout << #val" Failed!\n"; return false; } }
 
-#define R64FX_EXPECT_EQ(expected, got) { auto evaled = (got); if(!expect_eq(expected, evaled)) return false; }
+#define R64FX_EXPECT(val) R64FX_EXPECT_TRUE(val)
 
-#define R64FX_EXPECT_VEC_EQ(v1, v2, size) { if(!vec_eq(v1, v2, size)) return false; }
+#define R64FX_EXPECT_FALSE(val)\
+    { if(val) { R64FX_FILE_LINE return false; } }
+
+#define R64FX_EXPECT_EQ(expected, got)\
+    { auto evaled = (got); if(!expect_eq(expected, evaled)){ R64FX_FILE_LINE return false; } }
+
+#define R64FX_EXPECT_VEC_EQ(v1, v2, size)\
+    { if(!vec_eq(v1, v2, size)) { R64FX_FILE_LINE return false; } }
 
 namespace r64fx{
 
