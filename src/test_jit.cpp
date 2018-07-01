@@ -293,7 +293,7 @@ template<
     void (Assembler::*shift1)     (GPR64 gpr),
     void (Assembler::*shift_imm8) (GPR64 gpr, Imm8)
 >
-bool test_shift_instr(const char* name, IntT (*expected)(IntT num, IntT shift))
+bool test_gpr_shift(const char* name, IntT (*expected)(IntT num, IntT shift))
 {
     cout << name << "(GPR, 1)\n";
     {
@@ -321,19 +321,47 @@ bool test_shift_instr(const char* name, IntT (*expected)(IntT num, IntT shift))
     return true;
 }
 
+template<typename IntT, void (Assembler::*shift_imm8) (Xmm, Imm8)>
+bool test_sse_shift(const char* name, IntT (*expected)(IntT num, IntT shift))
+{
+    cout << name << "\n";
+
+    auto p = data(IntT());
+    auto s = scalars_per_vec<IntT>();
+
+    for(int i=0; i<s; i++)
+        p[i] = rand() & IntT(-1);
+
+    for(int i=s; i<s*2; i++)
+        p[i] = 0;
+
+    IntT shift = ((IntT)(rand() & 0x3)) + 1;
+
+    for(int i=0; i<s; i++)
+        p[i + s*2] = expected(p[i], shift);
+
+    rewind();
+    MOVDQA(xmm0, Mem128(p));
+    (this->*shift_imm8)(xmm0, Imm8(shift));
+    MOVDQA(Mem128(p+s), xmm0);
+    RET();
+    lfun();
+
+    R64FX_EXPECT_VEC_EQ(p+s*2, p+s, s);
+    return true;
+}
+
 bool test_push_pop()
 {
-
     cout << "PUSH & POP\n";
-    {
-        long num = rand();
-        rewind();
-        MOV(r9, Imm64(num));
-        PUSH(r9);
-        POP(rax);
-        RET();
-        R64FX_EXPECT_EQ(num, lfun());
-    }
+
+    long num = rand();
+    rewind();
+    MOV(r9, Imm64(num));
+    PUSH(r9);
+    POP(rax);
+    RET();
+    R64FX_EXPECT_EQ(num, lfun());
 
     return true;
 }
@@ -553,11 +581,11 @@ bool test()
         R64FX_TEST_GPR_INSTR(OR,  |) &&
 #undef  R64FX_TEST_GPR_INSTR
 
-#define R64FX_TEST_SHIFT_INSTR(type, name, op) test_shift_instr<type, R64FX_LIST(&Assembler::name, 2)>(#name, [](type num, type shift){ return num op shift; })
-        R64FX_TEST_SHIFT_INSTR(int,          SHL, <<) &&
-        R64FX_TEST_SHIFT_INSTR(int,          SHR, >>) &&
-        R64FX_TEST_SHIFT_INSTR(unsigned int, SAR, >>) &&
-#undef  R64FX_TEST_SHIFT_INSTR
+#define R64FX_TEST_GPR_SHIFT(type, name, op) test_gpr_shift<type, R64FX_LIST(&Assembler::name, 2)>(#name, [](type num, type shift){ return num op shift; })
+        R64FX_TEST_GPR_SHIFT(int,          SHL, <<) &&
+        R64FX_TEST_GPR_SHIFT(int,          SHR, >>) &&
+        R64FX_TEST_GPR_SHIFT(unsigned int, SAR, >>) &&
+#undef  R64FX_TEST_GPR_SHIFT
 
         test_push_pop() &&
         test_jumps()    &&
@@ -585,6 +613,17 @@ bool test()
 #undef  R64FX_TEST_SSE_INSTR
 
         test_pshufd() &&
+
+#define R64FX_TEST_SSE_SHIFT(type, name, op) test_sse_shift<type, &Assembler::name>(#name, [](type num, type shift) -> type { return num op shift; })
+        R64FX_TEST_SSE_SHIFT(unsigned short, PSRLW, >>) &&
+        R64FX_TEST_SSE_SHIFT(unsigned int,   PSRLD, >>) &&
+        R64FX_TEST_SSE_SHIFT(unsigned long,  PSRLQ, >>) &&
+        R64FX_TEST_SSE_SHIFT(short,          PSRAW, >>) &&
+        R64FX_TEST_SSE_SHIFT(int,            PSRAD, >>) &&
+        R64FX_TEST_SSE_SHIFT(short,          PSLLW, <<) &&
+        R64FX_TEST_SSE_SHIFT(int,            PSLLD, <<) &&
+        R64FX_TEST_SSE_SHIFT(long,           PSLLQ, <<) &&
+#undef  R64FX_TEST_SSE_SHIFT
 
         true;
 }};
