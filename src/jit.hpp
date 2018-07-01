@@ -282,6 +282,8 @@ public:
         m_byte = (s3 << 6) + (s2 << 4) + (s1 << 2) + s0;
     }
 
+    Shuf(unsigned char byte) : m_byte(byte) {}
+
     inline unsigned char byte() const { return m_byte; }
 
     inline int s0() const { return m_byte & 3; }
