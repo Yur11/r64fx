@@ -384,6 +384,13 @@ public:
     using AssemblerBaseT::AssemblerBaseT;
     using AssemblerBaseT::m;
 
+    inline void nopAlign(unsigned long align)
+    {
+        unsigned long extra_bytes = ((unsigned long)m.ptr()) % align;
+        if(extra_bytes)
+            NOP(align - extra_bytes);
+    }
+
     inline void NOP()          { m.write(0x90); }
     inline void NOP(int count) { m.fill(0x90, count); }
     inline void RET()          { m.write(0xC3); }
@@ -667,13 +674,13 @@ typedef AssemblerInstructions<AssemblerBase> Assembler;
 
 #define R64FX_USING_JIT_METHODS(T)\
     using T::resize;\
-    using T::rewindCode;\
-    using T::codeBegin;\
+    using T::rewind;\
+    using T::begin;\
     using T::ptr;\
+    using T::end;\
     using T::growData;\
-    using T::rewindData;\
-    using T::dataBegin;\
-    using T::dataEnd;\
+    \
+    using T::nopAlign;\
     \
     using T::NOP;\
     using T::RET;\
