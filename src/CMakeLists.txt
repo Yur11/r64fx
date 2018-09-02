@@ -258,3 +258,21 @@ add_executable(test_Synth EXCLUDE_FROM_ALL ${test_Synth_SRC})
 set(test_Synth_LIBS jack pthread)
 
 target_link_libraries(test_Synth ${test_Synth_LIBS})
+
+
+
+## test_jit_procedures ##
+set(test_jit_procedures_SRC
+    test_jit_procedures.cpp
+    Midi.cpp
+    MemoryUtils.cpp
+    TimeUtils.cpp
+    Thread.cpp
+    jit.cpp
+)
+
+add_executable(test_jit_procedures EXCLUDE_FROM_ALL ${test_jit_procedures_SRC})
+
+set(test_jit_procedures_LIBS pthread)
+
+target_link_libraries(test_jit_procedures ${test_jit_procedures_LIBS})
