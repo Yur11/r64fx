@@ -33,8 +33,8 @@ void initRegs()
     MOVAPS  (xmm14, xmm0);
     MOVAPS  (xmm15, xmm0);
 
-    MOV     (rdi, ImmAddr(dataEnd() - memory_page_size()));
-    MOV     (rsi, Imm32(0));
+    MOV     (r8, ImmAddr(dataEnd() - memory_page_size()));
+    MOV     (r9, Imm32(0));
 }
 
 void runMethod(void (TestJitPerf::*method)(), const char* str)
@@ -56,6 +56,29 @@ void runMethod(void (TestJitPerf::*method)(), const char* str)
     RET();
 
     fun();
+    cout << time() << str;
+}
+
+void runCmovJmp(void (TestJitPerf::*method)(), const char* str)
+{
+    rewindCode();
+    auto fun = (void(*)(unsigned char* loop_exit_in_rdi)) codeEnd();
+
+    initRegs();
+
+    MOV(rcx, Imm32(1000));
+
+    getBeginTime();
+    leaNextInstruction(rdx);
+    SUB(rcx, Imm32(1));
+    CMOVZ(rdx, rdi);
+    (this->*method)();
+    JMP(rdx);
+    auto loop_exit = codeEnd();
+    getEndTime();
+    RET();
+
+    fun(loop_exit);
     cout << time() << str;
 }
 
@@ -201,11 +224,11 @@ void loadmul3()
     auto data = (float*)(dataEnd() - memory_page_size());
     for(int i=0; i<32; i++)
         data[i] = float(i);
-    MULPS (xmm0, Base(rdi) + Index(rsi));
-    MULPS (xmm1, Base(rdi) + Index(rsi) + Disp(16));
-    MULPS (xmm2, Base(rdi) + Index(rsi) + Disp(32));
-    MULPS (xmm3, Base(rdi) + Index(rsi) + Disp(48));
-    MULPS (xmm4, Base(rdi) + Index(rsi) + Disp(64));
+    MULPS (xmm0, Base(r8) + Index(r9));
+    MULPS (xmm1, Base(r8) + Index(r9) + Disp(16));
+    MULPS (xmm2, Base(r8) + Index(r9) + Disp(32));
+    MULPS (xmm3, Base(r8) + Index(r9) + Disp(48));
+    MULPS (xmm4, Base(r8) + Index(r9) + Disp(64));
 }
 
 void lmulw1()
@@ -257,7 +280,7 @@ void lmulw2()
     MOVAPS(Mem128(data + 36), xmm0);
 }
 
-void run()
+void runJnz()
 {
     cout << "empty,mul1,mul2,mul3,xor51,xor52,mulxor4,mulxor9,loadxor,loadmul1,loadmul2,loadmul3,lmulw1,lmulw2\n";
     for(int i=0; i<16; i++)
@@ -279,10 +302,35 @@ void run()
     }
 }
 
+void runCmovJmp()
+{
+    cout << "empty,mul1,mul2,mul3,xor51,xor52,mulxor4,mulxor9,loadxor,loadmul1,loadmul2,loadmul3,lmulw1,lmulw2\n";
+    for(int i=0; i<16; i++)
+    {
+        runCmovJmp(&TestJitPerf::empty,    ",");
+        runCmovJmp(&TestJitPerf::mul1,     ",");
+        runCmovJmp(&TestJitPerf::mul2,     ",");
+        runCmovJmp(&TestJitPerf::mul3,     ",");
+        runCmovJmp(&TestJitPerf::xor51,    ",");
+        runCmovJmp(&TestJitPerf::xor52,    ",");
+        runCmovJmp(&TestJitPerf::mulxor4,  ",");
+        runCmovJmp(&TestJitPerf::mulxor9,  ",");
+        runCmovJmp(&TestJitPerf::loadxor,  ",");
+        runCmovJmp(&TestJitPerf::loadmul1, ",");
+        runCmovJmp(&TestJitPerf::loadmul2, ",");
+        runCmovJmp(&TestJitPerf::loadmul3, ",");
+        runCmovJmp(&TestJitPerf::lmulw1,   ",");
+        runCmovJmp(&TestJitPerf::lmulw2,   "\n");
+    }
+}
+
 };
 
 int main()
 {
-    TestJitPerf().run();
+    TestJitPerf tjp;
+    tjp.runJnz();
+    cout << "\n\n";
+    tjp.runCmovJmp();
     return 0;
 }
