@@ -101,7 +101,7 @@ union Imm64{
     explicit Imm64(unsigned long n) : n(n) {}
 };
 
-inline Imm64 Imm64ff(float f0, float f1) { Imm64 imm(0); imm.f[0] = f0; imm.f[1] = f1; return imm; }
+inline Imm64 Imm64f(float f0, float f1 = 0.0f) { Imm64 imm(0); imm.f[0] = f0; imm.f[1] = f1; return imm; }
 
 inline Imm64 Imm64D(double d) { Imm64 imm(0); imm.d = d; return imm; }
 
@@ -595,8 +595,15 @@ public:
     inline void MOVDQA(SIBD sibd, Xmm src)  { m.write(Opcode_660F(0x7F), Operands(src, sibd)); }
 
     inline void MOVD(Xmm dst, GPR32 src) { m.write(Opcode_660F(0x6E), Operands(dst, src)); }
+    inline void MOVD(Xmm dst, Mem32 mem) { m.write(Opcode_660F(0x6E), Operands(dst, mem, m.ptr() + 8)); }
+    inline void MOVD(Xmm dst, SIBD sibd) { m.write(Opcode_660F(0x6E), Operands(dst, sibd)); }
+
     inline void MOVQ(Xmm dst, GPR64 src) { m.write(Opcode_660F(0x6E), Operands(dst, src)); }
+
     inline void MOVD(GPR32 dst, Xmm src) { m.write(Opcode_660F(0x7E), Operands(src, dst)); }
+    inline void MOVD(Mem32 mem, Xmm src) { m.write(Opcode_660F(0x7E), Operands(src, mem, m.ptr() + 8)); }
+    inline void MOVD(SIBD sibd, Xmm src) { m.write(Opcode_660F(0x7E), Operands(src, sibd)); }
+
     inline void MOVQ(GPR64 dst, Xmm src) { m.write(Opcode_660F(0x7E), Operands(src, dst)); }
     inline void MOVD(Xmm dst, GPR64 src) { MOVD(dst, src.low32()); }
     inline void MOVD(GPR64 dst, Xmm src) { MOVD(dst.low32(), src); }
