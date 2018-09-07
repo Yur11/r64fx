@@ -39,9 +39,18 @@
     template<class Parent> JitProc_##NAME<Parent>::JitProc_##NAME()
     //Follow with function body!
 
-/* Load proc args into registers. Load next proc addr into rdx. */
+/* Load proc args into registers. Load next proc addr into rbx. */
 #define R64FX_LOAD_JIT_PROC_ARGS(...)                                           \
-    JitProcCommon::loadJitProcArgs(__VA_ARGS__, rdx)
+    JitProcCommon::loadJitProcArgs(__VA_ARGS__, rbx)
+
+/* Load loop entry addr into rax.
+ * Increment rcx. It is negative and grows towards zero.
+ * Load next proc addr into rax if rcx reached zero.
+ */
+#define R64FX_JIT_PROC_LOOP_BY(COUNT)                                           \
+    leaNextInstruction(rax);                                                    \
+    ADD    (rcx, Imm8(COUNT));                                                  \
+    CMOVZ  (rax, rbx);
 
 
 namespace r64fx{
@@ -137,17 +146,18 @@ R64FX_DEF_JIT_PROC_PARAMS(Gain, float* src, float* coeffs, float* dst, long coun
     R64FX_DEBUG_ASSERT(dst);
     R64FX_DEBUG_ASSERT(count > 0);
     R64FX_DEBUG_ASSERT((count & 3) == 0);
-
     R64FX_SAVE_JIT_PROC_ARGS(src, coeffs, dst, -count);
 }
 
 R64FX_DEF_JIT_PROC(Gain)
 {
-    R64FX_LOAD_JIT_PROC_ARGS(r8, r9, rbx, rcx);
-
-    leaNextInstruction(rax); //Load loop entry point to rax.
-    ADD    (rcx, Imm8(4));   //rcx is negative and is incremented towards zero
-    CMOVZ  (rax, rdx);       //Load next proc addr to rax if rcx is 0
+    R64FX_LOAD_JIT_PROC_ARGS(r8, r9, r10, rcx);
+    R64FX_JIT_PROC_LOOP_BY(4)
+        MOVAPS (xmm0, Base(r8) + Index(rcx)*4);
+        MULPS  (xmm0, Base(r9) + Index(rcx)*4);
+        MOVAPS (Base(r10) + Index(rcx)*4, xmm0);
+    JMP(rax); //Next Iteration or Next Proc.
+}
 
     MOVAPS (xmm0, Base(r8) + Index(rcx)*4);
     MULPS  (xmm0, Base(r9) + Index(rcx)*4);
