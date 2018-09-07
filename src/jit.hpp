@@ -384,6 +384,8 @@ public:
     using AssemblerBaseT::AssemblerBaseT;
     using AssemblerBaseT::m;
 
+    inline unsigned char* IP() { return m.ptr(); }
+
     inline void nopAlign(unsigned long align)
     {
         unsigned long extra_bytes = ((unsigned long)m.ptr()) % align;
@@ -678,7 +680,6 @@ typedef AssemblerInstructions<AssemblerBase> Assembler;
     using T::begin;\
     using T::ptr;\
     using T::end;\
-    using T::growData;\
     \
     using T::nopAlign;\
     \
@@ -772,11 +773,7 @@ typedef AssemblerInstructions<AssemblerBase> Assembler;
     using T::PSRAD;\
     using T::PSLLW;\
     using T::PSLLD;\
-    using T::PSLLQ;\
-    \
-    using T::getBeginTime;\
-    using T::getEndTime;\
-    using T::time;
+    using T::PSLLQ;
 
 
 struct JitCpuFeatures{
