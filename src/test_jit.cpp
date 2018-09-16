@@ -82,10 +82,11 @@ R64FX_DATA(float)
 R64FX_DATA(double)
 #undef R64FX_DATA
 
-long (*lfun)  ();
-long (*lfunp) (void*);
-int  (*ifun)  ();
-int  (*ifuni) (int*);
+long  (*lfun)  ();
+long  (*lfunp) (void*);
+int   (*ifun)  ();
+int   (*ifuni) (int*);
+float (*ffun)  ();
 
 AssemblerTestFixture()
 {
@@ -99,6 +100,7 @@ AssemblerTestFixture()
     lfunp  = (decltype(lfunp)) begin();
     ifun   = (decltype(ifun))  begin();
     ifuni  = (decltype(ifuni)) begin();
+    ffun   = (decltype(ffun))  begin();
 
     permitExecution();
 }
@@ -501,6 +503,59 @@ bool test_sse_movs()
     return true;
 }
 
+bool test_sse2_movs()
+{
+    auto f = data(float());
+
+    std::cout << "MOVD(Xmm, Xmm)\n";
+    {
+        float val = float((rand() & 0xFFFF) + 1);
+
+        rewind();
+        XORPS (xmm0, xmm0);
+        MOV   (rax, Imm64f(val));
+        MOVD  (xmm0, eax);
+        RET   ();
+
+        R64FX_EXPECT_EQ(val, ffun());
+    }
+
+    std::cout << "MOVD(Xmm, Mem32)\n";
+    {
+        float val = float((rand() & 0xFFFF) + 1);
+        f[0] = val;
+        f[1] = 0.0f;
+
+        rewind();
+        XORPS (xmm0, xmm0);
+        MOVD  (xmm0, Mem32(f));
+        MOVD  (Mem32(f+1), xmm0);
+        RET   ();
+
+        R64FX_EXPECT_EQ(val, ffun());
+        R64FX_EXPECT_EQ(val, f[1]);
+    }
+
+    std::cout << "MOVD(Xmm, SIBD)\n";
+    {
+        float val = float((rand() & 0xFFFF) + 1);
+        f[0] = val;
+        f[1] = 0.0f;
+
+        rewind();
+        XORPS (xmm0, xmm0);
+        MOV   (rax, ImmAddr(f));
+        MOVD  (xmm0, Base(rax));
+        MOVD  (Base(rax) + Disp(4), xmm0);
+        RET   ();
+
+        R64FX_EXPECT_EQ(val, ffun());
+        R64FX_EXPECT_EQ(val, f[1]);
+    }
+
+    return true;
+}
+
 template<
     typename T,
     void (Assembler::*xmmxmm)(Xmm, Xmm),
@@ -587,9 +642,10 @@ bool test()
         R64FX_TEST_GPR_SHIFT(unsigned int, SAR, >>) &&
 #undef  R64FX_TEST_GPR_SHIFT
 
-        test_push_pop() &&
-        test_jumps()    &&
-        test_sse_movs() &&
+        test_push_pop()  &&
+        test_jumps()     &&
+        test_sse_movs()  &&
+        test_sse2_movs() &&
 
 #define R64FX_TEST_SSE_INSTR(type, name, fun) test_sse_instr<type, R64FX_LIST(&Assembler::name, 3)>(#name, ::fun)
         R64FX_TEST_SSE_INSTR(float, ADDPS,  ADD   ) &&
@@ -628,8 +684,6 @@ bool test()
         true;
 }};
 
-
-#define R64FX_TEST(INSTR) () &&
 
 int main()
 {
