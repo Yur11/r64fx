@@ -297,7 +297,7 @@ class Opcode{
     unsigned long m = 0;
 
 public:
-    explicit Opcode(unsigned long code) : m(code) { R64FX_DEBUG_ASSERT((code & ~0x3FF) == 0); }
+    explicit Opcode(unsigned long code) : m(code) { R64FX_DEBUG_ASSERT((code & ~0x7FF) == 0); }
 
     inline unsigned char code() const { return m & 0xFF; }
 

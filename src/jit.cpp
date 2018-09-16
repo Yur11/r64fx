@@ -296,6 +296,8 @@ void AssemblerBuffer::write(const Opcode &opcode, const Operands &operands)
     int r = 0;
     if(opcode.has66())
         p[r++] = 0x66;
+    if(opcode.hasF3())
+        p[r++] = 0xF3;
     if(operands.hasRex())
         p[r++] = 64 | operands.wrxb();
     if(opcode.has0F())
