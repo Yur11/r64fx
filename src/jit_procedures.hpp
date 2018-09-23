@@ -168,20 +168,19 @@ R64FX_DEF_JIT_PROC(Gain)
     JMP(rdx); //Next Iteration or Next Proc.
 }
 
-
 R64FX_DEF_JIT_PROC_PARAMS(Playback, int* playheads, float* buffers, float* dst, long count)
 {
     R64FX_DEBUG_ASSERT(playheads);
     R64FX_DEBUG_ASSERT(buffers);
     R64FX_DEBUG_ASSERT(count > 0);
     R64FX_DEBUG_ASSERT((count & 3) == 0);
-    R64FX_SAVE_JIT_PROC_ARGS(playheads+count-4, buffers, dst+count-4, -count);
+    R64FX_SAVE_JIT_PROC_ARGS(playheads+(count<<2)-16, buffers, dst+count-4, -(count<<2));
 }
 
 R64FX_DEF_JIT_PROC(Playback)
 {
     R64FX_LOAD_JIT_PROC_ARGS(r8, r9, r10, rcx);
-    R64FX_JIT_PROC_LOOP(rdx, rcx, 4);
+    R64FX_JIT_PROC_LOOP(rdx, rcx, 16);
 
         /* Fetch Playhead */
         MOVDQA (xmm0, Base(r8) + Index(rcx)*4);
@@ -200,7 +199,7 @@ R64FX_DEF_JIT_PROC(Playback)
         JNZ(FetchData);
 
         /* Store Output */
-        MOVAPS  (Base(r10) + Index(rcx)*4, xmm1);
+        MOVAPS  (Base(r10) + Index(rcx), xmm1);
 
         /* Move Playhead */
         PADDD   (xmm0, Base(r8) + Index(rcx)*4 + Disp(16));
@@ -217,7 +216,6 @@ R64FX_DEF_JIT_PROC(Playback)
 
         /* Store Playhead */
         MOVDQA (Base(r8) + Index(rcx)*4, xmm0);
-
     JMP(rdx);
 }
 
