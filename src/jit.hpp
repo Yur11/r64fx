@@ -263,7 +263,7 @@ public:
 };
 
 
-#define R64FX_JIT_JUMP_LABEL(label) r64fx::JumpLabel label; mark(label);
+#define R64FX_JIT_LABEL(label) r64fx::JumpLabel label; mark(label);
 
 
 /*  Pack four 0..3 values into a sigle byte. To be used with shuffle instructions.
