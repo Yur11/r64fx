@@ -7,10 +7,35 @@ namespace r64fx{
 
 class JitProcSequence;
 
+
+class ScalarCount{
+    long n;
+
+public:
+    ScalarCount(long v) : n(-v) {}
+
+    inline operator long() { return n; }
+};
+
+
+template<typename T, long A> class VecPtr{
+    T* m;
+
+public:
+    VecPtr(T* p) : m(p) {}
+
+    inline operator long() { return (long)m; }
+};
+
+typedef VecPtr<float, 4> VecF4;
+
+
+template<typename Self, typename... Args> void invoke(Self self, Args... args)
+    { self->pack(args...); }
+
+
 /* Collection of jit procedures. */
 class JitProcedures : Assembler{
-    int m_exit_offset = 0;
-
 public:
     JitProcedures()
     {
@@ -18,7 +43,7 @@ public:
          * where rdi is obtained as first argument in System V AMD64 ABI calling convention and stays unchanged,
          * rbp is incremented by each procedure.
          *
-         * Using rsi as main buffer index.
+         * Using rsi (second argument) as main buffer index.
          * It is negative and is incremented towards zero. */
 
         PUSH (rbx);
@@ -29,14 +54,14 @@ public:
 
         XOR  (rax, rax);
 
-        R64FX_JIT_LABEL(main_loop); //Iterate over nframes
+        R64FX_JIT_LABEL(main_loop); //Iterate over nframes passed via rsi
         MOV  (rdx, Base(rdi));      //Load first proc addr
         XOR  (rbp, rbp);            //Reset JitProcSequence index
         JMP  (rdx);                 //Jump to first proc
 
         /* ------------------------------------------- */
 
-        m_exit_offset = Assembler::bytesUsed();
+        genProc_Exit(); // Save Proc Exit address
         ADD  (rsi, Imm8(1));
         JNZ  (main_loop);
 
@@ -51,11 +76,6 @@ public:
         genProc_Mix();
         permitExecution();
     }
-
-    /* Don't forget to add this to the end of the sequence! */
-    class Exit; inline Exit* procExit() const { return (Exit*)(Assembler::begin() + m_exit_offset); }
-
-    inline static void CheckType(Exit*) {};
 
 private:
     /* Close loop with JMP(ptr). */
@@ -79,28 +99,24 @@ private:
         if constexpr(sizeof...(gprs) > 0) unpack_(n+8, gprs...);
     }
 
-#define DEF_JIT_PROC(PROCNAME, ...)                                             \
-public:                                                                         \
-    class PROCNAME; inline PROCNAME* proc##PROCNAME() const                     \
-    {                                                                           \
-        return (PROCNAME*)(Assembler::begin() + m_##PROCNAME##_offset);         \
-    }                                                                           \
-                                                                                \
-    inline static void CheckType(PROCNAME*, __VA_ARGS__) {}                     \
-                                                                                \
-private:                                                                        \
-    int m_##PROCNAME##_offset;                                                  \
-                                                                                \
-    inline void genProc_##PROCNAME() /* Save procedure start offset */          \
-    {                                                                           \
-        m_##PROCNAME##_offset = Assembler::bytesUsed();                         \
-        genProc##PROCNAME();                                                    \
-    }                                                                           \
-                                                                                \
-    inline void genProc##PROCNAME()
+#define DEF_JIT_PROC(P, ...)                                            \
+public: struct P{                                                       \
+    template<class S, class... A> static void AddTo(S self, A... args)  \
+        { invoke<S, P*, ##__VA_ARGS__>(self, args...); }};              \
+                                                                        \
+    inline P* proc##P() const                                           \
+        { return (P*)(Assembler::begin() + m_##P##_offset); }           \
+                                                                        \
+private: int m_##P##_offset;                                            \
+    inline void genProc_##P() /* Save procedure start offset */         \
+        { m_##P##_offset = Assembler::bytesUsed(); genProc##P(); }      \
+                                                                        \
+    inline void genProc##P()
         /* Follow with function body. */
 
-    DEF_JIT_PROC(Gain, float*, float*, float*, long)
+    DEF_JIT_PROC(Exit){}
+
+    DEF_JIT_PROC(Gain, VecF4, VecF4, VecF4, ScalarCount)
     {
         unpack(r8, r9, r10, rcx, rbx);
         loop(rdx, rcx, 4, rbx);
@@ -111,7 +127,7 @@ private:                                                                        
         JMP(rdx);
     }
 
-    DEF_JIT_PROC(Mix, float*, long)
+    DEF_JIT_PROC(Mix, float*, ScalarCount)
     {
         unpack(r8, rcx, rbx);
         loop(rdx, rcx, 4, rbx);
@@ -126,17 +142,16 @@ private:                                                                        
 class JitProcSequence{
     MemoryBuffer m_buffer;
 
+public:
     template<typename Arg, typename... Args> inline void pack(Arg arg, Args... args)
     {
         *((long*)m_buffer.grow(sizeof(long))) = (long)arg;
         if constexpr(sizeof...(args) > 0) pack(args...);
     }
 
-public:
-    template<typename... Args> inline auto &add(Args... args)
+    template<typename Proc, typename... Args> inline auto &add(Proc* proc, Args... args)
     {
-        JitProcedures::CheckType(args...); //Make sure that compilation fails if wrong arguments are given!
-        pack(args...);
+        Proc::AddTo(this, proc, args...);
         return *this;
     }
 
