@@ -5,47 +5,126 @@
 
 namespace r64fx{
 
-class JitProcSequence;
-
-
-class ScalarCount{
-    long n;
-
-public:
-    ScalarCount(long v) : n(-v) {}
-
-    inline operator long() { return n; }
+/* Pointer + ScalarCount, captured in a single type */
+template<typename T, long ScalarCount> struct VecPtr{
+    long ptr = nullptr;
+    VecPtr(T* ptr) : ptr(long(ptr)) {}
+    constexpr static long BytesPerVector = ScalarCount * sizeof(T);
+    inline auto operator+(long offset) { ptr += offset; return *this; }
 };
 
+/* A collection of VecPtr instances + iteration_count
+ *
+ * Adjusts pointers and counter_value to work with loop() optimization.
+ * See: JitProc::loop() method.
+ */
+template<long BytesPerVector, typename... Ptrs> class VecPtrPack{
+    /* Recursive tuple-like structure for packing data into JitProc::Sequence */
+    template<typename X, typename... XS> struct Pack{
+        X x; Pack<XS...> xs;
 
-template<typename T, long A> class VecPtr{
-    T* m;
+        Pack(long offset, X x, XS... xs) : x(x + offset), xs(offset, xs...)
+        {
+            static_assert(alignof(X) == 8);
+            static_assert(X::BytesPerVector >= BytesPerVector);
+        }
+    };
+
+    template<typename X> struct Pack<X>{ X x; Pack(long offset, X x) : x(x + offset) {} };
+
+    long counter_value = 0; Pack<Ptrs...> pack;
 
 public:
-    VecPtr(T* p) : m(p) {}
-
-    inline operator long() { return (long)m; }
+    VecPtrPack(long iteration_count, Ptrs... ptrs)
+        : counter_value(-(iteration_count * BytesPerVector))
+        , pack((iteration_count - 1) * BytesPerVector, ptrs...)
+        { R64FX_DEBUG_ASSERT(iteration_count > 0); }
 };
 
 typedef VecPtr<float, 4> VecF4;
 
-
-template<typename Self, typename... Args> void invoke(Self self, Args... args)
-    { self->pack(args...); }
+typedef VecPtrPack<16, VecF4, VecF4, VecF4> VecPack3F4;
 
 
-/* Collection of jit procedures. */
-class JitProcedures : Assembler{
+/* Collection of jit procedures that can be executed in a sequence */
+class JitProc : Assembler{
 public:
-    JitProcedures()
-    {
-        /* Using Base(rdi) + Index(rbp)*8 to access JitProcSequence,
-         * where rdi is obtained as first argument in System V AMD64 ABI calling convention and stays unchanged,
-         * rbp is incremented by each procedure.
-         *
-         * Using rsi (second argument) as main buffer index.
-         * It is negative and is incremented towards zero. */
+    /* A buffer that describes a sequence of procedures to be executed */
+    class Sequence{
+        MemoryBuffer m_buffer;
 
+    public:
+        /* Helper class for packing data into JitProc::Sequence and unpacking that data into registers
+         *
+         * Used to enforce type safety and consistency.
+         */
+        template<typename... Args> class Data{
+            friend class JitProc;
+
+            /* Recursive tuple-like structure for packing data into JitProc::Sequence */
+            template<typename X, typename... XS> struct Pack{
+                X x; Pack<XS...> xs;
+
+                Pack(X x, XS... xs) : x(x), xs(xs...)
+                {
+                    static_assert(alignof(X) == 8);
+                }
+            };
+
+            template<typename X> struct Pack<X>{ X x; Pack(X x) : x(x) {} };
+
+            Pack<void*, Args...> pack; Data(void* proc, Args... args) : pack(proc, args...) {}
+
+            /* Functor for unpacking JitProc::Sequence::Data into registers */
+            class Unpack{
+                Assembler* as = nullptr;
+
+            public:
+                Unpack(Assembler* as) : as(as) {}
+
+                template<typename... Regs> inline void operator()(Regs... regs)
+                {
+                    static_assert(sizeof...(Regs) * 8 == sizeof(Pack<void*, Args...>)); // Args + next proc addr
+                    unpack<8, Regs...>(regs...);
+                    as->ADD(rbp, Imm8(sizeof...(Regs)));
+                }
+
+            private:
+                template<long D, typename Reg, typename... Regs>inline void unpack(Reg reg, Regs... regs)
+                {
+                    R64FX_DEBUG_ASSERT(reg != rdi);
+                    R64FX_DEBUG_ASSERT(reg != rsi);
+                    as->MOV(reg, Base(rdi) + Index(rbp)*8 + Disp(D));
+                    if constexpr(sizeof...(Regs) > 0) unpack<D+8, Regs...>(regs...);
+                }
+            };
+        };
+
+        /* Push new data into JitProc::Sequence */
+        template<typename... XS> inline void push(const Data<XS...> &data)
+            { new(m_buffer.grow(sizeof(data))) Data<XS...>(data); }
+
+        /* Overloaded for convenence */
+        template<typename... XS> inline auto &operator<<(const Data<XS...> &data)
+            { push(data); return *this; }
+
+        /* Execute JitProc::Sequence
+         *
+         * Make sure to use the same JitProc instance that was used to genetate this JitProc::Sequence object.
+         */
+        inline long exec(JitProc* jp, long nframes)
+        {
+            R64FX_DEBUG_ASSERT(jp); R64FX_DEBUG_ASSERT(nframes > 0);
+
+            auto proc = (long(*)(void*, long)) ((Assembler*)jp)->begin();
+            return proc(m_buffer.begin(), -nframes);
+        }
+
+        inline void clear() { m_buffer.resize(0); }
+    };
+
+    JitProc()
+    {
         PUSH (rbx);
         PUSH (rbp);
         PUSH (rdi);
@@ -72,177 +151,86 @@ public:
         POP  (rbx);
         RET  ();
 
-        genProc_Gain();
-        genProc_Mix();
+        genProc_Add();
+        genProc_Mul();
         permitExecution();
     }
 
 private:
-    /* Close loop with JMP(ptr). */
-    inline void loop(GPR64 ptr, GPR64 cnt, long n, GPR64 nxt)
+    /* Generate procedure loop entry point.
+     *
+     * counter    - must contain initial negative value, use as an index register
+     * increment  - added to counter with each iteration
+     * jump_ptr   - stores the address of the loop entry point and
+     *              is assigned the value of jump_next upon counter reaching zero
+     *
+     * Close with JMP(jump_ptr)
+     *
+     * NOTE: Pointers passed as JitProc arguments must be adjusted to make this loop work.
+     *       Base pointer of each buffer must point to the address of the last vector,
+     *       because at the last iteration the counter index register becomes zero.
+     */
+    inline void loop(GPR64 counter, long increment, GPR64 jump_ptr, GPR64 jump_next)
     {
-        leaNextInstruction(ptr);
-        ADD   (cnt, Imm8(n));
-        CMOVZ (ptr, nxt);
+        leaNextInstruction(jump_ptr);
+        ADD(counter, Imm8(increment));
+        CMOVZ(jump_ptr, jump_next);
     }
 
-    /* Unpack pointers stored in JitProcSequence into GPRs. */
-    template<class... GPRS> inline void unpack(GPRS... gprs)
+    /* Procedure boilerplate code */
+#define R64FX_JIT_PROC(P, ...)                                                      \
+    typedef Sequence::Data<__VA_ARGS__> SeqData##P;                                 \
+                                                                                    \
+    public:                                                                         \
+        /* Generate JitProc::Sequence::Data with the address of this proc,          \
+         * followed by optional arguments,                                          \
+         * to be passed into JitProc::Sequence::pack() method.                      \
+         */                                                                         \
+        template<typename... XS> inline auto proc##P(XS... xs)                      \
+            { return SeqData##P(begin() + m_offset_##P, xs...); }                   \
+                                                                                    \
+    private:                                                                        \
+        long m_offset_##P = 0; /* Offset of this proc in the code buffer */         \
+                                                                                    \
+        /* Save proc m_proc_offset##P, generate proc code. */                       \
+        inline void genProc_##P()                                                   \
+        {                                                                           \
+            m_offset_##P = bytesUsed();                                             \
+            SeqData##P::Unpack unpack(this);                                        \
+            _genProc##P(unpack);                                                    \
+        }                                                                           \
+                                                                                    \
+        /* Proc generator function, passed Unpack functor                           \
+         * to safely get data from JitProc::Sequence                                \
+         */                                                                         \
+        inline void _genProc##P(SeqData##P::Unpack unpack)                          \
+            /* { Follow with function body! } */
+
+    R64FX_JIT_PROC(Exit) {}
+
+    R64FX_JIT_PROC(Add, VecPack3F4)
     {
-        unpack_(8, gprs...);
-        ADD(rbp, Imm32(sizeof...(gprs) + 1));
+        unpack(rax, rcx, rdx, rbx, r9);
+        loop(rax, 16, r8, r9);
+            MOVAPS (xmm0, Base(rcx) + Index(rax));
+            ADDPS  (xmm0, Base(rdx) + Index(rax));
+            MOVAPS (Base(rbx) + Index(rax), xmm0);
+        JMP(r8);
     }
 
-    template<class GPR, class... GPRS> inline void unpack_(int n, GPR gpr, GPRS... gprs)
+    R64FX_JIT_PROC(Mul, VecPack3F4)
     {
-        MOV(gpr, Base(rdi) + Index(rbp)*8 + Disp(n));
-        if constexpr(sizeof...(gprs) > 0) unpack_(n+8, gprs...);
+        unpack(rax, rcx, rdx, rbx, r9);
+        loop(rax, 16, r8, r9);
+            MOVAPS (xmm0, Base(rcx) + Index(rax));
+            MULPS  (xmm0, Base(rdx) + Index(rax));
+            MOVAPS (Base(rbx) + Index(rax), xmm0);
+        JMP(r8);
     }
 
-#define DEF_JIT_PROC(P, ...)                                            \
-public: struct P{                                                       \
-    template<class S, class... A> static void AddTo(S self, A... args)  \
-        { invoke<S, P*, ##__VA_ARGS__>(self, args...); }};              \
-                                                                        \
-    inline P* proc##P() const                                           \
-        { return (P*)(Assembler::begin() + m_##P##_offset); }           \
-                                                                        \
-private: int m_##P##_offset;                                            \
-    inline void genProc_##P() /* Save procedure start offset */         \
-        { m_##P##_offset = Assembler::bytesUsed(); genProc##P(); }      \
-                                                                        \
-    inline void genProc##P()
-        /* Follow with function body. */
-
-    DEF_JIT_PROC(Exit){}
-
-    DEF_JIT_PROC(Gain, VecF4, VecF4, VecF4, ScalarCount)
-    {
-        unpack(r8, r9, r10, rcx, rbx);
-        loop(rdx, rcx, 4, rbx);
-            ADD   (rax, Imm8(1));
-            MOVAPS (xmm0, Base(r8) + Index(rcx)*4);
-            MULPS  (xmm0, Base(r9) + Index(rcx)*4);
-            MOVAPS (Base(r10) + Index(rcx)*4, xmm0);
-        JMP(rdx);
-    }
-
-    DEF_JIT_PROC(Mix, float*, ScalarCount)
-    {
-        unpack(r8, rcx, rbx);
-        loop(rdx, rcx, 4, rbx);
-            
-        JMP(rdx);
-    }
-
-#undef DEF_JIT_PROC
-};
-
-/* Make sure to use the same JitProcedures instances for add() and exec() calls! */
-class JitProcSequence{
-    MemoryBuffer m_buffer;
-
-public:
-    template<typename Arg, typename... Args> inline void pack(Arg arg, Args... args)
-    {
-        *((long*)m_buffer.grow(sizeof(long))) = (long)arg;
-        if constexpr(sizeof...(args) > 0) pack(args...);
-    }
-
-    template<typename Proc, typename... Args> inline auto &add(Proc* proc, Args... args)
-    {
-        Proc::AddTo(this, proc, args...);
-        return *this;
-    }
-
-    /* Execute sequence. */
-    inline long exec(JitProcedures* jp, long nframes)
-    {
-        R64FX_DEBUG_ASSERT(jp);
-        R64FX_DEBUG_ASSERT(nframes > 0);
-
-        auto proc = (long(*)(void*, long)) ((Assembler*)jp)->begin();
-        return proc(m_buffer.begin(), -nframes);
-    }
-
-    inline void clear() { m_buffer.resize(0); }
+#undef R64FX_JIT_PROC
 };
 
 }//namespace r64fx
-
-// 
-// 
-// R64FX_DEF_JIT_PROC_PARAMS(Gain, float* src, float* coeffs, float* dst, long count)
-// {
-//     R64FX_DEBUG_ASSERT(src);
-//     R64FX_DEBUG_ASSERT(coeffs);
-//     R64FX_DEBUG_ASSERT(dst);
-//     R64FX_DEBUG_ASSERT(count > 0);
-//     R64FX_DEBUG_ASSERT((count & 3) == 0);
-//     R64FX_SAVE_JIT_PROC_Args(src, coeffs, dst, -count);
-// }
-// 
-// R64FX_DEF_JIT_PROC(Gain)
-// {
-//     R64FX_LOAD_JIT_PROC_Args(r8, r9, r10, rcx);
-//     R64FX_JIT_PROC_LOOP(rdx, rcx, 4);
-//         MOVAPS (xmm0, Base(r8) + Index(rcx)*4);
-//         MULPS  (xmm0, Base(r9) + Index(rcx)*4);
-//         MOVAPS (Base(r10) + Index(rcx)*4, xmm0);
-//     JMP(rdx); //Next Iteration or Next Proc.
-// }
-// 
-// R64FX_DEF_JIT_PROC_PARAMS(Playback, int* playheads, float* buffers, float* dst, long count)
-// {
-//     R64FX_DEBUG_ASSERT(playheads);
-//     R64FX_DEBUG_ASSERT(buffers);
-//     R64FX_DEBUG_ASSERT(count > 0);
-//     R64FX_DEBUG_ASSERT((count & 3) == 0);
-//     R64FX_SAVE_JIT_PROC_Args(playheads+(count<<2)-16, buffers, dst+count-4, -(count<<2));
-// }
-// 
-// R64FX_DEF_JIT_PROC(Playback)
-// {
-//     R64FX_LOAD_JIT_PROC_Args(r8, r9, r10, rcx);
-//     R64FX_JIT_PROC_LOOP(rdx, rcx, 16);
-// 
-//         /* Fetch Playhead */
-//         MOVDQA (xmm0, Base(r8) + Index(rcx)*4);
-// 
-//         /* Fetch Data */
-//         XORPS  (xmm1, xmm1);
-// 
-//         MOV(r11, Imm32(-4));
-//         R64FX_JIT_LABEL(FetchData);
-//             MOVD   (rax, xmm0);
-//             SHUFPS (xmm0, xmm0, Shuf(1, 2, 3, 0));
-//             MOVSS  (xmm2, Base(r9) + Index(rax)*4);
-//             ORPS   (xmm1, xmm2);
-//             SHUFPS (xmm1, xmm1, Shuf(1, 2, 3, 0));
-//         ADD(r11, Imm8(1));
-//         JNZ(FetchData);
-// 
-//         /* Store Output */
-//         MOVAPS  (Base(r10) + Index(rcx), xmm1);
-// 
-//         /* Move Playhead */
-//         PADDD   (xmm0, Base(r8) + Index(rcx)*4 + Disp(16));
-// 
-//         /* Loop Playhead */
-//         MOVDQA  (xmm1, xmm0);
-//         MOVDQA  (xmm2, Base(r8) + Index(rcx)*4 + Disp(32));
-//         PCMPGTD (xmm1, xmm2);
-//         MOVDQA  (xmm3, xmm1);
-//         PAND    (xmm1, xmm2);
-//         PAND    (xmm3, Base(r8) + Index(rcx)*4 + Disp(48));
-//         PSUBD   (xmm0, xmm1);
-//         PADDD   (xmm0, xmm3);
-// 
-//         /* Store Playhead */
-//         MOVDQA (Base(r8) + Index(rcx)*4, xmm0);
-//     JMP(rdx);
-// }
-
-// }//namespace r64fx
 
 #endif//R64FX_JIT_PROCEDURES_HPP

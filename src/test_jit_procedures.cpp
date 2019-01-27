@@ -34,15 +34,16 @@ float c[12] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
 
 int main(int argc, char** argv)
 {
-    JitProcedures jp;
-    JitProcSequence seq;
-    seq.add(jp.procGain(), a+8, b+8, c+8, 12);
-    seq.add(jp.procExit());
+    JitProc jp;
+    JitProc::Sequence seq;
 
-    cout << DumpF12(a) << "\n";
-    cout << DumpF12(b) << "\n";
-    cout << DumpF12(c) << "\n";
-    cout << seq.exec(&jp, 1000) << "\n";
+    seq
+        << jp.procAdd(VecPack3F4(3, a, b, c))
+        << jp.procMul(VecPack3F4(3, a, b, c))
+        << jp.procExit();
+
+    cout << seq.exec(&jp, 1) << "\n";
+
     cout << DumpF12(a) << "\n";
     cout << DumpF12(b) << "\n";
     cout << DumpF12(c) << "\n";
