@@ -645,30 +645,6 @@ public:
     inline void PSLLW(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x71), Operands(6, reg, imm)); }
     inline void PSLLD(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x72), Operands(6, reg, imm)); }
     inline void PSLLQ(Xmm reg, Imm8 imm) { m.write(Opcode_660F(0x73), Operands(6, reg, imm)); }
-
-
-    /* Time measurments are stored in the 16 bytes at the end of data pages
-       adjacent to the code. */
-
-//     inline void getTime(unsigned long* t)
-//     {
-//         LFENCE();
-//         RDTSC ();
-//         SHL   (rdx, Imm8(32));
-//         OR    (rax, rdx);
-//         MOV   (Mem64(t), rax);
-//     }
-// 
-//     inline void getBeginTime() { getTime(beginTimeAddr()); }
-//     inline void getEndTime()   { getTime(endTimeAddr()); }
-
-//     inline unsigned long* beginTimeAddr()  const { return (unsigned long*)(dataEnd() - 8); }
-//     inline unsigned long  beginTime()      const { return *beginTimeAddr(); }
-// 
-//     inline unsigned long* endTimeAddr()    const { return (unsigned long*)(dataEnd() - 16); }
-//     inline unsigned long  endTime()        const { return *endTimeAddr(); }
-// 
-//     inline unsigned long  time()           const { return endTime() - beginTime(); }
 };
 
 
@@ -680,107 +656,6 @@ public:
 };
 
 typedef AssemblerInstructions<AssemblerBase> Assembler;
-
-#define R64FX_USING_JIT_METHODS(T)\
-    using T::resize;\
-    using T::rewind;\
-    using T::begin;\
-    using T::ptr;\
-    using T::end;\
-    \
-    using T::nopAlign;\
-    \
-    using T::NOP;\
-    using T::RET;\
-    using T::RDTSC;\
-    using T::CPUID;\
-    \
-    using T::LEA;\
-    using T::leaNextInstruction;\
-    \
-    using T::MOV;\
-    using T::CMOVZ;\
-    using T::ADD;\
-    using T::SUB;\
-    using T::XOR;\
-    using T::AND;\
-    using T::OR;\
-    using T::SHL;\
-    using T::SHR;\
-    using T::SAR;\
-    \
-    using T::PUSH;\
-    using T::POP;\
-    \
-    using T::mark;\
-    using T::CMP;\
-    using T::JMP;\
-    using T::JNZ;\
-    using T::JZ;\
-    using T::JE;\
-    using T::JNE;\
-    using T::JL;\
-    \
-    using T::MOVAPS;\
-    using T::MOVUPS;\
-    using T::MOVLPS;\
-    using T::MOVHPS;\
-    using T::MOVLHPS;\
-    using T::MOVHLPS;\
-    using T::ADDPS;\
-    using T::SUBPS;\
-    using T::MULPS;\
-    using T::DIVPS;\
-    using T::RCPPS;\
-    using T::SQRTPS;\
-    using T::RSQRTPS;\
-    using T::MAXPS;\
-    using T::MINPS;\
-    using T::ANDPS;\
-    using T::ANDNPS;\
-    using T::ORPS;\
-    using T::XORPS;\
-    using T::CMPPS;\
-    using T::CMPSS;\
-    using T::CMPLTPS;\
-    using T::CMPNLTPS;\
-    using T::CMPEQPS;\
-    using T::MOVSS;\
-    using T::SHUFPS;\
-    using T::CVTPS2DQ;\
-    using T::CVTDQ2PS;\
-    \
-    using T::MOVDQA;\
-    using T::MOVD;\
-    using T::MOVQ;\
-    using T::PSHUFD;\
-    using T::PADDD;\
-    using T::PSUBD;\
-    using T::PADDQ;\
-    using T::PSUBQ;\
-    using T::PAND;\
-    using T::PXOR;\
-    using T::POR;\
-    using T::PCMPEQB;\
-    using T::PCMPEQW;\
-    using T::PCMPEQD;\
-    using T::PCMPGTB;\
-    using T::PCMPGTW;\
-    using T::PCMPGTD;\
-    using T::PUNPCKLBW;\
-    using T::PUNPCKHBW;\
-    using T::PUNPCKLWD;\
-    using T::PUNPCKHWD;\
-    using T::PUNPCKLDQ;\
-    using T::PUNPCKHDQ;\
-    using T::PSRLW;\
-    using T::PSRLD;\
-    using T::PSRLQ;\
-    using T::PSRAW;\
-    using T::PSRAD;\
-    using T::PSLLW;\
-    using T::PSLLD;\
-    using T::PSLLQ;
 
 
 struct JitCpuFeatures{
