@@ -23,30 +23,44 @@ template<class StreamT, class DumpVecT> StreamT &operator<<(StreamT &stream, con
     return stream;
 }
 
+template<typename F> F fact(F f)
+{
+    if(f <= F(0))
+        return F(1);
+    return f * fact(f-F(1));
+}
+
 typedef DumpVec<float, 4> DumpF4;
 typedef DumpVec<float, 8> DumpF8;
 typedef DumpVec<float, 12> DumpF12;
 
 
-float a[12] = {0.1f, 0.1f, 0.1f, 0.1f, 0.2f, 0.2f, 0.2f, 0.2f, 0.3f, 0.3f, 0.3f, 0.3f};
-float b[12] = {1.0f, 2.0f, 3.0f, 4.0f, 1.0f, 2.0f, 3.0f, 4.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-float c[12] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+float a[12] = {0.1f, 0.1f, 0.1f, 0.1f,   0.2f, 0.2f, 0.2f, 0.2f,   0.3f, 0.3f, 0.3f, 0.3f};
+float b[12] = {1.0f, 2.0f, 3.0f, 4.0f,   1.0f, 2.0f, 3.0f, 4.0f,   1.0f, 2.0f, 3.0f, 4.0f};
+float c[12] = {1.0f, 0.0f, 1.0f, 0.0f,   1.0f, 0.0f, 1.0f, 0.0f,   1.0f, 0.0f, 1.0f, 0.0f};
+
+int    clk      [4] = {0, 0, 0, 0};
+int    clk_step [4] = {0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF};
+float  out      [4] = {0.0f, 0.0f, 0.0f, 0.0f};
+
+float  coeffs     [24] = {
+    3.1415926535f / 0x7FFFFFFF,  3.1415926535f / 0x7FFFFFFF, 3.1415926535f / 0x7FFFFFFF, 3.1415926535f / 0x7FFFFFFF,
+    1.0f, 1.0f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 0.5f,
+    1.0f/fact(4), 1.0f/fact(4), 1.0f/fact(4), 1.0f/fact(4),
+    1.0f/fact(6), 1.0f/fact(6), 1.0f/fact(6), 1.0f/fact(6),
+    1.0f/fact(8), 1.0f/fact(8), 1.0f/fact(8), 1.0f/fact(8)
+};
 
 int main(int argc, char** argv)
 {
     JitProc jp;
     JitProc::Sequence seq;
 
-    seq
-        << jp.procAdd(VecPack3F4(3, a, b, c))
-        << jp.procMul(VecPack3F4(3, a, b, c))
+    seq << jp.procOscTaylorCosF4(1, clk, clk_step, out, coeffs)
         << jp.procExit();
 
-    cout << seq.exec(&jp, 1) << "\n";
-
-    cout << DumpF12(a) << "\n";
-    cout << DumpF12(b) << "\n";
-    cout << DumpF12(c) << "\n";
+    cout << seq.exec(&jp, 1024) / 1024.0f << "\n";
 
     return 0;
 }
