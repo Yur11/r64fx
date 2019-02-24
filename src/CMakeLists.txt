@@ -65,6 +65,7 @@ set(SRC
     SoundFile.cpp
     SoundFileLoader.cpp
     StringUtils.cpp
+    Strings_Eng.cpp
     SystemUtils.cpp
     TextEditingUtils.cpp
     TextPainter.cpp
