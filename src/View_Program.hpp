@@ -1,7 +1,7 @@
 #ifndef R64FX_VIEW_PROGRAM_HPP
 #define R64FX_VIEW_PROGRAM_HPP
 
-#include "Widget.hpp"
+#include "Widget_Menu.hpp"
 
 namespace r64fx{
 
@@ -19,6 +19,10 @@ public:
     void addMainPartOption(void* option, const std::string &name);
 
     void setMainPartWidget(Widget* widget);
+
+    void addMenu(Widget_Menu* menu, const char* name);
+
+    void resizeAndRealign();
 
 protected:
     virtual void paintEvent(WidgetPaintEvent* event);

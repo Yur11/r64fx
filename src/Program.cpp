@@ -13,190 +13,130 @@
 
 #include "Debug.hpp"
 
+#define NEW_MENU(M)\
+    Widget_Menu menu_##M; menu = &menu_##M;
+
+#define NEW_ACTION(A, STR)                                   \
+    class Action_##A : public Action{                        \
+        Program* m;                                          \
+                                                             \
+    public:                                                  \
+        Action_##A(Program* pp) : Action(STR), m(pp) {}      \
+                                                             \
+        virtual void exec() { m->act##A(); }                 \
+    } act_##A(this);                                         \
+                                                             \
+    menu->addAction(&act_##A)
+
+#define ADD_MENU(M, S)\
+    menu_##M.setOrientation(Orientation::Vertical);\
+    menu_##M.resizeAndRealign();\
+    view_program.addMenu(&menu_##M, S);
+
+
 using namespace std;
 
 namespace r64fx{
 
-ProgramActions*  g_acts     = nullptr;
+struct Program : public View_ProgramEventIface{
+    bool m_running = true;
 
-struct ProgramPrivate : public View_ProgramEventIface{
-    bool running = true;
-
-    View_Program* view_program = nullptr;
-
-//     Module_SineGenerator* m_module_sine_generator = nullptr;
-
-//     Module_SoundDriver* m_module_sound_driver = nullptr;
-//     ModuleSoundDriverOutputSink* m_output_sink = nullptr;
-
-//     ModuleLink* m_link = nullptr;
+    View_Program* m_view_program = nullptr;
 
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
 
     int exec(int argc, char** argv)
     {
-        initActions();
+        View_Program view_program(this);
+        m_view_program = &view_program;
 
-        view_program = new View_Program(this);
-        view_program->openWindow();
+        Widget_Menu* menu = nullptr;
 
-//         m_module_sound_driver = new Module_SoundDriver;
-//         m_module_sound_driver->engage([](Module* module, void* arg){
-//             auto pp = (ProgramPrivate*) arg;
-//             pp->engagedModuleSoundDriver(pp->m_module_sound_driver);
-//         }, this);
-// 
-        newProject();
+        NEW_MENU  (Session);
+        NEW_ACTION(NewSession,     "New Session");
+        NEW_ACTION(OpenSession,    "Open Session...");
+        NEW_ACTION(SaveSession,    "Save Session");
+        NEW_ACTION(SaveSessionAs,  "Save Session As...");
+        NEW_ACTION(Quit,           "Quit");
+        ADD_MENU  (Session, "Session");
 
-        while(running)
+        NEW_MENU  (Project);
+        NEW_ACTION(NewProject,     "New Project");
+        NEW_ACTION(OpenProject,    "Open Project...");
+        NEW_ACTION(SaveProject,    "Save Project");
+        NEW_ACTION(SaveProjectAs,  "Save Project As...");
+        NEW_ACTION(CreatePlayer,   "Create Player");
+        NEW_ACTION(CloseProject,   "Close Project");
+        ADD_MENU  (Project, "Project");
+
+        NEW_MENU  (Edit);
+        NEW_ACTION(Cut,            "Cut");
+        NEW_ACTION(Copy,           "Copy");
+        NEW_ACTION(Paste,          "Paste");
+        NEW_ACTION(Undo,           "Undo");
+        NEW_ACTION(Redo,           "Redo");
+        ADD_MENU  (Edit, "Edit");
+
+        NEW_MENU  (View);
+        NEW_ACTION(NoView,         "No View");
+        ADD_MENU  (View, "View");
+
+        NEW_MENU  (Help);
+        NEW_ACTION(NoHelp,         "No Help");
+        ADD_MENU  (Help, "Help");
+
+        view_program.resizeAndRealign();
+        view_program.openWindow();
+
+        actNewProject();
+
+        while(m_running)
         {
             auto time = Timer::runTimers();
             sleep_nanoseconds(time);
         }
-// 
-//         delete m_module_sound_driver;
-// 
-//         delete m_module_sine_generator;
 
-        view_program->closeWindow();
+        view_program.closeWindow();
         closeAllProjects();
-        delete view_program;
-
-        cleanupActions();
 
         return 0;
     }
 
-//     void engagedModuleSoundDriver(Module_SoundDriver* module_sound_driver)
-//     {
-//         module_sound_driver->addAudioOutput("out", 1, [](ModuleSoundDriverOutputSink* sink, void* arg1, void* arg2){
-//             auto self = (ProgramPrivate*) arg1;
-//             self->outputSinkAdded(sink, (Module_SoundDriver*)arg2);
-//         }, this, module_sound_driver);
-// 
-//         m_module_sine_generator = new Module_SineGenerator;
-//         m_module_sine_generator->engage([](Module* module, void* arg){
-//             auto pp = (ProgramPrivate*) arg;
-//             pp->engagedModuleSineGenerator();
-//         }, this);
-//     }
-
-//     void engagedModuleSineGenerator()
-//     {
-//         if(m_output_sink)
-//             connectPorts();
-//     }
-
-//     void outputSinkAdded(ModuleSoundDriverOutputSink* sink, Module_SoundDriver* module_sound_driver)
-//     {
-//         m_output_sink = sink;
-//         if(m_module_sine_generator->isEngaged())
-//             connectPorts();
-//     }
-
-//     void connectPorts()
-//     {
-//         m_link = new ModuleLink(m_module_sine_generator->source(), m_output_sink);
-//         ModuleLink::enable(&m_link, 1, [](ModuleLink** links, unsigned int nlinks, void* arg){
-//             auto self = (ProgramPrivate*) arg;
-//             self->portsConnected(links, nlinks);
-//         }, this);
-//     }
-
-//     void portsConnected(ModuleLink** links, int nlinks)
-//     {
-//         cout << "Ports Connected\n";
-//     }
-
-//     void disconnectPorts()
-//     {
-//         ModuleLink::disable(&m_link, 1, [](ModuleLink** links, unsigned int nlinks, void* arg){
-//             auto self = (ProgramPrivate*) arg;
-//             self->portsDisconnected();
-//         }, this);
-//     }
-
-//     void portsDisconnected()
-//     {
-//         m_module_sine_generator->disengage([](Module* module, void* arg){
-//             auto self = (ProgramPrivate*) arg;
-//             self->disengagedModuleSineGenerator();
-//         }, this);
-// 
-//         m_module_sound_driver->removePort(m_output_sink, [](void* arg0, void* arg1){
-//             auto self = (ProgramPrivate*) arg0;
-//             self->outputSinkRemoved();
-//         }, this, nullptr);
-//     }
-
-
-//     void outputSinkRemoved()
-//     {
-//         m_output_sink = nullptr;
-// 
-//         m_module_sound_driver->disengage([](Module* module, void* arg){
-//             auto p = (ProgramPrivate*) arg;
-//             p->disengagedModuleSoundDriver();
-//         }, this);
-//     }
-// 
-//     void disengagedModuleSoundDriver()
-//     {
-//         delete m_module_sound_driver;
-//         m_module_sound_driver = nullptr;
-//         if(!m_module_sine_generator)
-//             doQuit();
-//     }
-// 
-//     void disengagedModuleSineGenerator()
-//     {
-//         delete m_module_sine_generator;
-//         m_module_sine_generator = nullptr;
-//         if(!m_module_sound_driver)
-//             doQuit();
-//     }
-
-    void newSession()
+    void actNewSession()
     {
 
     }
 
-    void openSession()
+    void actOpenSession()
     {
 
     }
 
-    void saveSession()
+    void actSaveSession()
     {
 
     }
 
-    void saveSessionAs()
+    void actSaveSessionAs()
     {
 
     }
 
-    void quit()
+    void actQuit()
     {
-//         if(m_link->isEnabled())
-//             disconnectPorts();
+        m_running = false;
     }
 
-    void doQuit()
-    {
-        running = false;
-    }
-
-    void newProject()
+    void actNewProject()
     {
         auto project = new Project;
         open_projects.append(project);
         setCurrentProject(project);
 
-        view_program->addMainPartOption(project, "Untitled");
-        view_program->setMainPartWidget(project->view());
-        view_program->repaint();
+        m_view_program->addMainPartOption(project, "Untitled");
+        m_view_program->setMainPartWidget(project->view());
+        m_view_program->repaint();
     }
 
     void setCurrentProject(Project* project)
@@ -204,17 +144,17 @@ struct ProgramPrivate : public View_ProgramEventIface{
         current_project = project;
     }
 
-    void openProject()
+    void actOpenProject()
     {
 
     }
 
-    void saveProject()
+    void actSaveProject()
     {
 
     }
 
-    void saveProjectAs()
+    void actSaveProjectAs()
     {
 
     }
@@ -229,32 +169,47 @@ struct ProgramPrivate : public View_ProgramEventIface{
         }
     }
 
-    void createPlayer()
+    void actCreatePlayer()
     {
         cout << "Create Player!\n";
     }
 
-    void cut()
+    void actCloseProject()
+    {
+        
+    }
+
+    void actCut()
     {
 
     }
 
-    void copy()
+    void actCopy()
     {
 
     }
 
-    void paste()
+    void actPaste()
     {
 
     }
 
-    void undo()
+    void actUndo()
     {
 
     }
 
-    void redo()
+    void actRedo()
+    {
+
+    }
+
+    void actNoView()
+    {
+
+    }
+
+    void actNoHelp()
     {
 
     }
@@ -269,249 +224,9 @@ struct ProgramPrivate : public View_ProgramEventIface{
     }
 };
 
-
-class Action_NewSession : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_NewSession(ProgramPrivate* pp) : Action("New Session"), m(pp) {}
-
-    virtual void exec() { m->newSession(); }
-};
-
-
-class Action_OpenSession : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_OpenSession(ProgramPrivate* pp) : Action("Open Session..."), m(pp) {}
-
-    virtual void exec() { m->openSession(); }
-};
-
-
-class Action_SaveSession : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_SaveSession(ProgramPrivate* pp) : Action("Save Session"), m(pp) {}
-
-    virtual void exec() { m->saveSession(); }
-};
-
-
-class Action_SaveSessionAs : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_SaveSessionAs(ProgramPrivate* pp) : Action("Save Session As..."), m(pp) {}
-
-    virtual void exec() { m->saveSessionAs(); }
-};
-
-
-class Action_Quit : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_Quit(ProgramPrivate* pp) : Action("Quit"), m(pp) {}
-
-    virtual void exec() { m->quit(); }
-};
-
-
-class Action_NewProject : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_NewProject(ProgramPrivate* pp) : Action("New Project"), m(pp) {}
-
-    virtual void exec() { m->newProject(); }
-};
-
-
-class Action_OpenProject : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_OpenProject(ProgramPrivate* pp) : Action("Open Project..."), m(pp) {}
-
-    virtual void exec() { m->openProject(); }
-};
-
-
-class Action_SaveProject : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_SaveProject(ProgramPrivate* pp) : Action("Save Project"), m(pp) {}
-
-    virtual void exec() { m->saveProject(); }
-};
-
-
-class Action_SaveProjectAs : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_SaveProjectAs(ProgramPrivate* pp) : Action("Save Project As..."), m(pp) {}
-
-    virtual void exec() { m->saveProjectAs(); }
-};
-
-
-class Action_CreatePlayer : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_CreatePlayer(ProgramPrivate* pp) : Action("Create Player"), m(pp) {}
-
-    virtual void exec() { m->createPlayer(); }
-};
-
-
-class Action_CloseProject : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_CloseProject(ProgramPrivate* pp) : Action("Close Project"), m(pp) {}
-
-    virtual void exec() { /*m->closeCurrentProject();*/ }
-};
-
-
-class Action_Cut : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_Cut(ProgramPrivate* pp) : Action("Cut"), m(pp) {}
-
-    virtual void exec() { m->cut(); }
-};
-
-
-class Action_Copy : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_Copy(ProgramPrivate* pp) : Action("Copy"), m(pp) {}
-
-    virtual void exec() { m->copy(); }
-};
-
-
-class Action_Paste : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_Paste(ProgramPrivate* pp) : Action("Paste"), m(pp) {}
-
-    virtual void exec() { m->paste(); }
-};
-
-
-class Action_Undo : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_Undo(ProgramPrivate* pp) : Action("Undo"), m(pp) {}
-
-    virtual void exec() { m->undo(); }
-};
-
-
-class Action_Redo : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_Redo(ProgramPrivate* pp) : Action("Redo"), m(pp) {}
-
-    virtual void exec() { m->redo(); }
-};
-
-
-class Action_NoView : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_NoView(ProgramPrivate* pp) : Action("No View"), m(pp) {}
-
-    virtual void exec() {}
-};
-
-
-class Action_NoHelp : public Action{
-    ProgramPrivate* m;
-
-public:
-    Action_NoHelp(ProgramPrivate* pp) : Action("No Help"), m(pp) {}
-
-    virtual void exec() {}
-};
-
-
-void ProgramPrivate::initActions()
-{
-    g_acts = new ProgramActions;
-
-    g_acts->new_session_act      = new Action_NewSession(this);
-    g_acts->open_session_act     = new Action_OpenSession(this);
-    g_acts->save_session_act     = new Action_SaveSession(this);
-    g_acts->save_session_as_act  = new Action_SaveSessionAs(this);
-    g_acts->quit_act             = new Action_Quit(this);
-
-    g_acts->new_project_act      = new Action_NewProject(this);
-    g_acts->open_project_act     = new Action_OpenProject(this);
-    g_acts->save_project_act     = new Action_SaveProject(this);
-    g_acts->save_project_as_act  = new Action_SaveProjectAs(this);
-    g_acts->create_player_act    = new Action_CreatePlayer(this);
-    g_acts->close_project_act    = new Action_CloseProject(this);
-
-    g_acts->cut_act              = new Action_Cut(this);
-    g_acts->copy_act             = new Action_Copy(this);
-    g_acts->paste_act            = new Action_Paste(this);
-    g_acts->undo_act             = new Action_Undo(this);
-    g_acts->redo_act             = new Action_Redo(this);
-
-    g_acts->no_view_act          = new Action_NoView(this);
-
-    g_acts->no_help_act          = new Action_NoHelp(this);
-}
-
-
-void ProgramPrivate::cleanupActions()
-{
-    delete g_acts->new_session_act;
-    delete g_acts->open_session_act;
-    delete g_acts->save_session_act;
-    delete g_acts->save_session_as_act;
-    delete g_acts->quit_act;
-
-    delete g_acts->new_project_act;
-    delete g_acts->open_project_act;
-    delete g_acts->save_project_act;
-    delete g_acts->save_project_as_act;
-    delete g_acts->create_player_act;
-    delete g_acts->close_project_act;
-
-    delete g_acts->cut_act;
-    delete g_acts->copy_act;
-    delete g_acts->paste_act;
-    delete g_acts->undo_act;
-    delete g_acts->redo_act;
-
-    delete g_acts->no_view_act;
-
-    delete g_acts->no_help_act;
-
-    delete g_acts;
-}
-
-
 int exec(int argc, char** argv)
 {
-    ProgramPrivate p;
-    return p.exec(argc, argv);
+    return Program().exec(argc, argv);
 }
 
 }//namespace r64fx

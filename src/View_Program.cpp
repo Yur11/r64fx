@@ -302,52 +302,8 @@ View_Program::View_Program(View_ProgramEventIface* event_iface, Widget* parent) 
     m->bottom_dock  = new BottomDock  (m, this);
     m->main_part    = new MainPart    (m, this);
 
-    m->menu_session = new Widget_Menu(m->menu);
-    m->menu_session->setOrientation(Orientation::Vertical);
-    m->menu_session->addAction(g_acts->new_session_act);
-    m->menu_session->addAction(g_acts->open_session_act);
-    m->menu_session->addAction(g_acts->save_session_act);
-    m->menu_session->addAction(g_acts->save_session_as_act);
-    m->menu_session->addAction(g_acts->quit_act);
-    m->menu_session->resizeAndRealign();
-
-    m->menu_project = new Widget_Menu(m->menu);
-    m->menu_project->setOrientation(Orientation::Vertical);
-    m->menu_project->addAction(g_acts->new_project_act);
-    m->menu_project->addAction(g_acts->open_project_act);
-    m->menu_project->addAction(g_acts->save_project_act);
-    m->menu_project->addAction(g_acts->save_project_as_act);
-    m->menu_project->addAction(g_acts->create_player_act);
-    m->menu_project->addAction(g_acts->close_project_act);
-    m->menu_project->resizeAndRealign();
-
-    m->menu_edit = new Widget_Menu(m->menu);
-    m->menu_edit->setOrientation(Orientation::Vertical);
-    m->menu_edit->addAction(g_acts->cut_act);
-    m->menu_edit->addAction(g_acts->copy_act);
-    m->menu_edit->addAction(g_acts->paste_act);
-    m->menu_edit->addAction(g_acts->undo_act);
-    m->menu_edit->addAction(g_acts->redo_act);
-    m->menu_edit->resizeAndRealign();
-
-    m->menu_view = new Widget_Menu(m->menu);
-    m->menu_view->setOrientation(Orientation::Vertical);
-    m->menu_view->addAction(g_acts->no_view_act);
-    m->menu_view->resizeAndRealign();
-
-    m->menu_help = new Widget_Menu(m->menu);
-    m->menu_help->setOrientation(Orientation::Vertical);
-    m->menu_help->addAction(g_acts->no_help_act);
-    m->menu_help->resizeAndRealign();
-
     m->menu = new Widget_Menu(m->top_bar);
     m->menu->setOrientation(Orientation::Horizontal);
-    m->menu->addSubMenu(m->menu_session,  "Session");
-    m->menu->addSubMenu(m->menu_project,  "Project");
-    m->menu->addSubMenu(m->menu_edit,     "Edit");
-    m->menu->addSubMenu(m->menu_view,     "View");
-    m->menu->addSubMenu(m->menu_help,     "Help");
-    m->menu->resizeAndRealign();
     m->menu->setPosition({0, 0});
 
     m->main_tab_bar = new Widget_TabBar(m->top_bar);
@@ -357,8 +313,6 @@ View_Program::View_Program(View_ProgramEventIface* event_iface, Widget* parent) 
         auto m = (View_ProgramPrivate*)arg;
         m->event->mainPartOptionSelected(payload);
     }, m);
-
-    m->top_bar->setHeight(m->menu->height());
 
     m->left_dock->setWidth(300);
     m->right_dock->setWidth(100);
@@ -399,24 +353,6 @@ View_Program::~View_Program()
     free_icon(&m->icon30);
     free_icon(&m->icon32);
     free_icon(&m->icon_check);
-
-    m->main_tab_bar->setParent(nullptr);
-    delete m->main_tab_bar;
-
-    m->menu_session->setParent(nullptr);
-    delete m->menu_session;
-
-    m->menu_project->setParent(nullptr);
-    delete m->menu_project;
-
-    m->menu_edit->setParent(nullptr);
-    delete m->menu_edit;
-
-    m->menu_view->setParent(nullptr);
-    delete m->menu_view;
-
-    m->menu_help->setParent(nullptr);
-    delete m->menu_help;
 }
 
 
@@ -433,6 +369,16 @@ void View_Program::setMainPartWidget(Widget* widget)
     widget->setParent(m->main_part);
 }
 
+void View_Program::addMenu(Widget_Menu* menu, const char* name)
+{
+    m->menu->addSubMenu(menu, name);
+}
+
+void View_Program::resizeAndRealign()
+{
+    m->menu->resizeAndRealign();
+    m->top_bar->setHeight(m->menu->height());
+}
 
 void View_Program::paintEvent(WidgetPaintEvent* event)
 {
@@ -770,7 +716,7 @@ Widget* View_ProgramPrivate::findDockAt(Point<int> p)
 
 void View_Program::closeEvent()
 {
-    g_acts->quit_act->exec();
+//     g_acts->quit_act->exec();
 }
 
 }//namespace r64fx
