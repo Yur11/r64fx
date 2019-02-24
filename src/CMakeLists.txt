@@ -52,10 +52,6 @@ set(SRC
     Midi.cpp
     MidiDispatcher.cpp
     Module.cpp
-    Module_Filter.cpp
-    Module_Oscillator.cpp
-    Module_Player.cpp
-    Module_SineGenerator.cpp
     Mouse.cpp
     Mutex.cpp
     Painter.cpp
@@ -64,10 +60,6 @@ set(SRC
     Program.cpp
     Project.cpp
     RingSectorPainter.cpp
-    SignalGraph.cpp
-    SignalNode_BufferRW.cpp
-    SignalNode_Oscillator.cpp
-    SignalNode_SineGenerator.cpp
     Shader.cpp
     SoundDriver.cpp
     SoundFile.cpp
@@ -77,7 +69,6 @@ set(SRC
     TextEditingUtils.cpp
     TextPainter.cpp
     Thread.cpp
-    ThreadObject.cpp
     TimeUtils.cpp
     Timer.cpp
     UndoRedoChain.cpp
@@ -130,7 +121,7 @@ target_link_libraries(r64fx ${LIBS})
 ## Some Tests ###########################################################################
 #########################################################################################
 add_custom_target(tests DEPENDS
-    test_LinkedList test_Timer test_MemoryUtils test_ThreadObject test_jit test_SignalGraph test_SoundDriver
+    test_LinkedList test_Timer test_MemoryUtils test_jit test_SignalGraph test_SoundDriver
 )
 
 ## test_LinkedList ##
@@ -174,24 +165,6 @@ set(test_MidiEventBuffer_SRC
 add_executable(test_MidiEventBuffer EXCLUDE_FROM_ALL ${test_MidiEventBuffer_SRC})
 
 
-## test_ThreadObject ##
-set(test_ThreadObject_SRC
-    test_ThreadObject.cpp
-    ThreadObject.cpp
-    Thread.cpp
-    Mutex.cpp
-    Timer.cpp
-    TimeUtils.cpp
-    MemoryUtils.cpp
-)
-
-add_executable(test_ThreadObject EXCLUDE_FROM_ALL ${test_ThreadObject_SRC})
-
-set(test_ThreadObject_LIBS pthread)
-
-target_link_libraries(test_ThreadObject ${test_ThreadObject_LIBS})
-
-
 ## test_jit ##
 set(test_jit_SRC
     test_jit.cpp
@@ -200,19 +173,6 @@ set(test_jit_SRC
 )
 
 add_executable(test_jit EXCLUDE_FROM_ALL ${test_jit_SRC})
-
-
-## test_SignalGraph ##
-set(test_SignalGraph_SRC
-    test_SignalGraph.cpp
-    SignalGraph.cpp
-    SignalNode_BufferRW.cpp
-    SignalNode_Oscillator.cpp
-    jit.cpp
-    MemoryUtils.cpp
-)
-
-add_executable(test_SignalGraph EXCLUDE_FROM_ALL ${test_SignalGraph_SRC})
 
 
 ## test_jit_perf ##

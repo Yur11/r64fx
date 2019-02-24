@@ -10,10 +10,6 @@
 
 #include "SoundFileLoader.hpp"
 #include "View_Filter.hpp"
-#include "Module_Filter.hpp"
-#include "Module_Player.hpp"
-#include "Module_SoundDriver.hpp"
-#include "Module_SineGenerator.hpp"
 
 #include "Debug.hpp"
 
@@ -28,12 +24,12 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     View_Program* view_program = nullptr;
 
-    Module_SineGenerator* m_module_sine_generator = nullptr;
+//     Module_SineGenerator* m_module_sine_generator = nullptr;
 
-    Module_SoundDriver* m_module_sound_driver = nullptr;
-    ModuleSoundDriverOutputSink* m_output_sink = nullptr;
+//     Module_SoundDriver* m_module_sound_driver = nullptr;
+//     ModuleSoundDriverOutputSink* m_output_sink = nullptr;
 
-    ModuleLink* m_link = nullptr;
+//     ModuleLink* m_link = nullptr;
 
     LinkedList<Project> open_projects;
     Project* current_project = nullptr;
@@ -45,12 +41,12 @@ struct ProgramPrivate : public View_ProgramEventIface{
         view_program = new View_Program(this);
         view_program->openWindow();
 
-        m_module_sound_driver = new Module_SoundDriver;
-        m_module_sound_driver->engage([](Module* module, void* arg){
-            auto pp = (ProgramPrivate*) arg;
-            pp->engagedModuleSoundDriver(pp->m_module_sound_driver);
-        }, this);
-
+//         m_module_sound_driver = new Module_SoundDriver;
+//         m_module_sound_driver->engage([](Module* module, void* arg){
+//             auto pp = (ProgramPrivate*) arg;
+//             pp->engagedModuleSoundDriver(pp->m_module_sound_driver);
+//         }, this);
+// 
         newProject();
 
         while(running)
@@ -58,10 +54,10 @@ struct ProgramPrivate : public View_ProgramEventIface{
             auto time = Timer::runTimers();
             sleep_nanoseconds(time);
         }
-
-        delete m_module_sound_driver;
-
-        delete m_module_sine_generator;
+// 
+//         delete m_module_sound_driver;
+// 
+//         delete m_module_sine_generator;
 
         view_program->closeWindow();
         closeAllProjects();
@@ -72,94 +68,94 @@ struct ProgramPrivate : public View_ProgramEventIface{
         return 0;
     }
 
-    void engagedModuleSoundDriver(Module_SoundDriver* module_sound_driver)
-    {
-        module_sound_driver->addAudioOutput("out", 1, [](ModuleSoundDriverOutputSink* sink, void* arg1, void* arg2){
-            auto self = (ProgramPrivate*) arg1;
-            self->outputSinkAdded(sink, (Module_SoundDriver*)arg2);
-        }, this, module_sound_driver);
+//     void engagedModuleSoundDriver(Module_SoundDriver* module_sound_driver)
+//     {
+//         module_sound_driver->addAudioOutput("out", 1, [](ModuleSoundDriverOutputSink* sink, void* arg1, void* arg2){
+//             auto self = (ProgramPrivate*) arg1;
+//             self->outputSinkAdded(sink, (Module_SoundDriver*)arg2);
+//         }, this, module_sound_driver);
+// 
+//         m_module_sine_generator = new Module_SineGenerator;
+//         m_module_sine_generator->engage([](Module* module, void* arg){
+//             auto pp = (ProgramPrivate*) arg;
+//             pp->engagedModuleSineGenerator();
+//         }, this);
+//     }
 
-        m_module_sine_generator = new Module_SineGenerator;
-        m_module_sine_generator->engage([](Module* module, void* arg){
-            auto pp = (ProgramPrivate*) arg;
-            pp->engagedModuleSineGenerator();
-        }, this);
-    }
+//     void engagedModuleSineGenerator()
+//     {
+//         if(m_output_sink)
+//             connectPorts();
+//     }
 
-    void engagedModuleSineGenerator()
-    {
-        if(m_output_sink)
-            connectPorts();
-    }
+//     void outputSinkAdded(ModuleSoundDriverOutputSink* sink, Module_SoundDriver* module_sound_driver)
+//     {
+//         m_output_sink = sink;
+//         if(m_module_sine_generator->isEngaged())
+//             connectPorts();
+//     }
 
-    void outputSinkAdded(ModuleSoundDriverOutputSink* sink, Module_SoundDriver* module_sound_driver)
-    {
-        m_output_sink = sink;
-        if(m_module_sine_generator->isEngaged())
-            connectPorts();
-    }
+//     void connectPorts()
+//     {
+//         m_link = new ModuleLink(m_module_sine_generator->source(), m_output_sink);
+//         ModuleLink::enable(&m_link, 1, [](ModuleLink** links, unsigned int nlinks, void* arg){
+//             auto self = (ProgramPrivate*) arg;
+//             self->portsConnected(links, nlinks);
+//         }, this);
+//     }
 
-    void connectPorts()
-    {
-        m_link = new ModuleLink(m_module_sine_generator->source(), m_output_sink);
-        ModuleLink::enable(&m_link, 1, [](ModuleLink** links, unsigned int nlinks, void* arg){
-            auto self = (ProgramPrivate*) arg;
-            self->portsConnected(links, nlinks);
-        }, this);
-    }
+//     void portsConnected(ModuleLink** links, int nlinks)
+//     {
+//         cout << "Ports Connected\n";
+//     }
 
-    void portsConnected(ModuleLink** links, int nlinks)
-    {
-        cout << "Ports Connected\n";
-    }
+//     void disconnectPorts()
+//     {
+//         ModuleLink::disable(&m_link, 1, [](ModuleLink** links, unsigned int nlinks, void* arg){
+//             auto self = (ProgramPrivate*) arg;
+//             self->portsDisconnected();
+//         }, this);
+//     }
 
-    void disconnectPorts()
-    {
-        ModuleLink::disable(&m_link, 1, [](ModuleLink** links, unsigned int nlinks, void* arg){
-            auto self = (ProgramPrivate*) arg;
-            self->portsDisconnected();
-        }, this);
-    }
-
-    void portsDisconnected()
-    {
-        m_module_sine_generator->disengage([](Module* module, void* arg){
-            auto self = (ProgramPrivate*) arg;
-            self->disengagedModuleSineGenerator();
-        }, this);
-
-        m_module_sound_driver->removePort(m_output_sink, [](void* arg0, void* arg1){
-            auto self = (ProgramPrivate*) arg0;
-            self->outputSinkRemoved();
-        }, this, nullptr);
-    }
+//     void portsDisconnected()
+//     {
+//         m_module_sine_generator->disengage([](Module* module, void* arg){
+//             auto self = (ProgramPrivate*) arg;
+//             self->disengagedModuleSineGenerator();
+//         }, this);
+// 
+//         m_module_sound_driver->removePort(m_output_sink, [](void* arg0, void* arg1){
+//             auto self = (ProgramPrivate*) arg0;
+//             self->outputSinkRemoved();
+//         }, this, nullptr);
+//     }
 
 
-    void outputSinkRemoved()
-    {
-        m_output_sink = nullptr;
-
-        m_module_sound_driver->disengage([](Module* module, void* arg){
-            auto p = (ProgramPrivate*) arg;
-            p->disengagedModuleSoundDriver();
-        }, this);
-    }
-
-    void disengagedModuleSoundDriver()
-    {
-        delete m_module_sound_driver;
-        m_module_sound_driver = nullptr;
-        if(!m_module_sine_generator)
-            doQuit();
-    }
-
-    void disengagedModuleSineGenerator()
-    {
-        delete m_module_sine_generator;
-        m_module_sine_generator = nullptr;
-        if(!m_module_sound_driver)
-            doQuit();
-    }
+//     void outputSinkRemoved()
+//     {
+//         m_output_sink = nullptr;
+// 
+//         m_module_sound_driver->disengage([](Module* module, void* arg){
+//             auto p = (ProgramPrivate*) arg;
+//             p->disengagedModuleSoundDriver();
+//         }, this);
+//     }
+// 
+//     void disengagedModuleSoundDriver()
+//     {
+//         delete m_module_sound_driver;
+//         m_module_sound_driver = nullptr;
+//         if(!m_module_sine_generator)
+//             doQuit();
+//     }
+// 
+//     void disengagedModuleSineGenerator()
+//     {
+//         delete m_module_sine_generator;
+//         m_module_sine_generator = nullptr;
+//         if(!m_module_sound_driver)
+//             doQuit();
+//     }
 
     void newSession()
     {
@@ -183,8 +179,8 @@ struct ProgramPrivate : public View_ProgramEventIface{
 
     void quit()
     {
-        if(m_link->isEnabled())
-            disconnectPorts();
+//         if(m_link->isEnabled())
+//             disconnectPorts();
     }
 
     void doQuit()

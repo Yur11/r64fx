@@ -46,6 +46,7 @@ JitProc::JitProc()
     genProc_AddF4();
     genProc_MulF4();
     genProc_OscTaylorCosF4();
+    genProc_OscTaylorCosF8();
     permitExecution();
 }
 
@@ -129,6 +130,87 @@ void JitProc::genProc_OscTaylorCosF4()
 
         /* Out */
         MOVAPS   (Base(rbx) + Index(rax), xmm1);
+    JMP(r10);
+}
+
+
+void JitProc::genProc_OscTaylorCosF8()
+{
+    m_offset.OscTaylorCosF8 = bytesUsed();
+
+    unpack(rax, rcx, rdx, rbx, r8, r9);
+    loop(rax, 32, r10, r9);
+        /* OSC clock */
+        MOVAPS   (xmm1, Base(rcx) + Index(rax));
+        MOVAPS   (xmm5, Base(rcx) + Index(rax) + Disp(16));
+        CVTDQ2PS (xmm0, xmm1);
+        CVTDQ2PS (xmm4, xmm5);
+        PADDD    (xmm1, Base(rdx) + Index(rax));
+        PADDD    (xmm5, Base(rdx) + Index(rax) + Disp(16));
+        MOVAPS   (Base(rcx) + Index(rax),            xmm1);
+        MOVAPS   (Base(rcx) + Index(rax) + Disp(16), xmm5);
+
+        /* x: (-Pi, Pi) */
+        MULPS    (xmm0, Base(r8));
+        MULPS    (xmm4, Base(r8));
+
+        /* 1 */
+        MOVAPS   (xmm1, Base(r8) + Disp(16));
+        MULPS    (xmm5, Base(r8));
+
+        /* x^2 */
+        MULPS    (xmm0, xmm0);
+        MULPS    (xmm4, xmm4);
+        MOVAPS   (xmm2, xmm0);
+        MOVAPS   (xmm4, xmm4);
+
+        /* - x^2 / 2! */
+        MULPS    (xmm2, Base(r8) + Disp(32));
+        MULPS    (xmm6, Base(r8) + Disp(32));
+        SUBPS    (xmm1, xmm2);
+        SUBPS    (xmm5, xmm6);
+
+        /* x^4 */
+        MOVAPS   (xmm2, xmm0);
+        MOVAPS   (xmm6, xmm4);
+        MULPS    (xmm2, xmm0);
+        MULPS    (xmm6, xmm4);
+        MOVAPS   (xmm3, xmm2);
+        MOVAPS   (xmm7, xmm6);
+
+        /* + x^4 / 4! */
+        MULPS    (xmm2, Base(r8) + Disp(48));
+        MULPS    (xmm6, Base(r8) + Disp(48));
+        ADDPS    (xmm1, xmm2);
+        ADDPS    (xmm5, xmm6);
+
+        /* x^6 */
+        MOVAPS   (xmm2, xmm3);
+        MOVAPS   (xmm6, xmm7);
+        MULPS    (xmm2, xmm0);
+        MULPS    (xmm6, xmm4);
+        MOVAPS   (xmm3, xmm2);
+        MOVAPS   (xmm7, xmm6);
+
+        /* - x^6 / 6!*/
+        MULPS    (xmm2, Base(r8) + Disp(64));
+        MULPS    (xmm6, Base(r8) + Disp(64));
+        SUBPS    (xmm1, xmm2);
+        SUBPS    (xmm5, xmm6);
+
+        /* x^8 */
+        MULPS    (xmm3, xmm0);
+        MULPS    (xmm7, xmm4);
+
+        /* + x^8 / 8! */
+        MULPS    (xmm3, Base(r8) + Disp(80));
+        MULPS    (xmm7, Base(r8) + Disp(80));
+        ADDPS    (xmm1, xmm3);
+        ADDPS    (xmm5, xmm7);
+
+        /* Out */
+        MOVAPS   (Base(rbx) + Index(rax),            xmm1);
+        MOVAPS   (Base(rbx) + Index(rax) + Disp(16), xmm5);
     JMP(r10);
 }
 

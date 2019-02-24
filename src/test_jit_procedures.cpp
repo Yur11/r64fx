@@ -39,14 +39,15 @@ float a[12] = {0.1f, 0.1f, 0.1f, 0.1f,   0.2f, 0.2f, 0.2f, 0.2f,   0.3f, 0.3f, 0
 float b[12] = {1.0f, 2.0f, 3.0f, 4.0f,   1.0f, 2.0f, 3.0f, 4.0f,   1.0f, 2.0f, 3.0f, 4.0f};
 float c[12] = {1.0f, 0.0f, 1.0f, 0.0f,   1.0f, 0.0f, 1.0f, 0.0f,   1.0f, 0.0f, 1.0f, 0.0f};
 
-int    clk      [4] = {0, 0, 0, 0};
-int    clk_step [4] = {0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF};
-float  out      [4] = {0.0f, 0.0f, 0.0f, 0.0f};
+int    clk      [8] = {0, 0, 0, 0, 0, 0, 0, 0};
+int    clk_step [8] = {0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF};
+float  out      [8] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
 float  coeffs     [24] = {
-    3.1415926535f / 0x7FFFFFFF,  3.1415926535f / 0x7FFFFFFF, 3.1415926535f / 0x7FFFFFFF, 3.1415926535f / 0x7FFFFFFF,
-    1.0f, 1.0f, 1.0f, 1.0f,
-    0.5f, 0.5f, 0.5f, 0.5f,
+    3.1415926535f / 0x7FFFFFFF,  3.1415926535f / 0x7FFFFFFF,
+    3.1415926535f / 0x7FFFFFFF,  3.1415926535f / 0x7FFFFFFF,
+
+    0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,
     1.0f/fact(4), 1.0f/fact(4), 1.0f/fact(4), 1.0f/fact(4),
     1.0f/fact(6), 1.0f/fact(6), 1.0f/fact(6), 1.0f/fact(6),
     1.0f/fact(8), 1.0f/fact(8), 1.0f/fact(8), 1.0f/fact(8)
@@ -60,7 +61,10 @@ int main(int argc, char** argv)
     seq << jp.procOscTaylorCosF4(1, clk, clk_step, out, coeffs)
         << jp.procExit();
 
-    cout << seq.exec(&jp, 1024) / 1024.0f << "\n";
+    for(int i=0; i<16; i++)
+    {
+        cout << seq.exec(&jp, 0xFFFFF) / float(0xFFFFF) << "\n";
+    }
 
     return 0;
 }

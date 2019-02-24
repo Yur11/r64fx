@@ -20,6 +20,8 @@ template<typename T, long ScalarCount> struct VecPtr{
 
 typedef VecPtr<float, 4> VecF4;
 typedef VecPtr<int,   4> VecI4;
+typedef VecPtr<float, 8> VecF8;
+typedef VecPtr<int,   8> VecI8;
 
 
 /* Compile-time recursive tuple structure. */
@@ -38,11 +40,11 @@ public:
 /* Collection of jit procedures that can be executed in a sequence */
 class JitProc : Assembler{
     struct{ long
-        Exit, AddF4, MulF4, OscTaylorCosF4
+        Exit, AddF4, MulF4, OscTaylorCosF4, OscTaylorCosF8
     ;} m_offset;
 
-    template<typename... XS> inline auto pack(long iteration_count, XS... xs)
-        { return Tuple(-16*iteration_count, pack_(iteration_count, xs...)); }
+    template<typename... XS> inline auto pack(long iteration_size, long iteration_count, XS... xs)
+        { return Tuple(-iteration_size*iteration_count, pack_(iteration_count, xs...)); }
 
     template<typename X, typename... XS> inline auto pack_(long iteration_count, X x, XS... xs)
     {
@@ -64,6 +66,7 @@ class JitProc : Assembler{
     void genProc_AddF4();
     void genProc_MulF4();
     void genProc_OscTaylorCosF4();
+    void genProc_OscTaylorCosF8();
 
     void loop(GPR64 counter, long increment, GPR64 jump_ptr, GPR64 jump_next);
 
@@ -101,13 +104,16 @@ public:
     inline auto procExit() { return Tuple(PROC_ADDR(Exit)); }
 
     inline auto procAddF4(long count, VecF4 src1, VecF4 src2, VecF4 dst)
-        { return PROC_TUPLE(AddF4, pack(count, src1, src2, dst)); }
+        { return PROC_TUPLE(AddF4, pack(16, count, src1, src2, dst)); }
 
     inline auto procMulF4(long count, VecF4 src1, VecF4 src2, VecF4 dst)
-        { return PROC_TUPLE(MulF4, pack(count, src1, src2, dst)); }
+        { return PROC_TUPLE(MulF4, pack(16, count, src1, src2, dst)); }
 
     inline auto procOscTaylorCosF4(long count, VecI4 clock, VecI4 clock_change, VecF4 out, VecF4 coeffs)
-        { return PROC_TUPLE(OscTaylorCosF4, pack(count, clock, clock_change, out, coeffs)); }
+        { return PROC_TUPLE(OscTaylorCosF4, pack(16, count, clock, clock_change, out, coeffs)); }
+
+    inline auto procOscTaylorCosF8(long count, VecI8 clock, VecI8 clock_change, VecF8 out, VecF8 coeffs)
+        { return PROC_TUPLE(OscTaylorCosF8, pack(32, count, clock, clock_change, out, coeffs)); }
 };
 
 }//namespace r64fx
