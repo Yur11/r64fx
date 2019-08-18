@@ -34,6 +34,7 @@ set(SRC
     Atlas.cpp
     Clipboard.cpp
     ClipboardEvents.cpp
+    Conf_Scale.cpp
     Directory.cpp
 #     DummyMachine.cpp
 #     FilterMachine.cpp
