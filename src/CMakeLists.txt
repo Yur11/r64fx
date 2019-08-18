@@ -59,8 +59,7 @@ set(SRC
     Painter.cpp
     PainterShaders.cpp
     PainterVertexArrays.cpp
-    Program.cpp
-    Project.cpp
+#     Program.cpp
     RingSectorPainter.cpp
     Shader.cpp
     SoundDriver.cpp
@@ -101,7 +100,6 @@ set(SRC
     Window.cpp
     gl.cpp
     jit.cpp
-    main.cpp
 )
 
 add_executable(r64fx ${SRC})
