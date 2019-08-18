@@ -11,6 +11,8 @@
 
 #include "Debug.hpp"
 
+
+/* Boilerplate for generating main menu */
 #define NEW_MENU(M)\
     Widget_Menu menu_##M; menu = &menu_##M;
 
@@ -43,7 +45,8 @@ using namespace std;
 
 namespace r64fx{
 
-struct Program : public View_ProgramEventIface{
+/* Main Program Controller */
+struct Program{
     bool m_running = true;
 
     View_Program* m_view_program = nullptr;
@@ -53,7 +56,7 @@ struct Program : public View_ProgramEventIface{
 
     int exec(int argc, char** argv)
     {
-        View_Program view_program(this);
+        View_Program view_program;
         m_view_program = &view_program;
 
         Widget_Menu* menu = nullptr;
@@ -135,13 +138,7 @@ struct Program : public View_ProgramEventIface{
 
     void actNewProject()
     {
-        auto project = new Project;
-        open_projects.append(project);
-        setCurrentProject(project);
 
-        m_view_program->addMainPartOption(project, "Untitled");
-        m_view_program->setMainPartWidget(project->view());
-        m_view_program->repaint();
     }
 
     void setCurrentProject(Project* project)
@@ -166,12 +163,7 @@ struct Program : public View_ProgramEventIface{
 
     void closeAllProjects()
     {
-        while(!open_projects.empty())
-        {
-            auto proj = open_projects.last();
-            open_projects.remove(proj);
-            delete proj;
-        }
+
     }
 
     void actCreatePlayer()
@@ -181,7 +173,7 @@ struct Program : public View_ProgramEventIface{
 
     void actCloseProject()
     {
-        
+
     }
 
     void actCut()
