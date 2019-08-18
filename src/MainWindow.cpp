@@ -30,21 +30,21 @@ using namespace std;
 namespace r64fx{
 
 struct Widget_TopBar;
-struct Widget_MainPart;
-struct Widget_MiddleBar;
-struct Widget_BottomDock;
-struct Widget_LeftDock;
-struct Widget_RightDock;
+struct Widget_BottomBar;
+struct Widget_TopPart;
+struct Widget_BottomPart;
+struct Widget_LeftPart;
+struct Widget_RightPart;
 
 struct Widget_MainWindow : public Widget{
     Widget_TopBar*      top_bar      = nullptr;
-    Widget_MainPart*    main_part    = nullptr;
-    Widget_MiddleBar*   middle_bar   = nullptr;
-    Widget_BottomDock*  bottom_dock  = nullptr;
-    Widget_LeftDock*    left_dock    = nullptr;
-    Widget_RightDock*   right_dock   = nullptr;
+    Widget_BottomBar*   bottom_bar   = nullptr;
+    Widget_TopPart*     top_part     = nullptr;
+    Widget_BottomPart*  bottom_part  = nullptr;
+    Widget_LeftPart*    left_part    = nullptr;
+    Widget_RightPart*   right_part   = nullptr;
 
-    int gap = 1;
+    int gap = 3;
     bool left_dock_expanded = true, right_dock_expanded = true;
 
     void (*on_close)(void*) = nullptr;
@@ -53,6 +53,10 @@ struct Widget_MainWindow : public Widget{
 
     virtual void paintEvent(WidgetPaintEvent* event) override;
     virtual void resizeEvent(WidgetResizeEvent* event) override;
+
+    inline bool leftPartIsOpen() const { return true; }
+    inline bool rightPartIsOpen() const { return true; }
+    inline bool bottomPartIsOpen() const { return true; }
 };
 
 struct Widget_TopBar : public Widget{
@@ -61,31 +65,31 @@ struct Widget_TopBar : public Widget{
     virtual void resizeEvent(WidgetResizeEvent* event) override;
 };
 
-struct Widget_MainPart : public Widget{
+struct Widget_BottomBar : public Widget{
     using Widget::Widget;
     virtual void paintEvent(WidgetPaintEvent* event) override;
     virtual void resizeEvent(WidgetResizeEvent* event) override;
 };
 
-struct Widget_MiddleBar : public Widget{
+struct Widget_TopPart : public Widget{
     using Widget::Widget;
     virtual void paintEvent(WidgetPaintEvent* event) override;
     virtual void resizeEvent(WidgetResizeEvent* event) override;
 };
 
-struct Widget_BottomDock : public Widget{
+struct Widget_BottomPart : public Widget{
     using Widget::Widget;
     virtual void paintEvent(WidgetPaintEvent* event) override;
     virtual void resizeEvent(WidgetResizeEvent* event) override;
 };
 
-struct Widget_LeftDock : public Widget{
+struct Widget_LeftPart : public Widget{
     using Widget::Widget;
     virtual void paintEvent(WidgetPaintEvent* event) override;
     virtual void resizeEvent(WidgetResizeEvent* event) override;
 };
 
-struct Widget_RightDock : public Widget{
+struct Widget_RightPart : public Widget{
     using Widget::Widget;
     virtual void paintEvent(WidgetPaintEvent* event) override;
     virtual void resizeEvent(WidgetResizeEvent* event) override;
@@ -94,21 +98,24 @@ struct Widget_RightDock : public Widget{
 
 MainWindow::MainWindow()
 {
+    /* Remove Me */
+    Conf::setScale(2.5);
+
     m_private       = new Widget_MainWindow ();
     m->top_bar      = new Widget_TopBar     (m);
-    m->main_part    = new Widget_MainPart   (m);
-    m->middle_bar   = new Widget_MiddleBar  (m);
-    m->bottom_dock  = new Widget_BottomDock (m);
-    m->left_dock    = new Widget_LeftDock   (m);
-    m->right_dock   = new Widget_RightDock  (m);
+    m->bottom_bar   = new Widget_BottomBar  (m);
+    m->top_part     = new Widget_TopPart    (m);
+    m->bottom_part  = new Widget_BottomPart (m);
+    m->left_part    = new Widget_LeftPart   (m);
+    m->right_part   = new Widget_RightPart  (m);
 
     m->top_bar      ->setHeight (Conf::Scale() * 32,  false);
-    m->middle_bar   ->setHeight (Conf::Scale() * 32,  false);
-    m->bottom_dock  ->setHeight (Conf::Scale() * 256, false);
-    m->left_dock    ->setWidth  (Conf::Scale() * 256, false);
-    m->right_dock   ->setWidth  (Conf::Scale() * 128, false);
+    m->bottom_bar   ->setHeight (Conf::Scale() * 32,  false);
+    m->left_part    ->setWidth  (Conf::Scale() * 128, false);
+    m->right_part   ->setWidth  (Conf::Scale() * 128, false);
+    m->bottom_part  ->setHeight (Conf::Scale() * 256, false);
 
-    m->setSize({Conf::Scale() * 800, Conf::Scale() * 600});
+    m->setSize({int(Conf::Scale() * 800), int(Conf::Scale() * 600)});
     m->openWindow();
 }
 
@@ -118,11 +125,11 @@ MainWindow::~MainWindow()
     m->closeWindow();
 
     delete m->top_bar;
-    delete m->main_part;
-    delete m->middle_bar;
-    delete m->bottom_dock;
-    delete m->left_dock;
-    delete m->right_dock;
+    delete m->bottom_bar;
+    delete m->top_part;
+    delete m->bottom_part;
+    delete m->left_part;
+    delete m->right_part;
     delete m;
 }
 
@@ -154,35 +161,35 @@ void Widget_TopBar::paintEvent(WidgetPaintEvent* event)
     p->fillRect({0, 0, width(), height()}, Color(255, 0, 0));
 }
 
-void Widget_MainPart::paintEvent(WidgetPaintEvent* event)
-{
-    auto p = event->painter();
-
-    p->fillRect({0, 0, width(), height()}, Color(0, 255, 255));
-}
-
-void Widget_MiddleBar::paintEvent(WidgetPaintEvent* event)
+void Widget_BottomBar::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(255, 0, 0));
 }
 
-void Widget_BottomDock::paintEvent(WidgetPaintEvent* event)
+void Widget_TopPart::paintEvent(WidgetPaintEvent* event)
+{
+    auto p = event->painter();
+
+    p->fillRect({0, 0, width(), height()}, Color(0, 255, 255));
+}
+
+void Widget_BottomPart::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(0, 255, 0));
 }
 
-void Widget_LeftDock::paintEvent(WidgetPaintEvent* event)
+void Widget_LeftPart::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(0, 0, 255));
 }
 
-void Widget_RightDock::paintEvent(WidgetPaintEvent* event)
+void Widget_RightPart::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
@@ -192,75 +199,40 @@ void Widget_RightDock::paintEvent(WidgetPaintEvent* event)
 
 void Widget_MainWindow::resizeEvent(WidgetResizeEvent* event)
 {
-    top_bar->setWidth(event->width());
+    auto w = event->width();
+    auto h = event->height();
+
+    top_bar->setWidth(w);
     top_bar->setPosition({0, 0});
 
-    main_part->setY(top_bar->height() + gap);
+    bottom_bar->setWidth(w);
+    bottom_bar->setPosition({0, h - bottom_bar->height()});
 
-    if(bottom_dock->parent() == this)
+    auto mw = w;
+    auto mh = h - top_bar->height() - bottom_bar->height() - gap*2;
+    auto mx = 0;
+    auto my = top_bar->height() + gap;
+
+    if(leftPartIsOpen())
     {
-        bottom_dock->setY(event->height() - bottom_dock->height());
-
-        if(left_dock->parent() == this && left_dock_expanded)
-            bottom_dock->setX(left_dock->width() + gap);
-        else
-            bottom_dock->setX(0);
-
-        if(right_dock->parent() == this && right_dock_expanded)
-            bottom_dock->setWidth(event->width() - bottom_dock->x() - right_dock->width() - gap);
-        else
-            bottom_dock->setWidth(event->width() - bottom_dock->x());
-
-        main_part->setHeight(event->height() - top_bar->height() - middle_bar->height() - bottom_dock->height() - gap*3);
-    }
-    else
-    {
-        main_part->setHeight(event->height() - top_bar->height() - middle_bar->height() - gap*2);
+        left_part->setHeight(mh);
+        left_part->setPosition({0, top_bar->height() + gap});
+        mw -= left_part->width() + gap;
+        mx = left_part->width() + gap;
     }
 
-    if(left_dock->parent() == this)
+    if(rightPartIsOpen())
     {
-        left_dock->setX(0);
-        left_dock->setY(top_bar->height() + gap);
-
-        if(bottom_dock->parent() == this && !left_dock_expanded)
-            left_dock->setHeight(event->height() - left_dock->y() - bottom_dock->height());
-        else
-            left_dock->setHeight(event->height() - left_dock->y());
-
-        main_part->setX(left_dock->width() + gap);
-    }
-    else
-    {
-        main_part->setX(0);
+        right_part->setHeight(mh);
+        right_part->setPosition({w - right_part->width(), top_bar->height() + gap});
+        mw -= right_part->width() + gap;
     }
 
-    if(right_dock->parent() == this)
-    {
-        right_dock->setX(event->width() - right_dock->width());
-        right_dock->setY(top_bar->height() + gap);
+    top_part    ->setPosition({mx, my});
+    top_part    ->setSize({mw, mh - bottom_part->height() - gap});
 
-        if(bottom_dock->parent() == this && !right_dock_expanded)
-            right_dock->setHeight(event->height() - right_dock->y() - bottom_dock->height());
-        else
-            right_dock->setHeight(event->height() - right_dock->y());
-
-        if(left_dock->parent() == this)
-            main_part->setWidth(event->width() - left_dock->width() - right_dock->width() - gap - gap);
-        else
-            main_part->setWidth(event->width() - right_dock->width() - gap);
-    }
-    else
-    {
-        if(left_dock->parent() == this)
-            main_part->setWidth(event->width() - left_dock->width() - gap);
-        else
-            main_part->setWidth(event->width());
-    }
-
-    middle_bar->setWidth(main_part->width());
-    middle_bar->setX(main_part->x());
-    middle_bar->setY(main_part->y() + main_part->height() + gap);
+    bottom_part ->setPosition({mx, my + top_part->height() + gap});
+    bottom_part ->setWidth(mw);
 
     repaint();
 }
@@ -270,27 +242,27 @@ void Widget_TopBar::resizeEvent(WidgetResizeEvent* event)
 
 }
 
-void Widget_MainPart::resizeEvent(WidgetResizeEvent* event)
+void Widget_BottomBar::resizeEvent(WidgetResizeEvent* event)
 {
     
 }
 
-void Widget_MiddleBar::resizeEvent(WidgetResizeEvent* event)
+void Widget_TopPart::resizeEvent(WidgetResizeEvent* event)
 {
     
 }
 
-void Widget_BottomDock::resizeEvent(WidgetResizeEvent* event)
+void Widget_BottomPart::resizeEvent(WidgetResizeEvent* event)
 {
     
 }
 
-void Widget_LeftDock::resizeEvent(WidgetResizeEvent* event)
+void Widget_LeftPart::resizeEvent(WidgetResizeEvent* event)
 {
     
 }
 
-void Widget_RightDock::resizeEvent(WidgetResizeEvent* event)
+void Widget_RightPart::resizeEvent(WidgetResizeEvent* event)
 {
     
 }
