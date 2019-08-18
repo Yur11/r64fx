@@ -50,6 +50,8 @@ set(SRC
     Keyboard.cpp
     KeyboardModifiers.cpp
     LayoutUtils.cpp
+    Main.cpp
+    MainWindow.cpp
     MemoryUtils.cpp
     Midi.cpp
     MidiDispatcher.cpp
@@ -76,10 +78,8 @@ set(SRC
     UndoRedoChain.cpp
     UndoRedoUtils.cpp
     Value.cpp
-    View_Filter.cpp
-    View_Player.cpp
-    View_Program.cpp
-    View_Project.cpp
+#     View_Filter.cpp
+#     View_Player.cpp
     WaveformUtils.cpp
     Widget.cpp
     Widget_Button.cpp
