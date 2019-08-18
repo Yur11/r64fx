@@ -1842,7 +1842,7 @@ void Widget::dndFinishedEvent(DndFinishedEvent* event)
 
 void Widget::closeEvent()
 {
-    closeWindow();
+//     closeWindow();
 }
 
 }//namespace r64fx
