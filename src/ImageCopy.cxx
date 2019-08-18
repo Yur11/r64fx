@@ -300,8 +300,8 @@ template<unsigned int Flags> struct CopyFun{
                 int srcy = ((Flags & R64FX_IMGOP_FLIP_DIAG) ? x : y) + isec.srcy();
                 auto srcpx = src.img->pixel(srcx, srcy);
 
-                int dstx = flipval<Flags & R64FX_IMGOP_FLIP_HORI>(x, isec.dstWidth()) + isec.dstx();
-                int dsty = flipval<Flags & R64FX_IMGOP_FLIP_VERT>(y, isec.dstHeight()) + isec.dsty();
+                int dstx = flipval<bool(Flags & R64FX_IMGOP_FLIP_HORI)>(x, isec.dstWidth()) + isec.dstx();
+                int dsty = flipval<bool(Flags & R64FX_IMGOP_FLIP_VERT)>(y, isec.dstHeight()) + isec.dsty();
                 auto dstpx = dst.img->pixel(dstx, dsty);
 
                 shuf_components<Flags & R64FX_IMGOP_TYPE_MASK>(shuf, dstpx, srcpx);
