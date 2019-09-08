@@ -23,6 +23,9 @@
 #include "Painter.hpp"
 #include "Conf_Scale.hpp"
 
+//REMOVE ME
+#include "Widget_Panel.hpp"
+
 #define m ((Widget_MainWindow*) m_private)
 
 using namespace std;
@@ -43,6 +46,9 @@ struct Widget_MainWindow : public Widget{
     Widget_BottomPart*  bottom_part  = nullptr;
     Widget_LeftPart*    left_part    = nullptr;
     Widget_RightPart*   right_part   = nullptr;
+
+    //REMOVE ME
+    Widget_Panel*       panel        = nullptr;
 
     int gap = 3;
     bool left_dock_expanded = true, right_dock_expanded = true;
@@ -115,6 +121,10 @@ MainWindow::MainWindow()
     m->right_part   ->setWidth  (Conf::Scale() * 128, false);
     m->bottom_part  ->setHeight (Conf::Scale() * 256, false);
 
+    //REMOVE ME
+    m->panel        = new Widget_Panel(m->top_part);
+    m->panel        ->setPosition({0, 0});
+
     m->setSize({int(Conf::Scale() * 800), int(Conf::Scale() * 600)});
     m->openWindow();
 }
@@ -123,6 +133,9 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow()
 {
     m->closeWindow();
+
+    //REMOVE ME
+    delete m->panel;
 
     delete m->top_bar;
     delete m->bottom_bar;
@@ -159,6 +172,8 @@ void Widget_TopBar::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(255, 0, 0));
+
+    childrenPaintEvent(event);
 }
 
 void Widget_BottomBar::paintEvent(WidgetPaintEvent* event)
@@ -166,6 +181,8 @@ void Widget_BottomBar::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(255, 0, 0));
+
+    childrenPaintEvent(event);
 }
 
 void Widget_TopPart::paintEvent(WidgetPaintEvent* event)
@@ -173,6 +190,8 @@ void Widget_TopPart::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(0, 255, 255));
+
+    childrenPaintEvent(event);
 }
 
 void Widget_BottomPart::paintEvent(WidgetPaintEvent* event)
@@ -180,6 +199,8 @@ void Widget_BottomPart::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(0, 255, 0));
+
+    childrenPaintEvent(event);
 }
 
 void Widget_LeftPart::paintEvent(WidgetPaintEvent* event)
@@ -187,6 +208,8 @@ void Widget_LeftPart::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(0, 0, 255));
+
+    childrenPaintEvent(event);
 }
 
 void Widget_RightPart::paintEvent(WidgetPaintEvent* event)
@@ -194,6 +217,8 @@ void Widget_RightPart::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(255, 0, 255));
+
+    childrenPaintEvent(event);
 }
 
 

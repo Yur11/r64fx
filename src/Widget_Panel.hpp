@@ -24,6 +24,9 @@ namespace r64fx{
 class Widget_Panel : public Widget{
 public:
     Widget_Panel(Widget* parent);
+
+private:
+    void paintEvent(WidgetPaintEvent* event);
 };
 
 }//namespace r64fx

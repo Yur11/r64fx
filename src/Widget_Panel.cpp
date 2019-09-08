@@ -15,12 +15,22 @@
  */
 
 #include "Widget_Panel.hpp"
+#include "Painter.hpp"
+#include "Conf_Scale.hpp"
 
 namespace r64fx{
 
 Widget_Panel::Widget_Panel(Widget* parent) : Widget(parent)
 {
+    setSize({int(Conf::Scale() * 256), int(Conf::Scale() * 256)});
+}
 
+
+void Widget_Panel::paintEvent(WidgetPaintEvent* event)
+{
+    auto p = event->painter();
+
+    p->fillRect({0, 0, width(), height()}, Color(127, 127, 127));
 }
 
 }//namespace r64fx
