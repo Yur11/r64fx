@@ -22,6 +22,9 @@
 namespace r64fx{
 
 class Widget_Panel : public Widget{
+    void* m0 = nullptr;
+    void* m1 = nullptr;
+
 public:
     Widget_Panel(Widget* parent);
 

@@ -18,11 +18,21 @@
 #include "Painter.hpp"
 #include "Conf_Scale.hpp"
 
+#include "Widget_Knob.hpp"
+#define m_knob0 ((Widget_Knob*)m0)
+#define m_knob1 ((Widget_Knob*)m1)
+
 namespace r64fx{
 
 Widget_Panel::Widget_Panel(Widget* parent) : Widget(parent)
 {
     setSize({int(Conf::Scale() * 256), int(Conf::Scale() * 256)});
+
+    m0 = new Widget_Knob(Conf::Scale() * 48, this);
+    m_knob0->setPosition({int(Conf::Scale() * 2), int(Conf::Scale() * 2)});
+
+    m1 = new Widget_Knob(Conf::Scale() * 48, this);
+    m_knob1->setPosition({int(Conf::Scale() * 2), int(Conf::Scale() * 4 + m_knob1->height())});
 }
 
 
@@ -31,6 +41,8 @@ void Widget_Panel::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(127, 127, 127));
+
+    childrenPaintEvent(event);
 }
 
 }//namespace r64fx
