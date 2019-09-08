@@ -92,6 +92,7 @@ set(SRC
     Widget_Label.cpp
     Widget_Menu.cpp
     Widget_Number.cpp
+    Widget_Panel.cpp
     Widget_ScrollArea.cpp
     Widget_ScrollBar.cpp
     Widget_Slider.cpp
