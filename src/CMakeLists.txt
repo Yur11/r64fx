@@ -36,8 +36,6 @@ set(SRC
     ClipboardEvents.cpp
     Conf_Scale.cpp
     Directory.cpp
-#     DummyMachine.cpp
-#     FilterMachine.cpp
     FilterClass.cpp
     Font.cpp
     FontSupply.cpp
@@ -61,7 +59,6 @@ set(SRC
     Painter.cpp
     PainterShaders.cpp
     PainterVertexArrays.cpp
-#     Program.cpp
     RingSectorPainter.cpp
     Shader.cpp
     SoundDriver.cpp
@@ -78,8 +75,6 @@ set(SRC
     UndoRedoChain.cpp
     UndoRedoUtils.cpp
     Value.cpp
-#     View_Filter.cpp
-#     View_Player.cpp
     WaveformUtils.cpp
     Widget.cpp
     Widget_Button.cpp
