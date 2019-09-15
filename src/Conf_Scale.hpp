@@ -6,6 +6,7 @@ namespace Conf{
 
 void setScale(float scale);
 float Scale();
+int ScaleUp(int n);
 
 }//namespace Conf
 }//namespace r64fx

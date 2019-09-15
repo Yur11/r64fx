@@ -9,6 +9,7 @@ namespace Conf{
 
 void setScale(float scale) { g_Scale = scale; }
 float Scale() { return g_Scale; }
+int ScaleUp(int n) { return int(n * g_Scale); }
 
 }//namespace Conf
 }//namespace r64fx
