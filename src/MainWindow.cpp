@@ -125,7 +125,7 @@ MainWindow::MainWindow()
     m->panel        = new Widget_Panel(m->top_part);
     m->panel        ->setPosition({0, 0});
 
-    m->setSize({int(Conf::Scale() * 800), int(Conf::Scale() * 600)});
+    m->setSize({Conf::ScaleUp(800), Conf::ScaleUp(600)});
     m->openWindow();
 }
 
