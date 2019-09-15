@@ -26,13 +26,13 @@ namespace r64fx{
 
 Widget_Panel::Widget_Panel(Widget* parent) : Widget(parent)
 {
-    setSize({int(Conf::Scale() * 256), int(Conf::Scale() * 256)});
+    setSize({Conf::ScaleUp(256), Conf::ScaleUp(256)});
 
-    m0 = new Widget_Knob(Conf::Scale() * 48, this);
-    m_knob0->setPosition({int(Conf::Scale() * 2), int(Conf::Scale() * 2)});
+    m0 = new Widget_Knob(Conf::ScaleUp(48), this);
+    m_knob0->setPosition({Conf::ScaleUp(2), Conf::ScaleUp(2)});
 
-    m1 = new Widget_Knob(Conf::Scale() * 48, this);
-    m_knob1->setPosition({int(Conf::Scale() * 2), int(Conf::Scale() * 4 + m_knob1->height())});
+    m1 = new Widget_Knob(Conf::ScaleUp(48), this);
+    m_knob1->setPosition({Conf::ScaleUp(2), Conf::ScaleUp(4) + m_knob1->height()});
 }
 
 

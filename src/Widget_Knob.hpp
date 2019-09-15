@@ -17,7 +17,9 @@ public:
 
     virtual ~Widget_Knob();
 
+#ifdef R64FX_DEBUG
     static void debugPaint(Painter* painter, Point<int> position, int size);
+#endif//R64FX_DEBUG
 
 private:
     virtual void addedToWindowEvent(WidgetAddedToWindowEvent* event);

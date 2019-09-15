@@ -105,7 +105,7 @@ struct Widget_RightPart : public Widget{
 MainWindow::MainWindow()
 {
     /* Remove Me */
-    Conf::setScale(2.5);
+    Conf::setScale(2);
 
     m_private       = new Widget_MainWindow ();
     m->top_bar      = new Widget_TopBar     (m);
