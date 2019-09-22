@@ -22,11 +22,17 @@
 namespace r64fx{
 
 class Widget_Panel : public Widget{
-    void* m0 = nullptr;
-    void* m1 = nullptr;
+    void* k0 = nullptr;
+    void* k1 = nullptr;
+    void* k2 = nullptr;
+    void* k3 = nullptr;
+    void* s0 = nullptr;
+    void* s1 = nullptr;
 
 public:
     Widget_Panel(Widget* parent);
+
+    ~Widget_Panel();
 
 private:
     void paintEvent(WidgetPaintEvent* event);

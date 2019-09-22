@@ -19,8 +19,13 @@
 #include "Conf_Scale.hpp"
 
 #include "Widget_Knob.hpp"
-#define m_knob0 ((Widget_Knob*)m0)
-#define m_knob1 ((Widget_Knob*)m1)
+#include "Widget_Slider.hpp"
+#define m_knob0 ((Widget_Knob*)k0)
+#define m_knob1 ((Widget_Knob*)k1)
+#define m_knob2 ((Widget_Knob*)k2)
+#define m_knob3 ((Widget_Knob*)k3)
+#define m_slider0 ((Widget_Slider*)s0)
+#define m_slider1 ((Widget_Slider*)s1)
 
 namespace r64fx{
 
@@ -28,11 +33,33 @@ Widget_Panel::Widget_Panel(Widget* parent) : Widget(parent)
 {
     setSize({Conf::ScaleUp(256), Conf::ScaleUp(256)});
 
-    m0 = new Widget_Knob(Conf::ScaleUp(48), this);
-    m_knob0->setPosition({Conf::ScaleUp(2), Conf::ScaleUp(2)});
+    k0 = new Widget_Knob(Conf::ScaleUp(48), this);
+    m_knob0->setPosition({Conf::ScaleUp(2), Conf::ScaleUp(12)});
 
-    m1 = new Widget_Knob(Conf::ScaleUp(48), this);
-    m_knob1->setPosition({Conf::ScaleUp(2), Conf::ScaleUp(4) + m_knob1->height()});
+    k1 = new Widget_Knob(Conf::ScaleUp(48), this);
+    m_knob1->setPosition({Conf::ScaleUp(2), Conf::ScaleUp(14) + m_knob0->height()});
+
+    k2 = new Widget_Knob(Conf::ScaleUp(48), this);
+    m_knob2->setPosition({Conf::ScaleUp(2), Conf::ScaleUp(16) + m_knob0->height() + m_knob1->height()});
+    m_knob2->setMinValue(0.0f);
+    m_knob2->setMaxValue(+1.0f);
+
+    k3 = new Widget_Knob(Conf::ScaleUp(48), this);
+    m_knob3->setPosition({Conf::ScaleUp(2), Conf::ScaleUp(18) + m_knob0->height() + m_knob1->height() + m_knob2->height()});
+    m_knob3->setMinValue(-1.0f);
+    m_knob3->setMaxValue(0.0f);
+
+    s0 = new Widget_Slider(Conf::ScaleUp(128), Conf::ScaleUp(16), Orientation::Vertical, this);
+    m_slider0->setPosition({m_knob0->width() + Conf::ScaleUp(10), Conf::ScaleUp(10)});
+
+    s1 = new Widget_Slider(Conf::ScaleUp(128), Conf::ScaleUp(16), Orientation::Vertical, this);
+    m_slider1->setPosition({m_knob0->width() + m_slider0->width() + Conf::ScaleUp(20), Conf::ScaleUp(10)});
+}
+
+
+Widget_Panel::~Widget_Panel()
+{
+    
 }
 
 
