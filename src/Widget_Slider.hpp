@@ -8,7 +8,7 @@ namespace r64fx{
 
 class SliderHandle;
 
-class Widget_Slider : public Widget, public Value{
+class Widget_Slider : public Widget, public Value, public ValueChangeCallback{
     SliderHandle* m_handle = nullptr;
 
 public:

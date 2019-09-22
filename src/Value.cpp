@@ -9,11 +9,10 @@ namespace{
 
 Value::Value()
 {
-    onValueChanged(nullptr);
 }
 
 
-void Value::setValue(float value, bool notify)
+bool Value::changeValue(float value)
 {
     float old_value = m_value;
     m_value = value;
@@ -21,8 +20,7 @@ void Value::setValue(float value, bool notify)
         m_value = minValue();
     else if(m_value > maxValue())
         m_value = maxValue();
-    if(notify && m_value != old_value)
-        m_on_value_changed(m_on_value_changed_arg, m_value);
+    return old_value != value;
 }
 
 
@@ -86,7 +84,13 @@ float Value::valueRange() const
 }
 
 
-void Value::onValueChanged(void (*on_value_changed)(void* arg, float new_value), void* arg)
+ValueChangeCallback::ValueChangeCallback()
+{
+    onValueChanged(nullptr);
+}
+
+
+void ValueChangeCallback::onValueChanged(void (*on_value_changed)(void* arg, float new_value), void* arg)
 {
     if(on_value_changed)
     {
@@ -97,6 +101,12 @@ void Value::onValueChanged(void (*on_value_changed)(void* arg, float new_value),
         m_on_value_changed = on_value_changed_stub;
     }
     m_on_value_changed_arg = arg;
+}
+
+
+void ValueChangeCallback::valueChanged(float value)
+{
+    m_on_value_changed(m_on_value_changed_arg, value);
 }
 
 }//namespace r64fx

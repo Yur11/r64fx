@@ -159,7 +159,8 @@ void Widget_Slider::mousePressEvent(MousePressEvent* event)
                 val = minValue();
             if(val > maxValue())
                 val = maxValue();
-            setValue(val, true);
+            if(changeValue(val))
+                valueChanged(val);
             repaint();
         }
         else
@@ -205,7 +206,8 @@ void Widget_Slider::setValueFromPosition(Point<int> position)
     }
 
     float new_value = (float(pos)/float(travelDistance())) * valueRange() + minValue();
-    setValue(new_value, true);
+    if(changeValue(new_value))
+        valueChanged(new_value);
     repaint();
 }
 

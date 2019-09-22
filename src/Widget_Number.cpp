@@ -103,7 +103,7 @@ Widget_Number::Widget_Number(Widget* parent)
     setMinValue(-1.0f);
     setMaxValue(+1.0f);
     setValueStep(0.005f);
-    Value::setValue(0.0f);
+    Value::changeValue(0.0f);
 }
 
 
@@ -176,7 +176,8 @@ void Widget_Number::setValue(float value, bool notify)
 
     auto tp = g.textPainter();
 
-    Value::setValue(value, notify);
+    if(Value::changeValue(value) && notify)
+        valueChanged(value);
     tp->clear();
     tp->insertText(float2str(Value::value()));
     renderImage();

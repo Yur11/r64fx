@@ -6,7 +6,7 @@
 
 namespace r64fx{
 
-class Widget_Number : public Widget, public Value{
+class Widget_Number : public Widget, public Value, public ValueChangeCallback{
     void* m = nullptr;
     int m_text_x = 0;
 

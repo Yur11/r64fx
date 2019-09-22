@@ -8,7 +8,7 @@ namespace r64fx{
 
 class KnobAnimation;
 
-class Widget_Knob : public Widget, public Value{
+class Widget_Knob : public Widget, public Value, public ValueChangeCallback{
 protected:
     KnobAnimation*  m_animation = nullptr;
 

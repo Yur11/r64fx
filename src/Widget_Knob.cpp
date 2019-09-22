@@ -363,7 +363,7 @@ Widget_Knob::Widget_Knob(int size, Widget* parent)
     m_animation = KnobAnimation::getAnimation(size);
     setMinValue(-1.0f);
     setMaxValue(+1.0f);
-    setValue(0.0f);
+    changeValue(0.0f);
 }
 
 
@@ -433,7 +433,8 @@ void Widget_Knob::mousePressEvent(MousePressEvent* event)
                 val = minValue();
             if(val > maxValue())
                 val = maxValue();
-            setValue(val, true);
+            if(changeValue(val))
+                valueChanged(val);
             repaint();
         }
         else
@@ -455,7 +456,8 @@ void Widget_Knob::mouseMoveEvent(MouseMoveEvent* event)
 {
     if(event->button() == MouseButton::Left())
     {
-        setValue(value() + valueStep() * -event->delta().y(), true);
+        if(changeValue(value() + valueStep() * -event->delta().y()))
+            valueChanged(value());
         repaint();
     }
 }

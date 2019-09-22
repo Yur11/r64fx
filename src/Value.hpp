@@ -8,13 +8,12 @@ class Value{
     float  m_max_value   = 1.0f;
     float  m_value_step  = 0.005f;
     float  m_value       = 0.0f;
-    void (*m_on_value_changed)(void* arg, float new_value) = nullptr;
-    void* m_on_value_changed_arg = nullptr;
 
 public:
     Value();
 
-    void setValue(float value, bool notify = false);
+    /* Returns true if value has changed */
+    bool changeValue(float value);
 
     float value() const;
 
@@ -35,8 +34,19 @@ public:
     float valueStep() const;
 
     float valueRange() const;
+};
 
-    void onValueChanged(void (*on_value_changed)(void* arg, float new_value), void* arg = nullptr);
+class ValueChangeCallback{
+    void (*m_on_value_changed)(void* arg, float value) = nullptr;
+    void* m_on_value_changed_arg = nullptr;
+
+public:
+    ValueChangeCallback();
+
+    void onValueChanged(void (*on_value_changed)(void* arg, float value), void* arg = nullptr);
+
+protected:
+    void valueChanged(float value);
 };
 
 }//namespace r64fx
