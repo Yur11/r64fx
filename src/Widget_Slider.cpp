@@ -104,7 +104,7 @@ Widget_Slider::~Widget_Slider()
 void Widget_Slider::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
-    p->fillRect({0, 0, width(), height()}, Color(191, 191, 191));
+    p->fillRect({0, 0, width(), height()}, Color(127, 127, 127));
 
     int pos = positionFromValue(value());
     int nullpos = positionFromValue(0.0f);
