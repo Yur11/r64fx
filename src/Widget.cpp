@@ -188,7 +188,7 @@ class WindowEventDispatcher : public WindowEventDispatcherIface{
             else
             {
                 auto d = (WidgetImpl*) window->data();
-                dst = d->root_widget;
+                dst = d->root_widget->leafAt(event_position);
             }
 
             MousePressEvent event(
