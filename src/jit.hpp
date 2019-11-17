@@ -297,22 +297,35 @@ class Opcode{
     unsigned long m = 0;
 
 public:
-    explicit Opcode(unsigned long code) : m(code) { R64FX_DEBUG_ASSERT((code & ~0x7FF) == 0); }
+    explicit Opcode(unsigned long code) : m(code)
+        { R64FX_DEBUG_ASSERT((m & ~0x700FF) == 0); }
 
-    inline unsigned char code() const { return m & 0xFF; }
+    explicit Opcode(unsigned long byte1, unsigned long byte2) : m(byte1 | (byte2 << 8))
+        { R64FX_DEBUG_ASSERT((m & ~0x7FFFF) == 0); }
 
-    inline bool has0F() const { return m & 0x100; }
+    inline unsigned char byte1() const { return m & 0xFF; }
 
-    inline bool has66() const { return m & 0x200; }
+    inline unsigned char byte2() const { return (m >> 8) & 0xFF; }
 
-    inline bool hasF3() const { return m & 0x400; }
+    inline bool hasByte2() const { return byte2(); }
 
-    inline int byteCount() const { return 1 + has0F() + has66() + hasF3(); }
+    inline bool has0F() const { return m & 0x10000; }
+
+    inline bool has66() const { return m & 0x20000; }
+
+    inline bool hasF3() const { return m & 0x40000; }
+
+    inline int byteCount() const { return 1 + hasByte2() + has0F() + has66() + hasF3(); }
 };
 
-inline Opcode Opcode_0F   (unsigned long code) { return Opcode(0x100 | code); }
-inline Opcode Opcode_660F (unsigned long code) { return Opcode(0x300 | code); }
-inline Opcode Opcode_F30F (unsigned long code) { return Opcode(0x500 | code); }
+inline Opcode Opcode_0F     (unsigned long byte1, unsigned long byte2 = 0)
+    { return Opcode(0x10000 | (byte2 << 8) | byte1); }
+
+inline Opcode Opcode_660F   (unsigned long byte1, unsigned long byte2 = 0)
+    { return Opcode(0x30000 | (byte2 << 8) |  byte1); }
+
+inline Opcode Opcode_F30F   (unsigned long byte1, unsigned long byte2 = 0)
+    { return Opcode(0x50000 | (byte2 << 8) |  byte1); }
 
 
 struct Operands{
@@ -625,6 +638,7 @@ public:
     R64FX_SSE2_INSTRUCTION(PSUBQ,      0xFB)
     R64FX_SSE2_INSTRUCTION(PMULHW,     0xE5)
     R64FX_SSE2_INSTRUCTION(PMULHUW,    0xE4)
+    R64FX_SSE2_INSTRUCTION(PMULUDQ,    0xF4)
     R64FX_SSE2_INSTRUCTION(PAND,       0xDB)
     R64FX_SSE2_INSTRUCTION(PXOR,       0xEF)
     R64FX_SSE2_INSTRUCTION(POR,        0xEB)
@@ -657,6 +671,14 @@ public:
 
     R64FX_SSE2_SHIFT_INSTRUCTION(PSRLQ, 0x73, 2, 0xD3)
     R64FX_SSE2_SHIFT_INSTRUCTION(PSLLQ, 0x73, 6, 0xF3)
+
+/* === SSE4.1 === */
+#define R64FX_SSE4_INSTRUCTION(name, op1, op2)\
+    inline void name(Xmm dst, Xmm src)    { m.write(Opcode_660F(op1, op2), Operands(dst, src));}\
+    inline void name(Xmm reg, Mem128 mem) { m.write(Opcode_660F(op1, op2), Operands(reg, mem, m.ptr() + 8)); }\
+    inline void name(Xmm reg, SIBD sibd)  { m.write(Opcode_660F(op1, op2), Operands(reg, sibd)); }
+
+R64FX_SSE4_INSTRUCTION(PMULDQ, 0x38, 0x28)
 };
 
 

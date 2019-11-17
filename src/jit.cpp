@@ -302,7 +302,9 @@ void AssemblerBuffer::write(const Opcode &opcode, const Operands &operands)
         p[r++] = 64 | operands.wrxb();
     if(opcode.has0F())
         p[r++] = 0x0F;
-    p[r++] = opcode.code();
+    p[r++] = opcode.byte1();
+    if(opcode.hasByte2())
+        p[r++] = opcode.byte2();
     auto operand_bytes = operands.operandBytes();
     for(int i=0; i<operands.operandByteCount(); i++)
     {
