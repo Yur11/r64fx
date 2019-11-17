@@ -679,6 +679,7 @@ public:
     inline void name(Xmm reg, SIBD sibd)  { m.write(Opcode_660F(op1, op2), Operands(reg, sibd)); }
 
 R64FX_SSE4_INSTRUCTION(PMULDQ, 0x38, 0x28)
+R64FX_SSE4_INSTRUCTION(PMULLD, 0x38, 0x40)
 };
 
 
