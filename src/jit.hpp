@@ -625,61 +625,69 @@ public:
     inline void PSHUFD(Xmm reg, Mem128 mem, Shuf shuf) { m.write(Opcode_660F(0x70), Operands(reg, mem, m.ptr() + 9, shuf.byte())); }
     inline void PSHUFD(Xmm reg, SIBD sibd,  Shuf shuf) { m.write(Opcode_660F(0x70), Operands(reg, sibd, shuf.byte())); }
 
-#define R64FX_SSE2_INSTRUCTION(name, opcode)\
-    inline void name(Xmm dst, Xmm src)    { m.write(Opcode_660F(opcode), Operands(dst, src));}\
-    inline void name(Xmm reg, Mem128 mem) { m.write(Opcode_660F(opcode), Operands(reg, mem, m.ptr() + 8)); }\
+#define R64FX_XMM_660F_1BYTE(name, opcode)                                                                   \
+    inline void name(Xmm dst, Xmm src)    { m.write(Opcode_660F(opcode), Operands(dst, src));}               \
+    inline void name(Xmm reg, Mem128 mem) { m.write(Opcode_660F(opcode), Operands(reg, mem, m.ptr() + 8)); } \
     inline void name(Xmm reg, SIBD sibd)  { m.write(Opcode_660F(opcode), Operands(reg, sibd)); }
 
-    R64FX_SSE2_INSTRUCTION(PADDW,      0xFD)
-    R64FX_SSE2_INSTRUCTION(PSUBW,      0xF9)
-    R64FX_SSE2_INSTRUCTION(PADDD,      0xFE)
-    R64FX_SSE2_INSTRUCTION(PSUBD,      0xFA)
-    R64FX_SSE2_INSTRUCTION(PADDQ,      0xD4)
-    R64FX_SSE2_INSTRUCTION(PSUBQ,      0xFB)
-    R64FX_SSE2_INSTRUCTION(PMULHW,     0xE5)
-    R64FX_SSE2_INSTRUCTION(PMULHUW,    0xE4)
-    R64FX_SSE2_INSTRUCTION(PMULUDQ,    0xF4)
-    R64FX_SSE2_INSTRUCTION(PAND,       0xDB)
-    R64FX_SSE2_INSTRUCTION(PXOR,       0xEF)
-    R64FX_SSE2_INSTRUCTION(POR,        0xEB)
-    R64FX_SSE2_INSTRUCTION(PCMPEQB,    0x74)
-    R64FX_SSE2_INSTRUCTION(PCMPEQW,    0x75)
-    R64FX_SSE2_INSTRUCTION(PCMPEQD,    0x76)
-    R64FX_SSE2_INSTRUCTION(PCMPGTB,    0x64)
-    R64FX_SSE2_INSTRUCTION(PCMPGTW,    0x65)
-    R64FX_SSE2_INSTRUCTION(PCMPGTD,    0x66)
-    R64FX_SSE2_INSTRUCTION(PUNPCKLBW,  0x60)
-    R64FX_SSE2_INSTRUCTION(PUNPCKHBW,  0x68)
-    R64FX_SSE2_INSTRUCTION(PUNPCKLWD,  0x61)
-    R64FX_SSE2_INSTRUCTION(PUNPCKHWD,  0x69)
-    R64FX_SSE2_INSTRUCTION(PUNPCKLDQ,  0x62)
-    R64FX_SSE2_INSTRUCTION(PUNPCKHDQ,  0x6A)
-
-#define R64FX_SSE2_SHIFT_INSTRUCTION(name, op1, r, op2)                                            \
+#define R64FX_XMM_660F_1BYTE_IMM(name, op1, r, op2)                                                \
     inline void name(Xmm reg, Imm8   imm) { m.write(Opcode_660F(op1),    Operands(r, reg, imm)); } \
     inline void name(Xmm dst, Xmm    src) { m.write(Opcode_660F(op2 + 128), Operands(dst, src)); } \
     inline void name(Xmm reg, Mem128 mem) { m.write(Opcode_660F(op2 + 128), Operands(reg, mem)); } \
     inline void name(Xmm reg, SIBD   mem) { m.write(Opcode_660F(op2 + 128), Operands(reg, mem)); }
 
-    R64FX_SSE2_SHIFT_INSTRUCTION(PSRLW, 0x71, 2, 0xD1)
-    R64FX_SSE2_SHIFT_INSTRUCTION(PSRAW, 0x71, 4, 0xE1)
-    R64FX_SSE2_SHIFT_INSTRUCTION(PSLLW, 0x71, 6, 0xF1)
-
-    R64FX_SSE2_SHIFT_INSTRUCTION(PSRLD, 0x72, 2, 0xD2)
-    R64FX_SSE2_SHIFT_INSTRUCTION(PSRAD, 0x72, 4, 0xE2)
-    R64FX_SSE2_SHIFT_INSTRUCTION(PSLLD, 0x72, 6, 0xF2)
-
-    R64FX_SSE2_SHIFT_INSTRUCTION(PSRLQ, 0x73, 2, 0xD3)
-    R64FX_SSE2_SHIFT_INSTRUCTION(PSLLQ, 0x73, 6, 0xF3)
-
-/* === SSE4.1 === */
-#define R64FX_SSE4_INSTRUCTION(name, op1, op2)\
-    inline void name(Xmm dst, Xmm src)    { m.write(Opcode_660F(op1, op2), Operands(dst, src));}\
-    inline void name(Xmm reg, Mem128 mem) { m.write(Opcode_660F(op1, op2), Operands(reg, mem, m.ptr() + 8)); }\
+#define R64FX_XMM_660F_2BYTE(name, op1, op2)                                                                   \
+    inline void name(Xmm dst, Xmm src)    { m.write(Opcode_660F(op1, op2), Operands(dst, src));}               \
+    inline void name(Xmm reg, Mem128 mem) { m.write(Opcode_660F(op1, op2), Operands(reg, mem, m.ptr() + 8)); } \
     inline void name(Xmm reg, SIBD sibd)  { m.write(Opcode_660F(op1, op2), Operands(reg, sibd)); }
 
-R64FX_SSE4_INSTRUCTION(PMULDQ, 0x38, 0x28)
-R64FX_SSE4_INSTRUCTION(PMULLD, 0x38, 0x40)
+    R64FX_XMM_660F_1BYTE      (PADDW,      0xFD)
+    R64FX_XMM_660F_1BYTE      (PSUBW,      0xF9)
+    R64FX_XMM_660F_1BYTE      (PADDD,      0xFE)
+    R64FX_XMM_660F_1BYTE      (PSUBD,      0xFA)
+    R64FX_XMM_660F_1BYTE      (PADDQ,      0xD4)
+    R64FX_XMM_660F_1BYTE      (PSUBQ,      0xFB)
+    R64FX_XMM_660F_1BYTE      (PMULHW,     0xE5)
+    R64FX_XMM_660F_1BYTE      (PMULHUW,    0xE4)
+    R64FX_XMM_660F_1BYTE      (PMULUDQ,    0xF4)
+    R64FX_XMM_660F_1BYTE      (PAND,       0xDB)
+    R64FX_XMM_660F_1BYTE      (PXOR,       0xEF)
+    R64FX_XMM_660F_1BYTE      (POR,        0xEB)
+    R64FX_XMM_660F_1BYTE      (PCMPEQB,    0x74)
+    R64FX_XMM_660F_1BYTE      (PCMPEQW,    0x75)
+    R64FX_XMM_660F_1BYTE      (PCMPEQD,    0x76)
+    R64FX_XMM_660F_1BYTE      (PCMPGTB,    0x64)
+    R64FX_XMM_660F_1BYTE      (PCMPGTW,    0x65)
+    R64FX_XMM_660F_1BYTE      (PCMPGTD,    0x66)
+    R64FX_XMM_660F_1BYTE      (PUNPCKLBW,  0x60)
+    R64FX_XMM_660F_1BYTE      (PUNPCKHBW,  0x68)
+    R64FX_XMM_660F_1BYTE      (PUNPCKLWD,  0x61)
+    R64FX_XMM_660F_1BYTE      (PUNPCKHWD,  0x69)
+    R64FX_XMM_660F_1BYTE      (PUNPCKLDQ,  0x62)
+    R64FX_XMM_660F_1BYTE      (PUNPCKHDQ,  0x6A)
+    R64FX_XMM_660F_1BYTE      (PMADDWD,    0xF5)
+
+    R64FX_XMM_660F_1BYTE_IMM  (PSRLW, 0x71, 2, 0xD1)
+    R64FX_XMM_660F_1BYTE_IMM  (PSRAW, 0x71, 4, 0xE1)
+    R64FX_XMM_660F_1BYTE_IMM  (PSLLW, 0x71, 6, 0xF1)
+    R64FX_XMM_660F_1BYTE_IMM  (PSRLD, 0x72, 2, 0xD2)
+    R64FX_XMM_660F_1BYTE_IMM  (PSRAD, 0x72, 4, 0xE2)
+    R64FX_XMM_660F_1BYTE_IMM  (PSLLD, 0x72, 6, 0xF2)
+    R64FX_XMM_660F_1BYTE_IMM  (PSRLQ, 0x73, 2, 0xD3)
+    R64FX_XMM_660F_1BYTE_IMM  (PSLLQ, 0x73, 6, 0xF3)
+
+    inline void PEXTRW(GPR64 gpr, Xmm xmm, Imm8 imm)
+        { m.write(Opcode_660F(0xC5), Operands(gpr, xmm, imm.b)); }
+
+    inline void PINSRW(Xmm xmm, GPR64 gpr, Imm8 imm)
+        { m.write(Opcode_660F(0xC4), Operands(gpr, xmm, imm.b)); }
+
+/* === SSSE3 === */
+    R64FX_XMM_660F_2BYTE      (PMADDUBSW, 0x38, 0x04)
+
+/* === SSE4.1 === */
+    R64FX_XMM_660F_2BYTE      (PMULDQ, 0x38, 0x28)
+    R64FX_XMM_660F_2BYTE      (PMULLD, 0x38, 0x40)
 };
 
 
