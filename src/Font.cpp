@@ -29,9 +29,17 @@ namespace{
     }
 
 #ifdef R64FX_USE_BUILTIN_FONTS
-#include "FreeMono_ascii.otf.h"
-#include "FreeSans_ascii.otf.h"
-#include "FreeSansBold_ascii.otf.h"
+    unsigned char FreeSans_ascii[] =
+#       include "FreeSans_ascii.otf.cxx"
+    ;
+
+    unsigned char FreeSansBold_ascii[] =
+#       include "FreeSansBold_ascii.otf.cxx"
+    ;
+
+    unsigned char FreeMono_ascii[] =
+#       include "FreeMono_ascii.otf.cxx"
+    ;
 
     void init_builtin_font(FT_Face* face, unsigned char* buff, unsigned int size)
     {

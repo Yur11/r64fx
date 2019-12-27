@@ -17,12 +17,12 @@ namespace r64fx{
 
 namespace{
 
-const char* text_shader_common_vert =
-#include "shader_common.vert.h"
+unsigned char text_shader_common_vert[] =
+#   include "shader_common.vert.cxx"
 ;
 
-const char* text_shader_common_frag =
-#include "shader_common.frag.h"
+unsigned char text_shader_common_frag[] =
+#   include "shader_common.frag.cxx"
 ;
 
 VertexShader    g_shader_common_vert;
@@ -69,8 +69,8 @@ PainterShader_Common::PainterShader_Common()
 
 void init_painter_shaders()
 {
-    g_shader_common_vert = VertexShader(text_shader_common_vert);
-    g_shader_common_frag = FragmentShader(text_shader_common_frag);
+    g_shader_common_vert = VertexShader((const char*)text_shader_common_vert);
+    g_shader_common_frag = FragmentShader((const char*)text_shader_common_frag);
 
     g_PainterShader_Common = new PainterShader_Common;
     if(!g_PainterShader_Common->isGood())

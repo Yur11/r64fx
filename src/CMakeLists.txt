@@ -29,6 +29,37 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_JACK")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR64FX_USE_PTHREAD")
 
+
+### Embedded blobs
+macro(gen_blobs type)
+    foreach(file ${ARGN})
+        add_custom_command(
+            OUTPUT ${file}.cxx
+            COMMAND ${CMAKE_SOURCE_DIR}/gen_blob.sh
+            ARGS ${type} ${CMAKE_SOURCE_DIR}/${file} -o ${file}.cxx
+        )
+
+        list(APPEND BLOBS ${file}.cxx)
+    endforeach(file)
+endmacro()
+
+gen_blobs(-t
+    shader_common.vert
+    shader_common.frag
+    shader_waveform.frag
+)
+
+gen_blobs(-b
+    FreeMono_ascii.otf
+    FreeSans_ascii.otf
+    FreeSansBold_ascii.otf
+)
+
+add_custom_target(blobs DEPENDS ${BLOBS})
+
+include_directories(${CMAKE_BINARY_DIR})
+
+
 set(SRC
     Action.cpp
     Atlas.cpp
@@ -99,6 +130,8 @@ set(SRC
 )
 
 add_executable(r64fx ${SRC})
+
+add_dependencies(r64fx blobs)
 
 set(LIBS
     X11
