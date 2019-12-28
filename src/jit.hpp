@@ -6,6 +6,29 @@
 
 namespace r64fx{
 
+/* Used for VEX prefix encoding */
+class MapSelect{
+    unsigned char m_bits = 0;
+
+public:
+    explicit MapSelect(unsigned char bits) : m_bits(bits) {}
+
+    inline unsigned char bits() const { return m_bits; }
+};
+inline MapSelect MapSelect_0F(1), MapSelect_0F38(2), MapSelect_0F3A(3);
+
+
+class OpMandPref{
+    unsigned char m_bits = 0;
+
+public:
+    explicit OpMandPref(unsigned char bits) : m_bits(bits) {}
+
+    inline unsigned char bits() const { return m_bits; }
+};
+inline OpMandPref OpMandPref_66(1), OpMandPref_F3(2), OpMandPref_F2(3);
+
+
 class Register{
     unsigned char m_bits = 0;
 
@@ -241,7 +264,6 @@ const CmpCode
     ORD(7)
 ;
 
-
 class JumpLabel{
     friend class AssemblerBuffer;
 
@@ -298,10 +320,10 @@ class Opcode{
 
 public:
     explicit Opcode(unsigned long code) : m(code)
-        { R64FX_DEBUG_ASSERT((m & ~0x700FF) == 0); }
+        { R64FX_DEBUG_ASSERT((m & ~0xF00FF) == 0); }
 
     explicit Opcode(unsigned long byte1, unsigned long byte2) : m(byte1 | (byte2 << 8))
-        { R64FX_DEBUG_ASSERT((m & ~0x7FFFF) == 0); }
+        { R64FX_DEBUG_ASSERT((m & ~0xFFFFF) == 0); }
 
     inline unsigned char byte1() const { return m & 0xFF; }
 
@@ -313,9 +335,11 @@ public:
 
     inline bool has66() const { return m & 0x20000; }
 
-    inline bool hasF3() const { return m & 0x40000; }
+    inline bool hasF2() const { return m & 0x40000; }
 
-    inline int byteCount() const { return 1 + hasByte2() + has0F() + has66() + hasF3(); }
+    inline bool hasF3() const { return m & 0x80000; }
+
+    inline int byteCount() const { return 1 + hasByte2() + has0F() + has66() + hasF2() + hasF3(); }
 };
 
 inline Opcode Opcode_0F     (unsigned long byte1, unsigned long byte2 = 0)
@@ -324,8 +348,11 @@ inline Opcode Opcode_0F     (unsigned long byte1, unsigned long byte2 = 0)
 inline Opcode Opcode_660F   (unsigned long byte1, unsigned long byte2 = 0)
     { return Opcode(0x30000 | (byte2 << 8) |  byte1); }
 
-inline Opcode Opcode_F30F   (unsigned long byte1, unsigned long byte2 = 0)
+inline Opcode Opcode_F20F   (unsigned long byte1, unsigned long byte2 = 0)
     { return Opcode(0x50000 | (byte2 << 8) |  byte1); }
+
+inline Opcode Opcode_F30F   (unsigned long byte1, unsigned long byte2 = 0)
+    { return Opcode(0x90000 | (byte2 << 8) |  byte1); }
 
 
 struct Operands{
@@ -681,6 +708,12 @@ public:
 
     inline void PINSRW(Xmm xmm, GPR64 gpr, Imm8 imm)
         { m.write(Opcode_660F(0xC4), Operands(gpr, xmm, imm.b)); }
+
+    inline void PSHUFLW(Xmm dst, Xmm src, Shuf shuf)
+        { m.write(Opcode_F20F(0x70), Operands(dst, src, shuf.byte())); }
+
+    inline void PSHUFHW(Xmm dst, Xmm src, Shuf shuf)
+        { m.write(Opcode_F30F(0x70), Operands(dst, src, shuf.byte())); }
 
 /* === SSSE3 === */
     R64FX_XMM_660F_2BYTE      (PMADDUBSW, 0x38, 0x04)
