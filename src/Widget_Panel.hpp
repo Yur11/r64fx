@@ -36,6 +36,8 @@ public:
 
 private:
     void paintEvent(WidgetPaintEvent* event);
+
+    
 };
 
 }//namespace r64fx

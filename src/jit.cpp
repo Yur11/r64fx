@@ -16,38 +16,6 @@ inline unsigned char Rex(bool W, bool R, bool X, bool B)
     { return 64 | WRXB(W, R, X, B); }
 
 
-struct OpPref2{
-    unsigned char b[2];
-
-    OpPref2(unsigned char byte0, bool R, Register vvvv, bool L, OpMandPref pp)
-    {
-        b[0] = byte0;
-        b[1] = (R ? 0 : 0x80) | ((~vvvv.bits() & 0xF) << 3)| (L ? 4 : 0) | pp.bits();
-    }
-};
-
-inline OpPref2 Vex(unsigned char byte0, bool R, Register vvvv, bool L, OpMandPref pp)
-    { return {0xC5, R, vvvv, L, pp}; }
-
-
-struct OpPref3{
-    unsigned char b[3];
-
-    OpPref3(unsigned char byte0, bool R, bool X, bool B, MapSelect ms, bool W, Register vvvv, bool L, OpMandPref pp)
-    {
-        b[0] = byte0;
-        b[1] = (R ? 0 : 0x80) | (X ? 0 : 0x40) | (B ? 0 : 0x20) | ms.bits();
-        b[2] = (W ? 0x80 : 0) | ((~vvvv.bits() & 0xF) << 3) | (L ? 4 : 0) | pp.bits();
-    }
-};
-
-inline OpPref3 Vex(bool R, bool X, bool B, MapSelect ms, bool W, Register vvvv, bool L, OpMandPref pp)
-    { return {0xC4, R, X, B, ms, W, vvvv, L, pp}; }
-
-inline OpPref3 Xop(bool R, bool X, bool B, MapSelect ms, bool W, Register vvvv, bool L, OpMandPref pp)
-    { return {0x8F, R, X, B, ms, W, vvvv, L, pp}; }
-
-
 inline unsigned char ModRM(unsigned char mod, unsigned char reg, unsigned char rm)
     { return (mod << 6) | ((reg & 7) << 3) | (rm & 7); }
 
@@ -342,6 +310,37 @@ void AssemblerBuffer::write(const Opcode &opcode, const Operands &operands)
     p[r++] = opcode.byte1();
     if(opcode.hasByte2())
         p[r++] = opcode.byte2();
+    auto operand_bytes = operands.operandBytes();
+    for(int i=0; i<operands.operandByteCount(); i++)
+    {
+        p[r++] = operand_bytes & 0xFF; operand_bytes >>= 8;
+    }
+}
+
+
+void AssemblerBuffer::write(const OpPref2 &pref, unsigned char opcode, const Operands &operands)
+{
+    auto p = MemoryBuffer::grow(3 + operands.totalByteCount());
+    int r = 0;
+    p[r++] = pref.b[0];
+    p[r++] = pref.b[1];
+    p[r++] = opcode;
+    auto operand_bytes = operands.operandBytes();
+    for(int i=0; i<operands.operandByteCount(); i++)
+    {
+        p[r++] = operand_bytes & 0xFF; operand_bytes >>= 8;
+    }
+}
+
+
+void AssemblerBuffer::write(const OpPref3 &pref, unsigned char opcode, const Operands &operands)
+{
+    auto p = MemoryBuffer::grow(4 + operands.totalByteCount());
+    int r = 0;
+    p[r++] = pref.b[0];
+    p[r++] = pref.b[1];
+    p[r++] = pref.b[2];
+    p[r++] = opcode;
     auto operand_bytes = operands.operandBytes();
     for(int i=0; i<operands.operandByteCount(); i++)
     {

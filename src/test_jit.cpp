@@ -324,7 +324,7 @@ bool test_gpr_shift(const char* name, IntT (*expected)(IntT num, IntT shift))
 }
 
 template<typename IntT, void (Assembler::*shift_imm8) (Xmm, Imm8)>
-bool test_sse_shift(const char* name, IntT (*expected)(IntT num, IntT shift))
+bool test_sse_shift1(const char* name, IntT (*expected)(IntT num, IntT shift))
 {
     cout << name << "\n";
 
@@ -350,6 +350,25 @@ bool test_sse_shift(const char* name, IntT (*expected)(IntT num, IntT shift))
     lfun();
 
     R64FX_EXPECT_VEC_EQ(p+s*2, p+s, s);
+    return true;
+}
+
+template<typename IntT, void (Assembler::*shift_imm8) (Xmm, Xmm)>
+bool test_sse_shift2(const char* name, IntT (*expected)(IntT num, IntT shift))
+{
+    cout << name << "\n";
+
+    auto p = data(IntT());
+    auto s = scalars_per_vec<IntT>();
+
+    for(int i=0; i<s; i++)
+        p[i] = rand() & IntT(-1);
+
+    IntT shift = ((IntT)(rand() & 0x3)) + 1;
+
+    for(int i=0; i<s; i++)
+        p[i + s] = shift;
+
     return true;
 }
 
@@ -670,7 +689,7 @@ bool test()
 
         test_pshufd() &&
 
-#define R64FX_TEST_SSE_SHIFT(type, name, op) test_sse_shift<type, &Assembler::name>(#name, [](type num, type shift) -> type { return num op shift; })
+#define R64FX_TEST_SSE_SHIFT(type, name, op) test_sse_shift1<type, &Assembler::name>(#name, [](type num, type shift) -> type { return num op shift; })
         R64FX_TEST_SSE_SHIFT(unsigned short, PSRLW, >>) &&
         R64FX_TEST_SSE_SHIFT(unsigned int,   PSRLD, >>) &&
         R64FX_TEST_SSE_SHIFT(unsigned long,  PSRLQ, >>) &&

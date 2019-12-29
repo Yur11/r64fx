@@ -6,29 +6,6 @@
 
 namespace r64fx{
 
-/* Used for VEX prefix encoding */
-class MapSelect{
-    unsigned char m_bits = 0;
-
-public:
-    explicit MapSelect(unsigned char bits) : m_bits(bits) {}
-
-    inline unsigned char bits() const { return m_bits; }
-};
-inline MapSelect MapSelect_0F(1), MapSelect_0F38(2), MapSelect_0F3A(3);
-
-
-class OpMandPref{
-    unsigned char m_bits = 0;
-
-public:
-    explicit OpMandPref(unsigned char bits) : m_bits(bits) {}
-
-    inline unsigned char bits() const { return m_bits; }
-};
-inline OpMandPref OpMandPref_66(1), OpMandPref_F3(2), OpMandPref_F2(3);
-
-
 class Register{
     unsigned char m_bits = 0;
 
@@ -95,6 +72,7 @@ inline Ymm ymm0(0x0), ymm1(0x1), ymm2 (0x2), ymm3 (0x3), ymm4 (0x4), ymm5 (0x5),
 
 template<typename RegT> inline bool operator==(RegT a, RegT b) { return a.code() == b.code(); }
 template<typename RegT> inline bool operator!=(RegT a, RegT b) { return a.code() != b.code(); }
+
 
 union Imm8{
     unsigned char b;
@@ -387,6 +365,61 @@ struct Operands{
 };
 
 
+class MapSelect{
+    unsigned char m_bits = 0;
+
+public:
+    explicit MapSelect(unsigned char bits) : m_bits(bits) {}
+
+    inline unsigned char bits() const { return m_bits; }
+};
+inline MapSelect MapSelect_0F(1), MapSelect_0F38(2), MapSelect_0F3A(3);
+
+
+class OpMandPref{
+    unsigned char m_bits = 0;
+
+public:
+    explicit OpMandPref(unsigned char bits) : m_bits(bits) {}
+
+    inline unsigned char bits() const { return m_bits; }
+};
+inline OpMandPref OpMandPref_None(0), OpMandPref_66(1), OpMandPref_F3(2), OpMandPref_F2(3);
+
+
+struct OpPref2{
+    unsigned char b[2];
+
+    OpPref2(unsigned char byte0, bool R, Register vvvv, bool L, OpMandPref pp)
+    {
+        b[0] = byte0;
+        b[1] = (R ? 0 : 0x80) | ((~vvvv.bits() & 0xF) << 3)| (L ? 4 : 0) | pp.bits();
+    }
+};
+
+inline OpPref2 Vex(unsigned char byte0, bool R, Register vvvv, bool L, OpMandPref pp)
+    { return {0xC5, R, vvvv, L, pp}; }
+
+
+struct OpPref3{
+    unsigned char b[3];
+
+    OpPref3(unsigned char byte0, bool R, bool X, bool B, MapSelect ms, bool W, Register vvvv, bool L, OpMandPref pp)
+    {
+        b[0] = byte0;
+        b[1] = (R ? 0 : 0x80) | (X ? 0 : 0x40) | (B ? 0 : 0x20) | ms.bits();
+        b[2] = (W ? 0x80 : 0) | ((~vvvv.bits() & 0xF) << 3) | (L ? 4 : 0) | pp.bits();
+    }
+};
+
+ inline OpPref3 Vex(bool R, bool X, bool B, MapSelect ms, bool W, Register vvvv, bool L, OpMandPref pp)
+    { return {0xC4, R, X, B, ms, W, vvvv, L, pp}; }
+
+inline OpPref3 Xop(bool R, bool X, bool B, MapSelect ms, bool W, Register vvvv, bool L, OpMandPref pp)
+    { return {0x8F, R, X, B, ms, W, vvvv, L, pp}; }
+
+
+
 class AssemblerBuffer : public MemoryBuffer{
     AssemblerBuffer(const AssemblerBuffer &other) {} //No Copy!
 
@@ -410,6 +443,9 @@ public:
     void write(unsigned char opcode1, unsigned char opcode2, JumpLabel &label);
 
     void write(const Opcode &opcode, const Operands &operands);
+
+    void write(const OpPref2 &pref, unsigned char opcode, const Operands &operands);
+    void write(const OpPref3 &pref, unsigned char opcode, const Operands &operands);
 
     void markLabel(JumpLabel &label);
 
@@ -721,6 +757,15 @@ public:
 /* === SSE4.1 === */
     R64FX_XMM_660F_2BYTE      (PMULDQ, 0x38, 0x28)
     R64FX_XMM_660F_2BYTE      (PMULLD, 0x38, 0x40)
+
+/* === AVX ===*/
+    void VMOVAPS(Xmm dst, Xmm src)
+    {
+        m.write(
+            Vex(dst.prefixBit(), 0, src.prefixBit(), MapSelect_0F, 0, Register(0), 0, OpMandPref_None),
+            Operands(dst, src)
+        );
+    }
 };
 
 
