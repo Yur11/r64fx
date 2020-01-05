@@ -283,6 +283,21 @@ public:
 
 #   include "JitInstructions_x86.cxx"
 
+#   define DEF_CMPPS(C, N)\
+    template<typename SrcT> inline void  CMP##C##PS (Xmm d, SrcT s)          { CMPPS  (d, s, Imm8(N)); }\
+    template<typename SrcT> inline void VCMP##C##PS (Xmm d, Xmm s1, SrcT s2) { VCMPPS (d, s1, s2, Imm8(N)); }\
+    template<typename SrcT> inline void VCMP##C##PS (Ymm d, Ymm s1, SrcT s2) { VCMPPS (d, s1, s2, Imm8(N)); }
+
+    DEF_CMPPS(EQ,    0)
+    DEF_CMPPS(LT,    1)
+    DEF_CMPPS(LE,    2)
+    DEF_CMPPS(UNORD, 3)
+    DEF_CMPPS(NEQ,   4)
+    DEF_CMPPS(NLT,   5)
+    DEF_CMPPS(NLE,   6)
+    DEF_CMPPS(ORD,   7)
+#   undef DEF_CMPPS
+
 private:
     /* Compress VEX prefix from 3 bytes to 2, if possible */
     inline int Vex(int rxb, int map_select, int w, int vvvv, int l, int pp, bool may_pack)

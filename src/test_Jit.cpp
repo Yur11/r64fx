@@ -4,7 +4,7 @@
 using namespace std;
 using namespace r64fx;
 
-float num[16] = { 1, 2, 3, 4,  5, 6, 7, 8,  0, 0, 0, 0,  0, 0, 0, 0 };
+float num[16] = { 1, 2, 3, 4,  5, 6, 7, 8,  2, 2, 2, 2,  6, 6, 6, 6 };
 
 class TestJit : public Assembler{
     JumpLabel8 l;
@@ -12,8 +12,11 @@ class TestJit : public Assembler{
 public:
     int run()
     {
-        MOV      (r9d, Imm32(3478));
-        MOV      (rax, r9);
+        MOV      (rax, Addr(num));
+
+        VMOVAPS   (ymm0, Base(rax));
+        VCMPEQPS  (ymm9, ymm0, Base(rax) + Disp8(32));
+        VMOVAPS   (Base(rax) + Disp8(32), ymm9);
 
         RET      ();
 

@@ -99,9 +99,10 @@ for op in Xmm Mem128 SIBD; do
 done
 
 for op in Xmm Mem128 SIBD; do
+    instr "CMPPS     (Xmm d, $op s, Imm8 imm)"       NP 0F C2 /r ib
     instr "SHUFPS    (Xmm d, $op s, Imm8 imm)"       NP 0F C6 /r ib
+    echo ''
 done
-echo ''
 
 for op in Xmm Mem128 SIBD; do
     instr "SQRTPS    (Xmm d, $op s)"                 NP 0F 51 /r
@@ -143,6 +144,12 @@ for op in Mem128 SIBD; do
 done
 
 for op in Xmm Mem128 SIBD; do
+    instr "VCMPPS     (Xmm d, Xmm s1, $op s2, Imm8 imm)"\
+                                                     VEX.NDS.128.0F.WIG C2 /r ib
+    echo ''
+done
+
+for op in Xmm Mem128 SIBD; do
     instr "VSQRTPS    (Xmm d, $op s)         "       VEX.128.0F.WIG 51 /r
     instr "VRSQRTPS   (Xmm d, $op s)         "       VEX.128.0F.WIG 52 /r
     instr "VRCPPS     (Xmm d, $op s)         "       VEX.128.0F.WIG 53 /r
@@ -165,6 +172,12 @@ for op in Xmm Mem32 SIBD; do
     instr "VDIVSS     (Xmm d, Xmm s1, $op s2)"       VEX.NDS.LIG.F3.0F.WIG 5E /r
     instr "VMINSS     (Xmm d, Xmm s1, $op s2)"       VEX.NDS.LIG.F3.0F.WIG 5D /r
     instr "VMAXSS     (Xmm d, Xmm s1, $op s2)"       VEX.NDS.LIG.F3.0F.WIG 5F /r
+    echo ''
+done
+
+for op in Ymm Mem128 SIBD; do
+    instr "VCMPPS     (Ymm d, Ymm s1, $op s2, Imm8 imm)"\
+                                                     VEX.NDS.256.0F.WIG C2 /r ib
     echo ''
 done
 
