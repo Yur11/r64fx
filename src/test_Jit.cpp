@@ -15,7 +15,7 @@ public:
         MOV      (rax, Addr(num));
 
         VMOVAPS   (ymm0, Base(rax));
-        VCMPEQPS  (ymm9, ymm0, Base(rax) + Disp8(32));
+        VSHUFPS   (ymm9, ymm0, Base(rax), Shuf(3, 2, 1, 0));
         VMOVAPS   (Base(rax) + Disp8(32), ymm9);
 
         RET      ();

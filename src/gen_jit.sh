@@ -146,6 +146,8 @@ done
 for op in Xmm Mem128 SIBD; do
     instr "VCMPPS     (Xmm d, Xmm s1, $op s2, Imm8 imm)"\
                                                      VEX.NDS.128.0F.WIG C2 /r ib
+    instr "VSHUFPS    (Xmm d, Xmm s1, $op s2, Imm8 imm)"\
+                                                     VEX.NDS.128.0F.WIG C6 /r ib
     echo ''
 done
 
@@ -178,6 +180,8 @@ done
 for op in Ymm Mem128 SIBD; do
     instr "VCMPPS     (Ymm d, Ymm s1, $op s2, Imm8 imm)"\
                                                      VEX.NDS.256.0F.WIG C2 /r ib
+    instr "VSHUFPS    (Ymm d, Ymm s1, $op s2, Imm8 imm)"\
+                                                     VEX.NDS.256.0F.WIG C6 /r ib
     echo ''
 done
 
