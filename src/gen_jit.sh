@@ -1,70 +1,70 @@
 #!/bin/bash
 function gen_jit {
 
-instr 'RET ()'                                       C3
-instr 'NOP ()'                                       90
+instr 'RET       ()'                                 C3
+instr 'NOP       ()'                                 90
 echo ''
 
-instr 'PUSH (Imm32 i)'                               68 id
-instr 'PUSH (Mem64 m)'                               FF /6
-instr 'POP  (Mem64 m)'                               8F /0
+instr 'PUSH      (Imm32 i)'                          68 id
+instr 'PUSH      (Mem64 m)'                          FF /6
+instr 'POP       (Mem64 m)'                          8F /0
 echo ''
 
-instr 'JNO  (JumpLabel8 &j)'                         71 cb
-instr 'JB   (JumpLabel8 &j)'                         72 cb
-instr 'JNAE (JumpLabel8 &j)'                         72 cb
-instr 'JAE  (JumpLabel8 &j)'                         73 cb
-instr 'JNB  (JumpLabel8 &j)'                         73 cb
-instr 'JNC  (JumpLabel8 &j)'                         73 cb
-instr 'JE   (JumpLabel8 &j)'                         74 cb
-instr 'JZ   (JumpLabel8 &j)'                         74 cb
-instr 'JNE  (JumpLabel8 &j)'                         75 cb
-instr 'JNZ  (JumpLabel8 &j)'                         75 cb
-instr 'JBE  (JumpLabel8 &j)'                         76 cb
-instr 'JNA  (JumpLabel8 &j)'                         76 cb
-instr 'JS   (JumpLabel8 &j)'                         78 cb
-instr 'JA   (JumpLabel8 &j)'                         77 cb
-instr 'JNBE (JumpLabel8 &j)'                         77 cb
-instr 'JP   (JumpLabel8 &j)'                         7A cb
-instr 'JPE  (JumpLabel8 &j)'                         7A cb
-instr 'JNP  (JumpLabel8 &j)'                         7B cb
-instr 'JPO  (JumpLabel8 &j)'                         7B cb
-instr 'JL   (JumpLabel8 &j)'                         7C cb
-instr 'JNGE (JumpLabel8 &j)'                         7C cb
-instr 'JGE  (JumpLabel8 &j)'                         7D cb
-instr 'JNL  (JumpLabel8 &j)'                         7D cb
-instr 'JLE  (JumpLabel8 &j)'                         7E cb
-instr 'JNG  (JumpLabel8 &j)'                         7E cb
-instr 'JG   (JumpLabel8 &j)'                         7F cb
-instr 'JNLE (JumpLabel8 &j)'                         7F cb
-instr 'JCXZ (JumpLabel8 &j)'                         E3 cb
+instr 'JNO       (JumpLabel8 &j)'                    71 cb
+instr 'JB        (JumpLabel8 &j)'                    72 cb
+instr 'JNAE      (JumpLabel8 &j)'                    72 cb
+instr 'JAE       (JumpLabel8 &j)'                    73 cb
+instr 'JNB       (JumpLabel8 &j)'                    73 cb
+instr 'JNC       (JumpLabel8 &j)'                    73 cb
+instr 'JE        (JumpLabel8 &j)'                    74 cb
+instr 'JZ        (JumpLabel8 &j)'                    74 cb
+instr 'JNE       (JumpLabel8 &j)'                    75 cb
+instr 'JNZ       (JumpLabel8 &j)'                    75 cb
+instr 'JBE       (JumpLabel8 &j)'                    76 cb
+instr 'JNA       (JumpLabel8 &j)'                    76 cb
+instr 'JS        (JumpLabel8 &j)'                    78 cb
+instr 'JA        (JumpLabel8 &j)'                    77 cb
+instr 'JNBE      (JumpLabel8 &j)'                    77 cb
+instr 'JP        (JumpLabel8 &j)'                    7A cb
+instr 'JPE       (JumpLabel8 &j)'                    7A cb
+instr 'JNP       (JumpLabel8 &j)'                    7B cb
+instr 'JPO       (JumpLabel8 &j)'                    7B cb
+instr 'JL        (JumpLabel8 &j)'                    7C cb
+instr 'JNGE      (JumpLabel8 &j)'                    7C cb
+instr 'JGE       (JumpLabel8 &j)'                    7D cb
+instr 'JNL       (JumpLabel8 &j)'                    7D cb
+instr 'JLE       (JumpLabel8 &j)'                    7E cb
+instr 'JNG       (JumpLabel8 &j)'                    7E cb
+instr 'JG        (JumpLabel8 &j)'                    7F cb
+instr 'JNLE      (JumpLabel8 &j)'                    7F cb
+instr 'JCXZ      (JumpLabel8 &j)'                    E3 cb
 echo ''
 
 instr 'JNE (JumpLabel32 &j)'                         0F 85 cd
 echo ''
 
-instr 'MOV (GPR32 d, Imm32 s)'                       B8+rd id
-instr 'MOV (GPR64 d, Imm64 s)'                       REX.W + B8+rd io
-instr 'MOV (GPR64 d, GPR64 s)'                       REX.W + 8B /r
-instr 'MOV (GPR64 d, Mem64 s)'                       REX.W + 8B /r
-instr 'MOV (GPR64 d, SIBD  s)'                       REX.W + 8B /r
+instr 'MOV       (GPR32 d, Imm32 s)'                 B8+rd id
+instr 'MOV       (GPR64 d, Imm64 s)'                 REX.W + B8+rd io
+instr 'MOV       (GPR64 d, GPR64 s)'                 REX.W + 8B /r
+instr 'MOV       (GPR64 d, Mem64 s)'                 REX.W + 8B /r
+instr 'MOV       (GPR64 d, SIBD  s)'                 REX.W + 8B /r
 echo ''
 
 for op in GPR64 Mem64 SIBD; do
-    instr "ADD ($op d, Imm8 s)"                      REX.W + 83 /0 ib
-    instr "OR  ($op d, Imm8 s)"                      REX.W + 83 /1 ib
-    instr "AND ($op d, Imm8 s)"                      REX.W + 83 /4 ib
-    instr "SUB ($op d, Imm8 s)"                      REX.W + 83 /5 ib
-    instr "XOR ($op d, Imm8 s)"                      REX.W + 83 /6 ib
+    instr "ADD       ($op d, Imm8 s)"                REX.W + 83 /0 ib
+    instr "OR        ($op d, Imm8 s)"                REX.W + 83 /1 ib
+    instr "AND       ($op d, Imm8 s)"                REX.W + 83 /4 ib
+    instr "SUB       ($op d, Imm8 s)"                REX.W + 83 /5 ib
+    instr "XOR       ($op d, Imm8 s)"                REX.W + 83 /6 ib
     echo
 done
 
 for op in GPR64 Mem64 SIBD; do
-    instr "ADD (GPR64 d, $op s)"                     REX.W + 03 /r
-    instr "OR  (GPR64 d, $op s)"                     REX.W + 0B /r
-    instr "AND (GPR64 d, $op s)"                     REX.W + 23 /r
-    instr "SUB (GPR64 d, $op s)"                     REX.W + 2B /r
-    instr "XOR (GPR64 d, $op s)"                     REX.W + 33 /r
+    instr "ADD       (GPR64 d, $op s)"               REX.W + 03 /r
+    instr "OR        (GPR64 d, $op s)"               REX.W + 0B /r
+    instr "AND       (GPR64 d, $op s)"               REX.W + 23 /r
+    instr "SUB       (GPR64 d, $op s)"               REX.W + 2B /r
+    instr "XOR       (GPR64 d, $op s)"               REX.W + 33 /r
     echo ''
 done
 
@@ -101,6 +101,7 @@ done
 for op in Xmm Mem128 SIBD; do
     instr "SHUFPS    (Xmm d, $op s, Imm8 imm)"       NP 0F C6 /r ib
 done
+echo ''
 
 for op in Xmm Mem128 SIBD; do
     instr "SQRTPS    (Xmm d, $op s)"                 NP 0F 51 /r
@@ -431,7 +432,11 @@ function instr
 
 
     # Generate Output
-    local out="inline void $signature { "
+    local out="inline void $signature "
+    while [[ ${#out} -lt 52 ]]; do
+        out+=' '
+    done
+    out+="{ "
 
     # VEX/REX
     if [[ -z "$enc_rexw" ]]; then
@@ -458,9 +463,9 @@ function instr
     fi
 
     if [[ -n "$out_vex" && -n "$may_use_c5_vex" ]]; then
-        out+=', m_pref&0xFF0000'
+        out+=',m_pref&0xFF0000'
     elif [[ -z "$enc_rexw" ]] && [[ -n "$out_r$out_b$out_rb$out_rxb" ]]; then
-        out+=', m_pref'
+        out+=',m_pref'
     fi
 
     out+=')'
