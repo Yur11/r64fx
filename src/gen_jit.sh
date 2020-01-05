@@ -144,57 +144,57 @@ for op in Mem128 SIBD; do
 done
 
 for op in Xmm Mem128 SIBD; do
-    instr "VCMPPS     (Xmm d, Xmm s1, $op s2, Imm8 imm)"\
+    instr "VCMPPS    (Xmm d, Xmm s1, $op s2, Imm8 imm)"\
                                                      VEX.NDS.128.0F.WIG C2 /r ib
-    instr "VSHUFPS    (Xmm d, Xmm s1, $op s2, Imm8 imm)"\
+    instr "VSHUFPS   (Xmm d, Xmm s1, $op s2, Imm8 imm)"\
                                                      VEX.NDS.128.0F.WIG C6 /r ib
     echo ''
 done
 
 for op in Xmm Mem128 SIBD; do
-    instr "VSQRTPS    (Xmm d, $op s)         "       VEX.128.0F.WIG 51 /r
-    instr "VRSQRTPS   (Xmm d, $op s)         "       VEX.128.0F.WIG 52 /r
-    instr "VRCPPS     (Xmm d, $op s)         "       VEX.128.0F.WIG 53 /r
-    instr "VADDPS     (Xmm d, Xmm s1, $op s2)"       VEX.128.0F.WIG 58 /r
-    instr "VMULPS     (Xmm d, Xmm s1, $op s2)"       VEX.128.0F.WIG 59 /r
-    instr "VSUBPS     (Xmm d, Xmm s1, $op s2)"       VEX.128.0F.WIG 5C /r
-    instr "VDIVPS     (Xmm d, Xmm s1, $op s2)"       VEX.128.0F.WIG 5E /r
-    instr "VMINPS     (Xmm d, Xmm s1, $op s2)"       VEX.128.0F.WIG 5D /r
-    instr "VMAXPS     (Xmm d, Xmm s1, $op s2)"       VEX.128.0F.WIG 5F /r
+    instr "VSQRTPS   (Xmm d, $op s)         "        VEX.128.0F.WIG 51 /r
+    instr "VRSQRTPS  (Xmm d, $op s)         "        VEX.128.0F.WIG 52 /r
+    instr "VRCPPS    (Xmm d, $op s)         "        VEX.128.0F.WIG 53 /r
+    instr "VADDPS    (Xmm d, Xmm s1, $op s2)"        VEX.128.0F.WIG 58 /r
+    instr "VMULPS    (Xmm d, Xmm s1, $op s2)"        VEX.128.0F.WIG 59 /r
+    instr "VSUBPS    (Xmm d, Xmm s1, $op s2)"        VEX.128.0F.WIG 5C /r
+    instr "VDIVPS    (Xmm d, Xmm s1, $op s2)"        VEX.128.0F.WIG 5E /r
+    instr "VMINPS    (Xmm d, Xmm s1, $op s2)"        VEX.128.0F.WIG 5D /r
+    instr "VMAXPS    (Xmm d, Xmm s1, $op s2)"        VEX.128.0F.WIG 5F /r
     echo ''
 done
 
 for op in Xmm Mem32 SIBD; do
-    instr "VSQRTSS    (Xmm d, $op s)         "       VEX.NDS.LIG.F3.0F.WIG 51 /r
-    instr "VRSQRTSS   (Xmm d, $op s)         "       VEX.NDS.LIG.F3.0F.WIG 52 /r
-    instr "VRCPSS     (Xmm d, $op s)         "       VEX.NDS.LIG.F3.0F.WIG 53 /r
-    instr "VADDSS     (Xmm d, Xmm s1, $op s2)"       VEX.NDS.LIG.F3.0F.WIG 58 /r
-    instr "VMULSS     (Xmm d, Xmm s1, $op s2)"       VEX.NDS.LIG.F3.0F.WIG 59 /r
-    instr "VSUBSS     (Xmm d, Xmm s1, $op s2)"       VEX.NDS.LIG.F3.0F.WIG 5C /r
-    instr "VDIVSS     (Xmm d, Xmm s1, $op s2)"       VEX.NDS.LIG.F3.0F.WIG 5E /r
-    instr "VMINSS     (Xmm d, Xmm s1, $op s2)"       VEX.NDS.LIG.F3.0F.WIG 5D /r
-    instr "VMAXSS     (Xmm d, Xmm s1, $op s2)"       VEX.NDS.LIG.F3.0F.WIG 5F /r
+    instr "VSQRTSS   (Xmm d, $op s)         "        VEX.NDS.LIG.F3.0F.WIG 51 /r
+    instr "VRSQRTSS  (Xmm d, $op s)         "        VEX.NDS.LIG.F3.0F.WIG 52 /r
+    instr "VRCPSS    (Xmm d, $op s)         "        VEX.NDS.LIG.F3.0F.WIG 53 /r
+    instr "VADDSS    (Xmm d, Xmm s1, $op s2)"        VEX.NDS.LIG.F3.0F.WIG 58 /r
+    instr "VMULSS    (Xmm d, Xmm s1, $op s2)"        VEX.NDS.LIG.F3.0F.WIG 59 /r
+    instr "VSUBSS    (Xmm d, Xmm s1, $op s2)"        VEX.NDS.LIG.F3.0F.WIG 5C /r
+    instr "VDIVSS    (Xmm d, Xmm s1, $op s2)"        VEX.NDS.LIG.F3.0F.WIG 5E /r
+    instr "VMINSS    (Xmm d, Xmm s1, $op s2)"        VEX.NDS.LIG.F3.0F.WIG 5D /r
+    instr "VMAXSS    (Xmm d, Xmm s1, $op s2)"        VEX.NDS.LIG.F3.0F.WIG 5F /r
     echo ''
 done
 
 for op in Ymm Mem128 SIBD; do
-    instr "VCMPPS     (Ymm d, Ymm s1, $op s2, Imm8 imm)"\
+    instr "VCMPPS    (Ymm d, Ymm s1, $op s2, Imm8 imm)"\
                                                      VEX.NDS.256.0F.WIG C2 /r ib
-    instr "VSHUFPS    (Ymm d, Ymm s1, $op s2, Imm8 imm)"\
+    instr "VSHUFPS   (Ymm d, Ymm s1, $op s2, Imm8 imm)"\
                                                      VEX.NDS.256.0F.WIG C6 /r ib
     echo ''
 done
 
 for op in Ymm Mem128 SIBD; do
-    instr "VSQRTPS    (Ymm d, $op s)         "       VEX.256.0F.WIG 51 /r
-    instr "VRSQRTPS   (Ymm d, $op s)         "       VEX.256.0F.WIG 52 /r
-    instr "VRCPPS     (Ymm d, $op s)         "       VEX.256.0F.WIG 53 /r
-    instr "VMULPS     (Ymm d, Ymm s1, $op s2)"       VEX.NDS.256.0F.WIG 59 /r
-    instr "VSUBPS     (Ymm d, Ymm s1, $op s2)"       VEX.NDS.256.0F.WIG 5C /r
-    instr "VADDPS     (Ymm d, Ymm s1, $op s2)"       VEX.NDS.256.0F.WIG 58 /r
-    instr "VDIVPS     (Ymm d, Ymm s1, $op s2)"       VEX.NDS.256.0F.WIG 5E /r
-    instr "VMINPS     (Ymm d, Ymm s1, $op s2)"       VEX.NDS.256.0F.WIG 5D /r
-    instr "VMAXPS     (Ymm d, Ymm s1, $op s2)"       VEX.NDS.256.0F.WIG 5F /r
+    instr "VSQRTPS   (Ymm d, $op s)         "        VEX.256.0F.WIG 51 /r
+    instr "VRSQRTPS  (Ymm d, $op s)         "        VEX.256.0F.WIG 52 /r
+    instr "VRCPPS    (Ymm d, $op s)         "        VEX.256.0F.WIG 53 /r
+    instr "VMULPS    (Ymm d, Ymm s1, $op s2)"        VEX.NDS.256.0F.WIG 59 /r
+    instr "VSUBPS    (Ymm d, Ymm s1, $op s2)"        VEX.NDS.256.0F.WIG 5C /r
+    instr "VADDPS    (Ymm d, Ymm s1, $op s2)"        VEX.NDS.256.0F.WIG 58 /r
+    instr "VDIVPS    (Ymm d, Ymm s1, $op s2)"        VEX.NDS.256.0F.WIG 5E /r
+    instr "VMINPS    (Ymm d, Ymm s1, $op s2)"        VEX.NDS.256.0F.WIG 5D /r
+    instr "VMAXPS    (Ymm d, Ymm s1, $op s2)"        VEX.NDS.256.0F.WIG 5F /r
     echo ''
 done
 
