@@ -40,7 +40,7 @@ instr 'JNLE      (JumpLabel8 &j)'                    7F cb
 instr 'JCXZ      (JumpLabel8 &j)'                    E3 cb
 echo ''
 
-instr 'JNE (JumpLabel32 &j)'                         0F 85 cd
+instr 'JNE       (JumpLabel32 &j)'                   0F 85 cd
 echo ''
 
 instr 'MOV       (GPR32 d, Imm32 s)'                 B8+rd id
