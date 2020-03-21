@@ -4,5 +4,5 @@ if [[ ! -d ./build ]]; then
 fi
 
 cd build
-cmake ../src && make
+cmake ../src && make $@
 cd ..
