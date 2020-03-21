@@ -198,6 +198,17 @@ for op in Ymm Mem128 SIBD; do
     echo ''
 done
 
+echo '/* === AVX2 === */'
+instr 'VGATHERDPS   (Xmm d, XSIBD s, Xmm m)'         VEX.DDS.128.66.0F38.W0 92 /r
+instr 'VGATHERDPS   (Ymm d, YSIBD s, Ymm m)'         VEX.DDS.256.66.0F38.W0 92 /r
+instr 'VGATHERQPS   (Xmm d, XSIBD s, Xmm m)'         VEX.DDS.128.66.0F38.W0 93 /r
+instr 'VGATHERQPS   (Ymm d, YSIBD s, Ymm m)'         VEX.DDS.256.66.0F38.W0 93 /r
+instr 'VGATHERDPD   (Xmm d, XSIBD s, Xmm m)'         VEX.DDS.128.66.0F38.W1 92 /r
+instr 'VGATHERDPD   (Ymm d, YSIBD s, Ymm m)'         VEX.DDS.256.66.0F38.W1 92 /r
+instr 'VGATHERQPD   (Xmm d, XSIBD s, Xmm m)'         VEX.DDS.128.66.0F38.W1 93 /r
+instr 'VGATHERQPD   (Ymm d, YSIBD s, Ymm m)'         VEX.DDS.256.66.0F38.W1 93 /r
+echo ''
+
 } # gen_jit
 
 
@@ -263,6 +274,7 @@ function instr
     local op_r=()
     local op_mem=''
     local op_sibd=''
+    local op_vsibd=''
     local op_imm=''
     local op_jmp=''
     local out_w=0
@@ -293,6 +305,10 @@ function instr
                 op_sibd="$operand_name"
             ;;
 
+            XSIBD|YSIBD)
+                op_vsibd="$operand_name"
+            ;;
+
             Imm*)
                 [[ -z "$op_imm" ]] ||
                     die "$dbg Multiple Imm* operands!"
@@ -316,14 +332,31 @@ function instr
         esac
     done;
 
+    [[ -n "$op_sibd" && -n "$op_vsibd" ]] &&
+        die "$dbg Can't have both SIBD and VSIBD!"
+
     local op_r1=''
     local op_r2=''
     local op_vv=''
 
-    [[ ${#op_r[@]} -le 3 ]] || die "$dbg Too many register operands!"
-    [[ ${#op_r[@]} -ge 1 ]] && op_r1=${op_r[0]}
-    [[ ${#op_r[@]} -eq 2 ]] && op_r2=${op_r[1]}
-    [[ ${#op_r[@]} -eq 3 ]] && { op_r2=${op_r[2]}; op_vv=${op_r[1]}; }
+    if [[ ${#op_r[@]} -ge 1 ]]; then
+        op_r1=${op_r[0]}
+
+        if [[ ${#op_r[@]} -gt 3 ]]; then
+            die "$dbg Too many register operands!"
+        elif [[ ${#op_r[@]} -eq 2 ]]; then
+            if [[ -n "$op_vsibd" ]]; then
+                op_vv=${op_r[1]} # Mask register for GATHER instructions
+            else
+                op_r2=${op_r[1]}
+            fi
+        elif [[ ${#op_r[@]} -eq 3 ]]; then
+            op_r2=${op_r[2]}
+            op_vv=${op_r[1]}
+        fi
+    fi
+
+    [[ -n "$op_vsibd" ]] && op_sibd=${op_vsibd}
 
 
     # Calculate instruction size
@@ -335,7 +368,7 @@ function instr
     [[ -n "$enc_modrm_reg_field" ]] && : $(( out_nbytes++ ))
 
     # SIB byte + dynamically added displacement
-    [[ -n "$op_sibd" ]] && : $(( out_nbytes++ ))
+    [[ -n "$op_sibd$op_vsibd" ]] && : $(( out_nbytes++ ))
 
     # RIP memory offset
     [[ -n "$op_mem" ]] && : $(( out_nbytes+=4 ))
@@ -553,7 +586,7 @@ function instr
         fi
     fi
 
-    if [[ $op_sibd ]]; then
+    if [[ "$op_sibd" ]]; then
         out+=", $op_sibd.sib"
     fi
     out+=')'

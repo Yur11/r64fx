@@ -19,13 +19,13 @@ public:
 
     inline unsigned int lowBits() const { return m_bits & 0x7; }
 
-    inline bool prefixBit() const { return m_bits & 0x8; }
+    inline bool prefBit() const { return m_bits & 0x8; }
 
-    inline constexpr static unsigned char rexwBit () { return 0; }
+    static constexpr bool isGPR() { return false; }
 };
 
 class GPR : public Reg
-    { public: using Reg::Reg; };
+    { public: using Reg::Reg; static constexpr bool isGPR() { return true; } };
 
 class GPR32 : public GPR
     { public: using GPR::GPR; };
@@ -87,149 +87,110 @@ R64FX_DEF_MEM(128, 16)
 
 
 struct Base{
-    GPR64 reg;
-    explicit Base(GPR64 reg) : reg(reg) {}
+    GPR64 r; explicit Base  (GPR64 r) : r(r) {}
+
+    inline unsigned char xb() const
+        { return r.prefBit() ? 1:0; }
+
+    inline unsigned char sib() const
+        { return 32 | r.lowBits(); }
 };
 
-struct Index{
-    GPR64 reg;
-    explicit Index(GPR64 reg) : reg(reg) {}
+template<typename R> struct IndexTmpl
+    { R r; explicit IndexTmpl (R r) : r(r) {} };
+
+typedef IndexTmpl<GPR64>  IndexGPR64;
+typedef IndexTmpl<Xmm>    IndexXmm;
+typedef IndexTmpl<Ymm>    IndexYmm;
+
+template<typename R> inline auto Index(R r) { return IndexTmpl<R>(r); }
+
+struct Scale{ int bits; explicit Scale(int bits = 0) : bits(bits) {}}
+    Scale1(0), Scale2(1), Scale4(2), Scale8(4);
+
+template<typename I> struct IndexScale
+    { I i; Scale s; IndexScale(I i, Scale s = Scale1) : i(i), s(s) {} };
+
+template<typename I> auto operator*(I i, Scale s) { return IndexScale<I>(i, s); }
+
+template<typename I> struct BaseIndexScale{
+    Base b; IndexScale<I> is;
+    BaseIndexScale(Base b, IndexScale<I> is) : b(b), is(is) {}
+
+    inline unsigned char xb() const
+        { return (is.i.r.prefBit() ? 2:0) | (b.r.prefBit() ? 1:0); }
+
+    inline unsigned char sib() const
+        { return (is.s.bits << 6) | (is.i.r.lowBits() << 3) | b.r.lowBits(); }
 };
 
-struct Scale{ int bits; explicit Scale(int bits = 0) : bits(bits) {}};
-Scale Scale1(0), Scale2(1), Scale4(2), Scale8(4);
+template<typename I> inline auto operator+(Base b, IndexScale<I> is)
+    { return BaseIndexScale<I>(b, is); }
 
-struct IndexScale{
-    Index index; Scale scale;
-    IndexScale(Index index, Scale scale = Scale1) : index(index), scale(scale) {}
+template<typename D> struct DispTmpl{
+    D d; explicit DispTmpl(D d) : d(d) {}
 };
 
-struct Disp8{
-    char disp; explicit Disp8(char disp) : disp(disp) {}
+typedef DispTmpl<char>  Disp8;
+typedef DispTmpl<int>   Disp32;
+
+template<typename I, typename D> struct BaseIndexScaleDisp
+    { BaseIndexScale<I> bis; D d; BaseIndexScaleDisp(BaseIndexScale<I> bis, D d) : bis(bis), d(d) {} };
+
+template<typename I, typename D> auto operator+(BaseIndexScale<I> bis, D d)
+    { return BaseIndexScaleDisp<I, D>(bis, d); }
+
+template<typename I> struct IndexScaleDisp32{
+    IndexScale<I> is; Disp32 d;
+    explicit IndexScaleDisp32(IndexScale<I> is, Disp32 d) : is(is), d(d) {}
+
+    inline unsigned char xb() const
+        { return is.i.r.prefBit() ? 2:0; }
+
+    inline unsigned char sib() const
+        { return (is.i.s.bits << 6) | (is.i.r.lowBits() << 3) | 5; }
 };
 
-struct Disp32{
-    int disp; explicit Disp32(int disp) : disp(disp) {}
-};
+template<typename I> auto operator+(IndexScale<I> is, Disp32 d) { return IndexScaleDisp32(is, d); }
 
-struct BaseIndexScale{
-    Base base; IndexScale is;
-    BaseIndexScale(Base base, IndexScale is) : base(base), is(is) {}
-};
-
-struct BaseIndexScaleDisp8{
-    BaseIndexScale bis; Disp8 disp;
-    BaseIndexScaleDisp8(BaseIndexScale bis, Disp8 disp) : bis(bis), disp(disp) {}
-};
-
-struct BaseIndexScaleDisp32{
-    BaseIndexScale bis; Disp32 disp;
-    BaseIndexScaleDisp32(BaseIndexScale bis, Disp32 disp) : bis(bis), disp(disp) {}
-};
-
-struct BaseDisp8{
-    Base base; Disp8 disp;
-    BaseDisp8(Base base, Disp8 disp) : base(base), disp(disp) {}
-};
-
-struct BaseDisp32{
-    Base base; Disp32 disp;
-    BaseDisp32(Base base, Disp32 disp) : base(base), disp(disp) {}
-};
-
-struct IndexScaleDisp32{
-    IndexScale is; Disp32 disp;
-    IndexScaleDisp32(IndexScale is, Disp32 disp) : is(is), disp(disp) {}
-};
-
-inline IndexScale            operator* (Index index, Scale scale)         { return {index, scale}; }
-inline BaseIndexScale        operator+ (Base base, IndexScale is)         { return {base, is}; }
-inline BaseIndexScaleDisp8   operator+ (BaseIndexScale bis, Disp8  disp)  { return {bis,  disp}; }
-inline BaseIndexScaleDisp32  operator+ (BaseIndexScale bis, Disp32 disp)  { return {bis,  disp}; }
-inline BaseDisp8             operator+ (Base base, Disp8  disp)           { return {base, disp}; }
-inline BaseDisp32            operator+ (Base base, Disp32 disp)           { return {base, disp}; }
-inline IndexScaleDisp32      operator+ (IndexScale is, Disp32 disp)       { return {is, disp}; }
-
-struct SIBD{
-    unsigned char xb, mod, sib, disp_size = 0;
+struct SIBD_Parts{
+    unsigned char xb = 0, mod = 0, sib = 0, disp_size = 0;
     int disp = 0;
 
-    SIBD(const Base &base)
-    {
-        R64FX_DEBUG_ASSERT(base.reg.lowBits() != 5);
-        xbsib(base);
-    }
+protected:
+    SIBD_Parts(unsigned char xb, unsigned char mod, unsigned char sib, unsigned char disp_size, int disp)
+        : xb(xb), mod(mod), sib(sib), disp_size(disp_size), disp(disp) {}
+};
 
-    SIBD(const BaseDisp8 &bd8)
-    {
-        xbsib(bd8.base);
-        modisp(bd8.disp);
-    }
-
-    SIBD(const BaseDisp32 &bd32)
-    {
-        xbsib(bd32.base);
-        modisp(bd32.disp);
-    }
-
-    SIBD(const BaseIndexScale &bis)
-    {
-        R64FX_DEBUG_ASSERT(bis.base.reg.lowBits() != 5);
-        R64FX_DEBUG_ASSERT(bis.is.index.reg.lowBits() != 4);
-        xbsib(bis);
-    }
-
-    SIBD(const BaseIndexScaleDisp8 &bisd8)
-    {
-        R64FX_DEBUG_ASSERT(bisd8.bis.is.index.reg.lowBits() != 4);
-        xbsib(bisd8.bis);
-        modisp(bisd8.disp);
-    }
-
-    SIBD(const BaseIndexScaleDisp32 &bisd32)
-    {
-        R64FX_DEBUG_ASSERT(bisd32.bis.is.index.reg.lowBits() != 4);
-        xbsib(bisd32.bis);
-        modisp(bisd32.disp);
-    }
-
-private:
-    inline void xbsib(Base base)
-    {
-        xb = base.reg.prefixBit() ? 1:0;
-        sib = 32 | base.reg.lowBits();
-    }
-
-    inline void xbsib(BaseIndexScale bis)
-    {
-        xb = (bis.is.index.reg.prefixBit() ? 2:0) | (bis.base.reg.prefixBit() ? 1:0);
-        sib = (bis.is.scale.bits << 6) | (bis.is.index.reg.lowBits() << 3) | bis.base.reg.lowBits();
-    }
-
-    inline void modisp(Disp8 disp8)
-    {
-        mod = 1;
-        disp = disp8.disp;
-        disp_size = 1;
-    }
-
-    inline void modisp(Disp32 disp32)
-    {
-        mod = 2;
-        disp = disp32.disp;
-        disp_size = 4;
-    }
+template<typename I> struct VSIBD : public SIBD_Parts{
+protected:
+    VSIBD(unsigned char xb, unsigned char mod, unsigned char sib, unsigned char disp_size, int disp)
+        : SIBD_Parts(xb, mod, sib, disp_size, disp) {}
 
 public:
-    SIBD(const IndexScaleDisp32 &isd32)
-    {
-        R64FX_DEBUG_ASSERT(isd32.is.index.reg.lowBits() != 4);
-        xb = isd32.is.index.reg.prefixBit() ? 2:0;
-        sib = (isd32.is.scale.bits << 6) | (isd32.is.index.reg.lowBits() << 3) | 5;
-        mod = 0;
-        disp = isd32.disp.disp;
-        disp_size = 4;
-    }
+    VSIBD(const BaseIndexScale<I> &bis)              : VSIBD(bis.xb(),  0, bis.sib(),  0, 0)        {}
+    VSIBD(const BaseIndexScaleDisp<I, Disp8>  &bisd) : VSIBD(bisd.xb(), 1, bisd.sib(), 1, bisd.d.d) {}
+    VSIBD(const BaseIndexScaleDisp<I, Disp32> &bisd) : VSIBD(bisd.xb(), 2, bisd.sib(), 4, bisd.d.d) {}
+    VSIBD(const IndexScaleDisp32<I> &isd)            : VSIBD(isd.xb(),  0, isd.sib(),  4, isd.d.d)  {}
+};
+
+typedef VSIBD<IndexTmpl<Xmm>> XSIBD;
+typedef VSIBD<IndexTmpl<Ymm>> YSIBD;
+
+template<typename DispT> struct BaseDispTmpl
+    { Base b; DispT d; BaseDispTmpl(Base b, DispT d) : b(b), d(d) {} };
+
+template<typename DispT> inline auto operator+(Base b, DispT d) { return BaseDispTmpl(b, d); }
+
+typedef BaseDispTmpl<Disp8>   BaseDisp8;
+typedef BaseDispTmpl<Disp32>  BaseDisp32;
+
+struct SIBD : public VSIBD<GPR64>{
+    SIBD(const Base &b)        : VSIBD(b.xb(),    0, b.sib(),    0, 0)      {}
+    SIBD(const BaseDisp8 &bd)  : VSIBD(bd.b.xb(), 1, bd.b.sib(), 1, bd.d.d) {}
+    SIBD(const BaseDisp32 &bd) : VSIBD(bd.b.xb(), 2, bd.b.sib(), 4, bd.d.d) {}
+
+    using VSIBD<GPR64>::VSIBD;
 };
 
 
@@ -308,10 +269,17 @@ private:
         return m_pref;
     }
 
-    inline unsigned char B   (Reg r)         { m_pref = (r.prefixBit()?1:0); return m_pref; }
-    inline unsigned char R   (Reg r)         { m_pref = (r.prefixBit()?4:0); return m_pref; }
-    inline unsigned char RB  (Reg r, Reg b)  { m_pref = (r.prefixBit()?4:0) | (b.prefixBit()?1:0); return m_pref; }
-    inline unsigned char RXB (Reg r, SIBD s) { m_pref = (r.prefixBit()?4:0) | s.xb; return m_pref; }
+    inline unsigned char B   (Reg r)
+        { m_pref = (r.prefBit()?1:0); return m_pref; }
+
+    inline unsigned char R   (Reg r)
+        { m_pref = (r.prefBit()?4:0); return m_pref; }
+
+    inline unsigned char RB  (Reg r, Reg b)
+        { m_pref = (r.prefBit()?4:0) | (b.prefBit()?1:0); return m_pref; }
+
+    inline unsigned char RXB (Reg r, SIBD_Parts s)
+        { m_pref = (r.prefBit()?4:0) | s.xb; return m_pref; }
 
     inline unsigned char ModRM_Bits(int bits) { return bits; }
     inline unsigned char ModRM_Bits(unsigned char bits) { return bits; }
@@ -365,7 +333,7 @@ private:
     }
 
     /* Write displacement */
-    inline void DISP(const SIBD &sibd)
+    inline void DISP(const SIBD_Parts &sibd)
     {
         int disp = sibd.disp;
         for(int i=0; i<sibd.disp_size; i++)

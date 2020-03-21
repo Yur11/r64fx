@@ -4,7 +4,11 @@
 using namespace std;
 using namespace r64fx;
 
-float num[16] = { 1, 2, 3, 4,  5, 6, 7, 8,  2, 2, 2, 2,  6, 6, 6, 6 };
+float buffer[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 17, 18, 19, 20, 21 };
+
+int indices[4] = { 3, 11, 9, 11 };
+
+int mask[4] = { -1, -1, -1, -1 };
 
 class TestJit : public Assembler{
     JumpLabel8 l;
@@ -12,32 +16,35 @@ class TestJit : public Assembler{
 public:
     int run()
     {
-        MOV      (rax, Addr(num));
+        MOV       (rax, Addr(buffer));
+        ADD       (rax, Imm8(8));
+        MOVAPS    (xmm0, Mem128(indices));
+        MOVAPS    (xmm1, Mem128(mask));
 
-        VMOVAPS   (ymm0, Base(rax));
-        VSHUFPS   (ymm9, ymm0, Base(rax), Shuf(3, 2, 1, 0));
-        VMOVAPS   (Base(rax) + Disp8(32), ymm9);
+        VGATHERDPS (xmm2, Base(rax) + IndexXmm(xmm0) * Scale4, xmm1);
 
-        RET      ();
+        MOVAPS    (Mem128(buffer), xmm2);
+
+        RET       ();
 
         auto fun = (unsigned long (*)()) begin();
 
-        auto p = begin();
-        for(;;)
-        {
-            cout << hex << int(*p) << "\n";
-
-            if(*p == 0xC3)
-                break;
-
-            p++;
-        }
+//         auto p = begin();
+//         for(;;)
+//         {
+//             cout << hex << int(*p) << "\n";
+// 
+//             if(*p == 0xC3)
+//                 break;
+// 
+//             p++;
+//         }
 
         cout << dec << fun() << "\n";
 
         for (int i=0; i<16; i++)
         {
-            cout << i << " -> " << num[i] << "\n";
+            cout << i << " -> " << buffer[i] << "\n";
         }
 
         return 0;
