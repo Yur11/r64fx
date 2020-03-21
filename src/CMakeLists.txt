@@ -250,7 +250,6 @@ set(test_Synth_LIBS jack pthread)
 target_link_libraries(test_Synth ${test_Synth_LIBS})
 
 
-
 ## test_jit_procedures ##
 set(test_jit_procedures_SRC
     test_jit_procedures.cpp
