@@ -20,8 +20,10 @@ public:
         VMOVAPS (ymm0, Mem128(buffer));
         VMOVAPS (ymm1, Mem128(buffer + 8));
         VMOVAPS (ymm2, Mem128(buffer + 16));
+        MOV(rdx, Addr(buffer + 16));
+        XOR(rcx, rcx);
 
-        VFMADD231PS  (ymm0, ymm1, ymm2);
+        VFMADD231PS  (ymm0, ymm1, Base(rdx) + Index(rcx) * Scale1);
 
         VMOVAPS (Mem128(buffer + 24),  ymm0);
 

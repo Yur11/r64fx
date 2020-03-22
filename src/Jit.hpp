@@ -7,6 +7,7 @@
 
 namespace r64fx{
 
+/* === Registers === */
 class Reg{
     unsigned char m_bits = 0;
 
@@ -62,6 +63,7 @@ template<>               inline bool has_w<GPR64> (GPR64) { return true; }
 template<typename IntT> inline IntT operator+(IntT opcode, Reg reg) { return opcode + reg.lowBits(); }
 
 
+/* === Immediates === */
 #define R64FX_DEF_IMM(S, T) struct Imm##S { T val; explicit Imm##S(T val) : val(val) {} };
 R64FX_DEF_IMM( 8, unsigned char)
 R64FX_DEF_IMM(16, unsigned short)
@@ -69,12 +71,15 @@ R64FX_DEF_IMM(32, unsigned int)
 R64FX_DEF_IMM(64, unsigned long)
 #undef R64FX_DEF_IMM
 
+/* Address immediate */
 auto Addr(void* addr) { return Imm64((unsigned long) addr); }
 
+/* Shuffle byte immediate */
 auto Shuf(unsigned char s0, unsigned char s1, unsigned char s2, unsigned char s3)
     { return Imm8((s3 << 6) + (s2 << 4) + (s1 << 2) + s0); }
 
 
+/* === Memory Offset operands === */
 #define R64FX_DEF_MEM(S, B) struct Mem##S\
     { unsigned long addr; Mem##S(void* addr = nullptr) : addr((unsigned long) addr)\
         { R64FX_DEBUG_ASSERT(this->addr % B == 0) }};
@@ -86,6 +91,7 @@ R64FX_DEF_MEM(128, 16)
 #undef R64FX_DEF_MEM
 
 
+/* === (V)SIBD === */
 struct Base{
     GPR64 r; explicit Base  (GPR64 r) : r(r) {}
 
@@ -96,8 +102,11 @@ struct Base{
         { return 32 | r.lowBits(); }
 };
 
-template<typename R> struct IndexTmpl
-    { R r; explicit IndexTmpl (R r) : r(r) {} };
+
+/* Different register types can be used as Index */
+template<typename R> struct IndexTmpl{
+    R r; explicit IndexTmpl (R r) : r(r) {}
+};
 
 typedef IndexTmpl<GPR64>  IndexGPR64;
 typedef IndexTmpl<Xmm>    IndexXmm;
@@ -105,16 +114,24 @@ typedef IndexTmpl<Ymm>    IndexYmm;
 
 template<typename R> inline auto Index(R r) { return IndexTmpl<R>(r); }
 
+
+/* Index can be scaled */
 struct Scale{ int bits; explicit Scale(int bits = 0) : bits(bits) {}}
     Scale1(0), Scale2(1), Scale4(2), Scale8(4);
 
-template<typename I> struct IndexScale
-    { I i; Scale s; IndexScale(I i, Scale s = Scale1) : i(i), s(s) {} };
+template<typename I> struct IndexScale{
+    I i; Scale s;
+    IndexScale(I i, Scale s) : i(i), s(s) {}
+    IndexScale(I i) : i(i), s(Scale1) {}
+};
 
 template<typename I> auto operator*(I i, Scale s) { return IndexScale<I>(i, s); }
 
+
+/* Combine Base & Scaled Index */
 template<typename I> struct BaseIndexScale{
     Base b; IndexScale<I> is;
+
     BaseIndexScale(Base b, IndexScale<I> is) : b(b), is(is) {}
 
     inline unsigned char xb() const
@@ -124,9 +141,12 @@ template<typename I> struct BaseIndexScale{
         { return (is.s.bits << 6) | (is.i.r.lowBits() << 3) | b.r.lowBits(); }
 };
 
-template<typename I> inline auto operator+(Base b, IndexScale<I> is)
-    { return BaseIndexScale<I>(b, is); }
+template<typename I>
+    inline auto operator+(Base b, IndexScale<I> is)
+        { return BaseIndexScale<I>(b, is); }
 
+
+/* Displacement can be added to BaseIndexScale */
 template<typename D> struct DispTmpl{
     D d; explicit DispTmpl(D d) : d(d) {}
 };
@@ -134,11 +154,14 @@ template<typename D> struct DispTmpl{
 typedef DispTmpl<char>  Disp8;
 typedef DispTmpl<int>   Disp32;
 
-template<typename I, typename D> struct BaseIndexScaleDisp
-    { BaseIndexScale<I> bis; D d; BaseIndexScaleDisp(BaseIndexScale<I> bis, D d) : bis(bis), d(d) {} };
+template<typename I, typename D> struct BaseIndexScaleDisp{
+    BaseIndexScale<I> bis; D d;
+    BaseIndexScaleDisp(BaseIndexScale<I> bis, D d) : bis(bis), d(d) {}
+};
 
-template<typename I, typename D> auto operator+(BaseIndexScale<I> bis, D d)
-    { return BaseIndexScaleDisp<I, D>(bis, d); }
+template<typename I, typename D>
+    auto operator+(BaseIndexScale<I> bis, D d)
+        { return BaseIndexScaleDisp<I, D>(bis, d); }
 
 template<typename I> struct IndexScaleDisp32{
     IndexScale<I> is; Disp32 d;
@@ -151,8 +174,12 @@ template<typename I> struct IndexScaleDisp32{
         { return (is.i.s.bits << 6) | (is.i.r.lowBits() << 3) | 5; }
 };
 
-template<typename I> auto operator+(IndexScale<I> is, Disp32 d) { return IndexScaleDisp32(is, d); }
+template<typename I>
+    auto operator+(IndexScale<I> is, Disp32 d)
+        { return IndexScaleDisp32(is, d); }
 
+
+/* Encoding bits computed from (V)SIBD */
 struct SIBD_Parts{
     unsigned char xb = 0, mod = 0, sib = 0, disp_size = 0;
     int disp = 0;
@@ -162,6 +189,8 @@ protected:
         : xb(xb), mod(mod), sib(sib), disp_size(disp_size), disp(disp) {}
 };
 
+
+/* VSIBD */
 template<typename I> struct VSIBD : public SIBD_Parts{
 protected:
     VSIBD(unsigned char xb, unsigned char mod, unsigned char sib, unsigned char disp_size, int disp)
@@ -177,20 +206,28 @@ public:
 typedef VSIBD<IndexTmpl<Xmm>> XSIBD;
 typedef VSIBD<IndexTmpl<Ymm>> YSIBD;
 
-template<typename DispT> struct BaseDispTmpl
-    { Base b; DispT d; BaseDispTmpl(Base b, DispT d) : b(b), d(d) {} };
 
-template<typename DispT> inline auto operator+(Base b, DispT d) { return BaseDispTmpl(b, d); }
+/* Base + Disp can be used with SIBD, but not with VSIBD */
+template<typename DispT> struct BaseDispTmpl{
+    Base b; DispT d;
+    BaseDispTmpl(Base b, DispT d) : b(b), d(d) {}
+};
+
+template<typename DispT>
+    inline auto operator+(Base b, DispT d)
+        { return BaseDispTmpl(b, d); }
 
 typedef BaseDispTmpl<Disp8>   BaseDisp8;
 typedef BaseDispTmpl<Disp32>  BaseDisp32;
 
-struct SIBD : public VSIBD<GPR64>{
+
+/* SIBD reuses parts from VSIBD and adds Base + Disp */
+struct SIBD : public VSIBD<IndexTmpl<GPR64>>{
     SIBD(const Base &b)        : VSIBD(b.xb(),    0, b.sib(),    0, 0)      {}
     SIBD(const BaseDisp8 &bd)  : VSIBD(bd.b.xb(), 1, bd.b.sib(), 1, bd.d.d) {}
     SIBD(const BaseDisp32 &bd) : VSIBD(bd.b.xb(), 2, bd.b.sib(), 4, bd.d.d) {}
 
-    using VSIBD<GPR64>::VSIBD;
+    using VSIBD<IndexTmpl<GPR64>>::VSIBD;
 };
 
 
@@ -242,6 +279,7 @@ public:
     inline void JMP  (JumpLabel8  &j) { A(2); W(0xEB); LABEL(j); };
     inline void JMP  (JumpLabel32 &j) { A(5); W(0xE9); LABEL(j); };
 
+    /* Generated by gen_jit.sh script */
 #   include "JitInstructions_x86.cxx"
 
 #   define DEF_CMPPS(C, N)\

@@ -353,23 +353,25 @@ function instr
         die "$dbg Can't have both SIBD and VSIBD!"
 
     local op_r1=''
-    local op_r2=''
     local op_vv=''
+    local op_r2=''
+
+    [[ ${#op_r[@]} -gt 3 ]] &&
+        die "$dbg Too many register operands!"
 
     if [[ ${#op_r[@]} -ge 1 ]]; then
         op_r1=${op_r[0]}
 
-        if [[ ${#op_r[@]} -gt 3 ]]; then
-            die "$dbg Too many register operands!"
-        elif [[ ${#op_r[@]} -eq 2 ]]; then
-            if [[ -n "$op_vsibd" ]]; then
-                op_vv=${op_r[1]} # Mask register for GATHER instructions
-            else
-                op_r2=${op_r[1]}
-            fi
+        local mem_ops="${op_mem}${op_sibd}${op_vsibd}"
+
+        if [[ ${#op_r[@]} -eq 3 || -n "$mem_ops" ]]; then
+            op_vv=${op_r[1]}
+        fi
+
+        if [[ ${#op_r[@]} -eq 2 && -z "$mem_ops" ]]; then
+            op_r2=${op_r[1]}
         elif [[ ${#op_r[@]} -eq 3 ]]; then
             op_r2=${op_r[2]}
-            op_vv=${op_r[1]}
         fi
     fi
 
