@@ -219,6 +219,13 @@ instr 'VGATHERQPD   (Xmm d, XSIBD s, Xmm m)'         VEX.DDS.128.66.0F38.W1 93 /
 instr 'VGATHERQPD   (Ymm d, YSIBD s, Ymm m)'         VEX.DDS.256.66.0F38.W1 93 /r
 echo ''
 
+echo '/* === FMA ===*/'
+for op in Ymm Mem128 SIBD; do
+    instr "VFMADD132PS   (Ymm d, Ymm s1, $op s2)"    VEX.NDS.256.66.0F38.W0 98 /r
+    instr "VFMADD213PS   (Ymm d, Ymm s1, $op s2)"    VEX.NDS.256.66.0F38.W0 A8 /r
+    instr "VFMADD231PS   (Ymm d, Ymm s1, $op s2)"    VEX.NDS.256.66.0F38.W0 B8 /r
+done
+
 } # gen_jit
 
 

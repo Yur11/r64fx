@@ -4,11 +4,12 @@
 using namespace std;
 using namespace r64fx;
 
-float buffer[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 17, 18, 19, 20, 21 };
-
-int indices[4] = { 3, 11, 9, 11 };
-
-int mask[4] = { -1, -1, -1, -1 };
+float buffer[] = {
+    0, 1, 2, 3,  4, 5, 6, 7,
+    2, 2, 2, 2,  2, 2, 2, 2,
+    3, 3, 3, 3,  3, 3, 3, 3,
+    0, 0, 0, 0,  0, 0, 0, 0
+};
 
 class TestJit : public Assembler{
     JumpLabel8 l;
@@ -16,7 +17,14 @@ class TestJit : public Assembler{
 public:
     int run()
     {
-        readTicks();
+        VMOVAPS (ymm0, Mem128(buffer));
+        VMOVAPS (ymm1, Mem128(buffer + 8));
+        VMOVAPS (ymm2, Mem128(buffer + 16));
+
+        VFMADD231PS  (ymm0, ymm1, ymm2);
+
+        VMOVAPS (Mem128(buffer + 24),  ymm0);
+
         RET     ();
 
         auto fun = (long (*)()) begin();
@@ -32,13 +40,14 @@ public:
 //             p++;
 //         }
 
-        for(;;)
-            cout << dec << fun() << "\n";
+        cout << dec << fun() << "\n";
 
-//         for (int i=0; i<16; i++)
-//         {
-//             cout << i << " -> " << buffer[i] << "\n";
-//         }
+        for(int i=0; i<32; i++)
+        {
+            if((i & 0x7) == 0)
+                cout << "\n";
+            cout << i << " -> " << buffer[i] << "\n";
+        }
 
         return 0;
     }
