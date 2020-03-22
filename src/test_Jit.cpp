@@ -16,18 +16,10 @@ class TestJit : public Assembler{
 public:
     int run()
     {
-        MOV       (rax, Addr(buffer));
-        ADD       (rax, Imm8(8));
-        MOVAPS    (xmm0, Mem128(indices));
-        MOVAPS    (xmm1, Mem128(mask));
+        readTicks();
+        RET     ();
 
-        VGATHERDPS (xmm2, Base(rax) + IndexXmm(xmm0) * Scale4, xmm1);
-
-        MOVAPS    (Mem128(buffer), xmm2);
-
-        RET       ();
-
-        auto fun = (unsigned long (*)()) begin();
+        auto fun = (long (*)()) begin();
 
 //         auto p = begin();
 //         for(;;)
@@ -40,12 +32,13 @@ public:
 //             p++;
 //         }
 
-        cout << dec << fun() << "\n";
+        for(;;)
+            cout << dec << fun() << "\n";
 
-        for (int i=0; i<16; i++)
-        {
-            cout << i << " -> " << buffer[i] << "\n";
-        }
+//         for (int i=0; i<16; i++)
+//         {
+//             cout << i << " -> " << buffer[i] << "\n";
+//         }
 
         return 0;
     }

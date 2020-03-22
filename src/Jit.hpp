@@ -259,6 +259,13 @@ public:
     DEF_CMPPS(ORD,   7)
 #   undef DEF_CMPPS
 
+    inline void readTicks()
+    {
+        RDTSC ();
+        SHL   (rdx, Imm8(32));
+        OR    (rax, rdx);
+    }
+
 private:
     /* Compress VEX prefix from 3 bytes to 2, if possible */
     inline int Vex(int rxb, int map_select, int w, int vvvv, int l, int pp, bool may_pack)

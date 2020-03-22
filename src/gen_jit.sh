@@ -3,6 +3,7 @@ function gen_jit {
 
 instr 'RET       ()'                                 C3
 instr 'NOP       ()'                                 90
+instr 'RDTSC     ()'                                 0F 31
 echo ''
 
 instr 'PUSH      (Imm32 i)'                          68 id
@@ -66,6 +67,15 @@ for op in GPR64 Mem64 SIBD; do
     instr "SUB       (GPR64 d, $op s)"               REX.W + 2B /r
     instr "XOR       (GPR64 d, $op s)"               REX.W + 33 /r
     echo ''
+done
+
+for op in GPR64 Mem64 SIBD; do
+    instr "SHL       ($op d, Imm8 s)"                REX.W + C1 /4 ib
+    instr "SHL       ($op d)"                        REX.W + D1 /4
+    instr "SHR       ($op d, Imm8 s)"                REX.W + C1 /5 ib
+    instr "SHR       ($op d)"                        REX.W + D1 /5
+    instr "SAR       ($op d, Imm8 s)"                REX.W + C1 /7 ib
+    instr "SAR       ($op d)"                        REX.W + D1 /7
 done
 
 echo '/* === SSE === */'
