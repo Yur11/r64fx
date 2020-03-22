@@ -57,7 +57,7 @@ for op in GPR64 Mem64 SIBD; do
     instr "AND       ($op d, Imm8 s)"                REX.W + 83 /4 ib
     instr "SUB       ($op d, Imm8 s)"                REX.W + 83 /5 ib
     instr "XOR       ($op d, Imm8 s)"                REX.W + 83 /6 ib
-    echo
+    echo ''
 done
 
 for op in GPR64 Mem64 SIBD; do
@@ -76,6 +76,7 @@ for op in GPR64 Mem64 SIBD; do
     instr "SHR       ($op d)"                        REX.W + D1 /5
     instr "SAR       ($op d, Imm8 s)"                REX.W + C1 /7 ib
     instr "SAR       ($op d)"                        REX.W + D1 /7
+    echo ''
 done
 
 echo '/* === SSE === */'
@@ -208,22 +209,28 @@ for op in Ymm Mem128 SIBD; do
     echo ''
 done
 
-echo '/* === AVX2 === */'
-instr 'VGATHERDPS   (Xmm d, XSIBD s, Xmm m)'         VEX.DDS.128.66.0F38.W0 92 /r
-instr 'VGATHERDPS   (Ymm d, YSIBD s, Ymm m)'         VEX.DDS.256.66.0F38.W0 92 /r
-instr 'VGATHERQPS   (Xmm d, XSIBD s, Xmm m)'         VEX.DDS.128.66.0F38.W0 93 /r
-instr 'VGATHERQPS   (Ymm d, YSIBD s, Ymm m)'         VEX.DDS.256.66.0F38.W0 93 /r
-instr 'VGATHERDPD   (Xmm d, XSIBD s, Xmm m)'         VEX.DDS.128.66.0F38.W1 92 /r
-instr 'VGATHERDPD   (Ymm d, YSIBD s, Ymm m)'         VEX.DDS.256.66.0F38.W1 92 /r
-instr 'VGATHERQPD   (Xmm d, XSIBD s, Xmm m)'         VEX.DDS.128.66.0F38.W1 93 /r
-instr 'VGATHERQPD   (Ymm d, YSIBD s, Ymm m)'         VEX.DDS.256.66.0F38.W1 93 /r
+echo '/* === Gather Instructions === */'
+for v in X:128 Y:256; do
+    for a in D:2 Q:3; do
+        for q in PS:0 PD:1; do
+            instr "VGATHER${a%:*}${q%:*}   (${v%:*}mm d, ${v%:*}SIBD s, ${v%:*}mm m)" \
+                VEX.DDS.${v#*:}.66.0F38.W${q#*:} 9${a#*:} /r
+        done
+    done
+done
 echo ''
 
 echo '/* === FMA ===*/'
-for op in Ymm Mem128 SIBD; do
-    instr "VFMADD132PS   (Ymm d, Ymm s1, $op s2)"    VEX.NDS.256.66.0F38.W0 98 /r
-    instr "VFMADD213PS   (Ymm d, Ymm s1, $op s2)"    VEX.NDS.256.66.0F38.W0 A8 /r
-    instr "VFMADD231PS   (Ymm d, Ymm s1, $op s2)"    VEX.NDS.256.66.0F38.W0 B8 /r
+for v in X:128 Y:256; do
+    for o in ${v%:*}mm Mem128 SIBD; do
+        for a in ADD:8 SUB:A; do
+            for s in 132:9 213:A 231:B; do
+                instr "VFM${a%:*}${s%:*}PS   (${v%:*}mm d, ${v%:*}mm s1, $o s2)" \
+                    VEX.NDS.${v#*:}.66.0F38.W0 ${s#*:}${a#*:} /r
+            done
+        done
+        echo ''
+    done
 done
 
 } # gen_jit
@@ -502,7 +509,7 @@ function instr
 
     # Generate Output
     local out="inline void $signature "
-    while [[ ${#out} -lt 52 ]]; do
+    while [[ ${#out} -lt 64 ]]; do
         out+=' '
     done
     out+="{ "
@@ -532,9 +539,9 @@ function instr
     fi
 
     if [[ -n "$out_vex" && -n "$may_use_c5_vex" ]]; then
-        out+=',m_pref&0xFF0000'
+        out+=',mp&0xFF0000'
     elif [[ -z "$enc_rexw" ]] && [[ -n "$out_r$out_b$out_rb$out_rxb" ]]; then
-        out+=',m_pref'
+        out+=',mp'
     fi
 
     out+=')'
@@ -568,10 +575,10 @@ function instr
             out+=', '
         fi
     elif [[ -n "$out_vex"  ]]; then
-        out+='; O(m_pref>>16); W((m_pref>>8)&0xFF, m_pref&0xFF, '
+        out+='; O(mp>>16); W((mp>>8)&0xFF, mp&0xFF, '
     elif [[ -n "$out_r$out_b$out_rb$out_rxb" ]]; then
         [[ -n "$out_pref" ]] && out+=')'
-        out+='; O<64>(m_pref); W('
+        out+='; O<64>(mp); W('
     elif [[ -n "$out_pref" ]]; then
         out+=', '
     else
@@ -632,7 +639,7 @@ function instr
         out+="; LABEL($op_jmp)"
     fi
 
-    echo "$out; }"
+    echo -e "$out; }"
 }
 
 function die

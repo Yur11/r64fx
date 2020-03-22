@@ -23,7 +23,7 @@ public:
         MOV(rdx, Addr(buffer + 16));
         XOR(rcx, rcx);
 
-        VFMADD231PS  (ymm0, ymm1, Base(rdx) + Index(rcx) * Scale1);
+        VFMSUB231PS  (ymm0, ymm1, Base(rdx) + Index(rcx) * Scale1);
 
         VMOVAPS (Mem128(buffer + 24),  ymm0);
 

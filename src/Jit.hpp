@@ -258,7 +258,7 @@ class JumpLabel32 : public JumpLabel<int>  { public: using JumpLabel<int>  ::Jum
 class Assembler : public MemoryBuffer{
     unsigned char* p = nullptr;
     bool m_use_extra_byte = false;
-    int m_pref = 0;
+    int mp = 0; // prefix
 
 public:
     Assembler() : MemoryBuffer(1) { permitExecution(); }
@@ -270,10 +270,10 @@ public:
     // Useful for code alignemnt.
     inline void useExtraByte(bool yes) { m_use_extra_byte = yes; }
 
-    inline void PUSH (GPR64 r) { R(r); A(1,m_pref); O<64>(m_pref); W(0x50+r); }
-    inline void POP  (GPR64 r) { R(r); A(1,m_pref); O<64>(m_pref); W(0x58+r); }
+    inline void PUSH (GPR64 r) { R(r); A(1,mp); O<64>(mp); W(0x50+r); }
+    inline void POP  (GPR64 r) { R(r); A(1,mp); O<64>(mp); W(0x58+r); }
 
-    inline void JMP  (GPR64 r) { B(r); A(2,m_pref); O<64>(m_pref); W(0xFF, ModRM(3, 4, r)); }
+    inline void JMP  (GPR64 r) { B(r); A(2,mp); O<64>(mp); W(0xFF, ModRM(3, 4, r)); }
     inline void JMP  (Mem64 m) { A(6); W(0xFF, ModRM(0, 4, 5)); RIP(m.addr); }
 
     inline void JMP  (JumpLabel8  &j) { A(2); W(0xEB); LABEL(j); };
@@ -308,23 +308,23 @@ private:
     /* Compress VEX prefix from 3 bytes to 2, if possible */
     inline int Vex(int rxb, int map_select, int w, int vvvv, int l, int pp, bool may_pack)
     {
-        m_pref = 0xC40000 | (((~rxb)&7)<<13) | (map_select<<8) | (w<<7) | (((~vvvv)&0xF)<<3) | (l<<2) | pp;
-        if(may_pack && !m_use_extra_byte && (m_pref & 0xFF7F80) == 0xC46100)
-            { m_pref = 0xC500 | ((m_pref & 0x8000) >> 8) | (m_pref & 0x7F); m_use_extra_byte = false; }
-        return m_pref;
+        mp = 0xC40000 | (((~rxb)&7)<<13) | (map_select<<8) | (w<<7) | (((~vvvv)&0xF)<<3) | (l<<2) | pp;
+        if(may_pack && !m_use_extra_byte && (mp & 0xFF7F80) == 0xC46100)
+            { mp = 0xC500 | ((mp & 0x8000) >> 8) | (mp & 0x7F); m_use_extra_byte = false; }
+        return mp;
     }
 
     inline unsigned char B   (Reg r)
-        { m_pref = (r.prefBit()?1:0); return m_pref; }
+        { mp = (r.prefBit()?1:0); return mp; }
 
     inline unsigned char R   (Reg r)
-        { m_pref = (r.prefBit()?4:0); return m_pref; }
+        { mp = (r.prefBit()?4:0); return mp; }
 
     inline unsigned char RB  (Reg r, Reg b)
-        { m_pref = (r.prefBit()?4:0) | (b.prefBit()?1:0); return m_pref; }
+        { mp = (r.prefBit()?4:0) | (b.prefBit()?1:0); return mp; }
 
     inline unsigned char RXB (Reg r, SIBD_Parts s)
-        { m_pref = (r.prefBit()?4:0) | s.xb; return m_pref; }
+        { mp = (r.prefBit()?4:0) | s.xb; return mp; }
 
     inline unsigned char ModRM_Bits(int bits) { return bits; }
     inline unsigned char ModRM_Bits(unsigned char bits) { return bits; }
