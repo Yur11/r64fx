@@ -11,7 +11,9 @@ class Shader{
     GLuint m_shader = 0;
 
 protected:
-    Shader(const char* text, GLenum shader_type);
+    Shader(const char** text, GLsizei count, GLenum shader_type);
+
+    Shader(const char* text, GLenum shader_type) : Shader(&text, 1, shader_type) {}
 
     Shader() {}
 

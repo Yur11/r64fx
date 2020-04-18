@@ -7,13 +7,13 @@ using namespace std;
 
 namespace r64fx{
 
-Shader::Shader(const char* text, GLenum shader_type)
+Shader::Shader(const char** text, GLsizei count, GLenum shader_type)
 {
     m_shader = gl::CreateShader(shader_type);
     if(!m_shader)
         return;
 
-    gl::ShaderSource(m_shader, 1, &text, nullptr);
+    gl::ShaderSource(m_shader, count, text, nullptr);
     gl::CompileShader(m_shader);
 
     if(!isOk())
