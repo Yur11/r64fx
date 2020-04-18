@@ -124,6 +124,7 @@ set(SRC
     Widget_Slider.cpp
     Widget_TabBar.cpp
     Widget_Text.cpp
+    Widget_Timeline.cpp
     Window.cpp
     gl.cpp
     jit.cpp

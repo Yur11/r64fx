@@ -25,6 +25,7 @@
 
 //REMOVE ME
 #include "Widget_Panel.hpp"
+#include "Widget_Timeline.hpp"
 
 #define m ((Widget_MainWindow*) m_private)
 
@@ -49,6 +50,7 @@ struct Widget_MainWindow : public Widget{
 
     //REMOVE ME
     Widget_Panel*       panel        = nullptr;
+    Widget_Timeline*    timeline     = nullptr;
 
     int gap = 3;
     bool left_dock_expanded = true, right_dock_expanded = true;
@@ -122,8 +124,10 @@ MainWindow::MainWindow()
     m->bottom_part  ->setHeight (Conf::Scale() * 256, false);
 
     //REMOVE ME
-    m->panel        = new Widget_Panel(m->top_part);
+    m->panel        = new Widget_Panel(m->bottom_part);
     m->panel        ->setPosition({0, 0});
+    m->timeline     = new Widget_Timeline(m->top_part);
+    m->timeline     ->setPosition({5, 5});
 
     m->setSize({Conf::ScaleUp(800), Conf::ScaleUp(600)});
     m->openWindow();
@@ -136,6 +140,7 @@ MainWindow::~MainWindow()
 
     //REMOVE ME
     delete m->panel;
+    delete m->timeline;
 
     delete m->top_bar;
     delete m->bottom_bar;
@@ -258,6 +263,9 @@ void Widget_MainWindow::resizeEvent(WidgetResizeEvent* event)
 
     bottom_part ->setPosition({mx, my + top_part->height() + gap});
     bottom_part ->setWidth(mw);
+
+    //REMOVE ME
+    timeline    ->setSize({top_part->width() - 10, top_part->height() - 10});
 
     repaint();
 }
