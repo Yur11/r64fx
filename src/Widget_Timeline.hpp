@@ -8,6 +8,11 @@ namespace r64fx{
 class Widget_Timeline : public Widget{
 public:
     Widget_Timeline(Widget* parent = nullptr);
+
+private:
+    virtual void paintEvent(WidgetPaintEvent* event);
+
+    virtual void resizeEvent(WidgetResizeEvent* event);
 };
 
 }//namespace r64fx

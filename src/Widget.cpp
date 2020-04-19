@@ -547,6 +547,7 @@ Widget::~Widget()
     {
         auto child = m_children.last();
         child->setParent(nullptr);
+        delete child;
     }
 
     if(this == g_moused_over_widget)
