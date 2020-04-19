@@ -7,19 +7,52 @@ using namespace std;
 
 namespace r64fx{
 
+class Widget_TimelineClip : public Widget{
+public:
+    Widget_TimelineClip(Widget* parent = nullptr) : Widget(parent)
+    {
+        setWidth(1024);
+    }
+
+private:
+    void paintEvent(WidgetPaintEvent* event)
+    {
+        auto p = event->painter();
+        p->strokeRect({0, 0, width(), height()}, Color(63, 32, 32), Color(255, 127, 127), 5);
+        childrenPaintEvent(event);
+    }
+};
+
 class Widget_TimelineLane : public Widget{
 public:
     Widget_TimelineLane(Widget* parent = nullptr) : Widget(parent)
     {
-        setHeight(128);
+        setHeight(256);
+
+        //REMOVE ME
+        for(int i=0; i<3; i++)
+            (void) new Widget_TimelineClip(this);
     }
 
-public:
+private:
     void paintEvent(WidgetPaintEvent* event)
     {
         auto p = event->painter();
         p->fillRect({0, 0, width(), height() - 5}, Color(255, 223, 159));
         childrenPaintEvent(event);
+    }
+
+    void resizeEvent(WidgetResizeEvent* event)
+    {
+        for(auto child : *this)
+        {
+            auto clip = dynamic_cast<Widget_TimelineClip*>(child);
+            if(clip)
+            {
+                clip->setPosition({0, 0});
+                clip->setHeight(height() - 5);
+            }
+        }
     }
 };
 
