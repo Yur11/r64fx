@@ -65,7 +65,6 @@ set(SRC
     Atlas.cpp
     Clipboard.cpp
     ClipboardEvents.cpp
-    Conf_Scale.cpp
     Directory.cpp
     FilterClass.cpp
     Font.cpp
@@ -87,6 +86,7 @@ set(SRC
     Module.cpp
     Mouse.cpp
     Mutex.cpp
+    Options.cpp
     Painter.cpp
     PainterShaders.cpp
     PainterVertexArrays.cpp

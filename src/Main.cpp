@@ -18,6 +18,7 @@
 
 #include <iostream>
 
+#include "Options.hpp"
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
 
@@ -30,46 +31,54 @@ using std::cout;
 namespace r64fx{
 
 class Main{
-
-bool m_running = false;
-
+    bool m_running = false;
 #ifndef R64FX_HEADLESS
-MainWindow m_main_window;
+    MainWindow m_main_window;
 #endif//R64FX_HEADLESS
 
 public:
-int run(int argc, char** argv)
-{
-    m_running = true;
-
-#ifndef R64FX_HEADLESS
-    m_main_window.onClose([](void* data){ auto self = (Main*)data; self->mainWindowClosed(); }, this);
-    m_main_window.open();
-#endif//R64FX_HEADLESS
-
-    while(m_running)
+    int run()
     {
-        auto time = Timer::runTimers();
-        sleep_nanoseconds(time);
-    }
+        m_running = true;
 
 #ifndef R64FX_HEADLESS
-    m_main_window.close();
+        m_main_window.onClose([](void* data){ auto self = (Main*)data; self->mainWindowClosed(); }, this);
+        m_main_window.open();
 #endif//R64FX_HEADLESS
 
-    return 0;
-}
+        while(m_running)
+        {
+            auto time = Timer::runTimers();
+            sleep_nanoseconds(time);
+        }
+
+#ifndef R64FX_HEADLESS
+        m_main_window.close();
+#endif//R64FX_HEADLESS
+
+        return 0;
+    }
 
 private:
 #ifndef R64FX_HEADLESS
-inline void mainWindowClosed()
-{
-    m_running = false;
-}
+    inline void mainWindowClosed()
+    {
+        m_running = false;
+    }
 #endif//R64FX_HEADLESS
-
 };//Main
 
 }//namespace r64fx
 
-int main(int argc, char** argv) { return r64fx::Main().run(argc, argv); }
+
+int main(int argc, char** argv)
+{
+    using namespace r64fx;
+
+    if(int status = g_options.parse(argc, argv); status != 0)
+            return status > 0 ? 0 : 1;
+
+    Main program;
+
+    return program.run();
+}

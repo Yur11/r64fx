@@ -5,13 +5,12 @@
 #include "WidgetFlags.hpp"
 #include "FlipFlags.hpp"
 #include "RingSectorPainter.hpp"
-#include "Conf_Scale.hpp"
+#include "Options.hpp"
 #include <cmath>
 #include <algorithm>
 
 #include <iostream>
 using namespace std;
-using namespace r64fx::Conf;
 
 namespace r64fx{
 
@@ -122,7 +121,7 @@ private:
         {
             Image c1(hs, m_size, 1);
             fill(&c1, Color(255));
-            fill_circle(&c1, 0, 1, Color(0), center, hs - ScaleUp(6.5f));
+            fill_circle(&c1, 0, 1, Color(0), center, hs - g_options.UiScaleUp(6.5f));
 
             Image layer(hs, m_size, 2);
             fill_gradient_vert(&layer, 0, 1, 127, 31, {0, 6, hs, m_size - 6});
@@ -134,7 +133,7 @@ private:
         {
             Image c2(hs, m_size, 1);
             fill(&c2, Color(255));
-            fill_circle(&c2, 0, 1, Color(0), center, hs - ScaleUp(8.5f));
+            fill_circle(&c2, 0, 1, Color(0), center, hs - g_options.UiScaleUp(8.5f));
 
             Image layer(hs, m_size, 2);
             fill_gradient_vert(&layer, 0, 1, 223, 31, {0, 8, hs, m_size - 8});
@@ -146,7 +145,7 @@ private:
         {
             Image c3(hs, m_size, 1);
             fill(&c3, Color(255));
-            fill_circle(&c3, 0, 1, Color(0), center, hs - ScaleUp(9.5f));
+            fill_circle(&c3, 0, 1, Color(0), center, hs - g_options.UiScaleUp(9.5f));
 
             Image layer(hs, m_size, 2);
             fill_gradient_vert(&layer, 0, 1, 147, 107, {0, 9, hs, m_size - 9});
@@ -216,11 +215,11 @@ private:
         marker_image->load(m_size, m_size, 2);
         fill(marker_image, Color(0, 255));
 
-        fill({marker_image, {m_size/2 - ScaleUp(2), ScaleUp(7), ScaleUp(4), m_size/2 - ScaleUp(7)}}, Color(0, 127));
-        fill({marker_image, {m_size/2 - ScaleUp(1), ScaleUp(8), ScaleUp(2), m_size/2 - ScaleUp(9)}}, Color(255, 31));
+        fill({marker_image, {m_size/2 - g_options.UiScaleUp(2), g_options.UiScaleUp(7), g_options.UiScaleUp(4), m_size/2 - g_options.UiScaleUp(7)}}, Color(0, 127));
+        fill({marker_image, {m_size/2 - g_options.UiScaleUp(1), g_options.UiScaleUp(8), g_options.UiScaleUp(2), m_size/2 - g_options.UiScaleUp(9)}}, Color(255, 31));
         for(int i=0; i<4; i++)
         {
-            fill({marker_image, {m_size/2 - ScaleUp(1), ScaleUp(7 + i), ScaleUp(2), ScaleUp(1)}}, 1, 1, 191 - 24 * i);
+            fill({marker_image, {m_size/2 - g_options.UiScaleUp(1), g_options.UiScaleUp(7 + i), g_options.UiScaleUp(2), g_options.UiScaleUp(1)}}, 1, 1, 191 - 24 * i);
         }
     }
 
@@ -322,7 +321,7 @@ public:
         fill(&sectorimg, Color(0));
 
         if(min_angle != max_angle)
-            m_rsp.paint(&sectorimg, min_angle, max_angle, m_size/2 - 1.5f * Conf::Scale(), m_size/2 - 6.0f * Conf::Scale());
+            m_rsp.paint(&sectorimg, min_angle, max_angle, m_size/2 - 1.5f * g_options.ui_scale, m_size/2 - 6.0f * g_options.ui_scale);
 
         painter->blendColors({0, 0}, Color(127, 191, 255), &sectorimg);
 

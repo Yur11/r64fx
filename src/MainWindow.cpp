@@ -21,7 +21,7 @@
 #include "MainWindow.hpp"
 #include "Widget.hpp"
 #include "Painter.hpp"
-#include "Conf_Scale.hpp"
+#include "Options.hpp"
 
 //REMOVE ME
 #include "Widget_Panel.hpp"
@@ -106,9 +106,6 @@ struct Widget_RightPart : public Widget{
 
 MainWindow::MainWindow()
 {
-    /* Remove Me */
-    Conf::setScale(2);
-
     m_private       = new Widget_MainWindow ();
     m->top_bar      = new Widget_TopBar     (m);
     m->bottom_bar   = new Widget_BottomBar  (m);
