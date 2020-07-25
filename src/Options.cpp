@@ -34,7 +34,13 @@ int bad_option_argument(string_view opt, string_view val)
 }
 
 
-bool str2num(string_view str, float &num)
+template<typename T> bool str2(string_view str, T &val)
+{
+    static_assert("Unsupported value type!");
+    return false;
+}
+
+template<> bool str2<float>(string_view str, float &num)
 {
     auto it = str.begin();
 
@@ -99,7 +105,7 @@ int Options::parse(int argc, char** argv)
                     argv++;
                     if(argv == end || argv[0][0] == '-')
                         return option_needs_value(opt);
-                    if(!str2num(argv[0], ui_scale) || ui_scale < 1.0f)
+                    if(!str2<float>(argv[0], ui_scale) || ui_scale < 1.0f)
                         return bad_option_argument(opt, argv[0]);
                 }
                 else
