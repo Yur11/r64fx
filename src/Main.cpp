@@ -18,6 +18,7 @@
 
 #include <iostream>
 
+#include "MainLoop.hpp"
 #include "Options.hpp"
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
@@ -30,31 +31,19 @@ using std::cout;
 
 namespace r64fx{
 
-class Main{
-    bool m_running = false;
-#ifndef R64FX_HEADLESS
+class Main : public MainLoop{
     MainWindow m_main_window;
 #endif//R64FX_HEADLESS
 
 public:
     int run()
     {
-        m_running = true;
 
 #ifndef R64FX_HEADLESS
         m_main_window.onClose([](void* data){ auto self = (Main*)data; self->mainWindowClosed(); }, this);
         m_main_window.open();
-#endif//R64FX_HEADLESS
 
-        while(m_running)
-        {
-            auto time = Timer::runTimers();
-            sleep_nanoseconds(time);
-        }
-
-#ifndef R64FX_HEADLESS
-        m_main_window.close();
-#endif//R64FX_HEADLESS
+        MainLoop::run();
 
         return 0;
     }
@@ -63,7 +52,7 @@ private:
 #ifndef R64FX_HEADLESS
     inline void mainWindowClosed()
     {
-        m_running = false;
+        MainLoop::stop();
     }
 #endif//R64FX_HEADLESS
 };//Main

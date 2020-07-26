@@ -79,6 +79,7 @@ set(SRC
     KeyboardModifiers.cpp
     LayoutUtils.cpp
     Main.cpp
+    MainLoop.cpp
     MainWindow.cpp
     MemoryUtils.cpp
     Midi.cpp
