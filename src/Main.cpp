@@ -17,57 +17,81 @@
 /* Main Program Controller */
 
 #include <iostream>
+#include <signal.h>
 
-#include "MainLoop.hpp"
+#include "Engine.hpp"
+#include "MainWindow.hpp"
 #include "Options.hpp"
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
 
-#ifndef R64FX_HEADLESS
-#include "MainWindow.hpp"
-#endif//R64FX_HEADLESS
-
-using std::cout;
+using namespace std;
 
 namespace r64fx{
 
-class Main : public MainLoop{
-    MainWindow m_main_window;
-#endif//R64FX_HEADLESS
+class Main{
+    Engine*      m_engine       = nullptr;
+    MainWindow*  m_main_window  = nullptr;
+    bool         m_running      = false;
 
 public:
-    int run()
-    {
+    int run(int argc, char** argv);
 
-#ifndef R64FX_HEADLESS
-        m_main_window.onClose([](void* data){ auto self = (Main*)data; self->mainWindowClosed(); }, this);
-        m_main_window.open();
-
-        MainLoop::run();
-
-        return 0;
-    }
+    inline void stop() { m_running = false; }
 
 private:
-#ifndef R64FX_HEADLESS
-    inline void mainWindowClosed()
+    void mainWindowClosed();
+
+} g_program;
+
+
+int Main::run(int argc, char** argv)
+{
+    if(int status = g_options.parse(argc, argv); status != 0)
+        return status > 0 ? 0 : 1;
+
+    signal(SIGINT, [](int sig){
+        cout << "\nInterrupted!\n";
+        g_program.stop();
+    });
+
+    m_main_window = new(std::nothrow) MainWindow;
+    if(!m_main_window)
     {
-        MainLoop::stop();
+        cerr << "Failed to create main window!\n";
+        return 1;
     }
-#endif//R64FX_HEADLESS
-};//Main
+
+    m_main_window->onClose([](void* data){
+        auto self = (Main*)data; self->mainWindowClosed();
+    }, this);
+    m_main_window->open();
+
+    auto timer_thread_id = Timer::reserveThreadId();
+
+    m_running = true;
+    while(m_running)
+    {
+        auto time = Timer::runTimers(timer_thread_id);
+        sleep_nanoseconds(time);
+    }
+
+    Timer::freeThreadId(timer_thread_id);
+
+    if(m_main_window)
+    {
+        delete m_main_window;
+        m_main_window = nullptr;
+    }
+
+    return 0;
+}
+
+
+void Main::mainWindowClosed() { stop(); }
 
 }//namespace r64fx
 
 
 int main(int argc, char** argv)
-{
-    using namespace r64fx;
-
-    if(int status = g_options.parse(argc, argv); status != 0)
-            return status > 0 ? 0 : 1;
-
-    Main program;
-
-    return program.run();
-}
+    { return r64fx::g_program.run(argc, argv); }
