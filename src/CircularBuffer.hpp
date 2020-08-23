@@ -24,8 +24,8 @@ template<typename T> class CircularBuffer{
     // MSBs are used as flags to distinguish
     // between full and empty states
     // when read pointer is equal to the write pointer.
-    volatile unsigned int mw    = 0;
-    volatile unsigned int mr    = 0;
+    unsigned int mw = 0;
+    unsigned int mr = 0;
 
 public:
     CircularBuffer(int size, T* storage = nullptr)
