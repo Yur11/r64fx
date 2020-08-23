@@ -67,6 +67,8 @@ int Main::run(int argc, char** argv)
     }, this);
     m_main_window->open();
 
+    m_engine = Engine::singletonInstance();
+
     auto timer_thread_id = Timer::reserveThreadId();
 
     m_running = true;
