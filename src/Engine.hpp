@@ -4,20 +4,24 @@
 #include <vector>
 #include <string>
 
+#include "Debug.hpp"
+
 namespace r64fx{
 
 /*=== Base Engine Classes ===*/
 
 struct EngineObject{
     void* impl = nullptr;
-    unsigned long bits = 0;
-    std::string name = "";
 
-    inline unsigned long type() const { return bits; }
+    unsigned short  type    = 0;
+    EngineObject*   parent  = nullptr;
+    std::string     name    = "";
 
-    inline bool isPort() const { return bits & 3; }
+    inline bool isPort() const
+        { return type <= 3; }
 
-    inline bool isModule() const { return bits & 0xF8; }
+    inline bool isModule() const
+        { return type >= 4; }
 };
 
 
@@ -33,44 +37,106 @@ R64FX_ENGINE_OBJECT_TYPE( ModuleSource,        3 )
 
 R64FX_ENGINE_OBJECT_TYPE( Module,              4 )
 R64FX_ENGINE_OBJECT_TYPE( Module_SoundDriver,  5 )
+R64FX_ENGINE_OBJECT_TYPE( Module_A,            6 )
+R64FX_ENGINE_OBJECT_TYPE( Module_B,            7 )
+R64FX_ENGINE_OBJECT_TYPE( Module_C,            8 )
 
 
 struct Module : public EngineObject{
     std::vector<EngineObject*> objects;
 
     Module()
-        { bits = EngineObjectType(this); }
+        { type = EngineObjectType(this); }
+
+    inline void addObject(EngineObject* new_object)
+    {
+        R64FX_DEBUG_ASSERT(new_object != nullptr);
+        R64FX_DEBUG_ASSERT(new_object->parent == nullptr);
+#       ifdef R64FX_DEBUG
+        for(auto object : objects)
+            if(object == new_object)
+                R64FX_DEBUG_ABORT("Object already added!");
+#       endif//R64FX_DEBUG
+        objects.push_back(new_object);
+        new_object->parent = this;
+    }
 };
 
 
 /*=== Module Ports ===*/
 
 struct ModulePort : public EngineObject{
-    ModulePort()
-        { bits = EngineObjectType(this); }
+    unsigned long nchannels = 0;
 
-    unsigned long nchannels = 1;
+    ModulePort()
+        { type = EngineObjectType(this); }
 };
 
 struct ModuleSource : public ModulePort{
     ModuleSource()
-        { bits = EngineObjectType(this); }
+        { type = EngineObjectType(this); }
 };
 
 struct ModuleSink : public ModulePort{
-    /* Only one port can be connected to a sink at a time. */
-    ModulePort* connected_source = nullptr;
+    /* Only one source can be connected to a sink at a time. */
+    ModuleSource* connected_source = nullptr;
 
     ModuleSink()
-        { bits = EngineObjectType(this); }
+        { type = EngineObjectType(this); }
 };
 
 
 /*=== Modules ===*/
 
-struct Module_SoundDriver : Module{
+struct Module_SoundDriver : public Module{
     Module_SoundDriver()
-        { bits = EngineObjectType(this); }
+        { type = EngineObjectType(this); }
+};
+
+
+struct Module_A : public Module{
+    Module_A()
+    {
+        type = EngineObjectType(this);
+
+        auto source = new ModuleSource;
+        source->name = "sequence";
+        addObject(source);
+
+        auto sink = new ModuleSink;
+        sink->name = "sequence";
+        addObject(sink);
+    }
+};
+
+struct Module_B : public Module{
+    Module_B()
+    {
+        type = EngineObjectType(this);
+
+        auto source = new ModuleSource;
+        source->name = "sequence";
+        addObject(source);
+
+        auto sink = new ModuleSink;
+        sink->name = "sequence";
+        addObject(sink);
+    }
+};
+
+struct Module_C : public Module{
+    Module_C()
+    {
+        type = EngineObjectType(this);
+
+        auto source = new ModuleSource;
+        source->name = "sequence";
+        addObject(source);
+
+        auto sink = new ModuleSink;
+        sink->name = "sequence";
+        addObject(sink);
+    }
 };
 
 
@@ -78,7 +144,7 @@ struct Module_SoundDriver : Module{
 
 struct EngineUpdate{
     enum class Verb{
-        None, AddObject, RemoveObject, ReplaceObject, AlterObject, RelinkPorts
+        None, ReplaceRoot, AddObject, RemoveObject, ReplaceObject, AlterObject, RelinkPorts
     };
 
     typedef unsigned long Noun;
@@ -90,31 +156,35 @@ struct EngineUpdate{
         : verb(verb), noun{first, second, third} {}
 };
 
+inline const EngineUpdate ReplaceRoot(Module* module)
+{
+    return {EngineUpdate::Verb::ReplaceRoot, (EngineUpdate::Noun)module};
+}
 
-inline EngineUpdate AddObject(Module* parent, EngineObject* child)
+inline const EngineUpdate AddObject(Module* parent, EngineObject* child)
 {
     return {EngineUpdate::Verb::AddObject, (EngineUpdate::Noun)parent, (EngineUpdate::Noun)child};
 }
 
-inline EngineUpdate RemoveObject(Module* parent, EngineObject* child)
+inline const EngineUpdate RemoveObject(Module* parent, EngineObject* child)
 {
     return {EngineUpdate::Verb::RemoveObject, (EngineUpdate::Noun)parent, (EngineUpdate::Noun)child};
 }
 
-inline EngineUpdate ReplaceObject(Module* module, EngineObject* old_object, EngineObject* new_object)
+inline const EngineUpdate ReplaceObject(Module* module, EngineObject* old_object, EngineObject* new_object)
 {
     return {EngineUpdate::Verb::ReplaceObject,
         (EngineUpdate::Noun)module, (EngineUpdate::Noun)old_object, (EngineUpdate::Noun)new_object};
 }
 
-inline EngineUpdate AlterObject(EngineObject* object, bool enabled)
+inline const EngineUpdate AlterObject(EngineObject* object, bool enabled)
 {
     return {EngineUpdate::Verb::AlterObject, (EngineUpdate::Noun)object, (EngineUpdate::Noun)enabled};
 }
 
-inline EngineUpdate RelinkPorts(ModuleSink* sink, ModulePort* port = nullptr)
+inline const EngineUpdate RelinkPorts(ModuleSink* sink, ModuleSource* source = nullptr)
 {
-    return {EngineUpdate::Verb::RelinkPorts, (EngineUpdate::Noun)sink, (EngineUpdate::Noun)port};
+    return {EngineUpdate::Verb::RelinkPorts, (EngineUpdate::Noun)sink, (EngineUpdate::Noun)source};
 }
 
 
@@ -125,13 +195,9 @@ class Engine{
 public:
     static Engine* singletonInstance();
 
-    bool update(
-            EngineUpdate* transaction, unsigned long size,
-            void (*done)(void* arg, EngineUpdate* transaction, unsigned long size) = nullptr,
-            void* arg = nullptr
-    );
+    bool update(const EngineUpdate* transaction, unsigned long size);
 
-    inline bool update(std::vector<EngineUpdate> &transaction)
+    inline bool update(const std::vector<EngineUpdate> &transaction)
         {  return update(transaction.data(), transaction.size()); }
 
 };

@@ -66,6 +66,7 @@ set(SRC
     Clipboard.cpp
     ClipboardEvents.cpp
     Directory.cpp
+    Engine.cpp
     FilterClass.cpp
     Font.cpp
     FontSupply.cpp
