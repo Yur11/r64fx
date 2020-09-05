@@ -639,7 +639,7 @@ function instr
         out+="; LABEL($op_jmp)"
     fi
 
-    echo -e "$out; }"
+    echo -e "$out; R64FXDBG; }"
 }
 
 function die
