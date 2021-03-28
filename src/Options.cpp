@@ -108,6 +108,13 @@ int Options::parse(int argc, char** argv)
                     if(!str2<float>(argv[0], ui_scale) || ui_scale < 1.0f)
                         return bad_option_argument(opt, argv[0]);
                 }
+                else if(opt == "demo")
+                {
+                    argv++;
+                    if(argv == end || argv[0][0] == '-')
+                        return option_needs_value(opt);
+                    demo = argv[0];
+                }
                 else
                 {
                     cerr << "Bad option --" << opt << " !\n";

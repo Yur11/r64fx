@@ -8,143 +8,166 @@
 
 namespace r64fx{
 
-/*=== Base Engine Classes ===*/
+/*
+ * EngineObject base class
+ */
+class EngineObject{
+    void* m = nullptr; // Implementation placeholder
 
-struct EngineObject{
-    void* impl = nullptr;
+public:
+    EngineObject* parent  = nullptr;
 
-    unsigned short  type    = 0;
-    EngineObject*   parent  = nullptr;
-    std::string     name    = "";
+    std::string name    = "";
 
-    inline bool isPort() const
-        { return type <= 3; }
+    void remove();
+    void replaceWith(EngineObject*);
 
-    inline bool isModule() const
-        { return type >= 4; }
-};
+    /*
+     *  Type Id system for engine objects
+     */
+    typedef unsigned short TypeId;
 
+#   define EO_TYPE(Name, TypeBits)                                      \
+    class Name;                                                         \
+    constexpr static TypeId TypeIdOf(Name* obj) { return (TypeBits); }  \
+    inline bool is##Name() const { return is<Name>(); }                 \
+    inline Name* to##Name() const { return to<Name>(); }
 
-template<typename T> constexpr unsigned long EngineObjectType(T* t = nullptr)
-    { return 0; }
+    constexpr static TypeId PortBit = 0x8000;
+    constexpr static TypeId NodeBit = 0x4000;
 
-#define R64FX_ENGINE_OBJECT_TYPE(Name, Id) class Name; \
-    template<> constexpr unsigned long EngineObjectType<Name>(Name*) { return Id; }
+    EO_TYPE(Port,           0 | PortBit)
+    EO_TYPE(Source,         1 | PortBit)
+    EO_TYPE(Sink,           2 | PortBit)
 
-R64FX_ENGINE_OBJECT_TYPE( ModulePort,          1 )
-R64FX_ENGINE_OBJECT_TYPE( ModuleSink,          2 )
-R64FX_ENGINE_OBJECT_TYPE( ModuleSource,        3 )
+    EO_TYPE(Node,           0 | NodeBit)
+    EO_TYPE(SoundDriver,    1 | NodeBit)
+    EO_TYPE(Test,           2 | NodeBit)
 
-R64FX_ENGINE_OBJECT_TYPE( Module,              4 )
-R64FX_ENGINE_OBJECT_TYPE( Module_SoundDriver,  5 )
-R64FX_ENGINE_OBJECT_TYPE( Module_A,            6 )
-R64FX_ENGINE_OBJECT_TYPE( Module_B,            7 )
-R64FX_ENGINE_OBJECT_TYPE( Module_C,            8 )
+#   undef EO_TYPE
 
+    template<typename T> constexpr static TypeId Type(T* obj = nullptr)
+        { return TypeIdOf((T*)obj); }
 
-struct Module : public EngineObject{
-    std::vector<EngineObject*> objects;
+    template<typename T> inline bool is() const
+        { return type() == Type<T>(); }
 
-    Module()
-        { type = EngineObjectType(this); }
+    template<typename T> inline T* to() const
+        { R64FX_DEBUG_ASSERT(is<T>()); return (T*)this; }
 
-    inline void addObject(EngineObject* new_object)
+    inline TypeId type() const { return m_type; }
+
+protected:
+    EngineObject(TypeId type) : m_type(type)
     {
-        R64FX_DEBUG_ASSERT(new_object != nullptr);
-        R64FX_DEBUG_ASSERT(new_object->parent == nullptr);
-#       ifdef R64FX_DEBUG
-        for(auto object : objects)
-            if(object == new_object)
-                R64FX_DEBUG_ABORT("Object already added!");
-#       endif//R64FX_DEBUG
-        objects.push_back(new_object);
-        new_object->parent = this;
+        R64FX_DEBUG_ASSERT(m_type != 0)
     }
+
+private:
+    const TypeId m_type = 0;
+};
+
+typedef EngineObject EO; // Convenience alias
+
+/* Intermediate EO class protected constructor */
+#define EO_BASE(This, Parent) This(EO::TypeId type) : Parent(type)
+
+/* Leaf EO class public constructor */
+#define EO_CTOR(This, Parent) This() : Parent(EO::Type<This>())
+
+
+/* Base port class */
+struct EO::Port : public EO{
+    unsigned int chan_count = 0;
+
+protected:
+    EO_BASE(Port, EO) {}
 };
 
 
-/*=== Module Ports ===*/
-
-struct ModulePort : public EngineObject{
-    unsigned long nchannels = 0;
-
-    ModulePort()
-        { type = EngineObjectType(this); }
-};
-
-struct ModuleSource : public ModulePort{
-    ModuleSource()
-        { type = EngineObjectType(this); }
-};
-
-struct ModuleSink : public ModulePort{
-    /* Only one source can be connected to a sink at a time. */
-    ModuleSource* connected_source = nullptr;
-
-    ModuleSink()
-        { type = EngineObjectType(this); }
+/* Source port that can be connected to sinks */
+struct EO::Source : public EO::Port{
+    EO_CTOR(Source, Port) {}
 };
 
 
-/*=== Modules ===*/
+/* Sink port that can be connected to source ports */
+struct EO::Sink : public EO::Port{
+    EO::Port* connected_port = nullptr;
 
-struct Module_SoundDriver : public Module{
-    Module_SoundDriver()
-        { type = EngineObjectType(this); }
+    EO_CTOR(Sink, Port) {}
 };
 
 
-struct Module_A : public Module{
-    Module_A()
-    {
-        type = EngineObjectType(this);
+/* Node EO object that cointains other EOs */
+struct EO::Node : public EO{
+    std::vector<EO*> objects;
 
-        auto source = new ModuleSource;
-        source->name = "sequence";
-        addObject(source);
+    void add(EO* eo);
 
-        auto sink = new ModuleSink;
-        sink->name = "sequence";
-        addObject(sink);
-    }
+    EO_BASE(Node, EO) {}
 };
 
-struct Module_B : public Module{
-    Module_B()
-    {
-        type = EngineObjectType(this);
+inline void EO::Node::add(EO* eo)
+{
+    R64FX_DEBUG_ASSERT(eo != nullptr);
+    R64FX_DEBUG_ASSERT(eo->parent == nullptr);
 
-        auto source = new ModuleSource;
-        source->name = "sequence";
-        addObject(source);
+    eo->parent = this;
+    this->objects.push_back(eo);
+}
 
-        auto sink = new ModuleSink;
-        sink->name = "sequence";
-        addObject(sink);
-    }
+inline void EO::remove()
+{
+    R64FX_DEBUG_ASSERT(parent != nullptr);
+    R64FX_DEBUG_ASSERT(parent->is<EO::Node>());
+
+    auto p = parent->to<EO::Node>();
+    auto &o = p->objects;
+
+    unsigned int i=0;
+    while(i < o.size() && o[i] != this)
+        i++;
+    if(i == o.size() - 1)
+        o.pop_back();
+    else
+        while(i < o.size() - 1)
+            o[i] = o[i + 1];
+    this->parent = nullptr;
+}
+
+inline void EO::replaceWith(EO* eo)
+{
+    R64FX_DEBUG_ASSERT(eo != nullptr);
+    R64FX_DEBUG_ASSERT(eo->parent == nullptr);
+    R64FX_DEBUG_ASSERT(this->parent != nullptr);
+
+    auto p = parent->to<EO::Node>();
+    auto &o = p->objects;
+
+    for(unsigned int i=0; i<o.size(); i++)
+        if(o[i] == this)
+            { o[i] = eo; break; }
+    eo->parent = this->parent;
+}
+
+
+struct EO::SoundDriver : public EO::Node{
+    EO_CTOR(SoundDriver, Node) {}
 };
 
-struct Module_C : public Module{
-    Module_C()
-    {
-        type = EngineObjectType(this);
 
-        auto source = new ModuleSource;
-        source->name = "sequence";
-        addObject(source);
-
-        auto sink = new ModuleSink;
-        sink->name = "sequence";
-        addObject(sink);
-    }
+struct EO::Test : public EO::Node{
+    EO_CTOR(Test, Node) {}
 };
 
+#undef EO_BASE
+#undef EO_CTOR
 
-/*=== Engine Update Infrastructure ===*/
 
 struct EngineUpdate{
     enum class Verb{
-        None, ReplaceRoot, AddObject, RemoveObject, ReplaceObject, AlterObject, RelinkPorts
+        None, Init, Add, Remove, Replace, Alter, Link
     };
 
     typedef unsigned long Noun;
@@ -156,48 +179,52 @@ struct EngineUpdate{
         : verb(verb), noun{first, second, third} {}
 };
 
-inline const EngineUpdate ReplaceRoot(Module* module)
+typedef EngineUpdate EU; // Convenience alias
+
+inline const EU Init(EO::Node* node)
 {
-    return {EngineUpdate::Verb::ReplaceRoot, (EngineUpdate::Noun)module};
+    return {EU::Verb::Init, EU::Noun(node)};
 }
 
-inline const EngineUpdate AddObject(Module* parent, EngineObject* child)
+inline const EU Add(EO::Node* parent, EO* child)
 {
-    return {EngineUpdate::Verb::AddObject, (EngineUpdate::Noun)parent, (EngineUpdate::Noun)child};
+    return {EU::Verb::Add, EU::Noun(parent), EU::Noun(child)};
 }
 
-inline const EngineUpdate RemoveObject(Module* parent, EngineObject* child)
+inline const EU Remove(EO* child)
 {
-    return {EngineUpdate::Verb::RemoveObject, (EngineUpdate::Noun)parent, (EngineUpdate::Noun)child};
+    return {EU::Verb::Remove, EU::Noun(child)};
 }
 
-inline const EngineUpdate ReplaceObject(Module* module, EngineObject* old_object, EngineObject* new_object)
+inline const EU Replace(EO* cur_object, EO* new_object)
 {
-    return {EngineUpdate::Verb::ReplaceObject,
-        (EngineUpdate::Noun)module, (EngineUpdate::Noun)old_object, (EngineUpdate::Noun)new_object};
+    return {EU::Verb::Replace, (EU::Noun)cur_object, (EU::Noun)new_object};
 }
 
-inline const EngineUpdate AlterObject(EngineObject* object, bool enabled)
+inline const EU Alter(EO* object, bool enabled)
 {
-    return {EngineUpdate::Verb::AlterObject, (EngineUpdate::Noun)object, (EngineUpdate::Noun)enabled};
+    return {EU::Verb::Alter, EU::Noun(object), EU::Noun(enabled)};
 }
 
-inline const EngineUpdate RelinkPorts(ModuleSink* sink, ModuleSource* source = nullptr)
+inline const EU Link(EO::Sink* sink, EO::Source* source = nullptr)
 {
-    return {EngineUpdate::Verb::RelinkPorts, (EngineUpdate::Noun)sink, (EngineUpdate::Noun)source};
+    return {EU::Verb::Link, EU::Noun(sink), EU::Noun(source)};
 }
 
 
 class Engine{
     Engine();
     Engine(const Engine&) {}
+    ~Engine();
 
 public:
-    static Engine* singletonInstance();
+    static Engine* newInstance();
 
-    bool update(const EngineUpdate* transaction, unsigned long size);
+    static void deleteInstance(Engine* engine);
 
-    inline bool update(const std::vector<EngineUpdate> &transaction)
+    bool update(const EU* transaction, unsigned long size);
+
+    inline bool update(const std::vector<EU> &transaction)
         {  return update(transaction.data(), transaction.size()); }
 
 };

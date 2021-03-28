@@ -463,6 +463,11 @@ struct PainterImplImage : public PainterImpl{
         window->repaint(rects, numrects);
     }
 
+    virtual void setViewport(const Rect<int> &rect)
+    {
+        
+    }
+
     virtual void adjustForWindowSize()
     {
         setClipRect({0, 0, window->width(), window->height()});

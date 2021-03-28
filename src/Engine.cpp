@@ -1,29 +1,59 @@
+#include <iostream>
+
 #include "Engine.hpp"
 #include "SoundDriver.hpp"
 #include "TimeUtils.hpp"
 #include "CircularBuffer.hpp"
+#include "JitProc.hpp"
 
-#include <iostream>
 
-using namespace std;
+using std::cout;
 
 namespace r64fx{
 
-struct ModuleImpl{
-};
-
-struct ModuleImpl_SoundDriverSource : public ModuleImpl{
-    SoundDriverAudioInput* sd_audio_input = nullptr;
-};
-
-struct ModuleImpl_SoundDriverSink : public ModuleImpl{
-    SoundDriverAudioOutput* sd_audio_output = nullptr;
-};
-
-
 struct EngineDspStep{
-    std::vector<EngineDspStep*> prev_steps;
-    std::vector<EngineObject*> processed_objects;
+    std::vector<EO::Node*> nodes;
+    std::vector<EngineDspStep*> source_steps, sink_steps;
+
+    EngineDspStep() {}
+    EngineDspStep(EO::Node* node) { addNode(node); }
+
+    void addNode(EO::Node* node);
+
+    void addSourceStep(EngineDspStep* dsp);
+
+    inline EO::TypeId type() const
+    {
+        if(nodes.empty())
+            return 0;
+
+        return nodes[0]->type();
+    }
+};
+
+typedef EngineDspStep DSP;
+
+
+struct NodeImpl{
+    struct P{
+        DSP* dsp = nullptr;
+        int slot = 0;
+    } cur_impl, new_impl;
+
+    inline static NodeImpl* &of(EO::Node* node)
+        { return *((NodeImpl**)node); }
+
+    inline bool isPending()
+        { return new_impl.dsp != nullptr; }
+
+    inline void commit()
+        { cur_impl = new_impl; new_impl = P(); }
+
+    inline void revert()
+        { new_impl = P(); }
+
+    inline void clear()
+        { cur_impl = new_impl = P(); }
 };
 
 
@@ -74,386 +104,241 @@ struct EngineWorker{
     static void thread(EngineWorker::Impl* worker);
 };
 
+typedef EngineWorker EW;
+
 
 class EngineImpl{
-    Module_SoundDriver* m_module_sound_driver = nullptr;
-
-//     void startSoundDriver(EngineData* ed)
-//     {
-//         cout << "StartSoundDriver\n";
-//         sound_driver = SoundDriver::newInstance(SoundDriver::Type::Jack, "r64fx");
-//         if(m_module_sound_driver)
-//         {
-//             m_module_sound_driver->enable();
-//         }
-//     }
-// 
-//     void stopSoundDriver(EngineData* ed)
-//     {
-//         cout << "StopSoundDriver\n";
-//         if(msound_driver)
-//         {
-//             m_module_sound_driver->disable();
-//             SoundDriver::deleteInstance(m_module_sound_driver);
-//         }
-//     }
+    EO::SoundDriver* m_eo_soubd_driver = nullptr;
+    EO* m_eo_root = nullptr;
 
 public:
-    bool update(const EngineUpdate* transaction, unsigned long size);
+    bool update(const EU* transaction, unsigned long size);
 
 private:
-    void verbAddObject(Module* parent, EngineObject* child);
-    void engageObject(EngineObject* child);
-    void engageModule(Module* module);
-    void engagePort(ModulePort* port);
+    /* Engine update verbs */
+    void verbInit(EO::Node*); void verbAdd(EO::Node*, EO*); void verbRemove(EO*);
+    void verbReplace(EO*, EO*); void verbAlter(EO*, bool); void verbLink(EO::Sink*, EO::Source*);
 
-    void verbReplaceRoot(Module* module);
-    void verbRemoveObject(Module* parent, EngineObject* child);
-    void verbReplaceObject(Module* parent, EngineObject* old_object, EngineObject* new_object);
-    void verbAlterObject(EngineObject* object, bool enabled);
-    void verbRelinkPorts(ModuleSink* sink, ModuleSource* source);
+    void updateDspGraph();
 
-    void rebuild();
-    void rebuildDspStep(EngineDspStep* dsp_step);
-    void rebuildDspStepSources(Module* module, std::vector<EngineDspStep*> &prev_steps);
+    /* Find sound driver object in engine object tree */
+    EO::SoundDriver* findSoundDriver(EO* eo);
 
-} g_engine_impl;
+    /* Generate new dsp step graph */
+    void genDspSteps(EngineDspStep* step);
+};
+
+typedef EngineImpl EI;
 
 
-Engine* Engine::singletonInstance()
-{
-    return (Engine*)&g_engine_impl;
-}
+Engine* Engine::newInstance()
+    { return (Engine*) new EngineImpl; }
 
 
-bool Engine::update(const EngineUpdate* transaction, unsigned long size)
+void Engine::deleteInstance(Engine* engine)
+    { delete (EngineImpl*) engine; }
+
+
+bool Engine::update(const EU* transaction, unsigned long size)
 {
     auto impl = (EngineImpl*)this;
     return impl->update(transaction, size);
 }
 
 
-bool EngineImpl::update(const EngineUpdate* transaction, unsigned long size)
+bool EngineImpl::update(const EU* transaction, unsigned long size)
 {
     for(auto eu = transaction; eu != transaction+size; eu++)
     {
-        switch(eu->verb)
-        {
-            case EngineUpdate::Verb::ReplaceRoot:
-            {
-                verbReplaceRoot((Module*)(eu->noun[0]));
-                break;
-            }
+        auto n = eu->noun;
 
-            case EngineUpdate::Verb::AddObject:
-            {
-                verbAddObject((Module*)(eu->noun[0]), (EngineObject*)(eu->noun[1]));
-                break;
-            }
+        switch(eu->verb){
+#       define EU_VERB(V) case EU::Verb::V: verb##V
+        EU_VERB(Init)     ( (EO::Node*) (n[0])                        ); break;
+        EU_VERB(Add)      ( (EO::Node*) (n[0]),  (EO*)         (n[1]) ); break;
+        EU_VERB(Remove)   ( (EO*)       (n[0])                        ); break;
+        EU_VERB(Replace)  ( (EO*)       (n[0]),  (EO*)         (n[1]) ); break;
+        EU_VERB(Alter)    ( (EO*)       (n[0]),  (bool)        (n[1]) ); break;
+        EU_VERB(Link)     ( (EO::Sink*) (n[0]),  (EO::Source*) (n[1]) ); break;
+#       undef EU_VERB
 
-            case EngineUpdate::Verb::RemoveObject:
-            {
-                verbRemoveObject((Module*)(eu->noun[0]), (EngineObject*)(eu->noun[1]));
-                break;
-            }
-
-            case EngineUpdate::Verb::ReplaceObject:
-            {
-                verbReplaceObject((Module*)(eu->noun[0]), (EngineObject*)(eu->noun[1]), (EngineObject*)(eu->noun[2]));
-                break;
-            }
-
-            case EngineUpdate::Verb::AlterObject:
-            {
-                verbAlterObject((EngineObject*)(eu->noun[0]), (bool)(eu->noun[1]));
-                break;
-            }
-
-            case EngineUpdate::Verb::RelinkPorts:
-            {
-                verbRelinkPorts((ModuleSink*)(eu->noun[0]), (ModuleSource*)(eu->noun[1]));
-                break;
-            }
-
-            default:
-            {
-                R64FX_DEBUG_ABORT("Bad EngineUpdate Verb!\n");
-                break;
-            }
+        default:
+            R64FX_DEBUG_ABORT("Bad EU Verb!\n");
+            break;
         }
     }
 
-    rebuild();
+    updateDspGraph();
 
     return true;
 }
 
 
-void EngineImpl::verbReplaceRoot(Module* module)
+void EI::verbInit(EO::Node* root)
 {
-    R64FX_DEBUG_ASSERT(module);
-    engageObject(module);
+    R64FX_DEBUG_ASSERT(root);
+    m_eo_root = root;
 }
 
 
-void EngineImpl::verbAddObject(Module* parent, EngineObject* child)
+void EI::verbAdd(EO::Node* parent, EngineObject* child)
+{
+    R64FX_DEBUG_ASSERT(parent != nullptr)
+    R64FX_DEBUG_ASSERT(child != nullptr);
+    parent->add(child);
+}
+
+
+void EI::verbRemove(EngineObject* child)
 {
     R64FX_DEBUG_ASSERT(child);
-    R64FX_DEBUG_ASSERT(child->impl == nullptr);
-
-    parent->addObject(child);
-    engageObject(child);
+    child->remove();
 }
 
 
-void EngineImpl::engageObject(EngineObject* object)
+void EI::verbReplace(EO* cur_object, EO* new_object)
 {
-    if(object->isModule())
-        engageModule((Module*)object);
-    else if(object->isPort())
-        engagePort((ModulePort*)object);
-    else
-        R64FX_DEBUG_ASSERT("Bad EngineObject type!\n");
-}
-
-
-void EngineImpl::engageModule(Module* module)
-{
-    switch(module->type)
-    {
-        case EngineObjectType<Module_SoundDriver>():
-        {
-            R64FX_DEBUG_ASSERT(m_module_sound_driver == nullptr);
-            R64FX_DEBUG_ASSERT(!module->name.empty());
-
-            m_module_sound_driver = (Module_SoundDriver*)module;
-            m_module_sound_driver->impl =
-                SoundDriver::newInstance(SoundDriver::Type::Jack, module->name.c_str());
-            break;
-        }
-
-        default:
-        {
-            break;
-        }
-    }
-
-    for(auto object : module->objects)
-        engageObject(object);
-}
-
-
-void EngineImpl::engagePort(ModulePort* port)
-{
-    R64FX_DEBUG_ASSERT(port->parent);
-    R64FX_DEBUG_ASSERT(port->parent->isModule());
-
-    auto module = (Module*)port->parent;
-
-    switch(module->type)
-    {
-        case EngineObjectType<Module_SoundDriver>():
-        {
-            auto msd = (Module_SoundDriver*) module;
-            auto sd = (SoundDriver*) msd->impl;
-
-            switch(port->type)
-            {
-                case EngineObjectType<ModuleSink>():
-                {
-                    if(port->nchannels == 0)
-                    {
-                        port->impl = sd->newMidiOutput(port->name);
-                    }
-                    else
-                    {
-                        auto sdports = new SoundDriverAudioOutput*[port->nchannels];
-                        for(unsigned long i=0; i<port->nchannels; i++)
-                            sdports[i] = sd->newAudioOutput(port->name + std::to_string(i+1));
-                        port->impl = sdports;
-                    }
-                    break;
-                }
-
-                case EngineObjectType<ModuleSource>():
-                {
-                    if(port->nchannels == 0)
-                    {
-                        port->impl = sd->newMidiInput(port->name);
-                    }
-                    else
-                    {
-                        auto sdports = new SoundDriverAudioInput*[port->nchannels];
-                        for(unsigned long i=0; i<port->nchannels; i++)
-                            sdports[i] = sd->newAudioInput(port->name + std::to_string(i+1));
-                        port->impl = sdports;
-                    }
-                    break;
-                }
-
-                default:
-                {
-                    R64FX_DEBUG_ABORT("engagePort: Bad port type!\n");
-                    break;
-                }
-            }
-            break;
-        }
-
-        default:
-        {
-            break;
-        }
-    }
-}
-
-
-void EngineImpl::verbRemoveObject(Module* parent, EngineObject* child)
-{
-    R64FX_DEBUG_ASSERT(parent);
-    R64FX_DEBUG_ASSERT(child);
-
-    for(unsigned int i=0; i<parent->objects.size(); i++)
-    {
-        if(parent->objects[i] == child)
-        {
-            if(i < parent->objects.size() - 1)
-                parent->objects[i] = parent->objects[parent->objects.size() - 1];
-            parent->objects.pop_back();
-            return;
-        }
-    }
-
-    R64FX_DEBUG_ABORT("verbRemoveObject: Parent has no such child!\n");
-}
-
-
-void EngineImpl::verbReplaceObject(Module* parent, EngineObject* old_object, EngineObject* new_object)
-{
-    R64FX_DEBUG_ASSERT(old_object);
+    R64FX_DEBUG_ASSERT(cur_object);
     R64FX_DEBUG_ASSERT(new_object);
-
-    for(unsigned int i=0; i<parent->objects.size(); i++)
-    {
-        if(parent->objects[i] == old_object)
-        {
-            parent->objects[i] = new_object;
-            return;
-        }
-    }
-
-    R64FX_DEBUG_ABORT("verbReplaceObject: Parent has no such child!\n");
+    cur_object->replaceWith(new_object);
 }
 
 
-void EngineImpl::verbAlterObject(EngineObject* object, bool enabled)
+void EI::verbAlter(EO* object, bool enabled)
 {
     R64FX_DEBUG_ASSERT(object);
+}
 
-    switch(object->type)
+
+void EI::verbLink(EO::Sink* sink, EO::Source* source)
+{
+    R64FX_DEBUG_ASSERT(sink);
+    sink->connected_port = source;
+}
+
+
+EO::SoundDriver* EI::findSoundDriver(EO* eo)
+{
+    if(eo->isSoundDriver())
+        return (EO::SoundDriver*) eo;
+
+    if(!eo->isNode())
+        return nullptr;
+
+    auto &o = eo->toNode()->objects;
+    for(unsigned int i=0; i<o.size(); i++)
     {
-        case EngineObjectType<Module_SoundDriver>():
-        {
-            auto msd = (Module_SoundDriver*) object;
-            R64FX_DEBUG_ASSERT(msd->impl);
+        auto sd = findSoundDriver(o[i]);
+        if(sd) return sd;
+    }
 
-            auto sd = (SoundDriver*) msd->impl;
-            if(enabled)
+    return nullptr;
+}
+
+
+void EI::updateDspGraph()
+{
+    auto sd = findSoundDriver(m_eo_root);
+    R64FX_DEBUG_ASSERT(sd != nullptr);
+
+    auto dsp = new DSP(sd);
+    genDspSteps(dsp);
+}
+
+
+void EI::genDspSteps(DSP* dsp)
+{
+    R64FX_DEBUG_ASSERT(dsp != nullptr);
+
+    std::vector<DSP*> new_dsp_steps;
+
+    for(auto node : dsp->nodes)
+    {
+        for(auto obj : node->objects)
+        {
+            if(!obj->isSink())
+                continue;
+
+            auto sink = obj->toSink();
+            if(sink->connected_port == nullptr)
+                continue; // No connection on this port.
+
+            R64FX_DEBUG_ASSERT(sink->connected_port->isSource()); //Fix me!
+
+            R64FX_DEBUG_ASSERT(sink->connected_port->parent->isNode());
+            auto source_node = sink->connected_port->parent->toNode();
+
+            if(NodeImpl::of(source_node)->isPending())
             {
-                cout << "AAA\n";
-                sd->enable();
+                // Source node is already attached to a DSP step.
+                // Just make sure there is a link between dsp and source_dsp.
+
+                dsp->addSourceStep(NodeImpl::of(source_node)->new_impl.dsp);
             }
             else
             {
-                cout << "BBB\n";
-                sd->disable();
-            }
-            break;
-        }
+                // Find exising source DSP step or create a new one.
+                DSP* source_dsp = nullptr;
 
-        default:
-        {
-            break;
-        }
-    }
-}
+                for(auto sdsp : dsp->source_steps)
+                {
+                    if(sdsp->type() == source_node->type())
+                    {
+                        source_dsp = sdsp;
+                        break;
+                    }
+                }
 
+                if(source_dsp == nullptr)
+                {
+                    source_dsp = new DSP;
+                    dsp->addSourceStep(source_dsp);
+                    new_dsp_steps.push_back(source_dsp);
+                }
 
-void EngineImpl::verbRelinkPorts(ModuleSink* sink, ModuleSource* source)
-{
-    R64FX_DEBUG_ASSERT(sink);
-}
-
-
-void EngineImpl::rebuild()
-{
-    if(!m_module_sound_driver)
-        return;
-
-    auto dsp_step = new EngineDspStep;
-    dsp_step->processed_objects.push_back(m_module_sound_driver);
-    rebuildDspStep(dsp_step);
-}
-
-
-void EngineImpl::rebuildDspStep(EngineDspStep* dsp_step)
-{
-    R64FX_DEBUG_ASSERT(dsp_step);
-    R64FX_DEBUG_ASSERT(dsp_step->prev_steps.empty());
-
-    if(dsp_step->processed_objects.empty())
-        return;
-
-    for(auto object : dsp_step->processed_objects)
-    {
-        R64FX_DEBUG_ASSERT(object->isModule());
-        rebuildDspStepSources((Module*)object, dsp_step->prev_steps);
-    }
-
-    for(auto &step : dsp_step->prev_steps)
-    {
-        rebuildDspStep(step);
-    }
-}
-
-
-void EngineImpl::rebuildDspStepSources(Module* module, std::vector<EngineDspStep*> &prev_steps)
-{
-    for(auto object : module->objects)
-    {
-        if(object->type != EngineObjectType<ModuleSink>())
-            continue;
-
-        auto sink = (ModuleSink*) object;
-
-        if(!sink->connected_source)
-            continue;
-
-        auto source = (ModuleSource*) sink->connected_source;
-        R64FX_DEBUG_ASSERT(source->parent);
-        R64FX_DEBUG_ASSERT(source->parent->isModule());
-
-        auto connected_module = (Module*) source->parent;
-
-        EngineDspStep* dsp_step = nullptr;
-
-        for(auto step : prev_steps)
-        {
-            R64FX_DEBUG_ASSERT(!step->processed_objects.empty());
-            if(step->processed_objects[0]->type == connected_module->type)
-            {
-                dsp_step = step;
+                source_dsp->addNode(source_node);
             }
         }
-
-        if(dsp_step == nullptr)
-        {
-            dsp_step = new EngineDspStep;
-            prev_steps.push_back(dsp_step);
-        }
-
-        dsp_step->processed_objects.push_back(connected_module);
     }
+
+    // Recursively process newly created DSP steps.
+    for(auto ndsp : new_dsp_steps)
+        genDspSteps(ndsp);
+}
+
+
+void DSP::addNode(EO::Node* node)
+{
+    R64FX_DEBUG_ASSERT(node);
+
+    if(!nodes.empty())
+    {
+        R64FX_DEBUG_ASSERT(nodes[0]->type() == node->type());
+    }
+
+    if(NodeImpl::of(node) == nullptr)
+    {
+        NodeImpl::of(node) = new NodeImpl;
+    }
+
+    if(NodeImpl::of(node)->new_impl.dsp == nullptr)
+    {
+        nodes.push_back(node);
+        NodeImpl::of(node)->new_impl.dsp = this;
+    }
+}
+
+
+void DSP::addSourceStep(EngineDspStep* dsp)
+{
+    for(auto sdsp : this->source_steps)
+    {
+        if (dsp == sdsp)
+            return; // Already added!
+    }
+
+    this->source_steps.push_back(dsp);
+    dsp->sink_steps.push_back(this);
 }
 
 

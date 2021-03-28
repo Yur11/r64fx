@@ -499,18 +499,23 @@ struct PainterImplGL : public PainterImpl{
         gl::Finish();
     }
 
+    virtual void setViewport(const Rect<int> &rect)
+    {
+        gl::Viewport(rect.x(), rect.y(), rect.width(), rect.height());
+
+        setClipRect(rect);
+        setOffset(rect.position());
+
+        m_window_double_width_rcp = 2.0f / float(rect.width());
+        m_window_minus_double_height_rcp = -2.0f / float(rect.height());
+
+        m_window_half_width = rect.width() * 0.5f;
+        m_window_half_height = rect.height() * 0.5f;
+    }
+
     virtual void adjustForWindowSize()
     {
-        gl::Viewport(0, 0, window->width(), window->height());
-
-        setClipRect({0, 0, window->width(), window->height()});
-        setOffset({0, 0});
-
-        m_window_double_width_rcp = 2.0f / float(window->width());
-        m_window_minus_double_height_rcp = -2.0f / float(window->height());
-
-        m_window_half_width = window->width() * 0.5f;
-        m_window_half_height = window->height() * 0.5f;
+        setViewport({0, 0, window->width(), window->height()});
     }
 
 };//PainterImplImage

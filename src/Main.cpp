@@ -67,34 +67,7 @@ int Main::run(int argc, char** argv)
     }, this);
     m_main_window->open();
 
-    m_engine = Engine::singletonInstance();
-
-    Module_SoundDriver msd;
-    msd.name = "hello123";
-
-    ModuleSink sdout;
-    sdout.name = "out";
-    sdout.nchannels = 0;
-    msd.addObject(&sdout);
-
-    ModuleSource sdin;
-    sdin.name = "in";
-    sdin.nchannels = 0;
-    msd.addObject(&sdin);
-
-    Module_A a;
-    Module_B b;
-    Module_C c;
-
-    msd.addObject(&a);
-    msd.addObject(&b);
-    msd.addObject(&c);
-
-    m_engine->update({
-        ReplaceRoot(&msd),
-        AlterObject(&msd, true),
-        RelinkPorts(&sdout, &sdin)
-    });
+    m_engine = Engine::newInstance();
 
     auto timer_thread_id = Timer::reserveThreadId();
 
@@ -106,6 +79,8 @@ int Main::run(int argc, char** argv)
     }
 
     Timer::freeThreadId(timer_thread_id);
+
+    Engine::deleteInstance(m_engine);
 
     if(m_main_window)
     {

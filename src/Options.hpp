@@ -10,6 +10,8 @@ struct Options{
 
     float ui_scale = 1.0f;
     inline int UiScaleUp(int n) const { return n * ui_scale; }
+
+    std::string demo = "";
 };
 
 #ifndef R64FX_OPTIONS_IMPL

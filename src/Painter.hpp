@@ -182,6 +182,8 @@ public:
      */
     virtual void repaint(Rect<int>* rects = nullptr, int numrects = 0) = 0;
 
+    virtual void setViewport(const Rect<int> &rect) = 0;
+
     /* Allways call this before any other paint commands
      * if the window has been resized. */
     virtual void adjustForWindowSize() = 0;

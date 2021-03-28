@@ -85,6 +85,7 @@ set(SRC
     MemoryUtils.cpp
     Midi.cpp
     MidiDispatcher.cpp
+    Model.cpp
     Module.cpp
     Mouse.cpp
     Mutex.cpp
@@ -123,10 +124,10 @@ set(SRC
     Widget_Panel.cpp
     Widget_ScrollArea.cpp
     Widget_ScrollBar.cpp
+    Widget_Sequencer.cpp
     Widget_Slider.cpp
     Widget_TabBar.cpp
     Widget_Text.cpp
-    Widget_Timeline.cpp
     Window.cpp
     gl.cpp
     jit.cpp
@@ -150,9 +151,9 @@ set(LIBS
 target_link_libraries(r64fx ${LIBS})
 
 
-#########################################################################################
-## Some Tests ###########################################################################
-#########################################################################################
+#
+# Some Tests
+#
 add_custom_target(tests DEPENDS
     test_LinkedList test_Timer test_MemoryUtils test_jit test_SignalGraph test_SoundDriver
 )
@@ -189,83 +190,7 @@ set(test_MemoryUtils_SRC
 
 add_executable(test_MemoryUtils EXCLUDE_FROM_ALL ${test_MemoryUtils_SRC})
 
-## test_MidiEventBuffer ##
-set(test_MidiEventBuffer_SRC
-    test_MidiEventBuffer
-    Midi.cpp
-)
 
-add_executable(test_MidiEventBuffer EXCLUDE_FROM_ALL ${test_MidiEventBuffer_SRC})
+add_executable(test_Jit EXCLUDE_FROM_ALL
+    test_Jit.cpp MemoryUtils.cpp)
 
-
-## test_jit ##
-set(test_jit_SRC
-    test_jit.cpp
-    jit.cpp
-    MemoryUtils.cpp
-)
-
-add_executable(test_jit EXCLUDE_FROM_ALL ${test_jit_SRC})
-
-
-## test_jit_perf ##
-set(test_jit_perf_SRC
-    test_jit_perf.cpp
-    jit.cpp
-    MemoryUtils.cpp
-)
-
-add_executable(test_jit_perf EXCLUDE_FROM_ALL ${test_jit_perf_SRC})
-
-
-## test_SoundDriver ##
-set(test_SoundDriver_SRC
-    test_SoundDriver.cpp
-    SoundDriver.cpp
-    Midi.cpp
-    MemoryUtils.cpp
-    TimeUtils.cpp
-    Thread.cpp
-)
-
-add_executable(test_SoundDriver EXCLUDE_FROM_ALL ${test_SoundDriver_SRC})
-
-set(test_SoundDriver_LIBS jack pthread)
-
-target_link_libraries(test_SoundDriver ${test_SoundDriver_LIBS})
-
-
-## test_Synth ##
-set(test_Synth_SRC
-    test_Synth.cpp
-    SoundDriver.cpp
-    Midi.cpp
-    MemoryUtils.cpp
-    TimeUtils.cpp
-    Thread.cpp
-    jit.cpp
-)
-
-add_executable(test_Synth EXCLUDE_FROM_ALL ${test_Synth_SRC})
-
-set(test_Synth_LIBS jack pthread)
-
-target_link_libraries(test_Synth ${test_Synth_LIBS})
-
-
-## test_jit_procedures ##
-set(test_jit_procedures_SRC
-    test_jit_procedures.cpp
-    jit_procedures.cpp
-    Midi.cpp
-    MemoryUtils.cpp
-    TimeUtils.cpp
-    Thread.cpp
-    jit.cpp
-)
-
-add_executable(test_jit_procedures EXCLUDE_FROM_ALL ${test_jit_procedures_SRC})
-
-set(test_jit_procedures_LIBS pthread)
-
-target_link_libraries(test_jit_procedures ${test_jit_procedures_LIBS})

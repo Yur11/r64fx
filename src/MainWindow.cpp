@@ -25,7 +25,7 @@
 
 //REMOVE ME
 #include "Widget_Panel.hpp"
-#include "Widget_Timeline.hpp"
+#include "Widget_Sequencer.hpp"
 
 #define m ((Widget_MainWindow*) m_private)
 
@@ -50,7 +50,7 @@ struct Widget_MainWindow : public Widget{
 
     //REMOVE ME
     Widget_Panel*       panel        = nullptr;
-    Widget_Timeline*    timeline     = nullptr;
+    Widget_Sequencer*   sequencer    = nullptr;
 
     int gap = 3;
     bool left_dock_expanded = true, right_dock_expanded = true;
@@ -114,19 +114,28 @@ MainWindow::MainWindow()
     m->left_part    = new Widget_LeftPart   (m);
     m->right_part   = new Widget_RightPart  (m);
 
-    m->top_bar      ->setHeight (Conf::Scale() * 32,  false);
-    m->bottom_bar   ->setHeight (Conf::Scale() * 32,  false);
-    m->left_part    ->setWidth  (Conf::Scale() * 128, false);
-    m->right_part   ->setWidth  (Conf::Scale() * 128, false);
-    m->bottom_part  ->setHeight (Conf::Scale() * 256, false);
+    m->top_bar      ->setHeight (g_options.ui_scale * 32,  false);
+    m->bottom_bar   ->setHeight (g_options.ui_scale * 32,  false);
+    m->left_part    ->setWidth  (g_options.ui_scale * 128, false);
+    m->right_part   ->setWidth  (g_options.ui_scale * 128, false);
+    m->bottom_part  ->setHeight (g_options.ui_scale * 256, false);
 
     //REMOVE ME
     m->panel        = new Widget_Panel(m->bottom_part);
     m->panel        ->setPosition({0, 0});
-    m->timeline     = new Widget_Timeline(m->top_part);
-    m->timeline     ->setPosition({5, 5});
+    m->sequencer     = new Widget_Sequencer(m->top_part);
+    m->sequencer     ->setPosition({5, 5});
+//     for(int l=0; l<2; l++)
+//     {
+//         auto lane = new Widget_SequencerLane;
+//         for(int c=0; c<1; c++)
+//         {
+//             lane->addClipWidget(new Widget_SequencerClip);
+//         }
+//         m->sequencer->addLaneWidget(lane);
+//     }
 
-    m->setSize({Conf::ScaleUp(800), Conf::ScaleUp(600)});
+    m->setSize({g_options.UiScaleUp(800), g_options.UiScaleUp(600)});
     m->openWindow();
 }
 
@@ -137,7 +146,7 @@ MainWindow::~MainWindow()
 
     //REMOVE ME
     delete m->panel;
-    delete m->timeline;
+    delete m->sequencer;
 
     delete m->top_bar;
     delete m->bottom_bar;
@@ -262,7 +271,7 @@ void Widget_MainWindow::resizeEvent(WidgetResizeEvent* event)
     bottom_part ->setWidth(mw);
 
     //REMOVE ME
-    timeline    ->setSize({top_part->width() - 10, top_part->height() - 10});
+    sequencer    ->setSize({top_part->width() - 10, top_part->height() - 10});
 
     repaint();
 }
