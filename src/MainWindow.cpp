@@ -136,7 +136,7 @@ MainWindow::MainWindow()
 //     }
 
     m->setSize({g_options.UiScaleUp(800), g_options.UiScaleUp(600)});
-    m->openWindow();
+//     m->openWindow();
 }
 
 

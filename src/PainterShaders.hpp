@@ -42,7 +42,7 @@ public:
 };
 
 
-class PainterShader_Common : public PainterShader{
+class PainterShader_V1 : public PainterShader{
     GLint attr_tex_coord;
     GLint unif_mode;
     GLint unif_colors;
@@ -56,7 +56,7 @@ class PainterShader_Common : public PainterShader{
     GLint unif_pole_count;
 
 public:
-    PainterShader_Common();
+    PainterShader_V1();
 
     inline void bindTexCoordAttr(GLenum type, GLboolean normalized, GLsizei stride, GLsizei pointer)
     {
@@ -146,7 +146,41 @@ public:
     }
 };
 
-R64FX_DEF_PAINTER_SHADER(PainterShader_Common)
+R64FX_DEF_PAINTER_SHADER(PainterShader_V1)
+
+
+class PainterShader_V2 : public PainterShader{
+    PainterShader_V2();
+    ~PainterShader_V2(){}
+public:
+    /* 2D position + texture coords */
+    struct Vertex{
+        float x = 0.0f, y = 0.0f, s = 0.0f, t = 0.0f;
+    };
+
+    /* Simply create new VertexArray instance. Shader will be initialized as needed. */
+    class VertexArray{
+        GLuint m_vao, m_vbo;
+        unsigned int m_vertex_count;
+
+    public:
+        VertexArray(unsigned int vertex_count);
+
+        static PainterShader_V2* shader();
+
+        static void useShader();
+
+        static void setScaleAndShift(float sx, float sy, float tx, float ty);
+
+        static void setSampler2D(int sampler);
+
+        void load(PainterShader_V2::Vertex* verts, unsigned int index, unsigned int count);
+
+        void draw();
+
+        ~VertexArray();
+    };
+};
 
 
 void init_painter_shaders();

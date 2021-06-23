@@ -46,6 +46,7 @@ endmacro()
 gen_blobs(-t
     shader_common.vert
     shader_common.frag
+    shader_v2.frag
     shader_waveform.frag
 )
 

@@ -2,10 +2,7 @@
 #ifdef R64FX_USE_GL
 
 #include <algorithm>
-
-#ifdef R64FX_DEBUG
-#include <assert.h>
-#endif//R64FX_DEBUG
+#include "Debug.hpp"
 
 using std::swap;
 
@@ -29,10 +26,8 @@ void PainterVertexArray::cleanup()
 
 void PainterVertexArray::setCoords(short* buff, int nvertices)
 {
-#ifdef R64FX_DEBUG
-    assert(buff != nullptr);
-    assert(nvertices == 4);
-#endif//R64FX_DEBUG
+    R64FX_DEBUG_ASSERT(buff != nullptr);
+    R64FX_DEBUG_ASSERT(nvertices == 4);
     gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
     gl::BufferSubData(GL_ARRAY_BUFFER, 0, (nvertices << 2), buff);
 }

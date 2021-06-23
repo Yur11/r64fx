@@ -31,8 +31,8 @@ public:
     void init()
     {
         PainterVertexArray::init(32);
-        g_PainterShader_Common->bindPositionAttr(GL_SHORT, GL_FALSE, 0, 0);
-        g_PainterShader_Common->bindTexCoordAttr(GL_SHORT, GL_FALSE, 0, 16);
+        g_PainterShader_V1->bindPositionAttr(GL_SHORT, GL_FALSE, 0, 0);
+        g_PainterShader_V1->bindTexCoordAttr(GL_SHORT, GL_FALSE, 0, 16);
     }
 
     void setTexCoords(short left, short top, short right, short bottom, bool flip_vert = false, bool flip_hori = false, bool flip_diag = false);

@@ -1,7 +1,8 @@
 /* To be included in Painter.cpp */
 
-#include "PainterVertexArrays.hpp"
 #include <vector>
+#include "PainterVertexArrays.hpp"
+#include "Debug.hpp"
 
 namespace r64fx{
 
@@ -88,6 +89,7 @@ void freePaintGroup(PaintGroup* pg)
 
 struct PainterImplGL : public PainterImpl{
     PainterVertexArray_V1 m_vert_rect_v1;
+    PainterShader_V2::VertexArray* m_vert_rect_v2 = nullptr;
 
     LinkedList<PainterTexture1DImplGL> m_1d_textures;
     LinkedList<PainterTexture2DImplGL> m_2d_textures;
@@ -124,9 +126,12 @@ struct PainterImplGL : public PainterImpl{
         gl::Enable(GL_BLEND);
         gl::BlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
 
-        g_PainterShader_Common->use();
-        g_PainterShader_Common->setSampler2D(0);
-        g_PainterShader_Common->setSampler1D(1);
+        g_PainterShader_V1->use();
+        g_PainterShader_V1->setSampler2D(0);
+        g_PainterShader_V1->setSampler1D(1);
+
+        m_vert_rect_v2 = new(std::nothrow) PainterShader_V2::VertexArray(4);
+        R64FX_DEBUG_ASSERT(m_vert_rect_v2);
     }
 
     virtual ~PainterImplGL()
@@ -169,13 +174,15 @@ struct PainterImplGL : public PainterImpl{
         if(transformed_rect.width() <= 0 || transformed_rect.height() <= 0)
             return;
 
-        g_PainterShader_Common->setMode(PainterShader_Common::ModeColor());
+        g_PainterShader_V1->use();
 
-        g_PainterShader_Common->setScaleAndShift(
+        g_PainterShader_V1->setMode(PainterShader_V1::ModeColor());
+
+        g_PainterShader_V1->setScaleAndShift(
             m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f
         );
 
-        g_PainterShader_Common->setColor(
+        g_PainterShader_V1->setColor(
             float(color[0]) * rcp255,
             float(color[1]) * rcp255,
             float(color[2]) * rcp255,
@@ -195,8 +202,8 @@ struct PainterImplGL : public PainterImpl{
         if(transformed_rect.width() <= 0 || transformed_rect.height() <= 0)
             return;
 
-        g_PainterShader_Common->setMode(11);
-        g_PainterShader_Common->setScaleAndShift(
+        g_PainterShader_V1->setMode(11);
+        g_PainterShader_V1->setScaleAndShift(
             m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f
         );
 
@@ -211,9 +218,9 @@ struct PainterImplGL : public PainterImpl{
             float(fill[3]) * rcp255
         };
 
-        g_PainterShader_Common->setColors(colors, 0, 2);
-        g_PainterShader_Common->setRectSize(transformed_rect.width(), transformed_rect.height());
-        g_PainterShader_Common->setStrokeWidth(stroke_width);
+        g_PainterShader_V1->setColors(colors, 0, 2);
+        g_PainterShader_V1->setRectSize(transformed_rect.width(), transformed_rect.height());
+        g_PainterShader_V1->setStrokeWidth(stroke_width);
 
         m_vert_rect_v1.setRect(
             transformed_rect.left(), transformed_rect.top(), transformed_rect.right(), transformed_rect.bottom()
@@ -248,7 +255,7 @@ struct PainterImplGL : public PainterImpl{
         if(!isec)
             return;
 
-        g_PainterShader_Common->setScaleAndShift(
+        g_PainterShader_V1->setScaleAndShift(
             m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f
         );
 
@@ -274,7 +281,7 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags)
     {
-        g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
+        g_PainterShader_V1->setMode(PainterShader_V1::ModePutImage(texture->componentCount()));
         putImageOrBlendColors(texture, dst_pos, src_rect, flags);
     }
 
@@ -286,10 +293,10 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void blendColors(Point<int> dst_pos, const Colors &colors, PainterTexture2D* mask_texture, FlipFlags flags)
     {
-        g_PainterShader_Common->setMode(PainterShader_Common::ModeBlendColors(mask_texture->componentCount()));
+        g_PainterShader_V1->setMode(PainterShader_V1::ModeBlendColors(mask_texture->componentCount()));
         for(int c=0; c<mask_texture->componentCount(); c++)
         {
-            g_PainterShader_Common->setColor(
+            g_PainterShader_V1->setColor(
                 float(colors[c][0]) * rcp255,
                 float(colors[c][1]) * rcp255,
                 float(colors[c][2]) * rcp255,
@@ -341,12 +348,12 @@ struct PainterImplGL : public PainterImpl{
 //         if(intersection.width() > 0 && intersection.height() > 0)
 //         {
 //             setScaleAndShift(
-//                 g_PainterShader_Common, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
+//                 g_PainterShader_V1, {current_clip_rect.position() + intersection.dstOffset(), intersection.size()}
 //             );
 // 
-//             g_PainterShader_Common->setMode(PainterShader_Common::ModeWaveform());
+//             g_PainterShader_V1->setMode(PainterShader_V1::ModeWaveform());
 // 
-//             g_PainterShader_Common->setColor(
+//             g_PainterShader_V1->setColor(
 //                 float(color[0]) * rcp255,
 //                 float(color[1]) * rcp255,
 //                 float(color[2]) * rcp255,
@@ -376,19 +383,19 @@ struct PainterImplGL : public PainterImpl{
         if(transformed_rect.width() <= 0 || transformed_rect.height() <= 0)
             return;
 
-        g_PainterShader_Common->setMode(12);
-        g_PainterShader_Common->setScaleAndShift(
+        g_PainterShader_V1->setMode(12);
+        g_PainterShader_V1->setScaleAndShift(
             m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f
         );
 
-        g_PainterShader_Common->setRectSize(transformed_rect.width(), transformed_rect.height());
+        g_PainterShader_V1->setRectSize(transformed_rect.width(), transformed_rect.height());
 
         setTexture1D(static_cast<PainterTexture1DImplGL*>(texture));
 
-        g_PainterShader_Common->setZeroIndex(zero_index);
-        g_PainterShader_Common->setZeroCount(zero_count);
-        g_PainterShader_Common->setPoleIndex(pole_index);
-        g_PainterShader_Common->setPoleCount(pole_count);
+        g_PainterShader_V1->setZeroIndex(zero_index);
+        g_PainterShader_V1->setZeroCount(zero_count);
+        g_PainterShader_V1->setPoleIndex(pole_index);
+        g_PainterShader_V1->setPoleCount(pole_count);
 
         m_vert_rect_v1.setRect(
             transformed_rect.left(), transformed_rect.top(), transformed_rect.right(), transformed_rect.bottom()
@@ -401,12 +408,24 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect) override final
     {
-        g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
-
         setTexture2D(static_cast<PainterTexture2DImplGL*>(texture));
-        m_vert_rect_v1.setTexCoords(rect.x(), rect.y(), rect.width(), rect.height());
-        m_vert_rect_v1.setRect(rect.x(), rect.y(), rect.width(), rect.height());
-        m_vert_rect_v1.draw();
+
+        PainterShader_V2::Vertex v[4] = {
+            {(float)rect.left(),   (float)rect.top(),     0.0f, 0.0f},
+            {(float)rect.right(),  (float)rect.top(),     3.0f, 0.0f},
+            {(float)rect.left(),   (float)rect.bottom(),  0.0f, 3.0f},
+            {(float)rect.right(),  (float)rect.bottom(),  3.0f, 3.0f}
+        };
+        m_vert_rect_v2->load(v, 0, 4);
+
+        m_vert_rect_v2->useShader();
+
+        m_vert_rect_v2->setScaleAndShift(
+            m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f
+        );
+        m_vert_rect_v2->setSampler2D(0);
+
+        m_vert_rect_v2->draw();
     }
 
     virtual void tileImage(Image* image, const Rect<int> &rect) override final

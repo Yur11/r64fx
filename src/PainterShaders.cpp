@@ -9,9 +9,7 @@
 #define R64FX_GET_ATTRIB_LOCATION(name) getAttribLocation(attr_##name, #name)
 #define R64FX_GET_UNIFORM_LOCATION(name) getUniformLocation(unif_##name, #name)
 
-#ifdef R64FX_DEBUG
-#include <assert.h>
-#endif//R64FX_DEBUG
+#include "Debug.hpp"
 
 namespace r64fx{
 
@@ -25,11 +23,18 @@ unsigned char text_shader_common_frag[] =
 #   include "shader_common.frag.cxx"
 ;
 
+unsigned char text_shader_v2_frag[] =
+#   include "shader_v2.frag.cxx"
+;
+
 VertexShader    g_shader_common_vert;
 FragmentShader  g_shader_common_frag;
+FragmentShader  g_shader_v2_frag;
 
 }//namespace
 
+
+/* === PainterShader_V1 === */
 
 PainterShader::PainterShader(VertexShader vert, FragmentShader frag)
 {
@@ -47,7 +52,7 @@ PainterShader::~PainterShader()
 }
 
 
-PainterShader_Common::PainterShader_Common()
+PainterShader_V1::PainterShader_V1()
 : PainterShader(g_shader_common_vert, g_shader_common_frag)
 {
     if(isGood())
@@ -67,24 +72,150 @@ PainterShader_Common::PainterShader_Common()
 }
 
 
+
+/* === PainterShader_V2 === */
+class PainterShader_V2_Impl{
+    friend class PainterShader_V2;
+    friend class PainterShader_V2::VertexArray;
+
+    PainterShader_V2* shader = nullptr;
+
+    GLint attr_position, attr_tex_coord, unif_sxsytxty, unif_sampler2d;
+
+    long user_count = 0;
+} g_PainterShader_V2_Impl;
+
+
+PainterShader_V2::PainterShader_V2()
+: PainterShader(g_shader_common_vert, g_shader_v2_frag)
+{
+    R64FX_DEBUG_ASSERT(isGood());
+    getAttribLocation  (g_PainterShader_V2_Impl.attr_position,  "position");
+    getAttribLocation  (g_PainterShader_V2_Impl.attr_tex_coord, "tex_coord");
+
+    getUniformLocation (g_PainterShader_V2_Impl.unif_sxsytxty,  "sxsytxty");
+    getUniformLocation (g_PainterShader_V2_Impl.unif_sampler2d, "sampler2d");
+}
+
+
+PainterShader_V2::VertexArray::VertexArray(unsigned int vertex_count)
+: m_vertex_count(vertex_count)
+{
+    if(g_PainterShader_V2_Impl.user_count == 0)
+    {
+        g_PainterShader_V2_Impl.shader = new(std::nothrow) PainterShader_V2;
+    }
+
+    R64FX_DEBUG_ASSERT(g_PainterShader_V2_Impl.shader);
+    R64FX_DEBUG_ASSERT(g_PainterShader_V2_Impl.shader->isGood());
+
+    gl::GenVertexArrays(1, &m_vao);
+    gl::BindVertexArray(m_vao);
+    gl::GenBuffers(1, &m_vbo);
+    gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    gl::BufferData(GL_ARRAY_BUFFER, m_vertex_count * sizeof(PainterShader_V2::Vertex), nullptr, GL_STREAM_DRAW);
+
+    gl::EnableVertexAttribArray(g_PainterShader_V2_Impl.attr_position);
+    gl::VertexAttribPointer(g_PainterShader_V2_Impl.attr_position, 2, GL_FLOAT, GL_TRUE, 16, 0);
+
+    gl::EnableVertexAttribArray(g_PainterShader_V2_Impl.attr_tex_coord);
+    gl::VertexAttribPointer(g_PainterShader_V2_Impl.attr_tex_coord, 2, GL_FLOAT, GL_FALSE, 16, 8);
+
+    g_PainterShader_V2_Impl.user_count++;
+}
+
+
+PainterShader_V2* PainterShader_V2::VertexArray::shader()
+{
+    R64FX_DEBUG_ASSERT(g_PainterShader_V2_Impl.shader->isGood());
+    return g_PainterShader_V2_Impl.shader;
+}
+
+
+void PainterShader_V2::VertexArray::useShader()
+{
+    g_PainterShader_V2_Impl.shader->use();
+}
+
+
+void PainterShader_V2::VertexArray::setScaleAndShift(float sx, float sy, float tx, float ty)
+{
+    gl::Uniform4f(g_PainterShader_V2_Impl.unif_sxsytxty, sx, sy, tx, ty);
+}
+
+
+void PainterShader_V2::VertexArray::setSampler2D(int sampler)
+{
+    gl::Uniform1i(g_PainterShader_V2_Impl.unif_sampler2d, sampler);
+}
+
+
+void PainterShader_V2::VertexArray::load(PainterShader_V2::Vertex* verts, unsigned int index, unsigned int count)
+{
+    R64FX_DEBUG_ASSERT((index + count) <= m_vertex_count);
+
+    gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    gl::BufferSubData(GL_ARRAY_BUFFER, index * sizeof(PainterShader_V2::Vertex), count * sizeof(PainterShader_V2::Vertex), verts);
+
+//     float v[] = {
+//         0.0f, 0.0f,
+//         0.0f, 0.0f,
+// 
+//         100.0f, 0.0f,
+//         2.0f, 0.0f,
+// 
+//         0.0f, 100.0f,
+//         0.0f, 2.0f,
+// 
+//         100.0f, 100.0f,
+//         2.0f, 2.0f,
+//     };
+// 
+//     gl::BufferSubData(GL_ARRAY_BUFFER, 0, 64, v);
+}
+
+
+void PainterShader_V2::VertexArray::draw()
+{
+    gl::BindVertexArray(m_vao);
+    gl::DrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+
+PainterShader_V2::VertexArray::~VertexArray()
+{
+    gl::DeleteVertexArrays(1, &m_vao);
+    gl::DeleteBuffers(1, &m_vbo);
+
+    g_PainterShader_V2_Impl.user_count--;
+
+    if(g_PainterShader_V2_Impl.user_count <= 0)
+    {
+        delete g_PainterShader_V2_Impl.shader;
+    }
+}
+
+
 void init_painter_shaders()
 {
-    g_shader_common_vert = VertexShader((const char*)text_shader_common_vert);
-    g_shader_common_frag = FragmentShader((const char*)text_shader_common_frag);
+    g_shader_common_vert  = VertexShader((const char*)text_shader_common_vert);
+    g_shader_common_frag  = FragmentShader((const char*)text_shader_common_frag);
+    g_shader_v2_frag      = FragmentShader((const char*)text_shader_v2_frag);
 
-    g_PainterShader_Common = new PainterShader_Common;
-    if(!g_PainterShader_Common->isGood())
+    g_PainterShader_V1 = new PainterShader_V1;
+    if(!g_PainterShader_V1->isGood())
         abort();
 }
 
 
 void cleanup_painter_shaders()
 {
-    if(g_PainterShader_Common)
-        delete g_PainterShader_Common;
+    if(g_PainterShader_V1)
+        delete g_PainterShader_V1;
 
     g_shader_common_vert.free();
     g_shader_common_frag.free();
+    g_shader_v2_frag.free();
 }
 
 }//namespace r64fx
