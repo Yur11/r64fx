@@ -56,7 +56,7 @@ void PainterVertexArray::draw()
 }
 
 
-void PainterVertexArray_CommonRect::setTexCoords(short left, short top, short right, short bottom, bool flip_vert, bool flip_hori, bool flip_diag)
+void PainterVertexArray_V1::setTexCoords(short left, short top, short right, short bottom, bool flip_vert, bool flip_hori, bool flip_diag)
 {
     short buff[8] = {
         left,  top,

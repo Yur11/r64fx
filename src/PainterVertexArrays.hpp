@@ -26,7 +26,7 @@ public:
 };
 
 
-class PainterVertexArray_CommonRect : public PainterVertexArray{
+class PainterVertexArray_V1 : public PainterVertexArray{
 public:
     void init()
     {

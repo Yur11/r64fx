@@ -87,7 +87,7 @@ void freePaintGroup(PaintGroup* pg)
 
 
 struct PainterImplGL : public PainterImpl{
-    PainterVertexArray_CommonRect      m_uber_rect;
+    PainterVertexArray_V1 m_vert_rect_v1;
 
     LinkedList<PainterTexture1DImplGL> m_1d_textures;
     LinkedList<PainterTexture2DImplGL> m_2d_textures;
@@ -118,8 +118,8 @@ struct PainterImplGL : public PainterImpl{
         }
         PainterImplGL_count++;
 
-        m_uber_rect.init();
-        m_uber_rect.setRect(0.0f, 0.0f, 1.0f, -1.0f);
+        m_vert_rect_v1.init();
+        m_vert_rect_v1.setRect(0.0f, 0.0f, 1.0f, -1.0f);
 
         gl::Enable(GL_BLEND);
         gl::BlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
@@ -131,7 +131,7 @@ struct PainterImplGL : public PainterImpl{
 
     virtual ~PainterImplGL()
     {
-        m_uber_rect.cleanup();
+        m_vert_rect_v1.cleanup();
 
         PainterImplGL_count--;
         if(PainterImplGL_count == 0)
@@ -182,11 +182,11 @@ struct PainterImplGL : public PainterImpl{
             float(color[3]) * rcp255
         );
 
-        m_uber_rect.setRect(
+        m_vert_rect_v1.setRect(
             transformed_rect.left(), transformed_rect.top(), transformed_rect.right(), transformed_rect.bottom()
         );
 
-        m_uber_rect.draw();
+        m_vert_rect_v1.draw();
     }
 
     virtual void strokeRect(const Rect<int> &rect, Color stroke, Color fill, int stroke_width)
@@ -215,13 +215,13 @@ struct PainterImplGL : public PainterImpl{
         g_PainterShader_Common->setRectSize(transformed_rect.width(), transformed_rect.height());
         g_PainterShader_Common->setStrokeWidth(stroke_width);
 
-        m_uber_rect.setRect(
+        m_vert_rect_v1.setRect(
             transformed_rect.left(), transformed_rect.top(), transformed_rect.right(), transformed_rect.bottom()
         );
 
-        m_uber_rect.setTexCoords(0, 0, transformed_rect.width(), transformed_rect.height());
+        m_vert_rect_v1.setTexCoords(0, 0, transformed_rect.width(), transformed_rect.height());
 
-        m_uber_rect.draw();
+        m_vert_rect_v1.draw();
     }
 
     virtual void putImage(Image* image, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags)
@@ -254,7 +254,7 @@ struct PainterImplGL : public PainterImpl{
 
         setTexture2D(static_cast<PainterTexture2DImplGL*>(texture));
 
-        m_uber_rect.setTexCoords(
+        m_vert_rect_v1.setTexCoords(
             isec.srcx(),
             isec.srcy(),
             isec.srcx() + isec.srcWidth(),
@@ -262,14 +262,14 @@ struct PainterImplGL : public PainterImpl{
             flags & FlipFlags::Vert(), flags & FlipFlags::Hori(), flags & FlipFlags::Diag()
         );
 
-        m_uber_rect.setRect(
+        m_vert_rect_v1.setRect(
             current_clip_rect.x() + isec.dstx(),
             current_clip_rect.y() + isec.dsty(),
             current_clip_rect.x() + isec.dstx() + isec.dstWidth(),
             current_clip_rect.y() + isec.dsty() + isec.dstHeight()
         );
 
-        m_uber_rect.draw();
+        m_vert_rect_v1.draw();
     }
 
     virtual void putImage(PainterTexture2D* texture, Point<int> dst_pos, Rect<int> src_rect, FlipFlags flags)
@@ -355,14 +355,14 @@ struct PainterImplGL : public PainterImpl{
 // 
 //             setTexture1D(waveform_tex);
 // 
-//             m_uber_rect.setTexCoords(
+//             m_vert_rect_v1.setTexCoords(
 //                 intersection.srcx(),
 //                 intersection.srcy(),
 //                 intersection.srcx() + intersection.width(),
 //                 intersection.srcy() + intersection.height()
 //             );
 // 
-//             m_uber_rect.draw();
+//             m_vert_rect_v1.draw();
 //         }
     }
 
@@ -390,13 +390,13 @@ struct PainterImplGL : public PainterImpl{
         g_PainterShader_Common->setPoleIndex(pole_index);
         g_PainterShader_Common->setPoleCount(pole_count);
 
-        m_uber_rect.setRect(
+        m_vert_rect_v1.setRect(
             transformed_rect.left(), transformed_rect.top(), transformed_rect.right(), transformed_rect.bottom()
         );
 
-        m_uber_rect.setTexCoords(0.0f, 0.0f, 1.0f, 1.0f);
+        m_vert_rect_v1.setTexCoords(0.0f, 0.0f, 1.0f, 1.0f);
 
-        m_uber_rect.draw();
+        m_vert_rect_v1.draw();
     }
 
     virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect) override final
@@ -404,9 +404,9 @@ struct PainterImplGL : public PainterImpl{
         g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
 
         setTexture2D(static_cast<PainterTexture2DImplGL*>(texture));
-        m_uber_rect.setTexCoords(rect.x(), rect.y(), rect.width(), rect.height());
-        m_uber_rect.setRect(rect.x(), rect.y(), rect.width(), rect.height());
-        m_uber_rect.draw();
+        m_vert_rect_v1.setTexCoords(rect.x(), rect.y(), rect.width(), rect.height());
+        m_vert_rect_v1.setRect(rect.x(), rect.y(), rect.width(), rect.height());
+        m_vert_rect_v1.draw();
     }
 
     virtual void tileImage(Image* image, const Rect<int> &rect) override final
