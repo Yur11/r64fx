@@ -399,6 +399,22 @@ struct PainterImplGL : public PainterImpl{
         m_uber_rect.draw();
     }
 
+    virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect) override final
+    {
+        g_PainterShader_Common->setMode(PainterShader_Common::ModePutImage(texture->componentCount()));
+
+        setTexture2D(static_cast<PainterTexture2DImplGL*>(texture));
+        m_uber_rect.setTexCoords(rect.x(), rect.y(), rect.width(), rect.height());
+        m_uber_rect.setRect(rect.x(), rect.y(), rect.width(), rect.height());
+        m_uber_rect.draw();
+    }
+
+    virtual void tileImage(Image* image, const Rect<int> &rect) override final
+    {
+        m_spare_2d_texture.loadImage(image);
+        PainterImplGL::tileImage(&m_spare_2d_texture, rect);
+    }
+
     virtual PainterTexture1D* newTexture()
     {
         auto texture_impl = new PainterTexture1DImplGL(this);

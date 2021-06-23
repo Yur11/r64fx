@@ -71,6 +71,7 @@ set(SRC
     Font.cpp
     FontSupply.cpp
     FrequencyPlot.cpp
+    GridView.cpp
     IconSupply.cpp
     Image.cpp
     ImageAnimation.cpp

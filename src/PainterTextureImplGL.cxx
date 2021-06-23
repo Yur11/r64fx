@@ -249,6 +249,7 @@ public:
         gl::BindTexture(GL_TEXTURE_2D, m_texture);
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 
         gl::TexStorage2D(
             GL_TEXTURE_2D,

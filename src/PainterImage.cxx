@@ -364,7 +364,17 @@ struct PainterImplImage : public PainterImpl{
 
     virtual void drawPoleZeroPlot(const Rect<int> &rect, PainterTexture1D* tex, int zero_index, int zero_count, int pole_index, int pole_count)
     {
-        
+        //stub
+    }
+
+    virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect) override final
+    {
+        //stub
+    }
+
+    virtual void tileImage(Image* image, const Rect<int> &rect) override final
+    {
+        //stub
     }
 
     virtual PainterTexture1D* newTexture()

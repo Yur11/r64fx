@@ -21,6 +21,7 @@
 
 #include "Engine.hpp"
 #include "MainWindow.hpp"
+#include "GridView.hpp"
 #include "Options.hpp"
 #include "Timer.hpp"
 #include "TimeUtils.hpp"
@@ -32,6 +33,7 @@ namespace r64fx{
 class Main{
     Engine*      m_engine       = nullptr;
     MainWindow*  m_main_window  = nullptr;
+    GridView*    m_grid_view_window    = nullptr;
     bool         m_running      = false;
 
 public:
@@ -62,10 +64,22 @@ int Main::run(int argc, char** argv)
         return 1;
     }
 
+    m_grid_view_window = new(std::nothrow) GridView;
+    if(!m_grid_view_window)
+    {
+        cerr << "Failed to create grid view window!\n";
+        return 1;
+    }
+
     m_main_window->onClose([](void* data){
         auto self = (Main*)data; self->mainWindowClosed();
     }, this);
     m_main_window->open();
+
+//     m_grid_view_window->onClose([](void* data){
+//         auto self = (Main*)data; self->mainWindowClosed();
+//     }, this);
+    m_grid_view_window->openWindow();
 
     m_engine = Engine::newInstance();
 
@@ -81,6 +95,12 @@ int Main::run(int argc, char** argv)
     Timer::freeThreadId(timer_thread_id);
 
     Engine::deleteInstance(m_engine);
+
+    if(m_grid_view_window)
+    {
+        delete m_grid_view_window;
+        m_grid_view_window = nullptr;
+    }
 
     if(m_main_window)
     {
