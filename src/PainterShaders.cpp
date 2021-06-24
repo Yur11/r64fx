@@ -196,6 +196,105 @@ PainterShader_V2::VertexArray::~VertexArray()
 }
 
 
+
+/* ===  VertexArray_TextureRGBA === */
+class Shader_TextureRGBA : public ShadingProgram{
+    long user_count = 0;
+
+    GLint attr_position, attr_tex_coord, unif_sxsytxty, unif_sampler2d;
+
+    Shader_TextureRGBA()
+    {
+        load(g_shader_common_vert, g_shader_v2_frag);
+        R64FX_DEBUG_ASSERT(isGood());
+
+        getAttribLocation  (attr_position,  "position");
+        getAttribLocation  (attr_tex_coord, "tex_coord");
+
+        getUniformLocation (unif_sxsytxty,  "sxsytxty");
+        getUniformLocation (unif_sampler2d, "sampler2d");
+    }
+
+    friend class VertexArray_TextureRGBA;
+} *g_Shader_TextureRGBA = nullptr;
+
+
+VertexArray_TextureRGBA::VertexArray_TextureRGBA(unsigned int vertex_count)
+: m_vertex_count(vertex_count)
+{
+    if(!g_Shader_TextureRGBA)
+        g_Shader_TextureRGBA = new (std::nothrow) Shader_TextureRGBA;
+
+    R64FX_DEBUG_ASSERT(g_Shader_TextureRGBA);
+    R64FX_DEBUG_ASSERT(g_Shader_TextureRGBA->isGood());
+
+    gl::GenVertexArrays(1, &m_vao);
+    gl::BindVertexArray(m_vao);
+    gl::GenBuffers(1, &m_vbo);
+    gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    gl::BufferData(GL_ARRAY_BUFFER, m_vertex_count * sizeof(PainterShader_V2::Vertex), nullptr, GL_STREAM_DRAW);
+
+    gl::EnableVertexAttribArray(g_Shader_TextureRGBA->attr_position);
+    gl::VertexAttribPointer(g_Shader_TextureRGBA->attr_position, 2, GL_FLOAT, GL_TRUE, 0, 0);
+
+    gl::EnableVertexAttribArray(g_Shader_TextureRGBA->attr_tex_coord);
+    gl::VertexAttribPointer(g_Shader_TextureRGBA->attr_tex_coord, 2, GL_FLOAT, GL_FALSE, 0, m_vertex_count * sizeof(XY));
+
+    g_Shader_TextureRGBA->user_count++;
+}
+
+
+VertexArray_TextureRGBA::~VertexArray_TextureRGBA()
+{
+    gl::DeleteVertexArrays(1, &m_vao);
+    gl::DeleteBuffers(1, &m_vbo);
+
+    R64FX_DEBUG_ASSERT(g_Shader_TextureRGBA);
+
+    g_Shader_TextureRGBA->user_count--;
+
+    if(g_Shader_TextureRGBA->user_count <= 0)
+    {
+        delete g_Shader_TextureRGBA;
+        g_Shader_TextureRGBA = nullptr;
+    }
+}
+
+
+void VertexArray_TextureRGBA::useShader()
+    { g_Shader_TextureRGBA->use(); }
+
+void VertexArray_TextureRGBA::setScaleAndShift(float sx, float sy, float tx, float ty)
+    { gl::Uniform4f(g_Shader_TextureRGBA->unif_sxsytxty, sx, sy, tx, ty); }
+
+void VertexArray_TextureRGBA::setSampler2D(int sampler)
+    { gl::Uniform1i(g_Shader_TextureRGBA->unif_sampler2d, sampler); }
+
+
+void VertexArray_TextureRGBA::loadPositions(XY* xy, unsigned int index, unsigned int count)
+{
+    R64FX_DEBUG_ASSERT((index + count) <= m_vertex_count);
+    gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    gl::BufferSubData(GL_ARRAY_BUFFER, index * sizeof(XY), count * sizeof(XY), xy);
+}
+
+
+void VertexArray_TextureRGBA::loadTexCoords(XY* xy, unsigned int index, unsigned int count)
+{
+    R64FX_DEBUG_ASSERT((index + count) <= m_vertex_count);
+    gl::BindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    gl::BufferSubData(GL_ARRAY_BUFFER, (index + m_vertex_count) * sizeof(XY), count * sizeof(XY), xy);
+}
+
+
+void VertexArray_TextureRGBA::draw()
+{
+    gl::BindVertexArray(m_vao);
+    gl::DrawArrays(GL_TRIANGLE_STRIP, 0, m_vertex_count);
+}
+
+
+
 void init_painter_shaders()
 {
     g_shader_common_vert  = VertexShader((const char*)text_shader_common_vert);

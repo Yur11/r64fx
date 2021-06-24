@@ -89,7 +89,7 @@ void freePaintGroup(PaintGroup* pg)
 
 struct PainterImplGL : public PainterImpl{
     PainterVertexArray_V1 m_vert_rect_v1;
-    PainterShader_V2::VertexArray* m_vert_rect_v2 = nullptr;
+    VertexArray_TextureRGBA* m_vert_rect_v2 = nullptr;
 
     LinkedList<PainterTexture1DImplGL> m_1d_textures;
     LinkedList<PainterTexture2DImplGL> m_2d_textures;
@@ -130,7 +130,7 @@ struct PainterImplGL : public PainterImpl{
         g_PainterShader_V1->setSampler2D(0);
         g_PainterShader_V1->setSampler1D(1);
 
-        m_vert_rect_v2 = new(std::nothrow) PainterShader_V2::VertexArray(4);
+        m_vert_rect_v2 = new(std::nothrow) VertexArray_TextureRGBA(4);
         R64FX_DEBUG_ASSERT(m_vert_rect_v2);
     }
 
@@ -410,21 +410,25 @@ struct PainterImplGL : public PainterImpl{
     {
         setTexture2D(static_cast<PainterTexture2DImplGL*>(texture));
 
-        PainterShader_V2::Vertex v[4] = {
-            {(float)rect.left(),   (float)rect.top(),     0.0f, 0.0f},
-            {(float)rect.right(),  (float)rect.top(),     3.0f, 0.0f},
-            {(float)rect.left(),   (float)rect.bottom(),  0.0f, 3.0f},
-            {(float)rect.right(),  (float)rect.bottom(),  3.0f, 3.0f}
+        VertexArray_TextureRGBA::XY pos[4] = {
+            (float)rect.left(),   (float)rect.top(),
+            (float)rect.right(),  (float)rect.top(),
+            (float)rect.left(),   (float)rect.bottom(),
+            (float)rect.right(),  (float)rect.bottom()
         };
-        m_vert_rect_v2->load(v, 0, 4);
+        m_vert_rect_v2->loadPositions(pos, 0, 4);
+
+        VertexArray_TextureRGBA::XY tex[4] = {
+            0.0f, 0.0f,
+            4.0f, 0.0f,
+            0.0f, 4.0f,
+            4.0f, 4.0f
+        };
+        m_vert_rect_v2->loadTexCoords(tex, 0, 4);
 
         m_vert_rect_v2->useShader();
-
-        m_vert_rect_v2->setScaleAndShift(
-            m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f
-        );
+        m_vert_rect_v2->setScaleAndShift(m_window_double_width_rcp, m_window_minus_double_height_rcp, -1.0f, +1.0f);
         m_vert_rect_v2->setSampler2D(0);
-
         m_vert_rect_v2->draw();
     }
 

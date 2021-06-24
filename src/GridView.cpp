@@ -15,8 +15,7 @@ void init()
         return;
 
     g_grid_tile = new Image(g_options.UiScaleUp(16), g_options.UiScaleUp(16), 4);
-    fill(g_grid_tile, Color(255, 0, 0, 0));
-    fill({g_grid_tile, {0, 0, g_grid_tile->width(), g_grid_tile->height()}}, Color(255, 0, 0, 0));
+    fill({g_grid_tile, {0, 0, g_grid_tile->width(), g_grid_tile->height()}}, Color(255, 255, 0, 0));
     fill({g_grid_tile, {
         int(g_options.ui_scale),
         int(g_options.ui_scale),
@@ -58,8 +57,7 @@ void GridView::paintEvent(WidgetPaintEvent* event)
     auto p = event->painter();
 
     p->fillRect({0, 0, width(), height()}, Color(255, 255, 255));
-    p->tileImage(g_grid_tile, {0, 0, 100, 100});
-    p->fillRect({100, 100, 100, 100}, Color(0, 255, 255));
+    p->tileImage(g_grid_tile, {10, 10, 200, 200});
 
     childrenPaintEvent(event);
 }

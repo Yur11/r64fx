@@ -183,6 +183,33 @@ public:
 };
 
 
+class VertexArray_TextureRGBA{
+    GLuint m_vao, m_vbo;
+    unsigned int m_vertex_count;
+
+public:
+    struct XY{
+        float x = 0.0f, y = 0.0f;
+    };
+
+    VertexArray_TextureRGBA(unsigned int vertex_count);
+
+    ~VertexArray_TextureRGBA();
+
+    static void useShader();
+
+    static void setScaleAndShift(float sx, float sy, float tx, float ty);
+
+    static void setSampler2D(int sampler);
+
+    void loadPositions(XY* xy, unsigned int index, unsigned int count);
+
+    void loadTexCoords(XY* xy, unsigned int index, unsigned int count);
+
+    void draw();
+};
+
+
 void init_painter_shaders();
 
 void cleanup_painter_shaders();

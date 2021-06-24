@@ -74,11 +74,8 @@ int Main::run(int argc, char** argv)
     m_main_window->onClose([](void* data){
         auto self = (Main*)data; self->mainWindowClosed();
     }, this);
-//     m_main_window->open();
+    m_main_window->open();
 
-//     m_grid_view_window->onClose([](void* data){
-//         auto self = (Main*)data; self->mainWindowClosed();
-//     }, this);
     m_grid_view_window->openWindow();
 
     m_engine = Engine::newInstance();
