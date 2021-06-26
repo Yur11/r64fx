@@ -408,7 +408,10 @@ struct PainterImplGL : public PainterImpl{
 
     virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect) override final
     {
-        setTexture2D(static_cast<PainterTexture2DImplGL*>(texture));
+        R64FX_DEBUG_ASSERT(texture);
+
+        auto gltex = static_cast<PainterTexture2DImplGL*>(texture);
+        setTexture2D(gltex);
 
         VertexArray_TextureRGBA::XY pos[4] = {
             (float)rect.left(),   (float)rect.top(),
@@ -418,11 +421,20 @@ struct PainterImplGL : public PainterImpl{
         };
         m_vert_rect_v2->loadPositions(pos, 0, 4);
 
+        float texw        = gltex->width();
+        float texh        = gltex->height();
+        float texw_rcp    = 1.0f / texw;
+        float texh_rcp    = 1.0f / texh;
+        float tex_left    = rect.left()    * texw_rcp;
+        float tex_top     = rect.top()     * texh_rcp;
+        float tex_right   = rect.right()   * texw_rcp;
+        float tex_bottom  = rect.bottom()  * texh_rcp;
+
         VertexArray_TextureRGBA::XY tex[4] = {
-            0.0f, 0.0f,
-            4.0f, 0.0f,
-            0.0f, 4.0f,
-            4.0f, 4.0f
+            tex_left,   tex_top,
+            tex_right,  tex_top,
+            tex_left,   tex_bottom,
+            tex_right,  tex_bottom
         };
         m_vert_rect_v2->loadTexCoords(tex, 0, 4);
 

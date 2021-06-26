@@ -56,8 +56,7 @@ void GridView::paintEvent(WidgetPaintEvent* event)
 {
     auto p = event->painter();
 
-    p->fillRect({0, 0, width(), height()}, Color(255, 255, 255));
-    p->tileImage(g_grid_tile, {10, 10, 200, 200});
+    p->tileImage(g_grid_tile, {0, 0, width(), height()});
 
     childrenPaintEvent(event);
 }
