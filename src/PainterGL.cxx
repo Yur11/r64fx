@@ -406,12 +406,17 @@ struct PainterImplGL : public PainterImpl{
         m_vert_rect_v1.draw();
     }
 
-    virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect) override final
+    virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect, const Point<int> &shift) override final
     {
         R64FX_DEBUG_ASSERT(texture);
 
         auto gltex = static_cast<PainterTexture2DImplGL*>(texture);
         setTexture2D(gltex);
+
+//         R64FX_DEBUG_ASSERT(shift.x() >= 0);
+//         R64FX_DEBUG_ASSERT(shift.y() >= 0);
+//         R64FX_DEBUG_ASSERT(shift.x() < gltex->width());
+//         R64FX_DEBUG_ASSERT(shift.y() < gltex->height());
 
         VertexArray_TextureRGBA::XY pos[4] = {
             (float)rect.left(),   (float)rect.top(),
@@ -421,14 +426,17 @@ struct PainterImplGL : public PainterImpl{
         };
         m_vert_rect_v2->loadPositions(pos, 0, 4);
 
-        float texw        = gltex->width();
-        float texh        = gltex->height();
-        float texw_rcp    = 1.0f / texw;
-        float texh_rcp    = 1.0f / texh;
-        float tex_left    = rect.left()    * texw_rcp;
-        float tex_top     = rect.top()     * texh_rcp;
-        float tex_right   = rect.right()   * texw_rcp;
-        float tex_bottom  = rect.bottom()  * texh_rcp;
+        float texw         = gltex->width();
+        float texh         = gltex->height();
+        float texw_rcp     = 1.0f / texw;
+        float texh_rcp     = 1.0f / texh;
+
+        auto r = rect - shift;
+
+        float tex_left     = r.left()   * texw_rcp;
+        float tex_top      = r.top()    * texh_rcp;
+        float tex_right    = r.right()  * texw_rcp;
+        float tex_bottom   = r.bottom() * texh_rcp;
 
         VertexArray_TextureRGBA::XY tex[4] = {
             tex_left,   tex_top,
@@ -444,10 +452,10 @@ struct PainterImplGL : public PainterImpl{
         m_vert_rect_v2->draw();
     }
 
-    virtual void tileImage(Image* image, const Rect<int> &rect) override final
+    virtual void tileImage(Image* image, const Rect<int> &rect, const Point<int> &shift) override final
     {
         m_spare_2d_texture.loadImage(image);
-        PainterImplGL::tileImage(&m_spare_2d_texture, rect);
+        PainterImplGL::tileImage(&m_spare_2d_texture, rect, shift);
     }
 
     virtual PainterTexture1D* newTexture()

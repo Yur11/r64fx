@@ -367,12 +367,12 @@ struct PainterImplImage : public PainterImpl{
         //stub
     }
 
-    virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect) override final
+    virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect, const Point<int> &shift) override final
     {
         //stub
     }
 
-    virtual void tileImage(Image* image, const Rect<int> &rect) override final
+    virtual void tileImage(Image* image, const Rect<int> &rect, const Point<int> &shift) override final
     {
         //stub
     }

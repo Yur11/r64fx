@@ -169,9 +169,9 @@ public:
 
     virtual void drawPoleZeroPlot(const Rect<int> &rect, PainterTexture1D* tex, int zero_index, int zero_count, int pole_index, int pole_count) = 0;
 
-    virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect) = 0;
+    virtual void tileImage(PainterTexture2D* texture, const Rect<int> &rect, const Point<int> &shift) = 0;
 
-    virtual void tileImage(Image* image, const Rect<int> &rect) = 0;
+    virtual void tileImage(Image* image, const Rect<int> &rect, const Point<int> &shift) = 0;
 
     virtual void beginPaintGroup() = 0;
 
