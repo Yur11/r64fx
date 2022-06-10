@@ -116,6 +116,11 @@ void WindowGLX::setup(int width, int height)
                 double_buffer  == other.double_buffer
             ;
         }
+
+        XVisualInfo* getVisual()
+        {
+            return glXGetVisualFromFBConfig(g_display, *config);
+        }
     };
 
     int nglxfbconfigs = 0;
@@ -131,6 +136,12 @@ void WindowGLX::setup(int width, int height)
     for(int i=0; i<nglxfbconfigs; i++)
     {
         FrameBufferConfig cfg(g_display, glxfbconfigs + i);
+
+        auto v = cfg.getVisual();
+        if(!v)
+            continue;
+        XFree(v);
+
         if(cfg.isBetterThan(best_cfg))
         {
             best_cfg = cfg;
@@ -149,7 +160,12 @@ void WindowGLX::setup(int width, int height)
         abort();
     }
 
-    XVisualInfo* vinfo = glXGetVisualFromFBConfig(g_display, best_cfg.config[0]);
+    XVisualInfo* vinfo = best_cfg.getVisual();
+    if(!vinfo)
+    {
+        cerr << "Failed to get visual from fb config!\n";
+        abort();
+    }
 
     XSetWindowAttributes swa;
     swa.colormap = XCreateColormap(
