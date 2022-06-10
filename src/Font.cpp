@@ -29,15 +29,15 @@ namespace{
     }
 
 #ifdef R64FX_USE_BUILTIN_FONTS
-    unsigned char FreeSans_ascii[] =
+    char FreeSans_ascii[] =
 #       include "FreeSans_ascii.otf.cxx"
     ;
 
-    unsigned char FreeSansBold_ascii[] =
+    char FreeSansBold_ascii[] =
 #       include "FreeSansBold_ascii.otf.cxx"
     ;
 
-    unsigned char FreeMono_ascii[] =
+    char FreeMono_ascii[] =
 #       include "FreeMono_ascii.otf.cxx"
     ;
 
@@ -87,15 +87,15 @@ Font::Font(string name, float size, int dpi)
 #ifdef R64FX_USE_BUILTIN_FONTS
     if(name == "")
     {
-        init_builtin_font(m_ft_face_p, FreeSans_ascii, sizeof(FreeSans_ascii));
+        init_builtin_font(m_ft_face_p, (unsigned char*)FreeSans_ascii, sizeof(FreeSans_ascii));
     }
     else if(name == "bold")
     {
-        init_builtin_font(m_ft_face_p, FreeSansBold_ascii, sizeof(FreeSansBold_ascii));
+        init_builtin_font(m_ft_face_p, (unsigned char*)FreeSansBold_ascii, sizeof(FreeSansBold_ascii));
     }
     else if(name == "mono")
     {
-        init_builtin_font(m_ft_face_p, FreeMono_ascii, sizeof(FreeMono_ascii));
+        init_builtin_font(m_ft_face_p, (unsigned char*)FreeMono_ascii, sizeof(FreeMono_ascii));
     }
 #endif//R64FX_USE_BUILTIN_FONTS
 
